@@ -26,7 +26,7 @@ curl -X POST '<PROXY_BASE_URL>/user/new' \
 -H 'Content-Type: application/json' \
 -D '{
     "user_email": "krrishdholakia@gmail.com",
-    "user_role": "internal_user" # 👈 THIS ALLOWS USER TO CREATE/VIEW/DELETE THEIR OWN KEYS + SEE THEIR SPEND
+    "user_role": "internal_user" # THIS ALLOWS USER TO CREATE/VIEW/DELETE THEIR OWN KEYS + SEE THEIR SPEND
 }'
 ```
 
@@ -34,7 +34,7 @@ Expected Response
 
 ```bash
 {
-    "user_id": "e9d45c7c-b20b-4ff8-ae76-3f479a7b1d7d", 👈 USE IN STEP 2
+    "user_id": "e9d45c7c-b20b-4ff8-ae76-3f479a7b1d7d", USE IN STEP 2
     "user_email": "<YOUR_USERS_EMAIL>",
     "user_role": "internal_user",
     ...
@@ -71,7 +71,7 @@ curl -X POST '<PROXY_BASE_URL>/invitation/new' \
 -H 'Authorization: Bearer <PROXY_MASTER_KEY>' \
 -H 'Content-Type: application/json' \
 -D '{
-    "user_id": "e9d45c7c-b20b..." # 👈 USER ID FROM STEP 1
+    "user_id": "e9d45c7c-b20b..." # USER ID FROM STEP 1
 }'
 ```
 
@@ -83,7 +83,7 @@ Expected Response
     "user_id": "e9d45c7c-b20b..",
     "is_accepted": false,
     "accepted_at": null,
-    "expires_at": "2024-06-13T00:02:16.454000Z", # 👈 VALID FOR 7d
+    "expires_at": "2024-06-13T00:02:16.454000Z", # VALID FOR 7d
     "created_at": "2024-06-06T00:02:16.454000Z",
     "created_by": "116544810872468347480",
     "updated_at": "2024-06-06T00:02:16.454000Z",
@@ -178,7 +178,7 @@ This walks through setting up sso auto-add for **Okta, Google SSO**
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   litellm_jwtauth:
-    team_ids_jwt_field: "groups" # 👈 CAN BE ANY FIELD
+    team_ids_jwt_field: "groups" # CAN BE ANY FIELD
 ```
 
 This is assuming your SSO token looks like this. **If you need to inspect the JWT fields received from your SSO provider by LiteLLM, follow these instructions [here](#debugging-sso-jwt-fields)**
@@ -198,7 +198,7 @@ curl -X POST '<PROXY_BASE_URL>/team/new' \
 -H 'Content-Type: application/json' \
 -D '{
     "team_alias": "team_1",
-    "team_id": "team_id_1" # 👈 MUST BE THE SAME AS THE SSO GROUP ID
+    "team_id": "team_id_1" # MUST BE THE SAME AS THE SSO GROUP ID
 }'
 ```
 
@@ -375,11 +375,14 @@ litellm_settings:
     team_member_permissions:       # Optional[List[str]]: permissions granted to non-admin team members
       - "/team/daily/activity"     # Allow members to view team usage
       - "/key/generate"            # Allow members to generate API keys
+    access_group_ids: ["<access-group-id>"]  # Optional[List[str]]: access groups attached to teams created without access_group_ids
 ```
 
 :::info
 
 These defaults fill any field that is missing or `null` in the `/team/new` request. `budget_duration` is the one exception: sending an explicit `"budget_duration": null` (the "Never resets" option in the UI create form) creates a team whose budget never resets, skipping the configured default.
+
+`access_group_ids` lets you keep one central [access group](./access_groups.md) as the model list for every new team: teams created from the Admin UI, `/team/new`, or SSO group auto-creation without their own `access_group_ids` get the configured groups, and the group's `assigned_team_ids` stays in sync. A request that sends `"access_group_ids": []` keeps the empty list. `PATCH /update/default_team_settings` rejects an access group id that does not exist. `models` only applies to SSO auto-created teams.
 
 :::
 
@@ -390,7 +393,7 @@ This is useful if you only want users to create keys under a specific team.
 
 This will also prevent users from using their session tokens on the test keys chat pane. 
 
-👉 [**See this**](./virtual_keys.md#restricting-key-generation)
+[**See this**](./virtual_keys.md#restricting-key-generation)
 
 ## **All Settings for Self Serve / SSO Flow**
 
@@ -417,6 +420,7 @@ litellm_settings:
     rpm_limit: 1000                # Optional[int]: requests per minute limit
     team_member_permissions:       # Optional[List[str]]: permissions granted to non-admin team members
       - "/team/daily/activity"
+    access_group_ids: ["<access-group-id>"]  # Optional[List[str]]: access groups attached to teams created without access_group_ids
 
 
   upperbound_key_generate_params:    # Upperbound for /key/generate requests when self-serve flow is on

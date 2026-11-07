@@ -73,7 +73,7 @@ Use TLS for client-to-gateway and gateway-to-provider traffic. Keep certificate 
 
 Store provider credentials, the master key, and the salt key in your platform's secret store or a supported [secret manager](../secret_managers/overview). Do not commit secrets to `config.yaml` or source control. Follow the [master key rotation guide](./master_key_rotations), and do not rotate `LITELLM_SALT_KEY` after credentials have been stored.
 
-Enable [audit logs](./multiple_admins) and review administrative changes such as key creation, key deletion, role changes, and team updates.
+Enable [audit logs](./audit_logs) and review administrative changes such as key creation, key deletion, role changes, and team updates.
 
 ## 7. Avoid disclosing internals through error responses and headers
 

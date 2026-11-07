@@ -1,5 +1,6 @@
 ---
-title: "v1.74.15-stable"
+title: "LiteLLM v1.74.15-stable"
+description: "Adds User Agent activity tracking, Git-Ops style prompt management, MCP Gateway guardrails and Imagen4 on Google AI Studio."
 slug: "v1-74-15"
 date: 2025-08-02T10:00:00
 authors:

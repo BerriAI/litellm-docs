@@ -3,8 +3,9 @@
  * a framed column with a "← Blog" row, tag pills, a large title and the
  * cover image, a "Published" row with the authors, then the article body.
  *
- * This replaces the stock BlogPostPage layout (no sidebar, no TOC) but keeps
- * its metadata, structured data, draft/unlisted banners and the
+ * This replaces the stock BlogPostPage layout (no sidebar) but keeps the
+ * docs-style table of contents on the right on wide screens, plus its
+ * metadata, structured data, draft/unlisted banners and the
  * #__blog-post-container id that the RSS feed generator reads.
  */
 import React, {useEffect} from 'react';
@@ -20,6 +21,7 @@ import BlogPostPageMetadata from '@theme/BlogPostPage/Metadata';
 import BlogPostPageStructuredData from '@theme/BlogPostPage/StructuredData';
 import ContentVisibility from '@theme/ContentVisibility';
 import MDXContent from '@theme/MDXContent';
+import TOC from '@theme/TOC';
 import styles from './styles.module.css';
 
 function formatDate(date) {
@@ -97,7 +99,7 @@ export function PostByline({horizontal = false}) {
 }
 
 const EMBED_CSS = `
-.navbar, footer, .theme-announcement-bar, .crisp-client { display: none !important; }
+.navbar, footer, .theme-announcement-bar { display: none !important; }
 :root { --ifm-navbar-height: 0px; }
 `;
 
@@ -113,8 +115,9 @@ function useEmbedMode() {
 
 function BlogPostPageContent({children, Hero}) {
   useEmbedMode();
-  const {metadata, assets} = useBlogPost();
+  const {metadata, assets, toc} = useBlogPost();
   const {title, date, tags, authors, nextItem, prevItem, frontMatter} = metadata;
+  const showToc = !frontMatter.hide_table_of_contents && toc.length > 0;
   const coverImage = frontMatter.hide_cover ? undefined : (assets.image ?? frontMatter.image);
   const authorImages = assets.authorsImageUrls || [];
 
@@ -178,11 +181,22 @@ function BlogPostPageContent({children, Hero}) {
                 </div>
               </div>
 
-              <div className={clsx(styles.body, (coverImage || Hero) && styles.hasCover)}>
-                <ContentVisibility metadata={metadata} />
-                <div id={blogPostContainerID} className="markdown">
-                  <MDXContent>{children}</MDXContent>
+              <div className={clsx(showToc && styles.withToc)}>
+                <div className={clsx(styles.body, (coverImage || Hero) && styles.hasCover)}>
+                  <ContentVisibility metadata={metadata} />
+                  <div id={blogPostContainerID} className="markdown">
+                    <MDXContent>{children}</MDXContent>
+                  </div>
                 </div>
+                {showToc && (
+                  <aside className={styles.toc}>
+                    <TOC
+                      toc={toc}
+                      minHeadingLevel={frontMatter.toc_min_heading_level}
+                      maxHeadingLevel={frontMatter.toc_max_heading_level}
+                    />
+                  </aside>
+                )}
               </div>
 
               {(nextItem || prevItem) && (

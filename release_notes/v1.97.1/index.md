@@ -1,5 +1,6 @@
 ---
-title: "v1.97.1 - Docker-Only Maintenance Release"
+title: "LiteLLM v1.97.1 - Docker-Only Maintenance Release"
+description: "Refreshes dependency pins and pins the build Python to 3.13 on the 1.97.x line."
 slug: "v1-97-1"
 date: 2026-09-02T00:10:30
 authors:

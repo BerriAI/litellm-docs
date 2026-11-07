@@ -540,7 +540,7 @@ PROXY_BASE_URL="https://<your-proxy-base-url>"
 
 Sign in to the Admin UI through your identity provider. Then disable the login with the master key and `UI_PASSWORD`. Refer to [Disable environment credential login](/docs/proxy/security_best_practices#disable-environment-credential-login-to-the-admin-ui).
 
-To create users and teams from your identity provider, use [SCIM provisioning](/docs/tutorials/scim_litellm). For more options, refer to [SSO for the Admin UI](/docs/proxy/admin_ui_sso), [SSO event hooks](/docs/proxy/custom_sso), and [CLI SSO](/docs/proxy/cli_sso).
+To create users and teams from your identity provider, use [SCIM provisioning](/docs/tutorials/scim_litellm). For more options, refer to [SSO for the Admin UI](/docs/proxy/admin_ui_sso), [SSO event hooks](/docs/proxy/custom_sso), and [CLI sign-in](/docs/proxy/cli_sso).
 
 ### JWT authentication for API traffic
 
@@ -556,7 +556,7 @@ Keep the provider keys in your secret manager, not in configuration files. Refer
 
 ### Audit logs
 
-Audit logs are on by default when the gateway has a license. To turn them off, set `store_audit_logs: false` in `litellm_settings`. To do a test, delete a virtual key in the API or the Admin UI. Then open the **Audit Logs** page. Refer to [Audit logs](/docs/proxy/multiple_admins).
+Audit logs are on by default when the gateway has a license. To turn them off, set `store_audit_logs: false` in `litellm_settings`. To do a test, delete a virtual key in the API or the Admin UI. Then open the **Audit Logs** page. Refer to [Audit logs](/docs/proxy/audit_logs).
 
 ---
 
@@ -676,4 +676,4 @@ For temporary limits, use a [temporary budget increase](/docs/proxy/temporary_bu
 
 ## Get help
 
-Each Enterprise license includes a dedicated Slack or Teams channel with the LiteLLM engineers. You can also send an email to `support@berri.ai`. Refer to [Support and SLA](/docs/enterprise/support).
+Each Enterprise license includes a shared Slack Connect channel with the LiteLLM engineers. You can also send an email to `support@berri.ai`. To get the channel, follow [How to request your channel](/docs/enterprise/support#how-to-request-your-channel). Refer to [Support and SLA](/docs/enterprise/support).

@@ -15,11 +15,11 @@ Request the current report through the [LiteLLM Trust Center](https://trust.lite
 
 You host the LiteLLM gateway in your environment. When you self-host, LiteLLM does not store data or telemetry on LiteLLM servers. The data that the gateway processes stays in your infrastructure. Refer to [Data privacy and security](../data_security.md).
 
-Some Enterprise functions connect to LiteLLM. [Billable request metering](../proxy/billing_metrics.md) sends only a count of successful requests to the LiteLLM collector. Prompts, responses, virtual keys, and your license key do not leave the deployment. The license check uses the LiteLLM license server, or it does the check offline against a signed payload. Refer to [Licensing across regions](../proxy/multi_region.md#licensing-across-regions).
+Some Enterprise functions connect to LiteLLM. [Billable request metering](../proxy/billing_metrics.md) sends only a count of successful requests to the LiteLLM collector. Prompts, responses, and virtual keys do not leave the deployment. The gateway first checks your license key offline against its signature. Only when that check does not pass does the gateway send the license key to the LiteLLM license server. Refer to [Licensing across regions](../proxy/multi_region.md#licensing-across-regions).
 
 ## Verify the images that you run
 
-LiteLLM signs each Docker image on GHCR with cosign, from v1.83.0. You can verify the signature before you deploy an image, and you can enforce the check in your CI/CD pipeline. Refer to [Verify image signatures](../proxy/docker_image_security.md).
+LiteLLM signs each Docker image on GHCR with cosign <SinceVersion v="1.83.0" />. You can verify the signature before you deploy an image, and you can enforce the check in your CI/CD pipeline. Refer to [Verify image signatures](../proxy/docker_image_security.md).
 
 ## Vulnerability management
 
@@ -35,6 +35,6 @@ These pages give the answers that security teams ask for most:
 - [Shared responsibility](../shared_responsibility.md): the problems that LiteLLM owns and the problems that you own.
 - [Security and encryption FAQ](../proxy/security_encryption_faq.md): encryption in transit and at rest.
 - [OWASP LLM Top 10](../proxy/security_owasp_llm_top10.md): the LiteLLM controls for each OWASP risk, and the limits of each control.
-- [Audit logs](../proxy/multiple_admins.md): the record of admin changes to keys, teams, and models.
+- [Audit logs](../proxy/audit_logs.md): the record of admin changes to keys, teams, and models.
 
 For a question that these pages do not answer, [book a demo](https://enterprise.litellm.ai/demo) or ask in your Enterprise support channel.

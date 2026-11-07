@@ -1,0 +1,11 @@
+key,model,method,ndcg_at_10,reported_usd_per_1000_queries,measurement_origin,litellm_reproduction
+pplx,Perplexity Decider v1.2,Multiple choice,0.777,0.15,external_reference_via_openrouter,pending
+flash,Perplexity Decider Flash v1.2,Multiple choice,0.775,0.07,external_reference_via_openrouter,pending
+liquid,Liquid D1 Ultra,Per-document,0.777,0.34,external_reference_via_openrouter,pending
+jev,TypeSafe Jev 1.14,Per-document,0.776,0.58,external_reference_via_openrouter,pending
+pro,Cohere Rerank 4 Pro,Rerank API,0.775,2.5,external_reference_via_openrouter,pending
+luna,OpenAI GPT-6 Luna,Multiple choice,0.773,0.7,external_reference_via_openrouter,pending
+voyage,Voyage Rerank 2.5,Rerank API,0.768,0.37,external_reference_via_openrouter,pending
+fast,Cohere Rerank 4 Fast,Rerank API,0.761,2.0,external_reference_via_openrouter,pending
+c35,Cohere Rerank 3.5,Rerank API,0.754,1.0,external_reference_via_openrouter,pending
+bm25,BM25,No reranking,0.686,0.0,external_reference_via_openrouter,pending

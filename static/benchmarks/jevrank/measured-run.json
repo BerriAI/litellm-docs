@@ -1,0 +1,117 @@
+{
+  "origin": "measured_via_local_litellm_sdk_and_gateway_decisions_transport",
+  "started_at": "2026-10-21T03:42:10.363503+00:00",
+  "finished_at": "2026-10-21T03:45:14.263801+00:00",
+  "run_sha256": "715ed256f85cce3f9ef445f3178575c3820bc7711e383d3baa6eea2d932371c7",
+  "implementation": {
+    "pr": "https://github.com/BerriAI/litellm/pull/47782",
+    "revision": "5aa0a8304cd5bfa095bbd07e77f6f8c367084595",
+    "tracked_changes": false,
+    "adapter_sha256": "26861e9a0d5791a823e541dd7fba60374d734b3b7360ddad8d50136d22207c45",
+    "decisions_source_sha256": {
+      "litellm/decisions/__init__.py": "3cedcb541468a9a1470719c88216d7bf062b576eb19e451c4959c000d5e4b482",
+      "litellm/decisions/call.py": "e13243013306c045ef77deb5c8e4653f6d03eaa9a7944da10b856b602dc2fa78",
+      "litellm/decisions/main.py": "c753375fefaaecbb257a0154b12197cb854c593f59b9ab3038d65f493b375af9"
+    }
+  },
+  "runner_sha256": "b8aa56ee1b46ed0ec2894f4b8652c9b4fa390ad586c0d0fcc08f5225a0b60209",
+  "dataset": {
+    "dataset": "BEIR SciFact",
+    "split": "test",
+    "dataset_source": "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/scifact.zip",
+    "dataset_archive_md5": "5f7d1de60b170fc8027bb7898e2efca1",
+    "dataset_archive_sha256": "536e14446a0ba56ed1398ab1055f39fe852686ecad24a6306c80c490fa8e0165",
+    "dataset_file_sha256": {
+      "corpus.jsonl": "dec31c8182f3d744c7d2c09423756fd1d17cbef75808db13ba01cc0aab4d1ac6",
+      "queries.jsonl": "8ff84a7c903f722981cd8d595c022660140c51867b27608a6d4910db86080313",
+      "qrels/test.tsv": "0864bb985e0ca2367ba217977e72004d549054b2b06666ed9d4825ac7c21284c"
+    },
+    "query_count": 300,
+    "corpus_count": 5183,
+    "retrieval": {
+      "library": "bm25s",
+      "version": "0.3.13",
+      "method": "lucene",
+      "k1": 1.5,
+      "b": 0.75,
+      "dtype": "float32",
+      "stemmer": "Snowball English",
+      "stemmer_package": "3.1.0",
+      "stopwords": "en",
+      "lower": true,
+      "token_pattern": "(?u)\\b\\w\\w+\\b",
+      "document_format": "stripped title + newline + stripped abstract",
+      "top_k": 20,
+      "tie_break": "lexicographic corpus id",
+      "numpy_version": "2.4.6"
+    },
+    "retrieval_sha256": "d18e107c33f1fcbac3ba44c166cbf3fdbd95880ec3271c837f0cc63ec9c21601",
+    "candidates_sha256": "020890cafb03b31f1bb1fc32f501c132bffaa866f0b1ef3c50268cbc3af9b480"
+  },
+  "query_concurrency": 1,
+  "automatic_client_retries": 0,
+  "models": [
+    {
+      "model_name": "jev-1-13-pointwise",
+      "model_config": {
+        "name": "jev-1-13-pointwise",
+        "model": "openai/typesafe/jev-latest",
+        "strategy": "pointwise",
+        "max_concurrency": 8,
+        "refusal_policy": "error",
+        "expected_model_version": "jev-1.13.0",
+        "pricing": {
+          "input_usd_per_million": 0.042,
+          "output_usd_per_million": 0,
+          "source": "Gateway model info, typesafe/jev-latest, inspected 2026-10-21; estimated from returned tokens, not an invoice"
+        }
+      },
+      "origin": "measured_via_litellm",
+      "queries_expected": 300,
+      "queries_attempted": 300,
+      "queries_succeeded": 300,
+      "errors": 0,
+      "complete": true,
+      "full_test_split": true,
+      "eligible_for_full_benchmark": true,
+      "resolved_models": [
+        "jev-1.13.0"
+      ],
+      "model_versions_verified": true,
+      "metrics_all_queries_errors_zero": {
+        "ndcg_at_10": 0.7676260618846087,
+        "hit_at_1": 0.68,
+        "hit_at_3": 0.8033333333333333,
+        "hit_at_20": 0.87,
+        "recall_at_20": 0.8569444444444444
+      },
+      "metrics_successes_only": {
+        "ndcg_at_10": 0.7676260618846087,
+        "hit_at_1": 0.68,
+        "hit_at_3": 0.8033333333333333,
+        "hit_at_20": 0.87,
+        "recall_at_20": 0.8569444444444444
+      },
+      "latency_p50_seconds": 0.5006285625277087,
+      "latency_p95_seconds": 1.1513177874090617,
+      "known_cost_sum_usd": 0.172618278,
+      "cost_known_queries": 300,
+      "cost_complete": true,
+      "cost_per_1000_queries_usd": 0.57539426,
+      "cost_sources": [
+        "estimate_from_reported_tokens"
+      ],
+      "cost_note": "Reported/calculated API costs; provider billing may include unobserved failed work."
+    }
+  ],
+  "artifacts_sha256": {
+    "measured-per-query.csv": "dcb7d79f7bc19366c87803b8277314e9cffcea7810391258be35c800bf7b2055",
+    "measured-responses.jsonl.gz": "efef3d265469dd78d309f4dc2836182f6cf56a45d186d8c9b5e26284c97a7389"
+  },
+  "comparability": "Common saved candidates within this measured run. External reference runs do not have verified identical candidates or infrastructure.",
+  "cost_note": "Estimated from returned tokens at configured rates; not an invoice. No paid reference values are labeled as measured.",
+  "runtime": {
+    "python": "3.12.13",
+    "httpx": "0.28.1"
+  }
+}

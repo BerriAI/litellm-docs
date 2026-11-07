@@ -1,0 +1,213 @@
+.chart {
+  --bench-agree: var(--ifm-color-primary);
+  --bench-error-a: #d68b1f;
+  --bench-error-b: #d8455c;
+  --bench-none: #b9bcc6;
+  margin: 1.5rem 0 2rem;
+  padding: 1.25rem 1.5rem 1rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 12px;
+  background: var(--ifm-background-surface-color);
+}
+
+[data-theme='dark'] .tierTag {
+  color: #0b0f14;
+}
+
+[data-theme='dark'] .chart {
+  --bench-error-a: #f2b552;
+  --bench-error-b: #f0687d;
+  --bench-none: #5d6080;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  margin-top: 0.75rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.75rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend i {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 3px;
+}
+
+.agree { background: var(--bench-agree); }
+.errorA { background: var(--bench-error-a); }
+.errorB { background: var(--bench-error-b); }
+.noAnswer { background: var(--bench-none); }
+
+.group {
+  margin-top: 1.25rem;
+}
+
+.groupHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.groupLabel {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.groupNote {
+  font-size: 0.78rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.tier {
+  position: relative;
+  margin: 0.9rem -0.6rem 0;
+  padding: 0 0.6rem;
+  border: 1px solid var(--ifm-color-primary-lightest);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ifm-color-primary) 5%, transparent);
+}
+
+.tierTag {
+  position: absolute;
+  top: -0.6rem;
+  right: 0.6rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  background: var(--ifm-color-primary);
+  color: #fff;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr) 5.5rem;
+  align-items: center;
+  column-gap: 1.25rem;
+  padding: 0.7rem 0;
+}
+
+.row + .row {
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.meta {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.bar {
+  display: flex;
+  gap: 2px;
+  height: 0.85rem;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.bar span {
+  display: block;
+  flex-basis: 0;
+  min-width: 2px;
+}
+
+.note {
+  margin-top: 0.3rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.7rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.note b {
+  font-weight: 600;
+  color: var(--ifm-font-color-base);
+}
+
+.score {
+  text-align: right;
+}
+
+.pct {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pct small {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.of {
+  margin-top: 0.25rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.7rem;
+  color: var(--ifm-color-emphasis-700);
+  font-variant-numeric: tabular-nums;
+}
+
+.footnote {
+  margin: 1rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+  font-size: 0.75rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.invalid {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: var(--ifm-color-danger-contrast-background);
+  color: var(--ifm-color-danger-contrast-foreground);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .chart {
+    padding: 1rem;
+  }
+
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 0.5rem;
+  }
+
+  .barCell {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .pct {
+    font-size: 1.25rem;
+  }
+}

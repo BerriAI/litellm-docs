@@ -94,7 +94,7 @@ Create a key for Team=`QA Prod Bot` and `team_id="de35b29e-6ca8-4f47-b804-2b79d0
 
 <TabItem value="api" label="API">
 
-💡 **The Budget for Team="QA Prod Bot" budget will apply to this team**
+**The Budget for Team="QA Prod Bot" budget will apply to this team**
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \

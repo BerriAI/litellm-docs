@@ -46,7 +46,7 @@ litellm.callbacks = ["openmeter"]
 response = litellm.completion(
   model="{{openai_small}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - i'm openai"}
+    {"role": "user", "content": "Hi - i'm openai"}
   ]
 )
 ```
@@ -64,7 +64,7 @@ model_list:
   model_name: fake-openai-endpoint
 
 litellm_settings:
-  callbacks: ["openmeter"] # 👈 KEY CHANGE
+  callbacks: ["openmeter"] # KEY CHANGE
 ```
 
 2. Start Proxy

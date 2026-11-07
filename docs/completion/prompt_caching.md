@@ -272,7 +272,7 @@ print(response.usage)
 
 ### OpenAI explicit breakpoints (GPT-5.6 and newer)
 
-GPT-5.6 and newer also accept [explicit cache breakpoints](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-breakpoints): a `prompt_cache_breakpoint` marker on a content block plus a request-level `prompt_cache_options` that picks the mode (`implicit` keeps OpenAI's automatic breakpoint on the latest message alongside yours, `explicit` uses only yours) and the cache `ttl` (`30m`). LiteLLM passes both through on `/chat/completions`, `/responses` and, for Anthropic-shaped clients, `/v1/messages`. Models that accept the marker carry `supports_prompt_cache_breakpoint: true` in the cost map, and a GPT-5.6 or newer OpenAI model name the map has not flagged yet is treated the same way. To have LiteLLM place the marker for you from the deployment config, see the [auto-inject tutorial](../tutorials/prompt_caching.md#openai-gpt-56-and-newer)
+GPT-5.6 and newer also accept [explicit cache breakpoints](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-breakpoints): a `prompt_cache_breakpoint` marker on a content block plus a request-level `prompt_cache_options` that picks the mode (`implicit` keeps OpenAI's automatic breakpoint on the latest message alongside yours, `explicit` uses only yours) and the cache `ttl` (`30m`, or `12h` on `/responses`). LiteLLM passes both through on `/chat/completions`, `/responses` and, for Anthropic-shaped clients, `/v1/messages`. A `12h` write bills at 2.5x the input rate instead of 1.25x for `30m`, and OpenAI reports the split in `usage.input_tokens_details.cache_write_tokens_details` as `ttl_30m_tokens` and `ttl_12h_tokens`. LiteLLM prices the `12h` share from the model's `cache_creation_input_token_cost_above_12hr` and the rest from `cache_creation_input_token_cost`; a model without the 12-hour rate bills every write at the 30-minute rate. Models that accept the marker carry `supports_prompt_cache_breakpoint: true` in the cost map, and a GPT-5.6 or newer OpenAI model name the map has not flagged yet is treated the same way. To have LiteLLM place the marker for you from the deployment config, see the [auto-inject tutorial](../tutorials/prompt_caching.md#openai-gpt-56-and-newer)
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -452,7 +452,7 @@ from litellm import completion
 import litellm 
 import os 
 
-litellm.set_verbose = True # 👈 SEE RAW REQUEST
+litellm.set_verbose = True # SEE RAW REQUEST
 os.environ["ANTHROPIC_API_KEY"] = "" 
 
 response = completion(
@@ -885,7 +885,7 @@ import os
 
 os.environ["DEEPSEEK_API_KEY"] = "" 
 
-litellm.set_verbose = True # 👈 SEE RAW REQUEST
+litellm.set_verbose = True # SEE RAW REQUEST
 
 model_name = "deepseek/deepseek-chat"
 messages_1 = [
@@ -963,7 +963,7 @@ from litellm import completion, completion_cost
 import litellm 
 import os 
 
-litellm.set_verbose = True # 👈 SEE RAW REQUEST
+litellm.set_verbose = True # SEE RAW REQUEST
 os.environ["ANTHROPIC_API_KEY"] = "" 
 model = "anthropic/{{anthropic}}"
 response = completion(
@@ -1081,7 +1081,7 @@ curl -L -X GET 'http://0.0.0.0:4000/v1/model/info' \
             "model_info": {
                 "key": "{{anthropic}}",
                 ...
-                "supports_prompt_caching": true # 👈 LOOK FOR THIS!
+                "supports_prompt_caching": true # LOOK FOR THIS!
             }
         }
     ]

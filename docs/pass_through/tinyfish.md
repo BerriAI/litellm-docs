@@ -9,7 +9,7 @@ Pass-through endpoints for the [TinyFish Agent API](https://docs.tinyfish.ai/age
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ✅ | `run-sse` progress events relayed live |
 
-Just replace `https://agent.tinyfish.ai` with `LITELLM_PROXY_BASE_URL/tinyfish` 🚀
+Just replace `https://agent.tinyfish.ai` with `LITELLM_PROXY_BASE_URL/tinyfish`
 
 **Supported endpoints:**
 

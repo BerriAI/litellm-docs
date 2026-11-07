@@ -1,5 +1,6 @@
 ---
-title: "v1.82.0 - Realtime Guardrails, Projects Management, and 10+ Performance Optimizations"
+title: "LiteLLM v1.82.0 - Realtime Guardrails, Projects Management, and 10+ Performance Optimizations"
+description: "Adds guardrails for /v1/realtime sessions and a Projects UI. Routes /v1/messages to the Responses API by default for OpenAI and Azure models."
 slug: "v1-82-0"
 date: 2026-02-28T00:00:00
 authors:

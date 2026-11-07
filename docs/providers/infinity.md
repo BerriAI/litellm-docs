@@ -135,7 +135,7 @@ response = rerank(
     model="infinity/rerank",
     query="What is the capital of France?",
     documents=["Paris", "London", "Berlin", "Madrid"],
-    raw_scores=True, # 👈 PROVIDER-SPECIFIC PARAM
+    raw_scores=True, # PROVIDER-SPECIFIC PARAM
 )
 ```
 
@@ -151,7 +151,7 @@ model_list:
     litellm_params:
       model: infinity/rerank
       api_base: https://localhost:8080
-      raw_scores: True # 👈 EITHER SET PROVIDER-SPECIFIC PARAMS HERE OR IN REQUEST BODY
+      raw_scores: True # EITHER SET PROVIDER-SPECIFIC PARAMS HERE OR IN REQUEST BODY
 ```
 
 2. Start litellm
@@ -177,7 +177,7 @@ curl http://0.0.0.0:4000/rerank \
         "Washington, D.C. is the capital of the United States.",
         "Capital punishment has existed in the United States since before it was a country."
     ],
-    "raw_scores": True # 👈 PROVIDER-SPECIFIC PARAM
+    "raw_scores": True # PROVIDER-SPECIFIC PARAM
   }'
 ```
 

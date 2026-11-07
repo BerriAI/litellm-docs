@@ -1,5 +1,7 @@
 # Ace Data Cloud
 
+{/* keep-version-note */}
+
 [简体中文](./acedatacloud_zh.md)
 
 [Ace Data Cloud](https://platform.acedata.cloud?utm_source=opensource&utm_medium=referral&utm_campaign=evergreen&utm_content=litellm_provider_docs) provides model APIs with one API key and a shared Credit balance.

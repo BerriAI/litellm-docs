@@ -1,5 +1,6 @@
 ---
-title: "v1.102.3 - Dependency Updates and pgbouncer 1.26.0"
+title: "LiteLLM v1.104.1, v1.103.4 and v1.102.3 update pgbouncer to 1.26.0"
+description: "Updates pgbouncer to 1.26.0 so the images build with OpenSSL 4.0, and updates langgraph-sdk, mako, werkzeug and the Admin UI next package."
 slug: "v1-102-3"
 date: 2026-10-07T18:50:10
 authors:

@@ -219,13 +219,13 @@ details > summary > :last-child {
 }
 
 /* "DOCS" beside the logo, as Stripe does. The logo file is untouched and
-   keeps its clear space: half its 25px height before the label. */
+   keeps its clear space: half its 18px height before the label. */
 .navbar__brand .navbar__title {
-  margin-left: 13px;
+  margin-left: 9px;
   font-family: var(--ifm-font-family-base);
-  font-size: 1.05rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   line-height: 1;
   text-transform: uppercase;
   color: var(--ifm-color-primary-lightest);
@@ -363,74 +363,73 @@ html[data-theme='dark'] .lite-footer form [type='submit'] {
   background: #1c31d1;
 }
 
-/* ---------- Dark mode: the palette from before the restyle ----------
-   Light mode keeps the new look. Dark mode goes back to the earlier docs
-   palette: teal accents on the GitHub-style near-black, no blue glow. The
-   restyle's dark variables are remapped here, so every component that reads
-   them follows; the few dark rules with fixed blues are reset below. */
+/* ---------- Dark mode: the logo blue, turned down ----------
+   #0117be is unreadable on a dark page, so text, links and active states use
+   a soft periwinkle from the same hue at low saturation, on a near-black with
+   a faint blue cast. The restyle's dark variables are remapped here, so every
+   component that reads them follows; fixed colors are reset below. */
 html[data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
-  --ifm-background-color: #0d1117;
-  --ifm-background-surface-color: #161b22;
+  --ifm-color-primary: #8a98f0;
+  --ifm-color-primary-dark: #7887ea;
+  --ifm-color-primary-darker: #6d7de6;
+  --ifm-color-primary-darkest: #5566dc;
+  --ifm-color-primary-light: #9eaaf3;
+  --ifm-color-primary-lighter: #aeb8f5;
+  --ifm-color-primary-lightest: #bcc5f7;
+  --ifm-background-color: #0b0e17;
+  --ifm-background-surface-color: #131826;
   --ifm-font-color-base: #e3e3e3;
   --ifm-heading-color: #f0f0f0;
   --ifm-toc-border-color: #262c36;
   --ifm-menu-color: #c3c6cc;
   --ifm-menu-color-background-hover: rgba(255, 255, 255, 0.05);
-  --ifm-navbar-background-color: #0d1117;
+  --ifm-navbar-background-color: #0b0e17;
   --docusaurus-highlighted-code-line-bg: rgb(66 66 66 / 35%);
 
-  --aurora-mesh: none;
-  --aurora-nav-bg: rgba(13, 17, 23, 0.85);
+  --aurora-nav-bg: rgba(11, 14, 23, 0.85);
   --aurora-line: rgba(255, 255, 255, 0.08);
   --aurora-line-strong: rgba(255, 255, 255, 0.14);
   --aurora-muted: #a8adb5;
   --aurora-soft: #8b939e;
-  --aurora-tint: rgba(37, 194, 160, 0.1);
-  --aurora-accent-line: rgba(37, 194, 160, 0.35);
-  --aurora-accent-ink: #4fddbf;
-  --aurora-active-bg: rgba(37, 194, 160, 0.1);
-  --aurora-pill-shadow: inset 0 0 0 1px rgba(37, 194, 160, 0.25);
-  --aurora-code-bg: #161b22;
-  --aurora-surface: #0d1117;
+  --aurora-tint: rgba(138, 152, 240, 0.1);
+  --aurora-accent-line: rgba(138, 152, 240, 0.35);
+  --aurora-accent-ink: #bcc5f7;
+  --aurora-active-bg: rgba(138, 152, 240, 0.1);
+  --aurora-pill-shadow: inset 0 0 0 1px rgba(138, 152, 240, 0.25);
+  --aurora-code-bg: #131826;
+  --aurora-surface: #0b0e17;
   --aurora-scroll: rgba(255, 255, 255, 0.18);
   --aurora-inline-code-bg: rgba(255, 255, 255, 0.08);
-  --aurora-grad-border: linear-gradient(135deg, rgba(37, 194, 160, 0.3), rgba(37, 194, 160, 0.15));
+  --aurora-grad-border: linear-gradient(135deg, rgba(138, 152, 240, 0.3), rgba(138, 152, 240, 0.15));
   --aurora-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 
-  /* Text on the teal primary */
-  --lite-on-primary: #0d1117;
+  /* Text on the periwinkle primary */
+  --lite-on-primary: #0b0e17;
 }
 html[data-theme='dark'] .theme-admonition.alert--info {
-  --co-bg: rgba(37, 194, 160, 0.07);
-  --co-border: rgba(37, 194, 160, 0.2);
-  --co-title: #4fddbf;
-  --co-accent: #25c2a0;
+  --co-bg: rgba(138, 152, 240, 0.07);
+  --co-border: rgba(138, 152, 240, 0.2);
+  --co-title: #bcc5f7;
+  --co-accent: #8a98f0;
 }
 html[data-theme='dark'] .enterprise-compare-head span:last-child,
 html[data-theme='dark'] .enterprise-compare span:last-child {
-  color: #4fddbf;
+  color: #bcc5f7;
 }
 html[data-theme='dark'] .footer,
 html[data-theme='dark'] .lite-footer {
-  background: #161b22;
+  background: #131826;
 }
 html[data-theme='dark'] .lite-footer form [type='submit'] {
-  background: #25c2a0;
-  color: #0d1117 !important;
+  background: #8a98f0;
+  color: #0b0e17 !important;
 }
 html[data-theme='dark'] .lite-footer form [type='submit']:hover:not(:disabled) {
-  background: #29d5b0;
+  background: #9eaaf3;
 }
 html[data-theme='dark'] [class*='promoButton_'] {
   background: var(--ifm-color-primary) !important;
-  color: #0d1117 !important;
+  color: #0b0e17 !important;
 }
 
 /* ---------- Dark mode: calm and clearly bounded ----------
@@ -438,12 +437,12 @@ html[data-theme='dark'] [class*='promoButton_'] {
    so sections separate from the page. The navbar is solid rather than a
    blurred glass over the content, and cards no longer lift on hover. */
 html[data-theme='dark'] {
-  --aurora-code-bg: #161b22;
+  --aurora-code-bg: #131826;
   --aurora-line: rgba(255, 255, 255, 0.13);
   --aurora-line-strong: rgba(255, 255, 255, 0.2);
-  --ifm-toc-border-color: #30363d;
-  --ifm-color-emphasis-200: #30363d;
-  --ifm-color-emphasis-300: #3d444d;
+  --ifm-toc-border-color: #272d42;
+  --ifm-color-emphasis-200: #272d42;
+  --ifm-color-emphasis-300: #343b55;
 }
 html[data-theme='dark'] .lite-cardgrid,
 html[data-theme='dark'] [class*='grid_']:has(> a[class*='card_']),
@@ -451,19 +450,19 @@ html[data-theme='dark'] section.row:has(> article > a.card),
 html[data-theme='dark'] details,
 html[data-theme='dark'] .tabs-container > div,
 html[data-theme='dark'] [class*='promoCard_'] {
-  background-color: #161b22 !important;
+  background-color: #131826 !important;
 }
 html[data-theme='dark'] .theme-admonition.alert {
   border: 1px solid var(--co-border, rgba(255, 255, 255, 0.13));
 }
 html[data-theme='dark'] :is(.markdown, [class*='mdxPageWrapper'] article) table {
-  background: #161b22;
+  background: #131826;
 }
 html[data-theme='dark'] .navbar {
-  background-color: #0d1117 !important;
+  background-color: #0b0e17 !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
-  border-bottom-color: #30363d;
+  border-bottom-color: #272d42;
 }
 html[data-theme='dark'] .contact-card:hover,
 html[data-theme='dark'] article a.card:hover,
@@ -471,20 +470,11 @@ html[data-theme='dark'] .pagination-nav__link:hover {
   transform: none !important;
 }
 
-/* Phones: a smaller logo and DOCS label, so the product switcher fits
-   beside them. Clear space stays half the logo's height. */
+/* Phones: the DOCS label does not shrink, so the product switcher keeps
+   its place beside it. Clear space stays half the logo's height. */
 @media (max-width: 576px) {
-  .navbar__brand-col .navbar__logo,
-  .navbar__logo {
-    height: 20px;
-  }
-  .navbar__brand {
-    padding-right: 10px;
-  }
   .navbar__brand .navbar__title {
     flex: none;
-    margin-left: 9px;
-    font-size: 0.78rem;
   }
   .navbar__brand,
   .navbar__brand-col {
@@ -495,8 +485,7 @@ html[data-theme='dark'] .pagination-nav__link:hover {
 /* ---------- Navbar stays on one row ----------
    Infima lets .navbar__inner wrap, and between 997px and about 1065px the
    logo with its DOCS label, the links, and the right icons no longer fit, so
-   the icons dropped to a second line. The row never wraps now, and in that
-   range the Trust Center text link steps aside (the footer links it too). */
+   the icons dropped to a second line. The row never wraps now. */
 @media (min-width: 997px) {
   .navbar__inner {
     flex-wrap: nowrap !important;
@@ -505,8 +494,4 @@ html[data-theme='dark'] .pagination-nav__link:hover {
     min-width: 0;
   }
 }
-@media (min-width: 997px) and (max-width: 1100px) {
-  .navbar__right-col a[href^='https://trust.litellm.ai'] {
-    display: none;
-  }
-}
+

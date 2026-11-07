@@ -144,7 +144,7 @@ model_list:
 </TabItem>
 <TabItem value="fast" label="Fast (GPT-6.1 Sol)">
 
-```yaml title="config.yaml"
+```yaml title="config.yaml" keep-model-ids
 model_list:
   - model_name: gpt-6.1-sol-fast
     litellm_params:

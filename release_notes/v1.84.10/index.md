@@ -1,5 +1,6 @@
 ---
-title: "v1.84.10 - Interrupted-Stream Cost Recovery"
+title: "LiteLLM v1.84.10 - Interrupted-Stream Cost Recovery"
+description: "Recovers output tokens and cost for interrupted Anthropic streams and records partial spend on the failure row."
 slug: "v1-84-10"
 date: 2026-06-24T04:00:54
 authors:

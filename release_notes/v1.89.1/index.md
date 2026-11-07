@@ -1,5 +1,6 @@
 ---
-title: "v1.89.1 - DB Resilience, MCP & Model-Info Backports"
+title: "LiteLLM v1.89.1 - DB Resilience, MCP & Model-Info Backports"
+description: "Backports database resilience fixes and MCP OAuth hardening to the 1.89 line. Also adds the disable_budget_reservation setting and aligns /v1/model/info."
 slug: "v1-89-1"
 date: 2026-06-15T20:08:03
 authors:

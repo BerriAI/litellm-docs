@@ -7,6 +7,8 @@ OpenTelemetry v2 is a rewrite of LiteLLM's tracing. The HTTP server span is owne
 
 ## Turn it on
 
+If you currently use the SDK-based `langfuse` callback, follow the [Langfuse SDK to OpenTelemetry v2 migration guide](./langfuse_to_otel_v2_migration) instead. Replacing that callback changes ingestion volume, content capture and metadata semantics. The instructions here cover existing OTel callbacks.
+
 Set the feature flag and restart the proxy:
 
 ```shell

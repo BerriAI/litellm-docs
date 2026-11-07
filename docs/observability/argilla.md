@@ -67,7 +67,7 @@ litellm.callbacks = ["argilla"]
 
 # add argilla transformation object
 litellm.argilla_transformation_object = {
-    "user_input": "messages", # 👈 key= argilla field, value = either message (argilla.ChatField) | response (argilla.TextField)
+    "user_input": "messages", # key= argilla field, value = either message (argilla.ChatField) | response (argilla.TextField)
     "llm_output": "response"
 }
 
@@ -86,7 +86,7 @@ response = completion(
 litellm_settings:
   callbacks: ["argilla"]
   argilla_transformation_object:
-    user_input: "messages" # 👈 key= argilla field, value = either message (argilla.ChatField) | response (argilla.TextField)
+    user_input: "messages" # key= argilla field, value = either message (argilla.ChatField) | response (argilla.TextField)
     llm_output: "response"
 ```
 

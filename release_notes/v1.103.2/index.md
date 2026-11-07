@@ -1,5 +1,6 @@
 ---
-title: "v1.103.2 - Claude Code Auto Mode, CLI Session Spend and Pass-Through Fixes"
+title: "LiteLLM v1.103.2 supports Claude Code auto mode and fixes CLI spend"
+description: "Lets Claude Code auto mode run through the gateway, records CLI session spend per user and fixes pass-through endpoints that forward headers."
 slug: "v1-103-2"
 date: 2026-10-01T06:37:00
 authors:

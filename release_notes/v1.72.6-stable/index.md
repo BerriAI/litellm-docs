@@ -1,5 +1,6 @@
 ---
-title: "v1.72.6-stable - MCP Gateway Permission Management"
+title: "LiteLLM v1.72.6-stable - MCP Gateway Permission Management"
+description: "Adds MCP permission management per key, team and organization, codex-mini on Claude Code and output token-only rate limiting."
 slug: "v1-72-6-stable"
 date: 2025-06-14T10:00:00
 authors:

@@ -5,13 +5,18 @@ sidebar_label: Overview
 
 import NavigationCards from '@site/src/components/NavigationCards';
 
-**Features** are the request options that LiteLLM supports across providers: streaming, tool calling, media input, prompt caching, and more. Most pages show the code for the Python SDK and the setup for the AI Gateway. A feature that applies to one product only is in the section for that product.
+**Features** are what LiteLLM does with your requests across providers: load balancing and fallbacks, streaming, tool calling, media input, prompt caching, and more. Most pages show the code for the Python SDK and the setup for the AI Gateway. A feature that applies to one product only is in the section for that product.
 
 > New to LiteLLM? Start with the [AI Gateway Quickstart](/docs/proxy/docker_quick_start) or the [Python SDK Quickstart](/docs/learn/sdk_quickstart).
 
 <NavigationCards
 columns={3}
 items={[
+  {
+    title: "Routing & Reliability",
+    description: "Load balancing, fallbacks, client-side fallbacks, timeouts, and routing rules.",
+    to: "/docs/proxy/load_balancing",
+  },
   {
     title: "Requests & Responses",
     description: "Streaming, batching, structured outputs, and reasoning.",

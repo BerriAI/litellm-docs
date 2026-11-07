@@ -39,6 +39,6 @@ print(response)
 
 ## DataRobot completion models
 
-🚨 LiteLLM supports _all_ DataRobot LLM gateway models. To get a list for your installation and user account, send the following CURL command:
+LiteLLM supports _all_ DataRobot LLM gateway models. To get a list for your installation and user account, send the following CURL command:
 `curl -X GET -H "Authorization: Bearer $DATAROBOT_API_TOKEN" "$DATAROBOT_ENDPOINT/genai/llmgw/catalog/" | jq | grep 'model":'DATAROBOT_ENDPOINT/genai/llmgw/catalog/`
 

@@ -1,5 +1,6 @@
 ---
-title: "v1.102.2 - UI and CLI Session Token Format"
+title: "LiteLLM v1.103.1, v1.102.2, v1.101.3 and v1.100.4 fix UI and CLI session tokens"
+description: "Changes UI and CLI session tokens to AES-256-GCM tokens that start with litellm_login_. Admin UI and lite CLI users must log in again."
 slug: "v1-102-2"
 date: 2026-09-30T00:58:30
 authors:

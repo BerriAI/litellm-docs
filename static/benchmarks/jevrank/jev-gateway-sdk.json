@@ -1,0 +1,20 @@
+{
+  "timeout_seconds": 120,
+  "models": [
+    {
+      "name": "jev-1-13-pointwise",
+      "model": "openai/typesafe/jev-latest",
+      "api_key_env": "JEVRANK_BENCHMARK_API_KEY",
+      "api_base_env": "JEVRANK_BENCHMARK_API_BASE",
+      "strategy": "pointwise",
+      "max_concurrency": 8,
+      "refusal_policy": "error",
+      "expected_model_version": "jev-1.13.0",
+      "pricing": {
+        "input_usd_per_million": 0.042,
+        "output_usd_per_million": 0,
+        "source": "Gateway model info, typesafe/jev-latest, inspected 2026-10-21; estimated from returned tokens, not an invoice"
+      }
+    }
+  ]
+}

@@ -9,7 +9,7 @@ Pass-through endpoints for the [Amazon Transcribe](https://docs.aws.amazon.com/t
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ❌ | Streaming transcription (`StartStreamTranscription`, the `transcribestreaming` HTTP/2 and WebSocket endpoint) is a separate protocol and is not covered by this pass-through |
 
-Just replace `https://transcribe.{aws_region_name}.amazonaws.com` with `LITELLM_PROXY_BASE_URL/transcribe` 🚀
+Just replace `https://transcribe.{aws_region_name}.amazonaws.com` with `LITELLM_PROXY_BASE_URL/transcribe`
 
 LiteLLM signs the forwarded request with SigV4 using the proxy's AWS credentials, so clients only need a LiteLLM virtual key.
 

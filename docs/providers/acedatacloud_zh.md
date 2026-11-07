@@ -1,5 +1,6 @@
 # Ace Data Cloud 模型接入
 
+{/* keep-version-note */}
 [English](./acedatacloud.md)
 
 使用 [Ace Data Cloud](https://platform.acedata.cloud?utm_source=opensource&utm_medium=referral&utm_campaign=evergreen&utm_content=litellm_provider_zh_docs) 的业务 API Key，通过 LiteLLM 调用 Chat Completions 和 Responses。音乐、视频、图片使用独立的 [媒体 MCP 指南](../mcp_servers/acedatacloud_zh.md)。

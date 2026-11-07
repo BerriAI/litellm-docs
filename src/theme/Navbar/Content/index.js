@@ -13,6 +13,8 @@ import NavbarMobileSidebarToggle from '@theme/Navbar/MobileSidebar/Toggle';
 import NavbarLogo from '@theme/Navbar/Logo';
 import NavbarSearch from '@theme/Navbar/Search';
 import SearchBar from '@theme/SearchBar';
+import AskAIButton from '@site/src/components/AskAI/AskAIButton';
+import NavbarMoreMenu from '@site/src/components/NavbarMoreMenu';
 
 function useNavbarItems() {
   return useThemeConfig().navbar.items;
@@ -45,26 +47,28 @@ export default function NavbarContent() {
 
   return (
     <div className="navbar__inner">
-      {/* Left: Logo only */}
+      {/* Left: logo, then the product switcher and the nav links */}
       <div className="navbar__brand-col">
         {!mobileSidebar.disabled && <NavbarMobileSidebarToggle />}
         <NavbarLogo />
       </div>
 
-      {/* Center: nav links */}
       <div className="navbar__center-col">
         <NavbarItems items={leftItems} />
       </div>
 
-      {/* Right: icons + color toggle */}
+      {/* Right: search, Ask AI, GitHub, More. The color mode toggle only
+          shows on phones (CSS); on desktop it lives in the More menu. */}
       <div className="navbar__right-col">
-        <NavbarItems items={rightItems} />
-        <NavbarColorModeToggle />
         {!searchBarItem && (
           <NavbarSearch>
             <SearchBar />
           </NavbarSearch>
         )}
+        <AskAIButton />
+        <NavbarItems items={rightItems} />
+        <NavbarMoreMenu />
+        <NavbarColorModeToggle className="navbar__colormode-mobile" />
       </div>
     </div>
   );

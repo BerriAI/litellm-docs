@@ -94,7 +94,7 @@ For **Gemini 3+ models** (e.g., `{{gemini_pro}}`), LiteLLM maps `reasoning_effor
 
 | reasoning_effort | thinking | Notes |
 | ---------------- | -------- | ----- |
-| "none"           | "budget_tokens": 0, "includeThoughts": false | 💰 **Recommended for cost optimization** - OpenAI-compatible, always 0 |
+| "none"           | "budget_tokens": 0, "includeThoughts": false | **Recommended for cost optimization** - OpenAI-compatible, always 0 |
 | "disable"        | "budget_tokens": DEFAULT (0), "includeThoughts": false | LiteLLM-specific, configurable via env var |
 | "low"            | "budget_tokens": 1024 | |
 | "medium"         | "budget_tokens": 2048 | |
@@ -305,6 +305,40 @@ import litellm
 litellm.enable_gemini_default_thinking_level_low = True
 ```
 
+### Thinking without thought summaries
+
+<SinceVersion v="1.107.0" />
+
+Gemini returns a summary of its thinking in `reasoning_content` whenever thinking is on. To keep the thinking but drop the summary text on every Gemini request, turn the summaries off.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+import litellm
+
+litellm.gemini_include_thoughts_default = False
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```yaml
+litellm_settings:
+  gemini_include_thoughts_default: false
+```
+
+</TabItem>
+</Tabs>
+
+The model still thinks and `usage.completion_tokens_details.reasoning_tokens` is still billed, but the response carries no thought text. A request that asks for the summary still gets it:
+
+- `/v1/chat/completions`: `reasoning_effort={"effort": "medium", "summary": "auto"}`, the AI SDK `reasoning_summary` (or `reasoningSummary`) next to `reasoning_effort`, or `thinking` with a `summary` string or any `display` other than `"omitted"`.
+- `/v1/messages`: `thinking` with a `summary` string or any `display` other than `"omitted"`, such as `"summarized"`.
+- `/v1/responses`: `reasoning={"effort": "medium", "summary": "auto"}`.
+
+`"display": "omitted"` is not an ask, so the setting decides. On `/v1/messages` this setting also wins over `reasoning_auto_summary`, since that summary is added by the gateway, not asked for by the request. A text value such as `"false"` is read as `false`, and a value that reads as neither keeps the summaries on.
+
 ## Usage - `service_tier`
 
 LiteLLM propagates OpenAI's `service_tier` parameter to Gemini, and also extracts it from the response headers (`x-gemini-service-tier`) into `model_response.service_tier`.
@@ -319,6 +353,14 @@ LiteLLM propagates OpenAI's `service_tier` parameter to Gemini, and also extract
 
 On the response, LiteLLM maps `"standard"` back to `"default"` for the Gemini API.
 
+
+## Long outputs
+
+On a model that ends a request with a `continuationToken`, such as Gemini 4 Argon, LiteLLM sends the request again with that token until the answer finishes or `max_tokens` is spent, so `max_tokens` can go above Google's per-request cap. [Long outputs](/blog/gemini-4-argon#long-outputs) covers how it works, the usage it reports and the timeouts it needs.
+
+A request that sends no output limit is sent once and stops at Google's own per-request limit. From v1.108.0, set the env var `LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS` to an integer to give those requests a budget. It applies to chat completion, text completion and Responses API requests through the proxy or the Python SDK, and never to `/v1/messages`, which requires `max_tokens`. LiteLLM caps the budget at the model's `max_output_tokens` in the cost map, and any output limit the request already carries wins. It is not applied to a model the cost map does not list as a chat model, such as an image model, to a model whose cost map `supported_output_modalities` leaves out text, such as a Lyria music model, to a request whose `modalities` asks for anything besides text, to a request that resumes with a `continuation_token`, or to the native `:generateContent` route. A large value makes a non-streamed request run as long as the answer, so stream long answers or raise the client's timeout. The [env var reference](/docs/proxy/config_settings#environment-variables---reference) lists every case.
+
+`supports_continuation: true` in the cost map marks a model that can end a request with a `continuationToken` <SinceVersion v="1.110.0" />. It is set on `gemini/gemini-4-argon`, `vertex_ai/gemini-4-argon` and `vertex_ai/gemini-4-argon-cyber-permissive`. Read it before sending a request with `litellm.supports_continuation("gemini/gemini-4-argon")` or `litellm.get_model_info("gemini/gemini-4-argon")["supports_continuation"]`, or through the proxy at `GET /model/info` and `GET /v1/model/info`, where each deployment carries it in `model_info`, and at `GET /model_group/info`, where a model group reports `true` when any of its deployments supports it. `get_model_info` and `/model/info` return `None` (`null`) for a model the cost map leaves unflagged, so check for `true` instead of `false`. A deployment's own `model_info` in `config.yaml` or the Admin UI overrides the cost map value for that deployment only, so set `supports_continuation: true` there for a model the cost map does not flag yet. The flag only says what the model can do and does not turn continuation on or off. LiteLLM sends the request again only when it has an output limit, from `max_tokens` or `LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS`, and asks for one choice (`n` of 1), whatever the flag says. Whether a given answer was cut short still comes from the response. On `/chat/completions` that answer ends with `finish_reason: "length"` and carries `provider_specific_fields.continuation_token`, and [Long outputs](/blog/gemini-4-argon#long-outputs) shows how to send it back to continue the answer.
 
 ## Text-to-Speech (TTS) Audio Output
 
@@ -347,7 +389,7 @@ LiteLLM supports Gemini TTS models with audio capabilities (e.g. `gemini-2.5-fla
 
 `audio.voice` takes any Gemini prebuilt voice name (`Kore`, `Puck`, `Zephyr`, ...) and sends it through unchanged. OpenAI voice names map to the nearest Gemini prebuilt voice, so OpenAI-shaped clients and the proxy's default `audio_speech` health check (`alloy`) work without a config change. The lookup is case-insensitive, and any other name is sent through as-is, so a typo still fails at Google with its `No matching speaker voice found` error.
 
-The mapping is available from v1.107.0 (first in `v1.107.0-rc.1`). Earlier releases send OpenAI voice names to Google unchanged, and Google rejects them, so set a Gemini voice name such as `Kore` there.
+The mapping works <SinceVersion v="1.107.0" />, first in `v1.107.0-rc.1`. Earlier releases send OpenAI voice names to Google unchanged, and Google rejects them, so set a Gemini voice name such as `Kore` there.
 
 | OpenAI voice | Gemini voice |
 |--------------|--------------|
@@ -587,7 +629,7 @@ response_schema = {
 completion(
     model="gemini/{{gemini_pro}}", 
     messages=messages, 
-    response_format={"type": "json_object", "response_schema": response_schema} # 👈 KEY CHANGE
+    response_format={"type": "json_object", "response_schema": response_schema} # KEY CHANGE
     )
 
 print(json.loads(completion.choices[0].message.content))
@@ -657,7 +699,7 @@ try:
     response_format={
         "type": "json_object", 
         "response_schema": response_schema,
-        "enforce_validation": true # 👈 KEY CHANGE
+        "enforce_validation": true # KEY CHANGE
     }
 	)
 except JSONSchemaValidationError as e: 
@@ -748,7 +790,7 @@ messages = [
 completion(
     model="gemini/{{gemini_pro}}", 
     messages=messages, 
-    topK=1 # 👈 KEY CHANGE
+    topK=1 # KEY CHANGE
 )
 
 print(json.loads(completion.choices[0].message.content))
@@ -783,7 +825,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   "messages": [
         {"role": "user", "content": "List 5 popular cookie recipes."}
     ],
-  "topK": 1 # 👈 KEY CHANGE
+  "topK": 1 # KEY CHANGE
 }
 '
 ```
@@ -807,7 +849,7 @@ try:
     response_format={
         "type": "json_object", 
         "response_schema": response_schema,
-        "enforce_validation": true # 👈 KEY CHANGE
+        "enforce_validation": true # KEY CHANGE
     }
 	)
 except JSONSchemaValidationError as e: 
@@ -949,7 +991,7 @@ import os
 
 os.environ["GEMINI_API_KEY"] = ".."
 
-tools = [{"googleSearch": {}}] # 👈 ADD GOOGLE SEARCH
+tools = [{"googleSearch": {}}] # ADD GOOGLE SEARCH
 
 response = completion(
     model="gemini/{{gemini_flash}}",
@@ -1109,7 +1151,7 @@ import os
 
 os.environ["GEMINI_API_KEY"] = ".."
 
-# 👇 ADD URL CONTEXT
+# ADD URL CONTEXT
 tools = [{"urlContext": {}}]
 
 response = completion(
@@ -1170,7 +1212,7 @@ import os
 
 os.environ["GEMINI_API_KEY"] = ".."
 
-tools = [{"googleSearch": {}}] # 👈 ADD GOOGLE SEARCH
+tools = [{"googleSearch": {}}] # ADD GOOGLE SEARCH
 
 response = completion(
     model="gemini/{{gemini_flash}}",
@@ -1227,7 +1269,7 @@ import os
 
 os.environ["GEMINI_API_KEY"] = ".."
 
-tools = [{"codeExecution": {}}] # 👈 ADD GOOGLE SEARCH
+tools = [{"codeExecution": {}}] # ADD GOOGLE SEARCH
 
 response = completion(
     model="gemini/{{gemini_flash}}",
@@ -1729,7 +1771,93 @@ curl --location 'http://localhost:4000/v1/chat/completions' \
 
 5. **Format**: Thought signatures are stored in `provider_specific_fields.thought_signature` of tool calls in the response, and are automatically included when you append the assistant message to your conversation history.
 
-6. **Chat Completions Clients**: With chat completions clients where you cannot control whether or not the previous assistant message is included as-is (ex langchain's ChatOpenAI), LiteLLM also preserves the thought signature by appending it to the tool call id (`call_123__thought__<thought-signature>`) and extracting it back out before sending the outbound request to Gemini. 
+6. **Chat Completions Clients**: With chat completions clients where you cannot control whether or not the previous assistant message is included as-is (ex langchain's ChatOpenAI), LiteLLM also preserves the thought signature by appending it to the tool call id (`call_123__thought__<thought-signature>`) and extracting it back out before sending the outbound request to Gemini. For a client that limits the id length, see [Keep tool call ids short](#keep-tool-call-ids-short).
+
+### Keep tool call ids short
+
+By default, when a tool call carries a thought signature, the tool call id that LiteLLM returns holds the whole signature, as `call_123__thought__<thought-signature>`. Gemini signs only the first call of a parallel batch, so the other ids are already short. A signature is often hundreds of characters long, so a client that limits the id length rejects the tool call. For example, the AWS Bedrock AgentCore harness allows at most 128 characters.
+
+Set `thought_signature_in_tool_call_id: false` <SinceVersion v="1.109.0" /> to get short ids such as `call_436686`. LiteLLM then returns the signature only in `provider_specific_fields.thought_signature` of the tool call that carries it. The setting applies to Gemini models called through `gemini/` and `vertex_ai/` on `/chat/completions` and `/responses`, with and without streaming. When it is not set, ids hold the signature as before.
+
+Set it on a deployment in your `config.yaml`:
+
+```yaml
+model_list:
+  - model_name: {{gemini_flash}}
+    litellm_params:
+      model: gemini/{{gemini_flash}}
+      api_key: os.environ/GEMINI_API_KEY
+      thought_signature_in_tool_call_id: false
+```
+
+Or set it per request. A value in the request takes precedence over the value on the deployment.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import completion
+
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_current_temperature",
+            "description": "Gets the current weather temperature for a given location.",
+            "parameters": {
+                "type": "object",
+                "properties": {"location": {"type": "string"}},
+                "required": ["location"],
+            },
+        },
+    }
+]
+
+response = completion(
+    model="gemini/{{gemini_flash}}",
+    messages=[{"role": "user", "content": "What's the temperature in London?"}],
+    tools=tools,
+    reasoning_effort="low",
+    thought_signature_in_tool_call_id=False,
+)
+print(response.choices[0].message.tool_calls[0].id)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```bash
+curl http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -d '{
+    "model": "{{gemini_flash}}",
+    "messages": [{"role": "user", "content": "What'\''s the temperature in London?"}],
+    "tools": [{
+      "type": "function",
+      "function": {
+        "name": "get_current_temperature",
+        "description": "Gets the current weather temperature for a given location.",
+        "parameters": {
+          "type": "object",
+          "properties": {"location": {"type": "string"}},
+          "required": ["location"]
+        }
+      }
+    }],
+    "reasoning_effort": "low",
+    "thought_signature_in_tool_call_id": false
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+The value is a boolean. LiteLLM also accepts a value that converts to a boolean, such as `"false"` or `0`. Any other value, such as `"maybe"`, gets an HTTP 400 error that names `thought_signature_in_tool_call_id`. With `drop_params: true`, LiteLLM drops the bad value instead and uses the value on the deployment, or the default when the deployment does not set one.
+
+On the next turn, send back the assistant message with its tool calls as you received them, `provider_specific_fields` included. LiteLLM reads the signature from `provider_specific_fields` and sends it to Gemini with the tool call. With the OpenAI client, `messages.append(response.choices[0].message)` does this, as in the [multi-turn example](#multi-turn-function-calling-with-thought-signatures) above. On `/responses`, each `function_call` output item carries the same `provider_specific_fields`, so send the item back unchanged in the next `input`. LiteLLM reads those fields from an input item only when the setting is `false` for that request too, so if you set it per request, send it on every turn, or set it on the deployment instead.
+
+If your client sends back only the short id and drops `provider_specific_fields`, LiteLLM has no signature to send. For Gemini 3 and newer models, it then puts a placeholder signature on the first tool call of each assistant message, so the request still succeeds, but the model loses the reasoning that the real signature carried. So if your client accepts long ids but drops `provider_specific_fields`, keep the default.
 
 ## JSON Mode
 
@@ -1755,7 +1883,7 @@ messages = [
 completion(
     model="gemini/{{gemini_pro}}", 
     messages=messages, 
-    response_format={"type": "json_object"} # 👈 KEY CHANGE
+    response_format={"type": "json_object"} # KEY CHANGE
 )
 
 print(json.loads(completion.choices[0].message.content))
@@ -2164,7 +2292,7 @@ import os
 
 os.environ["GEMINI_API_KEY"] = "" 
 
-litellm.set_verbose = True # 👈 See Raw call 
+litellm.set_verbose = True # See Raw call
 
 audio_bytes = Path("speech_vertex.mp3").read_bytes()
 encoded_data = base64.b64encode(audio_bytes).decode("utf-8")
@@ -2180,7 +2308,7 @@ response = litellm.completion(
                 {
                     "type": "file",
                     "file": {
-                        "file_data": "data:audio/mp3;base64,{}".format(encoded_data), # 👈 SET MIME_TYPE + DATA
+                        "file_data": "data:audio/mp3;base64,{}".format(encoded_data), # SET MIME_TYPE + DATA
                     }
                 },
             ],
@@ -2220,7 +2348,7 @@ import os
 
 os.environ["GEMINI_API_KEY"] = "" 
 
-litellm.set_verbose = True # 👈 See Raw call 
+litellm.set_verbose = True # See Raw call
 
 model = "gemini/{{gemini_flash}}"
 response = litellm.completion(
@@ -2233,7 +2361,7 @@ response = litellm.completion(
                 {
                     "type": "file",
                     "file": {
-                        "file_id": "https://storage...", # 👈 SET THE IMG URL
+                        "file_id": "https://storage...", # SET THE IMG URL
                         "format": "application/pdf" # OPTIONAL
                     }
                 },
@@ -2251,7 +2379,7 @@ import os
 
 os.environ["GEMINI_API_KEY"] = "" 
 
-litellm.set_verbose = True # 👈 See Raw call 
+litellm.set_verbose = True # See Raw call
 
 model = "gemini/{{gemini_flash}}"
 response = litellm.completion(
@@ -2264,7 +2392,7 @@ response = litellm.completion(
                 {
                     "type": "file",
                     "file": {
-                        "file_id": "gs://storage...", # 👈 SET THE IMG URL
+                        "file_id": "gs://storage...", # SET THE IMG URL
                         "format": "application/pdf" # OPTIONAL
                     }
                 },
@@ -2305,7 +2433,7 @@ Use Google AI Studio context caching is supported by
     {
         "role": "system",
         "content": ...,
-        "cache_control": {"type": "ephemeral"} # 👈 KEY CHANGE
+        "cache_control": {"type": "ephemeral"} # KEY CHANGE
     },
     ...
 }
@@ -2324,7 +2452,7 @@ You can now specify a custom Time-To-Live (TTL) for your cached content using th
         "content": ...,
         "cache_control": {
             "type": "ephemeral",
-            "ttl": "3600s"  # 👈 Cache for 1 hour
+            "ttl": "3600s"  # Cache for 1 hour
         }
     },
     ...
@@ -2391,7 +2519,7 @@ for _ in range(2):
                     {
                         "type": "text",
                         "text": "Here is the full text of a complex legal agreement" * 4000,
-                        "cache_control": {"type": "ephemeral"}, # 👈 KEY CHANGE
+                        "cache_control": {"type": "ephemeral"}, # KEY CHANGE
                     }
                 ],
             },
@@ -2408,7 +2536,7 @@ for _ in range(2):
             }]
     )
 
-    print(resp.usage) # 👈 2nd usage block will be less, since cached tokens used
+    print(resp.usage) # 2nd usage block will be less, since cached tokens used
 ```
 
 </TabItem>
@@ -2429,7 +2557,7 @@ resp = completion(
                     "text": "Here is the full text of a complex legal agreement" * 4000,
                     "cache_control": {
                         "type": "ephemeral", 
-                        "ttl": "7200s"  # 👈 Cache for 2 hours
+                        "ttl": "7200s"  # Cache for 2 hours
                     },
                 }
             ],
@@ -2442,7 +2570,7 @@ resp = completion(
                     "text": "What are the key terms and conditions in this agreement?",
                     "cache_control": {
                         "type": "ephemeral",
-                        "ttl": "3600s"  # 👈 This TTL will be ignored (first one is used)
+                        "ttl": "3600s"  # This TTL will be ignored (first one is used)
                     },
                 }
             ],
@@ -2492,7 +2620,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
                     {
                         "type": "text",
                         "text": "Here is the full text of a complex legal agreement" * 4000,
-                        "cache_control": {"type": "ephemeral"}, # 👈 KEY CHANGE
+                        "cache_control": {"type": "ephemeral"}, # KEY CHANGE
                     }
                 ],
             },
@@ -2567,7 +2695,7 @@ response = await client.chat.completions.create(
                     {
                         "type": "text",
                         "text": "Here is the full text of a complex legal agreement" * 4000,
-                        "cache_control": {"type": "ephemeral"}, # 👈 KEY CHANGE
+                        "cache_control": {"type": "ephemeral"}, # KEY CHANGE
                     }
             ],
         },

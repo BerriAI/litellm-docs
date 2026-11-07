@@ -1,5 +1,6 @@
 # Ace Data Cloud media MCP servers
 
+{/* keep-version-note */}
 [简体中文](./acedatacloud_zh.md)
 
 Connect Suno, Seedance, HappyHorse, GPT Image, or Nano Banana to the LiteLLM MCP Gateway. Each service has its own connection and tools. These integrations are maintained by Ace Data Cloud and require your own Ace API token. They are not official integrations from the model brands.

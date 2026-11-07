@@ -224,12 +224,14 @@ function useScrollStage(ref) {
 
 export default function LaunchHero({date, tagline, sections}) {
   const ref = useRef(null);
+  const [animated, setAnimated] = useState(false);
+  useEffect(() => setAnimated(true), []);
   const stage = useScrollStage(ref);
 
   return (
     <>
       <Starfield />
-      <section className={styles.scroller} ref={ref} data-stage={stage}>
+      <section className={styles.scroller} data-full-width data-animated={animated || undefined} ref={ref} data-stage={stage}>
         <div className={styles.hero}>
           <div className={styles.date}>{date}</div>
           <h1 className={styles.headline}>LiteLLM Lens</h1>

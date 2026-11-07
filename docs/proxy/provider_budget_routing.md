@@ -274,7 +274,7 @@ Expected response on failure
 
 </Tabs>
 
-## ✨ Tag Budgets
+## Tag Budgets
 
 <EnterpriseFeature />
 
@@ -377,7 +377,7 @@ router_settings:
       budget_limit: 0.000000000001 # float of $ value budget for time period
       time_period: 1d # can be 1d, 2d, 30d, 1mo, 2mo
   
-  # 👇 Add this: Set Redis Host, Port, and Password if using multiple instance of LiteLLM
+  # Add this: Set Redis Host, Port, and Password if using multiple instance of LiteLLM
   redis_host: os.environ/REDIS_HOST
   redis_port: os.environ/REDIS_PORT
   redis_password: os.environ/REDIS_PASSWORD

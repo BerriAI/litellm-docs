@@ -171,6 +171,7 @@ Inherits from `StandardLoggingUserAPIKeyMetadata` and adds:
 | `error_code` | `Optional[str]` | Optional error code (eg. "429") |
 | `error_class` | `Optional[str]` | Optional error class (eg. "RateLimitError") |
 | `llm_provider` | `Optional[str]` | LLM provider that returned the error (eg. "openai")` |
+| `error_cooldown_deployments` | `Optional[Tuple[CooldownDeploymentInfo, ...]]` | Set when the router refused the request because every deployment it could route to was in cooldown. Each entry has the deployment's `model_id` and configured `api_base`, with any `key=` value masked. Deployments the request's team, tags or allowed region rule out are left out. `None` for every other error |
 
 ## StandardLoggingPayloadStatus
 

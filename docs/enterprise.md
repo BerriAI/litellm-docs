@@ -20,10 +20,10 @@ Enterprise is a license key on the same Gateway image you may already run. Nothi
 <Tiles size="lg" columns={3} items={[
   {icon: 'compliance', title: 'Audited security you can hand to your review team', text: 'SOC 2 Type II audited, self-hosted so no data leaves your environment, and signed Docker images you can verify.', to: 'https://trust.litellm.ai/', more: 'Verify the signed images', moreTo: '/docs/proxy/docker_image_security'},
   {icon: 'sso', title: 'Everyone signs in with your identity provider', text: 'SSO and SCIM for Okta, Entra ID, Google Workspace, or any OIDC or SAML provider. Access follows your org chart.', to: '/docs/proxy/admin_ui_sso'},
-  {icon: 'audit', title: 'Every admin action is on record', text: 'Audit logs of key, team, and model changes, with retention policies your compliance team sets.', to: '/docs/proxy/multiple_admins'},
+  {icon: 'audit', title: 'Every admin action is on record', text: 'Audit logs of key, team, and model changes, with retention policies your compliance team sets.', to: '/docs/proxy/audit_logs'},
   {icon: 'budget', title: 'Teams run their own keys and budgets', text: 'Team admins manage keys, models, and budgets per project, tag, and model without the master key, with alerts before anyone hits a cap.', to: '/docs/proxy/access_control'},
   {icon: 'secrets', title: 'Provider keys stay in your vault', text: 'AWS, Azure, Google, HashiCorp Vault, and CyberArk secret managers, with automatic virtual key rotation.', to: '/docs/secret_managers/overview'},
-  {icon: 'support', title: 'Engineers on call', text: 'A dedicated Slack or Teams channel with the people who build LiteLLM, and 24/7 SLAs down to one hour.', to: '/docs/enterprise/support'},
+  {icon: 'support', title: 'Engineers on call', text: 'A shared Slack Connect channel with the people who build LiteLLM, and 24/7 SLAs down to one hour.', to: '/docs/enterprise/support'},
 ]} />
 
 <SalesBand source="enterprise-page-mid" title="See it running on your own infrastructure" text="Talk to the team about your rollout and security review, and start a 30-day trial with a full license." />
@@ -40,7 +40,7 @@ Everything below is enabled by the license key. Each item links to its setup gui
 
 - **[SSO for the Admin UI](./proxy/admin_ui_sso.md)**. Okta, Azure AD, Google Workspace, and any OIDC/SAML provider
 - **[JWT-based Authentication](./proxy/token_auth.md)**. Authenticate requests with your identity provider's tokens
-- **[Audit Logs with retention policies](./proxy/multiple_admins.md)**. Track every admin action and key-level change
+- **[Audit Logs with retention policies](./proxy/audit_logs.md)**. Track every admin action and key-level change
 - **[Role-Based Access Control](./proxy/access_control.md)**. Organizations, teams, and user roles
 - **[Public and private route controls](./proxy/public_routes.md)**. Restrict admin routes and lock down surface area
 - **[IP address-based access control lists](./proxy/ip_address.md)**. Restrict proxy access to specific CIDR ranges
@@ -92,11 +92,11 @@ Pricing depends on your deployment size. [Get in touch](https://enterprise.litel
 
 ## Support {#professional-support}
 
-Every license includes a dedicated Slack or Teams channel with the engineering team. With the optional 24/7 SLAs, the response time is 1 hour for Sev 0 and 72 hours for security patches. See [Support and SLA](/docs/enterprise/support) for hours, the full severity table, and custom SLAs.
+Every license includes a shared Slack Connect channel with the engineering team, or support by email at [support@berri.ai](mailto:support@berri.ai). With the optional 24/7 SLAs, the response time is 1 hour for Sev 0 and 72 hours for security patches. See [Support and SLA](/docs/enterprise/support) for hours, the full severity table, and custom SLAs.
 
 ## Version support
 
-LiteLLM supports the four most recent stable minor lines, and Enterprise and open source share one image and one version number. See [Version support](/docs/enterprise/version_support).
+LiteLLM supports the four most recent stable minor lines, and Enterprise and open source share one image and one version number. See [Version support](/docs/enterprise/version_support). This policy is paused during the [LTS pilot](/docs/enterprise/lts_pilot).
 
 ## FAQ
 

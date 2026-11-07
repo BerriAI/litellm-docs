@@ -259,11 +259,15 @@ litellm_settings:
         api_key: os.environ/YOUR_GUARDRAIL_API_KEY  # optional
         unreachable_fallback: fail_closed  # default: fail_closed. Set to fail_open to proceed if the guardrail endpoint is unreachable (network errors, or HTTP 502/503/504 from an upstream proxy/LB).
         fail_on_error: true  # default: true (fail closed). Set to false to proceed on ANY guardrail error. See "Error handling" below before changing this.
+        num_retries: 1  # optional. Resend a check that timed out waiting for the answer or lost its connection, on a fresh connection. See "Retries" below.
+        forward_messages_as_sent: false  # default: false. Set to true to receive structured_messages as the client sent it. See below.
         additional_provider_specific_params:
           # your custom parameters
           threshold: 0.8
           language: "en"
 ```
+
+With `forward_messages_as_sent: true`, `structured_messages` arrives as the client sent it, keeping keys and content blocks the OpenAI chat format does not declare, so rows may not be OpenAI-shaped.
 
 ### Error handling: `unreachable_fallback` and `fail_on_error`
 
@@ -286,6 +290,26 @@ Only a valid guardrail response can act. With `fail_on_error: false`, a parsed `
 :::
 
 The default is fail closed precisely because a guardrail is usually a security control. Every fail-open bypass is logged at critical level (`Generic Guardrail API error (fail-open) ...`) with the call id and trace id, so you can alert on it and audit how often it happens.
+
+### Retries: `num_retries`
+
+A guardrail check can be lost after it was sent: the guardrail holds the request past the `timeout`, or a load balancer closes the idle keep-alive connection the check was sent on. Set `num_retries` to resend the check in those cases instead of failing the request.
+
+```yaml
+litellm_params:
+  guardrail: generic_guardrail_api
+  api_base: https://your-guardrail-api.com
+  timeout: 5
+  num_retries: 1
+```
+
+- `num_retries` is the number of extra attempts after the first one. Unset or `0` sends each check once, which is the default. The most allowed is `5`.
+- Each retry opens a fresh connection to the guardrail and gets the full `timeout` again, so the worst-case latency of a check is `timeout x (num_retries + 1)`.
+- Only failures that happen after the connection was established are retried: a read or write timeout, a connection reset, or the server disconnecting without a response.
+- Connect timeouts and refused connections are not retried by `num_retries`, since an endpoint that does not accept connections rarely recovers within the same request. HTTP error statuses (for example 500 or 503) and `BLOCKED` verdicts are never retried.
+- When every attempt fails, `unreachable_fallback` and `fail_on_error` decide what happens to the request, the same as without retries.
+
+Only enable retries when your guardrail endpoint is safe to call twice for the same input, which is the case for classification-style guardrails that do not keep state per call. Each retry is logged at warning level (`Generic Guardrail API check timed out or lost its connection, retrying on a fresh connection`).
 
 ### Static and dynamic headers
 

@@ -43,9 +43,31 @@ Point the proxy at your own copy of the map with:
 
 ```bash
 export LITELLM_MODEL_COST_MAP_URL="https://your-host.example.com/model_prices.json"
+# or read it straight from a private S3 bucket
+export LITELLM_MODEL_COST_MAP_URL="s3://my-bucket/prices/model_prices.json"
 ```
 
-The map is fetched once at startup with a 5 second timeout, so the variable must be set before the proxy starts and changes require a restart. The URL must be HTTP(S); `file://` paths are not supported. To run fully offline instead, set `LITELLM_LOCAL_MODEL_COST_MAP=True`, which skips the fetch and uses the backup map bundled with the package (`litellm/model_prices_and_context_window_backup.json`), a file you can overwrite in your own image.
+The map is fetched at startup with a 5 second timeout, so the variable must be set in the proxy's environment before it starts (a `.env` file, `docker run -e`, or the Kubernetes `env:` block); setting it under `environment_variables` in `config.yaml` is too late. The URL can be HTTP(S) or `s3://`; `file://` paths are not supported. To run fully offline instead, set `LITELLM_LOCAL_MODEL_COST_MAP=True`, which skips the fetch and uses the backup map bundled with the package (`litellm/model_prices_and_context_window_backup.json`), a file you can overwrite in your own image.
+
+### Reading the map from S3
+
+With an `s3://bucket/key` URL the proxy reads the object with boto3 `get_object` at startup, on `POST /reload/model_cost_map`, and on the scheduled reload. This needs a LiteLLM version that includes [PR #46972](https://github.com/BerriAI/litellm/pull/46972).
+
+LiteLLM has no setting of its own for these credentials. boto3 finds them the standard AWS way in the proxy's process: the IAM role of the pod or instance (EKS IRSA, ECS task role, EC2 instance role), `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` (plus `AWS_SESSION_TOKEN` for temporary keys), or `AWS_PROFILE` with a mounted AWS config file. AWS credentials in `config.yaml`, including the Bedrock `aws_access_key_id` and `aws_role_name` params, are not used, because the map is fetched before the config is loaded. Set `AWS_REGION_NAME` to pin the bucket's region; it is optional.
+
+The identity needs `s3:GetObject` on the object:
+
+```json
+{
+  "Effect": "Allow",
+  "Action": "s3:GetObject",
+  "Resource": "arn:aws:s3:::my-bucket/prices/model_prices.json"
+}
+```
+
+If the bucket is in another AWS account, the bucket's policy must also allow the proxy's role as a principal. If the object is encrypted with a customer managed KMS key, the role also needs `kms:Decrypt` on that key. S3 compatible endpoints such as MinIO are not supported.
+
+S3 errors are not retried. At startup a missing credential, `AccessDenied`, or `NoSuchKey` falls back to the bundled map with the error in `fallback_reason` (for example `Remote fetch failed: S3 NoCredentialsError fetching s3://my-bucket/prices/model_prices.json: Unable to locate credentials`), and a reload keeps the current map, so check `/model/cost_map/source` after the first deploy as described below.
 
 ### Start from the full upstream file
 
@@ -66,7 +88,7 @@ The response reports `source` ("remote" or "local"), the attempted `url`, a huma
 
 ### Production checklist
 
-1. Host the file as a versioned artifact on infrastructure you control (object storage behind a CDN or an internal endpoint), reachable within 5 seconds from every proxy pod.
+1. Host the file as a versioned artifact on infrastructure you control (an S3 object read through `s3://`, object storage behind a CDN, or an internal endpoint), reachable within 5 seconds from every proxy pod.
 2. Alert on `/model/cost_map/source` reporting a fallback.
 3. Set a re-sync cadence with the upstream map so pricing for newly released models is not frozen at fork time.
 4. Treat the custom map as temporary where possible: upstream your correction to the default map, then drop the fork.

@@ -211,6 +211,7 @@ print(response)
 ## Supported Models
 | Model Name | Function Call |
 |------------|----------------|
+| north-large-01-2026 | `litellm.completion('cohere_chat/north-large-01-2026', messages)` |
 | command-a-03-2025 | `litellm.completion('command-a-03-2025', messages)` |
 | command-r-plus-08-2024 | `litellm.completion('command-r-plus-08-2024', messages)` |  
 | command-r-08-2024 | `litellm.completion('command-r-08-2024', messages)` |
@@ -218,6 +219,22 @@ print(response)
 | command-r | `litellm.completion('command-r', messages)` |
 | command-light | `litellm.completion('command-light', messages)` |  
 | command-nightly | `litellm.completion('command-nightly', messages)` |
+
+### Cost tracking for north-large-01-2026
+
+Cohere does not publish a per-token price for `north-large-01-2026`, so LiteLLM has no default price for it and records its spend as $0 until you set one. Set your contract price on the deployment to track cost:
+
+```yaml
+model_list:
+  - model_name: north-large
+    litellm_params:
+      model: cohere_chat/north-large-01-2026
+      api_key: os.environ/COHERE_API_KEY
+      input_cost_per_token: 0.000001
+      output_cost_per_token: 0.000002
+```
+
+Replace the two example prices with your contract prices in USD per token. See [Custom Pricing](../proxy/custom_pricing) for the other pricing fields.
 
 
 ## Embedding

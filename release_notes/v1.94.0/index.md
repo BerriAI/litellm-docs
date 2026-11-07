@@ -1,5 +1,6 @@
 ---
-title: "v1.94.0 - Router Plugins, MCP Client-Held Credentials & Shared DataTable UI"
+title: "LiteLLM v1.94.0 - Router Plugins, MCP Client-Held Credentials & Shared DataTable UI"
+description: "Adds a router plugin pipeline, a beta Cost Optimization page and Python 3.14 support. Known issue: user budgets applied to team keys."
 slug: "v1-94-0"
 date: 2026-07-28T00:00:00
 authors:

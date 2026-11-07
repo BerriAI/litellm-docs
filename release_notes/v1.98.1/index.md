@@ -1,5 +1,6 @@
 ---
-title: "v1.98.1 - Claude Code on Bedrock GPT and Grok, End-User Budget Resets"
+title: "LiteLLM v1.98.1 fixes Claude Code on Bedrock GPT and Grok models"
+description: "Fixes Claude Code model switches to Bedrock GPT and Grok models, removes the thinking block for Bedrock GPT-6 and fixes end-user budget resets."
 slug: "v1-98-1"
 date: 2026-09-25T06:20:00
 authors:

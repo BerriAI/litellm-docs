@@ -1,5 +1,6 @@
 ---
-title: "v1.105.0 - Claude Sonnet 5.5, GPT-6.1 Sol, Decisions API, litellm.agent() & Lens"
+title: "LiteLLM v1.105.0 adds Claude Sonnet 5.5, the Decisions API and litellm.agent()"
+description: "Adds Claude Sonnet 5.5 on day one, the Decisions API on /v1/decisions and /v1/systemone, and litellm.agent() for coding agents through the gateway."
 slug: "v1-105-0"
 date: 2026-10-11T00:00:00
 authors:

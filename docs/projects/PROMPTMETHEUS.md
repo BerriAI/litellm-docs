@@ -1,4 +1,4 @@
-🔥 PROMPTMETHEUS – Prompt Engineering IDE
+PROMPTMETHEUS – Prompt Engineering IDE
 
 Compose, test, optimize, and deploy reliable prompts for large language models.
 

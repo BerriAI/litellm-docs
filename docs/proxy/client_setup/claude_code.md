@@ -1,6 +1,5 @@
 ---
 title: Claude Code (CLI)
-sidebar_label: Claude Code (CLI)
 ---
 
 import Image from '@theme/IdealImage';
@@ -40,6 +39,8 @@ Claude Code sends every request to LiteLLM's `/v1/messages` endpoint with your v
 
 Claude Code sends whatever model id is selected, so that id has to exist as a `model_name` on your gateway. `ANTHROPIC_MODEL` pins the default to one of your names. The `/model` picker inside a session still lists Anthropic's own ids (for example `claude-haiku-4-5-20251001`), so choosing one there fails with `Invalid model name passed in` unless your config also defines that exact name; either add those names to `model_list` or keep switching models through `ANTHROPIC_MODEL`. [Route Claude Code to non-Anthropic models](../../tutorials/claude_non_anthropic_models.md) covers mapping the Sonnet, Opus, and Haiku tiers to any provider.
 
+Your team or key must allow the selected model. If access is restricted, set `ANTHROPIC_MODEL` to an allowed alias.
+
 ### 3. Verify
 
 Send a prompt. Here Claude Code 2.1 is answering through a local gateway with `ANTHROPIC_MODEL` set to a model from `model_list`:
@@ -50,11 +51,19 @@ Then confirm the traffic in the Admin UI under **Logs** or **Usage**, attributed
 
 ## Sign in without a static key
 
-[Claude Code Gateway SSO](../../tutorials/claude_code_gateway.md) is the native device sign-in option recommended for fleet rollout, with no per-user keys. You can also use [`lite auth print-token`](../cli_sso.md#use-the-credential-from-other-tools) as `apiKeyHelper` after [`lite login --pkce`](../cli_sso.md#browser-sign-in-with-pkce), or use an [IdP JWT helper](../../tutorials/claude_code_okta_sso.md)
+See [Claude Code sign-in](../../tutorials/claude_code_gateway.md) for Claude apps gateway setup, Lite CLI sign-in, and using a Claude subscription through LiteLLM.
 
-`lite login --pkce --config-claude` writes this login's key to `~/.claude/settings.json` as `env.ANTHROPIC_AUTH_TOKEN`; rerun it after the key expires, or set `apiKeyHelper` so Claude Code fetches a fresh token itself
+## Use an identity provider token
 
-If a user's team or key restricts models, Claude Code's default model name must be on that list, or set `ANTHROPIC_MODEL` to an allowed alias. Otherwise requests fail with `403 The requested model '...' is not available for this API key`
+If your administrator has configured [identity-to-Virtual-Key mapping](../jwt_key_mapping.md), Claude Code can send your identity provider's JWT directly. Set the gateway URL and bearer token, and clear any conflicting API key:
+
+```bash
+export ANTHROPIC_BASE_URL="http://localhost:4000"
+export ANTHROPIC_AUTH_TOKEN="<identity-provider-jwt>"
+unset ANTHROPIC_API_KEY
+```
+
+Your identity-provider integration must obtain and refresh this token. Setting environment variables does not start a sign-in flow. For browser sign-in that supplies a client credential, use [CLI sign-in](../cli_sso.md).
 
 ## MCP setup
 

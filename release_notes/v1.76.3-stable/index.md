@@ -1,5 +1,6 @@
 ---
-title: "v1.76.3-stable - Performance, Video Generation & CloudZero Integration"
+title: "LiteLLM v1.76.3-stable - Performance, Video Generation & CloudZero Integration"
+description: "Adds Veo video generation for Google AI Studio and Vertex AI, a CloudZero spend export integration and a 400 RPS gain from worker settings."
 slug: "v1-76-3"
 date: 2025-09-06T10:00:00
 authors:

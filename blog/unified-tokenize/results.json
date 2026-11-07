@@ -1,0 +1,177 @@
+{
+  "environment": {
+    "measured_at_utc": "2026-10-23T20:13:04.933292+00:00",
+    "machine": "Apple M4 Max",
+    "logical_cpus": 16,
+    "os": "macOS 15.5",
+    "python": "3.12.13",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14) (Homebrew)",
+    "uvicorn": "0.51.0",
+    "extension_profile": "release",
+    "build_command": "uv run --no-sync maturin develop --release",
+    "extension_sha256": "98779fadd7e1dd52df736c3e49f4fd1f202defcdf83ce794146f17bc9c452e2a",
+    "implementation_commit": "5f68bf4893f38a3c287ee83bb82aaf84f5c4f885"
+  },
+  "methodology": {
+    "api": "litellm.atokenize",
+    "requests_per_trial": 4096,
+    "warmup_requests_per_concurrency": 256,
+    "trials": 3,
+    "concurrency": [
+      1,
+      8,
+      32
+    ],
+    "prompt": "Hello world",
+    "provider_response": {
+      "count": 2,
+      "tokens": [
+        101,
+        102
+      ],
+      "token_strs": [
+        "Hello",
+        " world"
+      ]
+    },
+    "provider_requests_verified": 37632,
+    "errors": 0,
+    "summary_selection": "Trial with median throughput at each concurrency; latency percentiles from that same trial.",
+    "load": "Closed-loop workers; each worker starts its next call after its previous call completes.",
+    "timing": "Latency spans await atokenize; throughput also includes validation of each returned response.",
+    "scope": "Public async Python SDK, Python/Rust bridge, Rust provider integration, loopback HTTP, independent uvicorn/h11 stub, response normalization.",
+    "excluded": "Real provider tokenization, external network, TLS, cold starts, proxy authentication/routing, database, and configured observability callbacks.",
+    "caveat": "Local development-machine measurement. Fixed mock provider response. Not a provider latency benchmark or a comparison with Python."
+  },
+  "results": [
+    {
+      "concurrency": 1,
+      "requests": 4096,
+      "elapsed_seconds": 2.189993082998626,
+      "requests_per_second": 1870.3255420293808,
+      "p50_ms": 0.5147499996382976,
+      "p95_ms": 0.6067920003260951,
+      "p99_ms": 0.7400419999612495,
+      "max_ms": 6.083333000788116,
+      "trial": 1,
+      "trials": [
+        {
+          "requests": 4096,
+          "elapsed_seconds": 2.189993082998626,
+          "requests_per_second": 1870.3255420293808,
+          "p50_ms": 0.5147499996382976,
+          "p95_ms": 0.6067920003260951,
+          "p99_ms": 0.7400419999612495,
+          "max_ms": 6.083333000788116,
+          "trial": 1
+        },
+        {
+          "requests": 4096,
+          "elapsed_seconds": 2.1784653330014407,
+          "requests_per_second": 1880.222713646135,
+          "p50_ms": 0.5130830013513332,
+          "p95_ms": 0.6134579998615663,
+          "p99_ms": 0.7523330004914897,
+          "max_ms": 2.1363750001910375,
+          "trial": 2
+        },
+        {
+          "requests": 4096,
+          "elapsed_seconds": 2.4243766669987963,
+          "requests_per_second": 1689.5064433492314,
+          "p50_ms": 0.5287704998409026,
+          "p95_ms": 0.8432089998677839,
+          "p99_ms": 1.4868749985907925,
+          "max_ms": 11.97291700009373,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "concurrency": 8,
+      "requests": 4096,
+      "elapsed_seconds": 1.3180156660000648,
+      "requests_per_second": 3107.7020597415258,
+      "p50_ms": 2.5449579998166882,
+      "p95_ms": 3.004416999829118,
+      "p99_ms": 3.342541000165511,
+      "max_ms": 4.046750000270549,
+      "trial": 3,
+      "trials": [
+        {
+          "requests": 4096,
+          "elapsed_seconds": 1.3163622499996563,
+          "requests_per_second": 3111.6054870162598,
+          "p50_ms": 2.5404585003343527,
+          "p95_ms": 2.9957919996377314,
+          "p99_ms": 3.3775419997255085,
+          "max_ms": 5.274999999528518,
+          "trial": 1
+        },
+        {
+          "requests": 4096,
+          "elapsed_seconds": 1.3726147920006042,
+          "requests_per_second": 2984.0855743875713,
+          "p50_ms": 2.6313124999433057,
+          "p95_ms": 3.247374999773456,
+          "p99_ms": 3.8091670012363466,
+          "max_ms": 5.151082999873324,
+          "trial": 2
+        },
+        {
+          "requests": 4096,
+          "elapsed_seconds": 1.3180156660000648,
+          "requests_per_second": 3107.7020597415258,
+          "p50_ms": 2.5449579998166882,
+          "p95_ms": 3.004416999829118,
+          "p99_ms": 3.342541000165511,
+          "max_ms": 4.046750000270549,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "concurrency": 32,
+      "requests": 4096,
+      "elapsed_seconds": 1.3111478329992678,
+      "requests_per_second": 3123.9802994833512,
+      "p50_ms": 10.063187500236381,
+      "p95_ms": 11.23991699932958,
+      "p99_ms": 13.973832999909064,
+      "max_ms": 22.033166998880915,
+      "trial": 1,
+      "trials": [
+        {
+          "requests": 4096,
+          "elapsed_seconds": 1.3111478329992678,
+          "requests_per_second": 3123.9802994833512,
+          "p50_ms": 10.063187500236381,
+          "p95_ms": 11.23991699932958,
+          "p99_ms": 13.973832999909064,
+          "max_ms": 22.033166998880915,
+          "trial": 1
+        },
+        {
+          "requests": 4096,
+          "elapsed_seconds": 1.29883533300017,
+          "requests_per_second": 3153.5945288296707,
+          "p50_ms": 9.955667000212998,
+          "p95_ms": 11.643541000012192,
+          "p99_ms": 13.211625000622007,
+          "max_ms": 18.283332999999402,
+          "trial": 2
+        },
+        {
+          "requests": 4096,
+          "elapsed_seconds": 1.4690136669996718,
+          "requests_per_second": 2788.265413735538,
+          "p50_ms": 11.02652100053092,
+          "p95_ms": 14.865999999528867,
+          "p99_ms": 16.851541000505676,
+          "max_ms": 18.713375000515953,
+          "trial": 3
+        }
+      ]
+    }
+  ]
+}

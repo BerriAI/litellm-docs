@@ -10,7 +10,7 @@ Use web search with litellm
 | Supported Endpoints | - `/chat/completions` <br/> - `/responses` <br/> - `/images/generations` (Gemini image models only) |
 | Supported Providers | `openai`, `xai`, `vertex_ai`, `anthropic`, `gemini`, `perplexity` |
 | LiteLLM Cost Tracking | ✅ Supported |
-| LiteLLM Version | `v1.71.0+` |
+| LiteLLM Version | <SinceVersion v="1.71.0" /> |
 
 ## Which Search Engine is Used?
 
@@ -52,7 +52,7 @@ OpenAI offers two distinct ways to use web search depending on the endpoint and 
 | Approach | Endpoint | Models | How to enable |
 |----------|----------|--------|---------------|
 | **Search Models** | `/chat/completions` | `gpt-5-search-api`, `gpt-4o-search-preview`, `gpt-4o-mini-search-preview` | Pass `web_search_options` parameter |
-| **Web Search Tool** | `/responses` | `gpt-5`, `gpt-4.1`, `gpt-4o`, and other regular models | Pass `web_search_preview` tool |
+| **Web Search Tool** | `/responses` | `{{openai_large}}`, `{{openai_small}}`, and other regular models | Pass `web_search_preview` tool |
 
 :::tip[Search models search automatically]
 Search models like `gpt-5-search-api` **automatically search the web** even without the `web_search_options` parameter. Use `web_search_options` to set `search_context_size` (`"low"`, `"medium"`, `"high"`) or specify `user_location` for localized results.
@@ -670,6 +670,35 @@ model_list:
         search_context_size_medium: 0.014
         search_context_size_high: 0.014
 ```
+
+### Google's free grounding allowance
+
+Google gives every billing account a free allowance of Google Search grounding before the per-query price applies: 5,000 queries per month shared across the Gemini 3 models, 1,500 grounded prompts per day shared across Gemini 2.0 Flash, 2.5 Flash and 2.5 Flash-Lite, and 10,000 grounded prompts per day for Gemini 2.5 Pro. By default LiteLLM bills grounding from the first query, so logged grounding spend is an upper bound on the Google invoice.
+
+The cost map describes each allowance with `search_free_requests` on the Gemini rows. `count` is the free units per period, `period` is `"day"` or `"month"`, and models with the same `shared_group` draw from one pool, counted in the row's `web_search_billing_unit`.
+
+```json keep-model-ids
+{
+    "gemini/{{gemini_flash}}": {
+        "web_search_billing_unit": "per_query",
+        "search_free_requests": {"count": 5000, "period": "month", "shared_group": "gemini-3"}
+    }
+}
+```
+
+The field does nothing on its own. To have the proxy log grounding at $0 until the shared allowance is used up, opt in with `apply_search_free_tier`. The proxy keeps one counter per `shared_group` and UTC period in its Redis, the same Redis it uses for budgets, so every proxy instance draws from the same pool and a restart does not reset it. A request that crosses the allowance is split: the queries still inside it are free and the rest are billed at `search_context_cost_per_query`. The spend row keeps the full price in `metadata.cost_breakdown.original_cost` and the freed amount in `discount_amount`.
+
+```yaml
+litellm_settings:
+  apply_search_free_tier: true   # default false
+  cache: true
+  cache_params:
+    type: redis
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+```
+
+Two things to know before turning it on. The allowance is per Google billing account and LiteLLM only sees its own traffic, so if anything else on the account also grounds, LiteLLM frees queries that Google billed and the logged spend becomes a lower bound inside the allowance window; leave the setting off if other workloads share the account. Google does not publish the time zone its allowance resets in, so LiteLLM resets on the UTC calendar day and month. Without Redis, or when the counter cannot be reached, the request is billed at full price and a warning is logged. The `x-litellm-response-cost` header and logging callbacks still report the pre-allowance cost; only the spend row, budgets and spend counters see the reduced spend.
 
 ### How LiteLLM tracks search usage
 

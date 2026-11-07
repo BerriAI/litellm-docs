@@ -1,5 +1,6 @@
 # Ace Data Cloud 媒体 MCP 接入
 
+{/* keep-version-note */}
 [English](./acedatacloud.md)
 
 通过 LiteLLM MCP Gateway 使用 Suno、Seedance、HappyHorse、GPT Image 和 Nano Banana。每项服务使用独立连接与工具，由 Ace Data Cloud 维护，并需填写自己的 Ace 业务 API Token。它们不代表模型品牌的官方集成。

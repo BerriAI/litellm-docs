@@ -41,66 +41,74 @@ const ICONS = {
   sdk: icon(<>
     <path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" />
   </>),
-  lens: icon(<>
-    <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
-    <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
-    <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4" />
-    <path d="M17.599 6.5a3 3 0 0 0 .399-1.375" />
-    <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" />
-    <path d="M3.477 10.896a4 4 0 0 1 .585-.396" />
-    <path d="M19.938 10.5a4 4 0 0 1 .585.396" />
-    <path d="M6 18a4 4 0 0 1-1.967-.516" />
-    <path d="M19.967 17.484A4 4 0 0 1 18 18" />
-  </>),
   logs: icon(<>
     <path d="M3 3v18h18" />
     <path d="M7 15l4-5 3 3 5-7" />
   </>),
-  terminal: icon(<>
-    <rect x="3" y="4" width="18" height="16" rx="2" />
-    <path d="M7 9l3 3-3 3M13 15h4" />
+  models: icon(<>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+  </>),
+  subscriptions: icon(<>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="M3 10h18M7 15h4" />
   </>),
 };
 
 const HOME = {id: 'home', icon: 'home', title: 'Home', desc: 'Get started with LiteLLM', to: '/docs/'};
 
-// Each column holds one or more groups, each with its own heading.
+// Each column holds one or more groups. A group's `featured` items sit first,
+// in a highlighted box.
 const COLUMNS = [
   [
     {
-      heading: 'Build',
+      featured: [
+        {id: 'gateway', icon: 'gateway', title: 'AI Gateway', desc: 'Route and control LLM traffic', to: '/docs/simple_proxy'},
+        {id: 'router', icon: 'router', title: 'Auto Router', desc: 'Best model for each request', to: '/docs/auto_router'},
+        {id: 'subscriptions', icon: 'subscriptions', title: 'Claude, Codex & Copilot', desc: 'Use your existing subscriptions', to: '/docs/subscriptions'},
+      ],
       items: [
-        {id: 'gateway', icon: 'gateway', title: 'AI Gateway', desc: 'Route, control, and observe LLM traffic', to: '/docs/simple_proxy'},
-        {id: 'mcp', icon: 'mcp', title: 'MCP Gateway', desc: 'Give agents governed access to tools', to: '/docs/mcp'},
-        {id: 'agent', icon: 'agent', title: 'Agent Gateway', desc: 'Register and invoke A2A agents', to: '/docs/a2a'},
-        {id: 'router', icon: 'router', title: 'Auto Router', desc: 'Send each request to the best model', to: '/docs/auto_router'},
-        {id: 'sdk', icon: 'sdk', title: 'Python SDK', desc: 'Call 100+ LLMs with one interface', to: '/docs/python_sdk'},
+        {id: 'logs', icon: 'logs', title: 'Logging & Observability', short: 'Logging', desc: 'Logs, spend, and callbacks', to: '/docs/proxy/logging'},
       ],
     },
   ],
   [
     {
-      heading: 'Monitor',
       items: [
-        {id: 'lens', icon: 'lens', title: 'Lens', desc: 'Trace agent swarms and find what to improve', to: '/docs/proxy/lens'},
-        {id: 'logs', icon: 'logs', title: 'AI Gateway - Logging & Observability', short: 'Logging', desc: 'Logs, spend, and callbacks for every request', to: '/docs/proxy/logging'},
-      ],
-    },
-    {
-      heading: 'Self-Hosted Coding Agents',
-      items: [
-        {id: 'moyai', icon: 'terminal', title: 'Moyai', desc: 'Open source coding agent for background work', to: '/docs/self_hosted_coding_agents/moyai'},
+        {id: 'mcp', icon: 'mcp', title: 'MCP Gateway', desc: 'Give agents governed access to tools', to: '/docs/mcp'},
+        {id: 'agent', icon: 'agent', title: 'Agent Gateway', desc: 'Register and invoke A2A agents', to: '/docs/a2a'},
+        {id: 'sdk', icon: 'sdk', title: 'Python SDK', desc: 'Call 100+ LLMs with one interface', to: '/docs/python_sdk'},
+        {id: 'models', icon: 'models', title: 'Model Catalog', desc: 'Pricing and context windows', to: 'https://models.litellm.ai'},
       ],
     },
   ],
 ];
 
-const ALL_ITEMS = [HOME, ...COLUMNS.flat().flatMap((g) => g.items)];
+// Every item gets a cell on one grid, so the rows of both columns line up.
+// Row 1 is Home. On desktop each column fills rows 2 and down; on phones the
+// columns stack, so the second column continues below the first.
+const CELLS = (() => {
+  let phoneRow = 2;
+  return COLUMNS.flatMap((groups, col) => {
+    let row = 2;
+    return groups.flatMap((g) => [
+      ...(g.featured || []).map((item) => ({item, featured: true})),
+      ...g.items.map((item) => ({item, featured: false})),
+    ]).map((cell) => ({...cell, col: col + 1, row: row++, phoneRow: phoneRow++}));
+  });
+})();
+const FEATURED_ROWS = CELLS.filter((c) => c.featured).length;
+const ROWS = Math.max(...CELLS.map((c) => c.row)) - 1;
+
+const ALL_ITEMS = [HOME, ...COLUMNS.flat().flatMap((g) => [...(g.featured || []), ...g.items])];
 
 // Ordered most-specific first: /docs/proxy/lens must win over the /docs/proxy prefix.
+// Lens and Moyai have no menu entry, so their pages show Home.
 const SECTION_MATCHERS = [
-  ['moyai', ({pathname}) => pathname.startsWith('/docs/self_hosted_coding_agents')],
-  ['lens', ({pathname}) => pathname.startsWith('/docs/proxy/lens')],
+  ['subscriptions', ({pathname}) => pathname.startsWith('/docs/subscriptions')],
+  ['home', ({pathname}) => pathname.startsWith('/docs/self_hosted_coding_agents') || pathname.startsWith('/docs/proxy/lens')],
   ['logs', ({pathname}) => pathname.startsWith('/docs/proxy/logging')],
   ['mcp', ({pathname}) => pathname.startsWith('/docs/mcp')],
   ['agent', ({pathname}) => pathname.startsWith('/docs/a2a')],
@@ -114,9 +122,10 @@ function currentItem(location) {
   return ALL_ITEMS.find((item) => item.id === (hit ? hit[0] : 'home'));
 }
 
-function MenuLink({item, active, onNavigate}) {
+function MenuLink({item, active, onNavigate, className = '', style}) {
   return (
-    <Link className={`${styles.item} ${active ? styles.itemActive : ''}`} to={item.to} onClick={onNavigate}>
+    <Link className={`${styles.item} ${active ? styles.itemActive : ''} ${className}`} style={style}
+      to={item.to} onClick={onNavigate}>
       <span className={styles.icon}>{ICONS[item.icon]}</span>
       <span className={styles.text}>
         <span className={styles.title}>{item.title}</span>
@@ -207,17 +216,17 @@ export default function ProductsMenu({mobile}) {
         <div className={styles.home}>
           <MenuLink item={HOME} active={current.id === HOME.id} onNavigate={close} />
         </div>
-        {COLUMNS.map((groups) => (
-          <div key={groups[0].heading} className={styles.column}>
-            {groups.map((group) => (
-              <React.Fragment key={group.heading}>
-                <div className={styles.heading}>{group.heading}</div>
-                {group.items.map((item) => (
-                  <MenuLink key={item.id} item={item} active={current.id === item.id} onNavigate={close} />
-                ))}
-              </React.Fragment>
-            ))}
-          </div>
+        <span className={styles.featuredBox} style={{gridRow: `2 / span ${FEATURED_ROWS}`}} aria-hidden="true" />
+        <span className={styles.divider} style={{gridRow: `2 / span ${ROWS}`}} aria-hidden="true" />
+        {CELLS.map(({item, featured, col, row, phoneRow}) => (
+          <MenuLink
+            key={item.id}
+            item={item}
+            active={current.id === item.id}
+            onNavigate={close}
+            className={`${styles.cell} ${col === 1 ? styles.cellLeft : styles.cellRight} ${featured ? styles.itemFeatured : ''}`}
+            style={{'--col': col, '--row': row, '--phone-row': phoneRow}}
+          />
         ))}
       </div>
     </div>

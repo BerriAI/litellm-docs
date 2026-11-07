@@ -288,7 +288,7 @@ litellm_settings:
   set_verbose: True
   cache: True
   cache_params:
-    mode: default_off # 👈 Key change cache is default_off
+    mode: default_off # Key change cache is default_off
 ```
 
 2. **Opting in to cache when cache is default off**

@@ -19,7 +19,7 @@ LiteLLM Lens uses AI agents to analyze your agent traces and find recurring prob
 
 Use **Lens > Traces** to manually inspect individual runs. Use **Lens > Investigations** to investigate a set of runs, on demand or on a schedule.
 
-Before setup, click **Preview sample** beside the Lens title to explore sample traces, investigations, and linked evidence. **Exit demo** returns to your own workspace.
+Before setup, turn on **Demo data** at the top right of Lens to explore sample traces, investigations, and linked evidence. Turn it off to return to your own workspace. To see the fields of a finding before you set anything up, read the [sample finding](./api.md#read-findings) in the API reference.
 
 ## Get started
 

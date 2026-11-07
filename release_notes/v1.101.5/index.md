@@ -1,5 +1,6 @@
 ---
-title: "v1.101.5 - Dependency Updates"
+title: "LiteLLM v1.100.5 and v1.101.5 update next to 16.3.6 and urllib3 to 2.8.0"
+description: "Updates urllib3, pypdf and pyjwt in the locked Python dependencies, and updates the Admin UI next package to 16.3.6."
 slug: "v1-101-5"
 date: 2026-10-07T18:44:55
 authors:

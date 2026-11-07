@@ -17,7 +17,7 @@ Supported by:
   "role": "assistant", 
   "content": "..", 
   ...,
-  "prefix": true # 👈 KEY CHANGE
+  "prefix": true # KEY CHANGE
 }
 ```
 

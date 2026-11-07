@@ -55,7 +55,7 @@ from liteagents import ProfileOptions, run
 
 profile = ProfileOptions(
     harness="pydantic-ai",
-    model="openai/gpt-5.4-mini",
+    model="openai/{{openai_small}}",
 )
 prompt = "Explain what an agent harness does in one sentence."
 
@@ -86,7 +86,7 @@ Set the matching key and change `profile.model`. The harness can stay the same.
 
 | Provider | Model example | Key |
 | --- | --- | --- |
-| OpenAI | `openai/gpt-5.4-mini` | `OPENAI_API_KEY` |
+| OpenAI | `openai/{{openai_small}}` | `OPENAI_API_KEY` |
 | Anthropic | `anthropic/claude-sonnet-4-6` | `ANTHROPIC_API_KEY` |
 | OpenRouter | `openrouter/anthropic/claude-sonnet-4.6` | `OPENROUTER_API_KEY` |
 | Google Gemini | `gemini/gemini-2.5-flash` | `GEMINI_API_KEY` |

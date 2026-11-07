@@ -79,7 +79,7 @@ response = client.chat.completions.create(model="user-azure-instance", messages 
     extra_body={
       "user_config": user_config
     }
-) # 👈 User config
+) # User config
 
 print(response)
 ```
@@ -141,7 +141,7 @@ async function main() {
   const chatCompletion = await openai.chat.completions.create({
     messages: [{ role: 'user', content: 'Say this is a test' }],
     model: '{{openai_small}}',
-    user_config: userConfig // # 👈 User config
+    user_config: userConfig // # User config
   });
 }
 
@@ -166,7 +166,7 @@ model_list:
       model: "fireworks_ai/*"
       configurable_clientside_auth_params: ["api_base"]
       # OR 
-      configurable_clientside_auth_params: [{"api_base": '^https://litellm.*direct\.fireworks\.ai/v1$'}] # 👈 regex
+      configurable_clientside_auth_params: [{"api_base": '^https://litellm.*direct\.fireworks\.ai/v1$'}] # regex
 ```
 
 Specify the endpoint params you want the user to be able to configure:
@@ -197,7 +197,7 @@ response = client.chat.completions.create(model="{{openai_small}}", messages = [
         "content": "this is a test request, write a short poem"
     }
 ], 
-    extra_body={"api_key": "my-bad-key", "api_base": "https://litellm-dev.direct.fireworks.ai/v1"}) # 👈 clientside credentials
+    extra_body={"api_key": "my-bad-key", "api_base": "https://litellm-dev.direct.fireworks.ai/v1"}) # clientside credentials
 
 print(response)
 ```
@@ -226,7 +226,7 @@ response = client.chat.completions.create(model="{{openai_small}}", messages = [
       "api_key": "my-azure-key",
       "api_base": "my-azure-base",
       "api_version": "my-azure-version"
-    }) # 👈 User Key
+    }) # User Key
 
 print(response)
 ```
@@ -249,7 +249,7 @@ async function main() {
   const chatCompletion = await openai.chat.completions.create({
     messages: [{ role: 'user', content: 'Say this is a test' }],
     model: '{{openai_small}}',
-    api_key: "my-bad-key" // 👈 User Key
+    api_key: "my-bad-key" // User Key
   });
 }
 
