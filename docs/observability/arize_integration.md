@@ -136,7 +136,7 @@ litellm_settings:
 
 ### Per-team and per-key credentials {#pass-arize-spacekey-per-request}
 
-Arize supports per-request credentials, so different teams or keys can log to different Arize spaces without running separate proxies. Set `arize_space_id` and `arize_api_key` on the team or key as described in [per-key / per-team credentials](./opentelemetry_v2#per-key--per-team-credentials-multi-tenant).
+Arize supports per-request credentials, so different teams or keys can log to different Arize spaces without running separate proxies. Set `arize_space_id` and `arize_api_key` on the team or key as described in [per-key / per-team credentials](./opentelemetry_v2#per-key--per-team-credentials-multi-tenant). To keep the Arize credentials in a secret manager instead of on each key, define the callback once under `callback_settings` in `config.yaml` with `os.environ/` references and point keys at it by name, see [reference a callback definition from `config.yaml`](../proxy/team_logging#reference-a-callback-definition-from-configyaml).
 
 ### Sample a team's or key's traces {#sample-a-teams-or-keys-traces}
 
