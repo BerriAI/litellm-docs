@@ -443,7 +443,7 @@ Help us improve this feature, by filing a [ticket here](https://github.com/Berri
 
 ### Reference a callback definition from `config.yaml`
 
-A key's `callback_vars` cannot hold `os.environ/` references, so per-key credentials normally have to be pasted into every key. Instead, a proxy admin can define the callback once in `config.yaml` under `callback_settings`, with a `callback_type` naming the backend, and point individual keys at it by name. The key stores only the name. The definition's `os.environ/` values are resolved through the configured [secret manager](../secret) when the proxy starts, like every other secret in `config.yaml`, so a rotated secret takes effect on the next restart.
+A key's `callback_vars` cannot hold `os.environ/` references, so per-key credentials normally have to be pasted into every key. Instead, a proxy admin can define the callback once in `config.yaml` under `callback_settings`, with a `callback_type` naming the backend, and point individual keys at it by name through the `callback_settings_name` field of a `logging` entry. The key stores only the name. The definition's `os.environ/` values are resolved through the configured [secret manager](../secret) when the proxy starts, like every other secret in `config.yaml`, so a secret rotated in the secret manager takes effect after the next proxy restart or config reload.
 
 ```yaml
 callback_settings:
@@ -454,7 +454,7 @@ callback_settings:
     excluded_services: postgres,redis
 ```
 
-Any field a key's `callback_vars` accepts for that backend can sit in the definition, which is where options such as `excluded_services` or `turn_off_message_logging` go. The proxy refuses to start when a definition names a backend it does not know, uses a field no callback accepts, is named after a callback such as `arize` or `langfuse`, or references a secret the secret manager cannot provide. The error names the field and never its value.
+Any field a key's `callback_vars` accepts for that backend can sit in the definition, which is where options such as `excluded_services` or `turn_off_message_logging` go. The proxy refuses to start when a definition names a backend it does not know, uses a field no callback accepts, is named after a callback such as `arize` or `langfuse`, or references a secret the secret manager cannot provide. The error names the field and never its value. The same check runs on a `callback_settings` block placed under `litellm_settings`.
 
 ```shell
 curl -X POST 'http://0.0.0.0:4000/key/generate' \
@@ -464,16 +464,16 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
         "team_id": "team-a",
         "metadata": {
             "logging": [{
-                "callback_name": "arize_space_a",
+                "callback_settings_name": "arize_space_a",
                 "callback_type": "success"
             }]
         }
     }'
 ```
 
-Only a proxy admin can point a key at a definition, or change or remove the `logging` entries of a key that holds one, through `/key/generate`, `/key/update`, `/key/bulk_update`, `/team/key/bulk_update`, `/key/{key}/regenerate` and the `metadata` of `/user/new`. Anyone else who can edit the key's metadata has to send the stored `logging` list back unchanged, otherwise the request is rejected with a 403. A reference entry carries the name and the `callback_type` only. `callback_vars` on it, or a second entry on the same key naming the same backend or carrying a value of the same credential family (an inline `langfuse` entry next to a `langfuse_otel` reference, for example), is rejected with a 400, because every entry's values merge into one credential map at request time and the key could otherwise combine its own values with the definition's credentials. Every other logging entry on a key has to carry a `callback_vars` object, `{}` when it has no values, and a `callback_type` of `success`, `failure` or `success_and_failure` when it names one. Only keys that carry the reference log to the definition's backend, so two keys on the same team can differ. The reference is key-level only. A team's `logging` metadata naming a definition is ignored like any unknown callback name.
+Only entries that carry `callback_settings_name` are references. `callback_name` always names a built-in callback, so an entry with `"callback_name": "arize_space_a"` never picks up the definition, even after one with that name is added to `config.yaml`. A `callback_settings_name` that names no definition is rejected with a 400, for every caller including proxy admins. Only a proxy admin can add, change or remove an entry that carries `callback_settings_name`, through `/key/generate`, `/key/update`, `/key/bulk_update`, `/team/key/bulk_update`, `/key/{key}/regenerate` and the `metadata` of `/user/new`. Anyone else who can edit the key's metadata has to send the stored `logging` list back unchanged, otherwise the request is rejected with a 403. A reference entry carries `callback_settings_name` and `callback_type` only. `callback_name` or `callback_vars` on it, or a second entry on the same key naming the same backend or carrying a value of the same credential family (an inline `langfuse` entry next to a `langfuse_otel` reference, for example), is rejected with a 400, because every entry's values merge into one credential map at request time and the key could otherwise combine its own values with the definition's credentials. Every other logging entry on a key has to carry a `callback_vars` object, `{}` when it has no values, and a `callback_type` of `success`, `failure` or `success_and_failure` when it names one. Only keys that carry the reference log to the definition's backend, so two keys on the same team can differ. The reference is key-level only. A team's `logging` metadata carrying `callback_settings_name` is ignored.
 
-`/key/info` returns the stored entry, which holds the name and no credential. `/key/health` runs the referenced callback with the definition's values and lists the reference name. A key whose definition was later removed from `config.yaml` behaves like any unknown callback name, it logs nowhere and `/key/health` still reports it healthy, so keep a definition in place for as long as a key references it.
+`/key/info` returns the stored entry, which holds the name and no credential. `/key/health` runs the referenced callback with the definition's values and lists the reference name. A key whose definition was later removed from `config.yaml` logs nowhere for that entry and `/key/health` still reports it healthy, so keep a definition in place for as long as a key references it.
 
 ### Check if key callbacks are configured correctly `/key/health`
 
