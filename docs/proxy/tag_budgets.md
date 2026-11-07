@@ -293,7 +293,7 @@ curl -X POST 'http://0.0.0.0:4000/tag/update' \
          }'
 ```
 
-This zeroes the tag's spend immediately and unblocks any request currently rejected with `budget_exceeded`. It does **not** change `budget_reset_at` — the current budget window's boundary is left as-is.
+This zeroes the tag's spend immediately and unblocks any request currently rejected with `budget_exceeded`. It does **not** change `budget_reset_at`; the current budget window's boundary is left as-is.
 
 ### Delete Tag
 
