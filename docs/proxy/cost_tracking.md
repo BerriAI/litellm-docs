@@ -174,6 +174,34 @@ A request that carries usage but prices to `$0` on a model whose pricing entry h
 
 Free models (every rate the request used is set to `0`) and requests that carry no usage are not flagged. To fix a `missing_pricing_key`, set the missing rate in the deployment's `model_info` or in the model cost map, or set every rate to `0` to mark the model free
 
+### Cost in streaming usage
+
+Streams on `/v1/chat/completions` and `/v1/responses` carry `cost` inside the final `usage` object. Streams on `/v1/messages` and the Anthropic and OpenAI pass-through routes do not, unless you turn it on with one of the two switches below. Both switches add `cost` to the usage-carrying stream event (`message_delta` on `/v1/messages`) and the number is the same spend LiteLLM writes to `LiteLLM_SpendLogs`.
+
+The global switch applies to every stream the proxy serves
+
+```yaml
+litellm_settings:
+  include_cost_in_streaming_usage: true
+```
+
+The per-request switch is the `x-litellm-include-cost-in-streaming-usage: true` header. It opts in only the request that carries it, so the rest of your traffic keeps the lighter streaming path the proxy uses when nothing inspects each chunk. <SinceVersion v="1.110.0" />
+
+```bash
+curl -N http://localhost:4000/v1/messages \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "x-litellm-include-cost-in-streaming-usage: true" \
+  -H "content-type: application/json" \
+  -d '{"model": "claude-haiku-4-5", "max_tokens": 16, "stream": true, "messages": [{"role": "user", "content": "hi"}]}'
+```
+
+```text
+event: message_delta
+data: {"type": "message_delta", "delta": {"stop_reason": "max_tokens", ...}, "usage": {"input_tokens": 8, "output_tokens": 16, "cost": 8.8e-05}}
+```
+
+Any key that can call the proxy can send the header, and there is no key or team setting that refuses it. Leave the global switch off when you want only some requests to pay the per-chunk cost.
+
 ### Allowing Non-Proxy Admins to access `/spend` endpoints
 
 Use this when you want non-proxy admins to access `/spend` endpoints

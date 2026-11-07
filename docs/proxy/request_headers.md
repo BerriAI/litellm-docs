@@ -22,6 +22,8 @@ By default, LiteLLM does not forward client headers to LLM provider APIs. Howeve
 
 `x-litellm-keepalive-seconds`: Optional[float]: Emit an SSE `: ping` comment frame after this many seconds of stream silence, to keep idle-looking connections alive through load balancer timeouts. Subject to the deployment's `allow_client_keepalive_override` setting; has no effect if the deployment hasn't opted in. [Learn More](./timeout#keepalive-pings-for-idle-streaming-connections)
 
+`x-litellm-include-cost-in-streaming-usage`: Optional[bool]: Add `cost` to the usage-carrying event of this one stream (`/v1/messages`, Anthropic and OpenAI pass-throughs) without turning on `litellm_settings.include_cost_in_streaming_usage` for every request. [Learn More](./cost_tracking#cost-in-streaming-usage) <SinceVersion v="1.110.0" />
+
 `x-litellm-spend-logs-metadata`: Optional[str]: JSON string containing custom metadata to include in spend logs. Example: `{"user_id": "12345", "project_id": "proj_abc", "request_type": "chat_completion"}`. [Learn More](./cost_tracking)
 
 `x-litellm-customer-id`: Optional[str]: Standard header for passing a customer/end-user ID. Always checked without any configuration. [Learn More](./customers)
