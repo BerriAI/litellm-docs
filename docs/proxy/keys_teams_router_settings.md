@@ -16,6 +16,7 @@ With key-level and team-level router settings, you can now:
 
 - **Customize routing strategies** per key or team (e.g., use `least-busy` for high-priority keys, `latency-based-routing` for others)
 - **Configure different fallback chains** for different keys or teams
+- **Split traffic across deployments** with [deployment weights](#deployment-weights) per key or team
 - **Set key-specific or team-specific timeouts** and retry policies
 - **Apply different reliability settings** (cooldowns, allowed failures) per key or team
 - **Override global settings** when needed for specific use cases
@@ -110,6 +111,27 @@ Follow these steps to configure router settings for a team:
 6. Click "Select a model to begin configuring fallbacks" and configure your fallback chain:
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-01-24/67ca2655-4e82-4f93-be9a-7244ad22640f/ascreenshot_4fdbed826cd546d784e8738626be835d_text_export.jpeg)
+
+## Deployment Weights
+
+Deployment weights split a model group's traffic across its deployments for one key or team. For example, a team can send 90% of its `gpt-5` traffic to one deployment and 10% to another, while every other caller keeps the global split.
+
+To set them in the UI, open the key or team Router Settings, select the `simple-shuffle` routing strategy on the Loadbalancing tab, and add a model group under Deployment Weights. Each deployment of that group is listed with a weight field and the share of traffic it receives. Weights are relative, so `9` and `1` give the same split as `90` and `10`.
+
+The same settings can be sent through the API on `/team/new`, `/team/update`, `/key/generate` or `/key/update`. The keys of `weights` are model group names, and the inner keys are deployment IDs (`model_info.id`):
+
+```json
+{
+  "router_settings": {
+    "routing_strategy": "simple-shuffle",
+    "weights": {
+      "gpt-5": {"deployment-id-a": 9, "deployment-id-b": 1}
+    }
+  }
+}
+```
+
+Weights only apply with the `simple-shuffle` routing strategy, set either on the key or team or globally. The UI shows a warning when another strategy is selected. Once any deployment in a group has a weight, a deployment in that group without one receives no traffic from this key or team. A group with weights must have at least one weight above 0, and the proxy rejects deployment IDs that do not exist or that belong to a different team. Weights follow the same resolution order as the other router settings, so a key with its own router settings uses only those and the team's weights do not apply to it.
 
 ## Use Cases
 
