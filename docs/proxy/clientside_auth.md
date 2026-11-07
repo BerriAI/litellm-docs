@@ -263,7 +263,7 @@ main();
 
 <SinceVersion v="1.109.0" />
 
-When a deployment sets `model_id` (for example a SageMaker inference component, a Bedrock model ID or ARN), LiteLLM will always use the deployment's value and ignore any `model_id` in the request body. A SageMaker deployment that sets the `X-Amzn-SageMaker-Inference-Component` header in `extra_headers` is pinned in the same way. This applies to both proxy requests and to SDK `Router` calls.
+When a deployment sets `model_id` (for example a SageMaker inference component, a Bedrock model ID or ARN), LiteLLM will use the deployment's value and ignore any `model_id` in the request body, unless the deployment opts in as shown below. A SageMaker deployment that sets the `X-Amzn-SageMaker-Inference-Component` header in `extra_headers` is pinned in the same way. This applies to both proxy requests and to SDK `Router` calls.
 
 To let clients choose the value on a deployment, list `model_id` in its `configurable_clientside_auth_params`:
 
