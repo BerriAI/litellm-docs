@@ -173,6 +173,7 @@ Specify the endpoint params you want the user to be able to configure:
 
 - api_base (regex supported)
 - base_url
+- model_id, see [Let clients choose a deployment's `model_id`](#let-clients-choose-a-deployments-model_id)
 
 Without this opt-in, or `general_settings.allow_client_side_credentials: true` proxy-wide, a request body that sets `api_base` or `base_url` is rejected with `Rejected Request: api_base is not allowed in request body`
 
@@ -257,6 +258,25 @@ main();
 ```
 </TabItem>
 </Tabs>
+
+### Let clients choose a deployment's `model_id`
+
+<SinceVersion v="1.109.0" />
+
+If a deployment sets `model_id` (e.g. a SageMaker inference component, a Bedrock model ID or ARN) then LiteLLM will use the value of that deployment and ignore any `model_id` present in the request body, unless the deployment has opted in as described below. A SageMaker deployment that sets the `X-Amzn-SageMaker-Inference-Component` header in `extra_headers` is pinned in the same way. This applies to both proxy requests and to SDK `Router` calls.
+
+To let clients choose the value on a deployment, list `model_id` in its `configurable_clientside_auth_params`:
+
+```yaml
+model_list:
+  - model_name: my-sagemaker
+    litellm_params:
+      model: sagemaker_chat/<your-endpoint-name>
+      model_id: <default-inference-component>
+      configurable_clientside_auth_params: ["model_id"]
+```
+
+A request to `my-sagemaker` with `"model_id": "<other-inference-component>"` in the body is routed to that component, a request without `model_id` is routed to `<default-inference-component>`. `general_settings.allow_client_side_credentials: true` doesn't opt in so it leaves a pinned `model_id` in place. A deployment that sets neither `model_id` nor the SageMaker header still uses the request's `model_id`. Prior to 1.109.0 a `model_id` in the request body would take precedence over the deployment's. See [Pin the inference component on a deployment](../providers/aws_sagemaker.md#pin-the-inference-component-on-a-deployment) for SageMaker examples.
 
 ### Pass provider-specific params (e.g. Region, Project ID, etc.)
 

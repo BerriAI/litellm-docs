@@ -78,6 +78,8 @@ These callouts cover user-facing behavior that differs from [`v1.108.0`](/releas
 
 **Custom cost maps in the old rule format lose fallback info for unmapped Claude ids.** Nothing changes on the default remote map or the bundled backup, but if you pin or overwrite a map from before July 2026, move to a current copy before upgrading. See [PR #48737](https://github.com/BerriAI/litellm/pull/48737)
 
+**A deployment's own `model_id` now wins over a `model_id` in the request body.** Clients are no longer able to send a deployment that pins a SageMaker inference component, a Bedrock model ID or ARN or a SageMaker `X-Amzn-SageMaker-Inference-Component` header to a different value. To allow clients to re-choose, `model_id` must be listed in that deployment's `configurable_clientside_auth_params` as `allow_client_side_credentials` does not opt in. See [PR #49045](https://github.com/BerriAI/litellm/pull/49045) and [Clientside LLM Credentials](/docs/proxy/clientside_auth#let-clients-choose-a-deployments-model_id)
+
 :::
 
 ## Key Highlights
