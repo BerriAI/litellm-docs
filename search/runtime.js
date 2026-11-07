@@ -9,6 +9,8 @@ function readConfig(env, defaults = {}) {
     ...defaults,
     baseUrl: env.DOCS_AI_BASE_URL || BASE_URL,
     apiKey: env.DOCS_AI_API_KEY,
+    githubToken: env.DOCS_UPGRADE_GITHUB_TOKEN,
+    upgradeFeedback: {url: env.DOCS_UPGRADE_REDIS_URL, token: env.DOCS_UPGRADE_REDIS_TOKEN},
     botApiKey: env.DOCS_BOT_AI_API_KEY,
     botServiceToken: env.DOCS_BOT_SERVICE_TOKEN,
     botTracingKey: env.DOCS_BOT_TRACING_KEY,

@@ -10,7 +10,7 @@ function gatewayError(name, message) {
   return error;
 }
 
-function createModelCaller({config, signal, fetchImpl = fetch}) {
+function createModelCaller({config, signal, fetchImpl = fetch, model = MODEL, fallbacks = FALLBACKS, reasoningEffort = 'low'}) {
   const endpoint = new URL(`${(config.baseUrl || BASE_URL).replace(/\/$/, '')}/chat/completions`);
   if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) {
     throw new Error('Invalid gateway configuration');
@@ -23,21 +23,19 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
   async function turn(messages, {toolDefinitions, toolChoice = 'auto', onDelta, timeout = 25000, stage = 'agent'} = {}) {
     return tracing.span(`chat ${stage}`, {
       'openinference.span.kind': 'LLM', 'gen_ai.operation.name': 'chat',
-      'gen_ai.request.model': MODEL, 'docs.search.stage': stage,
+      'gen_ai.request.model': model, 'docs.search.stage': stage,
     }, async span => {
       span.setAttribute('input.value', JSON.stringify(messages));
       span.setAttribute('input.mime_type', 'application/json');
-      span.setAttribute('llm.model_name', MODEL);
+      span.setAttribute('llm.model_name', model);
       const requestSignal = signal ? AbortSignal.any([signal, AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout);
       requestSignal.throwIfAborted();
       const response = await fetchImpl(endpoint.href, {
         method: 'POST', redirect: 'error', signal: requestSignal,
         headers: {'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}`},
-        body: JSON.stringify({model: MODEL, fallbacks: [
-          {model: FALLBACKS[0], reasoning_effort: 'none'},
-          {model: FALLBACKS[1], reasoning_effort: 'none'},
-        ], num_retries: 0, max_fallbacks: 2,
-          timeout: Math.max(1, Math.floor(timeout / 1000 - 1)), reasoning_effort: 'low',
+        body: JSON.stringify({model, fallbacks: fallbacks.map(model => ({model, reasoning_effort: 'none'})),
+          num_retries: 0, max_fallbacks: fallbacks.length,
+          timeout: Math.max(1, Math.floor(timeout / 1000 - 1)), reasoning_effort: reasoningEffort,
           cache: {'no-cache': true, 'no-store': true}, messages,
           ...(toolDefinitions ? {tools: toolDefinitions, tool_choice: toolChoice} : {}),
           ...(onDelta ? {stream: true, stream_options: {include_usage: true}} : {}),

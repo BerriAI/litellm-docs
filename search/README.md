@@ -59,6 +59,20 @@ The server reads `.env.local`; the build and browser do not read the AI credenti
 
 ## Deploy on Vercel
 
+## Changelog upgrade assistant
+
+The changelog at `/release_notes` accepts two exact LiteLLM tags. `/api/docs/upgrade` resolves immutable commits, reads complete Git trees and changed migration/schema blobs, and sends their diff plus intervening published release-note Markdown to `anthropic/claude-haiku-5-5`. Incomplete Git trees and oversized ranges fail without generating a guide. Release notes live in this docs repository, not the code tags, so version-selected notes can include backports. The guide shows this coverage limitation and links every claim to a source. A citation validates source identity, not the model's interpretation.
+
+Use the same AI key, origin and public enable flag as Ask AI. `DOCS_UPGRADE_GITHUB_TOKEN` is an optional server-only token with public repository read access. Unauthenticated GitHub API limits are too low for repeated comparisons. The built local server also serves both upgrade endpoints. Plain `npm start` does not serve the API.
+
+Thumbs up and thumbs down are the only feedback inputs. Configure `DOCS_UPGRADE_REDIS_URL` and `DOCS_UPGRADE_REDIS_TOKEN` with a shared Upstash Redis REST database. The server stores its own generated guide under an unguessable ID for 30 days. The feedback endpoint accepts only that ID and a good/bad label, never replacement text or a browser-supplied guide. A new vote replaces the prior label for that generation. The latest 20 rated IDs are sampled for up to two good and two bad examples in the system prompt. Examples are bounded presentation hints, not evidence for another upgrade. Until users rate guides, no examples are fabricated. Stored guides and ratings contain no user identity. Anyone holding a guide ID can change its rating, so these are anonymous preferences, not verified expert labels.
+
+If storage is absent or unavailable, comparisons still work and the feedback controls stay visible but disabled with a tooltip. Storage failures never report a vote as saved. Add shared edge rate limits for both endpoints before public rollout. Per-instance limits do not prevent distributed abuse or feedback manipulation.
+
+Verify with `node --test search/upgrade*.test.js`, `npm run typecheck`, and `npm run build`.
+
+## Vercel search deployment
+
 The same-origin `/api/docs/search` function bundles only `build/search-index.json` and loads it once per function instance. `/api/docs/ask` bundles `build/search-*.json` for its research tools. Vercel uses `npm run build` and the `build` output directory. No separate API service or retrieval database is needed.
 
 In the docs project's **Settings > Environment Variables**, add `DOCS_AI_API_KEY` as a server secret and set `DOCS_AI_PUBLIC_ENABLED=true` for the intended environment, then redeploy. The production origin defaults to `https://docs.litellm.ai`. For a preview or another domain, set `DOCS_ORIGIN` to that exact origin too. Without the public enable flag, Ask AI returns 503 while document search still works
