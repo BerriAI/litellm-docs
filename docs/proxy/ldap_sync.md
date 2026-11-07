@@ -88,7 +88,7 @@ LDAP sync team_id=project-alpha matched_users=1 unmatched_users=1
 LDAP sync dry_run team_id=project-alpha create_team=True add=['alice'] remove=[]
 ```
 
-Confirm the roster before changing `dry_run` to `false` and restarting every replica.
+Confirm the roster before changing `dry_run` to `false` and restarting every replica. Only one replica syncs per interval, because the job lock lasts the whole interval. A restart soon after a run therefore applies the change at the next interval rather than immediately.
 
 After the next successful run, check the team in the Admin UI or through the API:
 
@@ -123,7 +123,7 @@ Changing the LDAP identity without updating the matching LiteLLM field makes the
 2. It reads the selected groups and user identities into a directory snapshot before making membership changes.
 3. For each valid group, it finds existing LiteLLM users, then looks up the exact team ID.
 4. In dry run, it logs the proposed changes. Otherwise, it creates a missing team and reconciles memberships, preserving retained roles and revoking removed members' team keys.
-5. It logs results and waits for the next scheduled interval. Unchanged rosters do not get rewritten.
+5. It logs results and keeps the lock until the interval ends, so replicas whose schedule fires later in the interval skip. Unchanged rosters do not get rewritten.
 
 Membership changes are transactional per team, not across the whole run. A later failure does not undo groups already committed. Each run has a time budget shorter than the Redis lease. A directory read that exceeds it makes no changes. Once writes begin, the budget is checked between teams, so a team that has started updating always finishes. Remaining teams retry at the next interval from current directory state. If the proxy shuts down during a team's update, a removed member's key can stay usable from the auth cache until `user_api_key_cache_ttl` expires, as with other key deletions.
 
