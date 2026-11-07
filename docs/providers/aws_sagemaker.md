@@ -381,7 +381,7 @@ response = completion(
 
 <SinceVersion v="1.109.0" />
 
-When a proxy deployment or an SDK `Router` deployment sets `model_id`, LiteLLM will call that inference component and will ignore any `model_id` in the request body, unless the deployment lets clients choose as shown below. A deployment can also pin the component using the `X-Amzn-SageMaker-Inference-Component` header in `extra_headers` and that pin will take precedence over the request in the same way. On `sagemaker_chat/` deployments LiteLLM will drop the client's own `X-Amzn-SageMaker-Inference-Component` header (regardless of case) if the deployment has pinned a component.
+When a proxy deployment or an SDK `Router` deployment sets `model_id`, LiteLLM will invoke that inference component and will ignore any `model_id` in the request body (unless the deployment allows the client to choose as per the below). A deployment can also pin the component via the `X-Amzn-SageMaker-Inference-Component` header in `extra_headers` and that pin will take precedence over the request in the same manner. On `sagemaker_chat/` deployments LiteLLM will drop the client's own `X-Amzn-SageMaker-Inference-Component` header (regardless of case) if the deployment has pinned a component.
 
 ```yaml
 model_list:
