@@ -48,10 +48,16 @@ model_list:
       api_key: os.environ/AZURE_API_KEY
       api_version: "2025-04-01-preview"
 
+router_settings:
+  optional_pre_call_checks:
+    - encrypted_content_affinity
+
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   database_url: os.environ/DATABASE_URL
 ```
+
+Codex sends the encrypted reasoning from earlier turns back on every call, and only the deployment that produced it can read it. `encrypted_content_affinity` sends those calls back to that deployment, while new runs still load balance across both. See [Encrypted Content Affinity](../response_api.md#encrypted-content-affinity-multi-region-load-balancing).
 
 Create a virtual key scoped to that group.
 
