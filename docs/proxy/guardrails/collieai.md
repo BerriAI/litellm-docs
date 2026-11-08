@@ -40,7 +40,7 @@ guardrails:
 
 Keep both modes and `default_on: true`. Otherwise one side of the call, or the calls that don't name the guardrail, go unchecked.
 
-The same guardrail can be added in the Admin UI under **Guardrails > Guardrail Garden > CollieAi**. A guardrail created there observes; block mode is set in config.yaml, see [Block mode](#block-mode).
+The same guardrail can be added in the Admin UI under **Guardrails > Guardrail Garden > CollieAi**. Its form starts with **Always On** off, so turn it on to check every call. A guardrail created there observes; block mode is set in config.yaml, see [Block mode](#block-mode).
 
 ### 3. Start LiteLLM Proxy
 
