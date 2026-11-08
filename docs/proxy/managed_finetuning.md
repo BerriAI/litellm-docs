@@ -27,13 +27,19 @@ Include `/fine_tuning` in the `supported_endpoints` list. Tells developers this 
 
 ```yaml showLineNumbers title="litellm_config.yaml"
 model_list:
-  - model_name: "gpt-4.1-openai"
+  - model_name: "gpt-4.1-azure"
     litellm_params:
-      model: gpt-4.1
-      api_key: os.environ/OPENAI_API_KEY
+      model: azure/gpt-4.1
+      api_base: os.environ/AZURE_API_BASE
+      api_key: os.environ/AZURE_API_KEY
+      api_version: "2025-04-01-preview"
     model_info:
       supported_endpoints: ["/chat/completions", "/fine_tuning"]
 ```
+
+This guide fine-tunes on Azure OpenAI. OpenAI only lets organizations that recently used a fine-tuned model create new fine-tuning jobs, and it stops new jobs for every organization on January 6, 2027 ([OpenAI deprecations](https://developers.openai.com/api/docs/deprecations)).
+
+LiteLLM sends the name after `azure/` to Azure as the base model to fine-tune, so use a model name such as `gpt-4.1` there. Set `api_version` to `2025-04-01-preview` or later. Older versions ignore the `trainingType` that step 3 sends, so Azure falls back to Standard training, which it offers for each model only in some regions.
 
 ### 2. Create Virtual Key
 
@@ -41,7 +47,7 @@ model_list:
 curl -L -X POST 'https://{PROXY_BASE_URL}/key/generate' \
 -H 'Authorization: Bearer ${PROXY_API_KEY}' \
 -H 'Content-Type: application/json' \
--d '{"models": ["gpt-4.1-openai"]}'
+-d '{"models": ["gpt-4.1-azure"]}'
 ```
 
 
@@ -77,7 +83,7 @@ client = OpenAI(
 finetuning_input_file = client.files.create(
     file=open("./request.jsonl", "rb"),
     purpose="fine-tune",
-    extra_body={"target_model_names": "gpt-4.1-openai"}
+    extra_body={"target_model_names": "gpt-4.1-azure"}
 )
 print(finetuning_input_file)
 
@@ -86,7 +92,7 @@ print(finetuning_input_file)
 
 **Where is the file written?**:
 
-All gpt-4.1-openai deployments will be written to. This enables loadbalancing across all gpt-4.1-openai deployments in Step 3, when a job is created. Once the job is created, any retrieve/list/cancel operations will be routed to that deployment.
+All gpt-4.1-azure deployments will be written to. This enables loadbalancing across all gpt-4.1-azure deployments in Step 3, when a job is created. Once the job is created, any retrieve/list/cancel operations will be routed to that deployment.
 
 ### 3. Create the Finetuning Job
 
@@ -97,10 +103,15 @@ file_id = finetuning_input_file.id
 
 # Create Finetuning Job
 ft_job = client.fine_tuning.jobs.create(
-    model="gpt-4.1-openai",  # litellm public model name you want to finetune                  
+    model="gpt-4.1-azure",  # litellm public model name you want to finetune
     training_file=file_id,
+    extra_body={"trainingType": "GlobalStandard"},
 )
 ```
+
+Azure imports an uploaded file in the background and rejects a job whose training file is still importing with `The specified file reference must point to a completed file import.` Wait about 30 seconds after the upload before you create the job.
+
+`GlobalStandard` trains wherever Azure has capacity and copies the training data and weights to that region. Use `Standard` instead when the data must stay in your resource's region and Azure offers Standard training for the model there.
 
 ### 4. Retrieve Finetuning Job
 
@@ -116,7 +127,7 @@ print(response)
 ```python showLineNumbers title="create_finetuning_job.py"
 ...
 
-client.fine_tuning.jobs.list(extra_query={"target_model_names": "gpt-4.1-openai"})
+client.fine_tuning.jobs.list(extra_query={"target_model_names": "gpt-4.1-azure"})
 ```
 
 ### 6. Cancel a Finetuning Job
@@ -134,6 +145,8 @@ cancel_ft_job = client.fine_tuning.jobs.cancel(
 ## E2E Example
 
 ```python showLineNumbers title="create_finetuning_job.py"
+import time
+
 from openai import OpenAI
 
 client = OpenAI(
@@ -147,17 +160,20 @@ client = OpenAI(
 finetuning_input_file = client.files.create(
     file=open("./fine_tuning.jsonl", "rb"), # {"model": "azure-gpt-4o"} <-> {"model": "gpt-4o-my-special-deployment"}
     purpose="fine-tune",
-    extra_body={"target_model_names": "gpt-4.1-openai"} # Tells litellm which regions/projects to write the file in.
+    extra_body={"target_model_names": "gpt-4.1-azure"} # Tells litellm which regions/projects to write the file in.
 )
 print(finetuning_input_file) # file.id = "litellm_proxy/..." = {"model_name": {"deployment_id": "deployment_file_id"}}
 
 file_id = finetuning_input_file.id
 # # file_id = "bGl0ZWxs..."
 
+time.sleep(30) # Azure rejects the job until it finishes importing the file
+
 # ## create fine-tuning job 
 ft_job = client.fine_tuning.jobs.create(
-    model="gpt-4.1-openai",  # litellm model name you want to finetune                  
+    model="gpt-4.1-azure",  # litellm model name you want to finetune
     training_file=file_id,
+    extra_body={"trainingType": "GlobalStandard"},
 )
 
 print(f"ft_job: {ft_job}")
@@ -171,7 +187,7 @@ cancel_ft_job = client.fine_tuning.jobs.cancel(
 print("response from cancel ft job={}".format(cancel_ft_job))
 # list fine-tuning jobs 
 list_ft_jobs = client.fine_tuning.jobs.list(
-    extra_query={"target_model_names": "gpt-4.1-openai"}   # tell litellm proxy which provider to use
+    extra_query={"target_model_names": "gpt-4.1-azure"}   # tell litellm proxy which provider to use
 )
 
 print("list of ft jobs={}".format(list_ft_jobs))

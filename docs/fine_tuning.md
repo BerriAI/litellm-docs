@@ -13,6 +13,7 @@ import TabItem from '@theme/TabItem';
 | Cost Tracking | Not yet | [Let us know if you need this](https://github.com/BerriAI/litellm/issues) |
 | Logging | ✅ | Works across all logging integrations |
 
+OpenAI only lets organizations that recently used a fine-tuned model create new fine-tuning jobs, and it stops new jobs for every organization on January 6, 2027 ([OpenAI deprecations](https://developers.openai.com/api/docs/deprecations)). Azure OpenAI still fine-tunes `gpt-4.1`, `gpt-4.1-mini` and `gpt-4o-mini`.
 
 Add `finetune_settings` and `files_settings` to your litellm config.yaml to use the fine-tuning endpoints.
 ## Example config.yaml for `finetune_settings` and `files_settings`
