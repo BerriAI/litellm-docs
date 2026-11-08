@@ -399,7 +399,7 @@ By default no. The proxy rejects `s3_bucket_name`, `s3_output_bucket_name`, `s3_
 
 To let clients pick from a fixed set of buckets, list the buckets a team may use in that team's metadata as `allowed_s3_buckets`. A key on the team can then send one of those buckets as `s3_bucket_name` when it uploads a batch input file to `POST /v1/files`, and as `s3_output_bucket_name` when it creates the batch with `POST /v1/batches`. The bucket overrides the model's bucket for that request. A bucket that is not on the team's list is rejected with a 401, and a request that sends no bucket keeps using the model's bucket.
 
-`PATCH /team/{team_id}` merges the key into the team's existing metadata, while `POST /team/update` replaces the whole metadata object.
+`PATCH /team/{team_id}` merges the key into the team's existing metadata, while `POST /team/update` replaces the whole metadata object. Only a proxy admin can change `allowed_s3_buckets`. Team admins cannot add, change or remove it, even when `team_admin_editable_team_fields` lets them edit the rest of the team's metadata. An entry can also carry a prefix, such as `team-a-batch-bucket/tenant`, to keep the team's files under that prefix.
 
 ```bash showLineNumbers title="allow_team_buckets.sh"
 curl -X PATCH 'http://localhost:4000/team/team-a' \
