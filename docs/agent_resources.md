@@ -18,6 +18,10 @@ import Stat from '@site/src/components/Stat';
 
 ## Skills
 
+### SDK and Gateway setup
+
+Install both setup skills with `npx skills add BerriAI/litellm -g`. Use `/litellm-sdk` for the Python SDK in an existing app or `/litellm-setup` for the Gateway.
+
 ### Gateway management
 
 [LiteLLM skills](https://github.com/BerriAI/litellm-skills): 21 Claude Code skills that create, change, and remove users, teams, API keys, organizations, models, MCP servers, and agents on a live gateway, plus `view-usage` for spend and tokens. They need the gateway URL and a proxy admin key.

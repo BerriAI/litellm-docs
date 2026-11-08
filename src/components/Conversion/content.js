@@ -19,22 +19,11 @@ function withUtm(url, content) {
 const PROMPTS = {
   sdk: {
     title: 'Add the LiteLLM SDK to this project',
-    text: `Help me add the LiteLLM Python SDK to this project. First read ${DOCS}/llms.txt and ${DOCS}/docs/index.md. Then:
-1. Detect the language, package manager, and framework. The SDK is Python only. If this is not a Python project, stop and tell me to run the LiteLLM Gateway and keep my existing OpenAI SDK instead (${DOCS}/docs/proxy/docker_quick_start.md).
-2. Install litellm with the project's own tool (uv add litellm, poetry add litellm, or pin it in requirements.txt).
-3. Replace direct OpenAI or Anthropic client calls with litellm.completion or litellm.acompletion, keeping the same model with a provider prefix (openai/..., anthropic/...). LiteLLM returns the OpenAI response shape, so update any Anthropic-style parsing to choices[0].message.content. Keep streaming and tool calls working.
-4. Add the provider key names to .env.example and read them from the environment. Never write real keys to files.
-5. Verify: run one real completion and print the reply, then run the existing tests. Show me the diff and both outputs.`,
+    text: 'Set up the LiteLLM Python SDK in this project by following https://raw.githubusercontent.com/BerriAI/litellm/main/skills/litellm-sdk/SKILL.md',
   },
   gateway: {
     title: 'Run the LiteLLM Gateway locally',
-    text: `Help me run the LiteLLM Gateway locally. First read ${DOCS}/docs/proxy/docker_quick_start.md. Then:
-1. Check that Docker Compose v2 is installed and running, and that port 4000 is free.
-2. In a new litellm-gateway directory, download https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml and create .env with LITELLM_MASTER_KEY and LITELLM_SALT_KEY, each "sk-" followed by the output of openssl rand -hex 32, and POSTGRES_PASSWORD set to the output of openssl rand -hex 24. Add .env to .gitignore and never print any of these values.
-3. Run docker compose -f docker-compose.quickstart.yml up -d and poll http://localhost:4000/health/readiness until the database shows as connected.
-4. Ask me which provider and model to add. Add it with POST /model/new using the master key, reading my provider API key from my shell environment without echoing it.
-5. Verify: GET /v1/models lists the model and POST /v1/chat/completions returns a reply.
-6. Tell me to open http://localhost:4000/ui and sign in as admin with the master key from .env.`,
+    text: 'Set up the LiteLLM Gateway in this project by following https://raw.githubusercontent.com/BerriAI/litellm/main/skills/litellm-setup/SKILL.md',
   },
   clients: {
     title: 'Point my tools at my LiteLLM Gateway',
