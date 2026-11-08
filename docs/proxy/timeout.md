@@ -311,7 +311,7 @@ print(response)
 
 It applies to non-streaming `/v1/chat/completions`, `/v1/messages` and `/v1/responses` requests. A request without it behaves exactly as before, and it never changes `timeout`, `stream_timeout` or the deployment's own timeouts, which still limit each provider call inside the total.
 
-The budget starts once the request is authenticated and ends when the response is ready to send. It covers the pre-call hooks, every retry and fallback attempt, the waits between retries, the moderation checks that run during the call and the post-call hooks. Authentication, reading the request body and sending the response to the client are outside it. The pre-call hooks are never cut short, because rate limit checks reserve shared quota while they run; when the budget runs out during them, the request ends with the `408` as soon as they finish, before the provider is called.
+The budget starts once the request is authenticated and ends when the response is ready to send. It covers the pre-call hooks, every retry and fallback attempt, the waits between retries, the moderation checks that run during the call and the post-call hooks. Authentication, reading the request body and sending the response to the client are outside it. A pre-call hook that outlasts the budget is cut short like any other step. The one exception is the rate limit check, which finishes the quota reservation it started so that the reservation can be handed back, and the `408` follows right after it.
 
 When the budget runs out, the proxy cancels the upstream call and answers `408`:
 
