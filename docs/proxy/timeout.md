@@ -311,7 +311,7 @@ print(response)
 
 It applies to non-streaming `/v1/chat/completions`, `/v1/messages` and `/v1/responses` requests. A request without it behaves exactly as before, and it never changes `timeout`, `stream_timeout` or the deployment's own timeouts, which still limit each provider call inside the total.
 
-The budget starts once the request is authenticated and ends when the response is ready to send. It covers the pre-call hooks, every retry and fallback attempt, the waits between retries, the moderation checks that run during the call and the post-call hooks. Authentication, reading the request body and sending the response to the client are outside it.
+The budget starts once the request is authenticated and ends when the response is ready to send. It covers the pre-call hooks, every retry and fallback attempt, the waits between retries, the moderation checks that run during the call and the post-call hooks. Authentication, reading the request body and sending the response to the client are outside it. The pre-call hooks are never cut short, because rate limit checks reserve shared quota while they run; when the budget runs out during them, the request ends with the `408` as soon as they finish, before the provider is called.
 
 When the budget runs out, the proxy cancels the upstream call and answers `408`:
 
@@ -323,7 +323,7 @@ A retry that would have to wait past the budget does not wait. For example, with
 
 After a timeout the proxy can take a few more seconds to hand back the rate limit reservations and in-flight counts the cancelled call held, then logs the failure and runs any failure hooks, so the `408` can arrive slightly after the budget. That cleanup time does not count toward the budget. A timed out request is billed like a client disconnect, at the estimated cost of its prompt.
 
-Streaming and background requests are not bounded. A body `total_timeout` on a `"stream": true` request, a `"background": true` Responses request or another endpoint returns a `400`. The header is ignored on those requests, so a client that sets `x-litellm-total-timeout` on every call through its default headers still gets its streaming requests through, unbounded.
+Streaming and background requests are not bounded. A body `total_timeout` on a `"stream": true` request, a `"background": true` Responses request or another endpoint returns a `400`. The header is ignored on those requests, whatever its value, so a client that sets `x-litellm-total-timeout` on every call through its default headers still gets its streaming requests through, unbounded.
 
 <Tabs>
 <TabItem value="body" label="Request body">
