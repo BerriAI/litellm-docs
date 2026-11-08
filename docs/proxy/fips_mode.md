@@ -31,16 +31,6 @@ When enabled, LiteLLM checks the cryptographic environment during startup. The p
 
 If any of these checks fail, LiteLLM raises a `FipsModeError` explaining the issue.
 
-**Note:** The standard `cryptography` package from PyPI includes its own OpenSSL, which does not include a FIPS provider. You will need to build it from source against your system's OpenSSL:
-
-```bash
-pip install --no-binary cryptography cryptography
-```
-
-If you're using uv, you can use `--no-binary-package cryptography` instead.
-
-When `fips_mode` is `false` or not configured, LiteLLM behaves as it normally would.
-
 ## Known Limitations
 
 FIPS support is still being implemented, so some functionality is not yet compatible with FIPS-enabled environments.

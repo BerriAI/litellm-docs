@@ -24,3 +24,5 @@ We are also piloting a long-term support (LTS) line for one month. The first LTS
 The LTS line is for teams that want to stay on one version and keep getting fixes, without upgrading every week. It gets patch releases with LLM translation fixes, cost tracking fixes, and new endpoints.
 
 While the pilot runs, the policy of patching the [four most recent stable lines](/docs/enterprise/version_support) is paused. The [LTS pilot](/docs/enterprise/lts_pilot) page has the details.
+
+**Update (November 6):** The `lts` image tag now always points to the latest LTS release. Pull `docker.litellm.ai/berriai/litellm:lts` to stay on the newest LTS patch, or pin a version such as `docker.litellm.ai/berriai/litellm:1.108.2`.

@@ -393,6 +393,10 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      // Google Search Console ownership token. Public by design; keep it so the property stays verified.
+      // It lives here, not in headTags, so it renders near <title>. headTags land after inline
+      // scripts whose strings contain "<div>", and Google's verifier then decides <head> has ended.
+      metadata: [{name: 'google-site-verification', content: '2ECVUxrDhV_G5feehdJNQuTA4dEJbE9R918TbGTwJI8'}],
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.png',
       // The whole bar links to the page; the close button still works.

@@ -1,6 +1,28 @@
 [
   {
     "folders": [
+      "v1.108.2"
+    ],
+    "title": "LiteLLM v1.108.2 (LTS) fixes Bedrock service tiers and Claude PDF input",
+    "points": [
+      "Bedrock Converse honors the `reserved`, `auto` and `standard_only` service tiers and returns 400 for a tier that it does not support.",
+      "Base64 PDFs that you send to Claude as `image_url` work, and `openai/` deployments with an empty `api_key` no longer send `OPENAI_ADMIN_KEY`.",
+      "Groups that accept unmatched tags keep the request after affinity or cooldown filters."
+    ]
+  },
+  {
+    "folders": [
+      "v1.108.1"
+    ],
+    "title": "LiteLLM v1.108.1 (LTS) fixes Bedrock guardrail billing and router cooldowns",
+    "points": [
+      "A string fallback target such as `default_fallbacks: gpt-3.5` stops the proxy at startup, so write it as a list, `default_fallbacks: [\"gpt-3.5\"]`.",
+      "Spend and budgets include native Bedrock guardrail traces and the Gemini audio rates for flex, priority and batch.",
+      "The router keeps the only deployment of a group warm under `allowed_fails`, and evicted SDK clients close their aiohttp sessions."
+    ]
+  },
+  {
+    "folders": [
       "v1.106.7"
     ],
     "title": "LiteLLM v1.106.7 supports custom video providers on /v1/videos",
@@ -13,7 +35,7 @@
     "folders": [
       "v1.108.0"
     ],
-    "title": "LiteLLM v1.108.0 adds Gemini 4 Argon, Microsoft 365 Copilot and OpenAI Live",
+    "title": "LiteLLM v1.108.0 (LTS) adds Gemini 4 Argon, Microsoft 365 Copilot and OpenAI Live",
     "points": [
       "LiteLLM adds Gemini 4 Argon, the Microsoft 365 Copilot provider, OpenAI Live sessions on `/v1/live/sessions` and Azure PTU capacity that teams share.",
       "The proxy count routes return the provider's error instead of a local estimate, and `token_count_framing` in `model_info` restores a local estimate."
@@ -203,27 +225,6 @@
       "The proxy now serves `POST /v1/decisions` in OpenAI's Decisions API format and `POST /v1/systemone` in the System One format.",
       "Decision models from OpenAI, Perplexity, TypeSafe, OpenRouter, Cloudflare Clef and self-hosted Strands Decider answer on both routes.",
       "Malformed requests, such as a missing `state` or more than 128 questions, return HTTP 400 before any upstream call."
-    ]
-  },
-  {
-    "folders": [
-      "v1.102.4"
-    ],
-    "title": "LiteLLM v1.102.4 fixes double-counted spend on the chat to Responses bridge",
-    "points": [
-      "Since v1.102.0, large non-streaming chat requests to `openai/responses/*` models logged spend twice, and each request now logs once.",
-      "Key, team and daily spend now match the real cost of each request, and streaming requests are unchanged."
-    ]
-  },
-  {
-    "folders": [
-      "v1.101.6"
-    ],
-    "title": "LiteLLM v1.101.6 fixes Codex CLI tool calls on the Responses to Chat bridge",
-    "points": [
-      "Codex CLI tools now reach models behind the Responses to Chat Completions bridge, such as Bedrock Converse models.",
-      "The bridge moves `additional_tools` input items into `tools` for every bridged provider.",
-      "The model call returns to Codex as a `custom_tool_call` in both streaming and non-streaming responses."
     ]
   }
 ]

@@ -287,6 +287,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/openai_moderation", customProps: { icon: "/img/integrations/openai.png" } },
           { type: "doc", id: "proxy/guardrails/pangea", customProps: { icon: "/img/integrations/pangea.png" } },
           "proxy/guardrails/pillar_security",
+          "proxy/guardrails/reco",
           { type: "doc", id: "proxy/guardrails/repelloai", customProps: { icon: "/img/integrations/repello.png" } },
           { type: "doc", id: "proxy/guardrails/promptguard", customProps: { icon: "/img/integrations/prompt-security.png" } },
           { type: "doc", id: "proxy/guardrails/pii_masking_v2", customProps: { icon: "/img/integrations/microsoft.png" } },
@@ -1731,6 +1732,7 @@ const providersSidebar = {
   providersSidebar: [
     { type: "doc", id: "providers/index", label: "All providers" },
     { type: "link", label: "Models & Pricing", href: "https://models.litellm.ai" },
+    { type: "doc", id: "model_latest_aliases", label: "Latest model aliases" },
     { type: "html", value: "Popular", className: "sidebar-group-label", defaultStyle: true },
     { type: "category", label: "OpenAI", className: "sidebar-provider", link: { type: "doc", id: "providers/openai" }, items: [
       "providers/openai/responses_api",

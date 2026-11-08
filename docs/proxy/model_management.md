@@ -8,6 +8,8 @@ This page covers those ongoing operations. If you are adding your very first mod
 
 ## The model list
 
+To follow a model family without changing the name in your application, use a [latest model alias](../model_latest_aliases.md), such as `openai/gpt-luna-latest`.
+
 Go to **Models + Endpoints** and open the **All Models** tab to see every model the gateway currently serves. Each row shows the public model name, the underlying provider and litellm model, and the input and output cost per token that LiteLLM maps automatically from its [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json).
 
 A badge on each model tells you where it came from: models added through the UI or API carry a database badge, while models loaded from `config.yaml` are marked as config. This distinction matters because config models cannot be edited from the UI (see [Database vs config.yaml models](#database-vs-configyaml-models) below). Use the search box and the provider filters to narrow a long list down to the models you care about.

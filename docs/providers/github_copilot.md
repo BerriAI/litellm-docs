@@ -118,6 +118,25 @@ These examples match LiteLLM's model catalog. GitHub controls which models each 
 
 To serve Responses or Embeddings, add a model for that endpoint with the same `github-copilot` credential, such as `github_copilot/gpt-5.3-codex` or `github_copilot/text-embedding-3-small`
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`github_copilot/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other GitHub Copilot model name. LiteLLM sends GitHub Copilot the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `github_copilot/gpt-luna-latest` | GPT Luna |
+| `github_copilot/gpt-sol-latest` | GPT Sol |
+| `github_copilot/gpt-terra-latest` | GPT Terra |
+| `github_copilot/gpt-astra-latest` | GPT Astra |
+| `github_copilot/claude-opus-latest` | Claude Opus |
+| `github_copilot/claude-sonnet-latest` | Claude Sonnet |
+| `github_copilot/claude-haiku-latest` | Claude Haiku |
+| `github_copilot/claude-fable-latest` | Claude Fable |
+| `github_copilot/grok-latest` | Grok |
+| `github_copilot/kimi-latest` | Kimi |
+
 ## Usage with the LiteLLM Python SDK
 
 Direct SDK calls run in your own process, outside the gateway, and sign in with one GitHub account. The first call starts GitHub's device flow in your terminal. LiteLLM saves the GitHub access token to `~/.config/litellm/github_copilot/access-token` and reuses it on later calls. The gateway never uses this sign-in. Direct SDK calls use the full model name, including the `github_copilot/` prefix
