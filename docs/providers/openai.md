@@ -1334,6 +1334,10 @@ LiteLLM:DEBUG: utils.py:255 - litellm.acompletion(... organization='my-special-o
 
 ## GPT-5 Pro Special Notes
 
+:::warning
+OpenAI shuts down `gpt-5-pro` on 2026-12-11, the `shutdown_date` its `/v1/models` endpoint lists. `gpt-5.5-pro` has no shutdown date.
+:::
+
 GPT-5 Pro is OpenAI's most advanced reasoning model with unique characteristics:
 
 - **Responses API Only**: GPT-5 Pro is only available through the `/v1/responses` endpoint
