@@ -47,7 +47,7 @@ model_list:
   # OpenAI reasoning model with native Responses API support
   - model_name: gpt
     litellm_params:
-      model: openai/gpt-5
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
   # a cheaper general model for OpenCode, Deep Agents and Tool Loop
   - model_name: gemini

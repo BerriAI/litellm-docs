@@ -124,7 +124,7 @@ from litellm import completion
 os.environ["EDENAI_API_KEY"] = ""  # your Eden AI API key
 
 response = completion(
-    model="edenai/gpt-5-mini",
+    model="edenai/{{openai_small}}",
     messages=[{"content": "Hello, how are you?", "role": "user"}],
     extra_body={
         "fallbacks": ["anthropic/claude-sonnet-latest"],

@@ -114,7 +114,7 @@ Follow these steps to configure router settings for a team:
 
 ## Deployment Weights
 
-Deployment weights split a model group's traffic across its deployments for one key or team. For example, a team can send 90% of its `gpt-5` traffic to one deployment and 10% to another, while every other caller keeps the global split.
+Deployment weights split a model group's traffic across its deployments for one key or team. For example, a team can send 90% of its `{{openai_large}}` traffic to one deployment and 10% to another, while every other caller keeps the global split.
 
 To set them in the UI, open the key or team Router Settings, select the `simple-shuffle` routing strategy on the Loadbalancing tab, and add a model group under Deployment Weights. Each deployment of that group is listed with a weight field and the share of traffic it receives. Weights are relative, so `9` and `1` give the same split as `90` and `10`.
 
@@ -125,7 +125,7 @@ The same settings can be sent through the API on `/team/new`, `/team/update`, `/
   "router_settings": {
     "routing_strategy": "simple-shuffle",
     "weights": {
-      "gpt-5": {"deployment-id-a": 9, "deployment-id-b": 1}
+      "{{openai_large}}": {"deployment-id-a": 9, "deployment-id-b": 1}
     }
   }
 }
