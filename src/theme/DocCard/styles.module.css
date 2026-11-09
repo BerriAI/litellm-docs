@@ -48,3 +48,11 @@
 .cardDescription {
   font-size: 0.8rem;
 }
+
+/* Default card icons: line icons in the muted text color, in place of emojis */
+.cardGlyph {
+  flex-shrink: 0;
+  margin-right: 2px;
+  vertical-align: -3px;
+  color: var(--ifm-color-emphasis-600);
+}

@@ -1,3 +1,7 @@
+---
+sidebar_label: "Routing Groups"
+---
+
 import Image from '@theme/IdealImage';
 
 # Manage Routing Groups

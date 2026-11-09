@@ -1,5 +1,6 @@
 ---
-title: "v1.81.9 - Control which MCP Servers are exposed on the Internet"
+title: "LiteLLM v1.81.9 - Control which MCP Servers are exposed on the Internet"
+description: "Adds public or private visibility for MCP servers with IP access control, Claude Opus 4.6 and A2A agent calls through /chat/completions."
 slug: "v1-81-9"
 date: 2026-02-07T00:00:00
 authors:

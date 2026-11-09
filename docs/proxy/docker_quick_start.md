@@ -7,17 +7,22 @@ import Image from '@theme/IdealImage';
 import ThemedVideo from '@site/src/components/ThemedVideo';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import QuickStartBox from '@site/src/components/QuickStartBox';
+import {OneClickDeploy} from '@site/src/components/Conversion';
 
 # Quickstart
 
 LiteLLM ships as a ready-to-run gateway. You start it with one command (or one click), then do everything else in your browser: connect providers, add models, create keys, and send test requests from the built-in Admin UI. No config files are required for this guide.
 
-By the end you will have LiteLLM running at `http://localhost:4000` with a model connected, a virtual key issued, and a request served through the gateway.
+<QuickStartBox variant="gateway" showTitle={false} heading="Up and running in a minute" source="docker-quickstart">
+
+When the command finishes, open the Admin UI. Then you can [add your models](#3-add-your-first-model), [create virtual keys](#5-create-a-virtual-key), and [call the gateway from your apps](#6-call-the-gateway-from-your-app).
+
+</QuickStartBox>
+
+For detailed installation steps, follow the rest of the guide. By the end you will have LiteLLM running at `http://localhost:4000` with a model connected, a virtual key issued, and a request served through the gateway.
 
 ## 1. Start LiteLLM
-
-<Tabs>
-<TabItem value="local" label="Run locally" default>
 
 ```bash
 curl -sSLO https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml
@@ -29,18 +34,7 @@ This brings up the gateway on port 4000 and a Postgres database that stores your
 
 The second command generates your master key, which is the credential you will use for every request below. The proxy refuses to start without it. Keep the `.env` file: regenerating `LITELLM_SALT_KEY` makes credentials already stored in the database unreadable.
 
-</TabItem>
-<TabItem value="cloud" label="1-click deploy">
-
-<div style={{display: 'flex', alignItems: 'center', gap: '1.5rem'}}>
-  <a href="https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic" target="_blank" rel="nofollow"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="40" /></a>
-  <a href="https://render.com/deploy?repo=https://github.com/BerriAI/litellm" target="_blank" rel="nofollow"><img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" height="40" /></a>
-</div>
-
-For the rest of this guide, use your deployment's URL wherever you see `http://localhost:4000`.
-
-</TabItem>
-</Tabs>
+<OneClickDeploy source="docker-quickstart" />
 
 :::warning[What the two keys do]
 Running locally, the command above generated both into `.env` and the compose file refuses to start without them. On a 1-click deploy, set them in the provider's environment.

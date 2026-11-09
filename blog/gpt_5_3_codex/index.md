@@ -7,6 +7,8 @@ authors:
   - krrish
   - ishaan-alt
 description: "Day 0 support for GPT-5.3-Codex on LiteLLM, including phase parameter handling for Responses API."
+card_title: "GPT-5.3-Codex"
+card_summary: "Codex model whose assistant items carry a phase field (commentary, final_answer) you must echo back each turn."
 tags: [openai, gpt-5.3-codex, codex, day 0 support]
 hide_table_of_contents: false
 ---

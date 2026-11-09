@@ -150,8 +150,9 @@ These `error.type` values are produced by the gateway itself. Seeing one of them
 | `key_model_access_denied` | 403 | The key's `models` list does not include the requested model | Add the model to the key, or call `/v1/models` to see what the key may use |
 | `team_model_access_denied`, `user_model_access_denied`, `org_model_access_denied`, `project_model_access_denied` | 403 | The same restriction applied at the team, user, organization, or project level | Grant access on the object named by the type |
 | `tool_access_denied` | 403 | The requested tool is not in the key's or team's allowed-tools list | Add the tool to the allowed list |
-| `key_vector_store_access_denied`, `team_vector_store_access_denied`, `org_vector_store_access_denied` | 403 | The caller may not use the requested vector store | Grant access on the object named by the type |
+| `key_vector_store_access_denied`, `team_vector_store_access_denied`, `user_vector_store_access_denied`, `org_vector_store_access_denied` | 401 | The caller may not use the requested vector store | Add the store to `object_permission.vector_stores` on the object named by the type |
 | `team_member_permission_error` | 401 | The caller lacks the team-member permission for this management action | Ask a team admin to perform it or to grant the permission |
+| `key_search_tool_access_denied`, `team_search_tool_access_denied`, `user_search_tool_access_denied` | 403 | `search_tool_deny_by_default` is on and the key, team, or user named by the type does not grant the requested search tool | Add the tool to `object_permission.search_tools` on the object named by the type |
 | `budget_exceeded` | 429 | A key, team, user, or per-session spend cap was reached. The message reports current cost and max budget | Raise the budget, or wait for the budget window to reset |
 | `throttling_error` | 429 | An RPM, TPM, or max-parallel-requests ceiling was exceeded. Also used for provider 429s, so check the headers to tell them apart | Back off using `retry-after` |
 | `invalid_request_error` | 400 | A required parameter is missing or malformed. `error.param` names it | Fix the request body |
@@ -164,7 +165,7 @@ Routing failures do not currently set a distinctive `error.type`; identify them 
 
 | Message prefix | Status | Cause |
 |---|---|---|
-| `No deployments available for selected model` | 429 | Every deployment in the model group is in cooldown after repeated failures. The message lists the cooling deployment ids and the seconds remaining |
+| `No deployments available for selected model` | 429 | Every deployment in the model group is in cooldown after repeated failures. The message lists the cooling deployment ids and the seconds remaining. The failure log lists the ones this request could have used, with their `api_base`, in [`error_information.error_cooldown_deployments`](/docs/proxy/logging_spec#standardloggingpayloaderrorinformation) |
 | `There are no healthy deployments for this model` | 400 | The model group has no deployment that can serve the request |
 | `Not allowed to access model due to tags configuration` | 401 | Tag-based routing excluded every deployment for this caller |
 | `No deployments available - crossed budget` | 429 | Provider-budget routing has exhausted the budget for every candidate deployment |

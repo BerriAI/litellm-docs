@@ -134,6 +134,18 @@ This applies to the `x-api-key` path; the OAuth `Authorization` header from `/lo
 - The setting can be in `litellm_settings` or `general_settings` depending on your config structure.
 - Enable debug logging: `LITELLM_LOG=DEBUG` to see which key is being forwarded.
 
+### Model is unavailable for everyone after one user hits their limit
+
+If a healthy account receives `429 No deployments available for selected model`, ask the proxy operator to check for an existing deployment cooldown. Wait for it to expire, or clear it with the steps below.
+
+Recovery before expiry briefly interrupts proxy traffic. Have the proxy operator:
+
+1. Stop all proxy workers that use the affected deployment.
+2. If Redis is configured, remove only that deployment's `deployment:<model_id>:cooldown` key using your Redis management tool. Use the deployment's `model_info.id`, not its model name, and include the configured Redis namespace prefix if present. Preserve all other keys.
+3. Start the proxy workers and send a request from a healthy account. Confirm it succeeds in **Logs**.
+
+With Redis, restarting workers alone can reload the old entry. Without Redis, restarting all workers clears the in-memory cooldown. This recovery does not reset the provider's account quota.
+
 ## Related
 
 - [Forward Client Headers](./../proxy/forward_client_headers.md) — Full BYOK and header forwarding docs

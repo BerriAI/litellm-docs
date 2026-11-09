@@ -201,6 +201,23 @@ Pass-through routes default to a **600 second** upstream timeout. Set `general_s
 
 Native provider passthrough routes (Bedrock `/converse`, `/v1/messages`, and the native `/v1/responses` stream) resolve their timeout through the router, and the first value set wins: the request's `timeout`, the deployment's `timeout` under `litellm_params`, `router_settings.timeout`, `litellm_settings.request_timeout` when you set it (or the `REQUEST_TIMEOUT` env var), `general_settings.pass_through_request_timeout`, then 600 seconds. A streaming request checks `stream_timeout` at each of those levels before `timeout`. So a `litellm_settings.request_timeout` you set outranks `pass_through_request_timeout` on these routes, and on a stream it bounds each wait for the next chunk, so a stalled upstream ends the stream with an error instead of hanging
 
+### Upstream-reported usage and model labels
+
+A custom pass-through upstream can report the cost and token count for its HTTP request in response headers. It can also name the model or feature that produced the usage.
+
+```http title="Upstream response headers"
+HTTP/1.1 200 OK
+x-litellm-response-cost: 0.0123
+x-litellm-total-tokens: 4210
+x-litellm-upstream-model: support-summarizer
+```
+
+`x-litellm-response-cost` reports the request's cost in USD, and `x-litellm-total-tokens` reports its total tokens. `x-litellm-upstream-model` sets the model label in spend logs and usage reports, even if the request body has no `model`. The upstream model label takes precedence over a body `model` on both success and failure records.
+
+LiteLLM trims surrounding whitespace from the model label and ignores empty or whitespace-only values. When the header is repeated or contains comma-separated values, only the first value is used. Labels are capped at 256 characters.
+
+The model header is a label only. It does not set or recalculate cost, look up a price for that name, or replace configured `cost_per_request`. Sending the model header alone does not make the request upstream-priced. See [Spend Tracking](./cost_tracking.md) to view the recorded usage.
+
 ### Header Options
 - **Authorization**: Authentication for the target API
 - **content-type**: Request body format specification
@@ -230,6 +247,35 @@ general_settings:
 |---------|----------|
 | `include_subpath: false` (default) | Only `/custom-api` is forwarded |
 | `include_subpath: true` | `/custom-api`, `/custom-api/v1/chat`, `/custom-api/anything` are all forwarded |
+
+### Restricting Keys and Teams to Routes
+
+An endpoint with `auth: true` rejects non-admin keys with a 403 unless the key or its team lists the route in `allowed_passthrough_routes`. The key's list is used when it has one; otherwise the team's list applies. To carve a route back out of a broader grant, add it to `denied_passthrough_routes`. A deny on the key or on its team always wins over an allow, so a team can grant `/custom-api` while one key, or the whole team, is blocked from `/custom-api/admin`
+
+```bash
+curl -X POST http://localhost:4000/key/generate \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "allowed_passthrough_routes": ["/custom-api"],
+    "denied_passthrough_routes": ["/custom-api/admin"]
+  }'
+```
+
+`/team/new`, `/team/update` and `/key/update` take the same two fields, and both are stored in the key or team `metadata`. With the key above:
+
+| Request | Result |
+|---------|--------|
+| `/custom-api/v1/chat` | Forwarded |
+| `/custom-api/admin`, `/custom-api/admin/users` | 403 naming the matched `denied_passthrough_routes` entry |
+| `/custom-api/administrator` | Forwarded, since an entry only matches whole path segments |
+| `/custom-api/public/../admin/users`, `/custom-api//admin/users` | 403, the path is checked as it will be forwarded |
+
+An entry matches its exact path and everything under it, a trailing `/` on an entry is ignored, and a trailing `*` matches any route that starts with the text before it (`/custom-api/adm*`). A more specific allow cannot re-open a route under a denied prefix. Team endpoint listings also hide the authenticated endpoints a team denies
+
+The deny list is checked against the path LiteLLM forwards, after `..`, `//` and percent-encoding are resolved, and it matches that path exactly. Variants that LiteLLM forwards unchanged, such as `/custom-api/ADMIN`, `/custom-api/admin;x=1`, a trailing `%20` or a backslash, are not denied. If your upstream treats those as the same path, grant only the routes a key needs with `allowed_passthrough_routes` instead of relying on a deny entry
+
+Both fields are Enterprise features, and only proxy admins can set or change them. A non-admin update that would change, clear or drop an existing deny list, including by replacing `metadata`, gets a 403. Proxy admin keys are not restricted by either list. The deny list only applies to custom endpoints with `auth: true`; endpoints with `auth: false` and LiteLLM's built-in provider routes such as `/anthropic/*` ignore it
 
 ---
 
@@ -437,9 +483,9 @@ general_settings:
 
 ### Getting Help
 
-[Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+[Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
 
-[Community Discord 💭](https://discord.gg/wuPM9dRgDw)
+[Community Discord](https://discord.gg/wuPM9dRgDw)
 
 
-Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+Our emails ishaan@berri.ai / krrish@berri.ai

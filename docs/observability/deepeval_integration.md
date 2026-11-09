@@ -49,7 +49,7 @@ You can obtain your `CONFIDENT_API_KEY` by logging into [Confident AI](https://a
 :::
 
 ## Support & Talk with Deepeval team
-- [Confident AI Docs 📝](https://documentation.confident-ai.com)
-- [Platform 🚀](https://confident-ai.com)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Support ✉️ support@confident-ai.com
+- [Confident AI Docs](https://documentation.confident-ai.com)
+- [Platform](https://confident-ai.com)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Support support@confident-ai.com

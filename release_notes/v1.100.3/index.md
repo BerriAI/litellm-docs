@@ -1,5 +1,6 @@
 ---
-title: "v1.100.3 - GPT-6 Request Handling & End-User Budget Resets"
+title: "LiteLLM v1.100.3 fixes GPT-6 request rules and end-user budget resets"
+description: "Fixes GPT-6 request rules for reasoning_effort, max_tokens and tools, and fixes end-user budget resets for large shared budgets."
 slug: "v1-100-3"
 date: 2026-09-25T06:21:39
 authors:

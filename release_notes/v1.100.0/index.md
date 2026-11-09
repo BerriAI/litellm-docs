@@ -1,5 +1,6 @@
 ---
-title: "v1.100.0 - Access Group Budgets, Together AI Sync & Custom Router Tiers"
+title: "LiteLLM v1.100.0 - Access Group Budgets, Together AI Sync & Custom Router Tiers"
+description: "Adds shared budgets on model access groups, a Together AI rewrite and editable Auto Router tiers. Also adds 242 models, such as grok-4.20."
 slug: "v1-100-0"
 date: 2026-09-06T00:00:00
 authors:

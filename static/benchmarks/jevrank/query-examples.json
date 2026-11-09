@@ -1,0 +1,594 @@
+{
+  "provenance": {
+    "dataset": "BEIR SciFact test",
+    "model": "jev-1.13.0",
+    "strategy": "pointwise",
+    "candidateCount": 20,
+    "codeRevision": "5aa0a8304cd5bfa095bbd07e77f6f8c367084595",
+    "source": "Saved LiteLLM benchmark responses and official SciFact relevance judgments",
+    "selection": "Three selected examples showing improvement, an unchanged first relevant rank, and regression. These examples do not summarize all 300 queries.",
+    "execution": "Recorded results; interacting with this demo makes no provider calls.",
+    "sourceResponses": "/benchmarks/jevrank/measured-responses.jsonl.gz"
+  },
+  "examples": [
+    {
+      "id": "702",
+      "label": "Plant roots",
+      "outcome": "improved",
+      "query": "Localization of PIN1 in the roots of Arabidopsis does not require VPS9a",
+      "firstRelevantBefore": 3,
+      "firstRelevantAfter": 1,
+      "ndcgAt10": 1.0,
+      "latencySeconds": 0.46437874995172024,
+      "estimatedCostUsd": 0.0005106780000000001,
+      "documents": [
+        {
+          "id": "16557565",
+          "title": "Local, Efflux-Dependent Auxin Gradients as a Common Module for Plant Organ Formation",
+          "excerpt": "Plants, compared to animals, exhibit an amazing adaptability and plasticity in their development. This is largely dependent on the ability of plants to form new organs, such as lateral roots, leaves, and flowers during postembryonic…",
+          "bm25Rank": 1,
+          "jevRank": 2,
+          "relevanceScore": 0.14,
+          "relevant": false
+        },
+        {
+          "id": "38675228",
+          "title": "A molecular framework for plant regeneration.",
+          "excerpt": "Plants and some animals have a profound capacity to regenerate organs from adult tissues. Molecular mechanisms for regeneration have, however, been largely unexplored. Here we investigate a local regeneration response in Arabidopsis roots.…",
+          "bm25Rank": 2,
+          "jevRank": 3,
+          "relevanceScore": 0.12,
+          "relevant": false
+        },
+        {
+          "id": "4350400",
+          "title": "Generation of cell polarity in plants links endocytosis, auxin distribution and cell fate decisions",
+          "excerpt": "Dynamically polarized membrane proteins define different cell boundaries and have an important role in intercellular communication—a vital feature of multicellular development. Efflux carriers for the signalling molecule auxin from the PIN…",
+          "bm25Rank": 3,
+          "jevRank": 1,
+          "relevanceScore": 0.39,
+          "relevant": true
+        },
+        {
+          "id": "19950357",
+          "title": "The rice FISH BONE gene encodes a tryptophan aminotransferase, which affects pleiotropic auxin-related processes.",
+          "excerpt": "Auxin is a fundamental plant hormone and its localization within organs plays pivotal roles in plant growth and development. Analysis of many Arabidopsis mutants that were defective in auxin biosynthesis revealed that the indole-3-pyruvic…",
+          "bm25Rank": 4,
+          "jevRank": 4,
+          "relevanceScore": 0.04,
+          "relevant": false
+        },
+        {
+          "id": "20402596",
+          "title": "The WUSCHEL-related homeobox gene WOX11 is required to activate shoot-borne crown root development in rice.",
+          "excerpt": "In rice (Oryza sativa), the shoot-borne crown roots are the major root type and are initiated at lower stem nodes as part of normal plant development. However, the regulatory mechanism of crown root development is poorly understood. In…",
+          "bm25Rank": 5,
+          "jevRank": 8,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "20868160",
+          "title": "TRICHOME BIREFRINGENCE and its homolog AT5G01360 encode plant-specific DUF231 proteins required for cellulose biosynthesis in Arabidopsis.",
+          "excerpt": "The Arabidopsis (Arabidopsis thaliana) trichome birefringence (tbr) mutant has severely reduced crystalline cellulose in trichomes, but the molecular nature of TBR was unknown. We determined TBR to belong to the plant-specific DUF231…",
+          "bm25Rank": 6,
+          "jevRank": 9,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "1354567",
+          "title": "The Arabidopsis Chromatin-Modifying Nuclear siRNA Pathway Involves a Nucleolar RNA Processing Center",
+          "excerpt": "In Arabidopsis thaliana, small interfering RNAs (siRNAs) direct cytosine methylation at endogenous DNA repeats in a pathway involving two forms of nuclear RNA polymerase IV (Pol IVa and Pol IVb), RNA-DEPENDENT RNA POLYMERASE 2 (RDR2),…",
+          "bm25Rank": 7,
+          "jevRank": 10,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "2991954",
+          "title": "Cdk11 is a RanGTP-dependent microtubule stabilization factor that regulates spindle assembly rate",
+          "excerpt": "Production of Ran-guanosine triphosphate (GTP) around chromosomes induces local nucleation and plus end stabilization of microtubules (MTs). The nuclear protein TPX2 is required for RanGTP-dependent MT nucleation. To find the MT…",
+          "bm25Rank": 8,
+          "jevRank": 11,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "16626264",
+          "title": "Genome-Wide Dynamics of Htz1, a Histone H2A Variant that Poises Repressed/Basal Promoters for Activation through Histone Loss",
+          "excerpt": "Histone variants help specialize chromatin regions; however, their impact on transcriptional regulation is largely unknown. Here, we determined the genome-wide localization and dynamics of Htz1, the yeast histone H2A variant. Htz1…",
+          "bm25Rank": 9,
+          "jevRank": 12,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "52944377",
+          "title": "ROS-induced R loops trigger a transcription-coupled but BRCA1/2-independent homologous recombination pathway through CSB",
+          "excerpt": "Actively transcribed regions of the genome are protected by transcription-coupled DNA repair mechanisms, including transcription-coupled homologous recombination (TC-HR). Here we used reactive oxygen species (ROS) to induce and…",
+          "bm25Rank": 10,
+          "jevRank": 13,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "14797520",
+          "title": "Noncoding Transcription by RNA Polymerase Pol IVb/Pol V Mediates Transcriptional Silencing of Overlapping and Adjacent Genes",
+          "excerpt": "Nuclear transcription is not restricted to genes but occurs throughout the intergenic and noncoding space of eukaryotic genomes. The functional significance of this widespread noncoding transcription is mostly unknown. We show that…",
+          "bm25Rank": 11,
+          "jevRank": 14,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "10504681",
+          "title": "TAA1-Mediated Auxin Biosynthesis Is Essential for Hormone Crosstalk and Plant Development",
+          "excerpt": "Plants have evolved a tremendous ability to respond to environmental changes by adapting their growth and development. The interaction between hormonal and developmental signals is a critical mechanism in the generation of this enormous…",
+          "bm25Rank": 12,
+          "jevRank": 5,
+          "relevanceScore": 0.04,
+          "relevant": false
+        },
+        {
+          "id": "35231675",
+          "title": "CLIP-170 interacts with dynactin complex and the APC-binding protein EB1 by different mechanisms.",
+          "excerpt": "CLIP-170 is a \"cytoplasmic linker protein\" implicated in endosome-microtubule interactions and in control of microtubule dynamics. CLIP-170 localizes dynamically to growing microtubule plus ends, colocalizing with the dynein activator…",
+          "bm25Rank": 13,
+          "jevRank": 15,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "2988714",
+          "title": "Coupled local translation and degradation regulate growth cone collapse",
+          "excerpt": "Local translation mediates axonal responses to Semaphorin3A (Sema3A) and other guidance cues. However, only a subset of the axonal proteome is locally synthesized, whereas most proteins are trafficked from the soma. The reason why only…",
+          "bm25Rank": 14,
+          "jevRank": 16,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "8536018",
+          "title": "Detection and function of nitric oxide during the hypersensitive response in Arabidopsis thaliana: where there's a will there's a way.",
+          "excerpt": "Nitric oxide (NO) was identified as a key player in plant defence responses approximately 20 years ago and a large body of evidence has accumulated since then supporting its role as a signalling molecule. However, there are many…",
+          "bm25Rank": 15,
+          "jevRank": 6,
+          "relevanceScore": 0.02,
+          "relevant": false
+        },
+        {
+          "id": "18264714",
+          "title": "Noise and interlocking signaling pathways promote distinct transcription factor dynamics in response to different stresses",
+          "excerpt": "All cells perceive and respond to environmental stresses through elaborate stress-sensing networks. Yeast cells sense stress through diverse signaling pathways that converge on the transcription factors Msn2 and Msn4, which respond by…",
+          "bm25Rank": 16,
+          "jevRank": 17,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "5849439",
+          "title": "Cytochemical Analysis of Pollen Development in Wild-Type Arabidopsis and a Male-Sterile Mutant.",
+          "excerpt": "Microsporogenesis has been examined in wild-type Arabidopsis thaliana and the nuclear male-sterile mutant BM3 by cytochemical staining. The mutant lacks adenine phosphoribosyltransferase, an enzyme of the purine salvage pathway that…",
+          "bm25Rank": 17,
+          "jevRank": 18,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "4544916",
+          "title": "The N-end rule pathway regulates pathogen responses in plants.",
+          "excerpt": "To efficiently counteract pathogens, plants rely on a complex set of immune responses that are tightly regulated to allow the timely activation, appropriate duration and adequate amplitude of defense programs. The coordination of the plant…",
+          "bm25Rank": 18,
+          "jevRank": 7,
+          "relevanceScore": 0.02,
+          "relevant": false
+        },
+        {
+          "id": "19708993",
+          "title": "Lysosomal localization of TRPML3 depends on TRPML2 and the mucolipidosis-associated protein TRPML1.",
+          "excerpt": "Mucolipidosis type IV is an autosomal recessive lysosomal storage disorder characterized by severe neurodegeneration, achlorhydria, and visual impairments such as corneal opacity and strabismus. The disease arises due to mutations in a…",
+          "bm25Rank": 19,
+          "jevRank": 19,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "40900242",
+          "title": "Smallest angiosperm genomes found in lentibulariaceae, with chromosomes of bacterial size.",
+          "excerpt": "Nuclear holoploid genome sizes (C-values) have been estimated to vary about 800-fold in angiosperms, with the smallest established 1C-value of 157 Mbp recorded in Arabidopsis thaliana. In the highly specialized carnivorous family…",
+          "bm25Rank": 20,
+          "jevRank": 20,
+          "relevanceScore": 0.01,
+          "relevant": false
+        }
+      ]
+    },
+    {
+      "id": "1014",
+      "label": "Fruit flies",
+      "outcome": "unchanged",
+      "query": "Rapamycin decreases the concentration of triacylglycerols in fruit flies.",
+      "firstRelevantBefore": 1,
+      "firstRelevantAfter": 1,
+      "ndcgAt10": 1.0,
+      "latencySeconds": 0.6300350000383332,
+      "estimatedCostUsd": 0.000609462,
+      "documents": [
+        {
+          "id": "6277638",
+          "title": "Mechanisms of Life Span Extension by Rapamycin in the Fruit Fly Drosophila melanogaster",
+          "excerpt": "The target of rapamycin (TOR) pathway is a major nutrient-sensing pathway that, when genetically downregulated, increases life span in evolutionarily diverse organisms including mammals. The central component of this pathway, TOR kinase,…",
+          "bm25Rank": 1,
+          "jevRank": 1,
+          "relevanceScore": 0.2,
+          "relevant": true
+        },
+        {
+          "id": "15615957",
+          "title": "Original Article",
+          "excerpt": "UNLABELLED Fruit and vegetable consumption has been inversely associated with the risk of chronic diseases including cancer and cardiovascular disease, with the beneficial effects attributed to a variety of protective antioxidants,…",
+          "bm25Rank": 2,
+          "jevRank": 11,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "18557974",
+          "title": "British Journal of Nutrition (2003), 89, 295–301 q The Authors 2003 DOI: 10.1079/BJN2002776 Plasma homocysteine concentration is decreased by dietary intervention*",
+          "excerpt": "High plasma total homocysteine (tHcy) concentration is reported to be a risk factor for vascular diseases. We investigated the extent to which serum folate and plasma tHcy respond to a high intake of natural folate from food. Thirty-seven…",
+          "bm25Rank": 3,
+          "jevRank": 12,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "10557471",
+          "title": "Association between folate intake from different food sources in Norway and homocysteine status in a dietary intervention among young male adults.",
+          "excerpt": "The aim of the present investigation was to study the effect of a dietary intervention which combined nutrition information with increased availability of vegetables, fruits and wholegrain bread. The effect of the intervention was…",
+          "bm25Rank": 4,
+          "jevRank": 13,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "2266471",
+          "title": "MicroRNA-21 is Induced by Rapamycin in a Model of Tuberous Sclerosis (TSC) and Lymphangioleiomyomatosis (LAM)",
+          "excerpt": "Lymphangioleiomyomatosis (LAM), a multisystem disease of women, is manifest by the proliferation of smooth muscle-like cells in the lung resulting in cystic lung destruction. Women with LAM can also develop renal angiomyolipomas. LAM is…",
+          "bm25Rank": 5,
+          "jevRank": 7,
+          "relevanceScore": 0.03,
+          "relevant": false
+        },
+        {
+          "id": "34760396",
+          "title": "Human and other faeces as breeding media of the trachoma vector Musca sorbens.",
+          "excerpt": "The fly Musca sorbens Wiedemann (Diptera: Muscidae) apparently transmits Chlamydia trachomatis, causing human trachoma. The literature indicates that M. sorbens breeds predominantly in isolated human faeces on the soil surface, but not in…",
+          "bm25Rank": 6,
+          "jevRank": 14,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "116792",
+          "title": "The mammalian target of rapamycin signaling pathway mediates epileptogenesis in a model of temporal lobe epilepsy.",
+          "excerpt": "Understanding molecular mechanisms mediating epileptogenesis is critical for developing more effective therapies for epilepsy. We recently found that the mammalian target of rapamycin (mTOR) signaling pathway is involved in…",
+          "bm25Rank": 7,
+          "jevRank": 5,
+          "relevanceScore": 0.05,
+          "relevant": false
+        },
+        {
+          "id": "1974176",
+          "title": "Fruit consumption and risk of type 2 diabetes: results from three prospective longitudinal cohort studies",
+          "excerpt": "OBJECTIVE To determine whether individual fruits are differentially associated with risk of type 2 diabetes. DESIGN Prospective longitudinal cohort study. SETTING Health professionals in the United States. PARTICIPANTS 66,105 women from…",
+          "bm25Rank": 8,
+          "jevRank": 15,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "13162391",
+          "title": "Funnel trap for the capture of phlebotomine sand flies (Diptera: Psychodidae) from tree holes.",
+          "excerpt": "A funnel trap that fitted over holes leading into hollow trees was used to capture adult phlebotomine sand flies, Lutzomyia shannoni Dyar, on Ossabaw Island, Chatham County, Ga. These insects rested in hollow trees during the day and were…",
+          "bm25Rank": 9,
+          "jevRank": 16,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "4658268",
+          "title": "Rictor, a Novel Binding Partner of mTOR, Defines a Rapamycin-Insensitive and Raptor-Independent Pathway that Regulates the Cytoskeleton",
+          "excerpt": "The mammalian TOR (mTOR) pathway integrates nutrient- and growth factor-derived signals to regulate growth, the process whereby cells accumulate mass and increase in size. mTOR is a large protein kinase and the target of rapamycin, an…",
+          "bm25Rank": 10,
+          "jevRank": 4,
+          "relevanceScore": 0.09,
+          "relevant": false
+        },
+        {
+          "id": "1227277",
+          "title": "Rapamycin passes the torch: a new generation of mTOR inhibitors",
+          "excerpt": "Mammalian target of rapamycin (mTOR) is an atypical protein kinase that controls growth and metabolism in response to nutrients, growth factors and cellular energy levels, and it is frequently dysregulated in cancer and metabolic…",
+          "bm25Rank": 11,
+          "jevRank": 3,
+          "relevanceScore": 0.1,
+          "relevant": false
+        },
+        {
+          "id": "10790846",
+          "title": "A rapamycin-sensitive signaling pathway contributes to long-term synaptic plasticity in the hippocampus.",
+          "excerpt": "Many forms of long-lasting behavioral and synaptic plasticity require the synthesis of new proteins. For example, long-term potentiation (LTP) that endures for more than an hour requires both transcription and translation. The…",
+          "bm25Rank": 12,
+          "jevRank": 8,
+          "relevanceScore": 0.03,
+          "relevant": false
+        },
+        {
+          "id": "9822397",
+          "title": "Sugar-sweetened beverages, weight gain, and incidence of type 2 diabetes in young and middle-aged women.",
+          "excerpt": "CONTEXT Sugar-sweetened beverages like soft drinks and fruit punches contain large amounts of readily absorbable sugars and may contribute to weight gain and an increased risk of type 2 diabetes, but these relationships have been minimally…",
+          "bm25Rank": 13,
+          "jevRank": 17,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "5145974",
+          "title": "Urinary bisphenol A concentrations and early reproductive health outcomes among women undergoing IVF.",
+          "excerpt": "STUDY QUESTION In women undergoing IVF, are urinary bisphenol A (BPA) concentrations associated with ovarian response and early reproductive outcomes, including oocyte maturation and fertilization, Day 3 embryo quality and blastocyst…",
+          "bm25Rank": 14,
+          "jevRank": 18,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "10482574",
+          "title": "Cell survival during complete nutrient deprivation depends on lipid droplet-fueled β-oxidation of fatty acids.",
+          "excerpt": "Cells exposed to stress of different origins synthesize triacylglycerols and generate lipid droplets (LD), but the physiological relevance of this response is uncertain. Using complete nutrient deprivation of cells in culture as a simple…",
+          "bm25Rank": 15,
+          "jevRank": 6,
+          "relevanceScore": 0.05,
+          "relevant": false
+        },
+        {
+          "id": "5260382",
+          "title": "An Antidepressant Decreases CSF Aβ Production in Healthy Individuals and in Transgenic AD Mice",
+          "excerpt": "Serotonin signaling suppresses generation of amyloid-β (Aβ) in vitro and in animal models of Alzheimer’s disease (AD). We show that in an aged transgenic AD mouse model (APP/PS1 plaque-bearing mice), the antidepressant citalopram, a…",
+          "bm25Rank": 16,
+          "jevRank": 19,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "17195001",
+          "title": "TOR Signaling in Growth and Metabolism",
+          "excerpt": "The target of rapamycin (TOR) is a conserved Ser/Thr kinase that regulates cell growth and metabolism in response to environmental cues. Here, highlighting contributions from studies in model organisms, we review mammalian TOR complexes…",
+          "bm25Rank": 17,
+          "jevRank": 2,
+          "relevanceScore": 0.2,
+          "relevant": false
+        },
+        {
+          "id": "6690087",
+          "title": "Inhibition of mammalian target of rapamycin potentiates thrombin-induced intercellular adhesion molecule-1 expression by accelerating and stabilizing NF-kappa B activation in endothelial cells.",
+          "excerpt": "We addressed the regulatory function of mammalian target of rapamycin (mTOR) in the mechanism of thrombin-induced ICAM-1 gene expression in endothelial cells. Pretreatment of HUVECs with rapamycin, an inhibitor of mTOR, augmented…",
+          "bm25Rank": 18,
+          "jevRank": 9,
+          "relevanceScore": 0.03,
+          "relevant": false
+        },
+        {
+          "id": "24632480",
+          "title": "Rapamycin treatment augments motor neuron degeneration in SOD1(G93A) mouse model of amyotrophic lateral sclerosis.",
+          "excerpt": "Aberrant protein misfolding may contribute to the pathogenesis of amyotrophic lateral sclerosis (ALS) but the detailed mechanisms are largely unknown. Our previous study has shown that autophagy is altered in the mouse model of ALS. In the…",
+          "bm25Rank": 19,
+          "jevRank": 10,
+          "relevanceScore": 0.03,
+          "relevant": false
+        },
+        {
+          "id": "12224536",
+          "title": "Trends in sugar-sweetened beverage consumption among youth and adults in the United States: 1999-2010.",
+          "excerpt": "BACKGROUND Reducing sugar-sweetened beverage (SSB) consumption is a recommended strategy to promote optimal health. OBJECTIVE The objective was to describe trends in SSB consumption among youth and adults in the United States. DESIGN We…",
+          "bm25Rank": 20,
+          "jevRank": 20,
+          "relevanceScore": 0.01,
+          "relevant": false
+        }
+      ]
+    },
+    {
+      "id": "237",
+      "label": "Bacterial cells",
+      "outcome": "regressed",
+      "query": "Cells lacking clpC have a defect in sporulation efficiency in Bacillus subtilis.",
+      "firstRelevantBefore": 1,
+      "firstRelevantAfter": 2,
+      "ndcgAt10": 0.6309297535714575,
+      "latencySeconds": 0.5551230000564829,
+      "estimatedCostUsd": 0.000549234,
+      "documents": [
+        {
+          "id": "4942718",
+          "title": "High-Throughput Genetic Screens Identify a Large and Diverse Collection of New Sporulation Genes in Bacillus subtilis",
+          "excerpt": "The differentiation of the bacterium Bacillus subtilis into a dormant spore is among the most well-characterized developmental pathways in biology. Classical genetic screens performed over the past half century identified scores of factors…",
+          "bm25Rank": 1,
+          "jevRank": 2,
+          "relevanceScore": 0.2,
+          "relevant": true
+        },
+        {
+          "id": "34386619",
+          "title": "The first gene of the Bacillus subtilis clpC operon, ctsR, encodes a negative regulator of its own operon and other class III heat shock genes.",
+          "excerpt": "The Bacillus subtilis clpC operon is regulated by two stress induction pathways relying on either sigmaB or a class III stress induction mechanism acting at a sigmaA-like promoter. When the clpC operon was placed under the control of the…",
+          "bm25Rank": 2,
+          "jevRank": 4,
+          "relevanceScore": 0.15,
+          "relevant": false
+        },
+        {
+          "id": "12881593",
+          "title": "Fine-tuning in regulation of Clp protein content in Bacillus subtilis.",
+          "excerpt": "Clp-controlled proteolysis in Bacillus subtilis seems to play a substantial role, particularly under stress conditions. Calibrated Western blot analyses were used to estimate the approximate numbers of heat-inducible Clp molecules within a…",
+          "bm25Rank": 3,
+          "jevRank": 3,
+          "relevanceScore": 0.2,
+          "relevant": false
+        },
+        {
+          "id": "24706198",
+          "title": "A minimal Tat system from a gram-positive organism: a bifunctional TatA subunit participates in discrete TatAC and TatA complexes.",
+          "excerpt": "The Tat system transports folded proteins across bacterial and thylakoid membranes. In Gram-negative organisms, a TatABC substrate-binding complex and separate TatA complex are believed to coalesce to form an active translocon, with all…",
+          "bm25Rank": 4,
+          "jevRank": 8,
+          "relevanceScore": 0.02,
+          "relevant": false
+        },
+        {
+          "id": "27373088",
+          "title": "Substrate requirements for ErmC' methyltransferase activity.",
+          "excerpt": "ErmC' is a methyltransferase that confers resistance to the macrolide-lincosamide-streptogramin B group of antibiotics by catalyzing the methylation of 23S rRNA at a specific adenine residue (A-2085 in Bacillus subtilis; A-2058 in…",
+          "bm25Rank": 5,
+          "jevRank": 9,
+          "relevanceScore": 0.02,
+          "relevant": false
+        },
+        {
+          "id": "17416520",
+          "title": "Genome-wide identification of genes directly regulated by the pleiotropic transcription factor Spx in Bacillus subtilis",
+          "excerpt": "The transcriptional regulator Spx plays a key role in maintaining the redox homeostasis of Bacillus subtilis cells exposed to disulfide stress. Defects in Spx were previously shown to lead to differential expression of numerous genes but…",
+          "bm25Rank": 6,
+          "jevRank": 5,
+          "relevanceScore": 0.03,
+          "relevant": false
+        },
+        {
+          "id": "12824568",
+          "title": "From Cell Differentiation to Cell Collectives: Bacillus subtilis Uses Division of Labor to Migrate",
+          "excerpt": "The organization of cells, emerging from cell-cell interactions, can give rise to collective properties. These properties are adaptive when together cells can face environmental challenges that they separately cannot. One particular…",
+          "bm25Rank": 7,
+          "jevRank": 10,
+          "relevanceScore": 0.02,
+          "relevant": false
+        },
+        {
+          "id": "2851611",
+          "title": "The multidrug ABC transporter BmrC/BmrD of Bacillus subtilis is regulated via a ribosome-mediated transcriptional attenuation mechanism",
+          "excerpt": "Expression of particular drug transporters in response to antibiotic pressure is a critical element in the development of bacterial multidrug resistance, and represents a serious concern for human health. To obtain a better understanding…",
+          "bm25Rank": 8,
+          "jevRank": 11,
+          "relevanceScore": 0.02,
+          "relevant": false
+        },
+        {
+          "id": "2904102",
+          "title": "Characterization of biochemical properties of Bacillus subtilis RecQ helicase.",
+          "excerpt": "RecQ family helicases function as safeguards of the genome. Unlike Escherichia coli, the Gram-positive Bacillus subtilis bacterium possesses two RecQ-like homologues, RecQ[Bs] and RecS, which are required for the repair of DNA…",
+          "bm25Rank": 9,
+          "jevRank": 6,
+          "relevanceScore": 0.03,
+          "relevant": false
+        },
+        {
+          "id": "5473074",
+          "title": "Solution NMR structure of the TatA component of the twin-arginine protein transport system from gram-positive bacterium Bacillus subtilis.",
+          "excerpt": "The twin-arginine transport (Tat) system translocates folded proteins across the bacterial cytoplasmic or chloroplast thylakoid membrane of plants. The Tat system in most Gram-positive bacteria consists of two essential components, the…",
+          "bm25Rank": 10,
+          "jevRank": 12,
+          "relevanceScore": 0.02,
+          "relevant": false
+        },
+        {
+          "id": "21943141",
+          "title": "TatC is a specificity determinant for protein secretion via the twin-arginine translocation pathway.",
+          "excerpt": "The recent discovery of a ubiquitous translocation pathway, specifically required for proteins with a twin-arginine motif in their signal peptide, has focused interest on its membrane-bound components, one of which is known as TatC. Unlike…",
+          "bm25Rank": 11,
+          "jevRank": 13,
+          "relevanceScore": 0.02,
+          "relevant": false
+        },
+        {
+          "id": "35085326",
+          "title": "SvpA, a novel surface virulence-associated protein required for intracellular survival of Listeria monocytogenes.",
+          "excerpt": "A previously unknown protein, designated SvpA (surface virulence-associated protein) and implicated in the virulence of the intracellular pathogen Listeria monocytogenes, was identified. This 64 kDa protein, encoded by svpA, is both…",
+          "bm25Rank": 12,
+          "jevRank": 1,
+          "relevanceScore": 0.22,
+          "relevant": false
+        },
+        {
+          "id": "680949",
+          "title": "The transcriptional program of sporulation in budding yeast",
+          "excerpt": "Diploid cells of budding yeast produce haploid cells through the developmental program of sporulation, which consists of meiosis and spore morphogenesis. DNA microarrays containing nearly every yeast gene were used to assay changes in gene…",
+          "bm25Rank": 13,
+          "jevRank": 14,
+          "relevanceScore": 0.02,
+          "relevant": false
+        },
+        {
+          "id": "464511",
+          "title": "Memory and Modularity in Cell-Fate Decision Making",
+          "excerpt": "Genetically identical cells sharing an environment can display markedly different phenotypes. It is often unclear how much of this variation derives from chance, external signals, or attempts by individual cells to exert autonomous…",
+          "bm25Rank": 14,
+          "jevRank": 7,
+          "relevanceScore": 0.03,
+          "relevant": false
+        },
+        {
+          "id": "16472469",
+          "title": "Targeting BRCA1 and BRCA2 Deficiencies with G-Quadruplex-Interacting Compounds",
+          "excerpt": "G-quadruplex (G4)-forming genomic sequences, including telomeres, represent natural replication fork barriers. Stalled replication forks can be stabilized and restarted by homologous recombination (HR), which also repairs DNA double-strand…",
+          "bm25Rank": 15,
+          "jevRank": 18,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "18855191",
+          "title": "Exploitative and Hierarchical Antagonism in a Cooperative Bacterium",
+          "excerpt": "Social organisms that cooperate with some members of their own species, such as close relatives, may fail to cooperate with other genotypes of the same species. Such noncooperation may take the form of outright antagonism or social…",
+          "bm25Rank": 16,
+          "jevRank": 15,
+          "relevanceScore": 0.02,
+          "relevant": false
+        },
+        {
+          "id": "8148304",
+          "title": "Molecular characterization of the yeast meiotic regulatory gene RIM1.",
+          "excerpt": "In the yeast Saccharomyces cerevisiae, genetic studies suggest that the RIM1 gene encodes a positive regulator of meiosis. rim1 mutations cause reduced expression of IME1, which is required for expression of many meiotic genes, and thus…",
+          "bm25Rank": 17,
+          "jevRank": 16,
+          "relevanceScore": 0.02,
+          "relevant": false
+        },
+        {
+          "id": "799586",
+          "title": "Role of the Single-Stranded DNA–Binding Protein SsbB in Pneumococcal Transformation: Maintenance of a Reservoir for Genetic Plasticity",
+          "excerpt": "Bacteria encode a single-stranded DNA (ssDNA) binding protein (SSB) crucial for genome maintenance. In Bacillus subtilis and Streptococcus pneumoniae, an alternative SSB, SsbB, is expressed uniquely during competence for genetic…",
+          "bm25Rank": 18,
+          "jevRank": 17,
+          "relevanceScore": 0.02,
+          "relevant": false
+        },
+        {
+          "id": "26731863",
+          "title": "Distinct and essential roles of transcription factors IRF-3 and IRF-7 in response to viruses for IFN-alpha/beta gene induction.",
+          "excerpt": "Induction of the interferon (IFN)-alpha/beta gene transcription in virus-infected cells is an event central to innate immunity. Mice lacking the transcription factor IRF-3 are more vulnerable to virus infection. In embryonic fibroblasts,…",
+          "bm25Rank": 19,
+          "jevRank": 19,
+          "relevanceScore": 0.01,
+          "relevant": false
+        },
+        {
+          "id": "34753204",
+          "title": "Zmpste24 deficiency in mice causes spontaneous bone fractures, muscle weakness, and a prelamin A processing defect.",
+          "excerpt": "Zmpste24 is an integral membrane metalloproteinase of the endoplasmic reticulum. Biochemical studies of tissues from Zmpste24-deficient mice (Zmpste24(-/-)) have indicated a role for Zmpste24 in the processing of CAAX-type prenylated…",
+          "bm25Rank": 20,
+          "jevRank": 20,
+          "relevanceScore": 0.01,
+          "relevant": false
+        }
+      ]
+    }
+  ]
+}

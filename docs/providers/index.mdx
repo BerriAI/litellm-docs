@@ -1,0 +1,15 @@
+---
+title: AI Providers
+slug: /providers
+sidebar_label: All providers
+description: Every model provider LiteLLM supports, with the endpoints each one serves. Call any of them from the Python SDK or the LiteLLM Gateway through one OpenAI-format API.
+hide_table_of_contents: true
+---
+
+import ProviderCatalog from '@site/src/components/ProviderCatalog';
+
+# AI Providers
+
+LiteLLM calls every provider below through one OpenAI-format API. Set the model as `<prefix>/<model-name>`, for example `anthropic/claude-sonnet-5`, and the same request works from the Python SDK and the Gateway. Open a provider for its keys, setup, and supported parameters. Prices and context windows for each model are on [Models & Pricing](https://models.litellm.ai).
+
+<ProviderCatalog />

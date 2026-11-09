@@ -7,6 +7,8 @@ authors:
   - krrish
   - ishaan-alt
 description: "Day 0 support for the GPT-5.6 family (Sol, Terra, and Luna) on LiteLLM."
+card_title: "GPT-5.6 (Sol, Terra, Luna)"
+card_summary: "The GPT-5.6 family (Sol, Terra, Luna) on OpenAI direct and Azure OpenAI, one config per variant."
 image: ./hero.png
 tags: [openai, gpt-5.6, gpt-5.6-sol, gpt-5.6-terra, gpt-5.6-luna, completion, day 0 support]
 hide_table_of_contents: false

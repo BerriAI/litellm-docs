@@ -27,7 +27,7 @@ model_list:
         model: vertex_ai/{{gemini_flash}}
         vertex_project: my-project-id
         vertex_location: us-central1
-    - model_name: "gpt-4o-mini-openai"
+    - model_name: "{{openai_small}}-openai"
       litellm_params:
         model: {{openai_small}}
         api_key: os.environ/OPENAI_API_KEY
@@ -53,10 +53,10 @@ When enabled, uploads without `target_model_names` return `400`. Existing manage
 
 ```python
 # String (comma-separated for multiple models)
-extra_body={"target_model_names": "gpt-4o-mini-openai, {{gemini_flash}}"}
+extra_body={"target_model_names": "{{openai_small}}-openai, {{gemini_flash}}"}
 
 # List (OpenAI Python SDK sends this as target_model_names[] in multipart form)
-extra_body={"target_model_names": ["gpt-4o-mini-openai"]}
+extra_body={"target_model_names": ["{{openai_small}}-openai"]}
 ```
 
 ### 2. Start proxy
@@ -70,7 +70,7 @@ litellm --config /path/to/config.yaml
 Specify `target_model_names` to use the same file id across different providers. This is the list of model_names set via config.yaml (or 'public_model_names' on UI). 
 
 ```python
-target_model_names="gpt-4o-mini-openai, {{gemini_flash}}" # 👈 Specify model_names
+target_model_names="{{openai_small}}-openai, {{gemini_flash}}" # Specify model_names
 ```
 
 Check `/v1/models` to see the list of available model names for a key.
@@ -97,7 +97,7 @@ with open("2403.05530.pdf", "wb") as f:
 file = client.files.create(
     file=open("2403.05530.pdf", "rb"),
     purpose="user_data", # can be any openai 'purpose' value
-    extra_body={"target_model_names": "gpt-4o-mini-openai, {{gemini_flash}}"}, # 👈 Specify model_names
+    extra_body={"target_model_names": "{{openai_small}}-openai, {{gemini_flash}}"}, # Specify model_names
 )
 
 print(f"file id={file.id}")
@@ -110,7 +110,7 @@ print(f"file id={file.id}")
 
 ```python
 completion = client.chat.completions.create(
-    model="gpt-4o-mini-openai",
+    model="{{openai_small}}-openai",
     messages=[
         {
             "role": "user",
@@ -185,10 +185,10 @@ with open("2403.05530.pdf", "wb") as f:
 file = client.files.create(
     file=open("2403.05530.pdf", "rb"),
     purpose="user_data", # can be any openai 'purpose' value
-    extra_body={"target_model_names": "gpt-4o-mini-openai, vertex_ai/{{gemini_flash}}"},
+    extra_body={"target_model_names": "{{openai_small}}-openai, vertex_ai/{{gemini_flash}}"},
 )
 
-print(f"file.id: {file.id}") # 👈 Unified file id
+print(f"file.id: {file.id}") # Unified file id
 
 ## GEMINI CALL ### 
 completion = client.chat.completions.create(
@@ -214,7 +214,7 @@ print(completion.choices[0].message)
 
 ### OPENAI CALL ### 
 completion = client.chat.completions.create(
-    model="gpt-4o-mini-openai",
+    model="{{openai_small}}-openai",
     messages=[
         {
             "role": "user",
@@ -243,7 +243,7 @@ Prevent users from seeing files they don't have access to on `list` and `retriev
 
 ```yaml
 model_list:
-    - model_name: "gpt-4o-mini-openai"
+    - model_name: "{{openai_small}}-openai"
       litellm_params:
         model: {{openai_small}}
         api_key: os.environ/OPENAI_API_KEY
@@ -267,7 +267,7 @@ Let's create a user with the id `user_123`.
 curl -L -X POST 'http://0.0.0.0:4000/user/new' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -H 'Content-Type: application/json' \
--d '{"models": ["gpt-4o-mini-openai"], "user_id": "user_123"}'
+-d '{"models": ["{{openai_small}}-openai"], "user_id": "user_123"}'
 ```
 
 Get the key from the response.
@@ -294,7 +294,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://0.0.0.0:4000",
-    api_key="sk-...", # 👈 Use the key you generated in step 3
+    api_key="sk-...", # Use the key you generated in step 3
     max_retries=0
 )
 
@@ -302,7 +302,7 @@ client = OpenAI(
 finetuning_input_file = client.files.create(
     file=open("./fine_tuning.jsonl", "rb"), # {"model": "azure-gpt-4o"} <-> {"model": "gpt-4o-my-special-deployment"}
     purpose="fine-tune",
-    extra_body={"target_model_names": "gpt-4.1-openai"} # 👈 Tells litellm which regions/projects to write the file in. 
+    extra_body={"target_model_names": "gpt-4.1-openai"} # Tells litellm which regions/projects to write the file in.
 )
 print(finetuning_input_file) # file.id = "litellm_proxy/..." = {"model_name": {"deployment_id": "deployment_file_id"}}
 ```
@@ -371,7 +371,7 @@ with open("2403.05530.pdf", "wb") as f:
 file = client.files.create(
     file=open("2403.05530.pdf", "rb"),
     purpose="user_data", # can be any openai 'purpose' value
-    extra_body={"target_model_names": "gpt-4o-mini-openai, vertex_ai/{{gemini_flash}}"},
+    extra_body={"target_model_names": "{{openai_small}}-openai, vertex_ai/{{gemini_flash}}"},
 )
 ```
 
@@ -396,14 +396,14 @@ file = client.files.delete(file_id=file.id)
 ```python
 client = OpenAI(base_url="http://0.0.0.0:4000", api_key="sk-<your-litellm-api-key>", max_retries=0)
 
-files = client.files.list(extra_body={"target_model_names": "gpt-4o-mini-openai"})
+files = client.files.list(extra_body={"target_model_names": "{{openai_small}}-openai"})
 
 print(files) # All files user has created
 ```
 
 Pre-GA Limitations on List Files:
  - No multi-model support: Just 1 model name is supported for now. 
- - No multi-deployment support: Just 1 deployment of the model is supported for now (e.g. if you have 2 deployments with the `gpt-4o-mini-openai` public model name, it will pick one and return all files on that deployment).
+ - No multi-deployment support: Just 1 deployment of the model is supported for now (e.g. if you have 2 deployments with the `{{openai_small}}-openai` public model name, it will pick one and return all files on that deployment).
 
 Pre-GA Limitations will be fixed before GA of the Managed Files feature.
 

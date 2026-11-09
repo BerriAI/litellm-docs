@@ -136,7 +136,7 @@ The above request should not be blocked, and you should receive a regular LLM re
       "finish_reason": "stop",
       "index": 0,
       "message": {
-        "content": "Hello! 😊 How can I assist you today?",
+        "content": "Hello! How can I assist you today?",
         "role": "assistant",
         "tool_calls": null,
         "function_call": null,

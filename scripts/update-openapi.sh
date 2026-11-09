@@ -3,4 +3,7 @@
 # Snapshots a running proxy's /openapi.json into static/openapi.json; run from the repo root.
 # The daily .github/workflows/update-openapi.yml job calls this script to keep the snapshot in sync.
 set -euo pipefail
-curl -sf "${1:-http://localhost:4000}/openapi.json" -o static/openapi.json
+snapshot_tmp=$(mktemp)
+trap 'rm -f "$snapshot_tmp"' EXIT
+curl -sf "${1:-http://localhost:4000}/openapi.json" -o "$snapshot_tmp"
+python3 scripts/normalize-openapi.py "$snapshot_tmp" static/openapi.json

@@ -1,5 +1,6 @@
 ---
-title: "v1.82.3 - Nebius AI, gpt-5.4, Gemini 3.x, FLUX Kontext, and 116 New Models"
+title: "LiteLLM v1.82.3 - Nebius AI, gpt-5.4, Gemini 3.x, FLUX Kontext, and 116 New Models"
+description: "Adds Nebius AI, gpt-5.4 and gpt-5.4-pro, Gemini 3.x models and FLUX Kontext image editing. Adds 116 new models and a Hashicorp Vault secret manager."
 slug: "v1-82-3"
 date: 2026-03-16T00:00:00
 authors:

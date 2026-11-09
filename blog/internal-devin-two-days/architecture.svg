@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 800" role="img" aria-labelledby="title desc">
+<title id="title">Moyai: application, orchestration, and agent computers</title><desc id="desc">Slack and the web send messages to the Render app. Render keeps SQLite state, a Temporal worker, and a credential broker. Temporal Cloud coordinates one workflow per session. Hermes runs in Modal sandboxes and calls the broker for model and connected-app access. Render calls LiteLLM and organization integrations.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M1 1 L7 4 L1 7" fill="none" stroke="#9296ac" stroke-width="1.6"/></marker></defs>
+<rect width="960" height="800" rx="20" fill="#fafaff"/>
+<g font-family="Arial, Helvetica, sans-serif" fill="#20223b">
+<text x="36" y="43" fill="#20223b" font-size="25" font-weight="600" text-anchor="start">A session spans three services</text>
+<text x="36" y="71" fill="#64677e" font-size="16" font-weight="400" text-anchor="start">Keep the conversation durable; give each executing agent its own computer.</text>
+<rect x="36" y="156" width="180" height="86" rx="12" fill="#fff" stroke="#dedfec" stroke-width="1.5"/>
+<text x="56" y="190" fill="#20223b" font-size="22" font-weight="600" text-anchor="start">Slack</text>
+<text x="56" y="217" fill="#64677e" font-size="13" font-weight="400" text-anchor="start">Mentions + thread replies</text>
+<polyline points="216,199 280,199" fill="none" stroke="#9296ac" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="36" y="280" width="180" height="86" rx="12" fill="#fff" stroke="#dedfec" stroke-width="1.5"/>
+<text x="56" y="314" fill="#20223b" font-size="22" font-weight="600" text-anchor="start">Web UI</text>
+<text x="56" y="341" fill="#64677e" font-size="13" font-weight="400" text-anchor="start">Chat + files + progress</text>
+<polyline points="216,323 280,323" fill="none" stroke="#9296ac" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="280" y="108" width="350" height="430" rx="12" fill="#f0ecff" stroke="#b7a7ef" stroke-width="1.5"/>
+<text x="308" y="146" fill="#5b3fd1" font-size="14" font-weight="700" text-anchor="start">RENDER</text>
+<text x="308" y="180" fill="#20223b" font-size="24" font-weight="600" text-anchor="start">Application + worker</text>
+<text x="308" y="211" fill="#20223b" font-size="17" font-weight="400" text-anchor="start">Web API / signed Slack intake</text>
+<rect x="306" y="235" width="298" height="92" rx="8" fill="#ffffff" stroke="#d7ccef" stroke-width="1.5"/>
+<text x="324" y="267" fill="#20223b" font-size="18" font-weight="600" text-anchor="start">Persistent SQLite + artifacts</text>
+<text x="324" y="293" fill="#64677e" font-size="15" font-weight="400" text-anchor="start">Messages, execution phases,</text>
+<text x="324" y="314" fill="#64677e" font-size="15" font-weight="400" text-anchor="start">delivery receipts, saved results</text>
+<text x="308" y="369" fill="#20223b" font-size="19" font-weight="600" text-anchor="start">Temporal worker</text>
+<text x="308" y="395" fill="#64677e" font-size="15" font-weight="400" text-anchor="start">Start or reconnect to the sandbox</text>
+<text x="308" y="451" fill="#20223b" font-size="19" font-weight="600" text-anchor="start">Tool + model broker</text>
+<text x="308" y="477" fill="#64677e" font-size="15" font-weight="400" text-anchor="start">Check the session capability</text>
+<text x="308" y="501" fill="#64677e" font-size="15" font-weight="400" text-anchor="start">Keep provider credentials here</text>
+<rect x="704" y="108" width="220" height="168" rx="12" fill="#fff0e3" stroke="#efbb95" stroke-width="1.5"/>
+<text x="725" y="144" fill="#9a4e1a" font-size="14" font-weight="700" text-anchor="start">TEMPORAL CLOUD</text>
+<text x="725" y="178" fill="#20223b" font-size="23" font-weight="600" text-anchor="start">One workflow</text>
+<text x="725" y="207" fill="#20223b" font-size="19" font-weight="400" text-anchor="start">per chat session</text>
+<text x="725" y="238" fill="#64677e" font-size="15" font-weight="400" text-anchor="start">Signals, retries, timers</text>
+<text x="725" y="258" fill="#64677e" font-size="14" font-weight="400" text-anchor="start">IDs + small status values</text>
+<polyline points="633,188 701,188" fill="none" stroke="#9296ac" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<rect x="704" y="360" width="220" height="260" rx="12" fill="#e8f8f2" stroke="#93ccbc" stroke-width="1.5"/>
+<text x="725" y="396" fill="#26775e" font-size="14" font-weight="700" text-anchor="start">MODAL</text>
+<text x="725" y="430" fill="#20223b" font-size="23" font-weight="600" text-anchor="start">Hermes agent</text>
+<text x="725" y="459" fill="#20223b" font-size="14" font-weight="400" text-anchor="start">Terminal / files / browser</text>
+<text x="725" y="489" fill="#64677e" font-size="14" font-weight="400" text-anchor="start">Calls the Render broker</text>
+<text x="725" y="511" fill="#64677e" font-size="14" font-weight="400" text-anchor="start">for models and app tools</text>
+<polyline points="633,439 701,439" fill="none" stroke="#9296ac" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<rect x="722" y="541" width="184" height="58" rx="8" fill="#fff" stroke="#b7dacd" stroke-width="1.5"/>
+<text x="814" y="566" fill="#20223b" font-size="15" font-weight="600" text-anchor="middle">Filesystem snapshots</text>
+<text x="814" y="588" fill="#64677e" font-size="12" font-weight="400" text-anchor="middle">Save + restore workspace</text>
+<polyline points="375,540 375,642" fill="none" stroke="#9296ac" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="385" y="592" fill="#64677e" font-size="14" font-weight="400" text-anchor="start">Model requests</text>
+<polyline points="570,540 570,605 607,605 607,642" fill="none" stroke="#9296ac" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="582" y="575" fill="#64677e" font-size="14" font-weight="400" text-anchor="start">Approved app tools</text>
+<rect x="280" y="645" width="190" height="108" rx="12" fill="#ecefff" stroke="#bbc3f3" stroke-width="1.5"/>
+<text x="302" y="682" fill="#3a48a5" font-size="23" font-weight="600" text-anchor="start">LiteLLM</text>
+<text x="302" y="710" fill="#20223b" font-size="16" font-weight="400" text-anchor="start">Model access</text>
+<text x="302" y="733" fill="#64677e" font-size="15" font-weight="400" text-anchor="start">Request costs</text>
+<rect x="500" y="645" width="215" height="108" rx="12" fill="#fff" stroke="#dedfec" stroke-width="1.5"/>
+<text x="522" y="682" fill="#20223b" font-size="21" font-weight="600" text-anchor="start">Connected apps</text>
+<text x="522" y="710" fill="#20223b" font-size="16" font-weight="400" text-anchor="start">GitHub / Slack</text>
+<text x="522" y="733" fill="#20223b" font-size="16" font-weight="400" text-anchor="start">Linear / Notion</text>
+<text x="36" y="692" fill="#20223b" font-size="16" font-weight="600" text-anchor="start">One Render instance</text>
+<text x="36" y="719" fill="#64677e" font-size="14" font-weight="400" text-anchor="start">owns the persistent disk.</text>
+<text x="36" y="742" fill="#64677e" font-size="14" font-weight="400" text-anchor="start">Agents scale in Modal.</text>
+</g></svg>

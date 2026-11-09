@@ -2,7 +2,7 @@
 
 Pass-through endpoints for Langfuse - call langfuse endpoints with LiteLLM Virtual Key.
 
-Just replace `https://us.cloud.langfuse.com` with `LITELLM_PROXY_BASE_URL/langfuse` 🚀
+Just replace `https://us.cloud.langfuse.com` with `LITELLM_PROXY_BASE_URL/langfuse`
 
 #### **Example Usage**
 ```python

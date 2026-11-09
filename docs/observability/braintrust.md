@@ -25,7 +25,7 @@ litellm.callbacks = ["braintrust"]
 response = litellm.completion(
   model="{{openai_small}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - i'm openai"}
+    {"role": "user", "content": "Hi - i'm openai"}
   ]
 )
 ```
@@ -88,7 +88,7 @@ You can customize the span id, root span name and span parents in Braintrust log
 response = litellm.completion(
   model="{{openai_small}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - i'm openai"}
+    {"role": "user", "content": "Hi - i'm openai"}
   ],
   metadata={
     "project_id": "1234",
@@ -107,7 +107,7 @@ Note: Other `metadata` can be included here as well when using the SDK.
 response = litellm.completion(
   model="{{openai_small}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - i'm openai"}
+    {"role": "user", "content": "Hi - i'm openai"}
   ],
   metadata={
     "project_id": "1234",
@@ -159,7 +159,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={ # pass in any provider-specific param, if not supported by openai, https://docs.litellm.ai/docs/completion/input#provider-specific-params
-        "metadata": { # 👈 use for logging additional params (e.g. to braintrust)
+        "metadata": { # use for logging additional params (e.g. to braintrust)
             "project_id": "my-special-project",
             "span_name": "Poetry Generation"
         }

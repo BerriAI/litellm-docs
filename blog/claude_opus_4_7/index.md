@@ -178,11 +178,15 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 model_list:
   - model_name: claude-opus-4-7
     litellm_params:
-      model: bedrock/anthropic.claude-opus-4-7
+      model: bedrock/global.anthropic.claude-opus-4-7
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1
 ```
+
+:::note
+`global.` can serve a request from any commercial AWS region. To keep requests inside one geography, swap in a geographic inference profile such as `bedrock/us.anthropic.claude-opus-4-7` (the model's AWS model card lists the profiles it has), which costs 10% more. LiteLLM tracks the cost of both. On older images this needs the remote cost map, which LiteLLM loads at startup unless `LITELLM_LOCAL_MODEL_COST_MAP` is set.
+:::
 
 **2. Start the proxy**
 

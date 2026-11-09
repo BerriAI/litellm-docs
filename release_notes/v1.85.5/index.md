@@ -1,5 +1,6 @@
 ---
-title: "v1.85.5 - Claude Fable 5, CrowdStrike AIDR & Batch File Auth"
+title: "LiteLLM v1.85.5 - Claude Fable 5, CrowdStrike AIDR & Batch File Auth"
+description: "Adds Claude Fable 5 on Anthropic, Bedrock, Vertex AI and Azure AI, plus CrowdStrike AIDR identity capture and batch file authorization."
 slug: "v1-85-5"
 date: 2026-06-10T18:31:24
 authors:

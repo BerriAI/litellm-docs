@@ -1,6 +1,6 @@
 ---
 title: Codex (CLI)
-sidebar_label: Codex (CLI)
+toc_max_heading_level: 4
 ---
 
 import Image from '@theme/IdealImage';
@@ -9,13 +9,21 @@ import Image from '@theme/IdealImage';
 
 [Codex](https://github.com/openai/codex) reads all of its configuration from `~/.codex/config.toml`. You define LiteLLM as a custom model provider there and register the [MCP gateway](../../mcp.md) in the same file. This is the same config the [Codex surface inside ChatGPT Desktop](./codex_chatgpt_desktop.md) uses, so setting it up once covers both.
 
+:::tip Use your ChatGPT subscription
+
+To keep your own ChatGPT login and send its requests through the gateway, follow [ChatGPT subscription setup](../../tutorials/openai_codex_byok.md). That flow sends a separate LiteLLM key and keeps subscription authentication in Codex.
+
+:::
+
 ## Quick reference
 
 | Setting | Value |
 |---|---|
 | Config file | `~/.codex/config.toml` |
 | `base_url` | `<LITELLM_PROXY_BASE_URL>/v1` (e.g. `http://localhost:4000/v1`) |
-| Provider key | Your LiteLLM [virtual key](../virtual_keys.md), read from the env var named in `env_key`, or [`lite auth print-token`](#sign-in-with-litellm-sso) |
+| Provider key | Your LiteLLM [virtual key](../virtual_keys.md), read from the env var named in `env_key`, or [`lite auth print-token`](./codex_cli_sso.md) |
+| `model_catalog_url` | `<LITELLM_PROXY_BASE_URL>/v1/models`, plus `api_key_model_discovery = true` under `[features]` |
+| Context window | `model_info.max_input_tokens` on every deployment ([details](#context-window)) <SinceVersion v="1.110.0" /> |
 | MCP endpoint | `<LITELLM_PROXY_BASE_URL>/<server_name>/mcp` |
 | MCP auth | The same virtual key, read from the env var named in `bearer_token_env_var` |
 
@@ -60,12 +68,12 @@ request_max_retries = 4
 Export the key, then run Codex:
 
 ```bash
-export LITELLM_API_KEY="sk-1234"
+export LITELLM_API_KEY="sk-<your-virtual-key>"
 
 codex
 ```
 
-`model` can be any `model_name` from your LiteLLM config. Override it per run with `codex --model {{gemini_pro}}`. If Codex does not recognize the name, it uses fallback metadata; see [Model metadata for custom aliases](#model-metadata-for-custom-aliases) to configure an entry
+`model` can be any `model_name` from your LiteLLM config. Override it per run with `codex --model {{gemini_pro}}`. Until you complete [step 4](#model-catalog-and-service-tiers), Codex only knows the metadata of OpenAI's own models, so with a gateway name it prints `Model metadata for ... not found. Defaulting to fallback metadata` on the first request and its `/model` picker keeps showing Codex's built-in models; requests still go through. Step 4 fetches the catalog from the gateway, and [Model metadata for custom aliases](#model-metadata-for-custom-aliases) covers a local catalog file instead
 
 Codex shows the model in its startup header and routes the task through the gateway. Here Codex 0.154 is answering through a local gateway:
 
@@ -77,30 +85,80 @@ Ask Codex to make a small change, then check the Admin UI under **Logs** or **Us
 
 The row carries no end user yet, since Codex has no setting that puts one in the request body. To attribute each request to a developer, customer, or project instead, add a LiteLLM tracking header to the provider block with `http_headers` or `env_http_headers`; see [Codex CLI granular cost tracking](../../tutorials/codex_customer_tracking.md).
 
-## Sign in with LiteLLM SSO
+### 4. Let Codex list the gateway's models and service tiers {#model-catalog-and-service-tiers}
 
-In place of a long-lived virtual key, Codex can ask the `lite` CLI for a token whenever it needs one. Each developer runs [`lite login --pkce`](../cli_sso.md) once, and requests are then attributed to their LiteLLM user and team
+For an OpenAI deployment with UI screenshots, configuration, and request examples, see [Fast & Ultrafast mode](../../providers/openai/ultrafast.md). The guide also explains when to set a default `service_tier` and when to let Codex choose it per request.
 
-Replace `env_key` with an `auth` table in `~/.codex/config.toml`:
+Codex never asks a custom provider which models it serves unless you tell it to, so its `/model` picker shows Codex's built-in OpenAI models and a gateway-only name such as `my-coding-model` never appears in it. Codex CLI 0.159 or newer can fetch the catalog from the gateway instead. Two settings are needed together: `model_catalog_url` on the provider block, pointed at `<LITELLM_PROXY_BASE_URL>/v1/models`, and the `api_key_model_discovery` feature under `[features]`. Either one alone changes nothing, so `codex --enable api_key_model_discovery` without the URL never calls the gateway. Older releases such as 0.159 also show a startup warning about the feature, which `suppress_unstable_features_warning = true` at the top level of the file, before the first table, silences. Under `[features]` Codex ignores that key and warns about an unrecognized setting instead.
 
 ```toml title="~/.codex/config.toml"
-model_provider = "litellm"
+suppress_unstable_features_warning = true
+
+[features]
+api_key_model_discovery = true
 
 [model_providers.litellm]
 name = "LiteLLM"
-base_url = "https://litellm.example.com/v1"
+base_url = "http://localhost:4000/v1"
+model_catalog_url = "http://localhost:4000/v1/models"
+env_key = "LITELLM_API_KEY"
 wire_api = "responses"
-
-[model_providers.litellm.auth]
-command = "/absolute/path/to/lite"
-args = ["--base-url", "https://litellm.example.com", "auth", "print-token"]
-timeout_ms = 30000
-refresh_interval_ms = 300000
 ```
 
-Replace `/absolute/path/to/lite` with the absolute path returned by `which lite`. The `--base-url` value must exactly match the URL used for `lite login --pkce`; a token issued for `http://127.0.0.1:4000` is not returned for `http://localhost:4000`. `lite auth print-token` writes only the token to stdout and renews it with the refresh token stored by PKCE login. After `lite logout`, Codex receives 401 responses until you run `lite login --pkce` again
+On startup Codex calls `GET /v1/models?client_version=<its version>` with your virtual key, and the gateway answers in Codex's own catalog format. The `/model` picker then lists your gateway's chat models in `model_list` order, named by `model_info.display_name` when you set one and by the `model_name` otherwise. Wildcard entries such as `openai/*` and models that are not chat models (embeddings, for example) are left out. A model Codex already knows, by its `model_name` or by the upstream model in `litellm_params.model`, keeps Codex's own metadata (reasoning levels, prompt, tool support, and the context window unless you [set a limit on its deployments](#context-window)) under your name, so `my-coding-model` backed by `openai/gpt-6.1-sol` gets the same reasoning levels and prompt as Codex's own `gpt-6.1-sol`. The gateway matches against its own copy of Codex's bundled catalog, so which models count as known follows the gateway's release, not the user's Codex, and a model only a newer Codex ships is treated as unknown. Any other model gets the same fallback metadata Codex uses for `codex -m <unknown name>`, so it works but offers no reasoning-effort choices. Its context window is the largest `max_input_tokens` among all the deployments of the name, other teams' deployments included, or the cost map's limit when none sets one.
 
-Codex rejects a provider that sets both `auth` and `env_key` with `provider auth cannot be combined with env_key`, so remove `env_key` when adding `auth`. This is [OpenAI's command-backed gateway auth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway), verified with Codex CLI 0.160.0
+**Prerequisites for service tiers:** Ask your gateway administrator to configure the model's [Fast and Ultrafast settings](../../providers/openai/ultrafast.md#set-up-with-configyaml). Select the gateway model in Codex, then use `/fast` or `/ultrafast` when available.
+
+Codex caches the catalog for five minutes in `models_cache.json` under its home directory. Gateway model, service-tier, or context-window changes appear on a launch after that cache expires.
+
+Requests to `/v1/models` or `/models` without Codex's `client_version` query parameter keep the OpenAI response shape, so other clients see no change. Codex accepts a catalog of at most 1 MiB and silently keeps its built-in list when the body is larger, so the gateway keeps only the entries that fit: models that list a service tier are kept first, then the rest in `model_list` order, an entry too large for the bytes left is passed over while smaller ones after it are still kept, and the models left out are logged. Each entry is 20 to 65 KB, so roughly 20 to 45 models fit, and a model without a tier that was left out still works by name with Codex's fallback metadata.
+
+#### Context window of a model Codex knows {#context-window}
+
+<SinceVersion v="1.110.0" />
+
+A model Codex ships an entry for, matched by its `model_name` or by the upstream model in `litellm_params.model`, keeps that entry's context window by default. For `gpt-6.1-sol` the entry says 272K, and `/status` shows 95% of it as `258K`, even when every deployment behind the name takes 900K or more. To give Codex a larger window, set `model_info.max_input_tokens` on every deployment of the model group:
+
+```yaml title="config.yaml" keep-model-ids
+model_list:
+  - model_name: gpt-6.1-sol
+    litellm_params:
+      model: openai/gpt-6.1-sol
+      api_key: os.environ/OPENAI_API_KEY
+    model_info:
+      max_input_tokens: 922000
+  - model_name: gpt-6.1-sol
+    litellm_params:
+      model: bedrock/us.openai.gpt-6.1-sol
+      aws_region_name: us-east-1
+    model_info:
+      max_input_tokens: 922000
+```
+
+The catalog then gives the model the smallest `max_input_tokens` among the group's deployments, since a request can route to any of them, up to the most Codex lets that model reach, the `max_context_window` in Codex's own entry. For `gpt-6.1-sol` that cap is 872K, so the config above gives it a `context_window` of 872000 and `/status` shows `828K`:
+
+```text
+  Model:               GPT-6.1-Sol (reasoning low)
+  Context window:      100% left (12.2K used / 828K)
+```
+
+A deployment without `max_input_tokens` counts as Codex's own window, so a limit on only some deployments of a group can lower the window but never raise it, and a group where no deployment sets one keeps Codex's entry as it ships. Only the deployments the calling key's team can route to count, so two teams can see different windows for one model. An alias such as `my-coding-model` backed by `openai/gpt-6.1-sol` follows the same rule. The upstream match reads the first deployment the key can route to, and a Bedrock id such as `bedrock/us.openai.gpt-6.1-sol` matches no Codex entry, so an alias whose first deployment is on Bedrock gets the fallback metadata described above instead. It then has no reasoning-effort choices and no 872K cap, and its window is the largest limit in the group, so with 922000 on Bedrock and 500000 on OpenAI Codex gets 922000, more than the OpenAI deployment takes. Put an `openai/` deployment first, or name the group `gpt-6.1-sol`.
+
+On a deployment whose saved `model_info` carries the cost map's `key`, a limit equal to the current cost map's value counts as unset, since the gateway cannot tell it from a copy of the cost map. Rows saved before v1.102 carry `key`, and so does a deployment added through `/model/new` with a body copied from a `/model/info` response, so such a `gpt-6.1-sol` deployment with `max_input_tokens: 922000` keeps the window at 272K. To make that limit count, delete the deployment and add it again without `key` in `model_info`. A limit copied from an older cost map, or from another deployment, still counts, so before upgrading check the `model_info` column of `LiteLLM_ProxyModelTable` in the database for a `max_input_tokens` nobody set on purpose. `/model/info` cannot show this, since it fills in a value for every deployment that stores none.
+
+A larger window can cost more. Once a request's prompt passes 272K tokens, `gpt-6.1-sol` bills every token of that request, input, cached input, and output, at its higher `_above_272k_tokens` rates in the cost map, so every turn after a session grows past 272K costs more. A config that already sets `max_input_tokens` on a model Codex knows changes Codex's window once the gateway runs v1.110.0 {/* keep-version-note */} or later. The larger window reaches only a Codex that reads the catalog through `model_catalog_url`. A user's own `model_context_window` in `config.toml` wins over the catalog, up to the entry's `max_context_window`, so `model_context_window = 600000` shows `570K` in `/status` whatever limit the gateway sets, a lower one included. [`lite codex`](../management_cli.md#run-coding-agents-through-the-proxy) writes its own catalog, which never raises Codex's window this way, so its `/status` stays at `258K` for `gpt-6.1-sol`.
+
+To see what the gateway gives each model, read the catalog with your key:
+
+```bash
+curl -s -H "Authorization: Bearer $LITELLM_API_KEY" \
+  "http://localhost:4000/v1/models?client_version=0.166.0" \
+  | jq -c '.models[] | {slug, context_window, max_context_window}'
+```
+
+## Sign in with LiteLLM SSO
+
+Use the [Codex CLI SSO guide](./codex_cli_sso.md) to authenticate with `lite auth print-token` in place of a long-lived virtual key.
 
 ## Model metadata for custom aliases
 
@@ -140,7 +198,7 @@ For a LiteLLM server that fronts an upstream OAuth provider, run `codex mcp logi
 
 ## Troubleshooting
 
-Connection refused means the gateway is not reachable at the `base_url` you set; check the host, port, and the `/v1` suffix. A 401 from the gateway means `LITELLM_API_KEY` is not exported in the shell you launch `codex` from, or the key is no longer valid. `Invalid model name passed in` means `model` does not match a `model_name` in your gateway config; use your name, not the upstream provider's. If requests never appear in the Admin UI you are still on the default provider, so confirm `model_provider = "litellm"` is set at the top level of the file.
+Connection refused means the gateway is not reachable at the `base_url` you set; check the host, port, and the `/v1` suffix. A 401 from the gateway means `LITELLM_API_KEY` is not exported in the shell you launch `codex` from, or the key is no longer valid. `Invalid model name passed in` means `model` does not match a `model_name` in your gateway config; use your name, not the upstream provider's. If requests never appear in the Admin UI you are still on the default provider, so confirm `model_provider = "litellm"` is set at the top level of the file. If the `/model` picker still shows only Codex's built-in models after [step 4](#model-catalog-and-service-tiers), the provider block is missing `model_catalog_url`, the `api_key_model_discovery` feature is off, or the gateway runs a release without the Codex catalog; a `curl` of `<LITELLM_PROXY_BASE_URL>/v1/models?client_version=0.159.3` with your key shows which side is at fault, since a gateway that supports the catalog answers with a top-level `models` key instead of `data`
 
 ## Next steps
 

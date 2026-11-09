@@ -1,5 +1,6 @@
 ---
-title: v1.67.0-stable - SCIM Integration
+title: "LiteLLM v1.67.0-stable - SCIM Integration"
+description: "Adds SCIM user and team provisioning, team and tag spend views at 1M+ logs and Responses API calls to Anthropic and Gemini models."
 slug: v1.67.0-stable
 date: 2025-04-19T10:00:00
 authors:

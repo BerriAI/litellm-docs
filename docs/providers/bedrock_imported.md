@@ -57,7 +57,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "DeepSeek-R1-Distill-Llama-70B", # 👈 the 'model_name' in config
+            "model": "DeepSeek-R1-Distill-Llama-70B", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -126,7 +126,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "DeepSeek-R1-Distill-Llama-70B", # 👈 the 'model_name' in config
+            "model": "DeepSeek-R1-Distill-Llama-70B", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -190,7 +190,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "Qwen3-32B", # 👈 the 'model_name' in config
+            "model": "Qwen3-32B", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -255,7 +255,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "Qwen2-72B", # 👈 the 'model_name' in config
+            "model": "Qwen2-72B", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",

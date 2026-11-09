@@ -1,8 +1,6 @@
 # Call Gemini Realtime API with Audio Input/Output 
 
-:::info
-Requires LiteLLM Proxy v1.70.1+
-:::
+<SinceVersion v="1.70.1" />
 
 1. Setup config.yaml for LiteLLM Proxy 
 

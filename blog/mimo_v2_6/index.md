@@ -7,6 +7,8 @@ authors:
   - misbah
   - mateo
 description: "Day 0 support for Xiaomi MiMo V2.6 Pro and Flash on LiteLLM, priced on the native route for the first time."
+card_title: "Xiaomi MiMo V2.6"
+card_summary: "Xiaomi's Pro ($0.435 / $0.87 per 1M) and Flash ($0.14 / $0.28), same rates as V2.5, priced on the native route."
 tags: [xiaomi, mimo, mimo-v2.6, day 0 support]
 hide_table_of_contents: false
 ---

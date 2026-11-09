@@ -36,7 +36,7 @@ guardrails:
     litellm_params:
       guardrail: openai_moderation
       mode: "pre_call"
-      api_key: os.environ/OPENAI_API_KEY  # Optional if already set globally
+      api_key: os.environ/OPENAI_API_KEY  # Optional if already set globally, or if OPENAI_IDENTITY_* federation is set (v1.108.0+)
       model: "omni-moderation-latest"     # Optional, defaults to omni-moderation-latest
       api_base: "https://api.openai.com/v1"  # Optional, defaults to OpenAI API
 ```

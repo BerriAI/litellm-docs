@@ -1,5 +1,6 @@
 ---
-title: "v1.101.4 - Straiker v3 Platform and Guardrail api_version Fixes"
+title: "LiteLLM v1.101.4 supports Straiker v3 keys and fixes Azure Content Safety"
+description: "Adds Straiker v3 platform keys to the Straiker guardrail and fixes Azure Content Safety guardrails that returned 404 without an api_version."
 slug: "v1-101-4"
 date: 2026-10-01T05:10:00
 authors:

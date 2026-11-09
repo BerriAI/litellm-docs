@@ -5,8 +5,10 @@ import * as semver from 'semver';
 
 const RELEASES_URL = 'https://api.github.com/repos/BerriAI/litellm/releases?per_page=100';
 const PYPROJECT_URL = 'https://raw.githubusercontent.com/BerriAI/litellm/main/pyproject.toml';
-const OUTPUT_URL = new URL('../src/data/rustMigrationReleases.json', import.meta.url);
+const OUTPUT_URL = new URL('../src/data/rustMigration/releases.json', import.meta.url);
 const RELEASE_COUNT = 10;
+// Keep the original timeline baseline as new RCs arrive.
+const FIRST_RELEASE = 'v1.102.0-rc.1';
 
 function request(url, accept) {
   return new Promise((resolve, reject) => {
@@ -37,10 +39,6 @@ function isRcVersion(version) {
   return semver.valid(version) !== null && semver.prerelease(version)?.[0] === 'rc';
 }
 
-function isStableVersion(version) {
-  return semver.valid(version) !== null && semver.prerelease(version) === null;
-}
-
 function baseVersion(version) {
   const parsed = semver.parse(version);
   if (!parsed) {
@@ -66,18 +64,11 @@ function nextSaturday(releasedAt) {
 }
 
 async function generateSnapshot() {
-  const [releasesBody, pyproject] = await Promise.all([
-    request(RELEASES_URL, 'application/vnd.github+json'),
+  const [allReleases, pyproject] = await Promise.all([
+    releasesSinceBaseline(),
     request(PYPROJECT_URL, 'text/plain'),
   ]);
-  const allReleases = JSON.parse(releasesBody)
-    .map(release => ({version: release.tag_name, releasedAt: release.published_at}))
-    .filter(release => release.releasedAt && semver.valid(release.version) !== null)
-    .sort((left, right) => semver.compare(left.version, right.version));
   const releases = allReleases.filter(release => isRcVersion(release.version));
-  // Every stable release and RC in the fetched window, so readers can look up
-  // the one they run. `published` stays the chart's short window.
-  const stable = allReleases.filter(release => isStableVersion(release.version));
   const projectVersion = pyproject.match(/^version\s*=\s*"([^"]+)"/m)?.[1];
   if (!projectVersion || semver.valid(projectVersion) === null) {
     throw new Error('Could not read a valid project version from main/pyproject.toml');
@@ -86,7 +77,7 @@ async function generateSnapshot() {
     throw new Error(`Expected at least ${RELEASE_COUNT} published RC releases, found ${releases.length}`);
   }
 
-  const published = releases.slice(-RELEASE_COUNT);
+  const published = releases.filter(release => semver.gte(release.version, FIRST_RELEASE));
   const main = {
     version: nextMainRc(projectVersion, releases),
     plannedFor: nextSaturday(published.at(-1).releasedAt),
@@ -94,10 +85,24 @@ async function generateSnapshot() {
   return `${JSON.stringify({
     source: 'BerriAI/litellm',
     published,
-    candidates: releases,
-    stable,
     main,
   }, null, 2)}\n`;
+}
+
+async function releasesSinceBaseline() {
+  const releases = [];
+  for (let page = 1; ; page += 1) {
+    const batch = JSON.parse(await request(`${RELEASES_URL}&page=${page}`, 'application/vnd.github+json'));
+    if (batch.length === 0) {
+      throw new Error(`Could not find timeline baseline ${FIRST_RELEASE} in published releases`);
+    }
+    releases.push(...batch);
+    if (batch.some(release => release.tag_name === FIRST_RELEASE && release.published_at)) break;
+  }
+  return releases
+    .map(release => ({version: release.tag_name, releasedAt: release.published_at}))
+    .filter(release => release.releasedAt && semver.valid(release.version) !== null)
+    .sort((left, right) => semver.compare(left.version, right.version));
 }
 
 const snapshot = await generateSnapshot();

@@ -2,7 +2,7 @@ import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# ✨ [Beta] Project Management UI
+# [Beta] Project Management UI
 
 <EnterpriseFeature />
 

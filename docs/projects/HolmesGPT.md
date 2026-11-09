@@ -4,4 +4,4 @@
 
 LiteLLM helps HolmesGPT integrate with multiple LLM providers or bring their own model and self-host it.
 
-🔗 Try HolmesGPT → [https://github.com/robusta-dev/holmesgpt](https://github.com/robusta-dev/holmesgpt)
+Try HolmesGPT → [https://github.com/robusta-dev/holmesgpt](https://github.com/robusta-dev/holmesgpt)

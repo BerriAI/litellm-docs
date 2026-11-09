@@ -1,5 +1,6 @@
 ---
-title: "v1.79.3-stable - Built-in Guardrails on AI Gateway"
+title: "LiteLLM v1.79.3-stable - Built-in Guardrails on AI Gateway"
+description: "Adds built-in AI Gateway guardrails for keywords, sensitive patterns and custom regex. Lowers /responses median latency 19x and adds Veo3 video."
 slug: "v1-79-3"
 date: 2025-11-08T10:00:00
 authors:

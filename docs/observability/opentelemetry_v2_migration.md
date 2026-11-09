@@ -7,6 +7,8 @@ OpenTelemetry v2 is a rewrite of LiteLLM's tracing. The HTTP server span is owne
 
 ## Turn it on
 
+If you currently use the SDK-based `langfuse` callback, follow the [Langfuse SDK to OpenTelemetry v2 migration guide](./langfuse_to_otel_v2_migration) instead. Replacing that callback changes ingestion volume, content capture and metadata semantics. The instructions here cover existing OTel callbacks.
+
 Set the feature flag and restart the proxy:
 
 ```shell
@@ -42,6 +44,10 @@ v1 stamps team and key identity onto each span with explicit per-span code. v2 p
 ### Success status
 
 v1 sets a successful span's status to `OK`. v2 leaves it `UNSET`, the semantic-convention default that matches the FastAPI server span, and sets `ERROR` only on a genuine error. An alert keyed on status `OK` should switch to counting non-error spans.
+
+### More than one collector
+
+v1 has no list of collectors. Exporting to a second one from LiteLLM itself takes a Python handler per collector with `skip_set_global=True` on the extra ones, and only the first handler receives the proxy's root, auth and database spans, so the other collectors get LLM spans whose parent never arrives. v2 reads the collectors from `callback_settings.otel.exporters` in config.yaml and sends each one the complete trace; see [Send to more than one collector](./opentelemetry_v2#send-to-more-than-one-collector). When you switch, put every collector in that list, the first handler's included even if it came from `OTEL_ENDPOINT`, because the list replaces `OTEL_ENDPOINT` for traces. Then add `otel` to `litellm_settings.callbacks`, which the list needs before it is read, and drop the Python handlers. v1 ignores the list, so it does nothing until `LITELLM_OTEL_V2` is on.
 
 ## Keep the old attribute names during the cutover
 

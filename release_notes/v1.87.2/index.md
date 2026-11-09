@@ -1,5 +1,6 @@
 ---
-title: "v1.87.2 - Claude Fable 5, Batch Auth, CrowdStrike & Mantle SigV4"
+title: "LiteLLM v1.87.2 - Claude Fable 5, Batch Auth, CrowdStrike & Mantle SigV4"
+description: "Adds Claude Fable 5, batch file authorization, CrowdStrike AIDR identity metadata and SigV4 auth for the Bedrock Mantle Responses API route."
 slug: "v1-87-2"
 date: 2026-06-10T21:47:54
 authors:

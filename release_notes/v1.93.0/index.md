@@ -1,5 +1,6 @@
 ---
-title: "v1.93.0 - GPT-5.6, Client-Forwarded MCP Credentials & Meta Model API"
+title: "LiteLLM v1.93.0 - GPT-5.6, Client-Forwarded MCP Credentials & Meta Model API"
+description: "Adds GPT-5.6, Grok-4.5 and the Meta Model API. Keys now get throttled at their spend limit instead of being revoked."
 slug: "v1-93-0"
 date: 2026-07-18T00:00:00
 authors:

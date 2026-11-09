@@ -1,5 +1,6 @@
 ---
-title: v1.56.4
+title: "LiteLLM v1.56.4"
+description: "Adds Deepgram speech to text, Fireworks AI vision for all models and a Test Key tab in the Admin UI. Also upgrades fastapi to 0.115.5 for a security fix."
 slug: v1.56.4
 date: 2024-12-29T10:00:00
 authors:

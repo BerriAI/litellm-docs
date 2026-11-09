@@ -44,7 +44,7 @@ os.environ["OPENAI_API_KEY"] = ""
 response = litellm.completion(
     model="{{openai_small}}",
     messages=[
-      {"role": "user", "content": "Hi 👋 - i'm openai"}
+      {"role": "user", "content": "Hi - i'm openai"}
     ]
 )
 ```

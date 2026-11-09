@@ -165,7 +165,7 @@ try:
         max_tokens=20
     )
     print(f"✓ API Response: {response.choices[0].message.content}")
-    print("\n🎉 Setup complete! You're ready to use SAP Gen AI Hub with LiteLLM.")
+    print("\n Setup complete! You're ready to use SAP Gen AI Hub with LiteLLM.")
 except Exception as e:
     print(f"✗ API Error: {e}")
     print("\nTroubleshooting tips:")
@@ -192,7 +192,7 @@ python verify_sap_setup.py
 
 ✓ API Response: Connection successful!
 
-🎉 Setup complete! You're ready to use SAP Gen AI Hub with LiteLLM.
+Setup complete! You're ready to use SAP Gen AI Hub with LiteLLM.
 ```
 
 ## Authentication

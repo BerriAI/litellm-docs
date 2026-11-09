@@ -332,7 +332,7 @@ guardrails:
       monitor_mode: true
 ```
 
-## ✨ Pass Additional Parameters
+## Pass Additional Parameters
 
 Use `extra_body` to pass additional parameters to the Noma Security API call, such as dynamically setting the application ID for specific requests.
 

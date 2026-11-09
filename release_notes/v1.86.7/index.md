@@ -1,5 +1,6 @@
 ---
-title: "v1.86.7 - Stream Cost Recovery & MCP Key Scoping"
+title: "LiteLLM v1.86.7 - Stream Cost Recovery & MCP Key Scoping"
+description: "Adds a no-mcp-servers sentinel that scopes a key to zero MCP servers. Also recovers cost for interrupted Anthropic streams."
 slug: "v1-86-7"
 date: 2026-06-24T18:28:34
 authors:

@@ -1,361 +1,99 @@
-
-import Image from '@theme/IdealImage';
-
 # Benchmarks
 
-Benchmarks for LiteLLM Gateway (Proxy Server) tested against a fake OpenAI endpoint.
+Performance test results for LiteLLM Gateway.
 
+## High-throughput performance test results {#high-throughput-profile-3000-rps-with-50k-to-100k-token-prompts}
 
-LiteLLM Gateway has **8ms P95 latency** at 1k RPS (See benchmarks [here](#4-instances))
+**13.5 billion tokens per minute (TPM).**
 
-## High-throughput profile: 3,000 RPS with 50K to 100K-token prompts
+| Metric | Result |
+|---|---:|
+| Requests per second | 3,000 |
+| Client HTTP 200 rate | 100.00% |
+| Gateway request latency, p50 | 30.581 ms |
+| Gateway request latency, p95 | 54.029 ms |
+| Gateway request latency, p99 | 91.645 ms |
+| Client time to first token, p50 | 31.667 ms |
 
-Large prompts create a different gateway workload than short chat requests. Token counting, budget checks, spend tracking, and metrics collection all happen before or after the model-provider call and can become bottlenecks at high request volume.
+### Methodology
 
-This benchmark compares the [high-throughput deployment profile](./proxy/high_throughput.md) with `v1.101.0`. The profile combines Rust token counting, shared database connections, isolated metrics and spend processing, and traffic-based autoscaling.
-
-:::info[Nightly benchmark]
-The high-throughput profile is still in development and is available in nightly builds. These results used the earliest available version of the complete profile.
-:::
-
-### Results
-
-| Category | Metric | High-throughput profile | `v1.101.0` | Change |
-|---|---|---:|---:|---:|
-| Deployment | Gateway pods | 33 | 132 | 4x fewer |
-|  | Workers per pod | 4 | 1 | |
-|  | Total workers | 132 | 132 | same |
-| Throughput | Requests/sec | 3.00K | 0.19K | 16x |
-|  | Tokens/sec | 224.61M | 6.92M | 32x |
-|  | Projected tokens/30 days | 582.20T | 17.94T | 32x |
-| Reliability | HTTP 200 rate (Locust) | 100.00% | 92.07% | |
-| Request latency | p50 | 30.581 ms | 6.950 s | 227x |
-|  | p95 | 54.029 ms | 27.451 s | 508x |
-|  | p99 | 91.645 ms | 29.826 s | 325x |
-| Time to first token | p50 | 31.667 ms | 9.400 s | 297x |
-
-The profile reached the full 3,000 RPS target with 100 percent client-visible success. The baseline settled near 190 RPS and returned a successful response for 92.07 percent of requests.
-
-### Test setup
-
-| Test dimension | Configuration |
+| Setting | Configuration |
 |---|---|
-| Load generator | Distributed Locust with one master and 30 workers |
-| Traffic | 3,000 simulated users at one request per second each |
-| Request mix | 50K, 75K, and 100K-token prompts in equal shares |
-| Streaming | 50 percent of requests |
-| Endpoint | `/v1/chat/completions` with `max_tokens: 16` |
-| Authentication | Virtual key with a budget, so admission token counting and budget reservation ran |
-| Model | In-process mock model with response caching disabled |
-| Network path | Public AWS Application Load Balancer |
-| Client timeout | 60 seconds |
-| Run duration | High-throughput profile: 24m 22s. Baseline: 5m 7s. |
-
-The mock model removes provider cost and provider latency while keeping the gateway request path active. The test still includes authentication, budgets, token counting, spend tracking, and metrics.
-
-Both deployments ran 132 total gateway workers and requested 528 GiB of memory. The high-throughput profile used 33 pods with four workers per pod and requested 132 vCPU. The baseline used 132 pods with one worker per pod and requested 264 vCPU.
-
-### What made the difference
-
-Each change below was measured separately before the complete profile was tested.
-
-| Change | Customer impact | Measured effect |
-|---|---|---|
-| Rust admission token counting | Reduces CPU spent counting large prompts before dispatch. | 50K / 75K / 100K counts fell from 46 / 53 / 100 ms to 4.9 / 6.8 / 10.2 ms. |
-| PgBouncer per pod | Prevents database connections from multiplying with every worker. | Postgres held 86 to 175 connections across 11 to 29 pods, with no waiting PgBouncer clients. |
-| Spend collector sidecar | Keeps spend processing away from inference workers. | At 700 RPS, p99 fell from 1.8 s to 830 ms. Total compute stayed roughly the same. |
-| Metrics sidecar | Keeps Prometheus scrapes away from inference workers. | The sidecar used about 2 millicores per pod at 700 RPS. |
-| Higher CPU burst limit | Prevents all workers in a pod from being throttled together. | At 700 RPS, p99 fell from 830 ms to 670 ms. |
-| Gateway keep-alive | Keeps load-balancer connections valid during scaling. | ALB-generated 502 responses fell from 15 to zero in the 200 RPS test. |
-| RPS and TPS autoscaling | Reacts to traffic before CPU becomes saturated. | A new replica was added about 48 seconds after a 200-user load step. |
-| Admission token-count reuse | Avoids counting the same large streaming prompt twice in mock tests. | Streaming mock requests finished within about 30 ms of non-streaming requests. |
-
-### How to read the metrics
-
-- Requests per second, tokens per second, projected tokens, and request latency come from the gateway's Prometheus metrics.
-- Time to first token comes from Locust and measures the time from sending the request to receiving the first streaming event. It includes request upload, the load balancer, and gateway admission work.
-- The HTTP 200 rate comes from Locust because it includes failures that never reached the gateway.
-
-The `v1.101.0` run had 5,118 client-visible failures: 4,546 client timeouts or dropped connections, 457 HTTP 504 responses, and 115 HTTP 502 responses. The gateway did not receive these requests, so its own success metric showed 100 percent while Locust showed 92.07 percent.
-
-Use the `POST` rows when reading Locust throughput. Each streaming request also creates a `TTFT` row, so the Locust `Aggregated` row counts more entries than real requests when streaming is enabled.
-
-### Benchmark scope
-
-This is a before-and-after comparison of the complete profile, not a single-variable test. The deployments used different pod shapes and ran for different lengths of time. The individual effects in the table above come from separate A/B tests at 200 to 1,000 RPS.
-
-The in-process mock model excludes provider latency. These results measure gateway capacity for this specific traffic shape and should not be treated as universal production sizing guidance. Measure a representative workload before choosing worker counts, pod resources, and HPA targets.
-
-The sections below use short request bodies against a fake OpenAI endpoint on 4 CPU / 8 GB machines. They are not directly comparable with this large-prompt benchmark.
-
-## Machine Spec used for testing
-
-Each machine deploying LiteLLM had the following specs:
-
-- 4 CPU
-- 8GB RAM
-
-## Configuration
-
-- Database: PostgreSQL. See [Database Sizing](./proxy/db_sizing.md) for how to size yours
-- Redis: Not used. Recommended in production; see [Redis Sizing](./proxy/redis_sizing.md)
-- Load generator: Locust, 1000 users, each with 0.5s to 1s of think time between requests. See [Locust Settings](#locust-settings) before comparing these numbers against your own run.
-
-
-### 2 Instance LiteLLM Proxy
-
-In these tests the baseline latency characteristics are measured against a fake-openai-endpoint.
-
-#### Performance Metrics
-
-| **Type** | **Name** | **Median (ms)** | **95%ile (ms)** | **99%ile (ms)** | **Average (ms)** | **Current RPS** |
-| --- | --- | --- | --- | --- | --- | --- |
-| POST | /chat/completions | 200 | 630 | 1200 | 262.46 | 1035.7 |
-| Custom | LiteLLM Overhead Duration (ms) | 12 | 29 | 43 | 14.74 | 1035.7 |
-|  | Aggregated | 100 | 430 | 930 | 138.6 | 2071.4 |
-
-{/* <Image img={require('../img/1_instance_proxy.png')} /> */}
-
-{/* ## **Horizontal Scaling - 10K RPS**
-
-<Image img={require('../img/instances_vs_rps.png')} /> */}
-
-
-### 4 Instances
-
-| **Type** | **Name** | **Median (ms)** | **95%ile (ms)** | **99%ile (ms)** | **Average (ms)** | **Current RPS** |
-| --- | --- | --- | --- | --- | --- | --- |
-| POST | /chat/completions | 100 | 150 | 240 | 111.73 | 1170 |
-| Custom | LiteLLM Overhead Duration (ms) | 2 | 8 | 13 | 3.32 | 1170 |
-|  | Aggregated | 77 | 130 | 180 | 57.53 | 2340 |
-
-#### Key Findings
-- Doubling from 2 to 4 LiteLLM instances halves median latency: 200 ms → 100 ms.
-- High-percentile latencies drop significantly: P95 630 ms → 150 ms, P99 1,200 ms → 240 ms.
-- Setting workers equal to CPU count gives optimal performance.
-
-
-## Setting Up Benchmarking with Network Mock
-
-The fastest way to benchmark proxy overhead is using `network_mock` mode. This intercepts outbound requests at the httpx transport layer and returns canned responses, no need for setting up a mock provider. 
-
-**1. Create a proxy config:**
-
-```yaml
-model_list:
-  - model_name: db-openai-endpoint
-    litellm_params:
-      model: openai/{{openai_large}}
-      api_key: "sk-fake-key"
-      api_base: "https://api.openai.com"
-
-litellm_settings:
-  network_mock: true
-  callbacks: []
-  num_retries: 0
-  request_timeout: 30
-
-general_settings:
-  master_key: "sk-<your-litellm-master-key>"
-```
-
-**2. Start the proxy:**
-
-```bash
-litellm --config benchmark_config.yaml --port 4000 --num_workers 8
-```
-
-**3. Run the benchmark script:**
-
-```bash
-python scripts/benchmark_mock.py --requests 2000 --max-concurrent 200 --runs 3
-```
-
-Get the benchmarking script [here](https://github.com/BerriAI/litellm/blob/main/scripts/benchmark_mock.py)
-
-This measures pure proxy overhead on the hot path without any network latency to a real or fake provider.
-
-## Setting Up a Fake OpenAI Endpoint
-
-For load testing and benchmarking, you can use a fake OpenAI proxy server. LiteLLM provides:
-
-1. **Hosted endpoint**: Use our free hosted fake endpoint at `https://exampleopenaiendpoint-production.up.railway.app/`
-2. **Self-hosted**: Set up your own fake OpenAI proxy server using [github.com/BerriAI/example_openai_endpoint](https://github.com/BerriAI/example_openai_endpoint)
-
-Use this config for testing:
-
-```yaml
-model_list:
-  - model_name: "fake-openai-endpoint"
-    litellm_params:
-      model: openai/any
-      api_base: https://exampleopenaiendpoint-production.up.railway.app/  # or your self-hosted endpoint
-      api_key: "test"
-```
-
-## `/realtime` API Benchmarks
-
-End-to-end latency benchmarks for the `/realtime` endpoint tested against a fake realtime endpoint.
-
-### Performance Metrics
-
-| Metric          | Value      |
-| --------------- | ---------- |
-| Median latency  | 59 ms      |
-| p95 latency     | 67 ms      |
-| p99 latency     | 99 ms      |
-| Average latency | 63 ms      |
-| RPS             | 1,207      |
-
-### Test Setup
-
-| Category | Specification |
-|----------|---------------|
-| **Load Testing** | Locust: 1,000 users with 0.5s to 1s think time, 500 ramp-up |
-| **System** | 4 vCPUs, 8 GB RAM, 4 workers, 4 instances |
-| **Database** | PostgreSQL (Redis unused) |
-
-
-## Infrastructure Recommendations
-
-The runs above used a single PostgreSQL instance and no Redis, which is a benchmark configuration rather than a production one. For instance sizes at each request rate, the connection math that decides whether a deployment survives a scale-out, and concrete managed-service picks on AWS, Azure, and GCP, see [Database Sizing](./proxy/db_sizing.md) and [Redis Sizing](./proxy/redis_sizing.md). For the gateway-side configuration that goes with it, see [Production Best Practices](./proxy/prod.md).
-
-## Locust Settings
-
-- 1000 Users
-- 500 user Ramp Up
-- `wait_time = between(0.5, 1)`, so every user sleeps 0.5s to 1s between requests
-
-### Why the think time matters when you reproduce these numbers
-
-A Locust user spends its time either waiting on a response or sleeping. With a 0.75s mean think time and ~110ms responses, each of the 1000 users completes a request about every 0.86s, so the run offers ~1160 RPS and holds roughly **130 requests in flight** at any instant. That in-flight depth, not the user count, is what the latency columns above describe.
-
-A closed-loop client with no think time is measuring something else. 1000 concurrent workers that send the next request the moment the previous one returns hold **1000 requests in flight**, about 8x the queue depth of these runs. Once a gateway is saturated its throughput is fixed, and by Little's Law the latency each client observes is just `requests in flight / throughput`. So the same deployment, at the same RPS, reports roughly 8x the latency purely because the client queued 8x as much work into it. Latency and concurrency are not independent, and neither number means anything without the other.
-
-To compare against the tables above, either keep the 0.5s to 1s think time, or hold your client's in-flight request count near 130 and report it alongside the latency. It is also worth reporting RPS first: if your run shows higher RPS and higher latency than these tables, your gateway is faster than this benchmark and your client is simply queueing deeper.
-
-## How to measure LiteLLM Overhead
-
-All responses from litellm will include the `x-litellm-overhead-duration-ms` header, this is the latency overhead in milliseconds added by LiteLLM Proxy.
-
-
-If you want to measure this on locust you can use the following code:
-
-```python showLineNumbers title="Locust Code for measuring LiteLLM Overhead"
-import os
-import uuid
-from locust import HttpUser, task, between, events
-
-# Custom metric to track LiteLLM overhead duration
-overhead_durations = []
-
-@events.request.add_listener
-def on_request(request_type, name, response_time, response_length, response, context, exception, start_time, url, **kwargs):
-    if response and hasattr(response, 'headers'):
-        overhead_duration = response.headers.get('x-litellm-overhead-duration-ms')
-        if overhead_duration:
-            try:
-                duration_ms = float(overhead_duration)
-                overhead_durations.append(duration_ms)
-                # Report as custom metric
-                events.request.fire(
-                    request_type="Custom",
-                    name="LiteLLM Overhead Duration (ms)",
-                    response_time=duration_ms,
-                    response_length=0,
-                )
-            except (ValueError, TypeError):
-                pass
-
-class MyUser(HttpUser):
-    wait_time = between(0.5, 1)  # Random wait time between requests
-
-    def on_start(self):
-        self.api_key = os.getenv('API_KEY', 'sk-<your-litellm-api-key>')
-        self.client.headers.update({'Authorization': f'Bearer {self.api_key}'})
-
-    @task
-    def litellm_completion(self):
-        # no cache hits with this
-        payload = {
-            "model": "db-openai-endpoint",
-            "messages": [{"role": "user", "content": f"{uuid.uuid4()} This is a test there will be no cache hits and we'll fill up the context" * 150}],
-            "user": "my-new-end-user-1"
-        }
-        response = self.client.post("chat/completions", json=payload)
-        
-        if response.status_code != 200:
-            # log the errors in error.txt
-            with open("error.txt", "a") as error_log:
-                error_log.write(response.text + "\n")
-```
-
-
-## LiteLLM vs Portkey Performance Comparison
-
-**Test Configuration**: 4 CPUs, 8 GB RAM per instance | Load: 1k concurrent users, 500 ramp-up
-**Versions:** Portkey **v1.14.0** | LiteLLM **v1.79.1-stable**  
-**Test Duration:** 5 minutes  
-
-### Multi-Instance (4×) Performance
-
-| Metric              | Portkey (no DB) | LiteLLM (with DB) | Comment        |
-| ------------------- | --------------- | ----------------- | -------------- |
-| **Total Requests**  | 293,796         | 312,405           | LiteLLM higher |
-| **Failed Requests** | 0               | 0                 | Same           |
-| **Median Latency**  | 100 ms          | 100 ms            | Same           |
-| **p95 Latency**     | 230 ms          | 150 ms            | LiteLLM lower  |
-| **p99 Latency**     | 500 ms          | 240 ms            | LiteLLM lower  |
-| **Average Latency** | 123 ms          | 111 ms            | LiteLLM lower  |
-| **Current RPS**     | 1,170.9         | 1,170             | Same           |
-
-
-*Lower is better for latency metrics; higher is better for requests and RPS.*
-
-### Technical Insights
-
-**Portkey**
-
-**Pros**
-
-* Low memory footprint
-* Stable latency with minimal spikes
-
-**Cons**
-
-* CPU utilization capped around ~40%, indicating underutilization of available compute resources
-* Experienced three I/O timeout outages
-
-**LiteLLM**
-
-**Pros**
-
-* Fully uses available CPU capacity
-* Strong connection handling and low latency after initial warm-up spikes
-
-**Cons**
-
-* High memory usage during initialization and per request
-
-
-
-## Logging Callbacks
-
-### [GCS Bucket Logging](https://docs.litellm.ai/docs/observability/gcs_bucket_integration)
-
-Using GCS Bucket has **no impact on latency, RPS compared to Basic Litellm Proxy**
-
-| Metric | Basic Litellm Proxy | LiteLLM Proxy with GCS Bucket Logging |
-|--------|------------------------|---------------------|
-| RPS | 1133.2 | 1137.3 |
-| Median Latency (ms) | 140 | 138 |
-
-
-### [LangSmith logging](https://docs.litellm.ai/docs/proxy/logging)
-
-Using LangSmith has **no impact on latency, RPS compared to Basic Litellm Proxy**
-
-| Metric | Basic Litellm Proxy | LiteLLM Proxy with LangSmith |
-|--------|------------------------|---------------------|
-| RPS | 1133.2 | 1135 |
-| Median Latency (ms) | 140 | 132 |
+| Deployment | 33 gateway pods; 4 workers, 4 vCPUs, and 16 GiB memory requested per pod |
+| Traffic | Distributed Locust with 30 load-generator workers; 3,000 users at one request per second each |
+| Requests | `/v1/chat/completions`; equal shares of 50K, 75K, and 100K-token prompts; 50% streaming; `max_tokens: 16` |
+| Model and network | In-process mock model; public AWS Application Load Balancer; 60-second client timeout |
+| Configuration | [High-throughput Helm values](./proxy/high_throughput.md); PostgreSQL and Redis; virtual-key budgets, token counting, spend tracking, and metrics; response caching disabled |
+| Duration | 24 minutes 22 seconds |
+| Measurement | Prometheus: throughput and gateway latency. Locust: client success and time to first token, including upload and load-balancer time |
+
+## Realtime API performance test results {#realtime-api-benchmarks}
+
+**1,207 requests per second.**
+
+| Metric | Result |
+|---|---:|
+| End-to-end latency, p50 | 59 ms |
+| End-to-end latency, p95 | 67 ms |
+| End-to-end latency, p99 | 99 ms |
+| Average end-to-end latency | 63 ms |
+
+### Methodology
+
+| Setting | Configuration |
+|---|---|
+| Deployment | 4 gateway instances; 4 workers, 4 vCPUs, and 8 GB RAM per instance |
+| Traffic | Locust; 1,000 users with a 0.5 to 1 second pause between requests |
+| Requests | `/v1/realtime` over persistent WebSockets; text requests for a two-sentence story with a random ID |
+| Model and network | Mock realtime endpoint |
+| Configuration | PostgreSQL; Redis disabled |
+| Duration | Not recorded |
+| Measurement | [Locust script](https://gist.github.com/AlexsanderHamir/73b83ada21d9b84d4fe09665cf1745f5): requests per second and latency through `response.done`, including connection setup when needed |
+
+## Short-prompt chat performance test results {#short-prompt-chat-performance-test-results}
+
+**1,170 requests per second with 8 ms p95 gateway overhead across four instances.**
+
+| Metric | 2 instances | 4 instances |
+|---|---:|---:|
+| Requests per second | 1,035.7 | 1,170 |
+| Request latency, p50 | 200 ms | 100 ms |
+| Request latency, p95 | 630 ms | 150 ms |
+| Request latency, p99 | 1,200 ms | 240 ms |
+| Average request latency | 262.46 ms | 111.73 ms |
+| Gateway overhead, p50 | 12 ms | 2 ms |
+| Gateway overhead, p95 | 29 ms | 8 ms |
+| Gateway overhead, p99 | 43 ms | 13 ms |
+| Average gateway overhead | 14.74 ms | 3.32 ms |
+
+### Methodology
+
+| Setting | Configuration |
+|---|---|
+| Deployment | 2 or 4 instances; 4 vCPUs and 8 GB RAM per instance. The 4-instance test uses 4 workers per instance; the 2-instance worker count is not recorded |
+| Traffic | Locust; 1,000 users with a 0.5 to 1 second pause between requests |
+| Requests | `/chat/completions`; the [4-instance script](https://gist.github.com/AlexsanderHamir/42c33d7a4dc7a57f56a78b560dee3a42) sends text with a random ID repeated 150 times. The 2-instance payload is not recorded |
+| Model and network | Mock OpenAI endpoint |
+| Configuration | PostgreSQL; Redis disabled |
+| Duration | Not recorded |
+| Measurement | Locust: request throughput and full request latency. Gateway overhead: `x-litellm-overhead-duration-ms` response header |
+
+## Logging callback performance test results {#logging-callbacks}
+
+| Configuration | Requests per second | Median request latency |
+|---|---:|---:|
+| Base proxy | 1,133.2 | 140 ms |
+| GCS bucket logging | 1,137.3 | 138 ms |
+| LangSmith logging | 1,135 | 132 ms |
+
+### Methodology
+
+| Setting | Configuration |
+|---|---|
+| Deployment | Not recorded |
+| Traffic | Not recorded |
+| Requests | Not recorded |
+| Model and network | Not recorded |
+| Configuration | Base proxy compared with [GCS bucket logging](./observability/gcs_bucket_integration.md) and [LangSmith logging](./observability/langsmith_integration.md) |
+| Duration | Not recorded |
+| Measurement | Requests per second and median request latency |

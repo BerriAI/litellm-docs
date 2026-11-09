@@ -1,4 +1,4 @@
-# 🐕 Elroy
+# Elroy
 
 Elroy is a scriptable AI assistant that remembers and sets goals.
 

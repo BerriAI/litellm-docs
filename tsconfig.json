@@ -9,5 +9,8 @@
     "skipLibCheck": true,
     "types": []
   },
-  "include": ["src/data/rustMigration"]
+  "include": [
+    "src/data/rustMigration",
+    "src/components/RustMigration/timeline.ts"
+  ]
 }

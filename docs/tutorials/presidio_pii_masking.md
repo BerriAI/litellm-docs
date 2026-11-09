@@ -320,7 +320,7 @@ guardrails:
 1. **User Input**: "Hello, my name is Jane Doe. My number is 555-1234"
 2. **LLM Receives**: "Hello, my name is `<PERSON>`. My number is `<PHONE_NUMBER>`"
 3. **LLM Response**: "Nice to meet you, `<PERSON>`!"
-4. **User Receives**: "Nice to meet you, Jane Doe!" ✨
+4. **User Receives**: "Nice to meet you, Jane Doe!"
 
 ### Multi-language Support
 
@@ -673,7 +673,7 @@ litellm_settings:
 
 ## Conclusion
 
-Congratulations! 🎉 You've successfully set up PII masking with Presidio and LiteLLM. You now have:
+Congratulations! You've successfully set up PII masking with Presidio and LiteLLM. You now have:
 
 ✅ A production-ready PII masking solution  
 ✅ Automatic detection of sensitive information  

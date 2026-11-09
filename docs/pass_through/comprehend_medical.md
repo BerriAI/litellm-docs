@@ -9,7 +9,7 @@ Pass-through endpoints for [Amazon Comprehend Medical](https://docs.aws.amazon.c
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ❌ | Not offered by the Comprehend Medical API |
 
-Just replace `https://comprehendmedical.{aws_region_name}.amazonaws.com` with `LITELLM_PROXY_BASE_URL/comprehendmedical` 🚀
+Just replace `https://comprehendmedical.{aws_region_name}.amazonaws.com` with `LITELLM_PROXY_BASE_URL/comprehendmedical`
 
 LiteLLM signs the forwarded request with SigV4 using the proxy's AWS credentials, so clients only need a LiteLLM virtual key.
 

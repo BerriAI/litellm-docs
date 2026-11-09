@@ -9,8 +9,8 @@ import TabItem from '@theme/TabItem';
 |-------|-------|
 | Description | Crusoe Cloud provides GPU-accelerated inference for open-source large language models, optimized for performance and cost efficiency. |
 | Provider Route on LiteLLM | `crusoe/` |
-| Link to Provider Doc | [Crusoe Managed Inference Documentation ↗](https://docs.crusoecloud.com/managed-inference/overview/index.html) |
-| Base URL | `https://managed-inference-api-proxy.crusoecloud.com/v1` |
+| Link to Provider Doc | [Crusoe Serverless Inference Documentation ↗](https://docs.crusoecloud.com/serverless-inference/available-models) |
+| Base URL | `https://api.inference.crusoecloud.com/v1` (older LiteLLM versions call a different host by default, see [Custom API Base](#custom-api-base)) |
 | Supported Operations | [`/chat/completions`](/docs/providers/crusoe#usage---litellm-python-sdk) |
 
 <br />
@@ -20,15 +20,26 @@ import TabItem from '@theme/TabItem';
 
 ## Available Models
 
-| Model | Description | Context Window |
-|-------|-------------|----------------|
-| `crusoe/deepseek-ai/DeepSeek-R1-0528` | DeepSeek R1 reasoning model (May 2025) | 163,840 tokens |
-| `crusoe/deepseek-ai/DeepSeek-V3-0324` | DeepSeek V3 chat model (March 2025) | 163,840 tokens |
-| `crusoe/google/gemma-3-12b-it` | Google Gemma 3 12B instruction-tuned | 131,072 tokens |
-| `crusoe/meta-llama/Llama-3.3-70B-Instruct` | Llama 3.3 70B instruction-tuned | 131,072 tokens |
-| `crusoe/moonshotai/Kimi-K2-Thinking` | Kimi K2 extended thinking model | 262,144 tokens |
-| `crusoe/openai/gpt-oss-120b` | OpenAI 120B open-source model | 131,072 tokens |
-| `crusoe/Qwen/Qwen3-235B-A22B-Instruct-2507` | Qwen3 235B MoE instruction-tuned | 262,144 tokens |
+| Model | Provider | Context Window |
+|-------|----------|----------------|
+| `crusoe/deepseek-ai/Deepseek-V4-Flash` | DeepSeek | 1,048,576 tokens |
+| `crusoe/deepseek-ai/DeepSeek-V4.1-Flash` | DeepSeek | 1,048,576 tokens |
+| `crusoe/deepseek-ai/DeepSeek-V4-Pro` | DeepSeek | 1,048,576 tokens |
+| `crusoe/google/gemma-4-31b-it` | Google | 262,144 tokens |
+| `crusoe/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B` | NVIDIA | 262,144 tokens |
+| `crusoe/nvidia/NVIDIA-Nemotron-3.5-Super-VL` | NVIDIA | 262,144 tokens |
+| `crusoe/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` | NVIDIA | 262,144 tokens |
+| `crusoe/nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B` | NVIDIA | 262,144 tokens |
+| `crusoe/nvidia/Nemotron-3.5-Lightning-30B-A3B` | NVIDIA | 262,144 tokens |
+| `crusoe/openai/gpt-oss-120b` | OpenAI | 131,072 tokens |
+| `crusoe/Qwen/Qwen3.8-27B` | Qwen | 262,144 tokens |
+| `crusoe/yutori/n2` | Yutori | 262,144 tokens |
+| `crusoe/zai-org/GLM-5.3` | Z.ai | 1,048,576 tokens |
+| `crusoe/zai-org/GLM-5.3-Flash` | Z.ai | 1,048,576 tokens |
+
+Crusoe retires models often. To list the model ids your key can call, send `GET https://api.inference.crusoecloud.com/v1/models` with your Crusoe API key, and put `crusoe/` in front of each `id`. Copy ids from that endpoint rather than from Crusoe's docs pages, which spell some of them differently.
+
+LiteLLM's cost map does not have current prices for these models, so their spend logs as $0 or at an outdated price. To track spend, set `input_cost_per_token` and `output_cost_per_token` for each model you use from [Crusoe's pricing](https://www.crusoe.ai/cloud/pricing#Serverless-Inference), in the model's `litellm_params` on the proxy or as `completion()` arguments in the SDK.
 
 ## Required Variables
 
@@ -51,7 +62,7 @@ messages = [{"content": "Hello, how are you?", "role": "user"}]
 
 # Crusoe call
 response = completion(
-    model="crusoe/meta-llama/Llama-3.3-70B-Instruct",
+    model="crusoe/deepseek-ai/Deepseek-V4-Flash",
     messages=messages
 )
 
@@ -71,7 +82,7 @@ messages = [{"content": "Write a short story about AI", "role": "user"}]
 
 # Crusoe call with streaming
 response = completion(
-    model="crusoe/meta-llama/Llama-3.3-70B-Instruct",
+    model="crusoe/deepseek-ai/Deepseek-V4-Flash",
     messages=messages,
     stream=True
 )
@@ -110,7 +121,7 @@ tools = [{
 messages = [{"role": "user", "content": "What's the weather in Boston?"}]
 
 response = completion(
-    model="crusoe/meta-llama/Llama-3.3-70B-Instruct",
+    model="crusoe/deepseek-ai/Deepseek-V4-Flash",
     messages=messages,
     tools=tools,
     tool_choice="auto"
@@ -123,25 +134,25 @@ print(response)
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: llama-3.3-70b
+  - model_name: deepseek-v4-flash
     litellm_params:
-      model: crusoe/meta-llama/Llama-3.3-70B-Instruct
+      model: crusoe/deepseek-ai/Deepseek-V4-Flash
       api_key: os.environ/CRUSOE_API_KEY
-  - model_name: deepseek-r1
+  - model_name: deepseek-v4-pro
     litellm_params:
-      model: crusoe/deepseek-ai/DeepSeek-R1-0528
+      model: crusoe/deepseek-ai/DeepSeek-V4-Pro
       api_key: os.environ/CRUSOE_API_KEY
-  - model_name: deepseek-v3
+  - model_name: gpt-oss-120b
     litellm_params:
-      model: crusoe/deepseek-ai/DeepSeek-V3-0324
+      model: crusoe/openai/gpt-oss-120b
       api_key: os.environ/CRUSOE_API_KEY
-  - model_name: qwen3-235b
+  - model_name: qwen3.8-27b
     litellm_params:
-      model: crusoe/Qwen/Qwen3-235B-A22B-Instruct-2507
+      model: crusoe/Qwen/Qwen3.8-27B
       api_key: os.environ/CRUSOE_API_KEY
-  - model_name: kimi-k2
+  - model_name: glm-5.3
     litellm_params:
-      model: crusoe/moonshotai/Kimi-K2-Thinking
+      model: crusoe/zai-org/GLM-5.3
       api_key: os.environ/CRUSOE_API_KEY
 ```
 
@@ -149,15 +160,17 @@ model_list:
 
 **Option 1: Environment variable**
 
+Older LiteLLM versions, including v1.106 and earlier, send Crusoe calls to `https://managed-inference-api-proxy.crusoecloud.com/v1` by default. That host's firewall answers some prompts with an HTTP 403 "Sorry, you have been blocked" page, for example prompts that contain file paths like `../../etc/passwd` or SQL injection strings like `' OR 1=1 --`. To see which host your version calls, send a request that succeeds and read the `x-litellm-model-api-base` response header on the proxy, or `response._hidden_params["api_base"]` in the SDK. A blocked request does not show the host. If it is the old host, set `CRUSOE_API_BASE` to `https://api.inference.crusoecloud.com/v1` as below. If your deployment restricts outbound traffic, allow the host your version calls.
+
 ```python showLineNumbers title="Custom API Base via env var"
 import os
 from litellm import completion
 
-os.environ["CRUSOE_API_BASE"] = "https://custom.crusoecloud.com/v1"
+os.environ["CRUSOE_API_BASE"] = "https://api.inference.crusoecloud.com/v1"
 os.environ["CRUSOE_API_KEY"] = ""  # your API key
 
 response = completion(
-    model="crusoe/meta-llama/Llama-3.3-70B-Instruct",
+    model="crusoe/deepseek-ai/Deepseek-V4-Flash",
     messages=[{"content": "Hello!", "role": "user"}],
 )
 ```
@@ -168,9 +181,9 @@ response = completion(
 from litellm import completion
 
 response = completion(
-    model="crusoe/meta-llama/Llama-3.3-70B-Instruct",
+    model="crusoe/deepseek-ai/Deepseek-V4-Flash",
     messages=[{"content": "Hello!", "role": "user"}],
-    api_base="https://custom.crusoecloud.com/v1",
+    api_base="https://api.inference.crusoecloud.com/v1",
     api_key="your-api-key",
 )
 ```

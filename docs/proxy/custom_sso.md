@@ -1,198 +1,155 @@
-# ✨ Event Hooks for SSO Login
+# Event Hooks for SSO Login
 
-<EnterpriseFeature feature="SSO">SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
+Use a Python callback to read a verified identity from an upstream authentication proxy or customize the identity returned after an SSO sign-in.
 
-## Overview
+<EnterpriseFeature feature="SSO">SSO is free for up to 5 users. Beyond that, an enterprise license is required. The custom UI sign-in hook for an upstream authentication proxy requires Enterprise.</EnterpriseFeature>
 
-LiteLLM provides two different SSO hooks depending on your authentication setup:
+<a id="overview"></a>
 
-| Hook Type | When to Use | What It Does |
-|-----------|-------------|--------------|
-| **Custom UI SSO Sign-in Handler** | You have an OAuth proxy (oauth2-proxy, Gatekeeper, Vouch, etc.) in front of LiteLLM | Parses user info from request headers and signs user into UI |
-| **Custom SSO Handler** | You use direct SSO providers (Google, Microsoft, SAML) and want custom post-auth logic | Runs custom code after standard OAuth flow to set user permissions/teams |
+## How it works
 
-**Quick Decision Guide:**
-- ✅ **Use Custom UI SSO Sign-in Handler** if user authentication happens outside LiteLLM (via headers)
-- ✅ **Use Custom SSO Handler** if you want LiteLLM to handle OAuth flow + run custom logic afterward
+Choose the hook that matches where authentication happens:
 
----
+| Hook | When it runs | Return value |
+| --- | --- | --- |
+| `custom_ui_sso_sign_in_handler` | An upstream authentication proxy has authenticated the user; the hook reads its identity headers. | `OpenID` |
+| `custom_sso` | LiteLLM has completed its provider sign-in flow; the callback receives the provider's user information. | `SSOUserDefinedValues` |
 
-## Option 1: Custom UI SSO Sign-in Handler
+LiteLLM uses the returned identity to complete sign-in. Configure roles, team membership, and restrictions through [SSO permissions](./access_management/sso_permissions.md).
 
-Use this when you have an **OAuth proxy in front of LiteLLM** that has already authenticated the user and passes user information via request headers.
+## Prerequisites
 
-### How it works
-- User lands on Admin UI  
-- 👉 **Your custom SSO sign-in handler is called to parse request headers and return user info**
-- LiteLLM has retrieved user information from your custom handler
-- User signed in to UI
+Use a working LiteLLM deployment with the Admin UI, database, and master key configured. Put the handler module beside `config.yaml` or on the proxy's Python import path.
 
-### Usage
+For the upstream-proxy hook, configure the proxy to authenticate requests, strip client-supplied identity headers, and set its own verified values. Restrict direct access to LiteLLM to that proxy. Set `general_settings.trusted_proxy_ranges` to its direct peer IPs or CIDRs; LiteLLM rejects header-based sign-in from untrusted peers.
 
-#### 1. Create a custom UI SSO handler file
+For the post-sign-in callback, first configure [OpenID Connect](./admin_ui_sso.md) or [SAML](./saml_sso.md) and verify a normal sign-in.
 
-This handler parses request headers and returns user information as an OpenID object:
+## Setup
 
-```python
-from fastapi import Request
+### Read identity headers from an authentication proxy {#option-1-custom-ui-sso-sign-in-handler}
+
+<a id="usage"></a>
+<a id="1-create-a-custom-ui-sso-handler-file"></a>
+
+Save this as `custom_ui_sso.py`. Adjust the header names to match your authentication proxy. Reject missing identities instead of assigning a shared placeholder user.
+
+```python title="custom_ui_sso.py"
+from fastapi import HTTPException, Request
 from fastapi_sso.sso.base import OpenID
 from litellm.integrations.custom_sso_handler import CustomSSOLoginHandler
 
 
-class MyCustomSSOLoginHandler(CustomSSOLoginHandler):
-    """
-    Custom handler for parsing OAuth proxy headers
-    
-    Use this when you have an OAuth proxy (like oauth2-proxy, Vouch, etc.) 
-    in front of LiteLLM that adds user info to request headers
-    """
-    async def handle_custom_ui_sso_sign_in(
-        self,
-        request: Request,
-    ) -> OpenID:
-        # Parse headers from your OAuth proxy
-        request_headers = dict(request.headers)
-        
-        # Extract user info from headers (adjust header names for your proxy)
-        user_id = request_headers.get("x-forwarded-user") or request_headers.get("x-user")
-        user_email = request_headers.get("x-forwarded-email") or request_headers.get("x-email")
-        user_name = request_headers.get("x-forwarded-preferred-username") or request_headers.get("x-preferred-username")
-        
-        # Return OpenID object with user information
+class HeaderIdentityHandler(CustomSSOLoginHandler):
+    async def handle_custom_ui_sso_sign_in(self, request: Request) -> OpenID:
+        user_id = request.headers.get("x-forwarded-user") or request.headers.get("x-user")
+        email = request.headers.get("x-forwarded-email") or request.headers.get("x-email")
+        if not user_id or not email:
+            raise HTTPException(status_code=401, detail="Missing authenticated identity")
+        display_name = (
+            request.headers.get("x-forwarded-preferred-username")
+            or request.headers.get("x-preferred-username")
+            or user_id
+        )
         return OpenID(
-            id=user_id or "unknown",
-            email=user_email or "unknown@example.com", 
-            first_name=user_name or "Unknown",
-            last_name="User",
-            display_name=user_name or "Unknown User",
-            picture=None,
+            id=user_id,
+            email=email,
+            display_name=display_name,
             provider="oauth-proxy",
         )
 
-# Create an instance to be used by LiteLLM
-custom_ui_sso_sign_in_handler = MyCustomSSOLoginHandler()
+
+custom_ui_sso_sign_in_handler = HeaderIdentityHandler()
 ```
 
-#### 2. Configure in config.yaml
+<a id="2-configure-in-configyaml"></a>
 
-```yaml
-model_list: 
-  - model_name: "openai-model"
-    litellm_params: 
-      model: "{{openai_small}}"
+Add the handler instance to your existing configuration. Replace the example address with your authentication proxy's direct peer address:
 
+```yaml title="config.yaml"
 general_settings:
-  custom_ui_sso_sign_in_handler: custom_sso_handler.custom_ui_sso_sign_in_handler
-
-litellm_settings:
-  drop_params: True
-  set_verbose: True
+  custom_ui_sso_sign_in_handler: custom_ui_sso.custom_ui_sso_sign_in_handler
+  trusted_proxy_ranges: ["10.0.0.10/32"]
 ```
 
-#### 3. Start the proxy
-```shell
-$ litellm --config /path/to/config.yaml 
-```
+### Customize the identity after provider sign-in {#option-2-custom-sso-handler-post-authentication}
 
-#### 4. Navigate to the Admin UI
+<a id="how-it-works-1"></a>
+<a id="usage-1"></a>
+<a id="1-create-a-custom-sso-handler-file"></a>
 
-When a user attempts navigating to the LiteLLM Admin UI, the request will be routed to your custom UI SSO sign-in handler. 
+Save this as `custom_sso.py`. The callback receives provider user information after sign-in and returns the stable user ID and email LiteLLM should use.
 
----
-
-## Option 2: Custom SSO Handler (Post-Authentication)
-
-Use this if you want to run your own code **after** a user signs on to the LiteLLM UI using standard SSO providers (Google, Microsoft, etc.)
-
-### How it works
-- User lands on Admin UI
-- LiteLLM redirects user to your SSO provider (Google, Microsoft, etc.)
-- Your SSO provider redirects user back to LiteLLM  
-- LiteLLM has retrieved user information from your IDP
-- 👉 **Your custom SSO handler is called and returns an object of type SSOUserDefinedValues**
-- User signed in to UI
-
-### Usage
-
-#### 1. Create a custom SSO handler file
-
-Make sure the response type follows the `SSOUserDefinedValues` pydantic object. This is used for logging the user into the Admin UI:
-
-```python
+```python title="custom_sso.py"
 from fastapi_sso.sso.base import OpenID
-
-from litellm.proxy._types import LitellmUserRoles, SSOUserDefinedValues
-from litellm.proxy import proxy_server
-
-# These imports are available if you need to create users or manage team membership:
-# from litellm.proxy.management_endpoints.internal_user_endpoints import new_user
-# from litellm.proxy.management_endpoints.team_endpoints import add_new_member
+from litellm.proxy._types import SSOUserDefinedValues
 
 
 async def custom_sso_handler(userIDPInfo: OpenID) -> SSOUserDefinedValues:
-    try:
-        print("inside custom sso handler")  # noqa
-        print(f"userIDPInfo: {userIDPInfo}")  # noqa
-
-        if userIDPInfo.id is None:
-            raise ValueError(
-                f"No ID found for user. userIDPInfo.id is None {userIDPInfo}"
-            )
-        
-        #################################################
-        # Access extra fields from SSO provider (requires GENERIC_USER_EXTRA_ATTRIBUTES env var)
-        # Example: Set GENERIC_USER_EXTRA_ATTRIBUTES="department,employee_id,groups"
-        extra_fields = getattr(userIDPInfo, 'extra_fields', None) or {}
-        user_department = extra_fields.get("department")
-        employee_id = extra_fields.get("employee_id")
-        user_groups = extra_fields.get("groups", [])
-        
-        print(f"User department: {user_department}")  # noqa
-        print(f"Employee ID: {employee_id}")  # noqa
-        print(f"User groups: {user_groups}")  # noqa
-        #################################################
-
-        #################################################
-        # Run your custom code / logic here
-        # check if user exists in litellm proxy DB
-        if proxy_server.prisma_client is not None:
-            _user_info = await proxy_server.prisma_client.get_data(user_id=userIDPInfo.id)
-            print("_user_info from litellm DB ", _user_info)  # noqa
-        #################################################
-
-        return SSOUserDefinedValues(
-            models=[],                                      # models user has access to
-            user_id=userIDPInfo.id,                         # user id to use in the LiteLLM DB
-            user_email=userIDPInfo.email,                   # user email to use in the LiteLLM DB
-            user_role=LitellmUserRoles.INTERNAL_USER.value, # role to use for the user 
-            max_budget=0.01,                                # Max budget for this UI login Session
-            budget_duration="1d",                           # Duration of the budget for this UI login Session, 1d, 2d, 30d ...
-        )
-    except Exception as e:
-        raise Exception("Failed custom auth")
+    if not userIDPInfo.id:
+        raise ValueError("The identity provider returned no user ID")
+    return SSOUserDefinedValues(
+        user_id=userIDPInfo.id,
+        user_email=userIDPInfo.email,
+        user_role=None,
+    )
 ```
 
-#### 2. Configure in config.yaml
+`user_role=None` preserves the stored LiteLLM role; new users default to `internal_user_viewer`. An explicit role overrides it on every login. Configure role assignment in [SSO permissions](./access_management/sso_permissions.md).
 
-Pass the filepath to the config.yaml. 
+<a id="2-configure-in-configyaml-1"></a>
 
-e.g. if they're both in the same dir - `./config.yaml` and `./custom_sso.py`, this is what it looks like:
+Add the callback to the same configuration that contains your provider settings:
 
-```yaml 
-model_list: 
-  - model_name: "openai-model"
-    litellm_params: 
-      model: "{{openai_small}}"
-
+```yaml title="config.yaml"
 general_settings:
   custom_sso: custom_sso.custom_sso_handler
-
-litellm_settings:
-  drop_params: True
-  set_verbose: True
 ```
 
-#### 3. Start the proxy
-```shell
-$ litellm --config /path/to/config.yaml 
+<a id="3-start-the-proxy"></a>
+<a id="3-start-the-proxy-1"></a>
+
+Restart the proxy after configuring either hook:
+
+```bash
+litellm --config config.yaml
 ```
+
+## Test sign-in
+
+<a id="4-navigate-to-the-admin-ui"></a>
+
+For the upstream-proxy hook, open the Admin UI through the authentication proxy and sign in with a test account. Confirm LiteLLM shows that account. A request from the trusted proxy with missing identity headers should be rejected by the example handler; a direct request from an untrusted peer should also fail.
+
+For the post-sign-in callback, start a fresh browser session, sign in through your configured provider, and confirm the expected account opens in LiteLLM. Sign in again to check that the stable user ID resolves to the same account.
+
+## Configuration reference
+
+| Setting or callback | Contract |
+| --- | --- |
+| `general_settings.custom_ui_sso_sign_in_handler` | Module path to an instance of `CustomSSOLoginHandler`. |
+| `handle_custom_ui_sso_sign_in(request)` | Async method returning an `OpenID` identity from the trusted request. |
+| `general_settings.trusted_proxy_ranges` | Direct peer IPs or CIDRs allowed to supply identity headers. |
+| `general_settings.custom_sso` | Module path to an async function receiving provider user information. |
+| `SSOUserDefinedValues` | Supplies `user_id`, `user_email`, and optional overrides. See [SSO permissions](./access_management/sso_permissions.md) for permission fields. |
+
+### Read additional provider fields
+
+For a generic provider, set `GENERIC_USER_EXTRA_ATTRIBUTES` to the fields needed by your callback. They are available through `getattr(userIDPInfo, "extra_fields", None) or {}`. See [OIDC provider field mapping](./admin_ui_sso.md) for configuration.
+
+Use the returned identity for authentication. For user and team lifecycle operations, see [identity provisioning](./identity_provisioning.md).
+
+## Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| Handler cannot be imported | Confirm the module path and mounted Python file. The header hook refers to an instance; `custom_sso` refers to a function. |
+| Header sign-in reports an untrusted proxy | Configure `trusted_proxy_ranges` for the direct peer that reaches LiteLLM, and confirm the request passes through that proxy. |
+| Header sign-in reports a missing identity | Confirm the authentication proxy sets the expected headers after validating the user. |
+| `user_custom_sso must be a coroutine function` | Define the post-sign-in callback with `async def`. |
+| Repeated sign-ins create different users | Return a stable, nonempty provider ID instead of a changing email or display name. |
+| Roles or teams are wrong after sign-in | Check [SSO permissions](./access_management/sso_permissions.md) and any explicit callback overrides. |
+
+## Related guides
+
+Configure providers through [OpenID Connect](./admin_ui_sso.md) or [SAML](./saml_sso.md). Use [SSO permissions](./access_management/sso_permissions.md) for access policies, [identity provisioning](./identity_provisioning.md) for user lifecycle management, and [Custom Auth](./custom_auth.md) for API request handlers.

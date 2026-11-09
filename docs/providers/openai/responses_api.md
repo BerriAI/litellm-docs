@@ -3,6 +3,8 @@ import TabItem from '@theme/TabItem';
 
 # OpenAI - Response API
 
+To use Fast mode on supported OpenAI models or Ultrafast on GPT-6 Astra, see [Fast & Ultrafast mode](./ultrafast.md) for Admin UI setup, configuration, and request examples.
+
 ## Usage
 
 ### LiteLLM Python SDK
@@ -698,6 +700,8 @@ Set `parallel_tool_calls=False` to ensure zero or one tool is called per turn. [
 Tool search lets models dynamically load tools at runtime instead of sending every tool definition in the prompt. Group functions into **namespaces** and mark them with `defer_loading: true`, and the model only loads the schemas it actually needs, saving tokens.
 
 Requires `gpt-5.4` or later. See [OpenAI Tool Search docs](https://developers.openai.com/api/docs/guides/tools-tool-search) for full details.
+
+Claude models take the same `tool_search` tool on `/v1/responses`. See [Tool Search on Claude through the Responses API](../anthropic_tool_search.md#responses-api).
 
 <Tabs>
 <TabItem value="sdk" label="LiteLLM Python SDK">

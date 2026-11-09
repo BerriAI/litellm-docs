@@ -23,6 +23,8 @@ import type {
   PropSidebarItemLink,
 } from '@docusaurus/plugin-content-docs';
 
+import {ExternalLink, FileText, Folder} from 'lucide-react';
+
 import styles from './styles.module.css';
 
 function useCategoryItemsPlural() {
@@ -117,7 +119,7 @@ function CardCategory({item}: {item: PropSidebarItemCategory}): ReactNode {
     <CardLayout
       className={item.className}
       href={href}
-      icon={cardIcon(item) ?? '🗃️'}
+      icon={cardIcon(item) ?? <Folder size={18} className={styles.cardGlyph} aria-hidden="true" />}
       title={item.label}
       description={item.description ?? categoryItemsPlural(item.items.length)}
     />
@@ -125,7 +127,11 @@ function CardCategory({item}: {item: PropSidebarItemCategory}): ReactNode {
 }
 
 function CardLink({item}: {item: PropSidebarItemLink}): ReactNode {
-  const icon = isInternalUrl(item.href) ? '📄️' : '🔗';
+  const icon = isInternalUrl(item.href) ? (
+    <FileText size={18} className={styles.cardGlyph} aria-hidden="true" />
+  ) : (
+    <ExternalLink size={18} className={styles.cardGlyph} aria-hidden="true" />
+  );
   const doc = useDocById(item.docId ?? undefined);
   return (
     <CardLayout

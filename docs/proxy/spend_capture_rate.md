@@ -126,7 +126,7 @@ OpenAI bill live, so `OPENAI_ADMIN_KEY` must be set on the proxy
 
 ```bash
 curl "http://localhost:4000/spend/capture_rate?provider=openai&start_date=2026-09-17&end_date=2026-09-23&threshold=0.9&project_ids=proj_a&project_ids=proj_b" \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
 ```
 
 | Query parameter | Required | Default | Meaning |

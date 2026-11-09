@@ -8,6 +8,8 @@ authors:
   - mateo
   - kerry
 description: "Day 0 support for GPT-6.1 Sol on LiteLLM, with cached input at half GPT-6 Sol's price."
+card_title: "GPT-6.1 Sol"
+card_summary: "GPT-6 Sol successor with cached input at half GPT-6 Sol's price, same request family and params."
 tags: [openai, gpt-6, gpt-6.1-sol, completion, day 0 support]
 hide_table_of_contents: false
 ---

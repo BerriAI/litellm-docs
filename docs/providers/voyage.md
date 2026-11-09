@@ -1,10 +1,35 @@
-# Voyage AI
+# VoyageAI by MongoDB
 https://docs.voyageai.com/embeddings/
+
+Voyage AI is now VoyageAI by MongoDB. LiteLLM keeps the `voyage/` model prefix and picks the API host from the key you give it, the same way the official `voyageai` SDK does
 
 ## API Key
 ```python
 # env variable
 os.environ['VOYAGE_API_KEY']
+```
+
+LiteLLM also reads `VOYAGE_AI_API_KEY` and `VOYAGE_AI_TOKEN` when `VOYAGE_API_KEY` is not set
+
+### Which host your key goes to
+
+| Key issued by | Key prefix | Requests go to |
+|---------------|------------|----------------|
+| MongoDB Atlas (Model API) | `al-` | `https://ai.mongodb.com/v1` |
+| Voyage AI dashboard | `pa-` | `https://api.voyageai.com/v1` |
+
+Each host rejects the other's keys with a 403, so there is nothing to configure: a MongoDB-issued key is routed to `ai.mongodb.com` on its own. Set `api_base` on the model (or `VOYAGE_API_BASE` for rerank) to send requests somewhere else, for example a gateway in front of either host; an explicit `api_base` always wins over the key prefix
+
+```yaml
+model_list:
+  - model_name: voyage-3.5
+    litellm_params:
+      model: voyage/voyage-3.5
+      api_key: os.environ/VOYAGE_API_KEY   # al-... goes to ai.mongodb.com, pa-... to api.voyageai.com
+  - model_name: rerank-2.5
+    litellm_params:
+      model: voyage/rerank-2.5
+      api_key: os.environ/VOYAGE_API_KEY
 ```
 
 ## Sample Usage - Embedding
@@ -219,7 +244,7 @@ Reach for `voyage-context-4` when you split long documents into chunks and the s
 
 ## Rerank
 
-Voyage AI provides reranking models to improve search relevance by reordering documents based on their relevance to a query.
+VoyageAI by MongoDB provides reranking models to improve search relevance by reordering documents based on their relevance to a query. A MongoDB-issued key (`al-`) is routed to `ai.mongodb.com` here too.
 
 ### Quick Start
 

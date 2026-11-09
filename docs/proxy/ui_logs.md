@@ -37,6 +37,30 @@ general_settings:
 
 <Image img={require('../../img/ui_request_logs_content.png')}/>
 
+### Turn off prompt storage for a key or team
+
+When prompt storage is on for the proxy, you can still keep request and response content out of spend logs for a single key or a whole team. Set `store_prompts_in_spend_logs: false` in the key's or the team's metadata.
+
+```bash
+# one key
+curl -X POST 'http://0.0.0.0:4000/key/update' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{"key": "sk-...", "metadata": {"store_prompts_in_spend_logs": false}}'
+
+# every key on a team
+curl -X POST 'http://0.0.0.0:4000/team/update' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{"team_id": "my-team", "metadata": {"store_prompts_in_spend_logs": false}}'
+```
+
+You can also use the "Store prompts in spend logs" switch on the Create Key, Edit Key, Create Team and Edit Team forms in the Admin UI.
+
+Requests from a restricted key still get a spend log row with cost, tokens and identity, but its `proxy_server_request` and `response` are empty. This covers chat, pass-through, queued and failed requests, plus LiteLLM-executed batch rows.
+
+If either the key or its team sets it to `false`, prompts are not stored. A key set to `true` cannot override a team set to `false`, and a client cannot turn storage back on with request metadata or the `litellm-disable-message-redaction` header. Setting it to `true` on a key or team does not enable storage when it is off for the proxy. Unlike [message redaction](./logging.md#redact-messages-response-content), this only affects spend logs; other logging callbacks still receive the content.
+
 ## Tracing Tools
 
 View which tools were provided and called in your completion requests.
@@ -89,6 +113,44 @@ If you do not want to store spend logs in DB, you can opt out with this setting
 general_settings:
   disable_spend_logs: True   # Disable writing spend logs to DB
 ```
+
+## Choose which metadata fields are stored
+
+Every `LiteLLM_SpendLogs` row carries a `metadata` JSON column. Most of it is usually `model_map_information`, the model's cost map entry copied into every row (about 7 KB). Use `spend_logs_metadata_fields` to choose which top-level keys of that column are written to the database. Set exactly one of `include` or `exclude`
+
+```yaml
+general_settings:
+  spend_logs_metadata_fields:
+    exclude:
+      - model_map_information
+```
+
+```yaml
+general_settings:
+  spend_logs_metadata_fields:
+    include:
+      - user_api_key_alias
+      - usage_object
+      - cost_breakdown
+```
+
+An `include` list drops every key it does not name, including keys that only some rows carry, such as `is_silent_experiment` on [mirrored calls](../traffic_mirroring#find-mirrored-calls-in-logs).
+
+When the setting is unset, every key is written, which is the default. Setting both lists, setting neither, naming a key that is not a `LiteLLM_SpendLogs.metadata` field, or using a dotted path such as `usage_object.cache_read_input_tokens` stops the proxy at startup. `status` and `cold_storage_object_key` are always written and cannot be excluded. The setting can also be changed without a restart through `POST /config/field/update` with `config_type: general_settings`, which rejects the same invalid values with a 400
+
+Only the stored row is filtered. Daily spend tables, budgets and logging callbacks still receive every key. The `proxy_server_request` and `response` columns are not affected; `store_prompts_in_spend_logs` keeps controlling those. Rows written before the change keep their metadata until [retention](#automatically-deleting-old-spend-logs) deletes them, and Postgres only returns the disk space after `VACUUM FULL` or `pg_repack`
+
+Some keys are read back from stored rows. Leaving them out turns off the features below for the affected rows
+
+| Key | What stops working for rows without it |
+|---|---|
+| `model_map_information` | Nothing reads it from stored rows |
+| `usage_object`, `cost_breakdown` | Cost details in the log drawer and the prompt caching page |
+| `error_information` | Error code and error message filters on `/spend/logs`, and error details in the log drawer |
+| `user_api_key_alias` | The key alias filter on the Logs page and `/spend/logs/ui` |
+| `user_api_key_team_id`, `user_api_key_user_id` | Recovering the team and user of a deleted key from its spend logs |
+| `guardrail_information` | The guardrail panel in the log drawer and compression savings |
+| `used_client_oauth_token` | The OAuth token filter on `/spend/logs` |
 
 ## Automatically Deleting Old Spend Logs
 

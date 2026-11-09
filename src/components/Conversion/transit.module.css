@@ -1,0 +1,481 @@
+/*
+ * Transit maps: the "Who is calling the models?" diagram and the system map.
+ * Colors come from Infima and the --lite-* site variables, so both follow the
+ * theme in light and dark mode. Each product line on the system map owns one
+ * color (--c), echoing the blog's category colors.
+ */
+
+.svg,
+.map {
+  --tr-line: var(--ifm-color-primary);
+  --tr-ink: var(--ifm-font-color-base);
+  --tr-muted: var(--ifm-color-emphasis-600);
+  --tr-hair: var(--ifm-color-emphasis-300);
+  --tr-dot: var(--ifm-color-emphasis-200);
+  --tr-page: var(--lite-page, var(--ifm-background-surface-color, #fff));
+  --tr-tint: color-mix(in srgb, var(--tr-line) 8%, var(--tr-page));
+  --tr-edge: color-mix(in srgb, var(--tr-line) 28%, var(--tr-page));
+  --tr-zone: color-mix(in srgb, var(--tr-line) 50%, var(--tr-page));
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--ifm-font-family-base);
+}
+
+.dot {
+  fill: var(--tr-dot);
+}
+
+/* ------------------------------------------------------------ diagram */
+
+.line {
+  fill: none;
+  stroke: var(--tr-line);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.lineMore {
+  stroke-width: 3;
+  stroke-dasharray: 0.006 0.03;
+  opacity: 0.55;
+  animation: fade 0.5s ease 0.35s both;
+}
+.draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 0.75s cubic-bezier(0.3, 0.7, 0.2, 1) forwards;
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.fadeIn,
+.cars {
+  animation: fade 0.45s ease both;
+}
+.cars {
+  animation-delay: 0.6s;
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.car,
+.mapCar {
+  fill: var(--tr-page);
+  stroke: var(--tr-line);
+  stroke-width: 2;
+}
+
+.box {
+  fill: var(--tr-page);
+  stroke: var(--tr-hair);
+}
+.boxMore {
+  stroke-dasharray: 4 3;
+}
+.boxText {
+  fill: var(--tr-ink);
+  font-size: 13.5px;
+  font-weight: 550;
+}
+.boxTextSm {
+  fill: var(--tr-ink);
+  font-size: 13px;
+  font-weight: 550;
+}
+.boxTextMore {
+  fill: var(--tr-muted);
+}
+.stn {
+  fill: var(--tr-page);
+  stroke: var(--tr-line);
+  stroke-width: 2.5;
+}
+.stnMore {
+  stroke-dasharray: 3 2;
+  opacity: 0.6;
+}
+
+.hub {
+  fill: var(--tr-page);
+  stroke: var(--tr-line);
+  stroke-width: 3.5;
+}
+.hubLabel {
+  fill: var(--tr-line);
+  font-size: 14px;
+  font-weight: 650;
+}
+.sdkStop {
+  fill: var(--tr-tint);
+  stroke: var(--tr-line);
+  stroke-width: 2.5;
+}
+.note {
+  fill: var(--tr-muted);
+  font-size: 11px;
+}
+.chip,
+.tag {
+  fill: var(--tr-tint);
+  stroke: var(--tr-edge);
+}
+.tag {
+  fill: var(--tr-page);
+  stroke: var(--tr-zone);
+}
+.chipText,
+.tagText {
+  fill: var(--tr-line);
+  font-size: 11px;
+  font-weight: 550;
+}
+.mono {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 10.5px;
+}
+.zone {
+  fill: color-mix(in srgb, var(--tr-line) 4%, transparent);
+  stroke: var(--tr-zone);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+.zoneText {
+  fill: var(--tr-muted);
+  font-size: 10.5px;
+  font-weight: 550;
+}
+
+/* ------------------------------------------------------------ gateway map */
+
+.lineBranch {
+  stroke-width: 2.5;
+}
+.junction {
+  fill: var(--tr-page);
+  stroke: var(--tr-line);
+  stroke-width: 2.5;
+}
+.grp {
+  fill: var(--tr-line);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.route {
+  transition: opacity 0.2s ease;
+}
+.routeDim {
+  opacity: 0.16;
+}
+.routeOn .line:not(.lineMore) {
+  stroke-width: 4.5;
+}
+.routeOn .lineBranch:not(.lineMore) {
+  stroke-width: 3;
+}
+.routeOn .box:not(.boxMore) {
+  stroke: var(--tr-line);
+}
+.pill {
+  cursor: pointer;
+  outline: none;
+}
+.pill rect {
+  fill: var(--tr-tint);
+  stroke: var(--tr-edge);
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+.pill text {
+  fill: var(--tr-line);
+  font-size: 11px;
+  font-weight: 600;
+  transition: fill 0.15s ease;
+}
+.pill:hover rect,
+.pill:focus-visible rect {
+  stroke: var(--tr-line);
+}
+.pillOn rect {
+  fill: var(--tr-line);
+  stroke: var(--tr-line);
+}
+.pillOn text {
+  fill: var(--tr-page);
+}
+
+/* Blue logo on light backgrounds, white logo on dark (logo guidelines) */
+.monoDark {
+  display: none;
+}
+:global([data-theme='dark']) .monoLight {
+  display: none;
+}
+:global([data-theme='dark']) .monoDark {
+  display: inline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draw,
+  .lineMore,
+  .fadeIn,
+  .cars {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---------------------------------------------------------- prompt button */
+
+.promptBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: none;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--lite-radius-sm, 8px);
+  background: var(--ifm-background-surface-color, var(--ifm-background-color));
+  color: var(--ifm-font-color-base);
+  font: 550 0.78rem/1 var(--ifm-font-family-base);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.promptBtnMd {
+  gap: 0.45rem;
+  padding: 0.6rem 0.95rem;
+  font-size: 0.9rem;
+}
+.promptBtn:hover {
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+}
+.promptBtn:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+.promptBtn svg {
+  color: var(--ifm-color-primary);
+}
+.promptBtnDone,
+.promptBtnDone:hover {
+  border-color: var(--ifm-color-success);
+  color: var(--ifm-color-success);
+}
+
+/* ------------------------------------------------------------ system map */
+
+.map {
+  margin: 2.5rem 0;
+}
+.mapHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+.mapTitle {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 1.75rem);
+}
+.mapLead {
+  margin: 0;
+  max-width: 44rem;
+  color: var(--tr-muted);
+}
+.mapScroll {
+  overflow-x: auto;
+  border: 1px solid var(--tr-hair);
+  border-radius: var(--lite-radius-lg, 16px);
+  background: var(--tr-page);
+  padding: 0.75rem;
+}
+.mapSvg {
+  min-width: 760px;
+}
+
+.l_gateway {
+  --c: var(--ifm-color-primary);
+}
+.l_sdk {
+  --c: #1c8fd0;
+}
+.l_mcp {
+  --c: #0d7a70;
+}
+.l_agents {
+  --c: #b86e00;
+}
+.l_autorouter {
+  --c: #6d45c9;
+}
+.l_tools,
+.l_obs {
+  --c: #6c7386;
+}
+.l_enterprise {
+  --c: var(--ifm-color-primary);
+}
+:global([data-theme='dark']) .l_sdk {
+  --c: #5cc2f2;
+}
+:global([data-theme='dark']) .l_mcp {
+  --c: #3cc7b4;
+}
+:global([data-theme='dark']) .l_agents {
+  --c: #f5b95a;
+}
+:global([data-theme='dark']) .l_autorouter {
+  --c: #b39cf5;
+}
+:global([data-theme='dark']) .l_tools,
+:global([data-theme='dark']) .l_obs {
+  --c: #a2a7ba;
+}
+
+.mapLine {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.l_tools .mapLine,
+.l_obs .mapLine {
+  stroke-width: 3.5;
+}
+.mapCar {
+  stroke: var(--c);
+}
+.mapStn {
+  fill: var(--tr-page);
+  stroke: var(--c);
+  stroke-width: 2.5;
+}
+.mapTerminus {
+  fill: var(--c);
+  stroke: var(--tr-page);
+  stroke-width: 2;
+}
+.stopLink {
+  cursor: pointer;
+}
+.stopText {
+  fill: var(--tr-ink);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.stopTextBold {
+  font-weight: 700;
+  fill: var(--c);
+}
+.stopLink:hover .stopText,
+.stopLink:focus-visible .stopText {
+  fill: var(--c, var(--tr-line));
+  text-decoration: underline;
+}
+.provTerminus {
+  fill: var(--tr-line);
+}
+.provBig {
+  fill: var(--tr-page);
+  font-size: 20px;
+  font-weight: 750;
+}
+.provSmall {
+  fill: var(--tr-page);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.l_enterprise .zone {
+  stroke: var(--c);
+}
+
+.dim {
+  opacity: 0.18;
+  transition: opacity 0.2s ease;
+}
+.l_gateway,
+.l_tools,
+.l_sdk,
+.l_mcp,
+.l_agents,
+.l_autorouter,
+.l_obs,
+.l_enterprise {
+  transition: opacity 0.2s ease;
+}
+
+/* Legend: the same hairline grid as every other card set */
+.legend {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+  padding: 0;
+}
+.legendRow {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  margin: 0;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid var(--tr-hair);
+  border-radius: var(--lite-radius-md, 12px);
+}
+.swatch {
+  width: 28px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--c);
+}
+.swatchZone {
+  height: 14px;
+  border: 1.5px dashed var(--c);
+  background: transparent;
+  border-radius: 4px;
+}
+.legendBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.legendName {
+  font-weight: 650;
+  color: var(--tr-ink);
+}
+.legendName:hover {
+  color: var(--c);
+}
+.legendText {
+  font-size: 0.85rem;
+  color: var(--tr-muted);
+  line-height: 1.4;
+}
+
+@media (max-width: 760px) {
+  .legend {
+    grid-template-columns: 1fr;
+  }
+  .legendRow {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+  .legendRow .promptBtn {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

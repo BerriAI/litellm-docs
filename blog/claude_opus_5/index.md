@@ -7,6 +7,8 @@ authors:
   - krrish
   - ishaan-alt
 description: "Day 0 support for Claude Opus 5 on the LiteLLM AI Gateway. Use it across Anthropic, Azure, Vertex AI, and Bedrock."
+card_title: "Claude Opus 5"
+card_summary: "Much stronger coding agent with self-verification, thinking on by default, $5 / $25 per 1M, 2.5x fast mode at 2x cost."
 image: /img/litellm_claude_opus_5_announcement.png
 tags: [anthropic, claude, opus 5, day 0 support]
 hide_table_of_contents: false
@@ -138,14 +140,14 @@ docker run -d \
 model_list:
   - model_name: claude-opus-5
     litellm_params:
-      model: bedrock/anthropic.claude-opus-5
+      model: bedrock/global.anthropic.claude-opus-5
       aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
       aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
       aws_region_name: us-east-1
 ```
 
 :::note
-For cross-region routing, swap the model ID for a regional inference profile (`us.`, `eu.`, `au.`, or `jp.` prefix), e.g. `bedrock/converse/us.anthropic.claude-opus-5`. These carry a 10% regional premium; the `global.` profile stays at base price. LiteLLM tracks the cost of each variant automatically.
+To keep requests inside one geography, swap the model ID for a geographic inference profile such as `bedrock/converse/us.anthropic.claude-opus-5` (the model's AWS model card lists the profiles it has). These cost 10% more than `global.`, which can serve a request from any commercial AWS region. LiteLLM tracks the cost of `global.` and of the `us.`, `eu.`, and `au.` profiles. On older images this needs the remote cost map, which LiteLLM loads at startup unless `LITELLM_LOCAL_MODEL_COST_MAP` is set.
 :::
 
 **2. Start the proxy**

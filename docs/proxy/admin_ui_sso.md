@@ -2,16 +2,40 @@ import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# ✨ SSO for Admin UI
+# OpenID Connect (OIDC) SSO
+
+Sign in to the Admin UI with OpenID Connect (OIDC), the identity layer built on OAuth 2.0. For SAML providers, use [SAML SSO](./saml_sso.md).
 
 <EnterpriseFeature feature="SSO">From v1.76.0, SSO is free for up to 5 users. Beyond that, an enterprise license is required.</EnterpriseFeature>
 
-### Usage (Google, Microsoft, Okta, etc.)
+## How it works
+
+The Admin UI redirects the user to your identity provider. After sign-in, LiteLLM receives the provider's response at `/sso/callback`, identifies the user, and starts their UI session. Configure roles, team membership, and sign-in restrictions in [SSO permissions](./access_management/sso_permissions.md).
+
+## Prerequisites
+
+- A running LiteLLM proxy with a master key and database connection.
+- An application registered with your identity provider, with a client ID and secret.
+- The public proxy URL, including `https://` (or `http://` for local development).
+
+<a id="step-3-set-proxy_base_url-in-your-env"></a>
+
+Set the base URL so LiteLLM generates the correct callback URL:
+
+```bash
+PROXY_BASE_URL="https://litellm.yourcompany.com"
+```
+
+## Setup
+
+<a id="usage-google-microsoft-okta-etc"></a>
+
+Choose your provider and register `<PROXY_BASE_URL>/sso/callback` as its sign-in redirect URI.
 
 <Tabs>
 <TabItem value="okta" label="Okta SSO">
 
-### Video Walkthrough
+#### Video Walkthrough
 
 <iframe width="100%" height="415" src="https://www.loom.com/embed/cac5be90f2714ceaa95d7f89cf4ac548" frameBorder="0" allowFullScreen></iframe>
 
@@ -80,7 +104,113 @@ If you are using the Custom Authorization Server, you must configure an Access P
 
 See [Okta's Access Policy documentation](https://help.okta.com/en-us/content/topics/security/api-access-management/access-policies.htm) for more details.
 
-#### Step 4: Configure Okta Security Settings
+For state and PKCE settings, see [Okta security settings](#step-4-configure-okta-security-settings).
+
+</TabItem>
+<TabItem value="google" label="Google SSO">
+
+- Create a new Oauth 2.0 Client on [Google Cloud Console](https://console.cloud.google.com/)
+
+**Required .env variables on your Proxy**
+```shell
+# for Google SSO Login
+GOOGLE_CLIENT_ID="<client-id>"
+GOOGLE_CLIENT_SECRET="<client-secret>"
+```
+
+- Set Redirect URL on your Oauth 2.0 Client on [Google Cloud Console](https://console.cloud.google.com/)
+    - Set a redirect url = `<your proxy base url>/sso/callback`
+    ```shell
+    https://litellm-production-7002.up.railway.app/sso/callback
+    ```
+
+</TabItem>
+
+<TabItem value="msft" label="Microsoft SSO">
+
+- Create a new App Registration on [Azure portal](https://portal.azure.com/)
+- Create a client Secret for your App Registration
+
+**Required .env variables on your Proxy**
+```shell
+MICROSOFT_CLIENT_ID="<client-id>"
+MICROSOFT_CLIENT_SECRET="<client-secret>"
+MICROSOFT_TENANT="<tenant-id>"
+```
+
+For custom endpoints, see [Microsoft endpoint overrides](#microsoft-endpoint-overrides).
+
+- Set Redirect URI on your App Registration on [Azure portal](https://portal.azure.com/)
+    - Set a redirect url = `<your proxy base url>/sso/callback`
+    ```shell
+    http://localhost:4000/sso/callback
+    ```
+
+To assign LiteLLM roles from Entra ID, follow [Assign roles through Microsoft Entra ID](./access_management/sso_permissions.md#manage-user-roles-via-azure-app-roles).
+
+For non-standard user fields, see [Microsoft identity attributes](#microsoft-identity-attributes).
+
+</TabItem>
+
+<TabItem value="Generic" label="Generic SSO Provider">
+
+Configure an OIDC provider with its authorization, token, and UserInfo endpoints.
+
+**Required .env variables on your Proxy**
+```shell
+
+GENERIC_CLIENT_ID="<client-id>"
+GENERIC_CLIENT_SECRET="<client-secret>"
+GENERIC_AUTHORIZATION_ENDPOINT="http://localhost:9090/auth"
+GENERIC_TOKEN_ENDPOINT="http://localhost:9090/token"
+GENERIC_USERINFO_ENDPOINT="http://localhost:9090/me"
+```
+
+Set a stable user identifier and any additional response fields using [generic provider options](#generic-provider-options).
+
+- Set Redirect URI, if your provider requires it
+    - Set a redirect url = `<your proxy base url>/sso/callback`
+    ```shell
+    http://localhost:4000/sso/callback
+    ```
+
+</TabItem>
+
+</Tabs>
+
+## Test sign-in
+
+<a id="step-5-test-the-sso-flow"></a>
+<a id="step-4-test-flow"></a>
+
+1. Start or restart the proxy with your existing configuration:
+
+   ```bash
+   litellm --config /path/to/config.yaml
+   ```
+
+2. Open `https://<your-proxy-base-url>/ui` and click **SSO**.
+3. Sign in with a user assigned to the identity-provider application. Confirm that you return to the Admin UI.
+
+<Image img={require('../../img/litellm_ui_3.gif')} />
+
+## Configuration reference
+
+### Default Login, Logout URLs
+
+| Endpoint | URL |
+| --- | --- |
+| Start sign-in | `<PROXY_BASE_URL>/sso/key/generate` |
+| Sign-in callback | `<PROXY_BASE_URL>/sso/callback` |
+| Default logout destination | `<PROXY_BASE_URL>` |
+
+Override the logout destination when your provider requires another URL:
+
+```bash
+PROXY_LOGOUT_URL="https://www.google.com"
+```
+
+### Okta security settings {#step-4-configure-okta-security-settings}
 
 **GENERIC_CLIENT_STATE** is recommended for Okta to prevent CSRF attacks:
 
@@ -96,54 +226,7 @@ GENERIC_CLIENT_USE_PKCE="true"
 
 LiteLLM will automatically handle PKCE parameter generation and verification during the OAuth flow.
 
-#### Step 5: Test the SSO Flow
-
-1. Start your LiteLLM proxy
-2. Navigate to `https://<your-proxy-base-url>/ui`
-3. Click the SSO login button
-4. Authenticate with Okta and verify you're redirected back to LiteLLM
-
-#### Troubleshooting
-
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `redirect_uri` error | Redirect URI not configured | Add `<proxy_base_url>/sso/callback` to Sign-in redirect URIs in Okta |
-| `access_denied` | User not assigned to app | Assign the user in the Assignments tab |
-| `no_matching_policy` | Missing Access Policy (Custom Authorization Server only) | Create an Access Policy in the Authorization Server (see Step 3a) |
-
-</TabItem>
-<TabItem value="google" label="Google SSO">
-
-- Create a new Oauth 2.0 Client on https://console.cloud.google.com/ 
-
-**Required .env variables on your Proxy**
-```shell
-# for Google SSO Login
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-```
-
-- Set Redirect URL on your Oauth 2.0 Client on https://console.cloud.google.com/ 
-    - Set a redirect url = `<your proxy base url>/sso/callback`
-    ```shell
-    https://litellm-production-7002.up.railway.app/sso/callback
-    ```
-
-</TabItem>
-
-<TabItem value="msft" label="Microsoft SSO">
-
-- Create a new App Registration on https://portal.azure.com/
-- Create a client Secret for your App Registration
-
-**Required .env variables on your Proxy**
-```shell
-MICROSOFT_CLIENT_ID="84583a4d-"
-MICROSOFT_CLIENT_SECRET="nbk8Q~"
-MICROSOFT_TENANT="5a39737"
-```
-
-**Optional: Custom Microsoft SSO Endpoints**
+### Microsoft endpoint overrides
 
 If you need to use custom Microsoft SSO endpoints (e.g., for a custom identity provider, sovereign cloud, or proxy), you can override the default endpoints:
 
@@ -155,49 +238,9 @@ MICROSOFT_USERINFO_ENDPOINT="https://your-custom-graph-api.com/v1.0/me"
 
 If these are not set, the default Microsoft endpoints are used based on your tenant.
 
-- Set Redirect URI on your App Registration on https://portal.azure.com/
-    - Set a redirect url = `<your proxy base url>/sso/callback`
-    ```shell
-    http://localhost:4000/sso/callback
-    ```
+### Microsoft identity attributes
 
-**Using App Roles for User Permissions**
-
-You can assign user roles directly from Entra ID using App Roles. LiteLLM will automatically read the app roles from the JWT token and assign the corresponding role to the user.
-
-Supported roles:
-- `proxy_admin` - Admin over the platform
-- `proxy_admin_viewer` - Can login, view all keys, view all spend (read-only)
-- `internal_user` - Normal user. Can login, view spend and depending on team-member permissions - view/create/delete their own keys.
-
-
-To set up app roles:
-1. Navigate to your App Registration on https://portal.azure.com/
-2. Go to "App roles" and create a new app role
-3. Use one of the supported role names above (e.g., `proxy_admin`)
-4. Assign users to these roles in your Enterprise Application
-5. When users sign in via SSO, LiteLLM will automatically assign them the corresponding role
-
-**Advanced: Custom User Attribute Mapping**
-
-For certain Microsoft Entra ID configurations, you may need to override the default user attribute field names. This is useful when your organization uses custom claims or non-standard attribute names in the SSO response.
-
-**Step 1: Debug SSO Response**
-
-First, inspect the JWT fields returned by your Microsoft SSO provider using the [SSO Debug Route](#debugging-sso-jwt-fields).
-
-1. Set `ENABLE_SSO_DEBUG="true"` on the proxy and restart it (the debug routes return 404 otherwise)
-2. Add `/sso/debug/callback` as a redirect URL in your Azure App Registration
-3. Navigate to `https://<proxy_base_url>/sso/debug/login`
-4. Complete the SSO flow to see the returned user attributes
-
-**Step 2: Identify Field Attribute Names**
-
-From the debug response, identify the field names used for email, display name, user ID, first name, and last name.
-
-**Step 3: Set Environment Variables**
-
-Override the default attribute names by setting these environment variables:
+Inspect your provider response with the [SSO debug flow](#debugging-sso-jwt-fields), then override any non-standard user fields and restart the proxy.
 
 | Environment Variable | Description | Default Value |
 |---------------------|-------------|---------------|
@@ -207,91 +250,41 @@ Override the default attribute names by setting these environment variables:
 | `MICROSOFT_USER_FIRST_NAME_ATTRIBUTE` | Field name for first name | `givenName` |
 | `MICROSOFT_USER_LAST_NAME_ATTRIBUTE` | Field name for last name | `surname` |
 
-**Step 4: Restart the Proxy**
+### Generic provider options
 
-After setting the environment variables, restart the proxy:
-
-```bash
-litellm --config /path/to/config.yaml
-```
-
-</TabItem>
-
-<TabItem value="Generic" label="Generic SSO Provider">
-
-A generic OAuth client that can be used to quickly create support for any OAuth provider with close to no code
-
-**Required .env variables on your Proxy**
-```shell
-
-GENERIC_CLIENT_ID = "******"
-GENERIC_CLIENT_SECRET = "G*******"
-GENERIC_AUTHORIZATION_ENDPOINT = "http://localhost:9090/auth"
-GENERIC_TOKEN_ENDPOINT = "http://localhost:9090/token"
-GENERIC_USERINFO_ENDPOINT = "http://localhost:9090/me"
-```
-
-**Optional .env variables**
-The following can be used to customize attribute names when interacting with the generic OAuth provider. We will read these attributes from the SSO Provider result
+Customize the user attributes and protocol settings read from your provider:
 
 ```shell
-GENERIC_USER_ID_ATTRIBUTE = "sub"
-GENERIC_USER_EMAIL_ATTRIBUTE = "email"
-GENERIC_USER_DISPLAY_NAME_ATTRIBUTE = "display_name"
-GENERIC_USER_FIRST_NAME_ATTRIBUTE = "first_name"
-GENERIC_USER_LAST_NAME_ATTRIBUTE = "last_name"
-GENERIC_USER_ROLE_ATTRIBUTE = "given_role"
-GENERIC_USER_PROVIDER_ATTRIBUTE = "provider"
-GENERIC_USER_EXTRA_ATTRIBUTES = "department,employee_id,manager" # comma-separated list of additional fields to extract from SSO response
-GENERIC_CLIENT_STATE = "some-state" # if the provider needs a state parameter
-GENERIC_INCLUDE_CLIENT_ID = "false" # some providers enforce that the client_id is not in the body
-GENERIC_SCOPE = "openid profile email" # default scope openid is sometimes not enough to retrieve basic user info like first_name and last_name located in profile scope
+GENERIC_USER_ID_ATTRIBUTE="sub"
+GENERIC_USER_EMAIL_ATTRIBUTE="email"
+GENERIC_USER_DISPLAY_NAME_ATTRIBUTE="display_name"
+GENERIC_USER_FIRST_NAME_ATTRIBUTE="first_name"
+GENERIC_USER_LAST_NAME_ATTRIBUTE="last_name"
+GENERIC_USER_PROVIDER_ATTRIBUTE="provider"
+GENERIC_USER_EXTRA_ATTRIBUTES="department,employee_id,manager" # comma-separated list of additional fields to extract from SSO response
+GENERIC_CLIENT_STATE="some-state" # if the provider needs a state parameter
+GENERIC_INCLUDE_CLIENT_ID="false" # some providers enforce that the client_id is not in the body
+GENERIC_SCOPE="openid profile email" # default scope openid is sometimes not enough to retrieve basic user info like first_name and last_name located in profile scope
 ```
 
-Set `GENERIC_INCLUDE_TOKEN_CLAIMS = "true"` to also read user claims from the ID token and access token when the UserInfo response is incomplete. UserInfo claims take precedence
+Set `GENERIC_INCLUDE_TOKEN_CLAIMS="true"` to also read user claims from the ID token and access token when the UserInfo response is incomplete. UserInfo claims take precedence
 
 **Choosing `GENERIC_USER_ID_ATTRIBUTE`**
 
 LiteLLM stores this attribute's value as the user's identity and looks the user up by it on every subsequent login, so point it at a claim your provider guarantees is unique and never changes for the lifetime of the account. `sub` is the standard OIDC claim for this. Claims that a user can edit in their own profile, such as `preferred_username`, `email`, or `name`, will change out from under LiteLLM, and the next login is then treated as a different person with a separate set of keys, teams, and spend. When `GENERIC_USER_ID_ATTRIBUTE` is unset, LiteLLM reads `preferred_username`, so set it explicitly if your provider lets users change that value.
 
-**Assigning User Roles via SSO**
-
-Use `GENERIC_USER_ROLE_ATTRIBUTE` to specify which attribute in the SSO token contains the user's role. The role value must be one of the following supported LiteLLM roles:
-
-- `proxy_admin` - Admin over the platform
-- `proxy_admin_viewer` - Can login, view all keys, view all spend (read-only)
-- `internal_user` - Can login, view/create/delete their own keys, view their spend
-- `internal_user_viewer` - Can login, view their own keys, view their own spend
-
-Nested attribute paths are supported (e.g., `claims.role` or `attributes.litellm_role`).
+For role assignment, see [generic OIDC role mapping](./access_management/sso_permissions.md#assign-roles-through-a-generic-oidc-provider).
 
 **Capturing Additional SSO Fields**
 
 Use `GENERIC_USER_EXTRA_ATTRIBUTES` to extract additional fields from the SSO provider response beyond the standard user attributes (id, email, name, etc.). This is useful when you need to access custom organization-specific data (e.g., department, employee ID, groups) in your [custom SSO handler](./custom_sso.md).
-
-For **CLI SSO**, you can map the same (or other) claims into user `metadata` and return scalars to the CLI via `CLI_SSO_CLAIM_MAP`. See [CLI Authentication](./cli_sso.md#attribution-metadata-oidc-claims).
 
 ```shell
 # Comma-separated list of field names to extract
 GENERIC_USER_EXTRA_ATTRIBUTES="department,employee_id,manager,groups"
 ```
 
-**Accessing Extra Fields in Custom SSO Handler:**
-
-```python
-from litellm.proxy.management_endpoints.types import CustomOpenID
-
-async def custom_sso_handler(userIDPInfo: CustomOpenID):
-    # Access the extra fields
-    extra_fields = getattr(userIDPInfo, 'extra_fields', None) or {}
-    
-    user_department = extra_fields.get("department")
-    employee_id = extra_fields.get("employee_id")
-    user_groups = extra_fields.get("groups", [])
-    
-    # Use these fields for custom logic (e.g., team assignment, access control)
-    # ...
-```
+Read these values through `userIDPInfo.extra_fields` in your [custom SSO callback](./custom_sso.md#read-additional-provider-fields).
 
 **Nested Field Paths:**
 
@@ -301,351 +294,56 @@ Dot notation is supported for nested fields:
 GENERIC_USER_EXTRA_ATTRIBUTES="org_info.department,org_info.cost_center,metadata.employee_type"
 ```
 
-- Set Redirect URI, if your provider requires it
-    - Set a redirect url = `<your proxy base url>/sso/callback`
-    ```shell
-    http://localhost:4000/sso/callback
-    ```
-
-</TabItem>
-
-</Tabs>
-
-### Default Login, Logout URLs
-
-Some SSO providers require a specific redirect url for login and logout. You can input the following values.
-
-- Login: `<your-proxy-base-url>/sso/key/generate`
-- Logout: `<your-proxy-base-url>`
-
-Here's the env var to set the logout url on the proxy
-```bash
-PROXY_LOGOUT_URL="https://www.google.com"
-```
-
-#### Step 3. Set `PROXY_BASE_URL` in your .env
-
-Set this in your .env (so the proxy can set the correct redirect url)
-```shell
-PROXY_BASE_URL=https://your-proxy-domain.com
-```
-
-#### Step 4. Test flow
-<Image img={require('../../img/litellm_ui_3.gif')} />
-
-### Restrict Email Subdomains w/ SSO
-
-If you're using SSO and want to only allow users with a specific subdomain - e.g. (@berri.ai email accounts) to access the UI, do this:
-
-```bash
-export ALLOWED_EMAIL_DOMAINS="berri.ai"
-```
-
-This will check if the user email we receive from SSO contains this domain, before allowing access.
-
-### Set Proxy Admin
-
-Set a Proxy Admin when SSO is enabled. Once SSO is enabled, the `user_id` for users is retrieved from the SSO provider. To set a Proxy Admin, you need to copy the `user_id` from the UI and set it in your `.env` as `PROXY_ADMIN_ID`.
-
-#### Step 1: Copy your ID from the UI 
-
-<Image img={require('../../img/litellm_ui_copy_id.png')} />
-
-#### Step 2: Set it in your .env as the PROXY_ADMIN_ID 
-
-```env
-export PROXY_ADMIN_ID="116544810872468347480"
-```
-
-This will update the user role in the `LiteLLM_UserTable` to `proxy_admin`. 
-
-If you plan to change this ID, please update the user role via API `/user/update` or UI (Internal Users page). 
-
-#### Step 3: See all proxy keys
-
-<Image img={require('../../img/litellm_ui_admin.png')} />
-
-:::info
-
-If you don't see all your keys this could be due to a cached token. So just re-login and it should work.
-
-:::
-
-### Auto-add SSO users to teams (OIDC)
-
-For OIDC providers (Okta, Google, Generic SSO), you can pull a claim from the token returned by your identity provider into the user's `team_ids`. On every SSO login, LiteLLM reads that claim and adds the user as a member of each matching team.
-
-#### Step 1: Point LiteLLM at the claim containing the team ids
-
-```yaml showLineNumbers title="config.yaml"
-general_settings:
-  master_key: os.environ/LITELLM_MASTER_KEY
-  litellm_jwtauth:
-    team_ids_jwt_field: "groups" # any claim; dot notation works for nested claims, e.g. "resource_access.myapp.groups"
-```
-
-This assumes the token from your provider looks like this:
-
-```json
-{
-  ...,
-  "groups": ["team_id_1", "team_id_2"]
-}
-```
-
-If you're unsure what your provider sends, inspect the received claims with the [SSO debug flow](#debugging-sso-jwt-fields).
-
-#### Step 2: Create the teams on LiteLLM
-
-The claim values must match the `team_id` of teams that already exist on LiteLLM. Teams are not auto-created from OIDC claims, and a claim value with no matching team is skipped.
-
-```bash showLineNumbers title="Create team with team_id matching the SSO group value"
-curl -X POST '<PROXY_BASE_URL>/team/new' \
--H 'Authorization: Bearer <PROXY_MASTER_KEY>' \
--H 'Content-Type: application/json' \
--d '{
-    "team_alias": "team_1",
-    "team_id": "team_id_1"
-}'
-```
-
-#### Step 3: Test the SSO flow
-
-Log in via SSO and verify the user's team memberships on the UI (Internal Users page). Here's a [video walkthrough](https://www.loom.com/share/8959be458edf41fd85937452c29a33f3?sid=7ebd6d37-569a-4023-866e-e0cde67cb23e).
-
-Some providers only include the groups claim in the access token, not in the userinfo response. In that case, configure the claim via `ui_access_mode`, which also decodes the access token. Note this form additionally restricts UI login to members of the given group:
-
-```yaml showLineNumbers title="config.yaml"
-general_settings:
-  ui_access_mode:
-    type: "restricted_sso_group"
-    restricted_sso_group: "<group required for UI access>"
-    sso_group_jwt_field: "groups"
-```
-
-For Microsoft Entra ID, group membership is read from the Microsoft Graph API instead; follow [this tutorial](../tutorials/msft_sso.md). For SAML, team ids come from assertion attributes; see [SAML SSO](./saml_sso.md).
-
-### Restrict Personal Key Creation
-
-Use this if you want to stop users from creating personal keys (keys with no team). This is enforced on `/key/generate`, so it applies to both the Admin UI and direct API calls
-
-Set `key_generation_settings` on your litellm config.yaml
-
-```yaml
-litellm_settings:
-  key_generation_settings:
-    personal_key_generation:
-      allowed_user_roles: ["proxy_admin"]
-```
-
-See [Restricting Key Generation](./virtual_keys.md#restricting-key-generation) for all options
-
-### Use Username, Password when SSO is on
-
-If you need to access the UI via username/password when SSO is on navigate to `/fallback/login`. This route will allow you to sign in with your username/password credentials.
-
-### Restrict UI Access
-
-You can restrict UI Access to just admins - includes you (proxy_admin) and people you give view only access to (proxy_admin_viewer) for seeing global spend.
-
-**Step 1. Set 'admin_only' access**
-```yaml
-general_settings:
-    ui_access_mode: "admin_only"
-```
-
-**Step 2. Invite view-only users**
-
-<Image img={require('../../img/admin_ui_viewer.png')} />
-
-### Custom Branding Admin UI
-
-Use your companies custom branding on the LiteLLM Admin UI
-We allow you to 
-- Customize the UI Logo
-- Customize the UI color scheme
-<Image img={require('../../img/litellm_custom_ai.png')} />
-
-#### Set Custom Logo
-We allow you to pass a local image or a an http/https url of your image
-
-Set `UI_LOGO_PATH` on your env. We recommend using a hosted image, it's a lot easier to set up and configure / debug
-
-Example setting Hosted image
-```shell
-UI_LOGO_PATH="https://litellm-logo-aws-marketplace.s3.us-west-2.amazonaws.com/berriai-logo-github.png"
-```
-
-Example setting a local image (on your container)
-```shell
-UI_LOGO_PATH="ui_images/logo.jpg"
-```
-
-#### Or set your logo directly from Admin UI:
-<div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-  <Image img={require('../../img/admin_settings_ui_theme.png')} />
-  <Image img={require('../../img/admin_settings_ui_theme_logo.png')} />
-</div>
-
-#### Set Custom Color Theme
-- Navigate to [/enterprise/enterprise_ui](https://github.com/BerriAI/litellm/blob/main/enterprise/enterprise_ui/_enterprise_colors.json)
-- Inside the `enterprise_ui` directory, rename `_enterprise_colors.json` to `enterprise_colors.json`
-- Set your companies custom color scheme in `enterprise_colors.json`
-Example contents of `enterprise_colors.json` 
-Set your colors to any of the following colors: https://www.tremor.so/docs/layout/color-palette#default-colors
-```json
-{
-    "brand": {
-      "DEFAULT": "teal",
-      "faint": "teal",
-      "muted": "teal",
-      "subtle": "teal",
-      "emphasis": "teal",
-      "inverted": "teal"
-    }
-}
-
-```
-- Deploy LiteLLM Proxy Server
-
 ## Troubleshooting
 
-### "The 'redirect_uri' parameter must be a Login redirect URI in the client app settings" Error
+### Redirect URI errors
 
-This error commonly occurs with Okta and other SSO providers when the redirect URI configuration is incorrect.
+<a id="the-redirect_uri-parameter-must-be-a-login-redirect-uri-in-the-client-app-settings-error"></a>
+<a id="common-configuration-issues"></a>
+<a id="missing-protocol-in-base-url"></a>
+<a id="issue"></a>
+<a id="solution"></a>
 
-#### Issue
-```
-Your request resulted in an error. The 'redirect_uri' parameter must be a Login redirect URI in the client app settings
-```
+If the provider reports that `redirect_uri` is not a registered login URI, confirm both settings match:
 
-#### Solution
+- `PROXY_BASE_URL` includes the protocol, for example `https://litellm.yourcompany.com`.
+- The provider's registered redirect URI is exactly `<PROXY_BASE_URL>/sso/callback`.
 
-**1. Ensure you have set PROXY_BASE_URL in your .env and it includes protocol**
+### Okta errors
 
-Make sure your `PROXY_BASE_URL` includes the complete URL with protocol (`http://` or `https://`):
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `redirect_uri` error | Redirect URI not configured | Add `<proxy_base_url>/sso/callback` to Sign-in redirect URIs in Okta |
+| `access_denied` | User not assigned to app | Assign the user in the Assignments tab |
+| `no_matching_policy` | Missing Access Policy (Custom Authorization Server only) | Create an Access Policy in the Authorization Server (see Step 3a) |
 
-```bash
-# ✅ Correct - includes https://
-PROXY_BASE_URL=https://litellm.platform.com
-
-# ✅ Correct - includes http://
-PROXY_BASE_URL=http://litellm.platform.com
-
-# ❌ Incorrect - missing protocol
-PROXY_BASE_URL=litellm.platform.com
-```
-
-**2. For Okta specifically, ensure `GENERIC_CLIENT_STATE` is set and PKCE is configured if required**
-
-See [Okta SSO, Step 4: Configure Okta Security Settings](#step-4-configure-okta-security-settings) for details on `GENERIC_CLIENT_STATE` and PKCE configuration.
-
-### Common Configuration Issues
-
-#### Missing Protocol in Base URL
-```bash
-# This will cause redirect_uri errors
-PROXY_BASE_URL=mydomain.com
-
-# Fix: Add the protocol
-PROXY_BASE_URL=https://mydomain.com
-```
 
 ### Fallback Login
 
-If you need to access the UI via username/password when SSO is on navigate to `/fallback/login`. This route will allow you to sign in with your username/password credentials.
+<a id="use-username-password-when-sso-is-on"></a>
+
+Open `/fallback/login` to sign in with a username and password while SSO is enabled. This works for a database user with a password even when `disable_env_credential_login` is on. See [Keep a break-glass admin account for SSO outages](./ui.md#keep-a-break-glass-admin-account-for-sso-outages).
 
 <Image img={require('../../img/fallback_login.png')} />
 
+### Debugging SSO JWT fields
 
-### Debugging SSO JWT fields 
+1. Set `ENABLE_SSO_DEBUG="true"` and restart the proxy. Debug routes return 404 while this is disabled.
+2. Register `<PROXY_BASE_URL>/sso/debug/callback` as an additional redirect URI at your provider.
+3. Open `<PROXY_BASE_URL>/sso/debug/login` and complete sign-in.
+4. Inspect the returned fields on the **SSO Debug Information** page, then unset `ENABLE_SSO_DEBUG` when finished.
 
-If you need to inspect the JWT fields received from your SSO provider by LiteLLM, follow these instructions. This guide walks you through setting up a debug callback to view the JWT data during the SSO process.
+<Image img={require('../../img/debug_sso.png')} style={{ width: '500px', height: 'auto' }} />
 
+## Related guides
 
-<Image img={require('../../img/debug_sso.png')}  style={{ width: '500px', height: 'auto' }} />
-<br />
+<a id="manage-sso-permissions"></a>
+<a id="custom-branding-admin-ui"></a>
+<a id="set-custom-logo"></a>
+<a id="or-set-your-logo-directly-from-admin-ui"></a>
+<a id="set-custom-color-theme"></a>
 
-1. Enable the debug routes on the proxy
-
-  The debug routes are disabled by default and return 404. Set the following environment variable and restart the proxy (unset it again once you are done debugging):
-
-  ```bash showLineNumbers title="Environment variable"
-  ENABLE_SSO_DEBUG="true"
-  ```
-
-2. Add `/sso/debug/callback` as a redirect URL in your SSO provider 
-
-  In your SSO provider's settings, add the following URL as a new redirect (callback) URL:
-
-  ```bash showLineNumbers title="Redirect URL"
-  http://<proxy_base_url>/sso/debug/callback
-  ```
-
-
-3. Navigate to the debug login page on your browser 
-
-    Navigate to the following URL on your browser:
-
-    ```bash showLineNumbers title="URL to navigate to"
-    https://<proxy_base_url>/sso/debug/login
-    ```
-
-    This will initiate the standard SSO flow. You will be redirected to your SSO provider's login screen, and after successful authentication, you will be redirected back to LiteLLM's debug callback route.
-
-
-4. View the JWT fields 
-
-Once redirected, you should see a page called "SSO Debug Information". This page displays the JWT fields received from your SSO provider (as shown in the image above)
-
-
-## Advanced
-
-### Manage User Roles via Azure App Roles
-
-Centralize role management by defining user permissions in Azure Entra ID. LiteLLM will automatically assign roles based on your Azure configuration when users sign in, with no need to manually manage roles in LiteLLM.
-
-#### Step 1: Create App Roles on Azure App Registration
-
-1. Navigate to your App Registration on https://portal.azure.com/
-2. Go to **App roles** > **Create app role**
-3. Configure the app role using one of the [supported LiteLLM roles](./access_control.md#global-proxy-roles):
-   - **Display name**: Admin Viewer (or your preferred display name)
-   - **Value**: `proxy_admin_viewer` (must match one of the LiteLLM role values exactly)
-4. Click **Apply** to save the role
-5. Repeat for each LiteLLM role you want to use
-
-
-**Supported LiteLLM role values** (see [full role documentation](./access_control.md#global-proxy-roles)):
-- `proxy_admin` - Full admin access
-- `proxy_admin_viewer` - Read-only admin access
-- `internal_user` - Can create/view/delete own keys
-- `internal_user_viewer` - Can view own keys (read-only)
-
-<Image img={require('../../img/app_roles.png')} style={{ width: '900px', height: 'auto' }} />
-
----
-
-#### Step 2: Assign Users to App Roles
-
-1. Navigate to **Enterprise Applications** on https://portal.azure.com/
-2. Select your LiteLLM application
-3. Go to **Users and groups** > **Add user/group**
-4. Select the user
-5. Under **Select a role**, choose the app role you created (e.g., `proxy_admin_viewer`)
-6. Click **Assign** to save
-
-<Image img={require('../../img/app_role2.png')} style={{ width: '900px', height: 'auto' }} />
-
----
-
-#### Step 3: Sign in and verify
-
-1. Sign in to the LiteLLM UI via SSO
-2. LiteLLM will automatically extract the app role from the JWT token
-3. The user will be assigned the corresponding role (you can verify this in the UI by checking the user profile dropdown)
-
-<Image img={require('../../img/app_role3.png')} style={{ width: '900px', height: 'auto' }} />
-
-**Note:** The role from Entra ID will take precedence over any existing role in the LiteLLM database. This ensures your SSO provider is the authoritative source for user roles.
-
+- [SSO permissions](./access_management/sso_permissions.md): sign-in restrictions, roles, team membership, and key creation.
+- [CLI sign-in](./cli_sso.md): sign in from a command-line client.
+- [Custom SSO](./custom_sso.md): customize the sign-in integration.
+- [Customize UI branding](./ui/ui_edit_logo.md): logos and color themes.

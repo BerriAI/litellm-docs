@@ -1,5 +1,6 @@
 ---
-title: "v1.89.0 - Claude Fable 5, A2A Agent Providers & MCP Per-Server Controls"
+title: "LiteLLM v1.89.0 - Claude Fable 5, A2A Agent Providers & MCP Per-Server Controls"
+description: "Adds Claude Fable 5, watsonx Orchestrate and LangFlow A2A providers, and per-server MCP environment variables."
 slug: "v1-89-0"
 date: 2026-06-10T11:04:00
 authors:

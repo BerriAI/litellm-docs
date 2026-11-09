@@ -162,6 +162,15 @@ By default all authenticated callers can call all MCP tools. Use these to restri
 
 ---
 
+### Disable prompts or resources
+
+By default the gateway advertises `prompts`, `resources` and `tools` to every MCP client, and a `prompts/list` or `resources/list` call asks every MCP server the caller can reach. When your MCP servers only expose tools, turn the unused capabilities off with `mcp_disabled_capabilities`. A disabled capability is left out of the `initialize` and `server/discover` responses, its list calls (`prompts/list`, `resources/list`, `resources/templates/list`) return an empty list without contacting any MCP server, and its get/read calls (`prompts/get`, `resources/read`) return the JSON-RPC `METHOD_NOT_FOUND` error. Tools are not affected. The setting is gateway-wide and can also be changed from the Admin UI under **MCP Servers > Network Settings > Served Capabilities**.
+
+```yaml title="config.yaml"
+general_settings:
+  mcp_disabled_capabilities: ["prompts", "resources"]  # either value alone is fine
+```
+
 ## Related
 
 - [MCP Overview](./mcp.md)

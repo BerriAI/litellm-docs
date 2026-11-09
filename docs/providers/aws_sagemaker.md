@@ -309,7 +309,7 @@ os.environ["AWS_REGION_NAME"] = ""
 response = completion(
   model="sagemaker/jumpstart-dft-hf-textgeneration1-mp-20240815-185614",
   messages=[{ "content": "Hello, how are you?","role": "user"}],
-  top_k=1 # 👈 PROVIDER-SPECIFIC PARAM
+  top_k=1 # PROVIDER-SPECIFIC PARAM
 )
 ```
 </TabItem>
@@ -322,7 +322,7 @@ model_list:
   - model_name: jumpstart-model
     litellm_params:
       model: sagemaker/jumpstart-dft-hf-textgeneration1-mp-20240815-185614
-      top_k: 1 # 👈 PROVIDER-SPECIFIC PARAM
+      top_k: 1 # PROVIDER-SPECIFIC PARAM
 ```
 
 **Set on request**
@@ -344,7 +344,7 @@ response = client.chat.completions.create(model="jumpstart-model", messages = [
 ],
 temperature=0.7,
 extra_body={
-    "top_k": 1 # 👈 PROVIDER-SPECIFIC PARAM
+    "top_k": 1 # PROVIDER-SPECIFIC PARAM
 }
 )
 
@@ -376,6 +376,47 @@ response = completion(
             max_tokens=80
         )
 ```
+
+#### Pin the inference component on a deployment
+
+<SinceVersion v="1.109.0" />
+
+When a proxy deployment or an SDK `Router` deployment sets `model_id`, LiteLLM will invoke that inference component and will ignore any `model_id` in the request body (unless the deployment allows the client to choose as per the below). A deployment can also pin the component via the `X-Amzn-SageMaker-Inference-Component` header in `extra_headers` and that pin will take precedence over the request in the same manner. On `sagemaker_chat/` deployments LiteLLM will drop the client's own `X-Amzn-SageMaker-Inference-Component` header (regardless of case) if the deployment has pinned a component.
+
+```yaml
+model_list:
+  - model_name: my-llama
+    litellm_params:
+      model: sagemaker_chat/<your-endpoint-name>
+      model_id: <llama-inference-component>
+  - model_name: my-mistral
+    litellm_params:
+      model: sagemaker_chat/<your-endpoint-name>
+      extra_headers:
+        X-Amzn-SageMaker-Inference-Component: <mistral-inference-component>
+```
+
+This request still goes to `<llama-inference-component>`:
+
+```bash
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "my-llama", "model_id": "<mistral-inference-component>", "messages": [{"role": "user", "content": "hi"}]}'
+```
+
+To allow the client to pick the component on a deployment, list `model_id` in its `configurable_clientside_auth_params`. A request that contains `model_id` is sent to that component and a request that doesn't contain it is sent to the deployment's own `model_id`. `general_settings.allow_client_side_credentials: true` doesn't allow the client to override a pinned component.
+
+```yaml
+model_list:
+  - model_name: my-endpoint
+    litellm_params:
+      model: sagemaker_chat/<your-endpoint-name>
+      model_id: <default-inference-component>
+      configurable_clientside_auth_params: ["model_id"]
+```
+
+A deployment that doesn't set either `model_id` or the header will still use the `model_id` from the request. Prior to 1.109.0 a `model_id` in the request body would have replaced the deployment's so a client could send a pinned deployment to a different component on the same endpoint.
 
 ### Passing credentials as parameters - Completion()
 Pass AWS credentials as parameters to litellm.completion
@@ -431,7 +472,7 @@ import os
 import litellm
 from litellm import completion
 
-litellm.set_verbose = True # 👈 SEE RAW REQUEST
+litellm.set_verbose = True # SEE RAW REQUEST
 
 os.environ["AWS_ACCESS_KEY_ID"] = ""
 os.environ["AWS_SECRET_ACCESS_KEY"] = ""
@@ -483,7 +524,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 '
 ```
 
-[**👉 See OpenAI SDK/Langchain/Llamaindex/etc. examples**](../proxy/user_keys.md#chatcompletions)
+[** See OpenAI SDK/Langchain/Llamaindex/etc. examples**](../proxy/user_keys.md#chatcompletions)
 
 </TabItem>
 </Tabs>
@@ -525,6 +566,70 @@ response = litellm.embedding(model="sagemaker/<your-deployment-name>", input=["g
 print(f"response: {response}")
 ```
 
+### Embeddings on inference components
+
+If the endpoint hosts inference components, pass the component to call via `model_id`, same as for completions. LiteLLM sends it as the `InferenceComponentName` of the invoke call and keeps it out of the request body.
+
+```python
+response = litellm.embedding(
+    model="sagemaker/<your-endpoint-name>",
+    model_id="<your-inference-component-name>",
+    input=["good morning from litellm"],
+)
+```
+
+### OpenAI-compatible embedding endpoints
+
+By default LiteLLM sends embedding requests in the Hugging Face shape (`{"inputs": [...]}`) and reads a list of vectors back. If the container behind your endpoint serves the OpenAI embeddings API instead (`{"input": [...]}` in, `{"data": [{"embedding": [...]}], "usage": {...}}` out), add the `openai/` route in front of the endpoint name. The request then goes out in the OpenAI shape with any `extra_body` fields merged in, and `data[].embedding` and `usage` are read from the response.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+response = litellm.embedding(
+    model="sagemaker/openai/<your-endpoint-name>",
+    model_id="<your-inference-component-name>",  # only for endpoints with inference components
+    extra_body={"model": "<model name the container expects>"},  # only if the container needs one
+    input=["good morning from litellm"],
+)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+```yaml
+model_list:
+  - model_name: my-embeddings
+    litellm_params:
+      model: sagemaker/openai/<your-endpoint-name>
+      model_id: <your-inference-component-name>
+      extra_body:
+        model: <model name the container expects>
+      aws_region_name: us-east-1
+    model_info:
+      mode: embedding
+```
+
+</TabItem>
+</Tabs>
+
+Provider-specific keys in `litellm_params` are sent in the request body as-is, so keep only the ones your container accepts.
+
+### Reject chat calls on embedding endpoints
+
+<SinceVersion v="1.109.0" />
+
+An embedding container answers a chat request after the round trip to SageMaker with its own error, or with an empty assistant message when it treats the prompt as text to embed. To have the proxy reject chat calls before they leave it, list the endpoints the deployment serves and turn on enforcement:
+
+```yaml
+    model_info:
+      mode: embedding
+      supported_endpoints: ["/v1/embeddings"]
+      enforce_supported_endpoints: true
+```
+
+Chat-style requests to that model then go to a configured fallback, or get a 400 that names the endpoint and the supported list, and `/v1/embeddings` keeps working. See [Reject chat calls on non-chat models](../proxy/model_management.md#reject-chat-calls-on-non-chat-models) for the routes covered and how fallbacks are handled.
+
 
 
 ## Nova Models on SageMaker
@@ -565,7 +670,7 @@ response = litellm.completion(
     stream_options={"include_usage": True},
 )
 for chunk in response:
-    if chunk.choices[0].delta.content:
+    if chunk.choices and chunk.choices[0].delta.content:
         print(chunk.choices[0].delta.content, end="")
 ```
 

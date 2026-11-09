@@ -58,7 +58,7 @@ litellm.callbacks = ["sumologic"]
 response = litellm.completion(
   model="{{openai_small}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - I'm testing Sumo Logic integration"}
+    {"role": "user", "content": "Hi - I'm testing Sumo Logic integration"}
   ]
 )
 ```
@@ -331,6 +331,6 @@ If you get authentication errors, regenerate the HTTP Source URL in Sumo Logic:
 
 ## Support & Talk to Founders
 
-- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+- [Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Our emails ishaan@berri.ai / krrish@berri.ai

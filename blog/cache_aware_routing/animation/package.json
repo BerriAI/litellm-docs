@@ -1,0 +1,1 @@
+{"name":"cache-aware-routing-animation","private":true,"type":"module","scripts":{"render":"node render.mjs"},"dependencies":{"sharp":"^0.32.6"}}

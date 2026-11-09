@@ -116,6 +116,14 @@ Set SEND_USER_API_KEY_USER_ID = True in litellm  (Default: False), add 'user-api
 - To send user_api_key_team_id:
 Set SEND_USER_API_KEY_TEAM_ID = True in litellm  (Default: False), add 'user-api-key-team-id' to the custom_headers in Zscaler AI Guard
 
+The request's top-level `user` field is always sent, with no setting needed, as `user` in the execute-policy request body whenever it is a non-empty string. Values of any other type are left out.
+
+```json
+{"direction": "IN", "content": "...", "policyId": 100, "user": "alice@example.com"}
+```
+
+The value is whatever the client put in `user`, so treat it as attribution rather than a verified identity. The proxy can also fill it in: from the header named by `general_settings.user_header_name`, with the key owner's user id on `/v1/audio/speech`, or with a hash of the virtual key when `litellm_settings.overwrite_user_with_key_hash` is on. With that setting, requests made with the master key send the fixed value `litellm_proxy_master_key` instead of a hash, as described in [virtual keys](../virtual_keys.md#overwrite-outgoing-user-with-the-key-hash).
+
 ## 7. Using a Custom Zscaler AI Guard Policy (Optional)
 If an end user wants to use their own custom Zscaler AI Guard policy instead of the default policy for LiteLLM, they can do so by providing metadata in their LiteLLM request. Follow the steps below to implement this functionality:
 

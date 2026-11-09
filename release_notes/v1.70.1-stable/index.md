@@ -1,5 +1,6 @@
 ---
-title: v1.70.1-stable - Gemini Realtime API Support
+title: "LiteLLM v1.70.1-stable - Gemini Realtime API Support"
+description: "Adds Gemini Realtime API calls through the OpenAI /v1/realtime endpoint, spend log retention and PII Masking 2.0 with Presidio."
 slug: v1.70.1-stable
 date: 2025-05-17T10:00:00
 authors:
@@ -241,8 +242,7 @@ Here's a Demo Instance to test changes:
 - Instance: https://demo.litellm.ai/
 - Login Credentials:
     - Username: admin
-    - Password: sk-1234
+    - Password: `sk-<your-master-key>`
 
 
 ## [Git Diff](https://github.com/BerriAI/litellm/releases)
-

@@ -25,7 +25,7 @@ curl -X POST --location 'http://0.0.0.0:4000/end_user/new' \
 --header 'Content-Type: application/json' \
 --data '{
     "user_id" : "ishaan-jaff-45",
-    "allowed_model_region": "eu", # 👈 SPECIFY ALLOWED REGION='eu'
+    "allowed_model_region": "eu", # SPECIFY ALLOWED REGION='eu'
 }'
 ```
 
@@ -39,7 +39,7 @@ Supported regions are 'eu' and 'us'.
 model_list:
   - model_name: {{openai_small}}
     litellm_params:
-      model: azure/{{openai_small}} # 👈 EU azure model
+      model: azure/{{openai_small}} # EU azure model
       api_base: https://my-endpoint-europe-berri-992.openai.azure.com/
       api_key: os.environ/AZURE_EUROPE_API_KEY
       region_name: "eu"
@@ -52,7 +52,7 @@ model_list:
       region_name: "us"
 
 router_settings:
-  enable_pre_call_checks: true # 👈 IMPORTANT
+  enable_pre_call_checks: true # IMPORTANT
 ```
 
 Start the proxy
@@ -76,7 +76,7 @@ curl -X POST --location 'http://localhost:4000/chat/completions' \
         "role": "user",
         "content": "what is the meaning of the universe? 1234"
     }],
-    "user": "ishaan-jaff-45" # 👈 USER ID
+    "user": "ishaan-jaff-45" # USER ID
 }
 '
 ```
@@ -85,7 +85,7 @@ Expected API Base in response headers
 
 ```
 x-litellm-api-base: "https://my-endpoint-europe-berri-992.openai.azure.com/"
-x-litellm-model-region: "eu" # 👈 CONFIRMS REGION-BASED ROUTING WORKED
+x-litellm-model-region: "eu" # CONFIRMS REGION-BASED ROUTING WORKED
 ```
 
 ### FAQ 

@@ -7,6 +7,8 @@ authors:
   - krrish
   - ishaan-alt
 description: "day 0 support for Gemini 3.8 Flash on LiteLLM, with launch pricing tracked across Google AI Studio and Vertex AI."
+card_title: "Gemini 3.8 Flash"
+card_summary: "Faster Gemini Flash with launch pricing tracked on Google AI Studio and Vertex AI, no image upgrade needed."
 image: ./hero.png
 tags: [gemini, gemini-3.8-flash, day 0 support, llms]
 hide_table_of_contents: false

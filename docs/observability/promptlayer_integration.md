@@ -44,10 +44,10 @@ os.environ["OPENAI_API_KEY"], os.environ["COHERE_API_KEY"] = "", ""
 litellm.success_callback = ["promptlayer"]
 
 #openai call
-response = completion(model="{{openai_small}}", messages=[{"role": "user", "content": "Hi 👋 - i'm openai"}])
+response = completion(model="{{openai_small}}", messages=[{"role": "user", "content": "Hi - i'm openai"}])
 
 #cohere call
-response = completion(model="command-nightly", messages=[{"role": "user", "content": "Hi 👋 - i'm cohere"}])
+response = completion(model="command-nightly", messages=[{"role": "user", "content": "Hi - i'm cohere"}])
 ```
 
 ### Logging Metadata 
@@ -72,16 +72,16 @@ os.environ["OPENAI_API_KEY"], os.environ["COHERE_API_KEY"] = "", ""
 litellm.success_callback = ["promptlayer"]
 
 #openai call - log llm provider is openai
-response = completion(model="{{openai_small}}", messages=[{"role": "user", "content": "Hi 👋 - i'm openai"}], metadata={"provider": "openai"})
+response = completion(model="{{openai_small}}", messages=[{"role": "user", "content": "Hi - i'm openai"}], metadata={"provider": "openai"})
 
 #cohere call - log llm provider is cohere
-response = completion(model="command-nightly", messages=[{"role": "user", "content": "Hi 👋 - i'm cohere"}], metadata={"provider": "cohere"})
+response = completion(model="command-nightly", messages=[{"role": "user", "content": "Hi - i'm cohere"}], metadata={"provider": "cohere"})
 ```
 
 Credits to [Nick Bradford](https://github.com/nsbradford), from [Vim-GPT](https://github.com/nsbradford/VimGPT), for the suggestion. 
 
 ## Support & Talk to Founders
 
-- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+- [Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Our emails ishaan@berri.ai / krrish@berri.ai

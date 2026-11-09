@@ -10,7 +10,7 @@ Send the beta header and a `block_binding` setting inside `thinking`. Both pass 
 
 ```bash
 curl http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "anthropic/{{anthropic_large}}",

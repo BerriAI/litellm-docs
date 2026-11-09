@@ -1,5 +1,6 @@
 ---
-title: "v1.83.0 - Official Release (Post Supply Chain Incident)"
+title: "LiteLLM v1.83.0 - Official Release (Post Supply Chain Incident)"
+description: "Rebuilds the release pipeline with isolated environments and ephemeral credentials after the March 2026 supply chain incident."
 slug: "v1-83-0"
 date: 2026-03-31T00:00:00
 authors:

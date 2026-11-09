@@ -1,0 +1,40 @@
+/* Base rules copied from the theme's own Content module, since overriding the
+   component replaces that stylesheet. */
+.content {
+  font-size: 85%;
+  text-align: center;
+  padding: 5px 0;
+}
+
+.content a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* One entry swapping for another. Keyed on the entry id, so React remounts the
+   span and the animation runs on every rotation. */
+.item {
+  display: inline-block;
+  animation: announcementFade 400ms ease;
+}
+
+@keyframes announcementFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item {
+    animation: none;
+  }
+}
+
+/* Every entry has expired. Content cannot unmount the bar around it, so hide
+   the bar from here rather than leaving an empty strip above the navbar. */
+:global(.theme-announcement-bar):has(.empty) {
+  display: none;
+}

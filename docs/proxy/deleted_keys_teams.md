@@ -102,5 +102,5 @@ This feature is particularly useful for:
 
 ## Related Features
 
-- [Audit Logs](./multiple_admins.md) - View audit logs for all entity changes
+- [Audit Logs](./audit_logs.md) - View audit logs for all entity changes
 - [UI Logs](./ui_logs.md) - View request logs and spend tracking

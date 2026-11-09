@@ -75,7 +75,7 @@ import litellm
 os.environ['LITELLM_LOG'] = 'DEBUG'
 
 # You'll see logs like:
-# 🔄 SHARED SESSION: acompletion called with shared_session (ID: 12345)
+# SHARED SESSION: acompletion called with shared_session (ID: 12345)
 # ✅ SHARED SESSION: Reusing existing ClientSession (ID: 12345)
 ```
 

@@ -1,5 +1,6 @@
 ---
-title: "v1.103.0 - Config File Ownership, Fuse Routing & Gateway Hardening"
+title: "LiteLLM v1.103.0 adds Fuse V2, TypeSafe Jev and config file ownership"
+description: "Adds Fuse V2 routing, per-model Fast mode and 408 models. The proxy now ignores database values for keys that config.yaml sets."
 slug: "v1-103-0"
 date: 2026-09-27T00:00:00
 authors:
@@ -72,7 +73,7 @@ If your spend logs table is partitioned, Postgres cannot build its index concurr
 
 **A key's own per-model rpm/tpm override now beats the team's per-model limit.** Documented precedence (key metadata over team metadata) is now what the code does, on chat, batches and `/cost/predict-cache`. A key that overrides only RPM still has the team TPM pool enforced, and vice versa. Review teams that relied on the per-model team cap clamping keys that declare their own. See [PR #41302](https://github.com/BerriAI/litellm/pull/41302)
 
-**Delegated MCP OAuth requires admission.** Legacy delegated MCP integrations that were not admitted to LiteLLM now receive 401 until they admit or migrate to `oauth_delegate`. See [PR #40923](https://github.com/BerriAI/litellm/pull/40923)
+**MCP servers with `delegate_auth_to_upstream: true` now require a LiteLLM credential.** Previously a request carrying only the upstream token in `Authorization` was let through with no LiteLLM identity, so anyone who could reach the gateway could use the server and its tool calls were missing from spend logs. Now a request without a LiteLLM credential has its upstream token validated as a LiteLLM key or JWT, which fails with a 401 such as `No matching public key found` (token signed by another issuer) or `Audience doesn't match` (token issued for the MCP server, not LiteLLM). To fix it, send the LiteLLM key or JWT in `x-litellm-api-key` and keep the upstream token in `Authorization`, which is forwarded to the MCP server, or migrate the server to `oauth_delegate`. A server that should stay reachable without LiteLLM auth can use `true_passthrough`, which deliberately keeps anonymous access. See [PR #40923](https://github.com/BerriAI/litellm/pull/40923)
 
 **A `CustomLogger` moderation callback now rejects the request.** `llm_api_check` moderation is dispatched through `during_call_hook`, so a flagged request returns 400 where it previously returned 200. See [PR #41685](https://github.com/BerriAI/litellm/pull/41685)
 

@@ -1,0 +1,10 @@
+.button {position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 12px;border:1px solid var(--aurora-line-strong,var(--ifm-color-emphasis-300));border-radius:var(--lite-radius-sm,6px);background:var(--ifm-background-surface-color);color:var(--ifm-font-color-base);font:inherit;font-size:14px;font-weight:500;line-height:1;white-space:nowrap;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s}
+.button svg {flex-shrink:0}
+.button:hover {background:var(--aurora-tint,var(--ifm-color-emphasis-100))}
+.button:focus-visible {outline:2px solid var(--ifm-color-primary);outline-offset:2px}
+.button[aria-pressed='true'],.active {border-color:var(--aurora-accent-line,var(--ifm-color-primary));background:var(--aurora-tint,var(--ifm-color-emphasis-100));color:var(--aurora-accent-ink,var(--ifm-color-primary))}
+@media(max-width:1099px) {
+  .button {width:36px;padding:0}
+  .label {position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+}
+@media(prefers-reduced-motion:reduce) {.button {transition:none}}

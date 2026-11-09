@@ -27,7 +27,7 @@ All detections are logged for analysis, attribution, and incident response.
 
 ## Quick Start
 
-In the Falcon console, click **Open menu** (**☰**) and go to **AI detection and response** > **Collectors**.
+In the Falcon console, click **Open menu** (** **) and go to **AI detection and response** > **Collectors**.
 
 ### 1. Register LiteLLM collector
 
@@ -212,7 +212,7 @@ The above request should not be blocked, and you should receive a regular LLM re
       "finish_reason": "stop",
       "index": 0,
       "message": {
-        "content": "Hello! 😊 How can I assist you today?",
+        "content": "Hello! How can I assist you today?",
         "role": "assistant"
       }
     }

@@ -1,5 +1,6 @@
 ---
-title: v1.57.7
+title: "LiteLLM v1.57.7"
+description: "Marks Langfuse prompt management as beta, adds Hashicorp Vault secret support and UI team and organization management. Also adds Prometheus metrics."
 slug: v1.57.7
 date: 2025-01-10T10:00:00
 authors:

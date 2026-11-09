@@ -1,5 +1,6 @@
 ---
-title: "v1.102.0 - Auto Router Controls, Native OCR & Gateway Reliability"
+title: "LiteLLM v1.102.0 - Auto Router Controls, Native OCR & Gateway Reliability"
+description: "Adds Auto Router controls, native OCR and Meta Muse Voice realtime transcription. Also adds 99 model catalog entries and shared PgBouncer connections."
 slug: "v1-102-0"
 date: 2026-09-19T00:00:00
 authors:
@@ -78,7 +79,7 @@ These callouts cover changes to behavior available in `v1.101.0`, the previous s
 
 **Very large local token counts become sampled estimates.** The default exact-count ceiling is 4,000,000 characters per string. Set `TOKEN_COUNTER_MAX_EXACT_CHARS` to choose a different limit. See [PR #40186](https://github.com/BerriAI/litellm/pull/40186)
 
-**Model health checks enforce deployment visibility and limit returned fields.** Explicit out-of-scope targets return 403, team-specific deployments follow routing permissions, and results contain an allowlist of display fields. Update monitoring clients that depended on the previous responses. See [PR #40765](https://github.com/BerriAI/litellm/pull/40765)
+**Model health checks enforce deployment visibility and limit returned fields.** Explicit out-of-scope targets return 403, team-specific deployments follow routing permissions, and results contain an allowlist of display fields. Update monitoring clients that depended on the previous responses, using [the `/health` reference](../../docs/proxy/health#model-health-from-the-api) for the scoping rules, status codes, and fields. See [PR #40765](https://github.com/BerriAI/litellm/pull/40765)
 
 **The existing lite login --config-claude command now writes a static gateway token.** Claude Code settings previously used `apiKeyHelper` to retrieve the login token dynamically. Rerun `lite login --config-claude` when the stored login key expires. See [PR #40330](https://github.com/BerriAI/litellm/pull/40330)
 

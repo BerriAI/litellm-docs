@@ -22,14 +22,14 @@ model_list:
       model: azure/gpt-4-prod
       api_key: os.environ/AZURE_PROD_API_KEY
       api_base: https://prod.openai.azure.com/
-      tags: ["AWS_IAM_PROD"]  # 👈 Tag for production
+      tags: ["AWS_IAM_PROD"]  # Tag for production
 
   - model_name: gpt-4-dev
     litellm_params:
       model: azure/gpt-4-dev
       api_key: os.environ/AZURE_DEV_API_KEY
       api_base: https://dev.openai.azure.com/
-      tags: ["AWS_IAM_DEV"]  # 👈 Tag for development
+      tags: ["AWS_IAM_DEV"]  # Tag for development
 ```
 
 ## Make Request
@@ -179,4 +179,5 @@ The tag from the model config appears in `LiteLLM_SpendLogs`:
 
 - [Spend Tracking Overview](cost_tracking.md) - Complete tutorial on tracking spend with tags
 - [Tag Budgets](tag_budgets.md) - Set budget limits per tag
+- [Map Baggage Values to Tags](tag_budgets.md#map-baggage-values-to-tags) - Tag requests from the W3C `baggage` header
 - [Virtual Keys Setup](virtual_keys.md) - Required for tag tracking

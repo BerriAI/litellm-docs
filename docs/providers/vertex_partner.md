@@ -19,6 +19,20 @@ import TabItem from '@theme/TabItem';
 | OpenAI (GPT-OSS) | `vertex_ai/openai/gpt-oss-*` | [Vertex AI - GPT-OSS Models](https://console.cloud.google.com/vertex-ai/publishers/openai/model-garden/) |
 | xAI (Grok) | `vertex_ai/xai/{MODEL}` | [xAI models (incl. Vertex)](https://docs.x.ai/docs/models), [Vertex AI Model Garden](https://cloud.google.com/vertex-ai/generative-ai/docs/model-garden/explore-models) |
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`vertex_ai/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Vertex AI model name. LiteLLM sends Vertex AI the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `vertex_ai/claude-opus-latest` | Claude Opus |
+| `vertex_ai/claude-sonnet-latest` | Claude Sonnet |
+| `vertex_ai/claude-haiku-latest` | Claude Haiku |
+| `vertex_ai/claude-fable-latest` | Claude Fable |
+| `vertex_ai/grok-latest` | Grok |
+
 ## Vertex AI - Anthropic (Claude)
 
 | Model Name       | Function Call                        |
@@ -89,7 +103,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "anthropic-vertex", # 👈 the 'model_name' in config
+            "model": "anthropic-vertex", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -374,7 +388,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "anthropic-llama", # 👈 the 'model_name' in config
+            "model": "anthropic-llama", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -468,7 +482,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "vertex-mistral", # 👈 the 'model_name' in config
+            "model": "vertex-mistral", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -553,7 +567,7 @@ curl -X POST 'http://0.0.0.0:4000/completions' \
       -H "Authorization: Bearer $LITELLM_API_KEY" \
       -H 'Content-Type: application/json' \
       -d '{
-            "model": "vertex-codestral", # 👈 the 'model_name' in config
+            "model": "vertex-codestral", # the 'model_name' in config
             "prompt": "def is_odd(n): \n return n % 2 == 1 \ndef test_is_odd():", 
             "suffix":"return True",                                              # optional
             "temperature":0,                                                     # optional
@@ -720,7 +734,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "vertex-qwen", # 👈 the 'model_name' in config
+            "model": "vertex-qwen", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -800,7 +814,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "gpt-oss", # 👈 the 'model_name' in config
+            "model": "gpt-oss", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",

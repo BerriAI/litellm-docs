@@ -31,7 +31,7 @@ uv add pydantic-ai fasta2a uvicorn
 ```python title="agent.py"
 from pydantic_ai import Agent
 
-agent = Agent('openai:gpt-4o-mini', instructions='Be helpful!')
+agent = Agent('openai:{{openai_small}}', instructions='Be helpful!')
 
 @agent.tool_plain
 def get_weather(city: str) -> str:

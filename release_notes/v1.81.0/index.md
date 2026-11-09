@@ -1,5 +1,6 @@
 ---
-title: "v1.81.0-stable - Claude Code - Web Search Across All Providers"
+title: "LiteLLM v1.81.0-stable - Claude Code - Web Search Across All Providers"
+description: "Adds web search for Claude Code across Bedrock, Vertex AI and all providers. Limits image URL downloads to 50MB and cuts CPU usage by 25%."
 slug: "v1-81-0"
 date: 2026-01-18T10:00:00
 authors:

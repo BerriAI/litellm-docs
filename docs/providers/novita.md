@@ -166,7 +166,7 @@ messages = [
 response = completion(
     model="novita/deepseek/deepseek-r1-turbo", 
     messages=messages, 
-    response_format={"type": "json_object"} # 👈 KEY CHANGE
+    response_format={"type": "json_object"} # KEY CHANGE
 )
 
 print(json.loads(response.choices[0].message.content))
@@ -212,7 +212,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 ## Chat Models
 
-🚨 LiteLLM supports ALL Novita AI models, send `model=novita/<your-novita-model>` to send it to Novita AI. See all Novita AI models [here](https://novita.ai/models/llm?utm_source=github_litellm&utm_medium=github_readme&utm_campaign=github_link)
+LiteLLM supports ALL Novita AI models, send `model=novita/<your-novita-model>` to send it to Novita AI. See all Novita AI models [here](https://novita.ai/models/llm?utm_source=github_litellm&utm_medium=github_readme&utm_campaign=github_link)
 
 | Model Name                | Function Call                                       |
 |---------------------------|-----------------------------------------------------|

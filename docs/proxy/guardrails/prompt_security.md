@@ -334,7 +334,7 @@ The request proceeds with sensitive information masked.
 
 **Original LLM Response:**
 ```
-"Here's a sample API key: sk-1234567890abcdef. You can use this for testing."
+"Here's a sample API key: sk-9876543210abcdef. You can use this for testing."
 ```
 
 **Modified Response (returned to user):**

@@ -9,7 +9,7 @@ Pass-through endpoints for the [Cursor Cloud Agents API](https://docs.cursor.com
 | End-user Tracking | ❌ | [Tell us if you need this](https://github.com/BerriAI/litellm/issues/new) |
 | Streaming | ❌ | Cursor API does not use streaming |
 
-Just replace `https://api.cursor.com` with `LITELLM_PROXY_BASE_URL/cursor` 🚀
+Just replace `https://api.cursor.com` with `LITELLM_PROXY_BASE_URL/cursor`
 
 This route fronts the Cloud Agents REST API only. Cursor CLI agent sessions log in to `api2.cursor.sh` by default (`agent --endpoint` only moves that login), not to `api.cursor.com`, so they cannot use this route, see [Cursor CLI](../tutorials/cursor_integration.md#cursor-cli-cursor-agent).
 

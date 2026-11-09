@@ -1,5 +1,6 @@
 ---
-title: "v1.99.4 - End-User Budget Resets and GPT-6 Request Mapping"
+title: "LiteLLM v1.99.4 fixes end-user budget resets and GPT-6 model names"
+description: "Fixes end-user budget resets for shared budgets with more than 32,700 end users, and applies the GPT-5 request rules to GPT-6 model names."
 slug: "v1-99-4"
 date: 2026-09-25T06:20:00
 authors:

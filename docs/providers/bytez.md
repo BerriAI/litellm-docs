@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 LiteLLM supports all chat models on [Bytez](https://www.bytez.com)!
 
-That also means multi-modal models are supported 🔥
+That also means multi-modal models are supported
 
 Tasks supported: `chat`, `image-text-to-text`, `audio-text-to-text`, `video-text-to-text`
 

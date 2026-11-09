@@ -169,6 +169,8 @@ When the guardrail fires, the proxy:
 
 The LLM never processes the injected instruction.
 
+On a transcription-only session (`/v1/realtime?intent=transcription`, or a `session.type` of `transcription`) there is no assistant turn to cancel or re-create, so the proxy sends nothing upstream on a block. It still forwards the transcript, then sends the client an `error` event with `"type": "guardrail_violation"` and the block message, and the session keeps transcribing the next turn. `on_violation: end_session` and `end_session_after_n_fails` close the session the same way they do on a voice session.
+
 ## Using with other guardrail providers
 
 The proxy runs realtime guardrails through the provider's `apply_guardrail` method, but a guardrail can only be configured with `mode: realtime_input_transcription` if that hook is listed in its `get_supported_event_hooks()`. Currently only `litellm_content_filter` declares it. Setting the mode on another provider (for example `lakera_v2`, which supports only `pre_call`, `during_call`, and `post_call`) fails validation at proxy startup: the proxy logs an error (`Skipping guardrail ... proxy is starting WITHOUT this guardrail`) and starts without that guardrail, so realtime sessions run unprotected. Setting `LITELLM_STRICT_GUARDRAIL_MODES=false` downgrades the log to a warning, but the guardrail is still not supported for this mode.

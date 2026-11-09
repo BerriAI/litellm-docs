@@ -1,4 +1,8 @@
-# Mock Completion() Responses - Save Testing Costs 💰
+---
+sidebar_label: "Mock Responses"
+---
+
+# Mock Completion() Responses - Save Testing Costs
 
 For testing purposes, you can use `completion()` with `mock_response` to mock calling the completion endpoint. 
 

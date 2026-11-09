@@ -200,11 +200,11 @@ curl -s -X GET 'http://localhost:4000/cache/ping' \
 Then confirm the cache is actually serving traffic by sending the same completion twice. The second
 call returns the same response id and comes back in a fraction of the time
 
-```shell
+```shell keep-model-ids
 curl -s -X POST 'http://localhost:4000/v1/chat/completions' \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
-  -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "ping"}], "temperature": 0}'
+  -d '{"model": "gpt-5.4-mini", "messages": [{"role": "user", "content": "ping"}], "temperature": 0}'
 ```
 
 ## Settings

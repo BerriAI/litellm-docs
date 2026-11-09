@@ -1,0 +1,22 @@
+In place of a long-lived virtual key, Codex can ask the `lite` CLI for a token whenever it needs one. Each developer runs [`lite login --pkce`](../cli_sso.md) once, and requests are then attributed to their LiteLLM user and team
+
+Replace `env_key` with an `auth` table in `~/.codex/config.toml`:
+
+```toml title="~/.codex/config.toml"
+model_provider = "litellm"
+
+[model_providers.litellm]
+name = "LiteLLM"
+base_url = "https://litellm.example.com/v1"
+wire_api = "responses"
+
+[model_providers.litellm.auth]
+command = "/absolute/path/to/lite"
+args = ["--base-url", "https://litellm.example.com", "auth", "print-token"]
+timeout_ms = 30000
+refresh_interval_ms = 300000
+```
+
+Replace `/absolute/path/to/lite` with the absolute path returned by `which lite`. The `--base-url` value must exactly match the URL used for `lite login --pkce`; a token issued for `http://127.0.0.1:4000` is not returned for `http://localhost:4000`. `lite auth print-token` writes only the token to stdout and renews it with the refresh token stored by PKCE login. After `lite logout`, Codex receives 401 responses until you run `lite login --pkce` again
+
+Codex rejects a provider that sets both `auth` and `env_key` with `provider auth cannot be combined with env_key`, so remove `env_key` when adding `auth`. This is [OpenAI's command-backed gateway auth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway), verified with Codex CLI 0.160.0

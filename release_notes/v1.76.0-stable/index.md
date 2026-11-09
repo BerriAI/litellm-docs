@@ -1,5 +1,6 @@
 ---
-title: "v1.76.0-stable - RPS Improvements"
+title: "LiteLLM v1.76.0-stable - RPS Improvements"
+description: "Fixes Vertex AI batch file format, GPT-5 chat function support, the Responses API default API version and Bedrock vector store query credentials."
 slug: "v1-76-0"
 date: 2025-08-23T10:00:00
 authors:

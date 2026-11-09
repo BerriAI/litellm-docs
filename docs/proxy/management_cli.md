@@ -67,7 +67,7 @@ You can use the CLI to authenticate to the LiteLLM Gateway. This is great if you
 
 :::info
 
-For an indepth guide, see [CLI Authentication](./cli_sso).
+For an indepth guide, see [CLI sign-in](./cli_sso).
 
 :::
 
@@ -75,7 +75,7 @@ For an indepth guide, see [CLI Authentication](./cli_sso).
 
 :::warning[Beta Feature - Required Environment Variable]
 
-CLI SSO Authentication is currently in beta. You must set this environment variable **when starting up your LiteLLM Proxy**:
+CLI sign-in is currently in beta. You must set this environment variable **when starting up your LiteLLM Proxy**:
 
 ```bash
 export EXPERIMENTAL_UI_LOGIN="True"
@@ -189,14 +189,17 @@ lite logout             # clear the keychain entry and the token file, and revok
 
 ### Credentials Management
 
-- List, create, get, and delete credentials for LLM providers.
+- List, create, get, and delete credentials for LLM providers. Names can't change, so `update` only sets or clears the display name
 - Example:
 
   ```bash
   lite credentials list
   lite credentials create azure-prod \
     --info='{"custom_llm_provider": "azure"}' \
-    --values='{"api_key": "sk-123", "api_base": "https://prod.azure.openai.com"}'
+    --values='{"api_key": "sk-123", "api_base": "https://prod.azure.openai.com"}' \
+    --display-name="Azure (prod)"
+  lite credentials update azure-prod --display-name="Azure EU (prod)"
+  lite credentials update azure-prod --clear-display-name
   lite credentials get azure-cred
   lite credentials delete azure-cred
   ```

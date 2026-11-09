@@ -2,10 +2,7 @@
 
 **Get API Key:** [https://online.nimbleway.com/settings/api-keys](https://online.nimbleway.com/settings/api-keys)
 
-:::info
-
-Supported from LiteLLM v1.98.0+
-:::
+<SinceVersion v="1.98.0" />
 
 ## LiteLLM Python SDK
 

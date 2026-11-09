@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="1400" viewBox="0 0 1040 1400" role="img" aria-labelledby="title desc">
+<title id="title">Requests retain fast-path eligibility or move to Python</title>
+<desc id="desc">One input splits at the top into blue fast-path candidates and gray Python requests. Horizontally aligned option rows show endpoint, routing, callbacks and providers. More requests branch away between every pair of rows, including endpoint and routing, and join the left edge of the Python lane. Blue means eligible so far; only the final blue stream reaches Rust. Endpoints, routing strategies and providers each allow one choice. Callbacks allow any combination of supported options; an unsupported callback sends the request to Python. Bedrock and Vertex eligibility applies to Anthropic models. Widths are synthetic, not production telemetry, and have no numeric labels.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L9 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.4" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="1040" height="1400" rx="0" fill="#fbfcfe" stroke="#fbfcfe" stroke-width="1.3"/>
+<rect x="25" y="34" width="16" height="16" rx="2" fill="#2e55b9" stroke="#2e55b9" stroke-width="1.3"/>
+<text x="52" y="48" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#18334b">Fast-path eligible so far</text>
+<rect x="359" y="34" width="16" height="16" rx="2" fill="#c4cedc" stroke="#c4cedc" stroke-width="1.3"/>
+<text x="386" y="48" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#597189">Other requests</text>
+<text x="1000" y="48" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="end" fill="#597189">Illustrative flow</text>
+<text x="660" y="96" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="500" text-anchor="middle" fill="#18334b">Requests</text>
+<text x="40" y="266" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="500" text-anchor="start" fill="#18334b">Fast-path eligibility</text>
+<text x="690" y="266" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="500" text-anchor="start" fill="#18334b">Python</text>
+<defs><linearGradient id="blue-flow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#88a7e8"/><stop offset="1" stop-color="#2e55b9"/></linearGradient></defs>
+<path d="M490.000 110C490.000 123.000 490.000 122.000 490.000 135L694.000 135C694.000 122.000 694.000 123.000 694.000 110Z" fill="#88a7e8" stroke="#88a7e8" stroke-width="0.3"/>
+<path d="M694.000 110C694.000 123.000 694.000 122.000 694.000 135L830.000 135C830.000 122.000 830.000 123.000 830.000 110Z" fill="#c7d1df" stroke="#c7d1df" stroke-width="0.3"/>
+<path d="M490.000 135C490.000 194.800 390.000 190.200 390.000 250L594.000 250C594.000 190.200 694.000 194.800 694.000 135Z" fill="url(#blue-flow)" stroke="url(#blue-flow)" stroke-width="0.3"/>
+<path d="M694.000 135C694.000 194.800 844.000 190.200 844.000 250L980.000 250C980.000 190.200 830.000 194.800 830.000 135Z" fill="#c7d1df" stroke="#c7d1df" stroke-width="0.3"/>
+<path d="M390.000 250C390.000 265.600 390.000 264.400 390.000 280L594.000 280C594.000 264.400 594.000 265.600 594.000 250Z" fill="#2e55b9" stroke="#2e55b9" stroke-width="0.3"/>
+<path d="M844.000 250C844.000 395.600 844.000 384.400 844.000 530L980.000 530C980.000 384.400 980.000 395.600 980.000 250Z" fill="#c7d1df" stroke="#c7d1df" stroke-width="0.3"/>
+<path d="M390.000 422C390.000 488.560 390.000 483.440 390.000 550L553.200 550C553.200 483.440 553.200 488.560 553.200 422Z" fill="url(#blue-flow)" stroke="url(#blue-flow)" stroke-width="0.3"/>
+<path d="M553.200 422C553.200 478.160 803.200 473.840 803.200 530L844.000 530C844.000 473.840 594.000 478.160 594.000 422Z" fill="#c7d1df" stroke="#c7d1df" stroke-width="0.3"/>
+<path d="M803.200 530C803.200 670.400 803.200 659.600 803.200 800L980.000 800C980.000 659.600 980.000 670.400 980.000 530Z" fill="#c7d1df" stroke="#c7d1df" stroke-width="0.3"/>
+<path d="M390.000 692C390.000 758.560 390.000 753.440 390.000 820L512.400 820C512.400 753.440 512.400 758.560 512.400 692Z" fill="url(#blue-flow)" stroke="url(#blue-flow)" stroke-width="0.3"/>
+<path d="M512.400 692C512.400 748.160 762.400 743.840 762.400 800L803.200 800C803.200 743.840 553.200 748.160 553.200 692Z" fill="#c7d1df" stroke="#c7d1df" stroke-width="0.3"/>
+<path d="M762.400 800C762.400 952.880 762.400 941.120 762.400 1094L980.000 1094C980.000 941.120 980.000 952.880 980.000 800Z" fill="#c7d1df" stroke="#c7d1df" stroke-width="0.3"/>
+<path d="M390.000 986C390.000 1052.560 390.000 1047.440 390.000 1114L481.800 1114C481.800 1047.440 481.800 1052.560 481.800 986Z" fill="url(#blue-flow)" stroke="url(#blue-flow)" stroke-width="0.3"/>
+<path d="M481.800 986C481.800 1042.160 731.800 1037.840 731.800 1094L762.400 1094C762.400 1037.840 512.400 1042.160 512.400 986Z" fill="#c7d1df" stroke="#c7d1df" stroke-width="0.3"/>
+<path d="M731.800 1094C731.800 1221.920 731.800 1212.080 731.800 1340L980.000 1340C980.000 1212.080 980.000 1221.920 980.000 1094Z" fill="#c7d1df" stroke="#c7d1df" stroke-width="0.3"/>
+<path d="M390.000 1256C390.000 1310.080 390.000 1305.920 390.000 1360L458.000 1360C458.000 1305.920 458.000 1310.080 458.000 1256Z" fill="url(#blue-flow)" stroke="url(#blue-flow)" stroke-width="0.3"/>
+<path d="M458.000 1256C458.000 1299.680 708.000 1296.320 708.000 1340L731.800 1340C731.800 1296.320 481.800 1299.680 481.800 1256Z" fill="#c7d1df" stroke="#c7d1df" stroke-width="0.3"/>
+<path d="M708.000 1340C708.000 1350.400 708.000 1349.600 708.000 1360L980.000 1360C980.000 1349.600 980.000 1350.400 980.000 1340Z" fill="#c7d1df" stroke="#c7d1df" stroke-width="0.3"/>
+<rect x="40" y="280" width="610" height="142" rx="7" fill="#f8faff" stroke="#b8c8e1" stroke-width="1.3"/>
+<text x="60" y="309" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="500" text-anchor="start" fill="#18334b">Endpoint</text>
+<text x="630" y="309" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="end" fill="#597189">Choose one</text>
+<rect x="60" y="328" width="570" height="54" rx="5" fill="#eaf0ff" stroke="#6382ca" stroke-width="1.3"/>
+<text x="345.0" y="361" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#294fa7">/v1/messages</text>
+<rect x="690" y="307.0" width="310" height="88" rx="6" fill="#f5f7fa" stroke="#cbd5e1" stroke-width="1.3"/>
+<text x="710" y="336.0" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#597189">Chat completions</text>
+<text x="710" y="360.0" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#597189">Responses · Other APIs</text>
+<rect x="40" y="550" width="610" height="142" rx="7" fill="#f8faff" stroke="#b8c8e1" stroke-width="1.3"/>
+<text x="60" y="579" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="500" text-anchor="start" fill="#18334b">Routing strategy</text>
+<text x="630" y="579" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="end" fill="#597189">Choose one</text>
+<rect x="60" y="598" width="570" height="54" rx="5" fill="#eaf0ff" stroke="#6382ca" stroke-width="1.3"/>
+<text x="345.0" y="631" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#294fa7">Simple shuffle</text>
+<rect x="690" y="577.0" width="310" height="88" rx="6" fill="#f5f7fa" stroke="#cbd5e1" stroke-width="1.3"/>
+<text x="710" y="606.0" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#597189">Least busy · Usage-based</text>
+<text x="710" y="630.0" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#597189">Latency-based · Cost-based</text>
+<rect x="40" y="820" width="610" height="166" rx="7" fill="#f8faff" stroke="#b8c8e1" stroke-width="1.3"/>
+<text x="60" y="849" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="500" text-anchor="start" fill="#18334b">Callbacks</text>
+<text x="630" y="849" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="end" fill="#597189">Choose many</text>
+<text x="60" y="875" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#597189">Any combination of supported callbacks</text>
+<rect x="60" y="890" width="278" height="54" rx="5" fill="#eaf0ff" stroke="#6382ca" stroke-width="1.3"/>
+<rect x="72" y="910" width="14" height="14" rx="2" fill="#2e55b9" stroke="#2e55b9" stroke-width="1.3"/>
+<path d="M75 917l3 3 6-7" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="95" y="923" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#294fa7">S3 logs</text>
+<rect x="352" y="890" width="278" height="54" rx="5" fill="#eaf0ff" stroke="#6382ca" stroke-width="1.3"/>
+<rect x="364" y="910" width="14" height="14" rx="2" fill="#2e55b9" stroke="#2e55b9" stroke-width="1.3"/>
+<path d="M367 917l3 3 6-7" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="387" y="923" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#294fa7">Spend logging</text>
+<text x="60" y="969" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#597189">Every enabled callback must be supported</text>
+<rect x="690" y="850.5" width="310" height="105" rx="6" fill="#f5f7fa" stroke="#cbd5e1" stroke-width="1.3"/>
+<text x="710" y="879.5" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#597189">Any unsupported callback</text>
+<text x="710" y="903.5" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#597189">Prometheus · Langfuse</text>
+<text x="710" y="927.5" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#597189">Datadog</text>
+<rect x="40" y="1114" width="610" height="142" rx="7" fill="#f8faff" stroke="#b8c8e1" stroke-width="1.3"/>
+<text x="60" y="1143" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="500" text-anchor="start" fill="#18334b">Provider</text>
+<text x="630" y="1143" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="end" fill="#597189">Choose one</text>
+<rect x="60" y="1162" width="174" height="54" rx="5" fill="#eaf0ff" stroke="#6382ca" stroke-width="1.3"/>
+<text x="147.0" y="1195" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#294fa7">Anthropic</text>
+<rect x="246" y="1162" width="194" height="54" rx="5" fill="#eaf0ff" stroke="#6382ca" stroke-width="1.3"/>
+<text x="343.0" y="1195" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#294fa7">Amazon Bedrock</text>
+<rect x="452" y="1162" width="178" height="54" rx="5" fill="#eaf0ff" stroke="#6382ca" stroke-width="1.3"/>
+<text x="541.0" y="1195" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#294fa7">Vertex AI</text>
+<text x="60" y="1239" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="start" fill="#597189">Anthropic models</text>
+<rect x="690" y="1141.0" width="310" height="88" rx="6" fill="#f5f7fa" stroke="#cbd5e1" stroke-width="1.3"/>
+<text x="710" y="1170.0" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#597189">OpenAI · Gemini</text>
+<text x="710" y="1194.0" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#597189">Azure OpenAI · Cohere</text>
+<text x="424.0" y="1385" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="500" text-anchor="middle" fill="#294fa7">Rust</text>
+<text x="844.0" y="1385" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="500" text-anchor="middle" fill="#18334b">Python</text>
+</svg>

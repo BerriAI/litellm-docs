@@ -1,0 +1,40 @@
+/* Page layout while the Ask AI panel is open (set on <html> by AskAIPanel).
+   Wide screens reserve room for the docked panel; tablets let it overlay the page; phones get a full-screen sheet. */
+@media (min-width: 1200px) {
+  /* The panel can be dragged wider (--ask-ai-width), but the docs sidebar and a 640px content column stay visible */
+  html[data-ask-ai] {
+    --ask-ai-panel-width: clamp(380px, var(--ask-ai-width, 380px), max(380px, calc(100vw - var(--doc-sidebar-width, 300px) - 640px)));
+  }
+
+  html[data-ask-ai] .theme-layout-main,
+  html[data-ask-ai] .theme-layout-footer {
+    padding-right: var(--ask-ai-panel-width);
+  }
+
+  /* The panel takes the place of the "On this page" column */
+  html[data-ask-ai] .col:has(> .theme-doc-toc-desktop),
+  html[data-ask-ai] .blog-wrapper .col--2:has(.table-of-contents) {
+    display: none;
+  }
+
+  html[data-ask-ai] .theme-doc-toc-desktop {
+    display: none;
+  }
+
+  html[data-ask-ai] [class*='docItemCol'] {
+    max-width: 100% !important;
+  }
+}
+
+html[data-ask-ai-resizing],
+html[data-ask-ai-resizing] * {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
+/* !important: Docusaurus leaves an inline overflow: visible on body after the mobile sidebar closes */
+@media (max-width: 640px) {
+  html[data-ask-ai] body {
+    overflow: hidden !important;
+  }
+}

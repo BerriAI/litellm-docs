@@ -1,5 +1,6 @@
 ---
-title: "v1.86.2 - Path-Handling Hardening Backport"
+title: "LiteLLM v1.86.2 - Path-Handling Hardening Backport"
+description: "Hardens proxy path handling, so auth and routing derive the request route from the ASGI scope instead of the Host header."
 slug: "v1-86-2"
 date: 2026-05-27T00:00:00
 authors:

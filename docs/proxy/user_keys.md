@@ -56,18 +56,25 @@ How to send requests to the proxy, pass metadata, allow users to pass in their O
 
 <TabItem value="openai" label="OpenAI Python v1.0.0+">
 
-Set `extra_body={"metadata": { }}` to `metadata` you want to pass
+Set your gateway URL and [Virtual Key](./api_key_auth.md) in the client environment:
+
+```bash
+export LITELLM_PROXY_URL="https://litellm.example.com"
+export LITELLM_API_KEY="<your-virtual-key>"
+```
+
+Point the SDK at the gateway's `/v1` base URL and supply that Virtual Key. Replace `my-model` with a configured model available to your key. The optional `extra_body.metadata` fields below attach logging metadata to the request.
 
 ```python
+import os
 import openai
 client = openai.OpenAI(
-    api_key="anything",
-    base_url="http://0.0.0.0:4000"
+    api_key=os.environ["LITELLM_API_KEY"],
+    base_url=f"{os.environ['LITELLM_PROXY_URL'].rstrip('/')}/v1",
 )
 
-# request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="{{openai_small}}",
+    model="my-model",
     messages = [
         {
             "role": "user",
@@ -75,7 +82,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={ # pass in any provider-specific param, if not supported by openai, https://docs.litellm.ai/docs/completion/input#provider-specific-params
-        "metadata": { # 👈 use for logging additional params (e.g. to langfuse)
+        "metadata": { # use for logging additional params (e.g. to langfuse)
             "generation_name": "ishaan-generation-openai-client",
             "generation_id": "openai-client-gen-id22",
             "trace_id": "openai-client-trace-id22",
@@ -89,7 +96,7 @@ print(response)
 </TabItem>
 <TabItem value="litellm_sdk" label="LiteLLM Python SDK">
 
-[**👉 Go Here**](../providers/litellm_proxy#send-all-sdk-requests-to-litellm-proxy)
+[** Go Here**](../providers/litellm_proxy#send-all-sdk-requests-to-litellm-proxy)
 
 </TabItem>
 <TabItem value="azureopenai" label="AzureOpenAI Python">
@@ -113,7 +120,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={ # pass in any provider-specific param, if not supported by openai, https://docs.litellm.ai/docs/completion/input#provider-specific-params
-        "metadata": { # 👈 use for logging additional params (e.g. to langfuse)
+        "metadata": { # use for logging additional params (e.g. to langfuse)
             "generation_name": "ishaan-generation-openai-client",
             "generation_id": "openai-client-gen-id22",
             "trace_id": "openai-client-trace-id22",
@@ -236,7 +243,7 @@ import { ChatOpenAI } from "@langchain/openai";
 const model = new ChatOpenAI({
   modelName: "{{openai_large}}",
   openAIApiKey: "sk-<your-litellm-api-key>",
-  modelKwargs: {"metadata": "hello world"} // 👈 PASS Additional params here
+  modelKwargs: {"metadata": "hello world"} // PASS Additional params here
 }, {
   basePath: "http://0.0.0.0:4000",
 });
@@ -962,7 +969,7 @@ print(result)
 
 ## Using with Vertex, Boto3, Anthropic SDK (Native format)
 
-👉 **[Here's how to use litellm proxy with Vertex, boto3, Anthropic SDK - in the native format](../pass_through/vertex_ai.md)**
+**[Here's how to use litellm proxy with Vertex, boto3, Anthropic SDK - in the native format](../pass_through/vertex_ai.md)**
 
 ## Advanced
 

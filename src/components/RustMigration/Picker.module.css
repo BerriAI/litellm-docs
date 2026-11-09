@@ -103,6 +103,12 @@
   color: var(--ifm-color-primary);
 }
 
+/* A goal that is listed but not tracked yet. */
+.selectItem[data-disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .selectLabel {
   font-size: 0.9rem;
   font-weight: 600;

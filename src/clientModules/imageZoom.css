@@ -1,0 +1,45 @@
+.lz-zoomable {
+  cursor: zoom-in;
+}
+
+.lz-zoom {
+  max-width: 96vw;
+  max-height: 94vh;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: zoom-out;
+  overflow: visible;
+}
+
+.lz-zoom::backdrop {
+  background: rgba(5, 8, 30, 0.72);
+}
+
+.lz-zoom img {
+  display: block;
+  max-width: 96vw;
+  max-height: 94vh;
+  width: auto;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lz-zoom[open] img {
+    animation: lz-in 0.18s ease-out;
+  }
+}
+
+@keyframes lz-in {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}

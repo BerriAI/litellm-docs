@@ -1,5 +1,6 @@
 ---
-title: "v1.89.4 - Vertex Batch Uploads & CVE Patches"
+title: "LiteLLM v1.89.4 - Vertex Batch Uploads & CVE Patches"
+description: "Streams OpenAI to Vertex batch JSONL uploads and recovers cost for interrupted Anthropic streams. Also adds a no-mcp-servers sentinel."
 slug: "v1-89-4"
 date: 2026-06-25T02:38:49
 authors:

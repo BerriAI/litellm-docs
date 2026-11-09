@@ -204,11 +204,11 @@ curl -X POST http://0.0.0.0:4000/rerank \
 model: nvidia_nim/ranking/nvidia/llama-3.2-nv-rerankqa-1b-v2
        └────┬────┘ └──┬──┘ └─────────────┬──────────────────┘
             │        │                   │
-            │        │                   └────▶ Model name sent to provider
+            │        │                   └──── Model name sent to provider
             │        │
-            │        └────────────────────────▶ Tells LiteLLM the request/response and url should be sent to Nvidia NIM /v1/ranking endpoint
+            │        └──────────────────────── Tells LiteLLM the request/response and url should be sent to Nvidia NIM /v1/ranking endpoint
             │
-            └─────────────────────────────────▶ Provider prefix
+            └───────────────────────────────── Provider prefix
 
 API URL: https://ai.api.nvidia.com/v1/ranking
 ```
@@ -222,14 +222,14 @@ Client Request                LiteLLM                              Provider API
 # Default reranking endpoint
 model: "nvidia_nim/nvidia/model-name"
                             1. Extracts model: nvidia/model-name
-                            2. Routes to default endpoint ──────▶ POST /v1/retrieval/nvidia/model-name/reranking
+                            2. Routes to default endpoint ────── POST /v1/retrieval/nvidia/model-name/reranking
 
 
 # Forced ranking endpoint  
 model: "nvidia_nim/ranking/nvidia/model-name"
                             1. Detects "ranking/" prefix
                             2. Extracts model: nvidia/model-name
-                            3. Routes to ranking endpoint ──────▶ POST /v1/ranking
+                            3. Routes to ranking endpoint ────── POST /v1/ranking
                                                                   Body: {"model": "nvidia/model-name", ...}
 ```
 

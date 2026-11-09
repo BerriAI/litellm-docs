@@ -337,7 +337,7 @@ Each key can point at a different Langfuse project: generate one key per project
 
 #### Secret handling for API-provisioned callbacks
 
-`os.environ/...` references inside API-supplied `callback_vars` are rejected (since v1.84). Resolving environment references from a request body would let any caller with key-management access read arbitrary secrets out of the proxy's environment, so the request fails with a validation error instead. Pass the resolved secret value in the request; LiteLLM encrypts `callback_vars` credentials at rest using the proxy's salt key. If you want the proxy to resolve credentials from its own environment, configure the callback in trusted `config.yaml` (globally under `litellm_settings`, or per team via [`default_team_settings`](#team-logging---configyaml)).
+From v1.84.0, the proxy rejects `os.environ/...` references inside API-supplied `callback_vars`. Resolving environment references from a request body would let any caller with key-management access read arbitrary secrets out of the proxy's environment, so the request fails with a validation error instead. Pass the resolved secret value in the request; LiteLLM encrypts `callback_vars` credentials at rest using the proxy's salt key. If you want the proxy to resolve credentials from its own environment, configure the callback in trusted `config.yaml` (globally under `litellm_settings`, or per team via [`default_team_settings`](#team-logging---configyaml)).
 
 <iframe width="840" height="500" src="https://www.youtube.com/embed/8iF0Hvwk0YU" frameBorder="0" allowFullScreen></iframe>
 
@@ -509,7 +509,7 @@ model_list:
       model: {{openai_large}}
 litellm_settings:
   callbacks: ["datadog"]
-  turn_off_message_logging: True # 👈 Globally logging prompt / response is disabled
+  turn_off_message_logging: True # Globally logging prompt / response is disabled
 ```
 
 **Enable prompt logging for key**
@@ -525,7 +525,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
         "logging": [{
             "callback_name": "datadog",
             "callback_vars": {
-                "turn_off_message_logging": false # 👈 Enable prompt logging
+                "turn_off_message_logging": false # Enable prompt logging
             }
         }]
     }

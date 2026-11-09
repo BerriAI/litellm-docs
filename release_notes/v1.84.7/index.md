@@ -1,5 +1,6 @@
 ---
-title: "v1.84.7 - Claude Fable 5 & Batch File Authorization"
+title: "LiteLLM v1.84.7 - Claude Fable 5 & Batch File Authorization"
+description: "Adds Claude Fable 5 on Anthropic, Bedrock, Vertex AI and Azure AI. Authorizes batch files with the upload target_model_names."
 slug: "v1-84-7"
 date: 2026-06-10T18:11:13
 authors:

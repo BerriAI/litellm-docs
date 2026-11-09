@@ -211,6 +211,8 @@ Auth is the same chain as the rest of the provider: a bearer token from `api_key
 
 Beta features travel in the `anthropic-beta` header: the values the caller sends plus the ones a request needs (a `context_management` edit adds `context-management-2025-06-27`), limited to what Mantle accepts. A value Mantle does not know is left out instead of failing the request with a 400, and nothing is sent in the body `anthropic_beta` field, which Mantle ignores whenever the header is present
 
+Health checks use the same surface. `/health` and the Admin UI's Test Connection button probe a `bedrock_mantle/anthropic.claude-*` deployment with a small `/v1/messages` request, with no `model_info.mode` needed. See [Model modes](../proxy/health.md#model-modes)
+
 ## OpenAI Models (GPT-5.4 / GPT-5.5)
 
 ### /responses
@@ -302,6 +304,38 @@ print(response)
 </TabItem>
 </Tabs>
 
+### Prompt caching (GPT-5.6 and newer)
+
+GPT-5.6 and newer OpenAI models on Mantle accept [explicit prompt cache breakpoints](../completion/prompt_caching.md#bedrock-mantle-explicit-breakpoints-openai-gpt-56-and-newer) on the Responses API: a `prompt_cache_breakpoint` marker on an `input_text`, `input_image` or `input_file` block plus a request-level `prompt_cache_options`. Each cached prefix needs at least 1,024 tokens, a request can carry up to 4 breakpoints, and a cached prefix stays available for at least 30 minutes. LiteLLM passes both fields through on `/v1/responses`. On `/v1/chat/completions` these models are bridged onto the Responses API, so a `prompt_cache_breakpoint` on a content block is kept, and `cache_control_injection_points` on the deployment place the marker for you the way they do for `openai/gpt-5.6` ([tutorial](../tutorials/prompt_caching.md#openai-gpt-56-and-newer))
+
+```yaml
+model_list:
+  - model_name: gpt-5.6-mantle
+    litellm_params:
+      model: bedrock_mantle/openai.gpt-5.6-sol
+      aws_region_name: us-east-1
+      api_key: os.environ/AWS_BEARER_TOKEN_BEDROCK
+      cache_control_injection_points:
+        - location: message
+          role: system
+```
+
+```bash
+curl -X POST http://0.0.0.0:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.6-mantle",
+    "messages": [
+      {"role": "system", "content": "<a system prompt of at least 1,024 tokens>"},
+      {"role": "user", "content": "What are the key terms and conditions?"}
+    ],
+    "prompt_cache_options": {"mode": "explicit", "ttl": "30m"}
+  }'
+```
+
+The first call reports the cache write in `usage.prompt_tokens_details.cache_write_tokens`, and a repeat of the same prefix within the cache lifetime reports `usage.prompt_tokens_details.cached_tokens`, each priced from the model's cache write and cache read rates
+
 ## API Key
 
 ```python
@@ -322,6 +356,23 @@ os.environ['BEDROCK_MANTLE_REGION'] = "us-east-1"  # or use AWS_REGION
 | `openai.gpt-oss-20b` | `/chat/completions` | 131K | $0.07 | $0.30 |
 | `openai.gpt-oss-safeguard-120b` | `/chat/completions` | 131K | $0.15 | $0.60 |
 | `openai.gpt-oss-safeguard-20b` | `/chat/completions` | 131K | $0.07 | $0.20 |
+
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`bedrock_mantle/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Bedrock Mantle model name. LiteLLM sends Bedrock Mantle the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `bedrock_mantle/gpt-luna-latest` | GPT Luna |
+| `bedrock_mantle/gpt-sol-latest` | GPT Sol |
+| `bedrock_mantle/gpt-terra-latest` | GPT Terra |
+| `bedrock_mantle/gpt-astra-latest` | GPT Astra |
+| `bedrock_mantle/claude-opus-latest` | Claude Opus |
+| `bedrock_mantle/claude-sonnet-latest` | Claude Sonnet |
+| `bedrock_mantle/claude-haiku-latest` | Claude Haiku |
+| `bedrock_mantle/grok-latest` | Grok |
 
 ## Sample Usage
 

@@ -143,7 +143,7 @@ response = litellm.responses(
     max_output_tokens=100,
     api_key=os.getenv("AZURE_RESPONSES_OPENAI_API_KEY"),
     api_base="https://litellm8397336933.openai.azure.com",
-    api_version="preview", # 👈 key difference
+    api_version="preview", # key difference
 )
 
 print(response)
@@ -160,7 +160,7 @@ response = litellm.responses(
     stream=True,
     api_key=os.getenv("AZURE_RESPONSES_OPENAI_API_KEY"),
     api_base="https://litellm8397336933.openai.azure.com",
-    api_version="preview", # 👈 key difference
+    api_version="preview", # key difference
 )
 
 for event in response:
@@ -178,7 +178,7 @@ model_list:
       model: azure/codex-mini
       api_key: os.environ/AZURE_RESPONSES_OPENAI_API_KEY
       api_base: https://litellm8397336933.openai.azure.com
-      api_version: preview # 👈 key difference
+      api_version: preview # key difference
 ```
 
 Start your LiteLLM proxy:

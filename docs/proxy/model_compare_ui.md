@@ -6,7 +6,7 @@ import TabItem from '@theme/TabItem';
 
 Compare multiple LLM models side-by-side in an interactive playground interface. Evaluate model responses, performance metrics, and costs to make informed decisions about which models work best for your use case.
 
-This feature is **available in v1.80.0-stable and above**.
+<SinceVersion v="1.80.5" />
 
 ## Overview
 
@@ -188,6 +188,7 @@ Use tags and multiple comparisons to run structured A/B tests:
 ## Related Features
 
 - [Playground Chat UI](./ui.md) - Single model testing interface
+- [Chat UI](./ui/chat_ui.md) - Chat page with chat history, MCP tools, and your own keys, logs, and usage
 - [Model Management](./model_management.md) - Configure and manage models
 - [Guardrails](./guardrails/quick_start.md) - Set up safety filters
 - [AI Hub](./ai_hub.md) - Share models and agents with your organization

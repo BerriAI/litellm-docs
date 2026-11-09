@@ -1,6 +1,7 @@
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import NavigationCards from '@site/src/components/NavigationCards';
 
 # CLI - Quick Start
 
@@ -17,7 +18,7 @@ $ uv tool install 'litellm[proxy]'
 ```
 
 :::warning[Minimum Python version]
-LiteLLM 1.84.0 and newer require Python {{python_min_version}} or higher (`requires-python >={{python_min_version}}`). `uv tool install` handles this for you by provisioning a compatible Python automatically. A bare `pip install 'litellm[proxy]'` does not; on an older interpreter pip silently resolves down to the last release whose `requires-python` still allowed it (1.83.9 for the previous floor), with no error. If you pinned to an old version unexpectedly, check `python --version` and upgrade to {{python_min_version}}+ (or use uv), then reinstall
+LiteLLM 1.84.0 and newer require Python {{python_min_version}} or higher (`requires-python >={{python_min_version}}`). `uv tool install` handles this for you by provisioning a compatible Python automatically. A bare `pip install 'litellm[proxy]'` does not; on an older interpreter pip silently resolves down to the last release whose `requires-python` still allowed it (1.83.9 for the previous floor), with no error. If you pinned to an old version unexpectedly, check `python --version` and upgrade to {{python_min_version}}+ (or use uv), then reinstall {/* keep-version-note */}
 :::
 
 ## Quick Start - LiteLLM Proxy CLI
@@ -429,7 +430,7 @@ print(message.content)
 
 
 
-## 📖 Proxy Endpoints - [Swagger Docs](https://docs.litellm.ai/api-reference/)
+## Proxy Endpoints - [Swagger Docs](https://docs.litellm.ai/api-reference/)
 - POST `/chat/completions` - chat completions endpoint to call 100+ LLMs
 - POST `/completions` - completions endpoint
 - POST `/embeddings` - embedding endpoint for Azure, OpenAI, Huggingface endpoints
@@ -467,3 +468,47 @@ export LITELLM_LOG=ERROR
 ```
 
 `LITELLM_LOG` must be a valid Python logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`). Setting it to `None` makes `import litellm` fail.
+
+## Add virtual keys and the Admin UI
+
+The commands on this page start the proxy without a database. To create virtual keys, track spend, and use the [Admin UI](/docs/proxy/ui), add `database_url` under `general_settings` in `config.yaml`. Then refer to [Virtual keys](/docs/proxy/virtual_keys) for keys and budgets. For a setup that starts the proxy, a database, and the Admin UI with one command, use the [Quickstart](/docs/proxy/docker_quick_start).
+
+## Next steps
+
+<NavigationCards
+columns={3}
+items={[
+  {
+    title: "Make LLM requests",
+    description: "Point LiteLLM or OpenAI-compatible clients to the gateway.",
+    to: "/docs/proxy/user_keys",
+  },
+  {
+    title: "Model config",
+    description: "Add more models and gateway settings.",
+    to: "/docs/proxy/configs",
+  },
+  {
+    title: "Virtual keys",
+    description: "Create keys, budgets, and access controls.",
+    to: "/docs/proxy/virtual_keys",
+  },
+  {
+    title: "Add logging",
+    description: "Capture logs, spend, and traces.",
+    to: "/docs/proxy/logging",
+  },
+  {
+    title: "Load balance",
+    description: "Route across deployments, regions, or providers.",
+    to: "/docs/proxy/load_balancing",
+  },
+  {
+    title: "Add guardrails",
+    description: "Add safety checks and policy enforcement.",
+    to: "/docs/proxy/guardrails/quick_start",
+  },
+]}
+/>
+
+If you only need to call models from one application and do not need central auth or shared infrastructure, use the [SDK Quickstart](/docs/learn/sdk_quickstart) instead.

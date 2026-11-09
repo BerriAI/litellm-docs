@@ -1,5 +1,6 @@
 ---
-title: "v1.99.1 - OTel Cache Token Counts"
+title: "LiteLLM v1.99.1 - OTel Cache Token Counts"
+description: "Fixes OpenTelemetry v2 LLM spans so they emit cache token counts for each request. Observability backends now see cache token usage per call."
 slug: "v1-99-1"
 date: 2026-09-02T14:01:25
 authors:

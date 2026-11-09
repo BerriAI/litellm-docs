@@ -1,0 +1,214 @@
+{
+  "id": "guardrails",
+  "title": "Catching dangerous coding-agent tool calls",
+  "description": "394 tool calls (195 dangerous, 199 safe). Every model got the same yes/no question through LiteLLM /v1/decisions, blocked at p ≥ 0.5.",
+  "date": "2026-10",
+  "total": 394,
+  "costUnit": "calls",
+  "labels": {
+    "agree": "agrees with the label",
+    "errorA": "over-blocks a safe call",
+    "errorB": "misses a dangerous call"
+  },
+  "topTier": 4,
+  "footnote": "Oct 2026. The top four are within noise (95% CI about ±2 points). The chat baseline uses the Claude Code auto-mode safeguards prompt. Cost from x-litellm-response-cost; Databricks cost is not tracked yet.",
+  "groups": [
+    {
+      "label": "Hosted APIs",
+      "rows": [
+        {
+          "model": "pplx-decider v1.1 / v1",
+          "provider": "Perplexity",
+          "costPer1k": 0.01,
+          "selfHosted": false,
+          "p50Seconds": 0.4,
+          "agree": 385,
+          "errorA": 0,
+          "errorB": 9,
+          "noAnswer": 0,
+          "note": "v1 returned identical scores"
+        },
+        {
+          "model": "Jev 1.14",
+          "provider": "TypeSafe",
+          "costPer1k": 0.029,
+          "selfHosted": false,
+          "p50Seconds": 0.29,
+          "agree": 384,
+          "errorA": 0,
+          "errorB": 10,
+          "noAnswer": 0
+        },
+        {
+          "model": "Clef",
+          "provider": "Cloudflare",
+          "costPer1k": 0.131,
+          "selfHosted": false,
+          "p50Seconds": 0.6,
+          "agree": 383,
+          "errorA": 2,
+          "errorB": 9,
+          "noAnswer": 0
+        },
+        {
+          "model": "GPT-6 Luna",
+          "provider": "OpenAI",
+          "costPer1k": 0.055,
+          "selfHosted": false,
+          "p50Seconds": 0.35,
+          "agree": 381,
+          "errorA": 1,
+          "errorB": 12,
+          "noAnswer": 0
+        },
+        {
+          "model": "Jev 1.13",
+          "provider": "TypeSafe",
+          "costPer1k": 0.029,
+          "selfHosted": false,
+          "p50Seconds": 0.24,
+          "agree": 375,
+          "errorA": 0,
+          "errorB": 19,
+          "noAnswer": 0
+        },
+        {
+          "model": "gpt-oss-120b chat baseline",
+          "provider": "Fireworks",
+          "costPer1k": 0.184,
+          "selfHosted": false,
+          "p50Seconds": 1.13,
+          "agree": 370,
+          "errorA": 0,
+          "errorB": 24,
+          "noAnswer": 0,
+          "note": "chat model with the auto-mode safeguards prompt"
+        },
+        {
+          "model": "Rune",
+          "provider": "Fireworks",
+          "costPer1k": 0.021,
+          "selfHosted": false,
+          "p50Seconds": 0.34,
+          "agree": 343,
+          "errorA": 3,
+          "errorB": 48,
+          "noAnswer": 0
+        },
+        {
+          "model": "Decision-1",
+          "provider": "Azure AI Foundry",
+          "costPer1k": 0.018,
+          "selfHosted": false,
+          "p50Seconds": 0.67,
+          "agree": 342,
+          "errorA": 1,
+          "errorB": 51,
+          "noAnswer": 0
+        },
+        {
+          "model": "Clef Flash",
+          "provider": "Cloudflare",
+          "costPer1k": 0.049,
+          "selfHosted": false,
+          "p50Seconds": 0.57,
+          "agree": 280,
+          "errorA": 0,
+          "errorB": 114,
+          "noAnswer": 0,
+          "note": "ranks well (AUROC 0.96), scores sit below the 0.5 cutoff"
+        },
+        {
+          "model": "Clef Omni",
+          "provider": "Cloudflare",
+          "costPer1k": 0.081,
+          "selfHosted": false,
+          "p50Seconds": 0.4,
+          "agree": 264,
+          "errorA": 0,
+          "errorB": 130,
+          "noAnswer": 0,
+          "note": "ranks well (AUROC 0.95), scores sit below the 0.5 cutoff"
+        },
+        {
+          "model": "OpenJev Qwen3.5 4B",
+          "provider": "Databricks",
+          "costPer1k": null,
+          "selfHosted": false,
+          "p50Seconds": 0.32,
+          "agree": 234,
+          "errorA": 0,
+          "errorB": 160,
+          "noAnswer": 0,
+          "note": "ai_decide matched OpenJev on every call"
+        }
+      ]
+    },
+    {
+      "label": "Open weights",
+      "note": "Self-hosted on an 8-core CPU, no GPU. Latency is not comparable to the hosted rows",
+      "rows": [
+        {
+          "model": "Bespoke Nimble 9B",
+          "provider": "Bespoke via Ollama",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 11.96,
+          "agree": 295,
+          "errorA": 0,
+          "errorB": 99,
+          "noAnswer": 0,
+          "note": "ranks well (AUROC 0.94), scores sit below the 0.5 cutoff"
+        },
+        {
+          "model": "Laya English",
+          "provider": "Laya",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 1.42,
+          "agree": 198,
+          "errorA": 196,
+          "errorB": 0,
+          "noAnswer": 0,
+          "note": "no better than chance (AUROC 0.42)"
+        },
+        {
+          "model": "Laya Multilingual",
+          "provider": "Laya",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 0.85,
+          "agree": 196,
+          "errorA": 198,
+          "errorB": 0,
+          "noAnswer": 0,
+          "note": "no better than chance (AUROC 0.58)"
+        },
+        {
+          "model": "Laya Typed Decisions",
+          "provider": "Laya",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 1.59,
+          "agree": 190,
+          "errorA": 16,
+          "errorB": 188,
+          "noAnswer": 0,
+          "note": "no better than chance (AUROC 0.45)"
+        },
+        {
+          "model": "Strands Decider 2B",
+          "provider": "Strands Agents",
+          "costPer1k": null,
+          "selfHosted": true,
+          "p50Seconds": 3.62,
+          "agree": 189,
+          "errorA": 189,
+          "errorB": 16,
+          "noAnswer": 0,
+          "note": "no better than chance (AUROC 0.42)"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,509 @@
+{
+  "date": "2026-10-20",
+  "baseCommit": "6ba8adbc",
+  "corpusSha256": "08215546a69ad9b04bcbdd5ded881e67faca284dc62b8396168ef9954dd37496",
+  "method": "50 distinct queries in the actual production dialog and the updated local production build, with no query-result cache. The loaded index is reused. UI timing starts before the input fill and ends when completion is observed, so it includes automation overhead. The old UI waits for aria-busy true then false; the new UI waits for aria-busy false and data-query matching the current query. Local API timings include HTTP and JSON parsing but exclude DOM rendering. No production after-change measurement is claimed.",
+  "indexDownload": {
+    "compressedBytes": 8419247,
+    "decodedBytes": 42099367,
+    "freshDownloadMs": 1506.551
+  },
+  "coldLocalFunction": {
+    "totalMs": 377.396,
+    "responseBytes": 14263,
+    "scope": "Local invocation of the Vercel handler, including index read and load; not a deployed Vercel cold start."
+  },
+  "productionUi": {
+    "p50Ms": 655,
+    "p95Ms": 762,
+    "maxMs": 936
+  },
+  "localUpdatedUi": {
+    "p50Ms": 123,
+    "p95Ms": 127,
+    "maxMs": 130
+  },
+  "localUpdatedApi": {
+    "wall": {
+      "n": 50,
+      "p50": 9.61420899999996,
+      "p95": 34.938958000000014,
+      "max": 50.599209,
+      "mean": 12.584786660000002
+    },
+    "retrieval": {
+      "n": 50,
+      "p50": 7.407624999999825,
+      "p95": 28.39387499999998,
+      "max": 37.38920800000005,
+      "mean": 9.63198997999999
+    },
+    "bytes": {
+      "n": 50,
+      "p50": 19286,
+      "p95": 59740,
+      "max": 74894,
+      "mean": 25059.68
+    }
+  },
+  "equivalentResults": 50,
+  "additionalDistinctQueries": {
+    "count": 50,
+    "uiP50Ms": 124,
+    "uiP95Ms": 145,
+    "environment": "local development preview",
+    "indexRequests": 0
+  },
+  "samples": [
+    {
+      "query": "redis cache ttl",
+      "productionUiMs": 666,
+      "localUpdatedUiMs": 127,
+      "localApiMs": 50.599,
+      "retrievalMs": 20.139,
+      "responseBytes": 14263,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "virtual key budget",
+      "productionUiMs": 651,
+      "localUpdatedUiMs": 126,
+      "localApiMs": 40.87,
+      "retrievalMs": 37.389,
+      "responseBytes": 57759,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "azure openai deployment",
+      "productionUiMs": 649,
+      "localUpdatedUiMs": 130,
+      "localApiMs": 26.944,
+      "retrievalMs": 18.066,
+      "responseBytes": 52237,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "anthropic prompt caching",
+      "productionUiMs": 643,
+      "localUpdatedUiMs": 125,
+      "localApiMs": 20.566,
+      "retrievalMs": 17.293,
+      "responseBytes": 59065,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "bedrock assume role",
+      "productionUiMs": 752,
+      "localUpdatedUiMs": 118,
+      "localApiMs": 11.146,
+      "retrievalMs": 8.31,
+      "responseBytes": 16156,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "vertex ai service account",
+      "productionUiMs": 652,
+      "localUpdatedUiMs": 126,
+      "localApiMs": 8.65,
+      "retrievalMs": 5.745,
+      "responseBytes": 15703,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "fallback context window",
+      "productionUiMs": 757,
+      "localUpdatedUiMs": 127,
+      "localApiMs": 13.394,
+      "retrievalMs": 11.917,
+      "responseBytes": 43518,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "router retry policy",
+      "productionUiMs": 649,
+      "localUpdatedUiMs": 120,
+      "localApiMs": 11.41,
+      "retrievalMs": 8.955,
+      "responseBytes": 26328,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "rate limit tpm rpm",
+      "productionUiMs": 642,
+      "localUpdatedUiMs": 124,
+      "localApiMs": 12.045,
+      "retrievalMs": 9.047,
+      "responseBytes": 29287,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "mcp oauth authentication",
+      "productionUiMs": 654,
+      "localUpdatedUiMs": 126,
+      "localApiMs": 12.837,
+      "retrievalMs": 10.19,
+      "responseBytes": 30099,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "a2a agent registration",
+      "productionUiMs": 667,
+      "localUpdatedUiMs": 124,
+      "localApiMs": 6.657,
+      "retrievalMs": 4.961,
+      "responseBytes": 8566,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "entra group sync",
+      "productionUiMs": 646,
+      "localUpdatedUiMs": 119,
+      "localApiMs": 6.867,
+      "retrievalMs": 4.454,
+      "responseBytes": 4863,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "sso role mapping",
+      "productionUiMs": 756,
+      "localUpdatedUiMs": 119,
+      "localApiMs": 7.133,
+      "retrievalMs": 5.033,
+      "responseBytes": 8523,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "team member permissions",
+      "productionUiMs": 648,
+      "localUpdatedUiMs": 123,
+      "localApiMs": 13.384,
+      "retrievalMs": 11.074,
+      "responseBytes": 39061,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "end user tracking",
+      "productionUiMs": 646,
+      "localUpdatedUiMs": 118,
+      "localApiMs": 20.7,
+      "retrievalMs": 17.752,
+      "responseBytes": 59740,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "responses api streaming",
+      "productionUiMs": 647,
+      "localUpdatedUiMs": 125,
+      "localApiMs": 34.939,
+      "retrievalMs": 32.727,
+      "responseBytes": 57266,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "embedding dimensions",
+      "productionUiMs": 648,
+      "localUpdatedUiMs": 120,
+      "localApiMs": 7.695,
+      "retrievalMs": 5.384,
+      "responseBytes": 20741,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "image generation azure",
+      "productionUiMs": 643,
+      "localUpdatedUiMs": 124,
+      "localApiMs": 12.643,
+      "retrievalMs": 10.472,
+      "responseBytes": 35244,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "audio transcription whisper",
+      "productionUiMs": 642,
+      "localUpdatedUiMs": 118,
+      "localApiMs": 5.983,
+      "retrievalMs": 3.787,
+      "responseBytes": 11389,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "realtime websocket",
+      "productionUiMs": 640,
+      "localUpdatedUiMs": 123,
+      "localApiMs": 7.972,
+      "retrievalMs": 5.642,
+      "responseBytes": 25756,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "guardrail pii masking",
+      "productionUiMs": 743,
+      "localUpdatedUiMs": 118,
+      "localApiMs": 8.302,
+      "retrievalMs": 7.027,
+      "responseBytes": 25329,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "presidio anonymization",
+      "productionUiMs": 642,
+      "localUpdatedUiMs": 124,
+      "localApiMs": 5.519,
+      "retrievalMs": 3.328,
+      "responseBytes": 827,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "langfuse logging",
+      "productionUiMs": 644,
+      "localUpdatedUiMs": 122,
+      "localApiMs": 13.848,
+      "retrievalMs": 11.722,
+      "responseBytes": 51822,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "opentelemetry tracing",
+      "productionUiMs": 646,
+      "localUpdatedUiMs": 124,
+      "localApiMs": 7.001,
+      "retrievalMs": 4.558,
+      "responseBytes": 16491,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "prometheus metrics",
+      "productionUiMs": 641,
+      "localUpdatedUiMs": 126,
+      "localApiMs": 11.072,
+      "retrievalMs": 8.82,
+      "responseBytes": 39360,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "s3 request logging",
+      "productionUiMs": 936,
+      "localUpdatedUiMs": 123,
+      "localApiMs": 11.986,
+      "retrievalMs": 9.785,
+      "responseBytes": 25892,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "cost tracking custom pricing",
+      "productionUiMs": 671,
+      "localUpdatedUiMs": 118,
+      "localApiMs": 11.595,
+      "retrievalMs": 9.363,
+      "responseBytes": 22660,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "spend logs retention",
+      "productionUiMs": 780,
+      "localUpdatedUiMs": 125,
+      "localApiMs": 10.719,
+      "retrievalMs": 8.747,
+      "responseBytes": 12593,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "budget reset duration",
+      "productionUiMs": 664,
+      "localUpdatedUiMs": 125,
+      "localApiMs": 14.221,
+      "retrievalMs": 11.966,
+      "responseBytes": 50745,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "docker postgres deployment",
+      "productionUiMs": 666,
+      "localUpdatedUiMs": 126,
+      "localApiMs": 8.449,
+      "retrievalMs": 6.389,
+      "responseBytes": 18043,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "helm redis configuration",
+      "productionUiMs": 679,
+      "localUpdatedUiMs": 119,
+      "localApiMs": 9.499,
+      "retrievalMs": 7.408,
+      "responseBytes": 12080,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "health readiness probes",
+      "productionUiMs": 656,
+      "localUpdatedUiMs": 124,
+      "localApiMs": 4.177,
+      "retrievalMs": 2.248,
+      "responseBytes": 7292,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "load balancing latency routing",
+      "productionUiMs": 655,
+      "localUpdatedUiMs": 126,
+      "localApiMs": 7.738,
+      "retrievalMs": 5.571,
+      "responseBytes": 8993,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "weighted routing deployments",
+      "productionUiMs": 652,
+      "localUpdatedUiMs": 124,
+      "localApiMs": 9.004,
+      "retrievalMs": 6.818,
+      "responseBytes": 19286,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "semantic cache redis",
+      "productionUiMs": 665,
+      "localUpdatedUiMs": 120,
+      "localApiMs": 8.724,
+      "retrievalMs": 6.26,
+      "responseBytes": 17150,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "batch api file upload",
+      "productionUiMs": 658,
+      "localUpdatedUiMs": 125,
+      "localApiMs": 14.939,
+      "retrievalMs": 12.552,
+      "responseBytes": 21491,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "prompt management versions",
+      "productionUiMs": 655,
+      "localUpdatedUiMs": 126,
+      "localApiMs": 9.331,
+      "retrievalMs": 7.058,
+      "responseBytes": 22093,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "model access groups",
+      "productionUiMs": 662,
+      "localUpdatedUiMs": 123,
+      "localApiMs": 29.526,
+      "retrievalMs": 28.394,
+      "responseBytes": 62609,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "jwt authentication claims",
+      "productionUiMs": 656,
+      "localUpdatedUiMs": 127,
+      "localApiMs": 7.515,
+      "retrievalMs": 5.456,
+      "responseBytes": 11279,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "scim user provisioning",
+      "productionUiMs": 657,
+      "localUpdatedUiMs": 125,
+      "localApiMs": 9.015,
+      "retrievalMs": 6.814,
+      "responseBytes": 4368,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "secret manager aws",
+      "productionUiMs": 650,
+      "localUpdatedUiMs": 119,
+      "localApiMs": 9.817,
+      "retrievalMs": 7.556,
+      "responseBytes": 25284,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "ip allowlist virtual keys",
+      "productionUiMs": 658,
+      "localUpdatedUiMs": 124,
+      "localApiMs": 12.818,
+      "retrievalMs": 10.59,
+      "responseBytes": 5679,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "claude code subscription",
+      "productionUiMs": 659,
+      "localUpdatedUiMs": 123,
+      "localApiMs": 12.662,
+      "retrievalMs": 10.068,
+      "responseBytes": 18812,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "codex subscription login",
+      "productionUiMs": 647,
+      "localUpdatedUiMs": 120,
+      "localApiMs": 9.614,
+      "retrievalMs": 7.405,
+      "responseBytes": 3283,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "vscode continue integration",
+      "productionUiMs": 754,
+      "localUpdatedUiMs": 121,
+      "localApiMs": 10.927,
+      "retrievalMs": 8.371,
+      "responseBytes": 12012,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "gemini thinking budget",
+      "productionUiMs": 668,
+      "localUpdatedUiMs": 122,
+      "localApiMs": 9.486,
+      "retrievalMs": 7.329,
+      "responseBytes": 21418,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "web search tavily",
+      "productionUiMs": 760,
+      "localUpdatedUiMs": 123,
+      "localApiMs": 6.512,
+      "retrievalMs": 4.328,
+      "responseBytes": 6881,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "rerank cohere",
+      "productionUiMs": 651,
+      "localUpdatedUiMs": 122,
+      "localApiMs": 5.476,
+      "retrievalMs": 3.335,
+      "responseBytes": 15095,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "latest stable release",
+      "productionUiMs": 659,
+      "localUpdatedUiMs": 30,
+      "localApiMs": 1.363,
+      "retrievalMs": 0.532,
+      "responseBytes": 74894,
+      "resultsEquivalent": true
+    },
+    {
+      "query": "rust gateway benchmarks",
+      "productionUiMs": 762,
+      "localUpdatedUiMs": 121,
+      "localApiMs": 5.949,
+      "retrievalMs": 3.464,
+      "responseBytes": 3659,
+      "resultsEquivalent": true
+    }
+  ]
+}

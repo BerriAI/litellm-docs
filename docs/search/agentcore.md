@@ -123,7 +123,7 @@ AgentCore caps queries at 200 characters, so longer queries are truncated
 
 ## Notes
 
-The gateway is billed by AWS directly, so LiteLLM tracks `agentcore/search` at zero cost
+LiteLLM tracks `agentcore/search` at $0.007 per query, matching the [Web Search on AgentCore price](https://aws.amazon.com/bedrock/agentcore/pricing/) of $7 per 1,000 queries. AWS bills AgentCore Gateway API invocations separately, and LiteLLM does not track them
 
 The SigV4 signing region comes from the gateway hostname. If you front the gateway with a custom hostname, set `aws_region_name` (or `AWS_REGION`, or a profile region) to the gateway's region
 

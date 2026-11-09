@@ -1,7 +1,3 @@
----
-sidebar_label: "OpenClaw"
----
-
 # OpenClaw + LiteLLM Integration
 
 [OpenClaw](https://openclaw.ai) is a self-hosted AI assistant that connects chat apps (WhatsApp, Telegram, Discord, and more) to LLM providers. By routing OpenClaw through LiteLLM Proxy, you get access to 100+ providers, cost tracking, spend limits, and automatic failover, all from a single gateway.

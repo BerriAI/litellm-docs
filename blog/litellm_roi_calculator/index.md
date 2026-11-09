@@ -17,10 +17,6 @@ Your gateway tells you what your team spends on AI. It doesn't tell you what tha
 
 {/* truncate */}
 
-:::info Native Admin UI calculator
-The ROI Calculator is now also integrated into the LiteLLM Admin UI. See the [ROI Calculator documentation](/docs/proxy/roi_calculator) for build availability, setup, and how the calculation works. The instructions below describe the original standalone application.
-:::
-
 ## Connect your gateway and GitHub
 
 Run it locally with one command:

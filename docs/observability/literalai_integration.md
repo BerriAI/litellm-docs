@@ -31,7 +31,7 @@ litellm.failure_callback = ["literalai"] # Log Errors to LiteralAI
 response = litellm.completion(
   model="{{openai_small}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - i'm openai"}
+    {"role": "user", "content": "Hi - i'm openai"}
   ]
 )
 ```

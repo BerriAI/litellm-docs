@@ -12,7 +12,7 @@ Add the following to your litellm proxy config yaml file.
 
 ```yaml showLineNumbers title="litellm proxy config.yaml"
 router_settings:
-  enable_tag_filtering: True # 👈 Key Change
+  enable_tag_filtering: True # Key Change
 ```
 
 ## 1. Create a tag

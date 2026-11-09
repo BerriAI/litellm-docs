@@ -386,7 +386,7 @@ Custom code runs in a restricted environment:
 - ❌ No `exec()` or `eval()`
 - ✅ HTTP requests via built-in `http_request`, `http_get`, `http_post` primitives, to public addresses or hosts listed in `user_url_allowed_hosts` (see [Blocked destinations](#blocked-destinations))
 - ✅ Only LiteLLM-provided primitives available
-- ⏱ Each run is bounded by the guardrail's `timeout` (see [Execution timeout](#execution-timeout))
+- Each run is bounded by the guardrail's `timeout` (see [Execution timeout](#execution-timeout))
 
 ## Per-Request Usage
 

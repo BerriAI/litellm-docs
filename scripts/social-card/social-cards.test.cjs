@@ -28,9 +28,9 @@ const content = (title = 'Routing') => ({
 });
 
 test('generates distinct page images, preserves overrides, and refreshes changed titles', async (t) => {
-  const generatedFilesDir = await fs.mkdtemp(path.join(os.tmpdir(), 'litellm-social-cards-'));
-  t.after(() => fs.rm(generatedFilesDir, {recursive: true, force: true}));
-  const plugin = socialCardsPlugin({siteDir, generatedFilesDir});
+  const cacheDir = await fs.mkdtemp(path.join(os.tmpdir(), 'litellm-social-cards-'));
+  t.after(() => fs.rm(cacheDir, {recursive: true, force: true}));
+  const plugin = socialCardsPlugin({siteDir}, {cacheDir});
   const run = async (allContent) => {
     let data;
     await plugin.allContentLoaded({allContent, actions: {setGlobalData: (value) => {data = value;}}});
@@ -43,14 +43,22 @@ test('generates distinct page images, preserves overrides, and refreshes changed
   assert.notEqual(images['/docs/routing'], images['/docs/other']);
   for (const route of ['/docs/routing', '/docs/category/gateway', '/zh-Hans/docs/1.0/routing', '/release_notes/v1', '/blog/release']) {
     assert.ok(images[route], route);
-    const metadata = await sharp(path.join(generatedFilesDir, 'social-cards', images[route])).metadata();
+    const metadata = await sharp(path.join(cacheDir, images[route])).metadata();
     assert.equal(metadata.width, 1200);
     assert.equal(metadata.height, 630);
   }
-  const routingFile = path.join(generatedFilesDir, 'social-cards', images['/docs/routing']);
+  const routingFile = path.join(cacheDir, images['/docs/routing']);
   assert.deepEqual(await fs.readFile(routingFile), await renderSocialCard({title: 'Routing', section: 'LLM Gateway'}));
   const before = await fs.stat(routingFile);
-  assert.deepEqual(await run(content()), images);
+  const logs = [];
+  const originalLog = console.log;
+  console.log = (...args) => logs.push(args.join(' '));
+  try {
+    assert.deepEqual(await run(content()), images);
+  } finally {
+    console.log = originalLog;
+  }
+  assert.ok(logs.some((line) => line.includes('[social-cards] Ready: 6 page previews (0 rendered, 6 from cache)')));
   assert.equal((await fs.stat(routingFile)).mtimeMs, before.mtimeMs);
   const updated = await run(content('Routing & fallbacks'));
   assert.notEqual(updated['/docs/routing'], images['/docs/routing']);

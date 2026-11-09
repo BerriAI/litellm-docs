@@ -1,3 +1,7 @@
+---
+sidebar_label: "Knowledge Bases"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';

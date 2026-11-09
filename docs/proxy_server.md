@@ -1,13 +1,13 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# [OLD PROXY 👉 [NEW proxy here](./simple_proxy)] Local LiteLLM Proxy Server
+# [OLD PROXY [NEW proxy here](./simple_proxy)] Local LiteLLM Proxy Server
 
 A fast, and lightweight OpenAI-compatible server to call 100+ LLM APIs. 
 
 :::info
 
-Docs outdated. New docs 👉 [here](./simple_proxy)
+Docs outdated. New docs [here](./simple_proxy)
 
 :::
 
@@ -736,6 +736,6 @@ Thread Stats   Avg      Stdev     Max   +/- Stdev
 
 ## Support/ talk with founders
 
-- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+- [Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Our emails ishaan@berri.ai / krrish@berri.ai

@@ -1,0 +1,300 @@
+{
+  "timestamp_utc": "2026-10-21T04:45:59.060461+00:00",
+  "head": "931b03c0bc12c8e82ce0e5dd27b510f2468c76ed",
+  "gateway": "https://gateway.litellm-sandbox.ai",
+  "requested_model": "typesafe/jev-latest",
+  "pricing_source": "gateway /model/info",
+  "input_cost_per_token": 4.2e-08,
+  "output_cost_per_token": 0,
+  "records": [
+    {
+      "case": "pointwise_sync",
+      "status": "passed",
+      "latency_seconds": 0.296,
+      "query": "What is LiteLLM used for?",
+      "documents": [
+        "LiteLLM is a gateway and SDK for calling many language models through a consistent API.",
+        "Bananas are yellow fruit commonly used in smoothies."
+      ],
+      "strategy": "pointwise",
+      "response": {
+        "id": null,
+        "results": [
+          {
+            "index": 0,
+            "relevance_score": 0.99,
+            "document": {
+              "text": "LiteLLM is a gateway and SDK for calling many language models through a consistent API."
+            }
+          },
+          {
+            "index": 1,
+            "relevance_score": 0.01,
+            "document": {
+              "text": "Bananas are yellow fruit commonly used in smoothies."
+            }
+          }
+        ],
+        "meta": {
+          "tokens": {
+            "input_tokens": 642,
+            "output_tokens": 44
+          },
+          "refused_document_indices": []
+        }
+      },
+      "sdk_completion_cost_usd": 2.6963999999999998e-05,
+      "cost_calculation": "litellm.completion_cost(response, custom_cost_per_token=explicit gateway rates)",
+      "tokens_times_configured_price_usd": 2.6963999999999998e-05,
+      "observed_gateway_response_cost_usd": 2.6963999999999998e-05,
+      "costs_match": true,
+      "observed_http_responses": [
+        {
+          "case": "pointwise_sync",
+          "status_code": 200,
+          "path": "/v1/decisions",
+          "x-litellm-response-cost": 1.3355999999999999e-05
+        },
+        {
+          "case": "pointwise_sync",
+          "status_code": 200,
+          "path": "/v1/decisions",
+          "x-litellm-response-cost": 1.3607999999999999e-05
+        }
+      ],
+      "provider_responses": [
+        {
+          "model": "jev-1.13.0",
+          "answers": [
+            {
+              "type": "predicate",
+              "name": "relevance",
+              "probability": 0.99
+            }
+          ],
+          "usage": {
+            "input_tokens": 324,
+            "input_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0
+            },
+            "output_tokens": 22,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 346
+          }
+        },
+        {
+          "model": "jev-1.13.0",
+          "answers": [
+            {
+              "type": "predicate",
+              "name": "relevance",
+              "probability": 0.01
+            }
+          ],
+          "usage": {
+            "input_tokens": 318,
+            "input_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0
+            },
+            "output_tokens": 22,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 340
+          }
+        }
+      ]
+    },
+    {
+      "case": "pointwise_async",
+      "status": "passed",
+      "latency_seconds": 0.188,
+      "query": "What is LiteLLM used for?",
+      "documents": [
+        "LiteLLM is a gateway and SDK for calling many language models through a consistent API.",
+        "Bananas are yellow fruit commonly used in smoothies."
+      ],
+      "strategy": "pointwise",
+      "response": {
+        "id": null,
+        "results": [
+          {
+            "index": 0,
+            "relevance_score": 0.99,
+            "document": {
+              "text": "LiteLLM is a gateway and SDK for calling many language models through a consistent API."
+            }
+          },
+          {
+            "index": 1,
+            "relevance_score": 0.01,
+            "document": {
+              "text": "Bananas are yellow fruit commonly used in smoothies."
+            }
+          }
+        ],
+        "meta": {
+          "tokens": {
+            "input_tokens": 642,
+            "output_tokens": 44
+          },
+          "refused_document_indices": []
+        }
+      },
+      "sdk_completion_cost_usd": 2.6963999999999998e-05,
+      "cost_calculation": "litellm.completion_cost(response, custom_cost_per_token=explicit gateway rates)",
+      "tokens_times_configured_price_usd": 2.6963999999999998e-05,
+      "observed_gateway_response_cost_usd": 2.6963999999999998e-05,
+      "costs_match": true,
+      "observed_http_responses": [
+        {
+          "case": "pointwise_async",
+          "status_code": 200,
+          "path": "/v1/decisions",
+          "x-litellm-response-cost": 1.3355999999999999e-05
+        },
+        {
+          "case": "pointwise_async",
+          "status_code": 200,
+          "path": "/v1/decisions",
+          "x-litellm-response-cost": 1.3607999999999999e-05
+        }
+      ],
+      "provider_responses": [
+        {
+          "model": "jev-1.13.0",
+          "answers": [
+            {
+              "type": "predicate",
+              "name": "relevance",
+              "probability": 0.99
+            }
+          ],
+          "usage": {
+            "input_tokens": 324,
+            "input_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0
+            },
+            "output_tokens": 22,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 346
+          }
+        },
+        {
+          "model": "jev-1.13.0",
+          "answers": [
+            {
+              "type": "predicate",
+              "name": "relevance",
+              "probability": 0.01
+            }
+          ],
+          "usage": {
+            "input_tokens": 318,
+            "input_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0
+            },
+            "output_tokens": 22,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 340
+          }
+        }
+      ]
+    },
+    {
+      "case": "multiple_choice",
+      "status": "passed",
+      "latency_seconds": 0.121,
+      "query": "What is LiteLLM used for?",
+      "documents": [
+        "LiteLLM is a gateway and SDK for calling many language models through a consistent API.",
+        "Bananas are yellow fruit commonly used in smoothies."
+      ],
+      "strategy": "multiple_choice",
+      "response": {
+        "id": null,
+        "results": [
+          {
+            "index": 0,
+            "relevance_score": 1.0,
+            "document": {
+              "text": "LiteLLM is a gateway and SDK for calling many language models through a consistent API."
+            }
+          },
+          {
+            "index": 1,
+            "relevance_score": 0.0,
+            "document": {
+              "text": "Bananas are yellow fruit commonly used in smoothies."
+            }
+          }
+        ],
+        "meta": {
+          "tokens": {
+            "input_tokens": 351,
+            "output_tokens": 36
+          },
+          "refused_document_indices": []
+        }
+      },
+      "sdk_completion_cost_usd": 1.4741999999999999e-05,
+      "cost_calculation": "litellm.completion_cost(response, custom_cost_per_token=explicit gateway rates)",
+      "tokens_times_configured_price_usd": 1.4741999999999999e-05,
+      "observed_gateway_response_cost_usd": 1.4741999999999999e-05,
+      "costs_match": true,
+      "observed_http_responses": [
+        {
+          "case": "multiple_choice",
+          "status_code": 200,
+          "path": "/v1/decisions",
+          "x-litellm-response-cost": 1.4741999999999999e-05
+        }
+      ],
+      "provider_responses": [
+        {
+          "model": "jev-1.13.0",
+          "answers": [
+            {
+              "type": "choice",
+              "name": "relevance",
+              "choice": "p0",
+              "probabilities": [
+                {
+                  "value": "p0",
+                  "probability": 1.0
+                },
+                {
+                  "value": "p1",
+                  "probability": 0.0
+                }
+              ],
+              "confidence": 1.0
+            }
+          ],
+          "usage": {
+            "input_tokens": 351,
+            "input_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0
+            },
+            "output_tokens": 36,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 387
+          }
+        }
+      ]
+    }
+  ]
+}

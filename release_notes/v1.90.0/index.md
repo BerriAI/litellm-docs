@@ -1,5 +1,6 @@
 ---
-title: "v1.90.0 - Six New Providers, OpenTelemetry v2 Parity & Streaming Reliability"
+title: "LiteLLM v1.90.0 - Six New Providers, OpenTelemetry v2 Parity & Streaming Reliability"
+description: "Adds six providers, 91 models and OpenTelemetry v2 metrics parity. Also changes /key/list to exact user_id and key_alias matching."
 slug: "v1-90-0"
 date: 2026-06-26T19:52:37
 authors:

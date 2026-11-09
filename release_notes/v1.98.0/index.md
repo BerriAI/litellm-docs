@@ -1,5 +1,6 @@
 ---
-title: "v1.98.0 - Provisioned Throughput Billing, Shadow Evals & Routing Groups"
+title: "LiteLLM v1.98.0 - Provisioned Throughput Billing, Shadow Evals & Routing Groups"
+description: "Adds provisioned throughput billing, shadow evals for the auto-router and routing groups as callable models. Langfuse metadata uses an allowlist."
 slug: "v1-98-0"
 date: 2026-08-22T00:00:00
 authors:

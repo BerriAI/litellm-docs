@@ -1,5 +1,6 @@
 ---
-title: v1.57.3 - New Base Docker Image
+title: "LiteLLM v1.57.3 - New Base Docker Image"
+description: "Changes the base Docker image to Chainguard Python to reach zero critical or high vulnerabilities. Custom Dockerfiles that use apt-get must switch to apk."
 slug: v1.57.3
 date: 2025-01-08T10:00:00
 authors:

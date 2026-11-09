@@ -9,7 +9,7 @@ import os
 from litellm import completion
 
 os.environ["LITELLM_PROXY_API_BASE"] = "http://0.0.0.0:4000"  # your proxy
-os.environ["LITELLM_PROXY_API_KEY"] = "sk-1234"  # a key issued by your proxy
+os.environ["LITELLM_PROXY_API_KEY"] = os.environ["LITELLM_API_KEY"]
 
 messages = [{"content": "Hello, how are you?", "role": "user"}]
 

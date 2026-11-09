@@ -1,5 +1,6 @@
 ---
-title: v1.68.0-stable
+title: "LiteLLM v1.68.0-stable"
+description: "Adds Bedrock Knowledge Base vector stores, accurate multi-instance rate limiting and the Meta Llama API and LlamaFile providers."
 slug: v1.68.0-stable
 date: 2025-05-03T10:00:00
 authors:
