@@ -672,6 +672,7 @@ function RequestMix({kinds, onKinds, model, info, slots}) {
           type="button"
           className={styles.mixBadge}
           onClick={() => setOpenKey(kind.key)}
+          title={kind.description || undefined}
           aria-label={`${kind.label || 'request'}, ${percent(kind)}% of requests: open its settings`}>
           <KindSwatch slot={slots.get(kind.label || 'request')} />
           {kind.label || 'request'}
@@ -724,6 +725,15 @@ function KindSettings({kind, percent, canRemove, model, info, onChange, onRemove
             </button>
           </>
         }>
+        <KindField label="description" hint="what this request is, in plain language">
+          <textarea
+            className={`${ce.input} ${styles.kindDescription}`}
+            rows={2}
+            placeholder="For example: a support chat from the mobile app, short prompt"
+            value={kind.description ?? ''}
+            onChange={event => onChange({description: event.target.value})}
+          />
+        </KindField>
         <div className={ce.fields2}>
           <KindField label="name">
             <input
@@ -1302,7 +1312,7 @@ function SimPicked({picked, slots, model, info, onClose}) {
 
 // The docs case bar: the linked case's title and text, with no way to browse to the others. A case opens in the live run with its config, traffic and incidents;
 // Before and After swap in the config the docs section changes, and the run starts over.
-function CaseBar({docsCase, side, onSide}) {
+function CaseBar({docsCase, side, onSide, kinds, slots}) {
   // Only a case link shows the bar; the playground opened directly has none.
   if (!docsCase) return null;
   return (
@@ -1333,6 +1343,18 @@ function CaseBar({docsCase, side, onSide}) {
           {side === 'after' ? docsCase.after : docsCase.before} Watch {docsCase.watch}.
         </span>
       </div>
+      <div className={styles.caseKinds}>
+        <span className={styles.cap}>{kinds.length === 1 ? 'The requests' : 'The requests, by kind'}</span>
+        {kinds.map(kind => (
+          <div key={kind.key} className={styles.caseKind}>
+            <span className={styles.caseKindName}>
+              <KindSwatch slot={slots.get(kind.label || 'request')} />
+              {kind.label || 'request'}
+            </span>
+            <span>{kind.description || 'No description.'}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1361,6 +1383,7 @@ export default function Simulator({
   const config = useMemo(() => (configJson ? JSON.parse(configJson) : null), [configJson]);
   const timeouts = useMemo(() => timeoutsOf(config, info?.deployments), [config, info]);
   const affinity = useMemo(() => !SESSIONS_READY && affinityConfigured(config), [config]);
+  const caseSlots = useKindSlots(kinds);
 
   if (!info) return null;
 
@@ -1391,7 +1414,7 @@ export default function Simulator({
             </span>
           </div>
         )}
-        <CaseBar docsCase={docsCase} side={caseSide} onSide={onCaseSide} />
+        <CaseBar docsCase={docsCase} side={caseSide} onSide={onCaseSide} kinds={kinds} slots={caseSlots} />
         {tab === 'live' ? (
           <LiveRun
             scheduled={docsCase ? initialScenario?.incidents : undefined}

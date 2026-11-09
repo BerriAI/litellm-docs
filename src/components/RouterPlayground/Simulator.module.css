@@ -1713,3 +1713,44 @@
   align-items: center;
   gap: 0.4rem;
 }
+
+/* The docs case's kinds of request, each in plain language. */
+.caseKinds {
+  display: flex;
+  flex-basis: 100%;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--sim-soft);
+  font-size: 0.8rem;
+}
+
+.caseKind {
+  display: grid;
+  grid-template-columns: minmax(6rem, auto) 1fr;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.caseKindName {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.76rem;
+}
+
+.kindDescription {
+  height: auto !important;
+  padding: 0.4rem 0.5rem !important;
+  font-family: inherit !important;
+  line-height: 1.4;
+  resize: vertical;
+}
+
+@media (max-width: 600px) {
+  .caseKind {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+}

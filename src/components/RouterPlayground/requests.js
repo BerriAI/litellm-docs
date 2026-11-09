@@ -16,6 +16,7 @@ export function newKind(fields = {}) {
   return {
     key: `kind-${Date.now().toString(36)}-${counter}`,
     label: 'chat',
+    description: '',
     share: 1,
     model: '',
     sessions: 0,
