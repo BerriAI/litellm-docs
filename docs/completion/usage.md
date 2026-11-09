@@ -102,7 +102,9 @@ Will automatically receive usage information in the response, without needing to
 
 ### Proxy: Include Cost in Streaming Usage
 
-Streams on `/v1/chat/completions` and `/v1/responses` carry `cost` inside the final `usage` object. Streams on `/v1/messages` and the Anthropic and OpenAI pass-through routes do not, unless one of the two switches below is on. Both add `cost` to the usage-carrying stream event (`message_delta` on `/v1/messages`), and the number is the same spend LiteLLM writes to `LiteLLM_SpendLogs`.
+Chat completions and Responses API streams carry computed `usage.cost` by default, as do Anthropic Messages streams in their final `message_delta` usage. No switch is needed for these SDK or proxy responses. See [response cost](./token_usage.md#response-cost) for the event locations and examples.
+
+The switches below remain available for extra proxy-side cost injection, including supported Anthropic and OpenAI pass-through streaming routes. The injected value is the same bill LiteLLM writes to `LiteLLM_SpendLogs`.
 
 #### Configuration
 
@@ -113,7 +115,7 @@ litellm_settings:
   include_cost_in_streaming_usage: true
 ```
 
-The per-request switch is the `x-litellm-include-cost-in-streaming-usage: true` header. It opts in only the request that carries it, so the rest of your traffic keeps the lighter streaming path the proxy uses when nothing inspects each chunk. Only the value `true` counts. <SinceVersion v="1.110.0" />
+The per-request switch is the `x-litellm-include-cost-in-streaming-usage: true` header. It enables extra proxy-side injection only for the request that carries it. It is not required to receive the default `usage.cost` described above. Only the value `true` counts. <SinceVersion v="1.110.0" />
 
 #### Example
 
@@ -130,4 +132,4 @@ event: message_delta
 data: {"type": "message_delta", "delta": {"stop_reason": "max_tokens", ...}, "usage": {"input_tokens": 8, "output_tokens": 16, "cost": 8.8e-05}}
 ```
 
-Any key that can call the proxy can send the header, and there is no key or team setting that refuses it. Leave the global switch off when only some requests should pay the per-chunk cost.
+Any key that can call the proxy can send the header, and there is no key or team setting that refuses it. Leave the global switch off when only some requests need extra proxy-side injection.
