@@ -15,8 +15,10 @@ export default function ConfigModal({cap, title, sub, label, onClose, foot, chil
   useEffect(() => {
     const before = document.activeElement;
     box.current?.focus();
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    // Lock the page on <html>: the docs give html overflow-x: clip, so hiding overflow on <body>
+    // makes body the scroller and the page behind jumps to the top.
+    const overflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
     const onKey = event => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -38,7 +40,7 @@ export default function ConfigModal({cap, title, sub, label, onClose, foot, chil
     document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = overflow;
+      document.documentElement.style.overflow = overflow;
       if (before && document.contains(before)) before.focus?.();
     };
   }, []);

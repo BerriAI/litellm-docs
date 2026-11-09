@@ -54,8 +54,10 @@ export default function CaseModal({id, onClose}) {
   useEffect(() => {
     const before = document.activeElement;
     box.current?.focus();
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    // Lock the page on <html>: the docs give html overflow-x: clip, so hiding overflow on <body>
+    // makes body the scroller and the page behind jumps to the top.
+    const overflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
     const onKey = event => {
       if (event.key !== 'Escape') return;
       // A dialog opened inside the modal, such as a request kind's settings, closes first.
@@ -66,7 +68,7 @@ export default function CaseModal({id, onClose}) {
     document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = overflow;
+      document.documentElement.style.overflow = overflow;
       if (before && document.contains(before)) before.focus?.();
     };
   }, []);
