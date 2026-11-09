@@ -1863,6 +1863,7 @@ const providersSidebar = {
     "providers/cognition",
     "providers/cohere",
     "providers/compactifai",
+    "providers/condense",
     "providers/coralbricks",
     "providers/crusoe",
     "providers/dashscope",
