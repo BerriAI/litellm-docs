@@ -9,9 +9,9 @@ This integration currently supports `mode: pre_call` only: it inspects the outbo
 
 ## Quick Start
 
-### 1. Get your Reco tenant ID and endpoint
+### 1. Get your Reco registration token and endpoint
 
-In the Reco console, find your tenant ID and the receiving endpoint for your silo and region. The endpoint follows the pattern `https://edge{N}.[{env}.]{region}.reco.ai`, for example `https://edge01.us.reco.ai`.
+In the Reco console, generate a registration token for the LiteLLM integration and copy the endpoint URL shown next to it. The token identifies your tenant and integration instance, so it replaces the tenant ID that earlier versions of this guardrail required. The endpoint URL already ends in `/beta/litellm_basic_guardrail_api`, and LiteLLM uses it as is.
 
 ### 2. Add Reco to your LiteLLM config.yaml
 
@@ -28,17 +28,20 @@ guardrails:
       guardrail: reco
       mode: pre_call
       optional_params:
-        reco_tenant_id: os.environ/RECO_TENANT_ID
-        api_base: https://edge01.us.reco.ai
+        api_key: os.environ/RECO_API_KEY
+        api_base: os.environ/RECO_API_BASE
 ```
 
-`reco_tenant_id` must be a valid UUID; it is sent as the `X-Reco-Tenant-Id` header on every request to Reco. By default the guardrail fails closed: if Reco errors or is unreachable, the request is blocked. To let traffic through uninspected instead, set `fail_on_error: false` under `optional_params`.
+The token is sent as the `x-api-key` header on every request to Reco. By default the guardrail fails closed: if Reco errors or is unreachable, the request is blocked. To let traffic through uninspected when Reco errors, set `fail_on_error: false` under `optional_params`.
+
+Configs that set `reco_tenant_id` instead of `api_key` keep working, but the tenant ID is a legacy option. Reco is turning off tenant-ID-only access, so switch to a registration token.
 
 ### 3. Start LiteLLM Proxy
 
 ```shell
 export OPENAI_API_KEY=sk-...
-export RECO_TENANT_ID=...
+export RECO_API_KEY=...
+export RECO_API_BASE=...
 litellm --config config.yaml
 ```
 
@@ -96,8 +99,9 @@ The request reaches the model and the response is returned unchanged.
 
 | Parameter | Required | Description |
 |---|---|---|
-| `reco_tenant_id` | Yes | Your Reco tenant ID, as a UUID. Sent as the `X-Reco-Tenant-Id` header on every request to Reco. |
-| `api_base` | Yes | Your Reco receiving endpoint. Reco's endpoint is per-silo and per-region, so there is no default; every customer sets their own. |
+| `api_key` | Yes, unless `reco_tenant_id` is set | The registration token generated in the Reco console. Sent as the `x-api-key` header; Reco derives your tenant from it. |
+| `api_base` | Yes | The endpoint URL copied from the Reco console. Reco's endpoint is per-silo and per-region, so there is no default. |
+| `reco_tenant_id` | No (legacy) | Your Reco tenant ID, as a UUID. Sent as the `X-Reco-Tenant-Id` header when set. Use `api_key` instead; Reco is turning off tenant-ID-only access. |
 | `fail_on_error` | No | Behavior on any Reco error, including an unreachable endpoint. `true` (default) blocks the request; `false` lets it through uninspected. |
 | `unreachable_fallback` | No | Behavior when Reco is unreachable (timeouts, connection errors, and HTTP 502/503/504). `"fail_closed"` (default) blocks the request; `"fail_open"` lets it through uninspected while other errors still block. Only applies while `fail_on_error` is `true`. |
 
