@@ -2,7 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {parseConfig} from './core';
 import {coreRequests} from './requests';
 import {runScenario} from './scenarioRun';
-import {CASES, caseById, caseScenario} from './cases';
+import {caseScenario} from './cases';
 import {INCIDENT_KINDS, incidentLabel, strengthLabel} from './simSession';
 import styles from './Simulator.module.css';
 
@@ -333,38 +333,9 @@ export default function Scenario({
     ['served by', r => shares(r.servedBy)],
   ];
   if (kinds.length > 1) rowsData.push(['success by kind', r => kindSuccess(r.byKind, kinds)]);
-  const docsCase = caseById(initialScenario?.case);
 
   return (
     <div className={styles.scenario}>
-      <div className={styles.caseBar}>
-        <label className={styles.slider}>
-          <span className={styles.cap}>DOCS CASE</span>
-          <select
-            value={docsCase?.id ?? ''}
-            onChange={event => {
-              window.location.hash = event.target.value ? `case=${event.target.value}` : '';
-            }}
-            aria-label="Docs case">
-            <option value="">none, use the config above</option>
-            {CASES.map(item => (
-              <option key={item.id} value={item.id}>
-                {item.title}
-              </option>
-            ))}
-          </select>
-        </label>
-        {docsCase && (
-          <div className={styles.caseText}>
-            <span>
-              {docsCase.claim} <a href={docsCase.page}>Read it in the docs</a>
-            </span>
-            <span className={styles.muted}>
-              Watch {docsCase.watch}. Link: <code>#case={docsCase.id}</code>
-            </span>
-          </div>
-        )}
-      </div>
       <div className={styles.scenarioBar}>
         <span className={styles.cap}>SCENARIO</span>
         {Object.keys(choices).map(name => (

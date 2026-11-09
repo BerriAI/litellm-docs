@@ -14,6 +14,7 @@ import {
   newKind,
 } from './requests';
 import Scenario from './Scenario';
+import {CASES} from './cases';
 import {KindLegend, KindSwatch, kindActive, kindColour, useKindSlots} from './SimKinds';
 import {INCIDENT_KINDS, coreIncident, coreProfiles, incidentLabel, openSession} from './simSession';
 import {RunCard} from './Trace';
@@ -882,6 +883,8 @@ function LiveRun({
   timeouts,
   onSelect,
   handle,
+  scheduled,
+  autoplay,
 }) {
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(10);
@@ -906,13 +909,18 @@ function LiveRun({
     });
   const session = useRef(null);
   const store = useRef(emptyStore());
-  const latest = useRef({profiles, rate, speed, info, kinds});
-  latest.current = {profiles, rate, speed, info, kinds};
+  const latest = useRef({profiles, rate, speed, info, kinds, scheduled, autoplay});
+  latest.current = {profiles, rate, speed, info, kinds, scheduled, autoplay};
 
   useEffect(() => {
     if (!core || !configJson || !info) return undefined;
     store.current = emptyStore();
     setPicked(null);
+    // A docs case brings incidents on a schedule; each gets its mark when the run reaches it.
+    const planned = (latest.current.scheduled ?? [])
+      .filter(item => info.deployments.some(deployment => deployment.id === item.row))
+      .map(item => ({...item, id: item.row}));
+    store.current.scheduled = planned;
     try {
       const next = openSession(core, configJson, seed);
       next.start({
@@ -920,11 +928,27 @@ function LiveRun({
         rate: latest.current.rate,
         requests: coreRequests(latest.current.kinds, model),
         profiles: coreProfiles(latest.current.profiles),
-        incidents: [],
+        incidents: planned.map(item =>
+          coreIncident(
+            item,
+            latest.current.profiles[item.id],
+            expectedRpm(
+              info,
+              item.id,
+              groupRate(
+                latest.current.kinds,
+                model,
+                info.deployments.find(deployment => deployment.id === item.id)?.model_name,
+                latest.current.rate,
+              ),
+            ),
+          ),
+        ),
         trace_last: 2000,
       });
       session.current = next;
       setError(null);
+      if (latest.current.autoplay) setPlaying(true);
     } catch (problem) {
       session.current = null;
       setError(String(problem.message ?? problem));
@@ -966,6 +990,12 @@ function LiveRun({
         }
         absorb(data, current.advance(chunk), chunk);
         left -= chunk;
+        while (data.scheduled?.length && data.scheduled[0].from <= data.now) {
+          const incident = data.scheduled.shift();
+          data.incidents.push(incident);
+          data.numbered += 1;
+          data.marks.push({n: data.numbered, t: incident.from, kind: 'incident', lane: incident.id, incident});
+        }
         if (data.surge && data.now >= data.surge.until - 1e-9) {
           data.surge = null;
           current.set({rate: latest.current.rate});
@@ -1282,6 +1312,57 @@ function RouterSees() {
   );
 }
 
+// The docs case picker. A case opens in the live run with its config, traffic and incidents;
+// Before and After swap in the config the docs section changes, and the run starts over.
+function CaseBar({docsCase, side, onSide}) {
+  return (
+    <div className={styles.caseBar}>
+      <label className={styles.slider}>
+        <span className={styles.cap}>DOCS CASE</span>
+        <select
+          value={docsCase?.id ?? ''}
+          onChange={event => {
+            window.location.hash = event.target.value ? `case=${event.target.value}` : '';
+          }}
+          aria-label="Docs case">
+          <option value="">none</option>
+          {CASES.map(item => (
+            <option key={item.id} value={item.id}>
+              {item.title}
+            </option>
+          ))}
+        </select>
+      </label>
+      {docsCase && (
+        <>
+          <div className={styles.segmented} role="group" aria-label="Before or after">
+            {[
+              ['before', 'Before'],
+              ['after', 'After'],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={side === value}
+                onClick={() => onSide(value)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className={styles.caseText}>
+            <span>
+              {docsCase.claim} <a href={docsCase.page}>Read it in the docs</a>
+            </span>
+            <span className={styles.muted}>
+              {side === 'after' ? docsCase.after : docsCase.before} Watch {docsCase.watch}.
+            </span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function Simulator({
   core,
   configJson,
@@ -1297,8 +1378,11 @@ export default function Simulator({
   onEditDeployment,
   defaultIncidents,
   initialScenario,
+  docsCase,
+  caseSide,
+  onCaseSide,
 }) {
-  const [tab, setTab] = useState(initialScenario ? 'scenario' : 'live');
+  const [tab, setTab] = useState(initialScenario && !docsCase ? 'scenario' : 'live');
   const liveIncident = useRef(null);
   const config = useMemo(() => (configJson ? JSON.parse(configJson) : null), [configJson]);
   const timeouts = useMemo(() => timeoutsOf(config, info?.deployments), [config, info]);
@@ -1333,8 +1417,11 @@ export default function Simulator({
             </span>
           </div>
         )}
+        <CaseBar docsCase={docsCase} side={caseSide} onSide={onCaseSide} />
         {tab === 'live' ? (
           <LiveRun
+            scheduled={docsCase ? initialScenario?.incidents : undefined}
+            autoplay={Boolean(docsCase)}
             handle={liveIncident}
             core={core}
             configJson={configJson}

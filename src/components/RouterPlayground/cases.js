@@ -1,9 +1,10 @@
 import yaml from 'js-yaml';
 import {newKind} from './requests';
 
-// Docs cases: one claim from a routing docs page, shown as a scenario. Config A is the page's starting
-// point and config B makes the one change the page is about; both run on the same traffic, incidents
-// and seed. A case opens from a short link, #case=<id>, so a docs page can point at it.
+// Docs cases: one claim from a routing docs page. Config A (Before) is the page's starting point and
+// config B (After) makes the one change the page is about. A case opens from a short link,
+// #case=<id>, in the live run with its traffic and incidents scheduled; the Scenario tab compares
+// the two on the same seed.
 
 // Two plain deployments of one model, the starting point of most cases.
 const pair = (a, b) => `model_list:
@@ -40,7 +41,9 @@ export const CASES = [
     title: 'Weights split traffic',
     page: '/docs/routing#weighted-deployments',
     claim: 'A deployment with weight 3 gets three times the traffic of one with weight 1.',
-    watch: 'served by: about 50/50 in A, about 75/25 in B',
+    before: 'Before: two deployments with no weights.',
+    after: 'After: weight 3 on azure and weight 1 on openai.',
+    watch: 'the bars in each lane: about even before, about 3 to 1 after',
     configA: `# Two deployments, no weights: simple-shuffle splits evenly.\n${pair('azure', 'openai')}`,
     configB: `# weight: 3 and weight: 1, so azure gets about 3 in 4 requests.
 model_list:
@@ -64,7 +67,9 @@ model_list:
     title: 'rpm limits steer traffic',
     page: '/docs/routing#load-balancing',
     claim: 'Without weights, simple-shuffle splits by each deployment’s rpm.',
-    watch: 'served by: about 50/50 in A, about 10/90 in B',
+    before: 'Before: two deployments with no limits.',
+    after: 'After: rpm 60 on small and rpm 600 on big, no weights.',
+    watch: 'the bars: about even before; after, big serves about 9 in 10 and small\u2019s rpm bar stays near its limit',
     configA: `# No limits: an even split.\n${pair('small', 'big')}`,
     configB: `# rpm 60 and rpm 600 and no weights, so the split follows rpm.
 model_list:
@@ -88,7 +93,9 @@ model_list:
     title: 'order beats weight',
     page: '/docs/proxy/load_balancing#deployment-ordering-priority',
     claim: 'Deployments with order: 1 get every request while healthy; order: 2 only takes over when they fail.',
-    watch: 'served by: about 50/50 in A; in B backup serves only during the outage',
+    before: 'Before: primary and backup share traffic.',
+    after: 'After: primary has order 1 and backup order 2.',
+    watch: 'backup\u2019s lane: busy all along before; after, it serves only while primary is down from 0:40 to 1:10',
     configA: `# No order: both deployments share traffic all the time.\n${pair('primary', 'backup')}\nrouter_settings:\n  num_retries: 2\n`,
     configB: `# order: 1 serves everything; order: 2 is the backup.
 model_list:
@@ -115,7 +122,9 @@ router_settings:
     title: 'Fail over inside the group',
     page: '/docs/routing#weighted-failover',
     claim: 'With enable_weighted_failover, a failed call is re-picked on a peer in the same group before any other fallback.',
-    watch: 'success: A loses the calls that hit east until it cools down, B moves them to west',
+    before: 'Before: east and west, no retries.',
+    after: 'After: enable_weighted_failover is on.',
+    watch: 'success from 0:30, when east goes down: before, calls that land on east fail until it cools down; after, they move to west and none fail',
     configA: `# Two regions of one model, no retries.\n${pair('east', 'west')}\nrouter_settings:\n  num_retries: 0\n`,
     patchB: {router_settings: {enable_weighted_failover: true}},
     incidents: [whole('east', 'outage', 30, 90)],
@@ -125,7 +134,9 @@ router_settings:
     title: 'Retries absorb flaky errors',
     page: '/docs/routing#retries',
     claim: 'num_retries retries a failed call on another deployment, so a flaky one stops hurting clients.',
-    watch: 'success: about 85% in A, about 99% in B; attempts per request go up',
+    before: 'Before: num_retries 0.',
+    after: 'After: num_retries 2.',
+    watch: 'success: about 85% before, about 100% after, with more attempts per request under More details',
     configA: `# No retries: every failure reaches the client.\n${pair('flaky', 'steady')}\nrouter_settings:\n  num_retries: 0\n`,
     patchB: {router_settings: {num_retries: 2}},
     incidents: [whole('flaky', 'flaky', 0, 120, 0.3)],
@@ -135,7 +146,9 @@ router_settings:
     title: 'Retries per error type',
     page: '/docs/routing#advanced-custom-retries-cooldowns-based-on-error-type',
     claim: 'retry_policy sets retries per error class, for example retrying only rate limits.',
-    watch: 'success: A loses the 429s, B retries them onto the other deployment',
+    before: 'Before: no retries, and limited stays in rotation.',
+    after: 'After: retry_policy retries rate limits twice.',
+    watch: 'success while limited hits its rate limit from 0:30 to 1:30: it dips before and holds after',
     configA: `# No retries. allowed_fails: 1000 keeps limited in rotation, so its 429s keep coming.\n${pair('limited', 'steady')}\nrouter_settings:\n  num_retries: 0\n  allowed_fails: 1000\n`,
     patchB: {router_settings: {retry_policy: {RateLimitErrorRetries: 2}}},
     incidents: [whole('limited', 'capacity', 30, 90, 0.2)],
@@ -145,7 +158,9 @@ router_settings:
     title: 'Cooldown takes a broken deployment out',
     page: '/docs/routing#cooldowns',
     claim: 'After allowed_fails failures in a minute, a deployment cools down and gets no traffic for cooldown_time.',
-    watch: 'attempts per request and p95 drop in B: requests stop trying the dead deployment first',
+    before: 'Before: allowed_fails 1000, so broken never cools down.',
+    after: 'After: allowed_fails 3 and cooldown_time 30.',
+    watch: 'broken\u2019s lane from 0:30: before, red failures keep coming and attempts per request rise; after, a cooldown mark and its lane goes quiet',
     configA: `# allowed_fails: 1000, so the broken deployment never cools down.\n${pair('broken', 'steady')}\nrouter_settings:\n  num_retries: 2\n  allowed_fails: 1000\n`,
     patchB: {router_settings: {allowed_fails: 3, cooldown_time: 30}},
     incidents: [whole('broken', 'outage', 30, 90)],
@@ -155,7 +170,9 @@ router_settings:
     title: 'How long a cooldown lasts',
     page: '/docs/routing#cooldowns',
     claim: 'cooldown_time sets how long a cooled deployment sits out before the router tries it again.',
-    watch: 'served by: B keeps traffic off flapping for longer; A goes back to it after 5 s',
+    before: 'Before: cooldown_time 5.',
+    after: 'After: cooldown_time 60.',
+    watch: 'flapping\u2019s lane after its outage ends at 0:45: before, traffic returns within seconds; after, it stays off until the cooldown ends',
     configA: `# A 5 s cooldown: the router tries flapping again quickly.\n${pair('flapping', 'steady')}\nrouter_settings:\n  num_retries: 2\n  allowed_fails: 3\n  cooldown_time: 5\n`,
     patchB: {router_settings: {cooldown_time: 60}},
     incidents: [whole('flapping', 'outage', 30, 45)],
@@ -165,7 +182,9 @@ router_settings:
     title: 'Turning cooldowns off',
     page: '/docs/routing#cooldowns',
     claim: 'disable_cooldowns keeps every deployment in rotation, even one that is down.',
-    watch: 'attempts per request and p95 rise in B: every pick of the dead deployment costs a retry',
+    before: 'Before: default cooldowns.',
+    after: 'After: disable_cooldowns is on.',
+    watch: 'broken\u2019s lane from 0:30: before, it cools down and goes quiet; after, it keeps taking picks and every one costs a retry',
     configA: `# Default cooldowns.\n${pair('broken', 'steady')}\nrouter_settings:\n  num_retries: 2\n`,
     patchB: {router_settings: {disable_cooldowns: true}},
     incidents: [whole('broken', 'outage', 30, 90)],
@@ -175,7 +194,9 @@ router_settings:
     title: 'Cooldown thresholds per error type',
     page: '/docs/proxy/health_check_routing#allowed_fails_policy-fields',
     claim: 'allowed_fails_policy sets how many failures of each error class a deployment takes before it cools down.',
-    watch: 'attempts per request: A cools limited down after three 429s, B keeps it in rotation and retries more',
+    before: 'Before: three failures of any kind cool a deployment down.',
+    after: 'After: rate limits get 1000 allowed fails.',
+    watch: 'limited\u2019s lane from 0:30: before, its 429s cool it down; after, it stays in rotation and requests retry more',
     configA: `# Three failures of any kind in a minute cool a deployment down.\n${pair('limited', 'steady')}\nrouter_settings:\n  num_retries: 2\n  allowed_fails: 3\n  cooldown_time: 30\n`,
     patchB: {router_settings: {allowed_fails_policy: {RateLimitErrorAllowedFails: 1000}}},
     incidents: [whole('limited', 'capacity', 30, 90, 0.5)],
@@ -185,7 +206,9 @@ router_settings:
     title: 'Fallbacks save a dead model group',
     page: '/docs/proxy/reliability#quick-start',
     claim: 'When every deployment of a group fails, fallbacks send the request to the next group.',
-    watch: 'success: A fails during the outage, B stays near 100% through claude',
+    before: 'Before: gpt-4o has no fallback.',
+    after: 'After: gpt-4o falls back to claude.',
+    watch: 'success while openai is down from 0:30 to 1:30: it falls to 0% before; after, anthropic\u2019s lane picks the traffic up',
     configA: `# gpt-4o has no fallback.\n${GPT_AND_CLAUDE}`,
     patchB: {router_settings: {fallbacks: [{'gpt-4o': ['claude']}]}},
     incidents: [whole('openai', 'outage', 30, 90)],
@@ -195,7 +218,9 @@ router_settings:
     title: 'A catch-all fallback',
     page: '/docs/proxy/reliability#default-fallbacks',
     claim: 'default_fallbacks applies to every model group that has no fallback of its own.',
-    watch: 'success: A fails during the outage, B stays near 100% through claude',
+    before: 'Before: no fallbacks at all.',
+    after: 'After: default_fallbacks is [claude].',
+    watch: 'success while openai is down from 0:30 to 1:30: it falls to 0% before; after, anthropic\u2019s lane picks the traffic up',
     configA: `# gpt-4o has no fallback.\n${GPT_AND_CLAUDE}`,
     patchB: {router_settings: {default_fallbacks: ['claude']}},
     incidents: [whole('openai', 'outage', 30, 90)],
@@ -205,7 +230,9 @@ router_settings:
     title: 'Timeouts, retries and fallbacks together',
     page: '/docs/proxy/reliability#fallbacks--retries--timeouts--cooldowns',
     claim: 'A timeout turns a slow call into a failure, so retries and fallbacks can take over.',
-    watch: 'p95: A waits on the slow calls, B stops at the timeout and falls back to claude',
+    before: 'Before: one retry, no timeout, no fallback.',
+    after: 'After: timeout 3 and a fallback to claude.',
+    watch: 'p95 under More details while openai is 20 times slower from 0:30: it climbs past 20 s before and stays under 10 s after',
     configA: `# One retry, no timeout, no fallback.\n${GPT_AND_CLAUDE}\nrouter_settings:\n  num_retries: 1\n`,
     patchB: {router_settings: {timeout: 3, fallbacks: [{'gpt-4o': ['claude']}]}},
     incidents: [whole('openai', 'latency', 30, 90, 20)],
@@ -215,7 +242,9 @@ router_settings:
     title: 'A timeout for one slow deployment',
     page: '/docs/proxy/timeout#custom-timeouts--stream-timeouts-per-model',
     claim: 'A timeout in one deployment’s litellm_params cuts its slow calls short and retries elsewhere.',
-    watch: 'p95: A waits on slow, B gives up on it at 3 s and retries on steady',
+    before: 'Before: no timeout.',
+    after: 'After: slow has its own timeout of 3 s.',
+    watch: 'p95 under More details while slow is 20 times slower from 0:30: it climbs before and stays low after, as calls move to steady',
     configA: `# No timeout: slow calls run to the end.\n${pair('slow', 'steady')}\nrouter_settings:\n  num_retries: 2\n`,
     configB: `# timeout: 3 on slow only.
 model_list:
@@ -241,7 +270,9 @@ router_settings:
     title: 'Long prompts move to a bigger model',
     page: '/docs/proxy/reliability#context-window-exceeded-fallback',
     claim: 'context_window_fallbacks sends a request that is too long for one model to a model with a bigger window.',
-    watch: 'success by kind: long fails in A and succeeds in B; chat is the same in both',
+    before: 'Before: no context window fallback.',
+    after: 'After: gpt-4o falls back to gpt-4.1 on context window errors.',
+    watch: 'the long kind: every long request fails before; after, gpt-4.1\u2019s lane serves them and chat is unchanged',
     configA: `# No context window fallback.
 model_list:
   - model_name: gpt-4o
@@ -267,7 +298,9 @@ model_list:
     title: 'Blocked prompts move to another provider',
     page: '/docs/proxy/reliability#content-policy-violation-fallback',
     claim: 'content_policy_fallbacks sends a request one provider refuses to another provider.',
-    watch: 'success by kind: flagged fails in A and succeeds in B; chat is the same in both',
+    before: 'Before: no content policy fallback.',
+    after: 'After: gpt-4o falls back to claude on content policy errors.',
+    watch: 'the flagged kind: every flagged request fails before; after, anthropic\u2019s lane serves them and chat is unchanged',
     configA: `# No content policy fallback.\n${GPT_AND_CLAUDE}`,
     patchB: {router_settings: {content_policy_fallbacks: [{'gpt-4o': ['claude']}]}},
     kinds: [
@@ -281,7 +314,9 @@ model_list:
     title: 'Fallbacks per request',
     page: '/docs/proxy/client_side_fallbacks',
     claim: 'A request can bring its own fallbacks, or turn the router’s off with disable_fallbacks.',
-    watch: 'success by kind: client survives in both; plain survives only in B; opt-out fails in both',
+    before: 'Before: the router has no fallbacks; the client kind sends its own.',
+    after: 'After: the router falls back to claude too.',
+    watch: 'while openai is down from 0:30: before, only client requests survive; after, plain survives too, and opt-out fails in both',
     configA: `# The router has no fallbacks; the client kind sends fallbacks: [claude].\n${GPT_AND_CLAUDE}`,
     patchB: {router_settings: {fallbacks: [{'gpt-4o': ['claude']}]}},
     kinds: [
@@ -296,7 +331,9 @@ model_list:
     title: 'Capping a fallback chain',
     page: '/docs/routing#router-general-settings',
     claim: 'max_fallbacks caps how many fallback groups one request may try.',
-    watch: 'success: A reaches c, B stops after one hop to b',
+    before: 'Before: a falls back to b, and b to c.',
+    after: 'After: max_fallbacks 1.',
+    watch: 'while a and b are down from 0:30: before, c\u2019s lane picks up the traffic; after, requests stop at b and fail',
     configA: `# a falls back to b, and b falls back to c.
 model_list:
   - model_name: a
@@ -329,7 +366,9 @@ router_settings:
     title: 'Moving an alias moves the traffic',
     page: '/docs/proxy/load_balancing#router-settings-on-config---routing_strategy-model_group_alias',
     claim: 'model_group_alias maps a public name onto a model group, so clients keep their name when the target changes.',
-    watch: 'served by: smart goes to openai in A and to anthropic in B, with no client change',
+    before: 'Before: the alias smart points at gpt-4o.',
+    after: 'After: smart points at claude.',
+    watch: 'the lanes: openai serves everything before, anthropic after, and the clients still ask for smart',
     configA: `# Clients ask for "smart".\n${GPT_AND_CLAUDE}\nrouter_settings:\n  model_group_alias:\n    smart: gpt-4o\n`,
     patchB: {router_settings: {model_group_alias: {smart: 'claude'}}},
     model: 'smart',
@@ -340,7 +379,9 @@ router_settings:
     title: 'A team gets its own deployment',
     page: '/docs/proxy/load_balancing#team-scoped-models-and-legacy-model_aliases',
     claim: 'A deployment with model_info.team_id serves that team under the public name, and nobody else.',
-    watch: 'served by: in B every acme request goes to acme-azure and the rest stay on shared',
+    before: 'Before: everyone shares one deployment.',
+    after: 'After: team acme has its own deployment under the same name.',
+    watch: 'the lanes: shared serves both kinds before; after, acme\u2019s requests move to acme-azure',
     configA: `# Everyone shares one deployment. teams: stands in for the proxy's team records.
 model_list:
   - model_name: gpt-4o

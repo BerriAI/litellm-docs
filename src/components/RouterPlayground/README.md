@@ -31,7 +31,7 @@ incidents per deployment, KPIs, one lane per deployment drawn from 2 second bins
 incidents, cooldowns and the first fallback, and a click on a bar or tick opens that request through
 `simTrace` in the state diagram. `Scenario.js` lays incidents out on a timeline, runs config A and an
 edited copy B on the same scenario and seed, compares them, and carries the scenario in the URL hash.
-`scenarioRun.js` runs one config through a scenario outside React, so a case can be checked in Node too. `cases.js` holds the docs cases: one claim from a routing docs page each, as config A, config B (often A plus one `router_settings` change), a request mix and incidents. `#case=<id>` opens one, and the Scenario tab's Docs case picker switches between them. `Simulator.module.css` styles all of them. Elsewhere,
+`scenarioRun.js` runs one config through a scenario outside React, so a case can be checked in Node too. `cases.js` holds the docs cases: one claim from a routing docs page each, as config A, config B (often A plus one `router_settings` change), a request mix and incidents. `#case=<id>` opens one in the live run with its incidents scheduled, the Docs case picker above the simulator switches between them, Before and After swap config A and B and start the run over, and the Scenario tab compares the two on one seed. `Simulator.module.css` styles all of them. Elsewhere,
 `core.js` loads the WebAssembly core and parses the YAML config, and `styles.module.css` styles it
 all. The core's `describe()` reports the merged settings and deployments the diagram shows, and
 only `simple-shuffle` is accepted, since the other strategies still run in Python. `core/` is the Rust crate that wraps `litellm-router-core` for the browser; its README says how

@@ -9,6 +9,7 @@ import {defaultProfile} from './profiles';
 import {defaultKinds} from './requests';
 import RequestPanel from './RequestPanel';
 import {readScenarioLink} from './Scenario';
+import {caseById} from './cases';
 import Simulator from './Simulator';
 import styles from './styles.module.css';
 
@@ -34,6 +35,7 @@ export default function Playground() {
   const [info, setInfo] = useState(null);
   const [linked, setLinked] = useState(null);
   const [links, setLinks] = useState(0);
+  const [caseSide, setCaseSide] = useState('before');
   const playground = useRef(null);
   const fields = useMemo(() => (core ? JSON.parse(core.Playground.configFields()) : []), [core]);
   const counter = useRef(0);
@@ -43,9 +45,16 @@ export default function Playground() {
   useEffect(() => {
     const open = () => {
       const scenario = readScenarioLink();
-      if (!scenario) return;
+      if (!scenario) {
+        setLinked(previous => {
+          if (previous) setLinks(n => n + 1);
+          return null;
+        });
+        return;
+      }
       setLinked(scenario);
       setLinks(n => n + 1);
+      setCaseSide('before');
       if (scenario.config) setConfigText(scenario.config);
       if (scenario.model) setModel(scenario.model);
       if (scenario.seed != null) setSeed(scenario.seed);
@@ -149,7 +158,19 @@ export default function Playground() {
     refresh();
   };
 
+  // A docs case's Before is its config A and After its config B; switching starts the live run over.
+  const chooseSide = side => {
+    if (!linked?.case) return;
+    setCaseSide(side);
+    setConfigText(side === 'after' ? linked.configB : linked.config);
+  };
+
   const choosePreset = next => {
+    if (linked) {
+      setLinked(null);
+      setLinks(n => n + 1);
+      window.history.replaceState(null, '', window.location.pathname);
+    }
     setPreset(next);
     setConfigText(next.config);
     setModel(next.model);
@@ -167,8 +188,8 @@ export default function Playground() {
             key={item.id}
             type="button"
             role="tab"
-            aria-selected={item.id === preset.id}
-            className={item.id === preset.id ? styles.presetActive : styles.preset}
+            aria-selected={item.id === preset.id && !linked}
+            className={item.id === preset.id && !linked ? styles.presetActive : styles.preset}
             onClick={() => choosePreset(item)}>
             {item.label}
           </button>
@@ -236,7 +257,7 @@ export default function Playground() {
           seed={seed}
           onSeed={setSeed}
           model={model}
-          rate={preset.rate}
+          rate={linked?.rate ?? preset.rate}
           kinds={kinds}
           onKinds={setKinds}
           info={info}
@@ -244,6 +265,9 @@ export default function Playground() {
           onEditDeployment={id => setFocus(previous => ({id, n: (previous?.n ?? 0) + 1}))}
           defaultIncidents={preset.outages}
           initialScenario={linked}
+          docsCase={linked?.case ? caseById(linked.case) : null}
+          caseSide={caseSide}
+          onCaseSide={chooseSide}
         />
       )}
 
