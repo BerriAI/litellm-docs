@@ -43,13 +43,11 @@ See [LiteLLM Core](https://docs.litellm.ai/docs/litellm_core) for installation, 
 
 To deploy the full AI Gateway (Proxy) with the Admin UI, follow the [Quickstart](./proxy/docker_quick_start.md); it runs as a container and needs no Python setup. To run it from the CLI instead, see the [CLI Quickstart](./proxy/quick_start.md).
 
-To have Claude Code set up the Gateway for you, install the LiteLLM setup skill and then type `/litellm-setup` in Claude Code:
+Install both setup skills, then use `/litellm-sdk` for the Python SDK in an existing app or `/litellm-setup` for the Gateway:
 
 ```shell
 npx skills add BerriAI/litellm -g
 ```
-
-The skill asks which providers and models you want, installs the Gateway with uv or Docker, writes the config and keys, starts it, and finishes with a test chat completion.
 
 ---
 
