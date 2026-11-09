@@ -1,6 +1,27 @@
 [
   {
     "folders": [
+      "v1.108.4"
+    ],
+    "title": "LiteLLM v1.108.4 (LTS) fixes Bedrock pass-through guardrails and video polls",
+    "points": [
+      "The `/bedrock` pass-through routes enforce the model's `guardrailConfig`, and it replaces any guardrail the caller sends.",
+      "Video status and content polls keep their model, so per-model keys work and each poll reaches the account that created the video.",
+      "A base SDK install no longer fails with `No module named 'mcp'` when `completion()`, `responses()` or `messages` get a tool."
+    ]
+  },
+  {
+    "folders": [
+      "v1.108.3"
+    ],
+    "title": "LiteLLM v1.108.3 (LTS) fixes Bedrock api_base and large MCP tool results",
+    "points": [
+      "Bedrock deployments with `api_base: \"\"` serve requests again, and no longer return 500 or 400.",
+      "MCP tool results over 1 MiB no longer fail with `SSE stream ended without a response`, and model-level `post_call` guardrails check each response once."
+    ]
+  },
+  {
+    "folders": [
       "v1.108.2"
     ],
     "title": "LiteLLM v1.108.2 (LTS) fixes Bedrock service tiers and Claude PDF input",
@@ -202,29 +223,6 @@
       "Decisions requests that send `safety_identifier` to a provider other than OpenAI now return 400, so set `drop_params` to `true` to keep the old behavior.",
       "The `litellm.systemone()` SDK function takes the System One format, and `litellm.decisions()` takes the OpenAI format.",
       "The `azure_ai/` prefix serves Microsoft-Decision-1, and `hosted_vllm/` is a new Decisions provider that requires `api_base`."
-    ]
-  },
-  {
-    "folders": [
-      "v1.105.0"
-    ],
-    "title": "LiteLLM v1.105.0 adds Claude Sonnet 5.5, the Decisions API and litellm.agent()",
-    "points": [
-      "Claude Sonnet 5.5 works on day one across Anthropic, Bedrock, Bedrock Mantle, Vertex AI, Azure AI, OpenRouter and Perplexity.",
-      "`/v1/decisions` and `/v1/systemone` let decision models answer yes/no, choice and score questions across OpenAI, Perplexity, TypeSafe, OpenRouter and Cloudflare.",
-      "`litellm.agent()` runs Claude Code, Codex, OpenCode and Deep Agents through the AI gateway from the SDK.",
-      "Bedrock GPT-5.6, GPT-6 and GPT-6.1 use native Chat Completions, which changes response ids and reasoning fields, so use `bedrock/converse/<model>` to stay on Converse."
-    ]
-  },
-  {
-    "folders": [
-      "v1.104.2"
-    ],
-    "title": "LiteLLM v1.104.2 adds Decisions API routes for OpenAI and System One",
-    "points": [
-      "The proxy now serves `POST /v1/decisions` in OpenAI's Decisions API format and `POST /v1/systemone` in the System One format.",
-      "Decision models from OpenAI, Perplexity, TypeSafe, OpenRouter, Cloudflare Clef and self-hosted Strands Decider answer on both routes.",
-      "Malformed requests, such as a missing `state` or more than 128 questions, return HTTP 400 before any upstream call."
     ]
   }
 ]
