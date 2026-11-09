@@ -33,13 +33,14 @@ os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key, from https://ai.topxea
 
 ## Available Models
 
-The live table is at https://ai.topxea.com/pricing and as JSON at `GET https://ai.topxea.com/api/pricing`. The following models and Auto-route prices were verified on November 8, 2026. Prices are USD per million tokens.
+The live table is at https://ai.topxea.com/pricing and as JSON at `GET https://ai.topxea.com/api/pricing`. The following models and Auto-route prices were verified on November 9, 2026. Prices are USD per million tokens.
 
 | Model | Input | Output | Notes |
 |-------|-------|--------|-------|
 | `topxai/claude-sonnet-5-5` | $1 | $5 | 1M context; prompt caching through `anthropic/` (see Notes) |
 | `topxai/claude-opus-5-5` | $2 | $10 | 1M context; prompt caching through `anthropic/` (see Notes) |
 | `topxai/claude-fable-5-1` | $5 | $25 | 1M context; prompt caching through `anthropic/` (see Notes) |
+| `topxai/gpt-6.1-terra` | $0.50 | $2.50 | from 272,001 input tokens the whole request bills at $1 / $3.75; also on `/responses` |
 | `topxai/gpt-6.1-sol` | $1 | $5 | from 272,001 input tokens the whole request bills at $2 / $7.50; also on `/responses` |
 | `topxai/gpt-6-astra` | $5 | $25 | from 272,001 input tokens the whole request bills at $10 / $37.50; also on `/responses` |
 | `topxai/grok-4.7` | $1 | $3 | from 200,000 input tokens the whole request bills at $2 / $6; also on `/responses` |
