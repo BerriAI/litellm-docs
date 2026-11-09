@@ -18,5 +18,17 @@ export function parseConfig(text) {
   if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.model_list)) {
     throw new Error('The config needs a model_list.');
   }
-  return parsed;
+  return foldDefaultFallbacks(parsed);
+}
+
+// The proxy hands default_fallbacks (from router_settings or litellm_settings) to the router, which
+// folds them into its fallbacks as {"*": [...]}. The core takes them already folded, as Python's
+// Router does at construction.
+export function foldDefaultFallbacks(config) {
+  const settings = config.router_settings ?? {};
+  const list = settings.default_fallbacks ?? config.litellm_settings?.default_fallbacks;
+  if (!Array.isArray(list) || !list.length) return config;
+  const fallbacks = Array.isArray(settings.fallbacks) ? settings.fallbacks : [];
+  if (fallbacks.some(entry => entry && typeof entry === 'object' && '*' in entry)) return config;
+  return {...config, router_settings: {...settings, fallbacks: [...fallbacks, {'*': list}]}};
 }

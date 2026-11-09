@@ -44,4 +44,4 @@ wasm-bindgen --target web --out-dir ../../../../static/router-playground \
 rm ../../../../static/router-playground/*.d.ts
 ```
 
-The checked-in build comes from litellm main at 62823005.
+The checked-in build comes from litellm main at 62823005, with this crate's host as it is here.

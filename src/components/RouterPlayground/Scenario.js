@@ -1,7 +1,9 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {parseConfig} from './core';
-import {coreRequests, expectedRpm, groupRate, mixModels} from './requests';
-import {INCIDENT_KINDS, coreIncident, coreProfiles, incidentLabel, openSession, strengthLabel} from './simSession';
+import {coreRequests} from './requests';
+import {runScenario} from './scenarioRun';
+import {CASES, caseById, caseScenario} from './cases';
+import {INCIDENT_KINDS, incidentLabel, strengthLabel} from './simSession';
 import styles from './Simulator.module.css';
 
 // A scripted scenario: incidents laid out on a timeline ahead of time, run on two router configs with
@@ -9,7 +11,6 @@ import styles from './Simulator.module.css';
 
 const DURATIONS = [120, 300, 600];
 const PALETTE = ['outage', 'latency', 'capacity', 'flaky', 'surge'];
-const DRAIN = 60;
 const SPARK_BIN = 10;
 
 const clock = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
@@ -47,8 +48,11 @@ export function scenarioLink(scenario) {
   return `${window.location.origin}${window.location.pathname}#scenario=${encoded}`;
 }
 
+// A short link, #case=<id>, opens one of the docs cases; a long one carries a whole scenario.
 export function readScenarioLink() {
   if (typeof window === 'undefined') return null;
+  const named = /#case=([a-z0-9-]+)/.exec(window.location.hash);
+  if (named) return caseScenario(named[1]);
   const found = /#scenario=([A-Za-z0-9_-]+)/.exec(window.location.hash);
   if (!found) return null;
   try {
@@ -58,67 +62,6 @@ export function readScenarioLink() {
   } catch {
     return null;
   }
-}
-
-export function runScenario(core, configJson, seed, {model, kinds, rate, duration, profiles, incidents}) {
-  const session = openSession(core, configJson, seed);
-  const probe = new core.Playground(configJson, BigInt(seed));
-  const info = JSON.parse(probe.describe());
-  probe.free();
-  const rpmOf = id => {
-    const deployment = info.deployments.find(item => item.id === id);
-    return expectedRpm(info, id, groupRate(kinds, model, deployment?.model_name, rate));
-  };
-  const served = new Set(mixModels(kinds, model));
-  const surges = incidents.filter(item => item.row === 'traffic');
-  const rateAt = t =>
-    surges.reduce((value, item) => (t >= item.from && t < item.to ? value * (item.strength ?? 5) : value), rate);
-  const requests = [];
-  let unhealthy = 0;
-  try {
-    session.start({
-      model,
-      rate,
-      duration,
-      requests: coreRequests(kinds, model),
-      profiles: coreProfiles(profiles),
-      incidents: incidents
-        .filter(item => item.row !== 'traffic' && info.deployments.some(deployment => deployment.id === item.row))
-        .map(item => coreIncident({...item, id: item.row}, profiles[item.row], rpmOf(item.row))),
-      trace_last: 0,
-    });
-    let current = rate;
-    for (let t = 0; t < duration + DRAIN; t += 1) {
-      const next = rateAt(t);
-      if (next !== current) {
-        session.set({rate: next});
-        current = next;
-      }
-      const frame = session.advance(1);
-      requests.push(...frame.completed.filter(request => request.start < duration));
-      const mine = frame.deployments.filter(item => served.has(item.model_name));
-      if (t < duration && mine.length && mine.every(item => item.cooling)) unhealthy += 1;
-    }
-  } finally {
-    session.stop();
-  }
-  const count = requests.length || 1;
-  const ok = requests.filter(request => request.ok);
-  const durations = requests.map(request => request.end - request.start).sort((a, b) => a - b);
-  const spark = [];
-  for (let from = 0; from < duration; from += SPARK_BIN) {
-    const inBin = requests.filter(request => request.start >= from && request.start < from + SPARK_BIN);
-    spark.push(inBin.length ? inBin.filter(request => request.ok).length / inBin.length : null);
-  }
-  return {
-    requests: requests.length,
-    success: ok.length / count,
-    p95: durations.length ? durations[Math.min(durations.length - 1, Math.floor(0.95 * durations.length))] : null,
-    attempts: requests.reduce((sum, request) => sum + (request.attempts?.length || 1 + request.retries), 0) / count,
-    viaFallback: ok.filter(request => request.fallbacks > 0).length,
-    unhealthy,
-    spark,
-  };
 }
 
 function settingsSummary(config) {
@@ -132,6 +75,26 @@ function settingsSummary(config) {
   );
   parts.push(fallbacks.length ? `fallbacks ${fallbacks.join('; ')}` : 'no fallbacks');
   return parts.join(' · ');
+}
+
+const pct = (part, whole) => `${Math.round((100 * part) / (whole || 1))}%`;
+
+// "east 74% · west 26%": who served the successful requests.
+function shares(counts) {
+  const total = Object.values(counts ?? {}).reduce((sum, value) => sum + value, 0);
+  if (!total) return 'none';
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([id, value]) => `${id} ${pct(value, total)}`)
+    .join(' · ');
+}
+
+function kindSuccess(byKind, kinds) {
+  return kinds
+    .map(kind => kind.label)
+    .filter(label => byKind?.[label])
+    .map(label => `${label} ${pct(byKind[label].ok, byKind[label].requests)}`)
+    .join(' · ');
 }
 
 function Sparkline({spark, duration, incidents, tone}) {
@@ -260,6 +223,8 @@ export default function Scenario({
   useEffect(() => {
     if (firstChoices.current === choices) return;
     firstChoices.current = choices;
+    // Incidents laid out by hand or brought by a link stay as they are.
+    if (!template) return;
     const name = choices[template] ? template : 'Region slowdown';
     setTemplate(name);
     setIncidents(choices[name]);
@@ -365,10 +330,41 @@ export default function Scenario({
     ['requests served by a fallback', r => String(r.viaFallback)],
     [`time with no healthy ${model} deployment`, r => secs(r.unhealthy)],
     ['requests', r => String(r.requests)],
+    ['served by', r => shares(r.servedBy)],
   ];
+  if (kinds.length > 1) rowsData.push(['success by kind', r => kindSuccess(r.byKind, kinds)]);
+  const docsCase = caseById(initialScenario?.case);
 
   return (
     <div className={styles.scenario}>
+      <div className={styles.caseBar}>
+        <label className={styles.slider}>
+          <span className={styles.cap}>DOCS CASE</span>
+          <select
+            value={docsCase?.id ?? ''}
+            onChange={event => {
+              window.location.hash = event.target.value ? `case=${event.target.value}` : '';
+            }}
+            aria-label="Docs case">
+            <option value="">none, use the config above</option>
+            {CASES.map(item => (
+              <option key={item.id} value={item.id}>
+                {item.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        {docsCase && (
+          <div className={styles.caseText}>
+            <span>
+              {docsCase.claim} <a href={docsCase.page}>Read it in the docs</a>
+            </span>
+            <span className={styles.muted}>
+              Watch {docsCase.watch}. Link: <code>#case={docsCase.id}</code>
+            </span>
+          </div>
+        )}
+      </div>
       <div className={styles.scenarioBar}>
         <span className={styles.cap}>SCENARIO</span>
         {Object.keys(choices).map(name => (

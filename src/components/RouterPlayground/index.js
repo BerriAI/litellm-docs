@@ -33,20 +33,28 @@ export default function Playground() {
   const [configJson, setConfigJson] = useState(null);
   const [info, setInfo] = useState(null);
   const [linked, setLinked] = useState(null);
+  const [links, setLinks] = useState(0);
   const playground = useRef(null);
   const fields = useMemo(() => (core ? JSON.parse(core.Playground.configFields()) : []), [core]);
   const counter = useRef(0);
 
-  // A scenario link carries its own configs, profiles and seed.
+  // A scenario link carries its own configs, profiles and seed; a case link names one of the docs
+  // cases. Both are read on load and whenever the hash changes, as the docs case picker does.
   useEffect(() => {
-    const scenario = readScenarioLink();
-    if (!scenario) return;
-    setLinked(scenario);
-    if (scenario.config) setConfigText(scenario.config);
-    if (scenario.model) setModel(scenario.model);
-    if (scenario.seed != null) setSeed(scenario.seed);
-    if (scenario.profiles) setProfiles(scenario.profiles);
-    if (scenario.kinds?.length) setKinds(scenario.kinds);
+    const open = () => {
+      const scenario = readScenarioLink();
+      if (!scenario) return;
+      setLinked(scenario);
+      setLinks(n => n + 1);
+      if (scenario.config) setConfigText(scenario.config);
+      if (scenario.model) setModel(scenario.model);
+      if (scenario.seed != null) setSeed(scenario.seed);
+      if (scenario.profiles) setProfiles(scenario.profiles);
+      if (scenario.kinds?.length) setKinds(scenario.kinds);
+    };
+    open();
+    window.addEventListener('hashchange', open);
+    return () => window.removeEventListener('hashchange', open);
   }, []);
 
   // Every deployment has a behaviour profile in the simulator; new ones start healthy.
@@ -221,6 +229,7 @@ export default function Playground() {
 
       {state && (
         <Simulator
+          key={links}
           core={core}
           configJson={configJson}
           configText={configText}

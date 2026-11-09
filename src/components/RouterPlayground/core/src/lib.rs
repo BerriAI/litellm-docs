@@ -395,8 +395,17 @@ impl ScriptedHost {
             return fail(FailureKind::ServiceUnavailable, 50.0, "503 outage".into());
         }
         let latency = self.lognormal(profile.p50, profile.p95) * factor;
-        if let Some(timeout) = attempt
-            .timeout
+        // A deployment's own litellm_params timeout reaches the provider call before the router's,
+        // as in Python's `_get_timeout`.
+        let own = attempt
+            .deployment
+            .raw_params
+            .get("timeout")
+            .and_then(Value::as_f64)
+            .filter(|secs| *secs > 0.0)
+            .map(Duration::from_secs_f64);
+        if let Some(timeout) = own
+            .or(attempt.timeout)
             .filter(|t| t.as_secs_f64() * 1000.0 < latency)
         {
             self.wait(timeout).await;

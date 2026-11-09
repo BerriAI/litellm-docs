@@ -49,6 +49,7 @@ export function kindBody(kind, model) {
   if (kind.team_id) body.team_id = kind.team_id;
   if (kind.num_retries != null && kind.num_retries !== '') body.num_retries = Number(kind.num_retries);
   if (kind.disable_fallbacks) body.disable_fallbacks = true;
+  if (kind.fallbacks?.length) body.fallbacks = kind.fallbacks;
   if (kind.mock) body[kind.mock] = true;
   const metadata = metadataOf(kind);
   if (metadata.ok && metadata.value) body.metadata = metadata.value;

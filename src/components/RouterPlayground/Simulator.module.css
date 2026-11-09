@@ -1751,3 +1751,26 @@
 .kpiMore:hover {
   color: var(--ifm-font-color-base);
 }
+
+/* Docs case picker and the claim the picked case shows. */
+.caseBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--sim-soft);
+}
+
+.caseBar .cap {
+  margin-right: 0.4rem;
+}
+
+.caseText {
+  display: flex;
+  flex: 1 1 320px;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.85rem;
+}
