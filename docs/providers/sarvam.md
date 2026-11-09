@@ -3,7 +3,7 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-LiteLLM supports Sarvam's OpenAI-compatible `/v2` API, including Sarvam 105B and the open-weight models served on Sarvam infrastructure (GLM, Gemma, and DeepSeek).
+LiteLLM supports Sarvam's OpenAI-compatible `/v2` API, including Sarvam 105B and the open-weight models served on Sarvam infrastructure (GLM, Gemma, and DeepSeek). <SinceVersion v="1.110.0" />
 
 ## Supported models
 
@@ -16,9 +16,13 @@ LiteLLM supports Sarvam's OpenAI-compatible `/v2` API, including Sarvam 105B and
 | `sarvam/gemma4` | 256K | 256K | Text, image | $0.39 / $1.00 |
 | `sarvam/deepseekv4.1-flash-1017` | 1M | 1M | Text, image | $0.28 / $1.17 |
 
+USD values are converted from Sarvam's INR rates at ₹90 per USD. See [Sarvam Token Factory pricing](https://www.sarvam.ai/token-factory/pricing) for the current INR rates.
+
+The legacy `sarvam-m` model is not served on `/v2`. If you are upgrading from `sarvam/sarvam-m`, switch to `sarvam/sarvam-105b`.
+
 Output on `sarvam-105b` and `sarvam-105b-conversations` is also capped by plan: Starter 4,096, Pro 16,384, Business 128,000 (and by the 32K context on `sarvam-105b-conversations`).
 
-All models support tool calling, streaming, structured output (`response_format`), system messages, `tool_choice`, and parallel tool calls. Prompt caching is supported on `sarvam-105b`, `sarvam-105b-conversations`, `gemma4`, and `deepseekv4.1-flash-1017`.
+All models support tool calling, streaming, structured output (`response_format`), system messages, `tool_choice`, and parallel tool calls. Prompt caching is supported on all six models: `sarvam-105b`, `sarvam-105b-conversations`, `glm5.3`, `glm5.3-flash`, `gemma4`, and `deepseekv4.1-flash-1017`.
 
 ## Usage
 
@@ -36,6 +40,21 @@ response = completion(
     messages=messages,
 )
 print(response)
+```
+
+## Responses API
+
+```python
+import os
+from litellm import responses
+
+os.environ["SARVAM_API_KEY"] = "your-api-key"
+
+response = responses(
+    model="sarvam/sarvam-105b",
+    input="Hello",
+)
+print(response.output_text)
 ```
 
 ## Usage with LiteLLM Proxy Server
@@ -108,7 +127,7 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
 
 ## Reasoning
 
-Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning.
+Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning. On `gemma4`, reasoning is off by default and only runs when `reasoning_effort` is set.
 
 ## Token limits
 
@@ -124,4 +143,4 @@ Most models return reasoning in `reasoning_content`. Reasoning tokens count towa
 
 ## Security
 
-Use LiteLLM `>=1.106.6` and keep the proxy off the public internet. See the [LiteLLM security advisories](https://github.com/BerriAI/litellm/security/advisories) for the latest guidance. {/* keep-version-note */}
+Use a current LiteLLM release and keep the proxy off the public internet. See the [LiteLLM security advisories](https://github.com/BerriAI/litellm/security/advisories) for the minimum safe version and the latest guidance.
