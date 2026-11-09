@@ -1,11 +1,16 @@
 import React from 'react';
 import Layout from '@theme/Layout';
+import useBrokenLinks from '@docusaurus/useBrokenLinks';
 import RouterPlayground from '@site/src/components/RouterPlayground';
+import {CASES} from '@site/src/components/RouterPlayground/cases';
 import styles from './router-playground.module.css';
 
 // The playground lives in src/components/RouterPlayground; this page only frames it.
 
 export default function RouterPlaygroundPage() {
+  // Docs pages link to #case=<id>; the playground reads that hash itself, so each one is a real anchor.
+  const brokenLinks = useBrokenLinks();
+  CASES.forEach(item => brokenLinks.collectAnchor(`case=${item.id}`));
   return (
     <Layout
       title="Router playground"
