@@ -1,4 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import ConfigModal from './ConfigModal';
+import ce from './ConfigEditor.module.css';
 import Panel from './Panel';
 import {profileLabel, profileSummary} from './profiles';
 import {
@@ -14,7 +16,7 @@ import {
   newKind,
 } from './requests';
 import Scenario from './Scenario';
-import {KindLegend, KindSwatch, kindActive, kindColour, useKindSlots} from './SimKinds';
+import {KindSwatch, kindActive, kindColour, useKindSlots} from './SimKinds';
 import {INCIDENT_KINDS, coreIncident, coreProfiles, incidentLabel, openSession} from './simSession';
 import {RunCard} from './Trace';
 import styles from './Simulator.module.css';
@@ -254,7 +256,7 @@ function IncidentButton({id, onIncident}) {
   return (
     <div className={styles.incidentSplit}>
       <button type="button" onClick={() => onIncident(id, kind)}>
-        {label(kind)}
+        Trigger {label(kind).toLowerCase()}
       </button>
       <span className={styles.incidentCaret}>
         <svg viewBox="0 0 10 10" width="9" height="9" aria-hidden="true">
@@ -579,7 +581,7 @@ function Lanes({store, info, profiles, timeouts, slots, active, onPick, onIncide
   );
 }
 
-function Kpis({store, timeout}) {
+function Kpis({store, timeout, seed, onSeed}) {
   const [open, setOpen] = useState(false);
   const {totals} = store;
   const p95 = quantile(store.durations, 0.95);
@@ -613,16 +615,30 @@ function Kpis({store, timeout}) {
           More details {open ? '\u25B4' : '\u25BE'}
         </button>
       </div>
-      {open && <div className={`${styles.kpis} ${styles.kpisMore}`}>{more.map(cell)}</div>}
+      {open && (
+        <div className={`${styles.kpis} ${styles.kpisMore}`}>
+          {more.map(cell)}
+          <label className={styles.kpi} title="Samples come from the seed, so the same seed replays the same run">
+            <span className={styles.muted}>seed</span>
+            <input
+              className={styles.seed}
+              type="number"
+              min={0}
+              value={seed}
+              onChange={event => onSeed(Number(event.target.value) || 0)}
+            />
+          </label>
+        </div>
+      )}
     </div>
   );
 }
 
-function NumberField({value, onChange, placeholder, min = 0, step = 1, label, width, disabled}) {
+function NumberField({value, onChange, placeholder, min = 0, step = 1, label, width, disabled, className}) {
   return (
     <input
       type="number"
-      className={styles.mixNum}
+      className={className ?? styles.mixNum}
       style={width ? {width} : undefined}
       aria-label={label}
       min={min}
@@ -635,151 +651,192 @@ function NumberField({value, onChange, placeholder, min = 0, step = 1, label, wi
   );
 }
 
-// The kinds of request the run sends, each with its share of arrivals and the fields the router
-// core reads. Sessions draw a session id per request from a pool of that size.
+// The kinds of request the run sends, as one badge per kind beside the label. A badge opens that
+// kind's settings: its share of arrivals and the fields the router core reads.
 function RequestMix({kinds, onKinds, model, info, slots}) {
-  const groups = [...new Set(info.deployments.map(item => item.model_name))];
+  const [openKey, setOpenKey] = useState(null);
   const total = kinds.reduce((sum, kind) => sum + (Number(kind.share) || 0), 0) || 1;
-  const change = (key, fields) => onKinds(kinds.map(kind => (kind.key === key ? {...kind, ...fields} : kind)));
+  const percent = kind => Math.round((100 * (Number(kind.share) || 0)) / total);
+  const opened = kinds.find(kind => kind.key === openKey);
+  const add = () => {
+    const kind = newKind({label: `kind${kinds.length + 1}`});
+    onKinds([...kinds, kind]);
+    setOpenKey(kind.key);
+  };
   return (
-    <div className={styles.requestMix}>
-      <div className={styles.mixGrid}>
-        <span className={styles.muted}>kind</span>
-        <span className={styles.muted}>share</span>
-        <span className={styles.muted}>model</span>
-        <span
-          className={SESSIONS_READY ? styles.muted : `${styles.muted} ${styles.soon}`}
-          title={SESSIONS_READY ? undefined : SESSIONS_SOON}>
-          sessions{SESSIONS_READY ? '' : ' (next week)'}
-        </span>
-        <span className={styles.muted}>team</span>
-        <span className={styles.muted}>tokens</span>
-        <span className={styles.muted}>num_retries</span>
-        <span className={styles.muted}>mock_testing</span>
-        <span className={styles.muted}>fallbacks</span>
-        <span />
-        {kinds.map(kind => {
-          const metadata = metadataOf(kind);
-          return (
-            <React.Fragment key={kind.key}>
-              <span className={styles.mixName}>
-                <KindSwatch slot={slots.get(kind.label || 'request')} />
-                <input
-                  className={styles.mixText}
-                  aria-label="Kind name"
-                  value={kind.label}
-                  onChange={event => change(kind.key, {label: event.target.value.replace(/\s+/g, '-')})}
-                />
-              </span>
-              <span className={styles.mixShare}>
-                <NumberField
-                  label={`Share of ${kind.label}`}
-                  value={kind.share}
-                  step={0.5}
-                  width="4rem"
-                  onChange={value => change(kind.key, {share: value ?? 0})}
-                />
-                <span className={styles.muted}>{Math.round((100 * (Number(kind.share) || 0)) / total)}%</span>
-              </span>
-              <input
-                className={styles.mixText}
-                aria-label={`Model of ${kind.label}`}
-                list="mix-models"
-                value={kind.model}
-                placeholder={`${model} (top)`}
-                onChange={event => change(kind.key, {model: event.target.value.trim()})}
-              />
-              <span className={SESSIONS_READY ? undefined : styles.soon} title={SESSIONS_READY ? undefined : SESSIONS_SOON}>
-                <NumberField
-                  label={`Sessions of ${kind.label}`}
-                  value={kind.sessions || null}
-                  placeholder="none"
-                  width="4.5rem"
-                  disabled={!SESSIONS_READY}
-                  onChange={value => change(kind.key, {sessions: value ?? 0})}
-                />
-              </span>
-              <input
-                className={styles.mixText}
-                aria-label={`Team of ${kind.label}`}
-                placeholder="none"
-                value={kind.team_id}
-                onChange={event => change(kind.key, {team_id: event.target.value.trim()})}
-              />
-              <NumberField
-                label={`Tokens of ${kind.label}`}
-                value={kind.tokens}
-                placeholder="profile"
-                step={100}
-                width="5.5rem"
-                onChange={value => change(kind.key, {tokens: value})}
-              />
-              <NumberField
-                label={`num_retries of ${kind.label}`}
-                value={kind.num_retries}
-                placeholder="router's"
-                width="5.5rem"
-                onChange={value => change(kind.key, {num_retries: value})}
-              />
-              <select
-                aria-label={`mock_testing flag of ${kind.label}`}
-                value={kind.mock}
-                onChange={event => change(kind.key, {mock: event.target.value})}>
-                {MOCKS.map(mock => (
-                  <option key={mock.value} value={mock.value}>
-                    {mock.label}
-                  </option>
-                ))}
-              </select>
-              <label className={styles.mixCheck}>
-                <input
-                  type="checkbox"
-                  checked={!kind.disable_fallbacks}
-                  onChange={event => change(kind.key, {disable_fallbacks: !event.target.checked})}
-                />
-                {kind.disable_fallbacks ? 'off' : 'on'}
-              </label>
-              <button
-                type="button"
-                className={styles.small}
-                disabled={kinds.length === 1}
-                onClick={() => onKinds(kinds.filter(item => item.key !== kind.key))}
-                aria-label={`Remove ${kind.label}`}>
-                Remove
-              </button>
-              <label className={styles.mixMeta}>
-                <span className={styles.muted}>metadata</span>
-                <input
-                  className={metadata.ok ? styles.mixText : `${styles.mixText} ${styles.mixBad}`}
-                  aria-label={`Metadata of ${kind.label}`}
-                  placeholder='none, or a JSON object such as {"tags": ["x"]}'
-                  value={kind.metadata}
-                  onChange={event => change(kind.key, {metadata: event.target.value})}
-                />
-                {!metadata.ok && <span className={styles.mixError}>{metadata.error}; not sent until it parses</span>}
-              </label>
-            </React.Fragment>
-          );
-        })}
-      </div>
-      <datalist id="mix-models">
-        {groups.map(group => (
-          <option key={group} value={group} />
-        ))}
-      </datalist>
-      <div className={styles.mixFoot}>
+    <div className={styles.mixRow} role="group" aria-label="Request mix">
+      <span className={styles.cap}>Request mix</span>
+      {kinds.map(kind => (
         <button
+          key={kind.key}
           type="button"
-          className={styles.small}
-          onClick={() => onKinds([...kinds, newKind({label: `kind${kinds.length + 1}`})])}>
-          Add a kind of request
+          className={styles.mixBadge}
+          onClick={() => setOpenKey(kind.key)}
+          aria-label={`${kind.label || 'request'}, ${percent(kind)}% of requests: open its settings`}>
+          <KindSwatch slot={slots.get(kind.label || 'request')} />
+          {kind.label || 'request'}
+          {kinds.length > 1 && <span className={styles.muted}>{percent(kind)}%</span>}
         </button>
-        <span className={styles.muted}>
-          Sessions are greyed out: session affinity comes to the Rust router next week, and until then requests carry
-          no session id. Extra metadata goes in the body as is and shows in the trace.
-        </span>
-      </div>
+      ))}
+      <button type="button" className={styles.mixAdd} onClick={add}>
+        + Add
+      </button>
+      {opened && (
+        <KindSettings
+          kind={opened}
+          percent={percent(opened)}
+          slot={slots.get(opened.label || 'request')}
+          canRemove={kinds.length > 1}
+          model={model}
+          info={info}
+          onChange={fields => onKinds(kinds.map(kind => (kind.key === opened.key ? {...kind, ...fields} : kind)))}
+          onRemove={() => {
+            onKinds(kinds.filter(kind => kind.key !== opened.key));
+            setOpenKey(null);
+          }}
+          onClose={() => setOpenKey(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function KindSettings({kind, percent, canRemove, model, info, onChange, onRemove, onClose}) {
+  const groups = [...new Set(info.deployments.map(item => item.model_name))];
+  const metadata = metadataOf(kind);
+  const label = kind.label || 'request';
+  return (
+    <div className={ce.root}>
+      <ConfigModal
+        cap="Kind of request"
+        title={label}
+        sub={`${percent}% of requests`}
+        label={`Settings for the ${label} requests`}
+        onClose={onClose}
+        foot={
+          <>
+            <button type="button" className={ce.danger} disabled={!canRemove} onClick={onRemove}>
+              Remove kind
+            </button>
+            <span className={ce.spacer} />
+            <button type="button" className={ce.primary} onClick={onClose}>
+              Done
+            </button>
+          </>
+        }>
+        <div className={ce.fields2}>
+          <KindField label="name">
+            <input
+              className={ce.input}
+              value={kind.label}
+              onChange={event => onChange({label: event.target.value.replace(/\s+/g, '-')})}
+            />
+          </KindField>
+          <KindField label="share" hint="relative weight among the kinds">
+            <NumberField
+              className={ce.input}
+              label={`Share of ${label}`}
+              value={kind.share}
+              step={0.5}
+              onChange={value => onChange({share: value ?? 0})}
+            />
+          </KindField>
+          <KindField label="model" hint="model group the request asks for">
+            <input
+              className={ce.input}
+              list="mix-models"
+              value={kind.model}
+              placeholder={`${model} (top)`}
+              onChange={event => onChange({model: event.target.value.trim()})}
+            />
+          </KindField>
+          <KindField label="team" hint="team_id, for team model aliases">
+            <input
+              className={ce.input}
+              placeholder="none"
+              value={kind.team_id}
+              onChange={event => onChange({team_id: event.target.value.trim()})}
+            />
+          </KindField>
+          <KindField label="tokens" hint="counted against tpm">
+            <NumberField
+              className={ce.input}
+              label={`Tokens of ${label}`}
+              value={kind.tokens}
+              placeholder="profile"
+              step={100}
+              onChange={value => onChange({tokens: value})}
+            />
+          </KindField>
+          <KindField label="num_retries" hint="overrides the router's">
+            <NumberField
+              className={ce.input}
+              label={`num_retries of ${label}`}
+              value={kind.num_retries}
+              placeholder="router's"
+              onChange={value => onChange({num_retries: value})}
+            />
+          </KindField>
+          <KindField label="mock_testing" hint="forces a fallback path">
+            <select className={ce.input} value={kind.mock} onChange={event => onChange({mock: event.target.value})}>
+              {MOCKS.map(mock => (
+                <option key={mock.value} value={mock.value}>
+                  {mock.label}
+                </option>
+              ))}
+            </select>
+          </KindField>
+          <KindField label="fallbacks">
+            <label className={styles.mixCheck}>
+              <input
+                type="checkbox"
+                checked={!kind.disable_fallbacks}
+                onChange={event => onChange({disable_fallbacks: !event.target.checked})}
+              />
+              {kind.disable_fallbacks ? 'off for this kind' : 'on'}
+            </label>
+          </KindField>
+          <KindField
+            label={`sessions${SESSIONS_READY ? '' : ' (next week)'}`}
+            hint={SESSIONS_READY ? 'session ids drawn from a pool this size' : SESSIONS_SOON}>
+            <NumberField
+              className={ce.input}
+              label={`Sessions of ${label}`}
+              value={kind.sessions || null}
+              placeholder="none"
+              disabled={!SESSIONS_READY}
+              onChange={value => onChange({sessions: value ?? 0})}
+            />
+          </KindField>
+        </div>
+        <div className={ce.modalSection}>
+          <KindField label="metadata" hint="goes in the body as is and shows in the trace">
+            <input
+              className={metadata.ok ? ce.input : `${ce.input} ${styles.mixBad}`}
+              placeholder='none, or a JSON object such as {"tags": ["x"]}'
+              value={kind.metadata}
+              onChange={event => onChange({metadata: event.target.value})}
+            />
+            {!metadata.ok && <span className={styles.mixError}>{metadata.error}; not sent until it parses</span>}
+          </KindField>
+        </div>
+        <datalist id="mix-models">
+          {groups.map(group => (
+            <option key={group} value={group} />
+          ))}
+        </datalist>
+      </ConfigModal>
+    </div>
+  );
+}
+
+function KindField({label, hint, children}) {
+  return (
+    <label className={ce.field}>
+      {label}
+      {children}
+      {hint && <small>{hint}</small>}
+    </label>
   );
 }
 
@@ -1082,6 +1139,9 @@ function LiveRun({
         <button type="button" className={styles.play} onClick={() => setPlaying(!playing)} disabled={!session.current}>
           {playing ? 'Pause' : 'Play'}
         </button>
+        <button type="button" onClick={() => setGeneration(n => n + 1)}>
+          Reset
+        </button>
         <div className={styles.segmented} role="group" aria-label="Speed">
           {SPEEDS.map(value => (
             <button key={value} type="button" aria-pressed={speed === value} onClick={() => setSpeed(value)}>
@@ -1108,32 +1168,11 @@ function LiveRun({
             ? `Surging, ${Math.ceil(data.surge.until - data.now)} s left`
             : `Surge ×${SURGE.factor} for ${SURGE.duration} s`}
         </button>
-        <span className={styles.spacer} />
-        <label className={styles.slider}>
-          <span className={styles.muted}>seed</span>
-          <input
-            className={styles.seed}
-            type="number"
-            min={0}
-            value={seed}
-            onChange={event => onSeed(Number(event.target.value) || 0)}
-          />
-        </label>
-        <button type="button" onClick={() => setGeneration(n => n + 1)}>
-          Reset
-        </button>
       </div>
 
-      <Panel
-        id="sim-request-mix"
-        sub
-        defaultOpen={false}
-        title="Request mix"
-        folded={`${kinds.length} kind${kinds.length === 1 ? '' : 's'}: ${kinds.map(kind => kind.label).join(', ')}`}>
-        <RequestMix kinds={kinds} onKinds={onKinds} model={model} info={info} slots={slots} />
-      </Panel>
+      <RequestMix kinds={kinds} onKinds={onKinds} model={model} info={info} slots={slots} />
 
-      <Kpis store={data} timeout={groupTimeout} />
+      <Kpis store={data} timeout={groupTimeout} seed={seed} onSeed={onSeed} />
       {unserved.map(({model: name, team_id: team}) => (
         <p key={`${team ?? ''}/${name}`} className={styles.error}>
           No deployment serves the model <code>{name}</code>
@@ -1147,13 +1186,6 @@ function LiveRun({
         </p>
       ))}
       {error && <p className={styles.error}>{error}</p>}
-      <KindLegend
-        kinds={kinds}
-        slots={slots}
-        active={active}
-        onToggle={toggleKind}
-        onClear={() => setPicks(new Set())}
-      />
       <Lanes
         store={data}
         info={info}
