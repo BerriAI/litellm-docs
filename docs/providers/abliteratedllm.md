@@ -7,7 +7,7 @@ description: Call AbliteratedLLM models through LiteLLM with the Python SDK or G
 
 <SinceVersion v="1.110.0" />
 
-Use [AbliteratedLLM](https://abliteratedllm.dev) through LiteLLM with the `abliteratedllm/` model prefix. AbliteratedLLM serves an abliterated open-weight model, stock open-weight models, and two DeepSeek models answered by DeepSeek's official API, all with one OpenAI-compatible API key. LiteLLM reads `ABLITERATEDLLM_API_KEY` and sends requests to `https://api.abliteratedllm.dev/v1`.
+Use [AbliteratedLLM](https://abliteratedllm.dev) through LiteLLM with the `abliteratedllm/` model prefix. AbliteratedLLM serves an abliterated open-weight model and stock open-weight models with one OpenAI-compatible API key. LiteLLM reads `ABLITERATEDLLM_API_KEY` and sends requests to `https://api.abliteratedllm.dev/v1`.
 
 ## Overview
 
@@ -48,8 +48,6 @@ Prices below are USD per million tokens, checked against the [published pricing]
 | Model | Context | Max output | Input | Cached input | Output | Input types | Type |
 | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |
 | `abliteratedllm/glm-5.3-flash-abliterated` | 1,048,576 | 131,072 | $0.0977 | $0.0098 | $0.3421 | text, image | `abliterated` |
-| `abliteratedllm/deepseek-v4.1-flash` | 1,048,576 | 393,216 | $0.30 | $0.006 | $1.20 | text | `official_api` |
-| `abliteratedllm/deepseek-v4-pro` | 1,048,576 | 393,216 | $1.32 | $0.044 | $3.96 | text | `official_api` |
 | `abliteratedllm/deepseek-v4.1-flash-1017` | 1,048,576 | 1,048,576 | $0.27 | $0.0054 | $1.08 | text, image | `stock` |
 | `abliteratedllm/deepseek-v4.1-flash-1017-ultrafast` | 1,048,576 | 1,048,576 | $2.16 | $0.0432 | $8.64 | text | `stock` |
 | `abliteratedllm/deepseek-v4.1-flash-original` | 1,048,576 | 1,048,576 | $0.27 | $0.0054 | $1.08 | text, image | `stock` |
@@ -65,7 +63,7 @@ Prices below are USD per million tokens, checked against the [published pricing]
 | `abliteratedllm/qwen3.8-2.4t-a95b` | 262,144 | 262,144 | $1.80 | $0.225 | $5.40 | text, image | `stock` |
 | `abliteratedllm/minimax-m3` | 512,000 | 512,000 | $0.27 | $0.054 | $1.08 | text, image | `stock` |
 
-The Type column is the catalog's `variant` field. `glm-5.3-flash-abliterated` is the only `abliterated` model: GLM-5.3 Flash weights with the refusal direction removed, served in native FP8. `stock` models run the vendor's original weights and keep the vendor's own refusals. `official_api` models are DeepSeek's stock models, answered by DeepSeek's official API. Prompts and outputs for them go to DeepSeek and are handled under the [DeepSeek Privacy Policy](https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html), and DeepSeek can decline some requests on its side. IDs ending in `-fast` or `-ultrafast` serve the same model as the ID without the suffix, at a higher speed and higher prices. Their input types and priority tier can differ, so check their rows in the table and their catalog entries.
+The Type column is the catalog's `variant` field. `glm-5.3-flash-abliterated` is the only `abliterated` model: GLM-5.3 Flash weights with the refusal direction removed, served in native FP8. `stock` models run the vendor's original weights and keep the vendor's own refusals. IDs ending in `-fast` or `-ultrafast` serve the same model as the ID without the suffix, at a higher speed and higher prices. Their input types and priority tier can differ, so check their rows in the table and their catalog entries.
 
 Models whose catalog entry sets `capabilities.priority_tier` also accept `service_tier="priority"` on Chat Completions, billed at the prices in `pricing.priority`. The table lists standard-tier prices. A model without `"image"` or `"video"` in its input types rejects those content parts with 400 `unsupported_content`.
 
@@ -130,20 +128,20 @@ Prompt caching is automatic. When a request starts with the same tokens as a rec
 
 ## Tools, structured output, and reasoning
 
-Chat Completions supports function `tools`, `tool_choice`, and `parallel_tool_calls`. A tool whose `type` is not `function` returns 400. `response_format` with `json_object` works on every model, and `json_schema` works on every model except the two `official_api` DeepSeek models. Use [LiteLLM function calling](../completion/function_call.md) for tool-result continuations and [structured outputs](../completion/json_mode.md) for JSON Schema examples.
+Chat Completions supports function `tools`, `tool_choice`, and `parallel_tool_calls`. A tool whose `type` is not `function` returns 400. `response_format` with `json_object` or `json_schema` works on every model. Use [LiteLLM function calling](../completion/function_call.md) for tool-result continuations and [structured outputs](../completion/json_mode.md) for JSON Schema examples.
 
 The provider passes `reasoning_effort` through to the model. Each model accepts the levels below, checked against the upstream models on November 9, 2026. LiteLLM's model map declares the same levels, and LiteLLM uses them to resolve the requested level.
 
 | Models | `reasoning_effort` levels |
 | --- | --- |
 | `glm-5.3-flash-abliterated`, `glm-5.3-flash`, `glm-5.3`, `glm-5.3-fast` | `low`, `high`, `max` |
-| `deepseek-v4.1-flash`, `deepseek-v4-pro`, `deepseek-v4.1-flash-1017`, `deepseek-v4.1-flash-1017-ultrafast`, `deepseek-v4.1-flash-original` | `none`, `low`, `high`, `max` |
+| `deepseek-v4.1-flash-1017`, `deepseek-v4.1-flash-1017-ultrafast`, `deepseek-v4.1-flash-original` | `none`, `low`, `high`, `max` |
 | `kimi-k3`, `kimi-k3-fast`, `kimi-k3.1-pro`, `ember-1` | `none`, `low`, `medium`, `high`, `max` |
 | `muse-spark-open` | `low`, `medium`, `high`, `xhigh` |
 | `qwen3.8-max`, `qwen3.8-2.4t-a95b` | `none`, `low`, `medium`, `xhigh` |
 | `minimax-m3` | `low`, `medium`, `high` |
 
-`"none"` turns reasoning off on the models that list it. The GLM-5.3 models, `glm-5.3-flash-abliterated` included, and `muse-spark-open` always reason, and `"none"` returns 400 for them. On `deepseek-v4.1-flash` and `deepseek-v4-pro`, thinking is on by default, and `reasoning_effort="none"` turns it off. Reasoning text, when returned, is available as `message.reasoning_content`. Reasoning tokens are billed as output tokens and count toward the output budget, which is 16,384 tokens when a request sets no `max_tokens`. See [AbliteratedLLM chat completions](https://abliteratedllm.dev/docs/chat-completions).
+`"none"` turns reasoning off on the models that list it. The GLM-5.3 models, `glm-5.3-flash-abliterated` included, and `muse-spark-open` always reason, and `"none"` returns 400 for them. Reasoning text, when returned, is available as `message.reasoning_content`. Reasoning tokens are billed as output tokens and count toward the output budget, which is 16,384 tokens when a request sets no `max_tokens`. See [AbliteratedLLM chat completions](https://abliteratedllm.dev/docs/chat-completions).
 
 ## Responses API
 
