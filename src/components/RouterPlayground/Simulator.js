@@ -16,6 +16,7 @@ import {
   newKind,
 } from './requests';
 import Scenario from './Scenario';
+import {caseCode} from './cases';
 import {KindSwatch, kindActive, kindColour, useKindSlots} from './SimKinds';
 import {INCIDENT_KINDS, coreIncident, coreProfiles, incidentLabel, openSession} from './simSession';
 import {RunCard} from './Trace';
@@ -1316,39 +1317,58 @@ function SimPicked({picked, slots, model, info, onClose}) {
   );
 }
 
-// The docs case bar: the linked case's title and text, with no way to browse to the others. A case opens in the live run with its config, traffic and incidents;
-// Before and After swap in the config the docs section changes, and the run starts over.
+// The docs case bar: the linked case's title and claim, then Before and After as two cards, each
+// with the setting it runs. Picking a card swaps in that config and starts the run over. There is
+// no way to browse to other cases from here.
+const sideText = text => {
+  const bare = text.replace(/^(Before|After):\s*/, '');
+  // Capitalize a plain word, never a name such as gpt-4o or num_retries.
+  return /^[a-z]+\b(?![-_.])/.test(bare) ? bare.charAt(0).toUpperCase() + bare.slice(1) : bare;
+};
+// A card's sentence is left out when it only restates its config line.
+const squash = text => text.toLowerCase().replace(/[^a-z0-9]/g, '');
+
 function CaseBar({docsCase, side, onSide, kinds, slots}) {
   // Only a case link shows the bar; the playground opened directly has none.
   if (!docsCase) return null;
+  const code = caseCode(docsCase);
+  const cards = [
+    {value: 'before', label: 'Before', n: 1, code: code.before, text: sideText(docsCase.before)},
+    {value: 'after', label: 'After', n: 2, code: code.after, text: sideText(docsCase.after)},
+  ];
   return (
     <div className={styles.caseBar}>
-      <div className={styles.caseTitle}>
+      <div className={styles.caseHead}>
         <span className={styles.cap}>DOCS CASE</span>
-        <strong>{docsCase.title}</strong>
-      </div>
-      <div className={styles.segmented} role="group" aria-label="Before or after">
-        {[
-          ['before', 'Before'],
-          ['after', 'After'],
-        ].map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            aria-pressed={side === value}
-            onClick={() => onSide(value)}>
-            {label}
-          </button>
-        ))}
-      </div>
-      <div className={styles.caseText}>
-        <span>
+        <strong className={styles.caseName}>{docsCase.title}</strong>
+        <span className={styles.caseClaim}>
           {docsCase.claim} <a href={docsCase.page}>Read it in the docs</a>
         </span>
-        <span className={styles.muted}>
-          {side === 'after' ? docsCase.after : docsCase.before} Watch {docsCase.watch}.
-        </span>
       </div>
+      <div className={styles.caseCards} role="group" aria-label="Before or after">
+        {cards.map(card => {
+          const on = side === card.value;
+          return (
+            <button
+              key={card.value}
+              type="button"
+              aria-pressed={on}
+              className={`${styles.caseCard} ${styles[card.value]} ${on ? styles.caseCardOn : ''}`}
+              onClick={() => onSide(card.value)}>
+              <span className={styles.caseCardTop}>
+                <span className={styles.caseStep}>{card.n}</span>
+                <span className={styles.caseCardLabel}>{card.label}</span>
+                <span className={styles.caseCardState}>{on ? 'Showing now' : 'Run it'}</span>
+              </span>
+              <code className={styles.caseCode}>{card.code}</code>
+              {card.text && squash(card.text) !== squash(card.code) && <span className={styles.caseCardText}>{card.text}</span>}
+            </button>
+          );
+        })}
+      </div>
+      <p className={styles.caseWatch}>
+        <strong>Watch:</strong> {docsCase.watch}.
+      </p>
       <div className={styles.caseKinds}>
         <span className={styles.cap}>{kinds.length === 1 ? 'The requests' : 'The requests, by kind'}</span>
         {kinds.map(kind => (

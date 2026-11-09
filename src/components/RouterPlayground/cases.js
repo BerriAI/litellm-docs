@@ -38,6 +38,7 @@ const whole = (row, kind, from, to, strength) => ({row, kind, from, to, ...(stre
 export const CASES = [
   {
     id: 'weights',
+    code: {before: 'no weights', after: 'weight: 3 on azure, weight: 1 on openai'},
     title: 'Weights split traffic',
     page: '/docs/routing#weighted-deployments',
     claim: 'A deployment with weight 3 gets three times the traffic of one with weight 1.',
@@ -65,6 +66,7 @@ model_list:
   },
   {
     id: 'rpm-as-weight',
+    code: {before: 'no rpm limits', after: 'rpm: 60 on small, rpm: 600 on big'},
     title: 'rpm limits steer traffic',
     page: '/docs/routing#load-balancing',
     claim: 'Without weights, simple-shuffle splits by each deployment’s rpm.',
@@ -92,6 +94,7 @@ model_list:
   },
   {
     id: 'order',
+    code: {before: 'no order', after: 'order: 1 on primary, order: 2 on backup'},
     title: 'order beats weight',
     page: '/docs/proxy/load_balancing#deployment-ordering-priority',
     claim: 'Deployments with order: 1 get every request while healthy; order: 2 only takes over when they fail.',
@@ -252,6 +255,7 @@ router_settings:
   },
   {
     id: 'per-model-timeout',
+    code: {before: 'no timeout', after: 'timeout: 3 on slow'},
     title: 'A timeout for one slow deployment',
     page: '/docs/proxy/timeout#custom-timeouts--stream-timeouts-per-model',
     claim: 'A timeout in one deployment’s litellm_params cuts its slow calls short and retries elsewhere.',
@@ -383,7 +387,7 @@ router_settings:
     claim: 'model_group_alias maps a public name onto a model group, so clients keep their name when the target changes.',
     request: 'Ordinary chat requests for the name smart, about 3 a second. The client never changes what it asks for; only the config does.',
     before: 'Before: the alias smart points at gpt-4o.',
-    after: 'After: smart points at claude.',
+    after: 'After: the alias smart points at claude.',
     watch: 'the lanes: openai serves everything before, anthropic after, and the clients still ask for smart',
     configA: `# Clients ask for "smart".\n${GPT_AND_CLAUDE}\nrouter_settings:\n  model_group_alias:\n    smart: gpt-4o\n`,
     patchB: {router_settings: {model_group_alias: {smart: 'claude'}}},
@@ -392,6 +396,7 @@ router_settings:
   },
   {
     id: 'team-deployment',
+    code: {before: 'one shared deployment', after: 'acme-azure with team_id: acme'},
     title: 'A team gets its own deployment',
     page: '/docs/proxy/load_balancing#team-scoped-models-and-legacy-model_aliases',
     claim: 'A deployment with model_info.team_id serves that team under the public name, and nobody else.',
@@ -445,6 +450,21 @@ function patched(text, patch) {
     .flatMap(([key, value]) => (key === 'router_settings' ? Object.keys(value) : [key]))
     .join(', ');
   return `# Config A with ${comment} changed.\n${yaml.dump(config, {lineWidth: 100})}`;
+}
+
+// The one setting a case changes, as a short line per side for its Before and After cards. Cases
+// whose After is a whole config name theirs in `code`; the rest are config A plus router_settings.
+const flow = value => yaml.dump(value, {flowLevel: 0, lineWidth: -1}).trim();
+
+export function caseCode(found) {
+  if (found.code) return found.code;
+  const settings = yaml.load(found.configA)?.router_settings ?? {};
+  const changed = Object.entries(found.patchB?.router_settings ?? {});
+  const line = pick => changed.map(([key, value]) => `${key}: ${pick(key, value)}`).join(', ');
+  return {
+    before: line(key => (settings[key] === undefined ? 'unset' : flow(settings[key]))),
+    after: line((key, value) => flow(value)),
+  };
 }
 
 export const caseById = id => CASES.find(item => item.id === id) ?? null;

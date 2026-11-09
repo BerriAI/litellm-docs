@@ -1688,30 +1688,148 @@
 /* Docs case picker and the claim the picked case shows. */
 .caseBar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 0.5rem 1rem;
-  margin-bottom: 0.6rem;
-  padding-bottom: 0.6rem;
-  border-bottom: 1px solid var(--sim-soft);
-}
-
-.caseBar .cap {
-  margin-right: 0.4rem;
-}
-
-.caseText {
-  display: flex;
-  flex: 1 1 320px;
   flex-direction: column;
-  gap: 0.15rem;
-  font-size: 0.85rem;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--sim-soft);
+  --case-before: #c2410c;
+  --case-before-ink: #9a3412;
+  --case-before-fill: #fff7ed;
+  --case-after: #1d4ed8;
+  --case-after-ink: #1e40af;
+  --case-after-fill: #eff4ff;
 }
 
-.caseTitle {
+[data-theme='dark'] .caseBar {
+  --case-before: #fb923c;
+  --case-before-ink: #fdba74;
+  --case-before-fill: rgba(251, 146, 60, 0.12);
+  --case-after: #60a5fa;
+  --case-after-ink: #93c5fd;
+  --case-after-fill: rgba(96, 165, 250, 0.12);
+}
+
+.caseHead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.caseName {
+  font-size: 1.3rem;
+  line-height: 1.25;
+}
+
+.caseClaim {
+  font-size: 0.92rem;
+}
+
+.caseCards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.panel .caseCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.85rem 1rem;
+  border: 2px solid var(--sim-line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ifm-font-color-base);
+  text-align: left;
+}
+
+.panel .caseCard:hover {
+  border-color: var(--ifm-color-emphasis-500);
+}
+
+.caseCardTop {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.55rem;
+}
+
+.caseStep {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--ifm-color-emphasis-200);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.caseCardLabel {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.caseCardState {
+  margin-left: auto;
+  color: var(--ifm-color-primary);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.caseCode {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+
+.caseCardText {
+  color: var(--sim-muted);
+  font-size: 0.84rem;
+}
+
+.panel .caseCardOn.before {
+  border-color: var(--case-before);
+  background: var(--case-before-fill);
+}
+
+.panel .caseCardOn.after {
+  border-color: var(--case-after);
+  background: var(--case-after-fill);
+}
+
+.caseCardOn.before .caseStep {
+  background: var(--case-before);
+  color: #fff;
+}
+
+.caseCardOn.after .caseStep {
+  background: var(--case-after);
+  color: #fff;
+}
+
+.caseCardOn.before .caseCardLabel,
+.caseCardOn.before .caseCardState {
+  color: var(--case-before-ink);
+}
+
+.caseCardOn.after .caseCardLabel,
+.caseCardOn.after .caseCardState {
+  color: var(--case-after-ink);
+}
+
+.caseWatch {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+@media (max-width: 600px) {
+  .caseCards {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* The docs case's kinds of request, each in plain language. */
