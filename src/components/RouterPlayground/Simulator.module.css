@@ -180,8 +180,7 @@
   }
 }
 
-.cards,
-.sees {
+.cards {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
@@ -221,25 +220,6 @@
   color: var(--sim-muted);
   font-family: var(--ifm-font-family-monospace);
   font-size: 0.72rem;
-}
-
-.seesTable {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr);
-  padding: 0 0.8rem 0.2rem;
-  border: 1px solid var(--sim-line);
-  border-radius: 6px;
-  font-size: 0.76rem;
-  line-height: 1.4;
-}
-
-.seesTable span {
-  padding: 0.45rem 0.6rem 0.45rem 0;
-  border-top: 1px solid var(--sim-soft);
-}
-
-.seesTable span:nth-child(-n + 2) {
-  border-top: none;
 }
 
 /* Profile editor */

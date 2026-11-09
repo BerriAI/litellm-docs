@@ -1300,49 +1300,6 @@ function SimPicked({picked, slots, model, info, onClose}) {
   );
 }
 
-const ROUTER_SEES = [
-  ['429, 500, 503', 'a failed attempt: counts toward allowed fails, can trip a cooldown, retries within num_retries'],
-  [
-    <>
-      attempt slower than <code>timeout</code>
-    </>,
-    'the host cancels it as a timeout, which is then a failed attempt like the row above',
-  ],
-  ['400 context window', 'context_window_fallbacks, when set'],
-  ['400 content policy', 'content_policy_fallbacks, when set'],
-  ['over capacity', '429 from the provider, so the same path as the first row'],
-  [
-    'slow, but under timeout',
-    'no routing effect with simple-shuffle; it shows up in the end to end latency and in how many requests are in flight',
-  ],
-];
-
-// How the answers a profile produces reach the router core.
-function RouterSees() {
-  return (
-    <div className={styles.sees}>
-      <div className={styles.seesTable}>
-        <span className={styles.muted}>Behaviour</span>
-        <span className={styles.muted}>Path through the router core</span>
-        {ROUTER_SEES.map(([what, path], index) => (
-          <React.Fragment key={index}>
-            <span>{what}</span>
-            <span>{path}</span>
-          </React.Fragment>
-        ))}
-      </div>
-      <div className={styles.note}>
-        Samples come from the seed, so the same profile, incidents and seed replay the same run. Latency starts to
-        steer picks only once latency-based routing runs in Rust; until then it is a profile setting, not a strategy.
-      </div>
-      <div className={styles.note}>
-        Requests overlap on simulated time: each attempt waits out its latency while others run, so a slow deployment
-        raises the number in flight before it changes any pick.
-      </div>
-    </div>
-  );
-}
-
 // The docs case bar: the linked case's title and text, with no way to browse to the others. A case opens in the live run with its config, traffic and incidents;
 // Before and After swap in the config the docs section changes, and the run starts over.
 function CaseBar({docsCase, side, onSide}) {
@@ -1468,9 +1425,6 @@ export default function Simulator({
             initialScenario={initialScenario}
           />
         )}
-        <Panel id="sim-sees" sub title="What the router sees" defaultOpen={false}>
-          <RouterSees />
-        </Panel>
       </Panel>
     </>
   );
