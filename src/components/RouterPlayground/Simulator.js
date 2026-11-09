@@ -14,7 +14,6 @@ import {
   newKind,
 } from './requests';
 import Scenario from './Scenario';
-import {CASES} from './cases';
 import {KindLegend, KindSwatch, kindActive, kindColour, useKindSlots} from './SimKinds';
 import {INCIDENT_KINDS, coreIncident, coreProfiles, incidentLabel, openSession} from './simSession';
 import {RunCard} from './Trace';
@@ -1312,29 +1311,17 @@ function RouterSees() {
   );
 }
 
-// The docs case bar. A case opens in the live run with its config, traffic and incidents;
+// The docs case bar: the linked case's title and text, with no way to browse to the others. A case opens in the live run with its config, traffic and incidents;
 // Before and After swap in the config the docs section changes, and the run starts over.
 function CaseBar({docsCase, side, onSide}) {
   // Only a case link shows the bar; the playground opened directly has none.
   if (!docsCase) return null;
   return (
     <div className={styles.caseBar}>
-      <label className={styles.slider}>
+      <div className={styles.caseTitle}>
         <span className={styles.cap}>DOCS CASE</span>
-        <select
-          value={docsCase.id}
-          onChange={event => {
-            window.location.hash = event.target.value ? `case=${event.target.value}` : '';
-          }}
-          aria-label="Docs case">
-          <option value="">none, close the case</option>
-          {CASES.map(item => (
-            <option key={item.id} value={item.id}>
-              {item.title}
-            </option>
-          ))}
-        </select>
-      </label>
+        <strong>{docsCase.title}</strong>
+      </div>
       <div className={styles.segmented} role="group" aria-label="Before or after">
         {[
           ['before', 'Before'],
