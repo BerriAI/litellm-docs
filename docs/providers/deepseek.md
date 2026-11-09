@@ -56,6 +56,16 @@ We support ALL Deepseek models, just set `deepseek/` as a prefix when sending co
 | deepseek-flash | `completion(model="deepseek/deepseek-flash", messages)` | 
 | deepseek-v4-pro | `completion(model="deepseek/deepseek-v4-pro", messages)` | 
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`deepseek/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other DeepSeek model name. LiteLLM sends DeepSeek the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `deepseek/deepseek-pro-latest` | DeepSeek Pro |
+| `deepseek/deepseek-flash-latest` | DeepSeek Flash |
 
 ## Reasoning Models
 | Model Name               | Function Call                                                                                                                                                      |

@@ -17,12 +17,12 @@ variant="cards"
 items={[
   { title: "Heuristic v1", icon: <SlidersHorizontal size={18} />, tone: "local", description: "Local keyword and pattern scoring with tunable weights. No classifier API call.", to: "#tune-heuristic-v1" },
   { title: "Heuristic v2", icon: <Gauge size={18} />, tone: "local", description: "Local success estimates for four tiers. Tune the minimum success threshold.", to: "#tune-heuristic-v2" },
-  { title: "Always use the judge", icon: <BrainCircuit size={18} />, tone: "judge", description: "An LLM selects the tier whenever classification runs.", to: "#tune-the-llm-judge" },
+  { title: "LLM as a judge", icon: <BrainCircuit size={18} />, tone: "judge", description: "An LLM selects the tier whenever classification runs.", to: "#tune-the-llm-judge" },
   { title: "Heuristic first", icon: <GitBranch size={18} />, tone: "chain", description: "Run v1 or v2 up to a tier ceiling, then ask the LLM for remaining requests.", to: "#heuristic-first" },
   { title: "Hybrid", icon: <Split size={18} />, tone: "chain", description: "Run v1 or v2 locally; ask the LLM near decision boundaries.", to: "#hybrid" },
   { title: "Capability", icon: <Target size={18} />, tone: "forecast", description: "Forecast whether an efficient solver can finish the task; otherwise use a capable solver.", to: "#capability" },
   { title: "Fuse v2", icon: <Combine size={18} />, tone: "forecast", description: "Compare two solver forecasts and choose within an acceptable quality gap.", to: "#fuse-v2" },
-  { title: "OSS classifier", icon: <Server size={18} />, description: "Connect to self-hosted Laya or Bespoke Nimble, or the hosted Jev classifier.", to: "#connect-a-self-hosted-classifier" },
+  { title: "Decision Model", icon: <Server size={18} />, description: "Connect to self-hosted Laya or Bespoke Nimble, or the hosted Jev classifier.", to: "#connect-a-self-hosted-classifier" },
   { title: "Custom classifier", icon: <Braces size={18} />, description: "Route with your own Python plugin, configured at gateway startup.", to: "#custom-classifier-startup-configuration-only" },
 ]}
 />

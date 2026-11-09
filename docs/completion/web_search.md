@@ -52,7 +52,7 @@ OpenAI offers two distinct ways to use web search depending on the endpoint and 
 | Approach | Endpoint | Models | How to enable |
 |----------|----------|--------|---------------|
 | **Search Models** | `/chat/completions` | `gpt-5-search-api`, `gpt-4o-search-preview`, `gpt-4o-mini-search-preview` | Pass `web_search_options` parameter |
-| **Web Search Tool** | `/responses` | `gpt-5`, `gpt-4.1`, `gpt-4o`, and other regular models | Pass `web_search_preview` tool |
+| **Web Search Tool** | `/responses` | `{{openai_large}}`, `{{openai_small}}`, and other regular models | Pass `web_search_preview` tool |
 
 :::tip[Search models search automatically]
 Search models like `gpt-5-search-api` **automatically search the web** even without the `web_search_options` parameter. Use `web_search_options` to set `search_context_size` (`"low"`, `"medium"`, `"high"`) or specify `user_location` for localized results.

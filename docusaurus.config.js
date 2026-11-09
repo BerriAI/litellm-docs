@@ -82,6 +82,8 @@ const config = {
           {from: '/docs/guides/reliability_testing_spend', to: '/docs/completion/reliable_completions'},
           {from: '/docs/proxy/liteadmin_slack_native', to: '/docs/proxy/liteadmin_slack'},
           {from: '/docs/proxy/multiple_admins', to: '/docs/proxy/audit_logs'},
+          {from: '/docs/proxy/jwt_auth_arch', to: '/docs/proxy/access_management/jwt_permissions#beta-control-access-with-oidc-roles'},
+          {from: ['/docs/oidc', '/docs/oidcz'], to: '/docs/proxy/model_management#workload-identity-credentials'},
           {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
           {
             from: '/docs/proxy/control_plane_and_data_plane',
@@ -354,7 +356,9 @@ const config = {
           remarkPlugins: [require('./src/remark/raw-markdown')],
         },
         blog: false, // Disable the default blog plugin from preset-classic
-        pages: {},
+        pages: {
+          beforeDefaultRemarkPlugins: [require('./src/remark/docs-models')],
+        },
         theme: {
           customCss: [require.resolve('./src/css/custom.css'), require.resolve('./src/css/logo-shape.css')],
         },
@@ -389,6 +393,10 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      // Google Search Console ownership token. Public by design; keep it so the property stays verified.
+      // It lives here, not in headTags, so it renders near <title>. headTags land after inline
+      // scripts whose strings contain "<div>", and Google's verifier then decides <head> has ended.
+      metadata: [{name: 'google-site-verification', content: '2ECVUxrDhV_G5feehdJNQuTA4dEJbE9R918TbGTwJI8'}],
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.png',
       // The whole bar links to the page; the close button still works.
@@ -460,6 +468,12 @@ const config = {
             position: 'right',
             className: 'header-github-link',
             'aria-label': 'GitHub repository',
+          },
+          {
+            href: 'https://discord.com/invite/wuPM9dRgDw',
+            position: 'right',
+            className: 'header-discord-link',
+            'aria-label': 'Discord community',
           },
         ],
       },

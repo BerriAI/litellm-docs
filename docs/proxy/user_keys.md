@@ -56,18 +56,25 @@ How to send requests to the proxy, pass metadata, allow users to pass in their O
 
 <TabItem value="openai" label="OpenAI Python v1.0.0+">
 
-Set `extra_body={"metadata": { }}` to `metadata` you want to pass
+Set your gateway URL and [Virtual Key](./api_key_auth.md) in the client environment:
+
+```bash
+export LITELLM_PROXY_URL="https://litellm.example.com"
+export LITELLM_API_KEY="<your-virtual-key>"
+```
+
+Point the SDK at the gateway's `/v1` base URL and supply that Virtual Key. Replace `my-model` with a configured model available to your key. The optional `extra_body.metadata` fields below attach logging metadata to the request.
 
 ```python
+import os
 import openai
 client = openai.OpenAI(
-    api_key="anything",
-    base_url="http://0.0.0.0:4000"
+    api_key=os.environ["LITELLM_API_KEY"],
+    base_url=f"{os.environ['LITELLM_PROXY_URL'].rstrip('/')}/v1",
 )
 
-# request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="{{openai_small}}",
+    model="my-model",
     messages = [
         {
             "role": "user",

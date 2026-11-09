@@ -230,6 +230,20 @@ model_list:
 | gpt-3.5-turbo-16k    | `completion('azure/<your deployment name>', messages)` |
 | gpt-3.5-turbo-16k-0613    | `completion('azure/<your deployment name>', messages)`
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`azure/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Azure OpenAI model name. LiteLLM sends Azure OpenAI the current target model and bills at that model's price. See [Latest model aliases](../../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `azure/gpt-luna-latest` | GPT Luna |
+| `azure/gpt-sol-latest` | GPT Sol |
+| `azure/gpt-terra-latest` | GPT Terra |
+| `azure/gpt-astra-latest` | GPT Astra |
+| `azure/gpt-mini-latest` | GPT Mini |
+
 ## Azure OpenAI Vision Models 
 | Model Name            | Function Call                                                   |
 |-----------------------|-----------------------------------------------------------------|
@@ -517,6 +531,10 @@ curl http://localhost:4000/v1/chat/completions \
 
 </TabItem>
 </Tabs>
+
+## Azure Realtime Translation
+
+For live speech-to-speech translation, add `azure/gpt-realtime-translate` with your `api_base` and `api_key`, then connect to `/v1/realtime/translations` on the proxy. See [Realtime translation](/docs/realtime_translation) for the config, a WebSocket client, WebRTC, and pricing.
 
 ## Azure Instruct Models
 
@@ -1040,7 +1058,7 @@ In your config.yaml, set `enable_loadbalancing_on_batch_endpoints: true`
 
 ```yaml keep-model-ids
 model_list:
-  - model_name: "batch-gpt-4o-mini"
+  - model_name: "batch-model"
     litellm_params:
       model: "azure/gpt-5.6-luna"
       api_key: os.environ/AZURE_API_KEY
@@ -1057,7 +1075,7 @@ Note: Response is in the OpenAI-format.
 
 1. Upload a file 
 
-Just set `model: batch-gpt-4o-mini` in your .jsonl.
+Just set `model: batch-model` in your .jsonl.
 
 ```bash
 curl http://localhost:4000/v1/files \
@@ -1071,9 +1089,9 @@ curl http://localhost:4000/v1/files \
 Note: `model` should be your azure deployment name.
 
 ```json
-{"custom_id": "task-0", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-gpt-4o-mini", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "When was Microsoft founded?"}]}}
-{"custom_id": "task-1", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-gpt-4o-mini", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "When was the first XBOX released?"}]}}
-{"custom_id": "task-2", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-gpt-4o-mini", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "What is Altair Basic?"}]}}
+{"custom_id": "task-0", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-model", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "When was Microsoft founded?"}]}}
+{"custom_id": "task-1", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-model", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "When was the first XBOX released?"}]}}
+{"custom_id": "task-2", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-model", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "What is Altair Basic?"}]}}
 ```
 
 Expected Response (OpenAI-compatible)
@@ -1092,7 +1110,7 @@ curl http://0.0.0.0:4000/v1/batches \
     "input_file_id": "file-f0be81f654454113a922da60acb0eea6",
     "endpoint": "/v1/chat/completions",
     "completion_window": "24h",
-    "model": "batch-gpt-4o-mini"
+    "model": "batch-model"
   }'
 ```
 

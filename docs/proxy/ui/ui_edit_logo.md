@@ -1,74 +1,41 @@
 import Image from '@theme/IdealImage';
 
-# Customize UI Logo
+# Customize UI branding
 
-Personalize your LiteLLM dashboard by replacing the default logo with your own company branding. You can set a custom logo via the UI or the API.
+{/* keep-version-note */}
+
+<a id="custom-branding-admin-ui"></a>
+<a id="customize-ui-logo"></a>
+
+Customize the Admin UI logo, favicon, and color scheme.
+
+<Image img={require('../../../img/litellm_custom_ai.png')} />
 
 ## Via the UI
 
-### 1. Navigate to Settings
+<a id="or-set-your-logo-directly-from-admin-ui"></a>
+<a id="1-navigate-to-settings"></a>
+<a id="2-open-ui-theme-settings"></a>
+<a id="3-click-the-logo-url-field"></a>
+<a id="4-find-your-logo-image"></a>
+<a id="5-right-click-on-the-logo-image"></a>
+<a id="6-copy-the-image-address"></a>
+<a id="7-switch-back-to-litellm"></a>
+<a id="8-paste-the-logo-url"></a>
+<a id="9-save-changes"></a>
 
-Click the **Settings** icon in the sidebar.
+1. Open **Settings → UI Theme**.
+2. Paste a hosted image URL into **Logo URL**. Optionally set **Custom Logo URL (dark mode)**.
+3. Click **Save Changes**. The logo appears in the dashboard sidebar and login page.
 
-![Navigate to Settings](https://colony-recorder.s3.amazonaws.com/files/2026-03-13/57a15404-51f7-481e-9db2-cea94566d3ce/ascreenshot_7a348567c839448bb806fd71cf4abca0_text_export.jpeg)
-
-### 2. Open UI Theme Settings
-
-Click **UI Theme** from the settings menu.
-
-![Open UI Theme](https://colony-recorder.s3.amazonaws.com/files/2026-03-13/30663fe1-9f78-4496-96d4-c53513cbaf82/ascreenshot_ac1eb59eda0e423fbd0e7d3a6cabd4c7_text_export.jpeg)
-
-### 3. Click the Logo URL Field
-
-Click the **Logo URL** text field to start editing.
-
-![Click Logo URL Field](https://colony-recorder.s3.amazonaws.com/files/2026-03-13/069e8412-8ec1-4d36-ba38-6b2e2858a45a/ascreenshot_8fc7fb4a3af74815bc1b69a8554bc110_text_export.jpeg)
-
-### 4. Find Your Logo Image
-
-Open a new browser tab and find the logo image you want to use (e.g., search Google Images for your company logo).
-
-![Find Logo Image](https://colony-recorder.s3.amazonaws.com/files/2026-03-13/d9b55dac-bc4e-4728-b422-4afbc21f9034/ascreenshot_2a805f39c83d4b5e95f43495a6ea4e79_text_export.jpeg)
-
-### 5. Right-Click on the Logo Image
-
-Right-click the image you want to use as your logo.
-
-![Right-Click Image](https://colony-recorder.s3.amazonaws.com/files/2026-03-13/9d42d13e-6028-4710-acb2-c6af04a855c7/ascreenshot_0f21f29ba0e44132afe483a4b88e8b70_text_export.jpeg)
-
-### 6. Copy the Image Address
-
-Select **Copy Image Address** from the context menu to copy the URL.
-
-![Copy Image Address](https://colony-recorder.s3.amazonaws.com/files/2026-03-13/c25637be-383a-498b-ad11-eb1761d52757/ascreenshot_b237ee800979462189a02c1e1942ebf1_text_export.jpeg)
-
-### 7. Switch Back to LiteLLM
-
-Navigate back to the LiteLLM UI tab (e.g., press **Cmd + Left** or click the tab).
-
-![Switch Back](https://colony-recorder.s3.amazonaws.com/files/2026-03-13/f0647856-679c-4591-9ff7-7fd3cfbc70b4/ascreenshot_3ce46dae64c94891ac0983f5ed8f085a_text_export.jpeg)
-
-### 8. Paste the Logo URL
-
-Paste the copied image URL into the **Logo URL** field with **Cmd + V**.
-
-![Paste URL](https://colony-recorder.s3.amazonaws.com/files/2026-03-13/54dd30d9-7a88-41e8-a580-a6acf707c7fa/ascreenshot_8a772218ac0743d9ae8ffd3311eccd5a_text_export.jpeg)
-
-### 9. Save Changes
-
-Click **Save Changes** to apply your new logo.
-
-![Save Changes](https://colony-recorder.s3.amazonaws.com/files/2026-03-13/4baf6494-d146-4600-b6f2-ef667338d580/ascreenshot_722cbcd568ec4267af5122b3958bb248_text_export.jpeg)
-
-Your custom logo will now appear in the LiteLLM dashboard sidebar and login page.
+<div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+  <Image img={require('../../../img/admin_settings_ui_theme.png')} />
+  <Image img={require('../../../img/admin_settings_ui_theme_logo.png')} />
+</div>
 
 ## Dark Mode Logo
 
-A logo drawn for a light background rarely reads well on a dark one, so you can set a second logo that LiteLLM uses whenever the dashboard is in dark mode. Fill in **Custom Logo URL (dark mode)** on the same UI Theme page, or set `UI_LOGO_PATH_DARK`
-
-Leaving it empty is a valid choice. Dark mode then reuses whatever you set for the light logo, so your branding still shows rather than reverting to LiteLLM's. The same thing happens if the dark logo is set but cannot be loaded, which means a broken or deleted image never costs you your branding
-
-Setting only the dark logo leaves light mode on the default LiteLLM logo, so set both if you want your own artwork in each theme
+Set **Custom Logo URL (dark mode)** or `UI_LOGO_PATH_DARK` for artwork designed for a dark background. If it is unset or cannot be loaded, dark mode reuses the light logo. Setting only a dark logo leaves light mode on the default LiteLLM logo.
 
 ## Via the API
 
@@ -84,7 +51,7 @@ curl -X PATCH 'http://localhost:4000/update/ui_theme_settings' \
   }'
 ```
 
-`logo_url_dark` is optional. Omit it and dark mode reuses `logo_url`
+`logo_url_dark` is optional. Omit it and dark mode reuses `logo_url`.
 
 ### Set a Custom Favicon
 
@@ -131,13 +98,49 @@ litellm_settings:
     favicon_url: "https://example.com/your-favicon.ico"  # optional
 ```
 
-Or set them as environment variables:
+## Environment variables {#set-custom-logo}
+
+Set `UI_LOGO_PATH` to a hosted image URL or a file available inside the proxy container. Hosted images are easier to configure and troubleshoot.
+
+```bash
+UI_LOGO_PATH="https://example.com/your-company-logo.png"
+UI_LOGO_PATH_DARK="https://example.com/your-company-logo-dark.png"
+```
+
+For a local image:
+
+```bash
+UI_LOGO_PATH="ui_images/logo.jpg"
+```
+
+You can also declare the variables in the proxy configuration:
 
 ```yaml
 environment_variables:
   UI_LOGO_PATH: "https://example.com/your-company-logo.png"
   UI_LOGO_PATH_DARK: "https://example.com/your-company-logo-dark.png"
 ```
+
+## Set a custom color theme {#set-custom-color-theme}
+
+1. Open the [enterprise UI color template](https://github.com/BerriAI/litellm/blob/main/enterprise/enterprise_ui/_enterprise_colors.json).
+2. In `enterprise/enterprise_ui`, rename `_enterprise_colors.json` to `enterprise_colors.json`.
+3. Set your colors using the [supported color palette](https://www.tremor.so/docs/layout/color-palette#default-colors). For example:
+
+```json
+{
+  "brand": {
+    "DEFAULT": "teal",
+    "faint": "teal",
+    "muted": "teal",
+    "subtle": "teal",
+    "emphasis": "teal",
+    "inverted": "teal"
+  }
+}
+```
+
+4. Deploy the LiteLLM proxy with the updated file.
 
 ## Supported Logo Formats
 

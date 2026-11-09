@@ -8,6 +8,12 @@ import TabItem from '@theme/TabItem';
 
 # [Beta] Rust AI Gateway
 
+:::warning
+
+As of `main:latest`, the Python proxy serves only two routes on Rust: `/ocr` for every provider and `/audio/transcriptions` for `bedrock`. Both always run on Rust, and `LITELLM_RUST` does not switch them back to Python. Every other route, including `/v1/messages` and `/chat/completions`, runs on Python, and the per-model `rust: true` flag described below has no effect.
+
+:::
+
 :::info
 
 This is a beta feature and the surface it covers is still growing. The Rust core is opt-in, off by default, and any Rust path that fails or is not yet supported falls back to the existing Python path automatically, so turning it on cannot break a request that Python already handles.

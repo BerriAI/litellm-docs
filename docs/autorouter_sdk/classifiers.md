@@ -60,39 +60,43 @@ Change the quickstart's message to `"Explain Kubernetes deployments"` and run it
 
 ## Write a classifier in Python
 
-Use your own code when application metadata should decide the tier. Add this class and configuration before you create the router:
+Return a tier name based on the message or metadata. Add this after `routing_config` and before `router = Router(...)` in the [quickstart](../autorouter_sdk.md):
 
 ```python
-from litellm.types.router import RoutingContext
-
-
 class TaskClassifier:
-    async def classify(self, context: RoutingContext) -> str | None:
-        if context.metadata.get("task_type") == "code_review":
-            return "REASONING"
-        return "SIMPLE"
+    async def classify(self, context):
+        message = context.structured_messages[-1]["content"]
+        if context.metadata.get("agent_name") == "summarizer":
+            return "quick"
+        if len(message) > 1000:
+            return "careful"
+        if "kubernetes" in message.lower():
+            return "careful"
+        return "quick"
 
 
 routing_config.update({
     "classifier_type": "custom",
     "classifier_plugin": TaskClassifier(),
-    "classifier_plugin_timeout_ms": 3000,
+    "tiers": {"quick": "fast", "careful": "capable"},
     "classifier_fallback": "default_model",
 })
 ```
 
-Inside `main()`, replace the `router.acompletion(...)` call with:
+This example reads the last message as text. The first matching rule wins. Change the rules and tier names to suit your application.
+
+Pass metadata with the request when you need it:
 
 ```python
 response = await router.acompletion(
     model="auto",
-    messages=[{"role": "user", "content": "Review this function: def add(a, b): return a - b"}],
-    metadata={"task_type": "code_review"},
+    messages=[{"role": "user", "content": "Summarize this document: ..."}],
+    metadata={"agent_name": "summarizer"},
 )
 ```
 
-Run the script. You should see the model assigned to `capable`. Without `task_type="code_review"`, this classifier returns `SIMPLE` and uses `fast`.
+Run `python autorouter.py`. The summarizer uses `fast`. Without that metadata, long messages and Kubernetes questions use `capable`; other messages use `fast`.
 
-Return a configured tier name from `classify()`, or `None` to use `classifier_fallback`. Exceptions, timeouts, and invalid tier names also use that fallback. Keyword rules still run before this classifier, so omit them when you want your Python logic to make the decision.
+If your classifier raises an error, times out, or returns an unknown tier, this configuration uses the quickstart's default model, `capable`.
 
 Next, [configure routing](./routing.md) or [inspect your classifier's decisions](./evaluation.md). For hosted decision classifiers and semantic keyword matching, see the [classification reference](/docs/proxy/auto_routing#classification).

@@ -335,6 +335,8 @@ messages=[{"role": "user", "content": [
 
 - `merge_reasoning_content_in_choices`: *boolean (optional)* - For streaming responses, adds `reasoning_content` to `content` inside `<think>` tags for clients that expect reasoning in content
 
+- `thought_signature_in_tool_call_id`: *boolean (optional)* <SinceVersion v="1.109.0" /> - For Gemini models on the Gemini API and Vertex AI, `false` keeps the thought signature out of tool call ids so the ids stay short. See [Keep tool call ids short](../providers/gemini.md#keep-tool-call-ids-short).
+
 - `prompt_id`: *string (optional)* - Managed prompt ID passed to prompt-management hooks. See [prompt management](../prompt_management.md).
 
 - `prompt_variables`: *dict (optional)* - Values used to fill managed prompt variables when prompt-management hooks are configured. See [prompt management](../prompt_management.md).

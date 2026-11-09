@@ -64,37 +64,37 @@ Click the **Toolsets** tab on the MCP page.
 
 ### 4. Enter a name
 
-Type a name for the toolset. Pick something descriptive, since this is what agents will reference.
+Type a descriptive **Toolset Name** and an optional **Description**. The editor shows **Available Tools** on the left and **Your Toolset** on the right.
 
-![Enter toolset name](https://colony-recorder.s3.amazonaws.com/files/2026-03-22/62b412e0-d38f-44c3-99e4-3693f1512f6a/ascreenshot_b678c7c988a04f8b887b0f54c4dd95a7_text_export.jpeg)
+![New toolset editor with name, description and server groups](/img/mcp/toolset_editor_name.png)
 
-![Toolset name field](https://colony-recorder.s3.amazonaws.com/files/2026-03-22/ba5ebc95-cab7-470b-a7c9-21f12b9b01a3/ascreenshot_a602e982a2a44890a83dca64d61c38eb_text_export.jpeg)
+### 5. Find and select tools
 
-### 5. Add the first tool
+Click a server group to expand its tools. Select individual tool checkboxes, or use the server checkbox to select all its loaded tools.
 
-Select an MCP server from the dropdown, then choose the tool you want to include from that server.
+Use **Search tools or servers...** to match tool names, tool descriptions or server names. Search is case-insensitive and expands matching groups. A matching server name shows all its tools. Otherwise, each group shows only tools that match the search.
 
-![Select MCP server](https://colony-recorder.s3.amazonaws.com/files/2026-03-22/2aa5bcba-6414-42e3-9813-efb0a9078e32/ascreenshot_58fbff35ba654210a1b4dc5452aa6bd9_text_export.jpeg)
+While searching, **Select all matching** adds the matching tools across servers, and **Deselect all matching** removes only those matching tools. A server checkbox also applies only to that group's matching tools. These actions apply to tools that have loaded, so wait for the loading indicator to finish to include every server.
 
-![Choose server from dropdown](https://colony-recorder.s3.amazonaws.com/files/2026-03-22/4fd9cffb-d3ba-461a-8679-89f278bf67ad/ascreenshot_b61e9e85a51b494a8d09fe61198d63e1_text_export.jpeg)
+![Search for build tools with matching tools selected across servers](/img/mcp/toolset_editor_search.png)
 
-![Select tool from server](https://colony-recorder.s3.amazonaws.com/files/2026-03-22/60718e72-2062-494b-9a23-456992c88cbd/ascreenshot_7a1f8eeab30a4a05ba39c450e5458b78_text_export.jpeg)
+### 6. Review the selection
 
-### 6. Add tools from a second server
+**Your Toolset** lists every selected tool, including tools hidden by the current search. Changing or clearing the search keeps those selections. Click a selected tool to remove it, or **Clear all** to remove the entire selection, including hidden tools.
 
-Click **Add Tool**, pick a different MCP server, and select another tool. Repeat for as many tools as you need; they can come from any number of servers.
-
-![Add tool from second server](https://colony-recorder.s3.amazonaws.com/files/2026-03-22/f34e0600-cc74-4b18-8794-88d45f326144/ascreenshot_98834b14ab9343e39fb503e458d72b7c_text_export.jpeg)
-
-![Select second server](https://colony-recorder.s3.amazonaws.com/files/2026-03-22/75150368-2202-4da1-99f1-6f0620e9b133/ascreenshot_f94d0bc08ea147348a9cf021cce7d854_text_export.jpeg)
-
-![Select tool from second server](https://colony-recorder.s3.amazonaws.com/files/2026-03-22/ed2cdf6e-025d-4d50-8b12-ed68745d5c51/ascreenshot_0c1c7f76524b46c5a056fda5e6956e2b_text_export.jpeg)
+You can combine tools from any number of servers in one toolset.
 
 ### 7. Create the toolset
 
 Click **Create Toolset** to save.
 
-![Create Toolset](https://colony-recorder.s3.amazonaws.com/files/2026-03-22/021ca7b3-2d9a-49a0-8758-dae3dc3bcb4d/ascreenshot_14c6434e71114a6091e359a996f20e12_text_export.jpeg)
+## Edit a toolset
+
+In the **Toolsets** tab, open the row's **Open toolset actions** menu and choose **Edit**. Use the same search and selection controls, then click **Save Changes**.
+
+Saved tools remain selected even when they are unavailable. The selected-tools panel labels them **server not found** when the server no longer exists, **server unreachable** when its tools cannot load, or **tool not found** when the server responds without that tool. These labels do not remove the tools from the saved selection. Remove an entry explicitly if it no longer belongs in the toolset.
+
+![Edit toolset with an unavailable saved tool in the selected-tools panel](/img/mcp/toolset_editor_unavailable.png)
 
 ---
 

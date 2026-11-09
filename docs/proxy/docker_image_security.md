@@ -21,7 +21,11 @@ All image variants published to `ghcr.io/berriai/` are signed with the same cosi
 `ghcr.io/berriai/litellm-database` used to be the image to pick when the proxy needed Postgres, because it bundled the Prisma toolchain that the core image lacked. `ghcr.io/berriai/litellm` now ships the same toolchain, entrypoint and migrations, so there is no longer a reason to choose between them. `litellm-database` is still published and signed with the same key, so deployments that pin it keep working and verify with the same commands. Use `ghcr.io/berriai/litellm` for new deployments; the examples on this page use it throughout.
 :::
 
-The signing key was introduced in [commit `0112e53`](https://github.com/BerriAI/litellm/commit/0112e53046018d726492c814b3644b7d376029d0) and the public key is checked into the repository at [`cosign.pub`](https://github.com/BerriAI/litellm/blob/main/cosign.pub).
+The current signing key was introduced in [commit `e82a3c6`](https://github.com/BerriAI/litellm/commit/e82a3c646908ba0a6ee0beddc4310d7a6cac4065) and the public key is checked into the repository at [`cosign.pub`](https://github.com/BerriAI/litellm/blob/main/cosign.pub). Its SHA-256 fingerprint is `e3fe3e08c44b16407fe0b37c43b4f8b603b3a0f4ee74c29e647bc022d762c2c0`. It signs images from `v1.103.8`, `v1.104.6`, `v1.105.4`, `v1.106.3` and every later release.
+
+:::warning[Previous signing key]
+Earlier images are signed with the previous key from [commit `0112e53`](https://github.com/BerriAI/litellm/commit/0112e53046018d726492c814b3644b7d376029d0). That key was rotated on October 23, 2026, after the [October 21, 2026 incident](/blog/security-incident-oct-21-2026#image-signing-key-rotation). Trust a signature from it only on an image published before the `v1.107.0` release on October 21, 2026.
+:::
 
 :::info[Enterprise images]
 Enterprise images (`litellm-ee`) follow the same signing process. Contact [support@berri.ai](mailto:support@berri.ai) to confirm coverage for your specific enterprise image tag.
@@ -37,8 +41,8 @@ A commit hash is cryptographically immutable, making this the strongest verifica
 
 ```bash
 cosign verify \
-  --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
-  ghcr.io/berriai/litellm:v1.89.4
+  --key https://raw.githubusercontent.com/BerriAI/litellm/e82a3c646908ba0a6ee0beddc4310d7a6cac4065/cosign.pub \
+  ghcr.io/berriai/litellm:v1.106.6
 ```
 
 Replace the image reference with any signed variant:
@@ -46,8 +50,8 @@ Replace the image reference with any signed variant:
 ```bash
 # litellm-non_root
 cosign verify \
-  --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
-  ghcr.io/berriai/litellm-non_root:v1.89.4
+  --key https://raw.githubusercontent.com/BerriAI/litellm/e82a3c646908ba0a6ee0beddc4310d7a6cac4065/cosign.pub \
+  ghcr.io/berriai/litellm-non_root:v1.106.6
 ```
 
 ### Verify with a release tag (convenience)
@@ -56,8 +60,8 @@ Tags are protected in this repository and resolve to the same key:
 
 ```bash
 cosign verify \
-  --key https://raw.githubusercontent.com/BerriAI/litellm/v1.89.4/cosign.pub \
-  ghcr.io/berriai/litellm:v1.89.4
+  --key https://raw.githubusercontent.com/BerriAI/litellm/v1.106.6/cosign.pub \
+  ghcr.io/berriai/litellm:v1.106.6
 ```
 
 ### Expected output
@@ -96,8 +100,8 @@ spec:
     - key:
         data: |
           -----BEGIN PUBLIC KEY-----
-          MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKi4ivqGpE231OGH50PKbqy1Y1Kkb
-          POJC8+i2Wko82gBOUCe3M0Vw86H/4rhUhfoYEti4gdJ9wZbYmK0I2EE96g==
+          MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEG06dpKM+vEDnmp2zcjyXgVCXxzRg
+          JA5H2LnmwBKQafZGka6OOrWujCEWATQewiAgyD4WQdJ0pvU9RC4mvNAjvQ==
           -----END PUBLIC KEY-----
 ```
 
@@ -141,7 +145,7 @@ Add a verification step before any deployment job:
 - name: Verify LiteLLM image signature
   run: |
     cosign verify \
-      --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
+      --key https://raw.githubusercontent.com/BerriAI/litellm/e82a3c646908ba0a6ee0beddc4310d7a6cac4065/cosign.pub \
       ghcr.io/berriai/litellm:${{ env.LITELLM_VERSION }}
 ```
 
@@ -159,14 +163,14 @@ Get the digest after pulling:
 
 ```bash
 docker inspect --format='{{index .RepoDigests 0}}' \
-  ghcr.io/berriai/litellm:v1.89.4
+  ghcr.io/berriai/litellm:v1.106.6
 ```
 
 Cosign verification works with digests too:
 
 ```bash
 cosign verify \
-  --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
+  --key https://raw.githubusercontent.com/BerriAI/litellm/e82a3c646908ba0a6ee0beddc4310d7a6cac4065/cosign.pub \
   ghcr.io/berriai/litellm@sha256:<digest>
 ```
 

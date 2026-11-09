@@ -83,7 +83,7 @@ The `agents` key is read correctly <SinceVersion v="1.96.0" />. On earlier versi
 
 Follow [this guide, to add your azure ai foundry agent to LiteLLM Agent Gateway](./providers/azure_ai_agents#litellm-a2a-gateway)
 
-Agents created in the current Foundry portal expose an A2A endpoint instead of the Assistants API; register those under `agents:` with Entra credentials as shown in [Foundry agents over A2A](./providers/azure_ai_agents#foundry-agents-over-a2a)
+Agents created in the current Foundry portal do not speak the Assistants API. Call them by name as a model through the project Responses API, as shown in [Foundry agents through the Responses API](./providers/azure_ai_agents#foundry-agents-through-the-responses-api), or register their A2A endpoint under `agents:` with Entra credentials as shown in [Foundry agents over A2A](./providers/azure_ai_agents#foundry-agents-over-a2a)
 
 ### Add Vertex AI Agent Engine
 

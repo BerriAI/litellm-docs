@@ -1,6 +1,59 @@
 [
   {
     "folders": [
+      "v1.108.2"
+    ],
+    "title": "LiteLLM v1.108.2 (LTS) fixes Bedrock service tiers and Claude PDF input",
+    "points": [
+      "Bedrock Converse honors the `reserved`, `auto` and `standard_only` service tiers and returns 400 for a tier that it does not support.",
+      "Base64 PDFs that you send to Claude as `image_url` work, and `openai/` deployments with an empty `api_key` no longer send `OPENAI_ADMIN_KEY`.",
+      "Groups that accept unmatched tags keep the request after affinity or cooldown filters."
+    ]
+  },
+  {
+    "folders": [
+      "v1.108.1"
+    ],
+    "title": "LiteLLM v1.108.1 (LTS) fixes Bedrock guardrail billing and router cooldowns",
+    "points": [
+      "A string fallback target such as `default_fallbacks: gpt-3.5` stops the proxy at startup, so write it as a list, `default_fallbacks: [\"gpt-3.5\"]`.",
+      "Spend and budgets include native Bedrock guardrail traces and the Gemini audio rates for flex, priority and batch.",
+      "The router keeps the only deployment of a group warm under `allowed_fails`, and evicted SDK clients close their aiohttp sessions."
+    ]
+  },
+  {
+    "folders": [
+      "v1.106.7"
+    ],
+    "title": "LiteLLM v1.106.7 supports custom video providers on /v1/videos",
+    "points": [
+      "`/v1/videos` serves providers that `custom_provider_map` registers.",
+      "The proxy and its Helm charts no longer package the Lens beta, so remove `lensWorker.enabled` from your Helm values before you upgrade."
+    ]
+  },
+  {
+    "folders": [
+      "v1.108.0"
+    ],
+    "title": "LiteLLM v1.108.0 (LTS) adds Gemini 4 Argon, Microsoft 365 Copilot and OpenAI Live",
+    "points": [
+      "LiteLLM adds Gemini 4 Argon, the Microsoft 365 Copilot provider, OpenAI Live sessions on `/v1/live/sessions` and Azure PTU capacity that teams share.",
+      "The proxy count routes return the provider's error instead of a local estimate, and `token_count_framing` in `model_info` restores a local estimate."
+    ]
+  },
+  {
+    "folders": [
+      "v1.106.6",
+      "v1.105.7"
+    ],
+    "title": "LiteLLM v1.106.6 and v1.105.7 fix the gzip performance regression",
+    "points": [
+      "The proxy gzips only dashboard analytics responses and compresses them on a worker thread, so `Accept-Encoding: gzip` no longer slows down other requests.",
+      "Inference and other endpoints outside the dashboard analytics routes return uncompressed responses, and no setting restores the old gzip behavior."
+    ]
+  },
+  {
+    "folders": [
       "v1.106.5",
       "v1.105.6",
       "v1.104.8",
@@ -172,62 +225,6 @@
       "The proxy now serves `POST /v1/decisions` in OpenAI's Decisions API format and `POST /v1/systemone` in the System One format.",
       "Decision models from OpenAI, Perplexity, TypeSafe, OpenRouter, Cloudflare Clef and self-hosted Strands Decider answer on both routes.",
       "Malformed requests, such as a missing `state` or more than 128 questions, return HTTP 400 before any upstream call."
-    ]
-  },
-  {
-    "folders": [
-      "v1.102.4"
-    ],
-    "title": "LiteLLM v1.102.4 fixes double-counted spend on the chat to Responses bridge",
-    "points": [
-      "Since v1.102.0, large non-streaming chat requests to `openai/responses/*` models logged spend twice, and each request now logs once.",
-      "Key, team and daily spend now match the real cost of each request, and streaming requests are unchanged."
-    ]
-  },
-  {
-    "folders": [
-      "v1.101.6"
-    ],
-    "title": "LiteLLM v1.101.6 fixes Codex CLI tool calls on the Responses to Chat bridge",
-    "points": [
-      "Codex CLI tools now reach models behind the Responses to Chat Completions bridge, such as Bedrock Converse models.",
-      "The bridge moves `additional_tools` input items into `tools` for every bridged provider.",
-      "The model call returns to Codex as a `custom_tool_call` in both streaming and non-streaming responses."
-    ]
-  },
-  {
-    "folders": [
-      "v1.104.1",
-      "v1.103.4",
-      "v1.102.3"
-    ],
-    "title": "LiteLLM v1.104.1, v1.103.4 and v1.102.3 update pgbouncer to 1.26.0",
-    "points": [
-      "Wolfi's `openssl-dev` package now installs OpenSSL 4.0, so the Docker images bundle pgbouncer 1.26.0 to build again.",
-      "The locked Python dependencies update `langgraph-sdk` to 0.4.4, `mako` to 1.4.2 and `werkzeug` to 3.1.9.",
-      "The Admin UI updates `next` to 16.3.6 and `moment` to 2.31.0."
-    ]
-  },
-  {
-    "folders": [
-      "v1.100.5",
-      "v1.101.5"
-    ],
-    "title": "LiteLLM v1.100.5 and v1.101.5 update next to 16.3.6 and urllib3 to 2.8.0",
-    "points": [
-      "The locked Python dependencies update `urllib3` to 2.8.0, `pypdf` to 6.19.0 and `pyjwt` to 2.15.0.",
-      "The Admin UI updates `next` to 16.3.6, and the wolfi-base image digest picks up glibc 2.44-r6."
-    ]
-  },
-  {
-    "folders": [
-      "v1.103.3"
-    ],
-    "title": "LiteLLM v1.103.3 fixes streamed alias spend and bridged tool calls",
-    "points": [
-      "The proxy exits at startup when database setup fails, unless you set `ENFORCE_PRISMA_MIGRATION_CHECK=false` to keep the old behavior.",
-      "Streamed requests through an alias such as `claude-opus-4.6` now record spend from the deployment model instead of $0.",
-      "Chat replies bridged from the Responses API now put tool calls in `choices[0]`, so clients that read only the first choice run the tool."
     ]
   }
 ]

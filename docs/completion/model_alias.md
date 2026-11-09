@@ -4,9 +4,11 @@ sidebar_label: "Model Aliases"
 
 # Model Alias
 
-The model name you show an end-user might be different from the one you pass to LiteLLM - e.g. Displaying `GPT-5.6` while calling `{{openai_small}}` on the backend. 
+To follow a model family without maintaining your own mapping, use a [latest model alias](../model_latest_aliases.md).
 
-LiteLLM simplifies this by letting you pass in a model alias mapping. 
+The model name you show an end-user might be different from the one you pass to LiteLLM - e.g. Displaying `GPT-5.6` while calling `{{openai_small}}` on the backend.
+
+LiteLLM simplifies this by letting you pass in a model alias mapping.
 
 ## expected format
 
@@ -17,7 +19,7 @@ litellm.model_alias_map = {
 }
 ```
 
-## usage 
+## usage
 
 ### Relevant Code
 ```python
@@ -31,8 +33,8 @@ litellm.model_alias_map = model_alias_map
 
 ### Complete Code
 ```python
-import litellm 
-from litellm import completion 
+import litellm
+from litellm import completion
 
 
 ## set ENV variables
