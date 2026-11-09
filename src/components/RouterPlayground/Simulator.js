@@ -1312,20 +1312,22 @@ function RouterSees() {
   );
 }
 
-// The docs case picker. A case opens in the live run with its config, traffic and incidents;
+// The docs case bar. A case opens in the live run with its config, traffic and incidents;
 // Before and After swap in the config the docs section changes, and the run starts over.
 function CaseBar({docsCase, side, onSide}) {
+  // Only a case link shows the bar; the playground opened directly has none.
+  if (!docsCase) return null;
   return (
     <div className={styles.caseBar}>
       <label className={styles.slider}>
         <span className={styles.cap}>DOCS CASE</span>
         <select
-          value={docsCase?.id ?? ''}
+          value={docsCase.id}
           onChange={event => {
             window.location.hash = event.target.value ? `case=${event.target.value}` : '';
           }}
           aria-label="Docs case">
-          <option value="">none</option>
+          <option value="">none, close the case</option>
           {CASES.map(item => (
             <option key={item.id} value={item.id}>
               {item.title}
@@ -1333,32 +1335,28 @@ function CaseBar({docsCase, side, onSide}) {
           ))}
         </select>
       </label>
-      {docsCase && (
-        <>
-          <div className={styles.segmented} role="group" aria-label="Before or after">
-            {[
-              ['before', 'Before'],
-              ['after', 'After'],
-            ].map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={side === value}
-                onClick={() => onSide(value)}>
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className={styles.caseText}>
-            <span>
-              {docsCase.claim} <a href={docsCase.page}>Read it in the docs</a>
-            </span>
-            <span className={styles.muted}>
-              {side === 'after' ? docsCase.after : docsCase.before} Watch {docsCase.watch}.
-            </span>
-          </div>
-        </>
-      )}
+      <div className={styles.segmented} role="group" aria-label="Before or after">
+        {[
+          ['before', 'Before'],
+          ['after', 'After'],
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={side === value}
+            onClick={() => onSide(value)}>
+            {label}
+          </button>
+        ))}
+      </div>
+      <div className={styles.caseText}>
+        <span>
+          {docsCase.claim} <a href={docsCase.page}>Read it in the docs</a>
+        </span>
+        <span className={styles.muted}>
+          {side === 'after' ? docsCase.after : docsCase.before} Watch {docsCase.watch}.
+        </span>
+      </div>
     </div>
   );
 }
