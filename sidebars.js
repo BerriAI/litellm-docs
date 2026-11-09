@@ -1842,6 +1842,7 @@ const providersSidebar = {
     "providers/langgraph",
     "providers/pydantic_ai_agent",
     { type: "html", value: "More Providers A-Z", className: "sidebar-group-label", defaultStyle: true },
+    "providers/abliteratedllm",
     "providers/abliteration",
     "providers/ai21",
     "providers/aiml",
