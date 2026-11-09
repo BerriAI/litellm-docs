@@ -399,7 +399,7 @@ By default no. The proxy rejects `s3_bucket_name`, `s3_output_bucket_name`, `s3_
 
 To let clients pick from a fixed set of buckets, list the buckets a team may use in that team's metadata as `allowed_s3_buckets`. A key on the team can then send one of those buckets as `s3_bucket_name` when it uploads a batch input file to `POST /v1/files`, and as `s3_output_bucket_name` when it creates the batch with `POST /v1/batches`. The bucket overrides the model's bucket for that request. A bucket that is not on the team's list is rejected with a 401, and a request that sends no bucket keeps using the model's bucket.
 
-`PATCH /team/{team_id}` merges the key into the team's existing metadata, while `POST /team/update` replaces the whole metadata object. Only a proxy admin can change `allowed_s3_buckets`. Team admins cannot add, change or remove it, even when `team_admin_editable_team_fields` lets them edit the rest of the team's metadata. An entry can also carry a prefix, such as `team-a-batch-bucket/tenant`, to keep the team's files under that prefix.
+`PATCH /team/{team_id}` merges the key into the team's existing metadata, while `POST /team/update` replaces the whole metadata object. Only a proxy admin can change `allowed_s3_buckets`. Team admins cannot add, change or remove it, even when `team_admin_editable_team_fields` lets them edit the rest of the team's metadata. An entry can also carry a prefix, such as `team-a-batch-bucket/tenant`, to keep the team's files under that prefix. Entries are matched as exact, case-sensitive strings, so `team-a-batch-bucket/tenant` allows only that value and not other prefixes or sub-paths of the bucket. The value must be a list of strings. Any other shape is treated as an empty list, which leaves the team unable to choose a bucket.
 
 ```bash showLineNumbers title="allow_team_buckets.sh"
 curl -X PATCH 'http://localhost:4000/team/team-a' \
@@ -433,7 +433,7 @@ Batch cost is computed from the output file Bedrock writes, so give a team's mem
 
 To keep one team from reading another team's batches, also turn on [`require_managed_files`](../proxy/managed_batches#access-control). With it, only the team that created a file or batch can act on it, and raw `s3://` ids are rejected.
 
-To allow a bucket for every team, list it in `general_settings.allowed_client_side_s3_buckets` instead. `allowed_client_side_s3_endpoint_urls` does the same for `s3_endpoint_url`. Setting `allow_client_side_credentials: true` still allows any value for all of these fields.
+To allow a bucket for every team, list it in `general_settings.allowed_client_side_s3_buckets` instead. `allowed_client_side_s3_endpoint_urls` does the same for `s3_endpoint_url`. Setting `allow_client_side_credentials: true` still allows any value for all of these fields, which also lets any caller send any bucket and so turns off the per-team lists. Leave it off when teams must stay in their own buckets.
 
 ```yaml
 general_settings:
