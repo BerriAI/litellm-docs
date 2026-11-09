@@ -480,6 +480,25 @@ curl --location 'http://0.0.0.0:4000/v1/audio/speech' \
 
 Voxtral TTS is priced per input character, at the `input_cost_per_character` rate in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). LiteLLM counts the non-whitespace characters of `input`, so a 19 character sentence holding 2 spaces is tracked as 17 characters. Mistral's own character meter, reported in the `x-ratelimit-input-characters-query-cost` response header, counts the spaces too, so whenever `input` contains whitespace, the spend LiteLLM tracks is lower than what Mistral meters.
 
+## Token Counting
+
+LiteLLM supports native upstream token counting for Mistral models via Mistral's `/v1/responses/input_tokens` endpoint. See [Token Counting](../count_tokens.md) for usage and details.
+
+```python
+import asyncio
+import litellm
+
+async def main():
+    result = await litellm.acount_tokens(
+        model="mistral/mistral-large-4",
+        messages=[{"role": "user", "content": "Hello, how are you?"}],
+    )
+    print(f"Token count: {result.total_tokens}")
+    print(f"Tokenizer: {result.tokenizer_type}")  # "mistral_api"
+
+asyncio.run(main())
+```
+
 ## Files and Batches API
 
 LiteLLM routes the OpenAI-compatible `/v1/files` and `/v1/batches` endpoints to Mistral's Files and Batch APIs. See [Mistral AI Batch API](./mistral_batches) for the full flow and cost tracking.
