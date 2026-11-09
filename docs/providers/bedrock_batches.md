@@ -429,6 +429,8 @@ curl http://localhost:4000/v1/batches \
 
 LiteLLM records the S3 location of every managed file and batch output it creates, so retrieving the batch, downloading its output file, deleting files and tracking the batch's cost all read from the bucket the data was actually written to, without the caller passing the bucket again. Removing a bucket from the team's list stops new uploads and batches from using it, while files already stored there stay readable to their owners.
 
+Batch cost is computed from the output file Bedrock writes, so give a team's members no direct write or delete access to its buckets in AWS. Only the S3 credentials LiteLLM uses and the batch role in `aws_batch_role_arn` should be able to change objects there, otherwise a member could replace a finished output file and change what the batch is billed.
+
 To keep one team from reading another team's batches, also turn on [`require_managed_files`](../proxy/managed_batches#access-control). With it, only the team that created a file or batch can act on it, and raw `s3://` ids are rejected.
 
 To allow a bucket for every team, list it in `general_settings.allowed_client_side_s3_buckets` instead. `allowed_client_side_s3_endpoint_urls` does the same for `s3_endpoint_url`. Setting `allow_client_side_credentials: true` still allows any value for all of these fields.
