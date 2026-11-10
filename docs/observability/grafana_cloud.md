@@ -81,7 +81,7 @@ Metrics arrive as OTLP histograms, queryable in Explore under their Prometheus-n
 
 ## Dashboard
 
-LiteLLM ships a dashboard for these metrics at [cookbook/litellm_proxy_server/grafana_dashboard/dashboard_genai_otel](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_genai_otel). Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source
+LiteLLM ships a [GenAI dashboard](https://github.com/BerriAI/litellm/tree/main/litellm/integrations/prometheus_helpers/grafana_dashboards/dashboard_genai_otel) for these metrics. Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source
 
 Spend, tokens, request count and p95 duration as stats, then request rate, spend per hour, token throughput split by input and output, and p95 duration, time to first token, and provider generation time, all by model
 

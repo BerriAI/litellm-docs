@@ -244,7 +244,7 @@ async def async_delete_secret(
 
 ## Example
 
-See [cookbook/litellm_proxy_server/secret_manager/my_secret_manager.py](https://github.com/BerriAI/litellm/blob/main/cookbook/litellm_proxy_server/secret_manager/my_secret_manager.py) for a complete working example with:
+See [cookbook/litellm_proxy_server/secret_manager/my_secret_manager.py](https://github.com/BerriAI/litellm/blob/f8933ecae4d610f07be2ecc3edf78537e5b1480f/cookbook/litellm_proxy_server/secret_manager/my_secret_manager.py) for a complete working example with:
 
 - In-memory secret manager implementation  
 - Integration with LiteLLM Proxy  

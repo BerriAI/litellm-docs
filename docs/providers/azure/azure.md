@@ -34,7 +34,7 @@ Claude models via Azure Foundry are routed through the `azure_ai/` provider, not
 :::
 
 ## **Usage - LiteLLM Python SDK**
-<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/LiteLLM_Azure_OpenAI.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/a8d65741f5b7a5b633d5f59a4be8b5dd2fafd464/cookbook/LiteLLM_Azure_OpenAI.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 

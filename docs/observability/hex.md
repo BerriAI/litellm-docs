@@ -168,7 +168,7 @@ The destination is independent of an existing `s3_v2` callback.
 
 ### Connect Hex through Athena
 
-Run the [Athena table setup](https://github.com/BerriAI/litellm/blob/main/cookbook/logging_observability/hex_spend_table.sql) in your Athena database. Replace both occurrences of `YOUR_BUCKET` and the `litellm-spend` prefix with your configured values. The table uses date partition projection, so new daily folders become queryable without a crawler or `MSCK REPAIR TABLE`.
+Run the [Athena table setup](https://github.com/BerriAI/litellm/blob/33991b106449089ad10f7e148e8f917a4a124849/cookbook/logging_observability/hex_spend_table.sql) in your Athena database. Replace both occurrences of `YOUR_BUCKET` and the `litellm-spend` prefix with your configured values. The table uses date partition projection, so new daily folders become queryable without a crawler or `MSCK REPAIR TABLE`.
 
 Create an Athena data connection in Hex. Prefer IAM role authentication with the trust policy and external ID that Hex provides. Grant the role read access to the spend prefix, the Athena and Glue permissions required by Hex, and write access to a separate Athena query-results prefix. Keep query results outside the spend prefix.
 
@@ -176,7 +176,7 @@ Schema discovery needs `athena:ListDatabases`, `athena:ListTableMetadata`, `athe
 
 After you create the table, refresh the connection schema and confirm that `litellm_hex_spend` appears in Hex's Data browser. Use the connection's schema filters to include only your spend database. You can then ask Hex AI to build a dashboard from that table or import the template below.
 
-Import the [Hex dashboard template](https://github.com/BerriAI/litellm/blob/main/cookbook/logging_observability/hex_spend_dashboard.hex.yaml) as a project. Select your Athena connection for its four SQL cells and use the database that contains `litellm_hex_spend`. Run all cells and publish the App.
+Import the [Hex dashboard template](https://github.com/BerriAI/litellm/blob/33991b106449089ad10f7e148e8f917a4a124849/cookbook/logging_observability/hex_spend_dashboard.hex.yaml) as a project. Select your Athena connection for its four SQL cells and use the database that contains `litellm_hex_spend`. Run all cells and publish the App.
 
 The template shows spend, requests, tokens, failures, unknown-cost requests, daily spend, model spend, and team spend for the last 30 UTC calendar days. Configure a Hex scheduled run for your desired refresh interval. Each query reads uploaded records; the dashboard refresh interval is separate from the callback's upload interval. Query-result caching is disabled in the template so a refresh queries S3 again.
 

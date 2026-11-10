@@ -244,7 +244,7 @@ response = client.chat.completions.create(
 
 ## Implementation Example
 
-See [mock_prompt_management_server.py](https://github.com/BerriAI/litellm/blob/main/cookbook/mock_prompt_management_server/mock_prompt_management_server.py) for a complete reference implementation with multiple example prompts, authentication, and convenience endpoints.
+See [mock_prompt_management_server.py](https://github.com/BerriAI/litellm/blob/f8933ecae4d610f07be2ecc3edf78537e5b1480f/cookbook/mock_prompt_management_server/mock_prompt_management_server.py) for a complete reference implementation with multiple example prompts, authentication, and convenience endpoints.
 
 **Minimal FastAPI example:**
 

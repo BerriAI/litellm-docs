@@ -1,7 +1,7 @@
 # Petals
 Petals: https://github.com/bigscience-workshop/petals
 
-<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/LiteLLM_Petals.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/f8933ecae4d610f07be2ecc3edf78537e5b1480f/cookbook/LiteLLM_Petals.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
