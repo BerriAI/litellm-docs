@@ -1654,6 +1654,7 @@ const sidebars = {
             "projects/GPTLocalhost",
             "projects/HolmesGPT",
             "projects/Railtracks",
+            "projects/Akmatori",
           ],
         },
         "extras/code_quality",
