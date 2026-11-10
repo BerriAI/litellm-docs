@@ -12,7 +12,7 @@ import TabItem from '@theme/TabItem';
 
 Use Helm to deploy LiteLLM on an existing Kubernetes cluster. The same charts work on Amazon EKS, Google Kubernetes Engine, Azure Kubernetes Service, and other Kubernetes clusters. You supply PostgreSQL and Redis, then choose a single proxy deployment or separate gateway, backend, and UI services.
 
-If you need help choosing a deployment method, start with the [deployment overview](../deploy.md). For Kubernetes YAML without a chart, use [Kubernetes without Helm](./kubernetes.md).
+If you need help choosing a deployment method, start with the [deployment overview](../deploy.md).
 
 ## Core configuration
 
@@ -183,8 +183,6 @@ ingress:
       pathType: Prefix     # default; Exact and ImplementationSpecific also work
       service: gateway     # default; backend and ui also work
 ```
-
-For one DNS hostname per component without path-based routing, see [Separate hostname per component](../manifests_to_microservices.md#separate-hostname-per-component).
 
 ```bash
 helm upgrade --install litellm \

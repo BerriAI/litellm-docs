@@ -106,6 +106,10 @@ const config = {
             to: '/docs/proxy/deploy/helm',
           },
           {
+            from: ['/docs/proxy/deploy/kubernetes', '/docs/proxy/manifests_to_microservices'],
+            to: '/docs/proxy/deploy/helm',
+          },
+          {
             from: '/docs/proxy/db_deadlocks',
             to: '/docs/proxy/prod#redis-transaction-buffer',
           },

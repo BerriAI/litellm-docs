@@ -5,7 +5,7 @@
   "deploy-with-helm": "/docs/proxy/deploy/helm",
   "autoscaling": "/docs/proxy/deploy/autoscaling",
   "scale-on-requests-and-tokens-per-pod": "/docs/proxy/deploy/autoscaling#scale-on-requests-and-tokens-per-pod",
-  "kubernetes-without-helm": "/docs/proxy/deploy/kubernetes",
+  "kubernetes-without-helm": "/docs/proxy/deploy/helm",
   "deploy-with-terraform-aws-and-gcp": "/docs/proxy/deploy/terraform",
   "1-click-deploy-from-cloud-shell": "/docs/proxy/deploy/terraform#1-click-deploy-from-cloud-shell",
   "use-the-modules-directly": "/docs/proxy/deploy/terraform#use-the-modules-directly",

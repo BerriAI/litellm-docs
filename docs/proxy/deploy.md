@@ -25,8 +25,6 @@ Use the same Helm charts on EKS, GKE, AKS, or another Kubernetes cluster. You pr
 
 The [Helm guide](./deploy/helm.md) covers both a single LiteLLM service and separate gateway, backend, and UI services. It includes configuration, secrets, and cloud-specific data stores.
 
-Already use raw Kubernetes manifests? Follow the [manifest guide](./deploy/kubernetes.md), or [move an existing deployment to the microservices chart](./manifests_to_microservices.md).
-
 </TabItem>
 <TabItem value="terraform" label="Terraform">
 
@@ -34,9 +32,9 @@ Already use raw Kubernetes manifests? Follow the [manifest guide](./deploy/kuber
 
 Use the official Terraform modules to create the network, database, Redis, load balancer, and LiteLLM services together. AWS runs the services on ECS Fargate; Google Cloud runs them on Cloud Run.
 
-The [Terraform guide](./deploy/terraform.md) covers Cloud Shell setup and modules you can use in your own configuration. For Azure, use [Helm on AKS](./deploy/helm.md).
+Start with the [Terraform overview](./deploy/terraform.md), then follow the [AWS](./deploy/terraform/aws.md) or [GCP](./deploy/terraform/gcp.md) guide. Each covers Cloud Shell setup and a module you can use in your own configuration. For Azure, use [Helm on AKS](./deploy/helm.md).
 
-To manage keys, teams, and models after deployment, use the separate [LiteLLM Terraform provider](https://github.com/BerriAI/terraform-provider-litellm).
+To manage keys, teams, and models after deployment, use the [Terraform Provider guide](./deploy/terraform/provider.md).
 
 </TabItem>
 <TabItem value="sizing" label="Sizing & Scaling">

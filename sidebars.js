@@ -402,16 +402,17 @@ const sidebars = {
           label: "Deploy",
           items: [
             { type: "doc", id: "proxy/deploy", label: "Overview" },
+            { type: "doc", id: "proxy/deploy/helm", label: "Helm" },
             {
               type: "category",
-              label: "Helm",
+              label: "Terraform",
               items: [
-                "proxy/deploy/helm",
-                "proxy/deploy/kubernetes",
-                "proxy/manifests_to_microservices",
+                { type: "doc", id: "proxy/deploy/terraform", label: "Overview" },
+                "proxy/deploy/terraform/aws",
+                "proxy/deploy/terraform/gcp",
+                "proxy/deploy/terraform/provider",
               ],
             },
-            "proxy/deploy/terraform",
             {
               type: "category",
               label: "Sizing & Scaling",
