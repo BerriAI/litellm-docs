@@ -27,7 +27,7 @@ LiteLLM supports [Tencent Hy4](https://www.tencent.com/tencent-launches-hy4-join
 
 TokenHub charges 50% of list prices through **December 31, 2026, at 23:59:59 Beijing time**. These USD rates apply per 1M tokens on [TokenHub's international pricing page](https://www.tencentcloud.com/document/product/1300/78937):
 
-| Token type | List price | Promotional price, calculated at 50% of list |
+| Token type | List price | 50% of list |
 |---|---:|---:|
 | Input | $0.834 | $0.417 |
 | Output | $2.501 | $1.2505 |
