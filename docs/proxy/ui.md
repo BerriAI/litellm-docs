@@ -154,6 +154,18 @@ For information on sharing models and agents, see [AI Hub](./ai_hub.md).
 [Sync model pricing data from GitHub](./sync_models_github.md) to keep your model cost information current.
 :::
 
+## Display currency
+
+<SinceVersion v="1.110.0" />
+
+The Admin UI shows spend and model prices in US dollars. To show them in another currency, set `LITELLM_UI_CURRENCY` on the proxy to its ISO 4217 code.
+
+```bash
+LITELLM_UI_CURRENCY="EUR"
+```
+
+This changes only the currency symbol and number format. LiteLLM does not convert any amount, and its built-in model prices are in US dollars, so a dollar price would be shown with a euro sign. Set it only when every model price the proxy uses is in that currency, for example when you set `input_cost_per_token` and `output_cost_per_token` on each model from your provider's EUR price list. A value that is not a 3-letter code logs a warning, and the UI keeps showing USD.
+
 ## Disable Admin UI
 
 Set `DISABLE_ADMIN_UI="True"` in your environment to disable the Admin UI.
