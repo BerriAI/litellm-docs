@@ -578,6 +578,89 @@ resp = litellm.completion(
 print(f"\nResponse: {resp}")
 ```
 
+### Images, PDFs, and videos from S3
+
+On Converse, LiteLLM sends an `s3://bucket/key` URL in an image, file, or video part to Bedrock as an S3 source (`source.s3Location.uri`) and never downloads the object. Bedrock reads the object with the same AWS credentials that sign the request. This works for `image_url` and `file` parts on `/chat/completions`, `input_image` and `input_file` parts on `/v1/responses`, `image` and `document` blocks with a `url` source on `/v1/messages`, and `file_data` parts on Gemini `generateContent`.
+
+Only models that read S3 sources on Converse, such as Amazon Nova, take these URLs. Other models, Claude among them, get Bedrock's own 400, `This model doesn't support the s3Uri field`.
+
+The part's `format`, a MIME type such as `image/png`, sets the block type and format. Without it, LiteLLM uses the key's file extension, and a key with no known extension gets a 400 that asks for `format`. For a bucket in another AWS account, add `bucket_owner` next to the URL with the account id as a string, and LiteLLM sends it as `bucketOwner`.
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import completion
+
+response = completion(
+    model="bedrock/converse/us.amazon.nova-2-lite-v1:0",
+    aws_region_name="us-east-1",
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "What text is written in this image?"},
+                {"type": "image_url", "image_url": {"url": "s3://my-media-bucket/signs/otter.png"}},
+            ],
+        }
+    ],
+)
+print(response.choices[0].message.content)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+**1. Add to config**
+
+```yaml
+model_list:
+  - model_name: nova-2-lite
+    litellm_params:
+      model: bedrock/converse/us.amazon.nova-2-lite-v1:0
+      aws_region_name: us-east-1
+
+general_settings:
+  allowed_client_side_s3_buckets: ["my-media-bucket"]
+```
+
+**2. Call it with a virtual key**
+
+```bash
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_VIRTUAL_KEY" \
+  -d '{
+    "model": "nova-2-lite",
+    "messages": [
+      {
+        "role": "user",
+        "content": [
+          {"type": "text", "text": "What text is written in this image?"},
+          {"type": "image_url", "image_url": {"url": "s3://my-media-bucket/signs/otter.png"}}
+        ]
+      }
+    ]
+  }'
+```
+
+The proxy answers 200 with Nova's reading of the image. With `my-media-bucket` left out of the list, the same key gets a 403 that names the URI and asks the proxy admin to list the bucket in `allowed_client_side_s3_buckets`.
+
+</TabItem>
+</Tabs>
+
+On the proxy, Bedrock reads the object with the proxy's AWS credentials, so a non-admin key can only name a bucket listed in `general_settings.allowed_client_side_s3_buckets`. Names must match exactly, and when the setting is unset no bucket is listed. Any other bucket gets a 403 before the request reaches Bedrock. Proxy admin keys are not limited, and `allow_client_side_credentials: true` turns the list off. The check covers every route above, `/queue/chat/completions`, file ids that encode an `s3://` URI, `model_file_id_mapping`, and every frame on the Responses WebSocket. A client-sent `aws_role_name`, `aws_profile_name`, or `aws_web_identity_token` skips the list only when every deployment of the model admits that field through `configurable_clientside_auth_params` and Bedrock signs the request with it.
+
+Objects under LiteLLM's managed file storage, the `litellm-bedrock-files/`, `litellm-bedrock-files-*`, and `litellm-batch-outputs/` paths, get a 403 for non-admin keys even in a listed bucket. Send the managed file id from `POST /v1/files` instead, which works for keys of the user or team that uploaded the file.
+
+In a Bedrock batch input file for Nova, a line with an `s3://` media URL gets a 400 at upload, before anything is written to S3, so send that media inline as base64 data.
+
+:::warning
+
+A non-admin key's `s3://` images to OpenAI and Grok models on Bedrock used to reach Bedrock, which read them with the proxy's AWS role. Those requests now get a 403 until their bucket is listed. On a proxy that runs without a master key, every caller counts as non-admin. List those buckets in `allowed_client_side_s3_buckets` before you upgrade.
+
+:::
+
 
 ## Usage - 'thinking' / 'reasoning content'
 
@@ -2131,7 +2214,7 @@ A model opts in through `"supported_endpoints": ["/v1/responses"]` on its entry 
 
 Authentication, regions, and cost tracking work the same as on Converse: SigV4 credentials or a Bedrock API key as `api_key`, with the host picked from the region's partition. An `aws_bedrock_runtime_endpoint` that already ends in `/openai/v1/responses`, `/v1/responses`, or `/responses` is used as is.
 
-What is different on the native route: `background` is dropped with a proxy-log warning, since bedrock-runtime rejects it and the bridge never forwarded it either. A `web_search` tool is dropped with a warning, since bedrock-runtime answers that web search is not supported. `file_search` keeps LiteLLM's emulation. Remote `http(s)` image URLs, in `input_image` blocks, in `function_call_output` lists, and in `computer_call_output` screenshots, are downloaded and inlined as data URIs, because bedrock-runtime accepts only `data:` and `s3://` images. Streaming works as on OpenAI.
+What is different on the native route: `background` is dropped with a proxy-log warning, since bedrock-runtime rejects it and the bridge never forwarded it either. A `web_search` tool is dropped with a warning, since bedrock-runtime answers that web search is not supported. `file_search` keeps LiteLLM's emulation. Remote `http(s)` image URLs, in `input_image` blocks, in `function_call_output` lists, and in `computer_call_output` screenshots, are downloaded and inlined as data URIs, because bedrock-runtime accepts only `data:` and `s3://` images. On the proxy, a non-admin key's `s3://` image must name a bucket listed in `allowed_client_side_s3_buckets`, as described in [Images, PDFs, and videos from S3](#images-pdfs-and-videos-from-s3). Streaming works as on OpenAI.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
