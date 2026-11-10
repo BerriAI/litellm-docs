@@ -1826,6 +1826,7 @@ const providersSidebar = {
     "providers/helicone",
     "providers/cometapi",
     "providers/clf_ai_gateway",
+    "providers/dulus",
     "providers/poe",
     { type: "html", value: "Vector Stores", className: "sidebar-group-label", defaultStyle: true },
     "providers/milvus_vector_stores",
