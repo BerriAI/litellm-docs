@@ -79,6 +79,6 @@ Pass native options such as `language`, `region`, `location`, `contentFormat`, `
 
 Domain filters narrow search relevance. Microsoft also notes that `site:` queries can return adult content regardless of `safeSearch`; see the API reference before relying on domain filtering in a restricted-content application
 
-The default API base is `https://api.microsoft.ai/v3`. Set `api_base` in the SDK call or proxy search configuration to select a different base, with `/search/web` appended once. A caller-selected host cannot receive a server-managed API key unless the host matches the default; pass an explicit `api_key` with a custom endpoint
+The default API base is `https://api.microsoft.ai/v3`. Set `api_base` in the SDK call or proxy search configuration to select a different base, with `/search/web` appended once. HTTPS is required for every endpoint, including custom endpoints with an explicit key. HTTP endpoints are rejected before credentials are resolved or a request is sent. A caller-selected host cannot receive a server-managed API key unless the host matches the default; pass an explicit `api_key` with a custom endpoint
 
 No default Web IQ price is registered by this integration. Do not interpret missing cost data as free usage. Live Web IQ validation requires an enabled account and a valid API key
