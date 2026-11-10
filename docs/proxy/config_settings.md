@@ -156,6 +156,7 @@ general_settings:
   maximum_spend_logs_retention_interval: 1d # interval in which the spend log cleanup task should run in.
   maximum_daily_tag_spend_retention_period: 90d # Optional. Prune LiteLLM_DailyTagSpend rows for days older than this.
   user_mcp_management_mode: restricted  # or "view_all"
+  access_group_rules: [{"attribute": "jwt_claims.groups", "contains": "Anthropic_Access", "access_group": "claude-models"}]  # grant Access Groups from JWT claims per request
 
   # Database Settings
   database_url: string
@@ -295,6 +296,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
+| access_group_rules | array of objects | `null` | Grant Access Groups per request when a JWT claim matches. [Doc](jwt_access_group_rules) |
 | completion_model | string | `null` | The model to use for all completions, overriding any `model` specified in the request |
 | enable_drain_endpoint | boolean | `false` | If true, exposes the unauthenticated `GET /health/drain` endpoint used by Kubernetes `preStop` hooks to drain in-flight requests before shutdown. Off by default; only enable it when the health port is reachable solely from inside the cluster, since any caller that reaches it can take the pod out of rotation. See `GRACEFUL_SHUTDOWN_TIMEOUT`. |
 | drain_endpoint_token | string | `null` | Shared secret for the `/health/drain` endpoint. When set, drain calls must carry a matching `X-Drain-Token` header (compared with `secrets.compare_digest`) or are rejected with 401; the kubelet supplies it from the preStop `httpGet.httpHeaders`. Also settable via the `DRAIN_ENDPOINT_TOKEN` env var. |

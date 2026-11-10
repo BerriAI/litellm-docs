@@ -606,6 +606,7 @@ const sidebars = {
               items: [
                 { type: "doc", id: "proxy/jwt_user_team_auth", label: "Map identities to users and teams", className: "sidebar-enterprise" },
                 { type: "doc", id: "proxy/jwt_key_mapping", label: "Map identities to Virtual Keys", className: "sidebar-enterprise" },
+                { type: "doc", id: "proxy/jwt_access_group_rules", label: "Map identities to Access Groups", className: "sidebar-enterprise" },
               ],
             },
             {
