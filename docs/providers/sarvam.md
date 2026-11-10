@@ -14,7 +14,8 @@ LiteLLM supports Sarvam's OpenAI-compatible `/v2` API, including Sarvam 105B and
 | `sarvam/glm5.3` | 1M | 1M | Text | $1.40 / $4.33 |
 | `sarvam/glm5.3-flash` | 1M | 1M | Text, image | $0.15 / $0.50 |
 | `sarvam/gemma4` | 256K | 256K | Text, image | $0.39 / $1.00 |
-| `sarvam/deepseekv4.1-flash-1017` | 1M | 1M | Text, image | $0.28 / $1.17 |
+| `sarvam/deepseekv4.1-flash-1017` | 1M | 1M | Text, image | $0.16 / $0.61 |
+| `sarvam/deepseekv4.1-flash-1017-interactive` | 1M | 1M | Text, image | $0.28 / $1.17 |
 
 USD values are converted from Sarvam's INR rates at ₹90 per USD. See [Sarvam Token Factory pricing](https://www.sarvam.ai/token-factory/pricing) for the current INR rates.
 
@@ -22,7 +23,7 @@ The legacy `sarvam-m` model is not served on `/v2`. If you are upgrading from `s
 
 Output on `sarvam-105b` and `sarvam-105b-conversations` is also capped by plan: Starter 4,096, Pro 16,384, Business 128,000 (and by the 32K context on `sarvam-105b-conversations`).
 
-All models support tool calling, streaming, structured output (`response_format`), system messages, `tool_choice`, and parallel tool calls. Prompt caching is supported on all six models: `sarvam-105b`, `sarvam-105b-conversations`, `glm5.3`, `glm5.3-flash`, `gemma4`, and `deepseekv4.1-flash-1017`.
+All models support tool calling, streaming, structured output (`response_format`), system messages, `tool_choice`, and parallel tool calls. Prompt caching is supported on all seven models: `sarvam-105b`, `sarvam-105b-conversations`, `glm5.3`, `glm5.3-flash`, `gemma4`, `deepseekv4.1-flash-1017`, and `deepseekv4.1-flash-1017-interactive`.
 
 ## Usage
 
