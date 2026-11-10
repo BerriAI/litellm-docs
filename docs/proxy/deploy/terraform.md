@@ -1,14 +1,14 @@
 ---
 title: Terraform
 sidebar_label: Overview
-description: Deploy LiteLLM on AWS or Google Cloud with Terraform modules, or manage resources on a running gateway with the LiteLLM provider.
+description: Deploy LiteLLM on AWS or Google Cloud with Terraform modules that create the cloud infrastructure and LiteLLM services together.
 ---
 
 # Terraform {#deploy-with-terraform-aws-and-gcp}
 
 {/* keep-version-note */}
 
-Use Terraform to create a LiteLLM deployment or manage resources on a gateway that is already running. The AWS and GCP modules create the cloud infrastructure and LiteLLM services together. The LiteLLM provider manages resources such as keys, teams, and models through the gateway's API.
+Use the LiteLLM Terraform modules to create a deployment on AWS or Google Cloud. Each module creates the cloud infrastructure and LiteLLM services together.
 
 ## Choose a guide
 
@@ -16,7 +16,6 @@ Use Terraform to create a LiteLLM deployment or manage resources on a gateway th
 | --- | --- |
 | [AWS](./terraform/aws.md) | Deploys the gateway, backend, and UI on ECS Fargate, with networking, PostgreSQL, Redis, secrets, and a load balancer. |
 | [GCP](./terraform/gcp.md) | Deploys the gateway, backend, and UI on Cloud Run, with networking, PostgreSQL, Redis, secrets, and a load balancer. |
-| [Provider](./terraform/provider.md) | Manages LiteLLM resources on an existing gateway, including one deployed with Helm. |
 
 Neither cloud module needs Kubernetes. For Kubernetes, including Azure AKS, use [Helm](./helm.md).
 
@@ -30,4 +29,4 @@ Call the [AWS module](./terraform/aws.md#use-the-module-directly) or [GCP module
 
 The modules deploy separate gateway, backend, and UI services and run database migrations before the services start. Each module version defaults the component images to the matching LiteLLM release. Set `image_tag` to use a different release, or `image_registry` to pull from a mirror.
 
-After the gateway is ready, use the [LiteLLM provider](./terraform/provider.md) to manage its resources as code. See [Reference Architectures](./architecture.md) to compare deployment layouts and [Sizing & Scaling](./sizing.md) to plan capacity.
+After the gateway is ready, use the [Terraform provider](../configuration/terraform.md) under Configuration to manage its resources as code. See [Reference Architectures](./architecture.md) to compare deployment layouts and [Sizing & Scaling](./sizing.md) to plan capacity.

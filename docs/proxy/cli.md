@@ -1,3 +1,7 @@
+---
+displayed_sidebar: tutorialSidebar
+---
+
 # CLI Arguments
 
 This page documents all command-line interface (CLI) arguments available for the LiteLLM proxy server.

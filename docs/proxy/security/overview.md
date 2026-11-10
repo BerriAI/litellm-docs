@@ -17,6 +17,7 @@ Start with [Security Best Practices](../security_best_practices.md) for the prod
 | Topic | What it covers |
 | --- | --- |
 | [Security Best Practices](../security_best_practices.md) | Secure releases, access controls, network settings, secrets, and audit logs. |
+| [SSL & HTTP Proxies](../../guides/security_settings.md) | Configure certificate verification, custom CA bundles, and outbound HTTP proxies. |
 | [Outbound Requests and Offline Mode](../outbound_requests.md) | The external services LiteLLM contacts and which requests you can disable. |
 | [OWASP LLM Top 10 mapping](../security_owasp_llm_top10.md) | How LiteLLM controls address LLM application risks, and what each control leaves to your application. |
 | [FIPS Mode](../fips_mode.md) | Current support and limitations. FIPS mode is still a work in progress. |

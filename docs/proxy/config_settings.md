@@ -1,3 +1,6 @@
+---
+displayed_sidebar: tutorialSidebar
+---
 
 ```yaml
 environment_variables: {}

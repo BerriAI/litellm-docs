@@ -180,4 +180,4 @@ The AWS module can run Prometheus collection in a dedicated ECS sidecar using `g
 
 [Verify the deployment](../../deploy.md#verify-the-deployment) and use [Sizing & Scaling](../sizing.md) to plan resources. See [autoscaling](../autoscaling.md) for cloud scaling options and [reference architectures](../architecture.md) for the deployment layout.
 
-Return to the [Terraform overview](../terraform.md) to compare cloud options. To manage keys, teams, and models after deployment, use the [Terraform provider](./provider.md).
+Return to the [Terraform overview](../terraform.md) to compare cloud options. To manage keys, teams, and models after deployment, use the [Terraform provider](../../configuration/terraform.md) under Configuration.

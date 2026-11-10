@@ -410,7 +410,6 @@ const sidebars = {
                 { type: "doc", id: "proxy/deploy/terraform", label: "Overview" },
                 "proxy/deploy/terraform/aws",
                 "proxy/deploy/terraform/gcp",
-                "proxy/deploy/terraform/provider",
               ],
             },
             {
@@ -445,11 +444,10 @@ const sidebars = {
           type: "category",
           label: "Configuration",
           items: [
-            { type: "doc", id: "proxy/configs", label: "Config.yaml" },
-            "proxy/config_settings",
-            "proxy/config_management",
-            "proxy/cli",
-            "guides/security_settings",
+            { type: "doc", id: "proxy/configuration/overview", label: "Overview" },
+            { type: "doc", id: "proxy/configs", label: "YAML" },
+            { type: "doc", id: "proxy/configuration/ui", label: "UI" },
+            { type: "doc", id: "proxy/configuration/terraform", label: "Terraform" },
           ],
         },
         {
@@ -712,6 +710,7 @@ const sidebars = {
           items: [
             { type: "doc", id: "proxy/security/overview", label: "Overview" },
             "proxy/security_best_practices",
+            "guides/security_settings",
             "proxy/outbound_requests",
             "proxy/security_owasp_llm_top10",
             "proxy/fips_mode",

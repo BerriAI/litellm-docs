@@ -110,6 +110,10 @@ const config = {
             to: '/docs/proxy/deploy/helm',
           },
           {
+            from: '/docs/proxy/deploy/terraform/provider',
+            to: '/docs/proxy/configuration/terraform',
+          },
+          {
             from: '/docs/proxy/db_deadlocks',
             to: '/docs/proxy/prod#redis-transaction-buffer',
           },

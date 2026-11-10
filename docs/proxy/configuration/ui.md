@@ -1,0 +1,45 @@
+---
+title: Configure LiteLLM in the Admin UI
+sidebar_label: UI
+description: Configure models, credentials, virtual keys, budgets, and routing in the LiteLLM Admin UI. Learn how saved settings interact with config.yaml.
+---
+
+# Configure LiteLLM in the Admin UI
+
+{/* keep-version-note */}
+
+Use the Admin UI to manage a running LiteLLM gateway from your browser. Add models, update provider credentials, create virtual keys, and change the settings exposed in the UI.
+
+## Before you start
+
+Connect LiteLLM to PostgreSQL and set `LITELLM_MASTER_KEY`; the [database setup](../virtual_keys.md#setup) covers both prerequisites. For a new installation, follow the [Quickstart](../docker_quick_start.md).
+
+Open `<your-proxy-url>/ui` and sign in. Use a `proxy_admin` account for gateway-wide configuration; other [roles](../access_control.md#global-proxy-roles) have more limited permissions. The [Admin UI guide](../ui.md) covers login, admin accounts, and access settings.
+
+## Save models and settings in the database
+
+Set `STORE_MODEL_IN_DB="True"` in the proxy environment, or set `general_settings.store_model_in_db: true` in `config.yaml`. This enables database storage for models added through the UI and for supported configuration settings. Saved models survive proxy restarts and are available to additional instances that use the same database.
+
+Keep `LITELLM_SALT_KEY` unchanged after you save provider credentials: changing it makes existing encrypted credentials unreadable. See [database model storage](../model_management.md#database-vs-configyaml-models) for the full setup and the runtime storage toggle.
+
+## Common tasks
+
+| Task | Guide |
+| --- | --- |
+| Add a provider and model | [Add your first model](../docker_quick_start.md#3-add-your-first-model) |
+| Edit a model, change pricing, or test its connection | [Model Management](../model_management.md#inspect-and-edit-a-model) |
+| Reuse provider credentials across models | [Reusable provider credentials](../model_management.md#reusable-provider-credentials) |
+| Create a virtual key for an application | [Create a virtual key](../docker_quick_start.md#5-create-a-virtual-key) |
+| Set a team's budget | [Team budgets](../team_budgets.md#setting-monthly-team-budgets) |
+| Set fallbacks, retries, and timeouts for a key or team | [Key and team router settings](../keys_teams_router_settings.md) |
+| Check the meaning and defaults of gateway settings | [Configuration reference](../config_settings.md) |
+
+After a model change, use **Test Connection** on its detail page or [send a message in Playground](../docker_quick_start.md#4-send-a-test-message). Database model changes apply to new requests without a proxy restart. Saved gateway settings follow the proxy's configuration refresh; see [config.yaml vs database settings](../configs.md#configyaml-vs-database-settings).
+
+## When a setting is also in YAML
+
+On **v1.103.0 and later**, a key declared in `general_settings`, `router_settings`, `litellm_settings`, or `environment_variables` in `config.yaml` is controlled by that file. The YAML value wins, and attempts to change it in the UI return HTTP 400. Edit the file and restart or reload the proxy, or remove the key from the file to let the database control it. A previously saved database value takes effect when the key is removed from YAML.
+
+This rule applies to those four settings sections. Models in `model_list` behave differently: YAML models and database models are served together, and a database model with the same name adds a deployment rather than replacing the YAML entry. YAML models cannot be edited or deleted from the UI. Choose one primary [source of truth for models](../model_management.md#choose-one-source-of-truth-for-models).
+
+Before v1.103.0, saved database settings took precedence over YAML. Read [config.yaml vs database settings](../configs.md#configyaml-vs-database-settings) for the version-specific behavior.

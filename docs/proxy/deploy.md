@@ -34,7 +34,7 @@ Use the official Terraform modules to create the network, database, Redis, load 
 
 Start with the [Terraform overview](./deploy/terraform.md), then follow the [AWS](./deploy/terraform/aws.md) or [GCP](./deploy/terraform/gcp.md) guide. Each covers Cloud Shell setup and a module you can use in your own configuration. For Azure, use [Helm on AKS](./deploy/helm.md).
 
-To manage keys, teams, and models after deployment, use the [Terraform Provider guide](./deploy/terraform/provider.md).
+To manage keys, teams, and models after deployment, use the [Terraform provider](./configuration/terraform.md) under Configuration.
 
 </TabItem>
 <TabItem value="sizing" label="Sizing & Scaling">
