@@ -4,6 +4,8 @@ sidebar_label: Map identities to Access Groups
 
 # Map identities to Access Groups
 
+<SinceVersion v="1.110.0" />
+
 <EnterpriseFeature feature="JWT authentication" />
 
 Grant [Access Groups](./access_groups.md) based on JWT claims. For example, any token whose `groups` claim contains `Anthropic_Access` gets the models in the `claude-models` Access Group.
