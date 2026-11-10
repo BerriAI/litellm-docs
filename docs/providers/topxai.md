@@ -33,32 +33,32 @@ os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key, from https://ai.topxea
 
 ## Available Models
 
-The live table is at https://ai.topxea.com/pricing and as JSON at `GET https://ai.topxea.com/api/pricing`. The following models and Auto-route prices were verified on November 9, 2026. Prices are USD per million tokens.
+The live table is at https://ai.topxea.com/pricing and as JSON at `GET https://ai.topxea.com/api/pricing`. The following models and Auto-route prices were verified on November 10, 2026. Prices are USD per million tokens.
 
 | Model | Input | Output | Notes |
 |-------|-------|--------|-------|
 | `topxai/claude-sonnet-5-5` | $1 | $5 | 1M context; prompt caching through `anthropic/` (see Notes) |
 | `topxai/claude-opus-5-5` | $2 | $10 | 1M context; prompt caching through `anthropic/` (see Notes) |
-| `topxai/claude-fable-5-1` | $5 | $25 | 1M context; prompt caching through `anthropic/` (see Notes) |
+| `topxai/claude-fable-5-2` | $4 | $20 | 1M context; prompt caching through `anthropic/` (see Notes) |
 | `topxai/gpt-6.1-terra` | $0.50 | $2.50 | from 272,001 input tokens the whole request bills at $1 / $3.75; also on `/responses` |
 | `topxai/gpt-6.1-sol` | $1 | $5 | from 272,001 input tokens the whole request bills at $2 / $7.50; also on `/responses` |
 | `topxai/gpt-6-astra` | $5 | $25 | from 272,001 input tokens the whole request bills at $10 / $37.50; also on `/responses` |
 | `topxai/grok-4.7` | $1 | $3 | from 200,000 input tokens the whole request bills at $2 / $6; also on `/responses` |
 | `topxai/kimi-k3.1-pro` | $0.50 | $5 | 1,048,576 context; 131,072 output; private deployment; also on `/responses` |
-| `topxai/deepseek-flash-Abliterated` | $0.28 | $1 | 1,048,576 context; 131,072 output; private deployment; also on `/responses` |
+| `topxai/deepseek-flash-Abliterated` | $0.42 | $1.50 | 1,048,576 context; 131,072 output; private deployment; also on `/responses` |
 | `topxai/deepseek-flash-fast` | $0.02 | $0.16 | 1,048,576 context; 262,144 output; DeepSeek V4.1 Flash on standard weights, private deployment; also on `/responses` |
-| `topxai/GLM-5.3-Abliterated` | $2 | $4 | text only; a fine-tuned GLM-5.3 served from a private deployment, not Z.ai's API |
-| `topxai/GLM-5.3-Flash-Abliterated` | $0.24 | $1 | 1,048,576 context; 131,072 output; text and images; private deployment; also on `/responses` |
+| `topxai/GLM-5.3-Abliterated` | $3 | $6 | text only; a fine-tuned GLM-5.3 served from a private deployment, not Z.ai's API |
+| `topxai/GLM-5.3-Flash-Abliterated` | $0.36 | $1.50 | 1,048,576 context; 131,072 output; text and images; private deployment; also on `/responses` |
 
 A key on TopxAI's Auto route sends each request to the lowest-priced line that serves the model. For Claude, GPT and Grok that is normally the shared pool at 50% of the provider's list price. Keys pinned to their official line pay 90% of list instead. The GLM, Kimi and DeepSeek models are private deployments with their own fixed prices, rather than the original providers' APIs.
 
 Cost tracking in LiteLLM uses the Auto-route prices above. For a key pinned to an official Claude, GPT or Grok line, set that line's prices as described in [Custom Pricing](../proxy/custom_pricing). The DeepSeek models do not use the original DeepSeek model's peak and off-peak schedule.
 
-Cache reads cost $0.30 per million tokens on Kimi, $0.07 on DeepSeek Abliterated, $0.004 on DeepSeek Flash Fast, $0.30 on GLM-5.3-Abliterated and $0.08 on GLM-5.3-Flash-Abliterated. These five publish no cache-write price; caching is automatic. The cost map also includes the published Claude, GPT and Grok cache prices, including Claude's one-hour writes.
+Cache reads cost $0.30 per million tokens on Kimi, $0.105 on DeepSeek Abliterated, $0.004 on DeepSeek Flash Fast, $0.45 on GLM-5.3-Abliterated and $0.075 on GLM-5.3-Flash-Abliterated. These five publish no cache-write price; caching is automatic. The cost map also includes the published Claude, GPT and Grok cache prices, including Claude's one-hour writes.
 
 Kimi K3.1 Pro always reasons, with `low`, `high` and `max` efforts and `low` as the default. Use base64 data URIs for images. Public image URLs, forced named-tool calls and strict response schemas are not covered by this integration's verified capabilities. See the [Kimi model guide](https://ai.topxea.com/docs/kimi-k3-1-pro).
 
-`kimi-k3`, `deepseek-flash` and `deepseek-v4-pro` are retired. Select a current model explicitly. TopxAI rejects retired IDs with HTTP 403 and does not alias them to a replacement.
+`kimi-k3`, `deepseek-flash`, `deepseek-v4-pro` and `claude-fable-5-1` are retired; Claude Fable 5.2 replaced Fable 5.1 on November 10, 2026. Select a current model explicitly. TopxAI rejects retired IDs with HTTP 403 and does not alias them to a replacement.
 
 ## Usage - LiteLLM Python SDK
 
