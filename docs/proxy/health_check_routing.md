@@ -302,6 +302,8 @@ router_settings:
 
 ### `allowed_fails_policy` fields
 
+[Try it in the router playground](/router-playground#case=allowed-fails-policy): cooldown thresholds per error type, before and after.
+
 | Field | Error type | HTTP status |
 |---|---|---|
 | `AuthenticationErrorAllowedFails` | Bad API key | 401 |
