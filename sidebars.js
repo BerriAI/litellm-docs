@@ -781,7 +781,6 @@ const sidebars = {
               items: [
                 "proxy/ui/ui_edit_logo",
                 "proxy/custom_root_ui",
-                "proxy/plugins",
               ]
             },
             {

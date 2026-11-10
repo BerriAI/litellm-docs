@@ -1,6 +1,12 @@
+---
+sidebar_label: Plugins (Call Hooks)
+---
+
 import Image from '@theme/IdealImage';
 
-# Modify / Reject Incoming Requests
+# Plugins (Call Hooks)
+
+Plugins, also called call hooks, are Python classes that run inside the proxy and let you modify or reject incoming requests and outgoing responses.
 
 - Modify data before making llm api calls on proxy
 - Reject data before making llm api calls / before returning the response 
