@@ -204,6 +204,7 @@ Each error uses the error format of the API that you used: Anthropic, OpenAI, or
 | A Vertex AI partner model, such as GLM, has no count API | A 400 that names the model |
 | A non-Claude Bedrock model, such as Amazon Nova, has no count API | The 400 or 404 from AWS |
 | `litellm.disable_token_counter` is set, and the provider has no count API | A 503 |
+| The count API of an Anthropic, OpenAI, or Azure AI deployment does not answer before the timeout | A 408 |
 
 If the deployment sets `token_count_framing` or another framing key, the proxy returns a local estimate in place of a 400 or a 404 from the provider. Refer to [Local estimates for models without a count API](#local-estimates-for-models-without-a-count-api). A Vertex AI partner model with `custom_tokenizer` in `model_info` continues to use a local count and does not return the 400.
 
@@ -211,7 +212,19 @@ This change does not apply to providers with no count API, such as Groq. They co
 
 A `/utils/token_counter?call_endpoint=true` request with only a `prompt` goes to the count API of the provider as one user message, the same as `messages` with that text. So it returns the same count or the same error. A deployment with a `mode` other than `chat` or `responses`, such as an embedding model, counts the prompt as raw text, and so does a model with no deployment. The proxy reads `mode` from the `model_info` of the deployment, or from its cost map entry. <SinceVersion v="1.111.0" />
 
-For Anthropic, OpenAI, and Azure AI deployments, the proxy waits for the count API for the `timeout` of the deployment. If the deployment has no `timeout`, the proxy waits for `request_timeout` in `litellm_settings`.
+For Anthropic, OpenAI, and Azure AI deployments, the proxy waits for the count API for the `timeout` of the deployment. If the deployment has no `timeout`, the proxy waits for `timeout` in `router_settings`, and then for `request_timeout` in `litellm_settings`. If the count API does not answer in that time, the proxy returns a 408. This applies to `/utils/token_counter`, `/v1/messages/count_tokens`, and `/v1/responses/input_tokens`.
+
+```yaml
+model_list:
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/claude-sonnet-5-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+      timeout: 10  # seconds to wait for the count API of this deployment
+
+router_settings:
+  timeout: 30  # for deployments with no timeout
+```
 
 ### Local estimates for models without a count API
 
