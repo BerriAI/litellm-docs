@@ -760,12 +760,12 @@ function SettingsColumn({data, info, issues, actions, team}) {
         {strategyIssue && <Issue issue={strategyIssue} />}
         <Setting name="num_retries">
           {team && set.num_retries != null ? (
-            <Overridden value={fmt(set.num_retries)} router={fmt(value('num_retries') ?? effective.num_retries ?? 0)} />
+            <Overridden value={fmt(set.num_retries)} router={fmt(value('num_retries') ?? effective.num_retries ?? 2)} />
           ) : (
             <NumInput
               label="num_retries"
               value={value('num_retries')}
-              placeholder={fmt(effective.num_retries ?? 0)}
+              placeholder={fmt(effective.num_retries ?? 2)}
               onCommit={next => actions.setting('num_retries', next)}
             />
           )}
@@ -869,7 +869,7 @@ function SettingsColumn({data, info, issues, actions, team}) {
                   actions.setting(
                     'retry_policy',
                     on
-                      ? {RateLimitErrorRetries: Number(value('num_retries') ?? effective.num_retries ?? 0)}
+                      ? {RateLimitErrorRetries: Number(value('num_retries') ?? effective.num_retries ?? 2)}
                       : undefined,
                   )
                 }

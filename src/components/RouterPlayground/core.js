@@ -18,7 +18,17 @@ export function parseConfig(text) {
   if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.model_list)) {
     throw new Error('The config needs a model_list.');
   }
-  return foldDefaultFallbacks(parsed);
+  return defaultNumRetries(foldDefaultFallbacks(parsed));
+}
+
+// The proxy's Router stores num_retries from router_settings, else litellm_settings, else 2
+// (litellm/router_rust/core.py). The core reads only router_settings and takes an unset count as 0,
+// so the default is filled in here, the way the Router's constructor does it.
+export function defaultNumRetries(config) {
+  const settings = config.router_settings ?? {};
+  if (settings.num_retries != null) return config;
+  const fromLitellm = config.litellm_settings?.num_retries;
+  return {...config, router_settings: {...settings, num_retries: fromLitellm ?? 2}};
 }
 
 // The proxy hands default_fallbacks (from router_settings or litellm_settings) to the router, which

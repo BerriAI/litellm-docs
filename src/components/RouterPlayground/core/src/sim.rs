@@ -220,7 +220,7 @@ impl Run {
     /// Draw the next arrival after `from` at the current rate.
     pub(crate) fn schedule(&mut self, host: &ScriptedHost, from: Duration) {
         self.next_arrival = (self.rate > 0.0)
-            .then(|| from + Duration::from_secs_f64(-(1.0 - host.uniform()).ln() / self.rate))
+            .then(|| from + Duration::from_secs_f64(-(1.0 - host.traffic_uniform()).ln() / self.rate))
             .filter(|at| self.end.is_none_or(|end| *at < end));
     }
 
@@ -233,7 +233,7 @@ impl Run {
     fn draw(&self, host: &ScriptedHost, start: f64, id: u64) -> (Value, Who) {
         let total: f64 = self.kinds.iter().map(|kind| kind.weight).sum();
         let mut roll = if total > 0.0 {
-            host.uniform() * total
+            host.traffic_uniform() * total
         } else {
             0.0
         };
@@ -266,7 +266,7 @@ impl Run {
             body["model"] = json!(self.model);
         }
         let session = (kind.sessions > 0).then(|| {
-            let n = ((host.uniform() * f64::from(kind.sessions)) as u32).min(kind.sessions - 1);
+            let n = ((host.traffic_uniform() * f64::from(kind.sessions)) as u32).min(kind.sessions - 1);
             format!("{}-{}", kind.label, n + 1)
         });
         if let Some(session) = &session {

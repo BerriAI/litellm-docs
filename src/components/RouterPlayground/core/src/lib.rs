@@ -212,8 +212,11 @@ struct ScriptedHost {
     taken: Mutex<HashMap<String, (u64, u32, u64)>>,
     /// What a simulation records besides the outcomes: steps, attempts, marks.
     sim: Mutex<SimLog>,
-    /// Draws for latency, errors and arrivals, apart from the router's own randomness.
+    /// Draws for latency and errors, apart from the router's own randomness.
     rng: SeededRandomness,
+    /// Draws for arrivals, kinds and sessions on a stream of their own, so two configs run on one
+    /// seed get the same traffic however many attempts each one makes.
+    traffic: SeededRandomness,
     /// Tokens the single call in progress costs, when its request names them.
     single_tokens: Mutex<Option<u64>>,
     /// Each team's `router_settings`, from the config's `teams:`.
@@ -343,6 +346,10 @@ impl ScriptedHost {
 
     fn uniform(&self) -> f64 {
         self.rng.next_f64()
+    }
+
+    pub(crate) fn traffic_uniform(&self) -> f64 {
+        self.traffic.next_f64()
     }
 
     fn lognormal(&self, p50: f64, p95: f64) -> f64 {
@@ -1166,6 +1173,7 @@ impl Playground {
             taken: Mutex::new(HashMap::new()),
             sim: Mutex::new(SimLog::default()),
             rng: SeededRandomness::new(seed ^ 0x5eed_5eed),
+            traffic: SeededRandomness::new(seed ^ 0x7aff_1c00),
             single_tokens: Mutex::new(None),
             teams: parse_teams(&parsed),
         });
