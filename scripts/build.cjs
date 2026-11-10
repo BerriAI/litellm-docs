@@ -12,6 +12,9 @@ const heapArgs = /--max-old-space-size/.test(env.NODE_OPTIONS ?? '') ? [] : ['--
 if (env.VERCEL) {
   const sync = spawnSync(process.execPath, [require.resolve('./update-provider-capabilities.mjs')], {env, stdio: 'inherit'});
   if (sync.status !== 0) console.warn('[build] Provider capability refresh failed; using the committed data');
+  // Warn about endpoints and pass-through routes the Supported Endpoints page
+  // does not list yet. The check always exits 0.
+  spawnSync(process.execPath, [require.resolve('./check-endpoints-upstream.mjs')], {env, stdio: 'inherit'});
 }
 
 const result = spawnSync(process.execPath, [

@@ -1,0 +1,92 @@
+---
+title: "Supported API Endpoints: Chat, Responses, Embeddings, Audio"
+slug: /supported_endpoints
+sidebar_label: Supported Endpoints
+description: LiteLLM serves 40+ API endpoints in OpenAI, Anthropic, and Google formats from the Python SDK and the AI Gateway. Find an endpoint and open its guide.
+keywords: [litellm endpoints, supported endpoints, openai compatible api, anthropic messages api, responses api, embeddings api, pass-through endpoints, ai gateway endpoints]
+hide_table_of_contents: true
+faq:
+  - question: Which endpoints does LiteLLM support?
+    answer: LiteLLM supports more than 40 endpoints. They include chat completions, responses, Anthropic messages, embeddings, images, video, audio, realtime, rerank, vector stores, files, batches, MCP, and A2A. This page lists them, with a link to the guide for each.
+  - question: Can I send an Anthropic-format request to a model that is not from Anthropic?
+    answer: Yes. Send the request to /v1/messages in the Anthropic format and set the model to any chat model in your config. LiteLLM changes the request to the API of that provider and sends the answer back in the Anthropic format.
+  - question: Can I call a model that only supports the Responses API from /chat/completions?
+    answer: Yes. LiteLLM bridges /chat/completions to the Responses API when the provider does not support chat completions for that model. The reverse also works. /v1/responses can call providers that only have chat completions.
+  - question: What is the difference between a translated endpoint and a pass-through endpoint?
+    answer: A translated endpoint takes one request format and calls many providers. A pass-through endpoint sends your request to the API of one provider without changes. Both use your LiteLLM key and are logged. For pass-through endpoints, cost tracking depends on the provider.
+  - question: Do the endpoints work in the Python SDK and in the AI Gateway?
+    answer: Most endpoints have a Python SDK function and a Gateway route. Each card on this page shows the Python function when one exists. Serving MCP servers is a Gateway feature only.
+  - question: How do I ask for an endpoint that is not on this page?
+    answer: Open an issue in the BerriAI/litellm repository on GitHub with the endpoint and the providers you need.
+---
+
+import EndpointPaths from '@site/src/components/EndpointPaths';
+import EndpointCatalog, {PassThroughList} from '@site/src/components/EndpointCatalog';
+
+# Supported Endpoints
+
+{/* keep-version-note */}
+
+LiteLLM serves chat, responses, embeddings, images, video, audio, realtime, rerank, vector store, file, batch, MCP, and A2A endpoints. Send a request in the OpenAI, Anthropic, or Google format, and LiteLLM calls any provider that supports it. Use the Python SDK or the AI Gateway. Most endpoints work in both.
+
+## Which endpoints does LiteLLM support? {#all-endpoints}
+
+Search by name, path, or Python function, or select a category. Each card opens the guide for that endpoint.
+
+<EndpointCatalog />
+
+## How does LiteLLM handle a request? {#how-it-works}
+
+LiteLLM handles a request in one of three ways. The diagram shows each path from your app to the provider.
+
+<EndpointPaths />
+
+### Compare the three paths {#request-paths}
+
+| | Translated | Native | Pass-through |
+| --- | --- | --- | --- |
+| **What LiteLLM does** | Takes a chat request in one of three formats and maps it to the API of any chat provider | Takes one request shape for each endpoint and maps it to the API of each provider that supports it | Sends your request to the provider API without changes |
+| **Request format** | OpenAI, Anthropic, or Google | Usually OpenAI. Rerank uses the Cohere format, search the Perplexity format, and OCR the Mistral format | The API of the provider |
+| **Examples** | `/v1/chat/completions`, `/v1/responses`, `/v1/messages`, `generateContent` | `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/rerank` | `/anthropic/v1/messages`, `/bedrock/...`, `/gemini/...` |
+| **LiteLLM keys and logs** | Yes | Yes | Yes |
+| **Cost tracking** | Yes | Yes | For the providers that support it. Each provider page says if it does |
+| **Use it when** | You want one client for many models | You use one capability across providers | You already use the provider SDK, or you need a provider feature that LiteLLM does not map |
+
+## Which providers have pass-through endpoints? {#pass-through-endpoints}
+
+A pass-through route sends a request to the API of one provider. LiteLLM checks your LiteLLM key, adds the provider credentials, and logs the request. Cost tracking depends on the provider. Read [why to use pass-through endpoints](./pass_through/intro.md), or select a provider.
+
+<PassThroughList />
+
+## Frequently asked questions {#faq}
+
+### Which endpoints does LiteLLM support?
+
+LiteLLM supports more than 40 endpoints. They include chat completions, responses, Anthropic messages, embeddings, images, video, audio, realtime, rerank, vector stores, files, batches, MCP, and A2A. This page lists them, with a link to the guide for each.
+
+### Can I send an Anthropic-format request to a model that is not from Anthropic?
+
+Yes. Send the request to `/v1/messages` in the Anthropic format and set the model to any chat model in your config. LiteLLM changes the request to the API of that provider and sends the answer back in the Anthropic format. See [/v1/messages](./anthropic_unified/index.md).
+
+### Can I call a model that only supports the Responses API from /chat/completions?
+
+Yes. LiteLLM bridges `/chat/completions` to the Responses API when the provider does not support chat completions for that model. The reverse also works. `/v1/responses` can call providers that only have chat completions. See [/responses](./response_api.md).
+
+### What is the difference between a translated endpoint and a pass-through endpoint?
+
+A translated endpoint takes one request format and calls many providers. A pass-through endpoint sends your request to the API of one provider without changes. Both use your LiteLLM key and are logged. For pass-through endpoints, cost tracking depends on the provider.
+
+### Do the endpoints work in the Python SDK and in the AI Gateway?
+
+Most endpoints have a Python SDK function and a Gateway route. Each card on this page shows the Python function when one exists. Serving MCP servers is a Gateway feature only.
+
+### How do I ask for an endpoint that is not on this page?
+
+[Open an issue](https://github.com/BerriAI/litellm/issues/new) in the BerriAI/litellm repository on GitHub with the endpoint and the providers you need.
+
+## Next steps {#next-steps}
+
+- **Tutorial:** [Start the AI Gateway](./proxy/docker_quick_start.md) or [make your first SDK call](./learn/sdk_quickstart.md).
+- **How-to:** [Call the Gateway from the OpenAI SDK, LangChain, or curl](./proxy/user_keys.md).
+- **Explanation:** [Why use pass-through endpoints](./pass_through/intro.md).
+- **Reference:** [All model providers](./providers/index.mdx) and the endpoints each one supports.
