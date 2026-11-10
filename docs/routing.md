@@ -37,9 +37,6 @@ If you want a server to load balance across different LLM APIs, use our [LiteLLM
 
 
 ## Load Balancing
-
-[Try it in the router playground](/router-playground#case=rpm-as-weight): rpm limits steer traffic, before and after.
-
 (s/o [@paulpierre](https://www.linkedin.com/in/paulpierre/) and [sweep proxy](https://docs.sweep.dev/blogs/openai-proxy) for their contributions to this implementation)
 [**See Code**](https://github.com/BerriAI/litellm/blob/main/litellm/router.py)
 
@@ -1157,8 +1154,6 @@ model_list:
 
 ### Weighted Deployments 
 
-[Try it in the router playground](/router-playground#case=weights): weights split traffic, before and after.
-
 Set `weight` on a deployment to pick one deployment more often than others. 
 
 This works across **simple-shuffle** routing strategy (this is the default, if no routing strategy is selected). 
@@ -1217,8 +1212,6 @@ model_list:
 </Tabs>
 
 ### Weighted Failover
-
-[Try it in the router playground](/router-playground#case=weighted-failover): fail over inside the group, before and after.
 
 By default, when a deployment in a model group fails, the router moves on to the next entry in `fallbacks` (a different model group). With `enable_weighted_failover`, the router first retries **inside the same model group** by re-picking a different deployment using the existing weights, and only escalates to cross-group fallbacks once every deployment in the group has been tried.
 
@@ -1371,8 +1364,6 @@ With the config above, four requests sent at the same time to `{{openai_large}}`
 [**See Code**](https://github.com/BerriAI/litellm/blob/a978f2d8813c04dad34802cb95e0a0e35a3324bc/litellm/utils.py#L5605)
 
 ### Cooldowns
-
-Try it in the router playground, before and after: [cooldown takes a broken deployment out](/router-playground#case=cooldown), [how long a cooldown lasts](/router-playground#case=cooldown-time), [turning cooldowns off](/router-playground#case=disable-cooldowns).
 
 Set the limit for how many calls a model is allowed to fail in a minute, before being cooled down for a minute. 
 
@@ -1564,8 +1555,6 @@ flowchart TD
 
 ### Retries
 
-[Try it in the router playground](/router-playground#case=retries): retries absorb flaky errors, before and after.
-
 For both async + sync functions, we support retrying failed requests. 
 
 For RateLimitError we implement exponential backoffs 
@@ -1631,8 +1620,6 @@ stops a deployment `num_retries: N` from being applied twice and turning one req
 `(1 + N) ** 2` upstream calls. Use `num_retries` to control how many attempts a request gets.
 
 ### [Advanced]: Custom Retries, Cooldowns based on Error Type
-
-[Try it in the router playground](/router-playground#case=retry-policy): retries per error type, before and after.
 
 - Use `RetryPolicy` if you want to set a `num_retries` based on the Exception received
 - Use `AllowedFailsPolicy` to set a custom number of `allowed_fails`/minute before cooling down a deployment
@@ -2257,8 +2244,6 @@ router = Router(
 ```
 
 ## Router General Settings
-
-[Try it in the router playground](/router-playground#case=max-fallbacks): capping a fallback chain, before and after.
 
 ### Usage 
 

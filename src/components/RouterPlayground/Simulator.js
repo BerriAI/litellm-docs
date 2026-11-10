@@ -423,19 +423,13 @@ function Lanes({store, info, profiles, timeouts, slots, active, onPick, onIncide
               <div className={styles.laneName}>
                 <UsageBars limits={usageLimits(deployment, profile, live)} />
                 <span className={styles.mono}>{deployment.id}</span>
-                {onSelect ? (
-                  <button
-                    type="button"
-                    className={styles.chip}
-                    title="Edit this deployment's behaviour in the config"
-                    onClick={() => onSelect(deployment.id)}>
-                    {profileLabel(profile)}
-                  </button>
-                ) : (
-                  <span className={styles.chip} title={profileSummary(profile)}>
-                    {profileLabel(profile)}
-                  </span>
-                )}
+                <button
+                  type="button"
+                  className={styles.chip}
+                  title="Edit this deployment's behaviour in the config"
+                  onClick={() => onSelect(deployment.id)}>
+                  {profileLabel(profile)}
+                </button>
                 {live?.cooling && (
                   <span className={styles.coolingTag}>cooling {secs(live.cooling.remaining ?? 0)}</span>
                 )}
@@ -1403,7 +1397,6 @@ export default function Simulator({
   docsCase,
   caseSide,
   onCaseSide,
-  liveOnly = false,
 }) {
   const [tab, setTab] = useState(initialScenario && !docsCase ? 'scenario' : 'live');
   const liveIncident = useRef(null);
@@ -1417,13 +1410,12 @@ export default function Simulator({
   return (
     <>
       <Panel
-        id={liveOnly ? 'sim-run-modal' : 'sim-run'}
+        id="sim-run"
         className={styles.panel}
         headClassName={styles.panelHead}
         title="Simulator"
         folded={tab === 'live' ? 'live run keeps running while folded' : 'scenario and compare'}
         extra={
-          liveOnly ? null : (
           <div className={styles.tabs} role="tablist">
             <button type="button" role="tab" aria-selected={tab === 'live'} onClick={() => setTab('live')}>
               Live run
@@ -1432,7 +1424,6 @@ export default function Simulator({
               Scenario and compare
             </button>
           </div>
-          )
         }>
         {affinity && (
           <div className={styles.affinityWarn} role="note">

@@ -9,8 +9,6 @@ import TabItem from '@theme/TabItem';
 
 # Client-Side Fallbacks
 
-[Try it in the router playground](/router-playground#case=client-fallbacks): fallbacks per request, before and after.
-
 Set fallbacks in the `.completion()` call for SDK and client-side for proxy. 
 
 In this request the following will occur:

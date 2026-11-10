@@ -42,8 +42,6 @@ $ litellm --config /path/to/config.yaml
 
 ### Custom Timeouts & Stream Timeouts (Per Model)
 
-[Try it in the router playground](/router-playground#case=per-model-timeout): a timeout for one slow deployment, before and after.
-
 For each model, you can set `timeout` and `stream_timeout` under `litellm_params`:
 
 - **`timeout`** → maximum time for the *complete response*.  
