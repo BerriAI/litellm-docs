@@ -210,9 +210,9 @@ If the deployment sets `token_count_framing` or another framing key, the proxy r
 
 This change does not apply to providers with no count API, such as Groq. They continue to use a local count. The SDK function `litellm.acount_tokens()` also continues to use a local count.
 
-A `/utils/token_counter?call_endpoint=true` request with only a `prompt` goes to the count API of the provider as one user message, the same as `messages` with that text. So it returns the same count or the same error. A deployment with a `mode` other than `chat` or `responses`, such as an embedding model, counts the prompt as raw text, and so does a model with no deployment. The proxy reads `mode` from the `model_info` of the deployment, or from its cost map entry. <SinceVersion v="1.111.0" />
+A `/utils/token_counter?call_endpoint=true` request with only a `prompt` goes to the count API of the provider as one user message, the same as `messages` with that text. So it returns the same count or the same error. A deployment with a `mode` other than `chat` or `responses`, such as an embedding model, counts the prompt as raw text. So does a model with no deployment, and a provider with no count API, such as Groq. The proxy reads `mode` from the `model_info` of the deployment, or from its cost map entry. <SinceVersion v="1.111.0" />
 
-For Anthropic, OpenAI, and Azure AI deployments, the proxy waits for the count API for the `timeout` of the deployment. If the deployment has no `timeout`, the proxy waits for `timeout` in `router_settings`, and then for `request_timeout` in `litellm_settings`. If the count API does not answer in that time, the proxy returns a 408. This applies to `/utils/token_counter`, `/v1/messages/count_tokens`, and `/v1/responses/input_tokens`.
+For Anthropic, OpenAI, and Azure AI deployments, the proxy waits for the count API as long as it waits for a chat call to the same deployment. That is the `timeout` of the deployment, else its `request_timeout`, else `request_timeout` in `litellm_settings`, else `timeout` in `router_settings`. If the count API does not answer in that time, the proxy returns a 408. This applies to `/utils/token_counter`, `/v1/messages/count_tokens`, and `/v1/responses/input_tokens`.
 
 ```yaml
 model_list:
@@ -270,7 +270,7 @@ Some hosts add a different hidden prompt when a request has tools, or when it go
 | `token_count_responses_framing` | A native Responses request |
 | `token_count_responses_tool_framing` | A native Responses request with a function tool |
 
-The proxy adds one framing value to each local estimate. A count from the count API of the provider gets no framing. A `/utils/token_counter` request with only a `prompt` gets no framing either, unless it sets `call_endpoint=true` for a chat deployment. Then the prompt counts as one user message, with the same framing as `messages`. A narrower key replaces `token_count_framing` and is not added to it. For example, with `token_count_framing: 149` and `token_count_tool_framing: 302`, a request with one function tool adds 302 tokens, not 451.
+The proxy adds one framing value to each local estimate. A count from the count API of the provider gets no framing. A `/utils/token_counter` request with only a `prompt` gets no framing either, unless it sets `call_endpoint=true` for a chat deployment whose provider has a count API. Then the prompt counts as one user message, with the same framing as `messages`. A narrower key replaces `token_count_framing` and is not added to it. For example, with `token_count_framing: 149` and `token_count_tool_framing: 302`, a request with one function tool adds 302 tokens, not 451.
 
 A function tool is a tool with a name, other than the Anthropic `web_search` tool. This includes OpenAI function tools, Anthropic custom tools, and Anthropic built-in tools such as `web_fetch` and `code_execution`. A request whose only tools are the Anthropic `web_search` tool or tools with no name, such as the Responses `web_search` and `file_search` tools, uses the keys for a request with no function tool.
 
