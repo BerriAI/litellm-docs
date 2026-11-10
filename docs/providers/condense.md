@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 {/* keep-version-note */}
 
-[condense.chat](https://condense.chat) is a drop-in proxy that sits between your app or agent and the LLM provider. It manages the context sent on each call and trims context the agent no longer needs, then forwards the request to the provider.
+[condense.chat](https://condense.chat) is a drop-in proxy that sits between your app or agent and the LLM provider. It manages and compresses the context sent on each call, then forwards the request to the provider.
 
 LiteLLM needs no separate provider for this. You keep using the `anthropic/` and `openai/` providers, point `api_base` at condense, and add the `X-Condense-Auth-Token` header.
 
@@ -13,7 +13,7 @@ LiteLLM needs no separate provider for this. You keep using the `anthropic/` and
 
 | Property | Details |
 |-------|-------|
-| Description | Proxy that manages the context sent on each LLM call before forwarding it to the provider |
+| Description | Proxy that manages and compresses the context sent on each LLM call before forwarding it to the provider |
 | Provider Route on LiteLLM | `anthropic/` and `openai/` with a condense `api_base` |
 | Link to Provider Doc | [condense.chat Documentation ↗](https://condense.chat/docs/) |
 | Anthropic `api_base` | `https://api.condense.chat/anthropic` |
