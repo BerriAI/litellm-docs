@@ -81,4 +81,6 @@ Domain filters narrow search relevance. Microsoft also notes that `site:` querie
 
 The default API base is `https://api.microsoft.ai/v3`. Set `api_base` in the SDK call or proxy search configuration to select a different base, with `/search/web` appended once. HTTPS is required for every endpoint, including custom endpoints with an explicit key. HTTP endpoints are rejected before credentials are resolved or a request is sent. A caller-selected host cannot receive a server-managed API key unless the host matches the default; pass an explicit `api_key` with a custom endpoint
 
-No default Web IQ price is registered by this integration. Do not interpret missing cost data as free usage. Live Web IQ validation requires an enabled account and a valid API key
+LiteLLM registers `webiq/search` at $0.007 per query. [Microsoft's published pricing](https://learn.microsoft.com/en-us/web-iq/resources/pricing) lists `/web` at $7 per 1,000 API calls, effective October 16, 2026. Live Web IQ validation requires an enabled account and a valid API key
+
+This integration currently supports `/web`. The `/video`, `/news`, `/images`, and `/browse` endpoints are outside its current scope
