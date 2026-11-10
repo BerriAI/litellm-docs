@@ -17,6 +17,15 @@
   line-height: 1.1;
 }
 
+.guide {
+  max-width: 760px;
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
 .description {
   max-width: 760px;
   margin: 0 0 0.75rem;

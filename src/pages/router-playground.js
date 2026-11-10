@@ -18,6 +18,14 @@ export default function RouterPlaygroundPage() {
       <main className={styles.page}>
         <header className={styles.hero}>
           <h1 className={styles.title}>Router playground</h1>
+          <ol className={styles.guide}>
+            <li>Pick a preset, or edit the config in Form or YAML.</li>
+            <li>
+              Press <strong>Play</strong> in the simulator to send traffic, then use <strong>Trigger outage</strong> on a
+              deployment to watch retries, cooldowns and fallbacks.
+            </li>
+            <li>Click a bar or a cross in a lane to see every step the router took for that request.</li>
+          </ol>
         </header>
         <RouterPlayground />
         <details className={styles.about}>
