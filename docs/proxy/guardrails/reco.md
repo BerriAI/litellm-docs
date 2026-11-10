@@ -27,12 +27,13 @@ guardrails:
     litellm_params:
       guardrail: reco
       mode: pre_call
+      default_on: true
       optional_params:
         api_key: os.environ/RECO_API_KEY
         api_base: os.environ/RECO_API_BASE
 ```
 
-The token is sent as the `x-api-key` header on every request to Reco. By default the guardrail fails closed: if Reco errors or is unreachable, the request is blocked. To let traffic through uninspected when Reco errors, set `fail_on_error: false` under `optional_params`.
+The token is sent as the `x-api-key` header on every request to Reco. `default_on: true` runs the guardrail on every request; without it, the guardrail only runs on requests that name it, for example `"guardrails": ["reco-guardrail"]` in the request body. By default the guardrail fails closed: if Reco errors or is unreachable, the request is blocked. To let traffic through uninspected when Reco errors, set `fail_on_error: false` under `optional_params`.
 
 Configs that set `reco_tenant_id` instead of `api_key` keep working, but the tenant ID is a legacy option. Reco is turning off tenant-ID-only access, so switch to a registration token.
 
