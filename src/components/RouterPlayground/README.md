@@ -4,6 +4,8 @@ Everything behind `/router-playground` lives in this folder, apart from the page
 `src/pages/router-playground.js` and the built core in `static/router-playground/`.
 
 `index.js` is the playground component: config editor, deployments, request controls and state.
+`PlaygroundModal.js` is an inline link that opens the whole playground in a dialog, for pages that
+mention it in passing; the playground mounts only when the dialog opens.
 `ConfigEditor.js` is the config editor: a Form | YAML toggle over the same YAML text, model groups as
 cards with a row per deployment, router settings grouped as strategy, retries, cooldowns and
 fallbacks, an add-deployment drawer, and checks drawn on the cards. The YAML stays the source of
