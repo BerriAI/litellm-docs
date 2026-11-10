@@ -85,7 +85,8 @@ router never set reads as None. Treat the field values as read-only.
 `background_health_check_model_groups`, `enable_tag_filtering`,
 `tag_filtering_match_any`, `tag_routing_prefix`, `router_general_settings`,
 `provider_budget_config`, `provider_default_deployment_ids`,
-`fallback_access_check`, `fallback_budget_check`, `kubernetes_pod_discovery`,
+`fallback_access_check`, `fallback_budget_check`, `fallback_rate_limit_check`,
+`kubernetes_pod_discovery`,
 `search_tools`, `guardrail_list`, `cache_responses`.
 
 | Method | Returns | Was |
