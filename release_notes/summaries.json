@@ -1,6 +1,17 @@
 [
   {
     "folders": [
+      "v1.108.5"
+    ],
+    "title": "LiteLLM v1.108.5 (LTS) fixes workload identity on OpenAI routes and transcription cost",
+    "points": [
+      "Keyless workload identity OpenAI deployments no longer answer 401 on image edits, audio, files, batches and the other routes beyond chat.",
+      "Transcription cost is correct for some FLAC files that could push a key over its budget.",
+      "`ollama_chat/` streams give each parallel tool call its own index, and `/v1/messages` honors a deployment's `additional_drop_params`."
+    ]
+  },
+  {
+    "folders": [
       "v1.108.4"
     ],
     "title": "LiteLLM v1.108.4 (LTS) fixes Bedrock pass-through guardrails and video polls",
@@ -212,17 +223,6 @@
       "The model leaderboard rollup now writes `LiteLLM_DailyModelUsage` in batches, so heavy traffic to one model no longer drops SpendLogs rows.",
       "Non-streaming requests of 256 KiB or more on the chat to Responses bridge now log spend once instead of twice.",
       "This patch has no new database migrations and no breaking changes."
-    ]
-  },
-  {
-    "folders": [
-      "v1.104.3"
-    ],
-    "title": "LiteLLM v1.104.3 adds hosted vLLM and Microsoft-Decision-1 to Decisions",
-    "points": [
-      "Decisions requests that send `safety_identifier` to a provider other than OpenAI now return 400, so set `drop_params` to `true` to keep the old behavior.",
-      "The `litellm.systemone()` SDK function takes the System One format, and `litellm.decisions()` takes the OpenAI format.",
-      "The `azure_ai/` prefix serves Microsoft-Decision-1, and `hosted_vllm/` is a new Decisions provider that requires `api_base`."
     ]
   }
 ]
