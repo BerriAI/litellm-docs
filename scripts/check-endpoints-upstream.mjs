@@ -39,6 +39,7 @@ const IGNORED_ROUTES = new Set([
   '/openai', // alias of /openai_passthrough
   '/vertex-ai', // alias of /vertex_ai
   '/eu.assemblyai', // EU host of /assemblyai
+  '/cn.tripo', // China host of /tripo, documented on the same provider page
   '/laya', // decision models, listed under /v1/decisions
   '/bespoke', // decision models, listed under /v1/decisions
   '/v1', // path suffixes such as "/v1/systemone" in helper code, not routes
