@@ -5,9 +5,9 @@ description: Move a LiteLLM proxy deployed with raw Kubernetes manifests onto th
 
 # Migrate from Kubernetes Manifests to the Microservices Chart
 
-This guide moves a LiteLLM proxy that runs from hand-written Kubernetes manifests (the [Kubernetes without Helm](./deploy.md#kubernetes-without-helm) layout: one `Deployment`, one `Service`, a `ConfigMap`, and a `Secret`) onto the componentized `litellm` Helm chart, where LLM traffic (`gateway`), management APIs (`backend`), and the Admin UI (`ui`) run as separate Deployments with their own autoscaling. The existing Postgres database and Redis are kept; no data moves. The old Deployment stays up until the new release serves traffic, so the switch is reversible at every step.
+This guide moves a LiteLLM proxy that runs from hand-written Kubernetes manifests (the [Kubernetes without Helm](./deploy/kubernetes.md) layout: one `Deployment`, one `Service`, a `ConfigMap`, and a `Secret`) onto the componentized `litellm` Helm chart, where LLM traffic (`gateway`), management APIs (`backend`), and the Admin UI (`ui`) run as separate Deployments with their own autoscaling. The existing Postgres database and Redis are kept; no data moves. The old Deployment stays up until the new release serves traffic, so the switch is reversible at every step.
 
-You need `helm` 3.8 or newer, `kubectl` access to the target namespace, the current manifests, and network reachability from the cluster to Postgres and Redis. For what each value does, see the chart's [`values.yaml`](https://github.com/BerriAI/litellm/blob/main/helm/litellm/values.yaml); for the architecture behind the two modes, see [Production Deployment](./deploy.md#architecture).
+You need `helm` 3.8 or newer, `kubectl` access to the target namespace, the current manifests, and network reachability from the cluster to Postgres and Redis. For what each value does, see the chart's [`values.yaml`](https://github.com/BerriAI/litellm/blob/main/helm/litellm/values.yaml); for the architecture behind the two modes, see [Production Deployment](./deploy/architecture.md).
 
 ## 1. Capture the current deployment
 
@@ -256,7 +256,7 @@ kubectl logs deploy/litellm-gateway -f | grep -i error
 
 ## 8. Scale the gateway
 
-The gateway HPA is on by default with CPU and memory targets, and scales the gateway alone; the backend has its own HPA and the UI is fixed at one replica unless `ui.hpa.enabled` is set. Raise `gateway.hpa.maxReplicas` or the floor as load needs, then `helm upgrade`. For LLM traffic, where pods saturate on open connections before CPU, add a requests or tokens per second target as described in [Scale on requests and tokens per pod](./deploy.md#scale-on-requests-and-tokens-per-pod).
+The gateway HPA is on by default with CPU and memory targets, and scales the gateway alone; the backend has its own HPA and the UI is fixed at one replica unless `ui.hpa.enabled` is set. Raise `gateway.hpa.maxReplicas` or the floor as load needs, then `helm upgrade`. For LLM traffic, where pods saturate on open connections before CPU, add a requests or tokens per second target as described in [Scale on requests and tokens per pod](./deploy/autoscaling.md#scale-on-requests-and-tokens-per-pod).
 
 If the old deployment was crash-looping, check why before relying on more replicas: `kubectl describe pod` on an old pod shows `OOMKilled` (raise `gateway.resources.limits.memory`), liveness failures during startup (set `gateway.startupProbe`), or a database or Redis connection error in `kubectl logs --previous`. Replicas multiply a bad configuration rather than fixing it.
 

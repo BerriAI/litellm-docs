@@ -63,7 +63,7 @@ The steps below assume you can already deploy a single-region production proxy (
 
 ### 1. Provision the shared database
 
-Create one PostgreSQL database in your primary region and run the schema migrations against it once, using the migrations job from the [Helm charts](./deploy.md#deploy-with-helm) or the [Terraform modules](./deploy.md#deploy-with-terraform-aws-and-gcp). All regions will use this database's connection string.
+Create one PostgreSQL database in your primary region and run the schema migrations against it once, using the migrations job from the [Helm charts](./deploy/helm.md) or the [Terraform modules](./deploy/terraform.md). All regions will use this database's connection string.
 
 ### 2. Connect the regions' networks
 

@@ -179,7 +179,7 @@ const INSTALLS = {
         label: 'Helm',
         when: 'You deploy to Kubernetes. Pair it with a values.yaml from the deploy guide.',
         code: HELM,
-        more: '/docs/proxy/deploy#deploy-with-helm',
+        more: '/docs/proxy/deploy/helm',
       },
       {
         id: 'installer',

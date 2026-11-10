@@ -40,7 +40,7 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
-  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js')],
+  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js'), require.resolve('./src/clientModules/deployLegacyRedirect.js')],
   plugins: [
     require('./plugins/litellm-stats'),
     require('./plugins/release-feed'),
@@ -103,7 +103,7 @@ const config = {
           },
           {
             from: '/docs/proxy/microservices_helm',
-            to: '/docs/proxy/deploy#deploy-with-helm',
+            to: '/docs/proxy/deploy/helm',
           },
           {
             from: '/docs/proxy/db_deadlocks',

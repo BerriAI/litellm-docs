@@ -153,7 +153,7 @@ proxy_config:
 </TabItem>
 <TabItem value="terraform" label="Terraform">
 
-Add these inputs to your existing [LiteLLM AWS or Google Cloud module](../deploy.md#use-the-modules-directly). Set `var.resource_client_secret_ref` to the resource client's secret ARN on AWS or Secret Manager resource ID on Google Cloud.
+Add these inputs to your existing [LiteLLM AWS or Google Cloud module](../deploy/terraform.md#use-the-modules-directly). Set `var.resource_client_secret_ref` to the resource client's secret ARN on AWS or Secret Manager resource ID on Google Cloud.
 
 ```hcl title="Existing LiteLLM module inputs"
 gateway_extra_env = { GENERIC_SCOPE = "openid profile email offline_access" }
@@ -239,7 +239,7 @@ proxy_config:
 </TabItem>
 <TabItem value="terraform" label="Terraform">
 
-Add these inputs to your existing [LiteLLM AWS or Google Cloud module](../deploy.md#use-the-modules-directly). The secret references are ARNs on AWS or Secret Manager resource IDs on Google Cloud.
+Add these inputs to your existing [LiteLLM AWS or Google Cloud module](../deploy/terraform.md#use-the-modules-directly). The secret references are ARNs on AWS or Secret Manager resource IDs on Google Cloud.
 
 ```hcl title="Existing LiteLLM module inputs"
 gateway_extra_secrets = {
