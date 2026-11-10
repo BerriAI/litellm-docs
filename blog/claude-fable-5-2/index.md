@@ -8,7 +8,7 @@ authors:
   - kerry
 description: "Claude Fable 5.2 costs $8 per 1M input tokens and $40 per 1M output tokens, 20% below Fable 5.1. LiteLLM supports it on day 0."
 card_title: "Claude Fable 5.2"
-card_summary: "$8 / $40 per 1M tokens, 20% below Fable 5.1, with cache reads at $0.20. 1M context, adaptive thinking, default effort high."
+card_summary: "$8 / $40 per 1M tokens, 20% below Fable 5.1, cache reads at $0.20. 1M context, adaptive thinking, default effort high."
 image: ./hero.png
 tags: [anthropic, claude, claude fable, fable 5.2, pricing, day 0 support]
 hide_table_of_contents: false
