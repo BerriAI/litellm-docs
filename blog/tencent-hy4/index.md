@@ -36,7 +36,7 @@ TokenHub charges 50% of list prices through **December 31, 2026, at 23:59:59 Bei
 List prices match Hy4 preview. After the promotion ends, TokenHub resumes billing at list prices.
 
 :::note Cost tracking
-LiteLLM's [default cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json) records **list prices** for `tencent/hy4`. Reloading the map does not apply the promotion. Use [custom pricing](/docs/proxy/custom_pricing) if your spend tracking needs to match the discounted invoice, and restore list rates when the offer ends.
+LiteLLM calculates spend using its active [cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). Check that your loaded map uses the promotional rates above. If it still records list prices, use [custom pricing](/docs/proxy/custom_pricing) to match the discounted invoice. Restore list rates when the offer ends.
 :::
 
 ## What's new in Hy4
