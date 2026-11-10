@@ -144,7 +144,7 @@ The `/v1/messages/count_tokens` endpoint automatically routes to the appropriate
 |----------|----------------------|
 | Anthropic | [Anthropic Token Counting API](https://docs.anthropic.com/en/docs/build-with-claude/token-counting) |
 | OpenAI | [OpenAI Responses API `/input_tokens`](https://platform.openai.com/docs/api-reference/responses/input-tokens) — see [Token Counting](./count_tokens.md) |
-| Mistral | [Mistral Responses API `/v1/responses/input_tokens`](https://docs.mistral.ai/api/#tag/responses) — see [Token Counting](./count_tokens.md) |
+| Mistral | [Mistral Responses API `/v1/responses/input_tokens`](https://docs.mistral.ai/api/endpoint/responses#operation-count_input_tokens_v1_responses_input_tokens_post) — see [Token Counting](./count_tokens.md) |
 | Vertex AI (Claude) | Vertex AI Partner Models Token Counter |
 | Bedrock (Claude) | AWS Bedrock CountTokens API, then bedrock-mantle for a Claude model it rejects, see [Bedrock Claude models](./count_tokens.md#bedrock-claude-models) |
 | Gemini | Google AI Studio countTokens API |

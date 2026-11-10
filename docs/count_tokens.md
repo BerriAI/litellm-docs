@@ -19,7 +19,7 @@ LiteLLM provides exact token counting by calling provider-specific token countin
 |----------|-------------------|--------|
 | OpenAI | [Responses API `/input_tokens`](https://platform.openai.com/docs/api-reference/responses/input-tokens) | OpenAI Responses |
 | Anthropic | [Messages `/count_tokens`](https://docs.anthropic.com/en/docs/build-with-claude/token-counting) | Anthropic Messages |
-| Mistral | [Responses API `/v1/responses/input_tokens`](https://docs.mistral.ai/api/#tag/responses) | OpenAI Responses |
+| Mistral | [Responses API `/v1/responses/input_tokens`](https://docs.mistral.ai/api/endpoint/responses#operation-count_input_tokens_v1_responses_input_tokens_post) | OpenAI Responses |
 | Vertex AI (Claude) | Vertex AI Partner Models Token Counter | Anthropic Messages |
 | Bedrock (Claude) | AWS Bedrock CountTokens API, then bedrock-mantle for a Claude model it rejects (see [Bedrock Claude models](#bedrock-claude-models)) | Anthropic Messages |
 | Gemini | Google AI Studio countTokens API | Anthropic Messages |

@@ -482,7 +482,11 @@ Voxtral TTS is priced per input character, at the `input_cost_per_character` rat
 
 ## Token Counting
 
+<SinceVersion v="1.111.0" />
+
 LiteLLM supports native upstream token counting for Mistral models via Mistral's `/v1/responses/input_tokens` endpoint. See [Token Counting](../count_tokens.md) for usage and details.
+
+A Mistral deployment on Azure (an Azure `api_base`, `MISTRAL_AZURE_API_BASE`, or only `MISTRAL_AZURE_API_KEY` set) is counted with LiteLLM's local tokenizer instead, so the prompt and the Azure key never go to `api.mistral.ai`.
 
 ```python
 import asyncio
