@@ -44,13 +44,13 @@ When prompt storage is on for the proxy, you can still keep request and response
 ```bash
 # one key
 curl -X POST 'http://0.0.0.0:4000/key/update' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"key": "sk-...", "metadata": {"store_prompts_in_spend_logs": false}}'
 
 # every key on a team
 curl -X POST 'http://0.0.0.0:4000/team/update' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"team_id": "my-team", "metadata": {"store_prompts_in_spend_logs": false}}'
 ```
