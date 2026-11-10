@@ -4,6 +4,8 @@ title: "Tencent Hy4 API Pricing and Support on LiteLLM"
 date: 2026-11-10T10:00:00-08:00
 authors:
   - moe
+  - kerry
+  - ryan
 description: "Use Tencent Hy4 through LiteLLM with vision, tool calling and 1M context. Compare TokenHub list pricing with its 50% discount through December 31."
 card_title: "Tencent Hy4"
 card_summary: "Vision, tool calling and 1M context through Tencent TokenHub, with 50% off inference until December 31."
