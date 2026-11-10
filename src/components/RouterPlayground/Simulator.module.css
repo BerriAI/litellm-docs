@@ -1570,38 +1570,40 @@
 
 /* One incident button with a caret that picks the kind. */
 
-.incidentSplit {
-  display: inline-flex;
-  border: 1px solid var(--sim-line);
-  border-radius: 4px;
-}
+/* A lane's incident buttons: one per kind, named for what it does. */
 
-.laneButtons .incidentSplit button {
-  border: none;
-  border-radius: 4px 0 0 4px;
-}
-
-.incidentCaret {
-  position: relative;
-  display: inline-flex;
+.incidentRow {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  width: 22px;
-  border-left: 1px solid var(--sim-line);
-  color: var(--sim-muted);
+  gap: 4px;
 }
 
-.incidentCaret select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  opacity: 0;
+.incidentLead {
+  margin-right: 2px;
+  color: var(--sim-muted);
+  font-size: 0.68rem;
+}
+
+.laneButtons .incidentRow .incidentChip {
+  padding: 1px 7px;
+  border: 1px solid var(--sim-line);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.7rem;
+  line-height: 1.5;
   cursor: pointer;
 }
 
-.incidentSplit:hover,
-.incidentSplit:focus-within {
-  border-color: var(--ifm-color-primary);
+.laneButtons .incidentRow .incidentChip:hover,
+.laneButtons .incidentRow .incidentChip:focus-visible {
+  border-color: var(--ifm-color-danger);
+  color: var(--ifm-color-danger);
+}
+
+.incidentFor {
+  color: var(--sim-muted);
 }
 
 /* rpm and tpm used this minute against the deployment's limit. */
