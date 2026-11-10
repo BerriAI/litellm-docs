@@ -439,7 +439,6 @@ const sidebars = {
             "proxy/fips_mode",
             "proxy/outbound_requests",
             "proxy/security_owasp_llm_top10",
-            "proxy/rust_gateway",
           ],
         },
         {
