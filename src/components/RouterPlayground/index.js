@@ -4,6 +4,8 @@ import ConfigEditor from './ConfigEditor';
 import {loadCore, parseConfig} from './core';
 import {seconds} from './format';
 import {PRESETS} from './presets';
+
+const DEFAULT_PRESET = PRESETS[0];
 import Panel from './Panel';
 import {defaultProfile} from './profiles';
 import {defaultKinds} from './requests';
@@ -21,13 +23,13 @@ export default function Playground() {
   const base = useBaseUrl('/router-playground/');
   const [core, setCore] = useState(null);
   const [loadError, setLoadError] = useState(null);
-  const [preset, setPreset] = useState(PRESETS[0]);
-  const [configText, setConfigText] = useState(PRESETS[0].config);
+  const [preset, setPreset] = useState(DEFAULT_PRESET);
+  const [configText, setConfigText] = useState(DEFAULT_PRESET.config);
   const [seed, setSeed] = useState(0);
-  const [model, setModel] = useState(PRESETS[0].model);
+  const [model, setModel] = useState(DEFAULT_PRESET.model);
   const [focus, setFocus] = useState(null);
-  const [profiles, setProfiles] = useState({});
-  const [kinds, setKinds] = useState(defaultKinds);
+  const [profiles, setProfiles] = useState(() => (DEFAULT_PRESET.profiles ? structuredClone(DEFAULT_PRESET.profiles) : {}));
+  const [kinds, setKinds] = useState(() => (DEFAULT_PRESET.requests ? DEFAULT_PRESET.requests() : defaultKinds()));
   const [runs, setRuns] = useState([]);
   const [state, setState] = useState(null);
   const [configError, setConfigError] = useState(null);

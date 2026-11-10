@@ -241,13 +241,6 @@ const tuned = (name, fields) => ({...presetProfile(name), ...fields, preset: 'cu
 
 export const PRESETS = [
   {
-    id: 'weights',
-    label: 'Weighted load balancing',
-    config: WEIGHTS,
-    model: 'gpt-4o',
-    outages: [{id: 'azure-eastus', fail: 'RateLimitError', from: 30, to: 70}],
-  },
-  {
     id: 'production',
     label: 'Production mix',
     config: PRODUCTION,
@@ -289,6 +282,13 @@ export const PRESETS = [
         metadata: '{"tags": ["batch"]}',
       }),
     ],
+  },
+  {
+    id: 'weights',
+    label: 'Weighted load balancing',
+    config: WEIGHTS,
+    model: 'gpt-4o',
+    outages: [{id: 'azure-eastus', fail: 'RateLimitError', from: 30, to: 70}],
   },
   {
     id: 'teams',

@@ -17,8 +17,11 @@ export default function RouterPlaygroundPage() {
       description="Run the LiteLLM router core in your browser and watch how it picks, retries, cools down and falls back.">
       <main className={styles.page}>
         <header className={styles.hero}>
-          <p className={styles.eyebrow}>Proof of concept</p>
           <h1 className={styles.title}>Router playground</h1>
+        </header>
+        <RouterPlayground />
+        <details className={styles.about}>
+          <summary className={styles.aboutSummary}>How it works</summary>
           <p className={styles.description}>
             This page runs the router core that <code>litellm.Router</code> uses, compiled to WebAssembly, in your
             browser. Paste a <code>model_list</code> and <code>router_settings</code>, choose how each deployment
@@ -36,8 +39,7 @@ export default function RouterPlaygroundPage() {
             <code>usage-based-routing-v2</code> and <code>latency-based-routing</code>, are not offered until they run
             in the Rust core.
           </p>
-        </header>
-        <RouterPlayground />
+        </details>
       </main>
     </Layout>
   );
