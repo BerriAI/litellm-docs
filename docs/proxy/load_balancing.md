@@ -273,6 +273,8 @@ router_settings:
 
 ## Router settings on config - routing_strategy, model_group_alias
 
+[Try it in the router playground](/router-playground#case=alias): moving an alias moves the traffic, before and after.
+
 Expose an 'alias' for a 'model_name' on the proxy server. 
 
 ```
@@ -341,6 +343,8 @@ class RouterModelGroupAliasItem(TypedDict):
 
 ## Deployment Ordering (Priority)
 
+[Try it in the router playground](/router-playground#case=order): order beats weight, before and after.
+
 Set `order` in `litellm_params` to prioritize deployments. Lower values = higher priority. When multiple deployments share the same `order`, the routing strategy picks among them.
 
 ```yaml
@@ -396,6 +400,8 @@ The fallback chain for the above config: `order=1` → `order=2` → `gpt-4-fall
 For 429 (rate limit) errors specifically, the failed deployment is immediately placed on cooldown. If all `order=1` deployments are on cooldown, the router picks `order=2` deployments directly during retries without waiting for the fallback path.
 
 ### Team-scoped models and legacy `model_aliases` {#team-scoped-models-and-legacy-model_aliases}
+
+[Try it in the router playground](/router-playground#case=team-deployment): a team gets its own deployment, before and after.
 
 Team-scoped deployments are identified by `model_info.team_id` and `model_info.team_public_model_name`. Requests should use the **public** model name; the router resolves all sibling deployments (same public name, different `api_base` / `order`, etc.) for routing, failover, and deployment `order`.
 

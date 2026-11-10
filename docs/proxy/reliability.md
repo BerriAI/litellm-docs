@@ -33,6 +33,8 @@ Fallbacks are typically done from one `model_name` to another `model_name`.
 
 ## Quick Start 
 
+[Try it in the router playground](/router-playground#case=fallbacks): fallbacks save a dead model group, before and after.
+
 ### 1. Setup fallbacks
 
 Key change: 
@@ -163,6 +165,8 @@ To set fallbacks per request from the client or the Python SDK, see [Client-Side
 
 ## Content Policy Violation Fallback
 
+[Try it in the router playground](/router-playground#case=content-policy-fallbacks): blocked prompts move to another provider, before and after.
+
 Key change: 
 
 ```python
@@ -226,6 +230,8 @@ litellm --config /path/to/config.yaml
 </Tabs>
 
 ## Context Window Exceeded Fallback
+
+[Try it in the router playground](/router-playground#case=context-window-fallbacks): long prompts move to a bigger model, before and after.
 
 Key change: 
 
@@ -291,6 +297,8 @@ litellm --config /path/to/config.yaml
 
 ## Advanced
 ### Fallbacks + Retries + Timeouts + Cooldowns
+
+[Try it in the router playground](/router-playground#case=timeout-fallback): timeouts, retries and fallbacks together, before and after.
 
 To set fallbacks, just do: 
 
@@ -687,6 +695,8 @@ litellm_settings:
 
 
 ### Default Fallbacks 
+
+[Try it in the router playground](/router-playground#case=default-fallbacks): a catch-all fallback, before and after.
 
 You can also set default_fallbacks, in case a specific model group is misconfigured / bad.
 
