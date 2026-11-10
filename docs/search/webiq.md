@@ -2,11 +2,11 @@
 
 :::note Availability
 
-This integration is proposed in [LiteLLM PR #42583](https://github.com/BerriAI/litellm/pull/42583). Use a build containing that change; it is not available in released versions yet
+This integration is proposed in [LiteLLM PR #50883](https://github.com/BerriAI/litellm/pull/50883). Use a build containing that change; it is not available in released versions yet
 
 :::
 
-Use `search_provider="webiq"` with a Microsoft Web IQ API key. This integration calls the [Web Search v3 REST API](https://webiq.microsoft.ai/documentation/api-reference/web/), which is separate from Grounding with Bing
+Use `search_provider="webiq"` with a Microsoft Web IQ API key. This integration calls the [Web Search v3 REST API](https://learn.microsoft.com/en-us/web-iq/reference/web-search), which is separate from Grounding with Bing
 
 Set `WEBIQ_API_KEY` in the process environment or pass `api_key` explicitly. The provider sends it in the `x-apikey` header. This initial integration uses API-key authentication; it does not acquire or refresh Entra ID tokens
 
@@ -29,7 +29,7 @@ async def main():
 asyncio.run(main())
 ```
 
-The provider requests `contentFormat="passage"` and `maxLength=5000` by default, following the [Web IQ quick start](https://webiq.microsoft.ai/documentation/). `content` becomes the standard result's `snippet`, while `lastUpdatedAt` supplies `date` and `last_updated` when available. Crawl timestamps are preserved as `crawledAt`, not presented as publication dates. Other response metadata, including `traceId` and instrumentation fields, is preserved unless its key conflicts with a standard LiteLLM response field; the integration does not send instrumentation pings
+The provider requests `contentFormat="passage"` and `maxLength=5000` by default. `content` becomes the standard result's `snippet`, while `lastUpdatedAt` supplies `date` and `last_updated` when available. Crawl timestamps are preserved as `crawledAt`, not presented as publication dates. Other response metadata, including `traceId` and instrumentation fields, is preserved unless its key conflicts with a standard LiteLLM response field; the integration does not send instrumentation pings
 
 ## Gateway
 
