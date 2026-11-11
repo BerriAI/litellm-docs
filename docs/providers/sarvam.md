@@ -9,15 +9,15 @@ LiteLLM supports Sarvam's OpenAI-compatible `/v2` API, including Sarvam 105B and
 
 | Model | Context | Max output | Input | USD per 1M in / out |
 | --- | --- | --- | --- | --- |
-| `sarvam/sarvam-105b` | 128K | 128K | Text | $0.17 / $0.67 |
-| `sarvam/sarvam-105b-conversations` | 32K | 32K | Text | $0.17 / $0.67 |
-| `sarvam/glm5.3` | 1M | 1M | Text | $1.40 / $4.33 |
-| `sarvam/glm5.3-flash` | 1M | 1M | Text, image | $0.15 / $0.50 |
-| `sarvam/gemma4` | 256K | 256K | Text, image | $0.39 / $1.00 |
-| `sarvam/deepseekv4.1-flash-1017` | 1M | 1M | Text, image | $0.16 / $0.61 |
-| `sarvam/deepseekv4.1-flash-1017-interactive` | 1M | 1M | Text, image | $0.28 / $1.17 |
+| `sarvam/sarvam-105b` | 128K | 128K | Text | $0.16 / $0.64 |
+| `sarvam/sarvam-105b-conversations` | 32K | 32K | Text | $0.16 / $0.64 |
+| `sarvam/glm5.3` | 1M | 1M | Text | $1.34 / $4.15 |
+| `sarvam/glm5.3-flash` | 1M | 1M | Text, image | $0.14 / $0.48 |
+| `sarvam/gemma4` | 256K | 256K | Text, image | $0.37 / $0.96 |
+| `sarvam/deepseekv4.1-flash-1017` | 1M | 1M | Text, image | $0.15 / $0.59 |
+| `sarvam/deepseekv4.1-flash-1017-interactive` | 1M | 1M | Text, image | $0.27 / $1.12 |
 
-USD values are converted from Sarvam's INR rates at ₹90 per USD. See [Sarvam Token Factory pricing](https://www.sarvam.ai/token-factory/pricing) for the current INR rates.
+USD values are converted from Sarvam's INR rates at ₹94 per USD. See [Sarvam Token Factory pricing](https://www.sarvam.ai/token-factory/pricing) for the current INR rates.
 
 The legacy `sarvam-m` model is not served on `/v2`. If you are upgrading from `sarvam/sarvam-m`, switch to `sarvam/sarvam-105b`.
 
