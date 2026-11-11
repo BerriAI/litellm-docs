@@ -49,7 +49,7 @@ response = completion(
 
 ## Decisions {#decisions}
 
-Gemini Decision 1 answers yes/no, choice and rubric score questions through LiteLLM's [`/v1/decisions` and `/v1/systemone`](../decisions.md) routes. This provider is unreleased, main after LiteLLM #GEMINI_PR
+Gemini Decision 1 answers yes/no, choice and rubric score questions through LiteLLM's [`/v1/decisions` and `/v1/systemone`](../decisions.md) routes. This provider is unreleased, main after [LiteLLM #51220](https://github.com/BerriAI/litellm/pull/51220)
 
 Set `GEMINI_API_KEY` in the proxy environment and add this deployment to `config.yaml`
 

@@ -47,7 +47,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 
 | Provider or feature | Release |
 |---------------------|---------|
-| [Gemini Decision 1](./providers/gemini.md#decisions) | Unreleased, main after LiteLLM #GEMINI_PR |
+| [Gemini Decision 1](./providers/gemini.md#decisions) | Unreleased, main after [LiteLLM #51220](https://github.com/BerriAI/litellm/pull/51220) |
 | vLLM, Microsoft Foundry, OpenRouter spend from `usage.cost` | `v1.104.3` |
 | Databricks serving endpoints, image input on Cloudflare Clef, [audio and video input](#audio-and-video-input) on Cloudflare Clef-omni, TypeSafe images and box questions | `v1.106.0` |
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
