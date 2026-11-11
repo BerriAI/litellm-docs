@@ -1,8 +1,8 @@
 ---
-title: "LiteLLM v1.109.0rc1 adds 11 providers, Codex tool search and daily limits"
-description: "Release candidate for LiteLLM 1.109.0 with 11 new providers, a redesigned Playground, Codex tool search and daily deployment limits."
-slug: "v1-109-0-rc-1"
-date: 2026-11-04T02:17:12
+title: "LiteLLM v1.109.0 adds 11 providers, Codex tool search and daily limits"
+description: "Adds 11 providers, a redesigned Playground, Codex tool search and daily deployment limits. Streams that stall or abort now fail visibly."
+slug: "v1-109-0"
+date: 2026-11-11T00:56:51
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -33,28 +33,28 @@ docker run \
 -e DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname> \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.109.0-rc.1
+docker.litellm.ai/berriai/litellm:1.109.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.109.0rc1
+pip install litellm==1.109.0
 ```
 
 </TabItem>
 </Tabs>
 
-This release is published as [`ghcr.io/berriai/litellm:v1.109.0-rc.1`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.109.0-rc.1) and the full [releases page](https://github.com/BerriAI/litellm/releases)
+This release is published as [`ghcr.io/berriai/litellm:v1.109.0`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.109.0) and the full [releases page](https://github.com/BerriAI/litellm/releases)
 
-The published GitHub tag is `v1.109.0-rc.1`. These notes compare it with `v1.108.0-rc.1`, the previous release candidate. Changes backported onto `rc/1.108.0` and already shipped in `v1.108.0` are omitted
+These notes cover everything since [`v1.108.0`](/release_notes/v1.108.0/v1-108-0). The only changes added to the release line after the `v1.109.0-rc.1` cut are six test fixes, listed under [Tests, CI and Internal Changes](#tests-ci-and-internal-changes)
 
 Customer-facing changes come first. Test, CI and internal changes are listed at the bottom
 
 :::danger Breaking Changes
 
-These callouts cover user-facing behavior that differs from [`v1.108.0`](/release_notes/v1.108.0/v1-108-0), the latest stable release
+These callouts cover user-facing behavior that differs from [`v1.108.0`](/release_notes/v1.108.0/v1-108-0), the previous stable release
 
 **The disk cache backend is removed.** A config with `cache_params.type: disk` now stops the proxy at startup. Switch to `local` or `redis`, and expect a cold cache. See [PR #48114](https://github.com/BerriAI/litellm/pull/48114)
 
@@ -1421,11 +1421,11 @@ Counts represent new catalog identifiers compared with `v1.108.0`, including ali
 
 ## Tests, CI and Internal Changes
 
-These 229 changes touch tests, CI, contributor tooling, refactors, Rust runtime scaffolding that is not yet wired into a user-facing path, or release bookkeeping. They do not change proxy or SDK behavior on their own. Changes listed as commits have no public PR
+These 235 changes touch tests, CI, contributor tooling, refactors, Rust runtime scaffolding that is not yet wired into a user-facing path, or release bookkeeping. They do not change proxy or SDK behavior on their own. Changes listed as commits have no public PR
 
 
 <details>
-<summary>Integration and e2e tests (94)</summary>
+<summary>Integration and e2e tests (99)</summary>
 
 - Qualify database upgrades with shared 5 RPS traffic in the perf suite - [PR #46802](https://github.com/BerriAI/litellm/pull/46802)
 - Add Sonnet 5.5 and Gemini Vertex AI rows to the cross-model mid tier translation tests - [PR #46896](https://github.com/BerriAI/litellm/pull/46896)
@@ -1521,6 +1521,11 @@ These 229 changes touch tests, CI, contributor tooling, refactors, Rust runtime 
 - Move the Sail, Weave and Presidio e2e tests to integration tests - [PR #49533](https://github.com/BerriAI/litellm/pull/49533)
 - Drop the unused `arize_phoenix` callback from the e2e stage mirror config - [PR #49538](https://github.com/BerriAI/litellm/pull/49538)
 - Replace the third-party agent A2A e2e test with an integration test against a scripted agent - [PR #49541](https://github.com/BerriAI/litellm/pull/49541)
+- Give each kill-burst its own prompts, so cached control replies cannot stand in for late traffic - [PR #50569](https://github.com/BerriAI/litellm/pull/50569)
+- Repin the Together reasoning replay e2e test to `MiniMax-M3.1-Flash` - [PR #50601](https://github.com/BerriAI/litellm/pull/50601)
+- Drop the empty-string `n` case from the Gemini long decode test - [PR #50795](https://github.com/BerriAI/litellm/pull/50795)
+- Empty the shared client cache before the tier pin batch test - [PR #50849](https://github.com/BerriAI/litellm/pull/50849)
+- Cap the OAuth metadata lookup in the mixed capabilities MCP subscription test - [PR #50849](https://github.com/BerriAI/litellm/pull/50849)
 
 </details>
 
@@ -1629,7 +1634,7 @@ These 229 changes touch tests, CI, contributor tooling, refactors, Rust runtime 
 </details>
 
 <details>
-<summary>Unit tests (16)</summary>
+<summary>Unit tests (17)</summary>
 
 - Cover streams stuck on one repeated chunk with tests for early close and a single failure log - [PR #38753](https://github.com/BerriAI/litellm/pull/38753)
 - Bound peak allocation in the streaming JSON drain test instead of a timing ratio - [PR #43370](https://github.com/BerriAI/litellm/pull/43370)
@@ -1647,6 +1652,7 @@ These 229 changes touch tests, CI, contributor tooling, refactors, Rust runtime 
 - Make the custom tokenizer offload test check the loader thread instead of relying on timing - [PR #48458](https://github.com/BerriAI/litellm/pull/48458)
 - Fix the six OTel Langfuse destination tests by building the provider with `console_default=True` - [PR #49129](https://github.com/BerriAI/litellm/pull/49129)
 - Deflake the JSON accumulator drain test and the armed routing prefetch test - [PR #49505](https://github.com/BerriAI/litellm/pull/49505)
+- Read the bundled beta header config in the Vertex AI prompt caching scope test - [PR #50849](https://github.com/BerriAI/litellm/pull/50849)
 
 </details>
 
@@ -1711,9 +1717,9 @@ These 229 changes touch tests, CI, contributor tooling, refactors, Rust runtime 
 
 ### PR roll-up by ownership area
 
-Customer-facing changes: **700**. Tests, CI and internal changes: **231**. Total: **931**
+Customer-facing changes: **700**. Tests, CI and internal changes: **237**. Total: **937**
 
-- Other (tests, CI, internal): 231
+- Other (tests, CI, internal): 237
 - Models & Providers: 185
 - LLM API Endpoints: 162
 - Spend / Budgets / Rate Limits: 82
@@ -1804,4 +1810,4 @@ Customer-facing changes: **700**. Tests, CI and internal changes: **231**. Total
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.108.0-rc.1...v1.109.0-rc.1
+https://github.com/BerriAI/litellm/compare/v1.108.0...v1.109.0

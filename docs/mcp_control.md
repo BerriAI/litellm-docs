@@ -38,12 +38,13 @@ When Creating a Key, Team, or Organization, you can select the allowed MCP Serve
 
 ## Permission Hierarchy
 
-Permissions can be set at six distinct levels. When more than one level applies to a request, LiteLLM **intersects** the lists (most-restrictive wins), except for the organization level, which acts as a **ceiling**.
+Permissions can be set at six distinct levels. When more than one level applies to a request, LiteLLM **intersects** the lists (most-restrictive wins), except for the organization level, which acts as a **ceiling**, and Access Groups attached to a key, which **add** servers on top of the key and team.
 
 | Level | Source | How it composes |
 |---|---|---|
 | **Key** | `object_permission.mcp_servers` / `object_permission.mcp_access_groups` on the virtual key | If the key has an explicit list, it's used. |
-| **Team** | Same fields on the team | If both key and team have lists, the result is the **intersection** (only servers in both). If only the team has a list, the key inherits it. |
+| **Team** | Same fields on the team, plus the MCP servers of [Access Groups](./proxy/access_groups) in the team's `access_group_ids` | If both key and team have lists, the result is the **intersection** (only servers in both). If only the team has a list, the key inherits it. |
+| **Key access groups** | MCP servers of [Access Groups](./proxy/access_groups) in the key's `access_group_ids` | **Added** to the key/team result, so a group attached to a key reaches its servers even when the team doesn't list them. The levels below still apply. |
 | **End user** | Same fields on the `LiteLLM_EndUserTable` row matching `x-litellm-end-user-id` | Intersected with the running result. Skipped if no end-user-id is present on the request. |
 | **Agent** | Same fields on the agent identified by `x-litellm-agent-id`, or the agent the key is bound to (`agent_id` set at key generation) | Intersected with the running result. Skipped if no agent applies. |
 | **Internal user** | Same fields on the internal user (the human) the request authenticated as | Intersected with the running result, so it can only narrow. Skipped if that user carries no entitlement. |
@@ -707,7 +708,7 @@ This configuration restricts the request to only use tools from the specified MC
 {
   "mcpServers": {
     "LiteLLM": {
-      "url": "litellm_proxy",
+      "url": "http://localhost:4000/mcp",
       "headers": {
         "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
         "x-mcp-servers": "alias_1,Server2"
@@ -766,7 +767,7 @@ Include the access group name in the `x-mcp-servers` header:
 {
   "mcpServers": {
     "LiteLLM": {
-      "url": "litellm_proxy",
+      "url": "http://localhost:4000/mcp",
       "headers": {
         "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
         "x-mcp-servers": "dev_group"
