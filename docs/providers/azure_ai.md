@@ -129,11 +129,11 @@ response = completion(
 | `https://<resource>.services.ai.azure.com/openai/v1` | `/openai/v1/chat/completions` |
 | `https://<resource>.services.ai.azure.com/api/projects/<project>` | `/api/projects/<project>/openai/v1/chat/completions` |
 
-On a project endpoint LiteLLM sends no `api-version`, because that route rejects every value. It sends the key as `Authorization: Bearer`, so `api_key` can hold an API key or a Microsoft Entra token. A service principal gets a token for `https://ai.azure.com/.default` unless `azure_scope` or `AZURE_SCOPE` sets another scope. A gateway in front of a project works too, as long as its path keeps `/api/projects/<project>`.
+On a project endpoint LiteLLM sends no `api-version`, because that route rejects every value. It sends the key as `Authorization: Bearer`, so `api_key` can hold an API key or a Microsoft Entra token. A service principal gets a token for `https://ai.azure.com/.default` unless `azure_scope` or `AZURE_SCOPE` sets another scope. A gateway in front of a project works too, as long as its path ends in `/api/projects/<project>` or `/api/projects/<project>/openai/v1`. LiteLLM keeps the gateway's query parameters, such as `subscription-key`, and drops only `api-version`.
 
 On a resource `/openai/v1` endpoint LiteLLM sends the key in the `api-key` header and passes through any `api_version` you set, such as `preview`.
 
-An OpenAI model such as `azure_ai/gpt-4.1` on a `<resource>.openai.azure.com/openai/v1` or `<resource>.cognitiveservices.azure.com/openai/v1` base goes through the [Azure OpenAI](./azure/azure) provider, and its spend is logged under `azure`. Set `api_version: preview` on that entry, because that route answers 404 without it.
+An OpenAI model such as `azure_ai/gpt-4.1` on a `<resource>.openai.azure.com/openai/v1` or `<resource>.cognitiveservices.azure.com/openai/v1` base goes through the [Azure OpenAI](./azure/azure) provider, and its spend is logged under `azure`. When neither the entry's `api_version` nor `AZURE_API_VERSION` is set, LiteLLM uses the Azure OpenAI v1 API there.
 
 ```yaml
 model_list:
