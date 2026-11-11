@@ -1,8 +1,14 @@
+div:has(> .hero) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
 .hero {
   position: relative;
   width: 100%;
   overflow: hidden;
-  background: #f8faff;
+  background: transparent;
 }
 
 .hero picture,
@@ -16,18 +22,21 @@
   position: absolute;
   right: 12px;
   bottom: 12px;
-  border: 1px solid #ced7e7;
-  border-radius: 6px;
-  padding: 6px 10px;
-  background: #fff;
-  color: #344666;
-  font: 12px/1.4 system-ui, sans-serif;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 50%;
+  padding: 0;
+  background: transparent;
+  color: var(--ifm-color-emphasis-700);
   cursor: pointer;
 }
 
 .control:hover,
 .control:focus-visible {
-  background: #eef2ff;
+  background: var(--ifm-color-emphasis-200);
   border-color: #3657f5;
 }
 
