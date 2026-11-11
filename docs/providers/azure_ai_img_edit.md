@@ -46,7 +46,7 @@ FLUX 2 edits go to the same model-specific Black Forest Labs route as FLUX 2 gen
 
 gpt-image edits go to your Foundry resource's `/openai/deployments/<deployment>/images/edits` route, the same route Azure OpenAI uses. LiteLLM sends every `azure_ai/` model that is not a FLUX or MAI model to this route, so `azure_ai/` followed by your deployment name works whatever you named the deployment. Set `api_base` to your Foundry resource, such as `https://<your-resource>.services.ai.azure.com`.
 
-When you set no `api_version`, LiteLLM sends `2025-04-01-preview`, because Foundry answers 404 for edits on older versions such as `2025-02-01-preview`. A version you set is sent as is, and LiteLLM reads it from the model's `api_version` first, then `AZURE_AI_API_VERSION`, then `litellm.api_version`. Set `api_version: v1` to use Foundry's `/openai/v1/images/edits` route, which takes no dated version.
+When you set no `api_version`, LiteLLM sends `2025-04-01-preview`, because Foundry answers 404 for edits on older versions such as `2025-02-01-preview`. A version you set is sent as is, and LiteLLM reads it from the model's `api_version` first, then `AZURE_AI_API_VERSION`, then `litellm.api_version`. Set `api_version: v1` to send edits to Foundry's `/openai/v1/images/edits` route instead.
 
 A deployment under a name you chose has no entry in LiteLLM's cost map, so LiteLLM records no cost for it until you set `model_info.base_model` to the model the deployment serves, such as `azure/gpt-image-2.5-flare`. See [Custom pricing](../proxy/custom_pricing.md) for details.
 
@@ -339,14 +339,14 @@ Azure AI Image Editing supports the following OpenAI-compatible parameters:
 | `image` | file | The image file to edit | Required | File object or binary data |
 | `prompt` | string | Text description of the desired changes | Required | `"Add snow and winter elements"` |
 | `model` | string | The FLUX or gpt-image model to use for editing | Required | `"azure_ai/FLUX.1-Kontext-pro"` |
-| `n` | integer | Number of edited images to generate (You can specify only 1) | `1` | `1` |
+| `n` | integer | How many edited images to generate. Only `1` is supported | `1` | `1` |
 | `api_base` | string | Your Azure AI endpoint URL | Required | `"https://your-endpoint.eastus2.inference.ai.azure.com/"` |
 | `api_key` | string | Your Azure AI API key | Required | Environment variable or direct value |
 | `api_version` | string | API version for Azure AI | Required for FLUX, `2025-04-01-preview` for gpt-image | `"2025-04-01-preview"` |
 
 FLUX 2 Pro and FLUX 2 Flex edits take the same parameters as [FLUX 2 generation](./azure_ai_img#flux-2-parameters): `size` (or `width` and `height`), `output_format`, `seed`, `safety_tolerance`, `aspect_ratio`, and for Flex `guidance` and `steps`. The OpenAI-only fields `user`, `quality`, `background`, `moderation`, and `output_compression` are accepted and dropped, so an OpenAI SDK client that sets them keeps working
 
-gpt-image edits pass the OpenAI image edit parameters, such as `mask`, `size`, `quality`, and `background`, through to Azure.
+gpt-image edits pass all OpenAI image edit parameters through to Azure, including `mask`, `size`, `quality`, and `background`.
 
 ## Getting Started
 
