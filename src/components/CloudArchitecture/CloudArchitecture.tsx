@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
+import { NetworkArchitecture } from './NetworkArchitecture';
+import type { CloudKey } from './networkTypes';
 
 /* ────────────────────── Shared pieces ────────────────────── */
 
@@ -59,42 +61,6 @@ function Node({
   );
 }
 
-function ComputeNode({
-  icon,
-  supportingIcon,
-  title,
-  subtitle,
-  replicas,
-}: {
-  icon: string;
-  supportingIcon?: string;
-  title: string;
-  subtitle: string;
-  replicas: string[];
-}) {
-  return (
-    <div className={styles.computeNode}>
-      <div className={styles.computeHeader}>
-        <div className={styles.computeIcons}>
-          <Icon file={icon} />
-          {supportingIcon && <Icon file={supportingIcon} />}
-        </div>
-        <div className={styles.nodeText}>
-          <span className={styles.nodeTitle}>{title}</span>
-          <span className={styles.nodeSubtitle}>{subtitle}</span>
-        </div>
-      </div>
-      <div className={styles.replicaRow}>
-        {replicas.map((r) => (
-          <span key={r} className={styles.replicaPill}>
-            {r}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function ConnectorDown({ label }: { label?: string }) {
   if (!label) return <div className={styles.connectorDown} />;
   return (
@@ -135,16 +101,6 @@ function Dependencies({ items }: {
 }
 
 /* ────────────────────── Per-cloud single-region diagrams ────────────────────── */
-
-type CloudKey =
-  | 'aws-ecs'
-  | 'aws-eks'
-  | 'aws-eks-micro'
-  | 'gcp-cloud-run'
-  | 'gcp-gke'
-  | 'gcp-gke-micro'
-  | 'azure-aks'
-  | 'azure-aks-micro';
 
 const MONO_PILLS = ['litellm', 'litellm', 'litellm'];
 const MICRO_PILLS = ['gateway', 'backend', 'ui'];
@@ -260,30 +216,7 @@ const CLOUD_SPECS: Record<
 };
 
 export function CloudArchitecture({ cloud }: { cloud: CloudKey }) {
-  const spec = CLOUD_SPECS[cloud];
-  const cloudName = cloud.startsWith('aws') ? 'AWS Cloud' : cloud.startsWith('gcp') ? 'Google Cloud' : 'Microsoft Azure';
-  return (
-    <figure className={styles.cloudCanvas} aria-label={`${cloudName} reference architecture`}>
-      <div className={`${styles.diagram} ${styles.cloudDiagram}`}>
-        <Clients />
-        <ConnectorDown />
-        <div className={styles.cloudBoundary}>
-          <span className={styles.cloudLabel}>{cloudName}</span>
-          <Node icon={spec.lb.icon} title={spec.lb.title} subtitle={spec.lb.subtitle} />
-          <ConnectorDown />
-          <ComputeNode
-            icon={spec.compute.icon}
-            supportingIcon={cloud === 'aws-ecs' ? 'aws-fargate.svg' : undefined}
-            title={spec.compute.title}
-            subtitle={spec.compute.subtitle}
-            replicas={spec.compute.pills}
-          />
-          <div className={styles.dependencyStem} />
-          <Dependencies items={spec.data} />
-        </div>
-      </div>
-    </figure>
-  );
+  return <NetworkArchitecture cloud={cloud} />;
 }
 
 /* ────────────────────── CSP selector ────────────────────── */

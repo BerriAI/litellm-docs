@@ -10,9 +10,11 @@ import { CloudArchitectureSelector } from '@site/src/components/CloudArchitectur
 
 {/* keep-version-note */}
 
-Choose where LiteLLM runs and whether its services scale together or separately. The diagrams show how the gateway, database, Redis, and load balancer fit together on each cloud.
+Choose where LiteLLM runs and whether its services scale together or separately. The diagrams show network boundaries, public and private subnets, load balancers, private service access, and outbound routes on each cloud.
 
 ## Cloud architectures
+
+Choose a cloud and deployment method. Terraform diagrams show the module defaults. Helm diagrams show example infrastructure that you provision separately. Dashed purple paths mark optional additions. Expand a diagram to inspect its subnets and traffic paths.
 
 <CloudArchitectureSelector />
 
