@@ -249,39 +249,35 @@ function markText(mark, store, info) {
     : `Requests start falling back ${hop}.`;
 }
 
-// One incident button per lane. The button fires the lane's current kind; the caret beside it
-// picks another kind and fires it, which also makes it the button's kind.
+// One row of incident pills per lane, one per kind, each saying how hard and for how long, so a
+// reader sees every kind at once instead of behind a menu. A click starts it on this lane now.
+const INCIDENT_TIPS = {
+  outage: 'every call fails',
+  latency: 'calls take 10 times longer',
+  capacity: 'only a fifth of its usual capacity; the rest get 429s',
+  flaky: '3 in 10 calls fail',
+};
+
 function IncidentButton({id, onIncident}) {
-  const [kind, setKind] = useState('outage');
-  const label = kind => (kind === 'outage' ? 'Outage' : kind === 'flaky' ? 'Flaky' : incidentLabel(kind));
   return (
-    <div className={styles.incidentSplit}>
-      <button type="button" onClick={() => onIncident(id, kind)}>
-        Trigger {label(kind).toLowerCase()}
-      </button>
-      <span className={styles.incidentCaret}>
-        <svg viewBox="0 0 10 10" width="9" height="9" aria-hidden="true">
-          <path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
-        <select
-          aria-label={`Incident kind for ${id}`}
-          value=""
-          onChange={event => {
-            const next = event.target.value;
-            if (!next) return;
-            setKind(next);
-            onIncident(id, next);
-          }}>
-          <option value="" disabled>
-            Start an incident
-          </option>
-          {LANE_INCIDENTS.map(item => (
-            <option key={item} value={item}>
-              {label(item)}
-            </option>
-          ))}
-        </select>
-      </span>
+    <div className={styles.incidentRow} role="group" aria-label={`Trigger an incident on ${id}`}>
+      <span className={styles.incidentLead}>Trigger</span>
+      {LANE_INCIDENTS.map(kind => {
+        const name = incidentLabel(kind);
+        const length = `${INCIDENT_KINDS[kind].duration} s`;
+        const tip = `${INCIDENT_TIPS[kind]} for ${length}`;
+        return (
+          <button
+            key={kind}
+            type="button"
+            className={styles.incidentChip}
+            title={tip.charAt(0).toUpperCase() + tip.slice(1)}
+            aria-label={`${name} on ${id}: ${tip}`}
+            onClick={() => onIncident(id, kind)}>
+            {name} <span className={styles.incidentFor}>· {length}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -1328,7 +1324,7 @@ const sideText = text => {
 // A card's sentence is left out when it only restates its config line.
 const squash = text => text.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-function CaseBar({docsCase, side, onSide, kinds, slots}) {
+function CaseBar({docsCase, side, onSide, kinds, slots, compact = false}) {
   // Only a case link shows the bar; the playground opened directly has none.
   if (!docsCase) return null;
   const code = caseCode(docsCase);
@@ -1338,6 +1334,7 @@ function CaseBar({docsCase, side, onSide, kinds, slots}) {
   ];
   return (
     <div className={styles.caseBar}>
+      {compact ? null : (
       <div className={styles.caseHead}>
         <span className={styles.cap}>DOCS CASE</span>
         <strong className={styles.caseName}>{docsCase.title}</strong>
@@ -1345,6 +1342,7 @@ function CaseBar({docsCase, side, onSide, kinds, slots}) {
           {docsCase.claim} <a href={docsCase.page}>Read it in the docs</a>
         </span>
       </div>
+      )}
       <div className={styles.caseCards} role="group" aria-label="Before or after">
         {cards.map(card => {
           const on = side === card.value;
@@ -1369,6 +1367,7 @@ function CaseBar({docsCase, side, onSide, kinds, slots}) {
       <p className={styles.caseWatch}>
         <strong>Watch:</strong> {docsCase.watch}.
       </p>
+      {compact && kinds.length < 2 ? null : (
       <div className={styles.caseKinds}>
         <span className={styles.cap}>{kinds.length === 1 ? 'The requests' : 'The requests, by kind'}</span>
         {kinds.map(kind => (
@@ -1381,6 +1380,7 @@ function CaseBar({docsCase, side, onSide, kinds, slots}) {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }
@@ -1404,6 +1404,7 @@ export default function Simulator({
   caseSide,
   onCaseSide,
   liveOnly = false,
+  caseBarCompact = false,
 }) {
   const [tab, setTab] = useState(initialScenario && !docsCase ? 'scenario' : 'live');
   const liveIncident = useRef(null);
@@ -1443,7 +1444,14 @@ export default function Simulator({
             </span>
           </div>
         )}
-        <CaseBar docsCase={docsCase} side={caseSide} onSide={onCaseSide} kinds={kinds} slots={caseSlots} />
+        <CaseBar
+          docsCase={docsCase}
+          side={caseSide}
+          onSide={onCaseSide}
+          kinds={kinds}
+          slots={caseSlots}
+          compact={caseBarCompact}
+        />
         {tab === 'live' ? (
           <LiveRun
             scheduled={docsCase ? initialScenario?.incidents : undefined}

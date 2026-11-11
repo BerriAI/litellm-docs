@@ -1,12 +1,12 @@
 .page {
   width: 100%;
-  max-width: 1180px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 0 2rem 4rem;
 }
 
 .hero {
-  padding: 3rem 0 1.5rem;
+  padding: 2.5rem 0 1.25rem;
 }
 
 .eyebrow {
@@ -32,4 +32,28 @@
   color: var(--ifm-color-emphasis-700);
   font-size: 0.95rem;
   line-height: 1.65;
+}
+
+.lead {
+  max-width: 720px;
+  margin: 0;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.about {
+  margin-top: 3rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 10px;
+}
+
+.aboutSummary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.about[open] .aboutSummary {
+  margin-bottom: 0.75rem;
 }
