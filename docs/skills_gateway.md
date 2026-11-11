@@ -1,16 +1,89 @@
+---
+title: Skills Gateway
+description: Share agent skills with your team. Upload ZIPs, review submissions, run optional security scans, keep version history, and track downloads.
+---
+
 # Skills Gateway
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/cb74eb79df3e4c2b83a6efae54a589f9" frameBorder="0" allowFullScreen></iframe>
+Share skills with your team through **LiteLLM Skills Hub**. Upload `SKILL.md` with its scripts and reference files, then install the package in Codex, Claude Code, or another agent that supports the [Agent Skills format](https://agentskills.io/specification).
 
-Use LiteLLM Skills Hub to upload, import, discover, and download [Agent Skills](https://agentskills.io/specification) packages for Codex, Claude Code, and other compatible agents. The neutral `/skill-hub/skills` API shares the existing registry and access grants with the Claude Code marketplace.
+| Feature | Use it to |
+|---------|-----------------|
+| [ZIP uploads](#upload-a-skill) | Share `SKILL.md` and its supporting files in one package |
+| [Admin review](#review-a-submission) | Review member submissions and optional security scan findings before publishing |
+| [Version history](#publish-a-new-version) | Publish updates and download retained ZIPs from earlier versions |
+| [Download tracking](#see-who-downloads-a-skill) | Check totals and, as an admin, see who downloaded a skill and when |
+
+For scripts and integrations, use the [portable Agent Skills API](#portable-agent-skills-api). You can use the same registry and access grants with the [Claude Code marketplace](#how-it-works).
+
+## Use Skills Hub in the dashboard
+
+Your gateway administrator must apply the Skills Hub database migrations before you start. Open **Skills Hub** in the dashboard. You need write access to submit skills or updates.
+
+### Upload a skill
+
+1. ZIP `SKILL.md` with the files your skill needs. Put `SKILL.md` at the archive root or inside one top-level folder. Limit the ZIP to 10 MiB.
+2. Select **Register your skill** (**Add Skill** in earlier releases), choose **Upload ZIP**, then select your file.
+3. Select **Submit for approval**. Proxy admins select **Register skill** to publish without review.
+
+![The skill registration form with Upload ZIP selected and a file picker for the archive.](../img/skills_gateway/upload-skill.png)
+
+Set the name and description in `SKILL.md` frontmatter; see [package requirements](#upload-or-import). To import a public GitHub or skills.sh skill, choose **Import URL**.
+
+Check **My submissions** for the admin's decision. Teammates can access your changes after approval. New skills are public after publication; use [private skill access](#private-skills) to restrict them to selected keys or teams.
+
+To install a published skill, open it and choose **Install / Share**. Copy the command for your agent, or download the ZIP from the skill's details.
+
+### Review a submission
+
+1. Open **Submissions** as a proxy admin and select **Review** on a pending submission.
+2. Compare **Currently published** with **Proposed**. Select **Download submitted ZIP** to inspect an uploaded package.
+3. If your administrator has [configured a scanner](#optional-security-scans), select **Scan for threats**. Check the findings, risk score, and notices about incomplete analysis.
+4. Select **Approve and publish**, or **Reject** with an optional reason.
+
+![The review dialog compares the published skill with the proposal and offers Reject and Approve and publish.](../img/skills_gateway/review-submission.png)
+
+![A completed security scan of a test skill shows two findings and a risk score of 42 out of 100.](../img/skills_gateway/security-scan.png)
+
+*Example scan of a test skill.*
+
+Scanning is optional. An admin decides whether to approve or reject the submission. Until you approve an update, teammates keep using the published version.
+
+### Publish a new version
+
+1. Open a published skill and select **Edit Skill**.
+2. Choose **Upload ZIP** to replace its files. Keep the same skill name in `SKILL.md`.
+3. Leave **Version override** blank to increment the patch version, such as `1.0.0` to `1.0.1`. Enter a higher semantic version, such as `1.1.0`, to override it.
+4. Submit the update for approval as a member, or select **Save changes** as an admin.
+
+In **Version history**, select **Download retained ZIP** beside an earlier version to download it. You need current access to the skill and a retained archive. Source-reference entries contain metadata without external files.
+
+New skills start at `1.0.0`. For an existing skill without history, publish an update to start recording versions. See [versions and updates](#versions-and-updates) for API examples.
+
+### See who downloads a skill
+
+Check **Downloads** in the catalog for totals. As a proxy admin, open a skill's **Downloads** tab to see authenticated downloads with the time, user or key owner, team, and version when available.
+
+![The Downloads tab shows totals and a history entry with the download time, user or key owner, team, and version.](../img/skills_gateway/download-history.png)
+
+*Example download history for a test skill.*
+
+Totals include repeat and anonymous downloads through the gateway. Anonymous downloads have no individual history. Shared keys identify their owner; you cannot distinguish people using the same key. Downloads do not confirm installs or skill executions. See [download counts and history](#download-counts-and-history) for the admin API.
+
+<details>
+<summary>Watch the Skills Gateway walkthrough</summary>
+
+<iframe title="Skills Gateway walkthrough" width="840" height="500" style={{maxWidth: "100%"}} src="https://www.loom.com/embed/cb74eb79df3e4c2b83a6efae54a589f9" frameBorder="0" allowFullScreen></iframe>
+
+</details>
+
+## Portable Agent Skills API
 
 :::note Legacy management API
 
-The `/claude-code/plugins` management endpoints are deprecated for new integrations. Use `/skill-hub` for portable skill management. Existing legacy endpoints remain available for compatibility; Claude Code marketplace discovery and installation remain supported.
+Use `/skill-hub` for new portable skill integrations. The deprecated `/claude-code/plugins` management endpoints remain available for compatibility; Claude Code marketplace discovery and installation remain supported.
 
 :::
-
-## Portable Agent Skills API
 
 Apply the Skills Hub database migrations before using these APIs. With a key attached to a writable user, you can submit skills and updates for [admin review](#submissions-and-approval). Proxy admins publish without review; read-only users cannot submit.
 
@@ -176,7 +249,7 @@ Admins decide whether to approve or reject, with or without a scan. The scanner 
 
 ### Download counts and history
 
-Proxy admins see a **Downloads** column in Skills and a download-history tab in each skill. `GET /skill-hub/skills` includes `download_count` for admins. To fetch totals and authenticated downloader history:
+Catalog readers can see download totals. `GET /skill-hub/skills` includes `download_count` for the skills visible to the caller. To fetch totals and authenticated history, use a proxy admin key:
 
 ```bash
 curl --fail-with-body 'https://your-proxy/skill-hub/skills/pdf-summarizer/downloads?limit=25' \
@@ -207,11 +280,11 @@ graph TD
 
 Enabled skills are public; disabled skills are private and only reach keys or teams that were granted them (see [Private skills](#private-skills)). New skills are enabled when published. The `/claude-code/plugins` write routes below require a proxy admin; members use the portable API's submission flow above.
 
-## Quick start
+### Marketplace setup {#quick-start}
 
-### 1. Register a skill
+#### 1. Register a skill
 
-In the Admin UI, open **Skills** to upload a ZIP or import from GitHub or skills.sh through the portable API above. To register an external source for Claude Code to fetch directly, use the following API with an admin key:
+Use the [dashboard guide](#upload-a-skill) or the portable API above to upload a ZIP or import from GitHub or skills.sh. For an existing integration that registers external sources for Claude Code to fetch, use the legacy API with an admin key:
 
 ```bash
 curl -X POST https://your-proxy/claude-code/plugins \
@@ -232,7 +305,7 @@ curl -X POST https://your-proxy/claude-code/plugins \
 
 `POST` only creates. Registering a name that already exists returns `409`; change an existing skill with `PUT /claude-code/plugins/{name}` instead.
 
-### 2. Publish or unpublish
+#### 2. Publish or unpublish
 
 A newly registered skill is already enabled and public. To change which skills are public, use the Admin UI: **AI Hub → Skill Hub → Select Skills to Make Public**.
 
@@ -243,11 +316,11 @@ curl -X POST https://your-proxy/claude-code/plugins/grill-me/disable \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY"
 ```
 
-### 3. Browse the hub
+#### 3. Browse the hub
 
 Public skills appear in the Admin UI under **AI Hub → Skill Hub**, on the public page at `/ui/model_hub` under the **Skill Hub** tab (no login required), and through the API at `GET /public/skill_hub`.
 
-### 4. Install in Claude Code
+#### 4. Install in Claude Code
 
 Add the proxy marketplace once. The marketplace is always named `litellm`:
 
