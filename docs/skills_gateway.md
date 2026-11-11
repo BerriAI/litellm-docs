@@ -5,40 +5,40 @@ description: Share agent skills with your team. Upload ZIPs, review submissions,
 
 # Skills Gateway
 
-Share the skills you build with the rest of your team through **LiteLLM Skills Hub**. Package a skill's instructions, scripts, and reference files together so teammates can use them in Codex, Claude Code, or another agent that supports the [Agent Skills format](https://agentskills.io/specification).
+Share skills with your team through **LiteLLM Skills Hub**. Upload `SKILL.md` with its scripts and reference files, then install the package in Codex, Claude Code, or another agent that supports the [Agent Skills format](https://agentskills.io/specification).
 
-| Feature | What you can do |
+| Feature | Use it to |
 |---------|-----------------|
 | [ZIP uploads](#upload-a-skill) | Share `SKILL.md` and its supporting files in one package |
-| [Admin review](#review-a-submission) | Review member submissions and optional security scan findings before publication |
+| [Admin review](#review-a-submission) | Review member submissions and optional security scan findings before publishing |
 | [Version history](#publish-a-new-version) | Publish updates and download retained ZIPs from earlier versions |
 | [Download tracking](#see-who-downloads-a-skill) | Check totals and, as an admin, see who downloaded a skill and when |
 
-Use the dashboard steps below or the [portable Agent Skills API](#portable-agent-skills-api). Both use the same registry and access grants as the [Claude Code marketplace](#how-it-works).
+For scripts and integrations, use the [portable Agent Skills API](#portable-agent-skills-api). You can use the same registry and access grants with the [Claude Code marketplace](#how-it-works).
 
 ## Use Skills Hub in the dashboard
 
-Open **Skills Hub** in the LiteLLM dashboard. Your gateway administrator must apply the Skills Hub database migrations first. Members with write access can submit skills and updates; proxy admins can publish them. Read-only users cannot submit.
+Your gateway administrator must apply the Skills Hub database migrations before you start. Open **Skills Hub** in the dashboard. You need write access to submit skills or updates.
 
 ### Upload a skill
 
-1. Put `SKILL.md` at the root of a ZIP, or inside one top-level skill folder. Include the scripts, references, and other files the skill needs. Keep the ZIP within 10 MiB.
-2. Select **Register your skill** (**Add Skill** in earlier releases), then **Upload ZIP** and choose the file.
-3. Select **Submit for approval** as a member, or **Register skill** as a proxy admin.
+1. ZIP `SKILL.md` with the files your skill needs. Put `SKILL.md` at the archive root or inside one top-level folder. Limit the ZIP to 10 MiB.
+2. Select **Register your skill** (**Add Skill** in earlier releases), choose **Upload ZIP**, then select your file.
+3. Select **Submit for approval**. Proxy admins select **Register skill** to publish without review.
 
 ![The skill registration form with Upload ZIP selected and a file picker for the archive.](../img/skills_gateway/upload-skill.png)
 
-Use the `SKILL.md` frontmatter to set the skill's name and description. See [package requirements and API examples](#upload-or-import). You can also select **Import URL** to submit a public GitHub or skills.sh skill.
+Set the name and description in `SKILL.md` frontmatter; see [package requirements](#upload-or-import). To import a public GitHub or skills.sh skill, choose **Import URL**.
 
-Members can check **My submissions** for review outcomes. Their new skills and updates stay pending until an admin approves them. Admins publish their own uploads without review. Newly published skills are public; use [private skill access](#private-skills) to restrict them to selected keys or teams.
+Check **My submissions** for the admin's decision. Teammates can access your changes after approval. New skills are public after publication; use [private skill access](#private-skills) to restrict them to selected keys or teams.
 
-After publication, teammates can open the skill and choose **Install / Share** to copy an install command for their agent. They can also download the ZIP from the skill's details.
+To install a published skill, open it and choose **Install / Share**. Copy the command for your agent, or download the ZIP from the skill's details.
 
 ### Review a submission
 
-1. As a proxy admin, open **Submissions** and select **Review** beside a pending submission.
-2. Compare **Currently published** with **Proposed**. For an uploaded package, select **Download submitted ZIP** to inspect its files.
-3. If your administrator has [configured a scanner](#optional-security-scans), select **Scan for threats**. Review the findings, risk score, and any incomplete-analysis notice.
+1. Open **Submissions** as a proxy admin and select **Review** on a pending submission.
+2. Compare **Currently published** with **Proposed**. Select **Download submitted ZIP** to inspect an uploaded package.
+3. If your administrator has [configured a scanner](#optional-security-scans), select **Scan for threats**. Check the findings, risk score, and notices about incomplete analysis.
 4. Select **Approve and publish**, or **Reject** with an optional reason.
 
 ![The review dialog compares the published skill with the proposal and offers Reject and Approve and publish.](../img/skills_gateway/review-submission.png)
@@ -47,28 +47,28 @@ After publication, teammates can open the skill and choose **Install / Share** t
 
 *Example scan of a test skill.*
 
-The scan is optional and advisory. Admins decide whether to publish; a scan does not approve a submission. Until approval, teammates continue to use the published version.
+Scanning is optional. An admin decides whether to approve or reject the submission. Until you approve an update, teammates keep using the published version.
 
 ### Publish a new version
 
 1. Open a published skill and select **Edit Skill**.
 2. Choose **Upload ZIP** to replace its files. Keep the same skill name in `SKILL.md`.
-3. Leave **Version override** blank for the next patch version, or enter a higher semantic version. For example, update `1.0.0` to `1.0.1`, or enter `1.1.0`.
+3. Leave **Version override** blank to increment the patch version, such as `1.0.0` to `1.0.1`. Enter a higher semantic version, such as `1.1.0`, to override it.
 4. Submit the update for approval as a member, or select **Save changes** as an admin.
 
-Open the skill's **Version history** tab to inspect published versions. Select **Download retained ZIP** beside an earlier version to retrieve its package. You need current access to the skill, and LiteLLM must have retained that version's archive. Entries marked as source references contain metadata, not copies of external files.
+In **Version history**, select **Download retained ZIP** beside an earlier version to download it. You need current access to the skill and a retained archive. Source-reference entries contain metadata without external files.
 
-New skills default to `1.0.0`. Existing skills without recorded history begin recording it on their next published update. See [versions and updates](#versions-and-updates) for API examples.
+New skills start at `1.0.0`. For an existing skill without history, publish an update to start recording versions. See [versions and updates](#versions-and-updates) for API examples.
 
 ### See who downloads a skill
 
-Check the **Downloads** column in the catalog for totals. As a proxy admin, open a skill's **Downloads** tab to inspect authenticated history, including the download time, user or key owner, team, and skill version when available.
+Check **Downloads** in the catalog for totals. As a proxy admin, open a skill's **Downloads** tab to see authenticated downloads with the time, user or key owner, team, and version when available.
 
 ![The Downloads tab shows totals and a history entry with the download time, user or key owner, team, and version.](../img/skills_gateway/download-history.png)
 
 *Example download history for a test skill.*
 
-Repeat and anonymous downloads count toward totals. Anonymous requests have no individual history, and shared keys identify the key's owner. These records show downloads through the gateway, not completed installations or skill executions. See [download counts and history](#download-counts-and-history) for the admin API.
+Totals include repeat and anonymous downloads through the gateway. Anonymous downloads have no individual history. Shared keys identify their owner; you cannot distinguish people using the same key. Downloads do not confirm installs or skill executions. See [download counts and history](#download-counts-and-history) for the admin API.
 
 <details>
 <summary>Watch the Skills Gateway walkthrough</summary>
@@ -249,7 +249,7 @@ Admins decide whether to approve or reject, with or without a scan. The scanner 
 
 ### Download counts and history
 
-Catalog readers can see aggregate download totals. `GET /skill-hub/skills` includes `download_count` for the skills visible to the caller. Individual download history requires proxy admin access. To fetch totals and authenticated downloader history:
+Catalog readers can see download totals. `GET /skill-hub/skills` includes `download_count` for the skills visible to the caller. To fetch totals and authenticated history, use a proxy admin key:
 
 ```bash
 curl --fail-with-body 'https://your-proxy/skill-hub/skills/pdf-summarizer/downloads?limit=25' \
