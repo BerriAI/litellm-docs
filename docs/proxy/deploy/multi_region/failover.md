@@ -11,11 +11,11 @@ description: Detect regional failures and send new LiteLLM requests to a healthy
 Failover sends new requests to a healthy region after another region fails. It needs a health policy, spare capacity, and a tested recovery procedure. It does not move an open stream or repair the [shared database](../../multi_region.md).
 
 ```mermaid
-flowchart TB
-    Clients[Applications] --> Route[Global routing layer]
-    Route -.->|Stop new traffic| A[Region A unavailable]
-    Route -->|New requests| B[Region B healthy with spare capacity]
-    B --> DB[(Shared PostgreSQL must remain reachable)]
+flowchart LR
+    Clients[Apps] --> Route[Global routing]
+    Route -.->|Stop new traffic| A[Region A: down]
+    Route -->|New requests| B[Region B: healthy]
+    B --> DB[(Shared PostgreSQL)]
     B --> Redis[(Region B Redis)]
 ```
 

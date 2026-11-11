@@ -7,12 +7,9 @@ type Step = { title: string; detail: string; icon?: string; symbol?: 'client' | 
 type Architecture = {
   title: string;
   client: Step;
-  credential: string;
   boundary: string;
   edge: Step;
-  policy: string;
-  link: string;
-  originBoundary: string;
+  identity: string;
   connector?: Step;
   origin: string;
   note: string;
@@ -20,66 +17,51 @@ type Architecture = {
 
 const architectures: Record<Kind, Architecture> = {
   mtls: {
-    title: 'Forward verified client certificate identity',
-    client: { title: 'Corporate workload', detail: 'Client certificate and private key', symbol: 'client' },
-    credential: 'Private network access · mTLS · optional client-held LiteLLM key',
-    boundary: 'Private API ingress',
-    edge: { title: 'Load balancer or API gateway', detail: 'Verify the client certificate against the client CA', symbol: 'shield' },
-    policy: 'Overwrite X-mTLS-Client-ID from the verified certificate. Remove client-supplied customer identity headers.',
-    link: 'HTTPS · X-mTLS-Client-ID · LiteLLM key',
-    originBoundary: 'Private LiteLLM endpoint · ingress access only',
-    origin: 'Validate the key. Apply its permissions. Map the certificate identity to the customer in usage logs.',
-    note: 'The examples configure both the ingress header and LiteLLM user_header_mappings. Certificate-only clients can use an ingress that maps each certificate identity to its own stored LiteLLM key.',
+    title: 'Client certificate identity',
+    client: { title: 'Workload', detail: 'Client certificate', symbol: 'client' },
+    boundary: 'Private ingress',
+    edge: { title: 'ALB or API gateway', detail: 'Verify client certificate', symbol: 'shield' },
+    identity: 'X-MTLS-Client-ID + LiteLLM key',
+    origin: 'Key permissions + usage',
+    note: 'The ingress overwrites the identity header. LiteLLM records the customer ID and applies virtual-key permissions.',
   },
   'iap-aws': {
-    title: 'Internal ALB forwards employee identity',
-    client: { title: 'Corporate employee', detail: 'Browser on VPN, Direct Connect, or approved private access', symbol: 'client' },
-    credential: 'Private DNS and HTTPS · OIDC sign-in',
-    boundary: 'VPC · internal Application Load Balancer',
-    edge: { title: 'Internal ALB', detail: 'authenticate-oidc before forward on each UI route', icon: 'cloud_icons/aws-alb.svg' },
-    policy: 'Allow corporate client CIDRs. Authenticate with the configured OIDC provider.',
-    link: 'HTTPS target group · signed x-amzn-oidc-data',
-    originBoundary: 'Private targets · ALB security group only',
-    origin: 'identity_sso.handler verifies the ALB assertion. sub identifies the user. LiteLLM creates the UI session.',
-    note: 'Set AWS_ALB_ARN, AWS_ALB_OIDC_CLIENT_ID, and AWS_ALB_OIDC_ISSUER. ALB encrypts the backend connection but does not verify its certificate. API JWT rules use the original IdP token instead.',
+    title: 'AWS employee sign-in',
+    client: { title: 'Employee', detail: 'VPN or Direct Connect', symbol: 'client' },
+    boundary: 'Private ingress',
+    edge: { title: 'Internal ALB', detail: 'OIDC authentication', icon: 'cloud_icons/aws-alb.svg' },
+    identity: 'x-amzn-oidc-data',
+    origin: 'Verify JWT → UI session',
+    note: 'ALB signs the identity header. The LiteLLM handler verifies it and maps sub to the user ID.',
   },
   'iap-azure': {
-    title: 'Entra Application Proxy forwards employee identity',
-    client: { title: 'Corporate employee', detail: 'Entra sign-in and required device policies', symbol: 'client' },
-    credential: 'HTTPS · Entra preauthentication and Conditional Access',
-    boundary: 'Microsoft Entra · approved corporate access',
-    edge: { title: 'Application Proxy', detail: 'Header-based SSO maps the user object ID and email', icon: 'cloud_icons/azure-enterprise-applications.svg' },
-    policy: 'Assign approved users or groups. Set X-LiteLLM-User-ID and X-LiteLLM-User-Email from their identity.',
-    link: 'Encrypted connector channel · connectors open outbound connections',
-    originBoundary: 'Private network · connector access only',
-    connector: { title: 'Private-network connectors', detail: 'Separate Windows Server hosts. Verify the origin HTTPS certificate.', icon: 'cloud_icons/azure-virtual-network.svg' },
-    origin: 'trusted_proxy_ranges checks the connector peer. identity_sso.handler creates a session for the forwarded user.',
-    note: 'Azure forwards plain identity headers through trusted connectors. Restrict direct origin access. This browser flow does not authenticate unattended service principals.',
+    title: 'Azure employee sign-in',
+    client: { title: 'Employee', detail: 'Approved device', symbol: 'client' },
+    boundary: 'Microsoft Entra',
+    edge: { title: 'Application Proxy', detail: 'Conditional Access', icon: 'cloud_icons/azure-enterprise-applications.svg' },
+    identity: 'X-LiteLLM-User-ID + X-LiteLLM-User-Email',
+    connector: { title: 'Connectors', detail: 'Outbound channel', icon: 'cloud_icons/azure-virtual-network.svg' },
+    origin: 'Trusted headers → UI session',
+    note: 'Application Proxy sets the identity headers. LiteLLM accepts them only from trusted connectors.',
   },
   'iap-gcp': {
-    title: 'Internal load balancer forwards the IAP assertion',
-    client: { title: 'Corporate employee', detail: 'Browser on Cloud VPN or Cloud Interconnect', symbol: 'client' },
-    credential: 'Private DNS and HTTPS · Google sign-in',
-    boundary: 'VPC · internal Application Load Balancer',
-    edge: { title: 'Internal load balancer with IAP', detail: 'IAP enabled on every exposed backend service', icon: 'cloud_icons/gcp-cloud-load-balancing.svg' },
-    policy: 'Grant roles/iap.httpsResourceAccessor to approved corporate users or groups.',
-    link: 'Signed x-goog-iap-jwt-assertion · sub and email claims',
-    originBoundary: 'Private backend · block direct access',
-    origin: 'identity_sso.handler verifies the assertion against GCP_IAP_AUDIENCE. LiteLLM opens the user session.',
-    note: 'Copy the resource Signed Header JWT Audience from IAP. For Cloud Run, keep internal ingress and Invoker IAM checks. Configure backend TLS separately for GKE or VM targets.',
+    title: 'GCP employee sign-in',
+    client: { title: 'Employee', detail: 'VPN or Interconnect', symbol: 'client' },
+    boundary: 'Private ingress',
+    edge: { title: 'Internal ALB + IAP', detail: 'IAP access policy', icon: 'cloud_icons/gcp-cloud-load-balancing.svg' },
+    identity: 'x-goog-iap-jwt-assertion',
+    origin: 'Verify JWT → UI session',
+    note: 'IAP signs the identity header. The LiteLLM handler verifies it and maps sub and email to the user.',
   },
   'iap-cloudflare': {
-    title: 'Cloudflare Access forwards the employee assertion',
-    client: { title: 'Corporate employee', detail: 'Browser on a device enrolled in the corporate Zero Trust account', symbol: 'client' },
-    credential: 'HTTPS · Access sign-in and required device policy',
-    boundary: 'Cloudflare · corporate Access policy',
-    edge: { title: 'Cloudflare Access', detail: 'Allow approved employees. Require Gateway.', icon: 'providers/cloudflare.svg' },
-    policy: 'Issue a signed assertion for the configured Access application audience.',
-    link: 'Tunnel · Cf-Access-Jwt-Assertion',
-    originBoundary: 'Private network · connector access only',
-    connector: { title: 'cloudflared connectors', detail: 'originRequest.access.required: true, teamName, and audTag', icon: 'providers/cloudflare.svg' },
-    origin: 'identity_sso.handler verifies the assertion. sub identifies the employee. LiteLLM creates the UI session.',
-    note: 'Keep noTLSVerify: false. Set CF_ACCESS_TEAM_DOMAIN and CF_ACCESS_AUDIENCE on LiteLLM. Service tokens use common_name for API identity and cannot sign into the UI.',
+    title: 'Cloudflare employee sign-in',
+    client: { title: 'Employee', detail: 'Corporate WARP device', symbol: 'client' },
+    boundary: 'Cloudflare',
+    edge: { title: 'Access', detail: 'Allow policy + Gateway', icon: 'providers/cloudflare.svg' },
+    identity: 'Cf-Access-Jwt-Assertion',
+    connector: { title: 'cloudflared', detail: 'Verify Access JWT', icon: 'providers/cloudflare.svg' },
+    origin: 'Verify JWT → UI session',
+    note: 'Access signs the identity header. The tunnel reaches the private origin. LiteLLM verifies the employee identity.',
   },
 };
 
@@ -91,39 +73,45 @@ function Symbol({ kind }: { kind: 'client' | 'shield' }) {
   );
 }
 
-function Card({ step, number }: { step: Step; number: number }) {
+function Card({ step }: { step: Step }) {
   const iconUrl = useBaseUrl(`/img/${step.icon ?? 'brand/litellm-monogram-blue.svg'}`);
   return <div className={styles.card}>
-    <span className={styles.number}>{number}</span>
     {step.symbol ? <Symbol kind={step.symbol} /> : <img src={iconUrl} alt="" className={styles.icon} />}
     <div className={styles.cardText}><strong>{step.title}</strong><span>{step.detail}</span></div>
   </div>;
 }
 
-function Flow({ children }: { children: React.ReactNode }) {
-  return <div className={styles.flow}><span className={styles.arrow} aria-hidden="true" /><span>{children}</span></div>;
+function Arrow() {
+  return <span className={styles.arrow} aria-hidden="true" />;
 }
 
 export function IngressArchitecture({ kind }: { kind: Kind }) {
   const data = architectures[kind];
   const id = useId();
   return <figure className={styles.figure} aria-labelledby={id}>
-    <figcaption id={id} className={styles.heading}>{data.title}<span>Proxy settings and forwarded identity</span></figcaption>
-    <div className={styles.canvas}>
-      <Card step={data.client} number={1} />
-      <Flow>{data.credential}</Flow>
-      <section className={styles.boundary} aria-label={data.boundary}>
-        <div className={styles.boundaryLabel}>{data.boundary}</div>
-        <Card step={data.edge} number={2} />
-        <p className={styles.policy}>{data.policy}</p>
-      </section>
-      <Flow>{data.link}</Flow>
-      <section className={`${styles.boundary} ${styles.origin}`} aria-label={data.originBoundary}>
-        <div className={styles.boundaryLabel}>{data.originBoundary}</div>
-        {data.connector && <><Card step={data.connector} number={3} /><Flow>HTTPS · verify the origin certificate</Flow></>}
-        <Card step={{ title: 'LiteLLM', detail: data.origin }} number={data.connector ? 4 : 3} />
-      </section>
+    <figcaption id={id} className={styles.heading}>{data.title}</figcaption>
+    <div className={styles.viewport} tabIndex={0} role="region" aria-label={`${data.title}, request path`}>
+      <div className={`${styles.canvas} ${data.connector ? styles.withConnector : ''}`}>
+        <section className={styles.boundary} aria-label="Corporate network">
+          <div className={styles.boundaryLabel}>Corporate access</div>
+          <Card step={data.client} />
+        </section>
+        <Arrow />
+        <section className={styles.boundary} aria-label={data.boundary}>
+          <div className={styles.boundaryLabel}>{data.boundary}</div>
+          <Card step={data.edge} />
+        </section>
+        <Arrow />
+        <section className={`${styles.boundary} ${styles.origin}`} aria-label="Private origin, ingress access only">
+          <div className={styles.boundaryLabel}>Private origin</div>
+          <div className={styles.originPath}>
+            {data.connector && <><Card step={data.connector} /><Arrow /></>}
+            <Card step={{ title: 'LiteLLM', detail: data.origin }} />
+          </div>
+        </section>
+      </div>
     </div>
+    <div className={styles.identity}><span>Forwarded identity</span><code>{data.identity}</code></div>
     <p className={styles.note}>{data.note}</p>
   </figure>;
 }

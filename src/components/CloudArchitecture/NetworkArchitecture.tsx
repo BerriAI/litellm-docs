@@ -114,11 +114,11 @@ function NetworkSvg({ diagram }: { diagram: NetworkDiagram }) {
 function Legend() {
   return (
     <div className={styles.legend} aria-label="Diagram legend">
-      <span><i style={{ borderColor: PATH_COLORS.request }} />Inbound requests</span>
-      <span><i style={{ borderColor: PATH_COLORS.data }} />Private service traffic</span>
-      <span><i style={{ borderColor: PATH_COLORS.egress }} />Internet egress</span>
-      <span><i className={styles.optionalLine} style={{ borderColor: PATH_COLORS.optional }} />Optional addition</span>
-      <span>Dots connect paths. Bridges keep paths separate.</span>
+      <span><i style={{ borderColor: PATH_COLORS.request }} />Requests</span>
+      <span><i style={{ borderColor: PATH_COLORS.data }} />Private traffic</span>
+      <span><i style={{ borderColor: PATH_COLORS.egress }} />Egress</span>
+      <span><i className={styles.optionalLine} style={{ borderColor: PATH_COLORS.optional }} />Optional</span>
+      <span>Dots join paths. Bridges cross them.</span>
     </div>
   );
 }
@@ -132,10 +132,7 @@ export function NetworkArchitecture({ cloud }: { cloud: CloudKey }) {
   return (
     <section className={styles.viewer} aria-label={diagram.title}>
       <div className={styles.toolbar}>
-        <div>
-          <strong>{diagram.title}</strong>
-          <span>Expand to inspect subnets and traffic paths.</span>
-        </div>
+        <strong>{diagram.title}</strong>
         <button type="button" className={styles.expandButton} onClick={() => { dialog.current?.showModal(); expandedViewport.current?.scrollTo(0, 0); }}>Expand diagram</button>
       </div>
       <Legend />
@@ -143,12 +140,15 @@ export function NetworkArchitecture({ cloud }: { cloud: CloudKey }) {
         <NetworkSvg diagram={diagram} />
       </div>
       <p className={styles.description}>{diagram.description}</p>
-      <dl className={styles.notes}>
-        {diagram.notes.map(note => <div key={note.title}><dt>{note.title}</dt><dd>{note.text}</dd></div>)}
-      </dl>
-      <p className={styles.sources}>
-        Design references: {diagram.sources.map((source, index) => <React.Fragment key={source.url}>{index > 0 && ' · '}<a href={source.url}>{source.label}</a></React.Fragment>)}
-      </p>
+      <details className={styles.details}>
+        <summary>Architecture details and references</summary>
+        <dl className={styles.notes}>
+          {diagram.notes.map(note => <div key={note.title}><dt>{note.title}</dt><dd>{note.text}</dd></div>)}
+        </dl>
+        <p className={styles.sources}>
+          Design references: {diagram.sources.map((source, index) => <React.Fragment key={source.url}>{index > 0 && ' · '}<a href={source.url}>{source.label}</a></React.Fragment>)}
+        </p>
+      </details>
       <dialog ref={dialog} className={styles.dialog} aria-label={diagram.title} onClick={event => { if (event.target === event.currentTarget) dialog.current?.close(); }}>
         <div className={styles.dialogHeader}>
           <strong>{diagram.title}</strong>

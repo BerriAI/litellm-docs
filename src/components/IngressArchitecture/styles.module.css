@@ -14,119 +14,111 @@
   overflow: hidden;
 }
 
+
 .heading {
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   line-height: 1.4;
 }
 
-.heading span {
-  display: block;
-  margin-top: 0.25rem;
-  font-size: 0.8rem;
-  font-weight: 400;
-  color: var(--ifm-color-emphasis-700);
+.viewport {
+  overflow-x: auto;
+  background: var(--ingress-bg);
+}
+
+.viewport:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: -2px;
 }
 
 .canvas {
-  padding: 1.25rem;
-  background: var(--ingress-bg);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1.2fr) 22px minmax(0, 1.2fr);
+  align-items: stretch;
+  min-width: 460px;
+  padding: 0.25rem 1rem 1rem;
   color: var(--ingress-text);
+}
+
+.withConnector {
+  grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1.1fr) 20px minmax(0, 2.2fr);
+  min-width: 590px;
 }
 
 .card {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.8rem;
-  padding: 1rem;
-  background: var(--ingress-bg);
-  border: 1px solid var(--ingress-border);
-  border-radius: 5px;
-}
-
-.number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
-  border-radius: 50%;
-  background: var(--ingress-accent-bg);
-  color: var(--ingress-accent);
-  font-size: 0.75rem;
-  font-weight: 700;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.35rem 0.4rem 0.65rem;
+  text-align: center;
 }
 
 .icon,
 .symbol {
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
   object-fit: contain;
   color: var(--ingress-accent);
 }
 
 .cardText {
   min-width: 0;
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
 .cardText strong {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 
 .cardText span {
   display: block;
-  margin-top: 0.2rem;
+  margin-top: 0.3rem;
   color: var(--ingress-muted);
-  font-size: 0.78rem;
-  overflow-wrap: anywhere;
-}
-
-.flow {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  padding: 0.5rem 0.9rem;
-  min-height: 56px;
   font-size: 0.72rem;
-  line-height: 1.5;
-  color: var(--ingress-muted);
 }
 
 .arrow {
   position: relative;
-  width: 2px;
-  height: 32px;
-  flex: 0 0 2px;
-  margin: 0 14px;
+  display: block;
+  align-self: center;
+  width: 100%;
+  height: 2px;
   background: var(--ingress-accent);
 }
 
 .arrow::after {
   content: '';
   position: absolute;
-  bottom: -1px;
-  left: -4px;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 7px solid var(--ingress-accent);
+  right: -1px;
+  top: -4px;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid var(--ingress-accent);
+}
+
+.canvas > .arrow {
+  align-self: start;
+  margin-top: calc(2.5rem + 0.35rem + 18px);
 }
 
 .boundary {
-  padding: 0.85rem;
+  min-width: 0;
   border: 1px dashed var(--ingress-border);
   background: var(--ingress-boundary-bg);
 }
 
 .boundaryLabel {
-  margin-bottom: 0.75rem;
-  font-size: 0.72rem;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.4rem 0.2rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  line-height: 1.5;
-  color: var(--ingress-text);
+  line-height: 1.4;
+  text-align: center;
 }
 
 .origin {
@@ -138,26 +130,44 @@
   color: var(--ingress-origin);
 }
 
-.policy {
-  margin: 0.75rem 0 0;
+.originPath {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.withConnector .originPath {
+  grid-template-columns: minmax(0, 1fr) 16px minmax(0, 1fr);
+}
+
+.originPath > .arrow {
+  align-self: start;
+  margin-top: calc(0.35rem + 17px);
+}
+
+.identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.6rem;
+  padding: 0.6rem 1rem;
+  border-top: 1px solid var(--ifm-color-emphasis-300);
   font-size: 0.75rem;
-  line-height: 1.6;
-  color: var(--ingress-muted);
+}
+
+.identity span {
+  font-weight: 600;
+}
+
+.identity code {
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
 }
 
 .note {
   margin: 0;
-  padding: 1rem 1.25rem;
-  border-top: 1px solid var(--ifm-color-emphasis-300);
+  padding: 0 1rem 0.75rem;
   font-size: 0.8rem;
-  line-height: 1.6;
-}
-
-@media (max-width: 600px) {
-  .canvas { padding: 0.75rem; }
-  .card { padding: 0.7rem; gap: 0.5rem; flex-wrap: wrap; }
-  .cardText { flex: 1 1 180px; }
-  .boundary { padding: 0.6rem; }
+  line-height: 1.5;
 }
 
 [data-theme='dark'] .figure {

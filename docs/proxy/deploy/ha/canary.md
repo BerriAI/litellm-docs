@@ -11,11 +11,11 @@ description: Send a small share of LiteLLM requests to a new version. Compare it
 A canary release sends a small share of new requests to a new LiteLLM version. The stable version serves the rest. Compare their behavior under real traffic. Then increase the canary's share or return it to zero.
 
 ```mermaid
-flowchart TB
-    Clients[Applications] --> Ingress[Weighted ingress]
-    Ingress -->|95 percent of new requests| Stable[Stable version]
-    Ingress -->|5 percent of new requests| Canary[Canary version]
-    Stable --> State[Shared state: PostgreSQL + regional Redis]
+flowchart LR
+    Clients[Apps] --> Ingress[Traffic split]
+    Ingress -->|95%| Stable[Stable]
+    Ingress -->|5%| Canary[Canary]
+    Stable --> State[PostgreSQL + Redis]
     Canary --> State
 ```
 

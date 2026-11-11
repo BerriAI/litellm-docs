@@ -1,141 +1,70 @@
-import type { CloudKey, NetworkDiagram, NetworkEdge, NetworkNode } from './networkTypes';
+import type { CloudKey, NetworkDiagram } from './networkTypes';
 
 const MODULE = 'https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/aws';
 
-/** Corporate-only target. ECS requires the module changes listed in the cloud guide. */
 export function makeAwsNetworkDiagram(cloud: CloudKey): NetworkDiagram {
   const ecs = cloud === 'aws-ecs';
   const micro = ecs || cloud === 'aws-eks-micro';
-  const nodes: NetworkNode[] = [
-    { id: 'clients', x: 160, y: 50, title: ['Corporate users', 'and applications'], detail: ['Private DNS'] },
-    { id: 'private-access', x: 600, y: 50, title: ['Private network access'], detail: ['VPN / Direct Connect', 'or approved access service'] },
-    { id: 'external', x: 1050, y: 50, title: ['External LLM APIs', 'and image registry'], detail: ['Public provider / registry APIs'] },
-    { id: 'igw', x: 400, y: 220, icon: 'aws-internet-gateway.svg', title: ['Internet gateway'] },
-    { id: 'nat-a', x: 175, y: 430, icon: 'aws-nat-gateway.svg', title: ['NAT gateway'], detail: [ecs ? 'Single NAT' : 'One per AZ'] },
-    { id: 'alb-a', x: 350, y: 650, icon: 'aws-alb.svg', title: ['Internal ALB'], detail: ['Private HTTPS 443', 'One logical ALB'] },
-    { id: 'alb-b', x: 780, y: 650, icon: 'aws-alb.svg', title: ['Internal ALB'], detail: ['Private HTTPS 443', 'One logical ALB'] },
-    { id: 'secrets', x: 1085, y: 330, icon: 'aws-secrets-manager.svg', title: ['Secrets Manager'], detail: ['Credentials and secrets'] },
-    { id: 's3', x: 1085, y: 510, icon: 'aws-s3.svg', title: ['Amazon S3'], detail: ['Config / optional logs'] },
-    { id: 'logs', x: 1085, y: 690, icon: 'aws-cloudwatch.svg', title: ['CloudWatch Logs'], detail: ['Container logs'] },
-    { id: 'bedrock', x: 1085, y: 1130, icon: 'aws-bedrock.svg', title: ['Amazon Bedrock'], detail: ['Runtime inference API'] },
-  ];
-
-  for (const [suffix, offset] of [['a', 0], ['b', 430]] as const) {
-    nodes.push(
-      {
-        id: `compute-${suffix}`, x: 350 + offset, y: 850,
-        icon: ecs ? 'aws-fargate.svg' : 'aws-eks.svg',
-        title: ecs ? ['LiteLLM', 'Fargate tasks'] : ['LiteLLM pods'],
-        detail: [micro ? 'Gateway / backend / UI' : 'One Deployment', ecs ? 'Placement by ECS' : 'Private EKS workers'],
-      },
-      {
-        id: `endpoint-${suffix}`, x: 175 + offset, y: 850,
-        icon: 'aws-vpc-endpoint.svg', title: ['Interface endpoint'],
-        detail: ['Bedrock runtime', 'Optional, private DNS'],
-      },
-      {
-        id: `aurora-${suffix}`, x: 200 + offset, y: 1110,
-        icon: 'aws-aurora.svg', title: [suffix === 'a' ? 'Aurora writer' : 'Aurora reader'],
-        detail: ['Private PostgreSQL', 'Example AZ placement'],
-      },
-      {
-        id: `redis-${suffix}`, x: 385 + offset, y: 1110,
-        icon: 'aws-elasticache.svg', title: [suffix === 'a' ? 'Redis primary' : 'Redis replica'],
-        detail: ['ElastiCache', 'Multi-AZ enabled'],
-      },
-    );
-  }
-  if (!ecs) {
-    nodes.push({ id: 'nat-b', x: 605, y: 430, icon: 'aws-nat-gateway.svg', title: ['NAT gateway'], detail: ['One per AZ'] });
-  }
-
-  const edges: NetworkEdge[] = [
-    // Corporate traffic reaches only the internal ALB.
-    { kind: 'request', points: [[182, 50], [578, 50]] },
-    { kind: 'request', points: [[622, 50], [930, 50], [930, 560], [350, 560]], arrow: false },
-    { kind: 'request', points: [[350, 560], [350, 628]] },
-    { kind: 'request', points: [[780, 560], [780, 628]] },
-    { kind: 'request', points: [[350, 740], [350, 828]] },
-    { kind: 'request', points: [[780, 740], [780, 828]] },
-
-    // Keep outbound routes in the space between the workload and endpoint columns.
-    { kind: 'egress', points: [[328, 840], [280, 840], [280, 760]], arrow: false },
-    { kind: 'egress', points: [[280, 760], [280, 430], [197, 430]] },
-    ...(ecs ? [
-      { kind: 'egress' as const, points: [[758, 840], [710, 840], [710, 760], [280, 760]] as [number, number][], arrow: false },
-    ] : [
-      { kind: 'egress' as const, points: [[758, 840], [710, 840], [710, 430], [627, 430]] as [number, number][] },
-    ]),
-    { kind: 'egress', points: [[153, 430], [80, 430], [80, 275], [335, 275]], arrow: false },
-    ...(!ecs ? [
-      { kind: 'egress' as const, points: [[583, 430], [510, 430], [510, 275], [335, 275]] as [number, number][], arrow: false },
-    ] : []),
-    { kind: 'egress', points: [[335, 275], [335, 220], [378, 220]] },
-    { kind: 'egress', points: [[400, 198], [400, 135], [1180, 135], [1180, 50], [1072, 50]] },
-    // The regional service endpoints share a public-egress trunk.
-    { kind: 'egress', points: [[955, 135], [955, 690]], arrow: false },
-    { kind: 'egress', points: [[955, 330], [1063, 330]] },
-    { kind: 'egress', points: [[955, 510], [1063, 510]] },
-    { kind: 'egress', points: [[955, 690], [1063, 690]] },
-
-    // Both AZs use the same writer and primary endpoints through one shared path.
-    { kind: 'data', points: [[372, 860], [450, 860], [450, 1020]], arrow: false },
-    { kind: 'data', points: [[802, 860], [880, 860], [880, 1020]], arrow: false },
-    { kind: 'data', points: [[200, 1020], [880, 1020]], arrow: false },
-    { kind: 'data', points: [[200, 1020], [200, 1088]], label: '5432', labelX: 200, labelY: 1006 },
-    { kind: 'data', points: [[385, 1020], [385, 1088]], label: '6379 / TLS', labelX: 330, labelY: 1006 },
-
-    // Optional interface endpoints join only on the dedicated PrivateLink path.
-    { kind: 'optional', points: [[328, 860], [197, 860]], label: '443', labelX: 255, labelY: 883 },
-    { kind: 'optional', points: [[758, 860], [627, 860]], label: '443', labelX: 685, labelY: 883 },
-    { kind: 'optional', points: [[153, 850], [100, 850], [100, 1055], [945, 1055], [945, 1130], [1063, 1130]] },
-    { kind: 'optional', points: [[583, 850], [530, 850], [530, 1055]], arrow: false },
-  ];
-
   return {
-    title: ecs ? 'AWS ECS Fargate: private deployment' : `AWS EKS: ${micro ? 'separate services' : 'single service'} network example`,
-    description: ecs
-      ? 'Corporate clients reach an internal ALB through private network access. This architecture requires changes to the Terraform module. NAT handles outbound traffic only.'
-      : 'Corporate clients reach an internal ALB and private EKS workers. Create the private network access, data stores, and NAT gateways around Helm.',
-    provider: 'aws', width: 1240, height: 1350,
+    title: ecs ? 'AWS ECS Fargate: private deployment' : `AWS EKS: ${micro ? 'separate services' : 'single service'}`,
+    description: 'Corporate clients use an internal ALB. Private workloads share database and cache endpoints. NAT serves outbound traffic only.',
+    provider: 'aws', width: 1560, height: 650,
     groups: [
-      { id: 'aws', x: 20, y: 140, width: 1200, height: 1200, label: 'AWS Cloud', kind: 'cloud', icon: 'aws-cloud.svg' },
-      { id: 'region', x: 35, y: 175, width: 1170, height: 1150, label: 'AWS Region', kind: 'region', icon: 'aws-region.svg' },
-      { id: 'vpc', x: 55, y: 220, width: 885, height: 1080, label: ecs ? 'VPC 10.40.0.0/16 (default)' : 'VPC', kind: 'vpc', icon: 'aws-vpc.svg' },
-      { id: 'az-a', x: 75, y: 310, width: 410, height: 950, label: 'Availability Zone A', kind: 'az' },
-      { id: 'az-b', x: 505, y: 310, width: 410, height: 950, label: 'Availability Zone B', kind: 'az' },
-      { id: 'public-a', x: 90, y: 360, width: 380, height: 190, label: 'Public egress subnet A', kind: 'public', icon: 'aws-public-subnet.svg' },
-      { id: 'public-b', x: 520, y: 360, width: 380, height: 190, label: 'Public egress subnet B', kind: 'public', icon: 'aws-public-subnet.svg' },
-      { id: 'private-a', x: 90, y: 575, width: 380, height: 660, label: 'Private subnet A', kind: 'private', icon: 'aws-private-subnet.svg' },
-      { id: 'private-b', x: 520, y: 575, width: 380, height: 660, label: 'Private subnet B', kind: 'private', icon: 'aws-private-subnet.svg' },
-      { id: 'regional-services', x: 970, y: 220, width: 230, height: 1080, label: 'Regional AWS services', kind: 'managed' },
+      { id: 'aws', x: 360, y: 120, width: 1180, height: 510, label: 'AWS Region', kind: 'cloud', icon: 'aws-cloud.svg' },
+      { id: 'vpc', x: 380, y: 165, width: 880, height: 445, label: 'VPC', kind: 'vpc', icon: 'aws-vpc.svg' },
+      { id: 'private', x: 400, y: 210, width: 630, height: 380, label: 'Private subnets', kind: 'private', icon: 'aws-private-subnet.svg' },
+      { id: 'az-a', x: 620, y: 255, width: 180, height: 130, label: 'AZ A', kind: 'az' },
+      { id: 'az-b', x: 830, y: 255, width: 180, height: 130, label: 'AZ B', kind: 'az' },
+      { id: 'public', x: 1050, y: 250, width: 185, height: 150, label: 'Public egress', kind: 'public', icon: 'aws-public-subnet.svg' },
+      { id: 'regional-services', x: 1300, y: 350, width: 220, height: 240, label: 'AWS services', kind: 'managed' },
     ],
-    nodes, edges,
+    nodes: [
+      { id: 'clients', x: 85, y: 320, title: ['Employees / apps'] },
+      { id: 'private-access', x: 260, y: 320, title: ['Private access'], detail: ['VPN / Direct Connect'] },
+      { id: 'alb', x: 470, y: 320, icon: 'aws-alb.svg', title: ['Internal ALB'], detail: ['HTTPS 443'] },
+      { id: 'compute-a', x: 710, y: 320, icon: ecs ? 'aws-fargate.svg' : 'aws-eks.svg', title: [ecs ? 'Fargate tasks' : 'EKS pods'], detail: [micro ? 'Separate services' : 'Proxy replicas'] },
+      { id: 'compute-b', x: 920, y: 320, icon: ecs ? 'aws-fargate.svg' : 'aws-eks.svg', title: [ecs ? 'Fargate tasks' : 'EKS pods'], detail: [micro ? 'Separate services' : 'Proxy replicas'] },
+      { id: 'nat', x: 1140, y: 320, icon: 'aws-nat-gateway.svg', title: ['NAT gateway'], detail: [ecs ? 'One shared NAT' : 'One per AZ'] },
+      { id: 'igw', x: 1260, y: 300, icon: 'aws-internet-gateway.svg', title: ['Internet gateway'] },
+      { id: 'external', x: 1450, y: 50, title: ['Public LLM APIs'], detail: ['Image registries'] },
+      { id: 'aws-apis', x: 1410, y: 410, icon: 'aws-cloud.svg', title: ['Secrets / S3 / Logs'], detail: ['HTTPS 443'] },
+      { id: 'endpoint', x: 470, y: 500, icon: 'aws-vpc-endpoint.svg', title: ['Bedrock endpoints'], detail: ['Optional 443'] },
+      { id: 'aurora', x: 710, y: 500, icon: 'aws-aurora.svg', title: ['Aurora'], detail: ['5432, writer + reader'] },
+      { id: 'redis', x: 920, y: 500, icon: 'aws-elasticache.svg', title: ['Redis'], detail: ['6379 TLS, primary + replica'] },
+      { id: 'bedrock', x: 1410, y: 520, icon: 'aws-bedrock.svg', title: ['Bedrock runtime'] },
+    ],
+    edges: [
+      { points: [[107, 320], [238, 320]], kind: 'request' },
+      { points: [[282, 320], [448, 320]], kind: 'request' },
+      { points: [[492, 320], [580, 320], [580, 240], [920, 240]], kind: 'request', arrow: false, label: micro ? '4000 / 4001 / 3000' : '4000', labelX: 680, labelY: 226 },
+      { points: [[710, 240], [710, 298]], kind: 'request' },
+      { points: [[920, 240], [920, 298]], kind: 'request' },
+      { points: [[710, 390], [710, 420], [920, 420]], kind: 'data', arrow: false },
+      { points: [[920, 390], [920, 420]], kind: 'data', arrow: false },
+      { points: [[710, 420], [710, 478]], kind: 'data' },
+      { points: [[920, 420], [920, 478]], kind: 'data' },
+      { points: [[732, 310], [805, 310], [805, 200], [1035, 200], [1035, 320], [1118, 320]], kind: 'egress' },
+      { points: [[942, 310], [1015, 310], [1015, 200]], kind: 'egress', arrow: false },
+      { points: [[1162, 320], [1200, 320], [1200, 300], [1238, 300]], kind: 'egress' },
+      { points: [[1282, 300], [1330, 300], [1330, 50], [1428, 50]], kind: 'egress' },
+      { points: [[1330, 300], [1490, 300], [1490, 410], [1432, 410]], kind: 'egress' },
+      { points: [[688, 330], [600, 330], [600, 455], [470, 455], [470, 478]], kind: 'optional' },
+      { points: [[898, 330], [825, 330], [825, 455], [600, 455]], kind: 'optional', arrow: false },
+      { points: [[492, 500], [570, 500], [570, 575], [1280, 575], [1280, 520], [1388, 520]], kind: 'optional' },
+    ],
     junctions: [
-      { x: 780, y: 560, kind: 'request' },
-      { x: 955, y: 135, kind: 'egress' },
-      { x: 955, y: 330, kind: 'egress' },
-      { x: 955, y: 510, kind: 'egress' },
-      { x: 385, y: 1020, kind: 'data' },
-      { x: 450, y: 1020, kind: 'data' },
-      { x: 530, y: 1055, kind: 'optional' },
-      ...(ecs ? [{ x: 280, y: 760, kind: 'egress' as const }] : [{ x: 335, y: 275, kind: 'egress' as const }]),
-    ],
-    annotations: [
-      { x: 285, y: 965, anchor: 'middle', lines: [ecs ? 'ALB to task security group' : 'ALB Ingress to workload targets', micro ? '4000 gateway, 4001 backend, 3000 UI' : 'HTTP 4000 to LiteLLM'] },
-      { x: 715, y: 965, anchor: 'middle', lines: [ecs ? 'ALB to task security group' : 'ALB Ingress to workload targets', micro ? '4000 gateway, 4001 backend, 3000 UI' : 'HTTP 4000 to LiteLLM'] },
-      { x: 285, y: 1218, anchor: 'middle', lines: [ecs ? 'DB / cache ingress: task security group' : 'DB / cache ingress: app security group'] },
-      { x: 715, y: 1218, anchor: 'middle', lines: ['Writes use writer / primary'] },
-      { x: 490, y: 1285, anchor: 'middle', lines: [ecs ? 'Private default route: NAT A. Public default route: Internet gateway.' : 'Private default route: same-AZ NAT. Public default route: Internet gateway.'] },
-      { x: 1085, y: 277, anchor: 'middle', lines: ['Public HTTPS endpoints', 'through NAT by default'] },
-      { x: 1085, y: 1235, anchor: 'middle', lines: ['PrivateLink: bedrock-runtime', 'Optional path without NAT'] },
-      ...(ecs ? [{ x: 605, y: 430, anchor: 'middle' as const, lines: ['No NAT in AZ B', 'Uses NAT in AZ A'] }] : []),
+      { x: 710, y: 240, kind: 'request' },
+      { x: 710, y: 420, kind: 'data' },
+      { x: 920, y: 420, kind: 'data' },
+      { x: 1015, y: 200, kind: 'egress' },
+      { x: 1330, y: 300, kind: 'egress' },
+      { x: 600, y: 455, kind: 'optional' },
     ],
     notes: ecs ? [
       { title: 'One image', text: 'The gateway, backend, UI, and migration job use the same image with a different startup argument for each component.' },
       { title: 'Required module changes', text: 'The module creates an internet-facing ALB. In your fork, set internal=true, select private ALB subnets, update the subnet precondition, and restrict port 443 to corporate source ranges. Remove public HTTP ingress. Add private access routes and private DNS. These are source changes, not module inputs.' },
       { title: 'Base module resources', text: 'The module creates one public and one private subnet for each supplied AZ, and one NAT gateway in the first public subnet. Supply at least two AZs. With an existing VPC, provide the subnets and routes yourself. Tasks, Aurora, and Redis share the private subnet set.' },
-      { title: 'Placement and availability', text: 'The gateway defaults to two tasks. The backend and UI each default to one. The diagram shows example AZ placements for workloads and Aurora. Both AZs use the Aurora writer endpoint and Redis primary endpoint. Aurora has a reader, and Redis has one replica by default. The diagram omits replication paths. Add per-AZ NAT gateways and service replicas to meet your availability requirements.' },
+      { title: 'Placement and availability', text: 'The gateway defaults to two tasks. The backend and UI each default to one. Workload placements are illustrative. Data icons show shared endpoints, not AZ placement. Both AZs use the Aurora writer endpoint and Redis primary endpoint. Aurora has a reader, and Redis has one replica by default. The diagram omits replication paths. Add per-AZ NAT gateways and service replicas to meet your availability requirements.' },
       { title: 'Security and egress', text: 'Supply acm_certificate_arn for HTTPS. Allow corporate traffic only through the private access path. TLS terminates at the internal ALB. The task security group allows all TCP ports from the ALB security group. The diagram labels the target ports. Aurora allows 5432 and Redis allows 6379 from tasks only. Tasks have no public IP. External providers, public registries, and public AWS service endpoints use NAT. Create DNS records separately. Add WAF or ECR repositories if needed.' },
       { title: 'Optional PrivateLink', text: 'Create Bedrock interface endpoints separately. Use com.amazonaws.<region>.bedrock-runtime, private DNS, and endpoint security group ingress 443 from tasks. Grant Bedrock IAM permissions separately. The bedrock endpoint is for the control plane. To expose LiteLLM through PrivateLink, create a separate endpoint service.' },
     ] : [

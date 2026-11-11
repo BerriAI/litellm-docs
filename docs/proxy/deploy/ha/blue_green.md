@@ -11,12 +11,12 @@ description: Test a replacement LiteLLM deployment, switch ingress traffic, and 
 Blue/green keeps two complete sets of LiteLLM instances available during an upgrade. Blue serves the current version. Green runs the new version and receives test traffic. After green passes your checks, switch new requests to it and drain blue.
 
 ```mermaid
-flowchart TB
-    Clients[Applications] --> Ingress[Ingress traffic switch]
-    Ingress -->|Before cutover: 100 percent| Blue[Blue: current version]
-    Ingress -.->|After cutover: 100 percent| Green[Green: replacement version]
-    Tests[Private test route] --> Green
-    Blue --> State[Shared state: PostgreSQL + regional Redis]
+flowchart LR
+    Clients[Apps] --> Ingress[Traffic switch]
+    Ingress -->|100% before| Blue[Blue: current]
+    Ingress -.->|100% after| Green[Green: new]
+    Tests[Private tests] --> Green
+    Blue --> State[PostgreSQL + Redis]
     Green --> State
 ```
 

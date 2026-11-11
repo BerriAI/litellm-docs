@@ -18,23 +18,23 @@ Start with [High Availability](./deploy/ha/overview.md) for replicas and zone fa
 ## Architecture
 
 ```mermaid
-flowchart TB
-    Clients[Applications] --> Route[Global routing layer]
+flowchart LR
+    Clients[Apps] --> Route[Global routing]
     subgraph A[Region A]
-        IngressA[Regional ingress] --> GatewayA[LiteLLM replicas]
-        GatewayA --> RedisA[(Regional Redis A)]
-        subgraph Data[Shared data service]
-            DB[(Shared PostgreSQL writer)]
+        IngressA[Ingress] --> GatewayA[LiteLLM replicas]
+        GatewayA --> RedisA[(Redis A)]
+        subgraph Data[Shared data]
+            DB[(PostgreSQL writer)]
         end
         GatewayA --> DB
     end
     subgraph B[Region B]
-        IngressB[Regional ingress] --> GatewayB[LiteLLM replicas]
-        GatewayB --> RedisB[(Regional Redis B)]
+        IngressB[Ingress] --> GatewayB[LiteLLM replicas]
+        GatewayB --> RedisB[(Redis B)]
     end
     Route --> IngressA
     Route --> IngressB
-    GatewayB -->|Private cross-region connection| DB
+    GatewayB -->|Private link| DB
 ```
 
 Each region has its own ingress, gateway capacity, and Redis. This example places the shared PostgreSQL writer in Region A. PostgreSQL holds the shared keys, teams, users, configuration, and spend records. Use a highly available database service. All regional gateways depend on that writable database. Adding a gateway region does not give it an independent database.

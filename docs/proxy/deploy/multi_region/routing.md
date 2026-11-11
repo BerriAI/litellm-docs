@@ -15,15 +15,18 @@ Routing chooses which region receives a new request. Use a single gateway hostna
 ```mermaid
 flowchart TB
     subgraph DNS[DNS routing]
-        Resolver[Client resolves gateway hostname] -.-> Answer[DNS returns a regional endpoint]
-        Answer -.-> ClientA[Client connects to that endpoint]
-        ClientA --> RegionA[Selected regional ingress]
+        direction LR
+        Resolver[DNS lookup] -.-> Answer[Regional address]
+        Answer -.-> ClientA[Client]
+        ClientA --> RegionA[Regional ingress]
     end
     subgraph Proxy[Proxy routing]
-        ClientB[Client connects to gateway hostname] --> Global[Global proxy or load balancer]
+        direction LR
+        ClientB[Client] --> Global[Global proxy]
         Global --> A[Region A ingress]
         Global --> B[Region B ingress]
     end
+    DNS ~~~ Proxy
 ```
 
 DNS returns an address. It does not proxy the model request. Recursive resolvers and clients cache the answer. An existing connection can outlive the DNS TTL. DNS weights control how often DNS returns each address. They do not control the exact share of requests each region receives.

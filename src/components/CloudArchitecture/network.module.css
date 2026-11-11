@@ -33,13 +33,6 @@
   font-size: 0.9rem;
 }
 
-.toolbar span {
-  display: block;
-  margin-top: 0.2rem;
-  color: var(--ifm-color-emphasis-700);
-  font-size: 0.75rem;
-}
-
 .expandButton {
   flex-shrink: 0;
   padding: 0.45rem 0.75rem;
@@ -146,7 +139,20 @@
 }
 
 .description {
-  margin-top: 1rem;
+  margin: 0.75rem 0;
+}
+
+.details {
+  font-size: 0.85rem;
+}
+
+.details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.details .notes {
+  margin: 0.75rem 0;
 }
 
 .notes > div {
@@ -186,11 +192,11 @@
 }
 
 .expandedViewport .svg {
-  min-width: 1080px;
+  max-height: calc(94vh - 112px);
 }
 
 .expandedViewport {
-  max-height: calc(94vh - 120px);
+  max-height: calc(94vh - 112px);
 }
 
 @media (max-width: 600px) {
@@ -201,6 +207,11 @@
 
   .toolbar {
     align-items: flex-start;
+  }
+
+  .expandedViewport .svg {
+    min-width: 1000px;
+    max-height: none;
   }
 }
 

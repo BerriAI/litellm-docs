@@ -21,12 +21,12 @@ High availability keeps the gateway serving requests when an instance fails or y
 ## Make one region resilient
 
 ```mermaid
-flowchart TB
-    Client[Applications] --> Ingress[Regional load balancer]
+flowchart LR
+    Client[Apps] --> Ingress[Load balancer]
     subgraph Region[One region]
-        Ingress --> A[LiteLLM replicas in Zone A]
-        Ingress --> B[LiteLLM replicas in Zone B]
-        A --> State[Shared state: PostgreSQL + regional Redis]
+        Ingress --> A[Zone A replicas]
+        Ingress --> B[Zone B replicas]
+        A --> State[PostgreSQL + Redis]
         B --> State
     end
 ```
