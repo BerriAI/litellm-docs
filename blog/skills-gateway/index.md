@@ -11,7 +11,12 @@ image: ./hero.png
 
 Give your team one place to find and share useful agent skills. With **LiteLLM Skills Gateway**, teammates can reuse a skill's instructions and supporting files in their own AI agents.
 
-We've added ZIP uploads, admin review, version history, and download tracking to help you manage those skills.
+To help you manage those skills, we've added:
+
+- ZIP uploads
+- Admin review
+- Version history
+- Download tracking
 
 {/* truncate */}
 
