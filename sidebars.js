@@ -1927,6 +1927,7 @@ const providersSidebar = {
     "providers/scaleway",
     "providers/scx_ai",
     "providers/snowflake",
+    "providers/sparrowcodes",
     "providers/stability",
     "providers/streamlake",
     "providers/strands_decider",
