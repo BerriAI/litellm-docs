@@ -346,7 +346,7 @@ Azure AI Image Editing supports the following OpenAI-compatible parameters:
 
 FLUX 2 Pro and FLUX 2 Flex edits take the same parameters as [FLUX 2 generation](./azure_ai_img#flux-2-parameters): `size` (or `width` and `height`), `output_format`, `seed`, `safety_tolerance`, `aspect_ratio`, and for Flex `guidance` and `steps`. The OpenAI-only fields `user`, `quality`, `background`, `moderation`, and `output_compression` are accepted and dropped, so an OpenAI SDK client that sets them keeps working
 
-gpt-image edits pass every OpenAI image edit parameter through to Azure unchanged.
+gpt-image edits take the same parameters as OpenAI image edits.
 
 ## Getting Started
 
