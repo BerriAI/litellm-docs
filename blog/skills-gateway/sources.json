@@ -35,6 +35,18 @@
         "bottom": 934
       },
       "note": "Crop of a real dashboard capture from the merged feature PR, using local test data. UI text and scan results are unchanged."
+    },
+    {
+      "file": "download-history.png",
+      "source_pr": "https://github.com/BerriAI/litellm/pull/50165",
+      "source_asset": "https://github.com/user-attachments/assets/4025bad7-16e2-490e-8315-b911fe4b3fbd",
+      "crop": {
+        "left": 280,
+        "top": 200,
+        "right": 1248,
+        "bottom": 647
+      },
+      "note": "Crop of a real dashboard capture from the merged feature PR, using a local test skill. Shows the Downloads tab, totals, and first history row. UI text and counts are unchanged."
     }
   ]
 }

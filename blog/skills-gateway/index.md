@@ -26,19 +26,6 @@ Select **Add Skill**, choose **Upload ZIP**, and select a ZIP with `SKILL.md` an
 
 ![The Add New Skill form with Upload ZIP selected and a file picker for the skill archive.](./upload-skill.png)
 
-For a code review skill, include your team's checklist and test scripts in the same package:
-
-```text
-code-review.zip
-├── SKILL.md
-├── scripts/
-│   └── run-checks.sh
-└── references/
-    └── review-checklist.md
-```
-
-Teammates can download the package from the registry and install it in a compatible agent, with the files they need to use it.
-
 ## Review skills before publication
 
 Team members can submit new skills or propose updates. **Admins approve or reject submissions** before teammates can access the changes. Admins can publish their own uploads without review.
@@ -62,6 +49,10 @@ New skills start at `1.0.0`. Publish the next update as `1.0.1` with the default
 ## See who downloads your skills
 
 Admins can inspect each skill's **download count and authenticated download history**, including who downloaded it and when. Use those records to see which skills teammates pick up and who to ask for feedback.
+
+![The Downloads tab shows total downloads and a history entry with the download time, user or key owner, team, and skill version.](./download-history.png)
+
+*Example download history for a test skill.*
 
 Anonymous and repeat downloads count toward totals. Shared keys identify the key's owner. Downloads do not confirm skill executions or completed installs.
 
