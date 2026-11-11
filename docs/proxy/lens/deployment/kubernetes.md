@@ -67,7 +67,10 @@ If this Secret already exists, reuse it after confirming the values match Lens. 
 
 ### 2. Add the Lens values
 
-Save this as `lens-connection.yaml`, using the address of your existing Lens service:
+Save this as `lens-connection.yaml`, using the address of your existing Lens service and the block for your chart:
+
+<Tabs groupId="litellm-chart">
+<TabItem value="combined" label="litellm-helm chart">
 
 ```yaml
 lensWorker:
@@ -80,16 +83,6 @@ lensWorker:
   gateway:
     secretName: lens-connection
     secretKey: gateway-secret
-```
-
-`externalUrl` must be reachable by the gateway. `publicUrl` must be reachable by agent exporters. Neither address includes `/ui/` or `/v1/traces`.
-
-Add the tracing store setting in the same file. Use the block for your existing chart:
-
-<Tabs groupId="litellm-chart">
-<TabItem value="combined" label="litellm-helm chart">
-
-```yaml
 proxy_config:
   general_settings:
     tracing:
@@ -97,10 +90,22 @@ proxy_config:
         type: lens
 ```
 
+`externalUrl` must be reachable by the gateway. `publicUrl` must be reachable by agent exporters. Neither address includes `/ui/` or `/v1/traces`.
+
 </TabItem>
 <TabItem value="split" label="Componentized litellm chart">
 
 ```yaml
+lens:
+  enabled: true
+  url: https://lens.example.com
+  publicUrl: https://lens.example.com
+  serviceTokenSecret:
+    name: lens-connection
+    key: service-token
+  gatewaySecret:
+    name: lens-connection
+    key: gateway-secret
 gateway:
   config:
     proxy_config:
@@ -109,6 +114,8 @@ gateway:
           store:
             type: lens
 ```
+
+`url` must be reachable by the gateway. `publicUrl` must be reachable by agent exporters. Neither address includes `/ui/` or `/v1/traces`. When Lens runs in the same namespace as the gateway release, `lens.service.name` adds a `/lens-ingest` route for it to the gateway ingress; an Ingress cannot route to a Service in another namespace, so leave it empty otherwise.
 
 </TabItem>
 </Tabs>
