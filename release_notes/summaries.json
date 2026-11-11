@@ -1,6 +1,18 @@
 [
   {
     "folders": [
+      "v1.109.0"
+    ],
+    "title": "LiteLLM v1.109.0 adds 11 providers, Codex tool search and daily limits",
+    "points": [
+      "LiteLLM adds 11 providers, including ai&, StreamLake, OpenInfer and BigModel, among 311 new model catalog entries.",
+      "Codex discovers MCP tools through tool search, and deployments accept `rpd` and `tpd` daily limits.",
+      "Streams that stall, abort or end without a finish reason now fail visibly, so retries, cooldowns and fallbacks apply to them.",
+      "Claude models missing from the cost map now default to `max_tokens: 128000`, and `DEFAULT_ANTHROPIC_CHAT_MAX_TOKENS=4096` keeps the old value."
+    ]
+  },
+  {
+    "folders": [
       "v1.108.5"
     ],
     "title": "LiteLLM v1.108.5 (LTS) fixes workload identity on OpenAI routes and transcription cost",
@@ -212,17 +224,6 @@
       "Tool calls no longer appear on a separate `choices[1]`, so agents that read only `choices[0]` run them.",
       "Each tool call in one non-streaming reply now gets its own `index` value instead of 0.",
       "The fix applies to `/chat/completions` calls with tools on GPT-5.4 and newer and on `responses/` deployments."
-    ]
-  },
-  {
-    "folders": [
-      "v1.105.1"
-    ],
-    "title": "LiteLLM v1.105.1 fixes SpendLogs rows and daily model usage writes",
-    "points": [
-      "The model leaderboard rollup now writes `LiteLLM_DailyModelUsage` in batches, so heavy traffic to one model no longer drops SpendLogs rows.",
-      "Non-streaming requests of 256 KiB or more on the chat to Responses bridge now log spend once instead of twice.",
-      "This patch has no new database migrations and no breaking changes."
     ]
   }
 ]
