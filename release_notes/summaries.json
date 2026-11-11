@@ -1,6 +1,27 @@
 [
   {
     "folders": [
+      "v1.106.8"
+    ],
+    "title": "LiteLLM v1.106.8 fixes transcription cost for some FLAC files",
+    "points": [
+      "Transcription cost is correct for some FLAC files that could push a key over its budget.",
+      "Per-second transcriptions bill the `usage.seconds` that the provider reports, so spend matches the provider invoice and unmeasured files no longer log $0."
+    ]
+  },
+  {
+    "folders": [
+      "v1.104.9",
+      "v1.103.11"
+    ],
+    "title": "LiteLLM v1.104.9 and v1.103.11 speed up request lookups in the Logs view",
+    "points": [
+      "After migrations, the proxy builds the spend log indexes that some installs lack, so request lookups in the Logs view stay fast on large tables.",
+      "On v1.103.11, replicas that boot together against one database start up more reliably while a peer runs or recovers migrations."
+    ]
+  },
+  {
+    "folders": [
       "v1.109.0"
     ],
     "title": "LiteLLM v1.109.0 adds 11 providers, Codex tool search and daily limits",
@@ -201,29 +222,6 @@
       "A refused upstream realtime handshake now sends the client an `error` event and closes with 1008, 1013 or 1011.",
       "Non-streaming requests of 256 KiB or more on the chat to Responses bridge now log spend once instead of twice.",
       "This patch has no new database migrations."
-    ]
-  },
-  {
-    "folders": [
-      "v1.106.0"
-    ],
-    "title": "LiteLLM v1.106.0 adds Claude Haiku 5.5, a Rust Lens service and MCP rate limits",
-    "points": [
-      "Claude Haiku 5.5 works on day one across Anthropic, Bedrock, Bedrock Mantle, Vertex AI, Azure AI and Perplexity.",
-      "Lens runs as a standalone Rust service, and agents upload traces to it directly with dedicated keys.",
-      "MCP Gateway rate limits now cover every MCP operation, and a new server-level `rpm` caps all callers of one server.",
-      "The caller's LiteLLM key is never forwarded to MCP servers, so each upstream server needs its own static header or OAuth credential."
-    ]
-  },
-  {
-    "folders": [
-      "v1.103.5"
-    ],
-    "title": "LiteLLM v1.103.5 fixes tool calls in chat completions on GPT-5.4 and newer",
-    "points": [
-      "Tool calls no longer appear on a separate `choices[1]`, so agents that read only `choices[0]` run them.",
-      "Each tool call in one non-streaming reply now gets its own `index` value instead of 0.",
-      "The fix applies to `/chat/completions` calls with tools on GPT-5.4 and newer and on `responses/` deployments."
     ]
   }
 ]
