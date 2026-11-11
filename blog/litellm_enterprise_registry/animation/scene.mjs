@@ -30,18 +30,22 @@ function icon(name, x, y, size) {
 // A dense, seeded fleet. Every glyph is one pod, not one network request.
 const shades = ['#5363D6', '#7483E5', '#9BA9EF', '#394FC5', '#9D9AE0', '#6B86BA', '#58B4CA', '#B5C4ED', '#7F9CDA', '#5153A7'];
 export const PODS = [];
-for (let row = 0; row < 33; row++) {
-  for (let col = 0; col < 33; col++) {
-    const n = row * 33 + col;
-    const x = 780 + col * 22.1 + (row % 2) * 11 + (hash(n + 19) - .5) * 4;
-    const y = 67 + row * 21 + (hash(n + 27) - .5) * 4;
-    // A broken, organic field uses the whole right half, with small islands
-    // and breathing room instead of a closed perimeter around the cluster.
-    const field = .59 + .18 * Math.sin(col * .39 + row * .19)
-      + .16 * Math.cos(row * .43 - col * .21) + .13 * row / 32;
-    const edge = Math.min(1, (col + 1) / 4, (34 - col) / 4, (row + 2) / 4, (34 - row) / 4);
-    const left = .45 + .55 * clamp((col + row * .14) / 8);
-    if (hash(n + 73) > field * edge * left) continue;
+for (let row = 0; row < 38; row++) {
+  for (let col = 0; col < 65; col++) {
+    const n = row * 65 + col;
+    const x = 210 + col * 22.1 + (row % 2) * 11 + (hash(n + 19) - .5) * 4;
+    const y = 38 + row * 21 + (hash(n + 27) - .5) * 4;
+    const depth = clamp(y / HEIGHT);
+    const center = 1280 - 145 * depth + 30 * Math.sin(depth * 7);
+    const spread = 92 + 665 * depth ** 1.45;
+    const distance = Math.abs((x - center) / spread);
+    // A soft, widening plume crosses the midpoint toward the bottom.
+    // Density falls gradually at its wandering edge; there is no half-canvas cutoff.
+    const envelope = Math.exp(-(distance ** 3.1));
+    const pockets = .84 + .12 * Math.sin(col * .38 + row * .22)
+      + .08 * Math.cos(row * .41 - col * .17);
+    const density = (.24 + .77 * depth) * envelope * pockets;
+    if (hash(n + 73) > density) continue;
     PODS.push({x, y, r: 7.7 + hash(n + 11) * 2.7, seed: n, fill: shades[Math.floor(hash(n + 9) * shades.length)]});
   }
 }
@@ -95,7 +99,7 @@ function beam(t) {
 }
 export function frame(seconds) {
   const t = ((seconds % DURATION) + DURATION) % DURATION;
-  let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}"><title>LiteLLM Enterprise Registry image pull and rolling deployment</title><desc>A broad, slowly traveling pulse of light leaves the LiteLLM mark and reaches an organic field of ${PODS.length} varied gateway pods spread over the right half. Each workload lights up in a staggered rolling deployment.</desc><defs>
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}"><title>LiteLLM Enterprise Registry image pull and rolling deployment</title><desc>A broad, slowly traveling pulse of light leaves the LiteLLM mark and reaches a flowing field of ${PODS.length} varied gateway pods, sparse at the top and wider and denser toward the bottom. Each workload lights up in a staggered rolling deployment.</desc><defs>
     <radialGradient id="beam-bloom"><stop stop-color="#BAEFFF" stop-opacity=".8"/><stop offset=".25" stop-color="#65C6F4" stop-opacity=".62"/><stop offset=".55" stop-color="#567DEB" stop-opacity=".3"/><stop offset="1" stop-color="#5877EB" stop-opacity="0"/></radialGradient>
     <radialGradient id="beam-core"><stop stop-color="#E0FCFF" stop-opacity=".92"/><stop offset=".4" stop-color="#8EE5FF" stop-opacity=".62"/><stop offset="1" stop-color="#72C8FF" stop-opacity="0"/></radialGradient>
     <filter id="fleet-glow" x="-25%" y="-40%" width="150%" height="180%"><feGaussianBlur stdDeviation="9"/></filter>

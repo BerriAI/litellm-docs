@@ -1,6 +1,6 @@
 # Enterprise Registry animation
 
-A transparent, text-free animation authored at 1600 by 800 and exported at 1200 by 600, at 25 fps. The LiteLLM monogram stands alone in the upper left. A broad pulse of light moves slowly toward 622 gateway pods spread organically across the right half. There is no persistent beam path, cone, or enclosure. The fleet varies in blue, cyan, and lavender shades, size, and internal details. Each pod glows and cycles in sequence, then settles into its updated state to represent a rolling deployment.
+A transparent, text-free animation authored at 1600 by 800 and exported at 1200 by 600, at 25 fps. The LiteLLM monogram stands alone in the upper left. A broad pulse of light moves slowly toward 710 gateway pods in a flowing field that is sparse at the top and wider and denser toward the bottom, spilling leftward across the canvas midpoint. There is no persistent beam path, cone, or enclosure. The fleet varies in blue, cyan, and lavender shades, size, and internal details. Each pod glows and cycles in sequence, then settles into its updated state to represent a rolling deployment.
 
 The ten-second loop illustrates one image pull and deployment. Its timing and pod count do not represent measured transfer speed, throughput, or customer scale. The article explains OAuth and AWS ECR pull-through access; the cover focuses on the pull and deployment.
 

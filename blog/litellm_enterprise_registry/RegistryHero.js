@@ -19,7 +19,7 @@ export default function RegistryHero() {
           src={imageUrl(paused ? poster : animation)}
           width="1600"
           height="800"
-          alt="A broad pulse of light travels slowly from the LiteLLM logo to an organic field of varied gateway pods spread across the right half. The workloads glow in sequence to represent a rolling deployment."
+          alt="A broad pulse of light travels slowly from the LiteLLM logo to a flowing field of varied gateway pods. The field is sparse at the top, widens toward the bottom, and spills leftward. Workloads glow in sequence to represent a rolling deployment."
         />
       </picture>
       <button type="button" className={styles.control} aria-label={paused ? 'Play animation' : 'Pause animation'} onClick={() => setPaused(value => !value)}>
