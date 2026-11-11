@@ -18,6 +18,7 @@ Supported Routes:
 - `/v1/embeddings` -> `litellm.aembedding`
 - `/v1/images/generations` -> `litellm.aimage_generation`
 - `/v1/images/edits` -> `litellm.aimage_edit`
+- `/v1beta/models/{model}:generateContent` -> `litellm.agenerate_content`
 
 - `/v1/messages` -> `litellm.acompletion`
 
@@ -557,6 +558,109 @@ Expected Response
 ```
 
 
+## Google GenAI `generateContent`
+
+<SinceVersion v="1.111.0" />
+
+A custom provider serves `/v1beta/models/{model}:generateContent` in one of two ways.
+
+When the handler overrides `agenerate_content`, and `generate_content` for sync SDK calls, LiteLLM passes it the native request. The hook gets `contents`, the whole `generationConfig` as `config`, and `tools` as the caller sent them, with other request fields like `systemInstruction` in `optional_params`. It returns a Gemini `GenerateContentResponse`, as a dict or a google-genai SDK object, and the caller gets it back as Gemini's camelCase JSON, with spend computed from its `usageMetadata`. Use this for image models and anything else that needs native settings like `imageConfig` or `responseModalities`.
+
+When the handler only has the chat hooks, LiteLLM translates the request to chat completions and the reply back. That path sends text, images, tools, `temperature`, `maxOutputTokens`, `topP`, `stopSequences` and JSON response schemas. Any other `generationConfig` key answers `400` unless the deployment sets `drop_params: true`. The exceptions are `responseModalities: ["TEXT"]` and `candidateCount: 1`, which a chat reply already meets.
+
+Streaming (`:streamGenerateContent`) always goes through the chat hooks, so it needs `streaming` or `astreaming`. A handler without them answers `500` before calling anything, and the deployment keeps serving its other requests.
+
+1. Setup your `custom_handler.py` file
+
+```python
+import os
+
+import httpx
+from litellm import CustomLLM
+
+GEMINI = "https://generativelanguage.googleapis.com/v1beta"
+
+
+class MyImageLLM(CustomLLM):
+    async def agenerate_content(self, model, contents, config, tools, optional_params, **kwargs):
+        async with httpx.AsyncClient(timeout=180) as client:
+            response = await client.post(
+                f"{GEMINI}/models/{model}:generateContent",
+                headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"]},
+                json={"contents": contents, "generationConfig": config or {}},
+            )
+        response.raise_for_status()
+        return response.json()
+
+
+my_image_llm = MyImageLLM()
+```
+
+2. Add to `config.yaml`
+
+Set prices on the deployment so spend is tracked, since LiteLLM has no prices for a custom provider's models.
+
+```yaml
+model_list:
+  - model_name: my-image-model
+    litellm_params:
+      model: my-image-llm/gemini-3.1-flash-image
+      input_cost_per_token: 0.0000005
+      output_cost_per_token: 0.00003
+
+litellm_settings:
+  custom_provider_map:
+  - {"provider": "my-image-llm", "custom_handler": custom_handler.my_image_llm}
+```
+
+```bash
+litellm --config /path/to/config.yaml
+```
+
+3. Test it!
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/v1beta/models/my-image-model:generateContent' \
+-H 'content-type: application/json' \
+-H "x-goog-api-key: $LITELLM_API_KEY" \
+-d '{
+    "contents": [{"role": "user", "parts": [{"text": "A red apple on a white table"}]}],
+    "generationConfig": {"responseModalities": ["IMAGE"], "imageConfig": {"aspectRatio": "1:1"}}
+}'
+```
+
+Expected Response, with the image bytes shortened
+
+```json
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "inlineData": {
+              "mimeType": "image/jpeg",
+              "data": "/9j/4AAQSkZJRgAB..."
+            },
+            "thoughtSignature": "ErjWMgq01jIBaRR9..."
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 8,
+    "candidatesTokenCount": 1536,
+    "totalTokenCount": 1544,
+    "candidatesTokensDetails": [{"modality": "IMAGE", "tokenCount": 1120}]
+  },
+  "modelVersion": "gemini-3.1-flash-image"
+}
+```
+
 ## Additional Parameters
 
 Additional parameters are passed inside `optional_params` key in the `completion` or `image_generation` function.
@@ -661,7 +765,10 @@ curl -X POST 'http://0.0.0.0:4000/v1/images/generations' \
 
 ```python
 from litellm.types.utils import GenericStreamingChunk, ModelResponse, ImageResponse
-from typing import Iterator, AsyncIterator, Any, Optional, Union
+from typing import Iterator, AsyncIterator, Any, Mapping, Optional, Union
+
+from litellm.types.google_genai.main import GenerateContentResponse
+from litellm.types.router import GenericLiteLLMParams
 from litellm.llms.base import BaseLLM
 
 class CustomLLMError(Exception):  # use this for all your exceptions
@@ -748,5 +855,35 @@ class CustomLLM(BaseLLM):
         timeout: Optional[Union[float, httpx.Timeout]] = None,
         client: Optional[AsyncHTTPHandler] = None,
     ) -> ImageResponse:
+        raise CustomLLMError(status_code=500, message="Not implemented yet!")
+
+    def generate_content(
+        self,
+        model: str,
+        contents: object,
+        config: Optional[Mapping[str, object]],
+        tools: Optional[object],
+        litellm_params: GenericLiteLLMParams,
+        logging_obj: Any,
+        optional_params: Mapping[str, object],
+        api_key: Optional[str] = None,
+        api_base: Optional[str] = None,
+        timeout: Optional[Union[float, httpx.Timeout]] = None,
+    ) -> Union[GenerateContentResponse, Mapping[str, object]]:
+        raise CustomLLMError(status_code=500, message="Not implemented yet!")
+
+    async def agenerate_content(
+        self,
+        model: str,
+        contents: object,
+        config: Optional[Mapping[str, object]],
+        tools: Optional[object],
+        litellm_params: GenericLiteLLMParams,
+        logging_obj: Any,
+        optional_params: Mapping[str, object],
+        api_key: Optional[str] = None,
+        api_base: Optional[str] = None,
+        timeout: Optional[Union[float, httpx.Timeout]] = None,
+    ) -> Union[GenerateContentResponse, Mapping[str, object]]:
         raise CustomLLMError(status_code=500, message="Not implemented yet!")
 ```
