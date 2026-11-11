@@ -294,11 +294,13 @@ model_list:
       configurable_clientside_auth_params: ["vertex_location"] # 👈 lets the request pick the region
 ```
 
-When several deployments share a model name, every one of them must list the param, because the router, not the request, picks which deployment serves it. The same goes for the model group a `model_group_alias` routes the name to and for every fallback the request or the router's `fallbacks` can move it onto, since each of them serves the same request.
+When several deployments share a model name, every one of them must list the param, because the router, not the request, picks which deployment serves it. The same goes for the model group a `model_group_alias` routes the name to and for every fallback the request or the router's `fallbacks` can move it onto, since each of them serves the same request. Only Vertex AI, Gemini, and GDC deployments read these four params, so a model group whose deployments all use other providers needs no opt-in for them.
+
+This every-deployment rule covers every `configurable_clientside_auth_params` entry, `api_base` included, so a model group where only some deployments list `api_base` now rejects it. On routes that name the model in the URL, such as `/v1beta/models/<model>:generateContent` and Azure's `/openai/deployments/<model>/chat/completions`, the proxy checks the deployments of that model. A request that names more than 100 fallback models is rejected.
 
 :::info
 
-The proxy rejects these params without an opt-in <SinceVersion v="1.109.0" />. Earlier versions accept them from any request body, so add the opt-in before you upgrade if your users send them.
+The proxy rejects these params without an opt-in, and checks every deployment for each opt-in, <SinceVersion v="1.111.0" />. Earlier versions accept the Vertex params from any request body and read one deployment's opt-in for the whole model group, so add the opt-in to every deployment before you upgrade if your users send them.
 
 :::
 
