@@ -1,7 +1,7 @@
 ---
 slug: skills-gateway
 title: "Share your team's skills with LiteLLM"
-date: 2026-11-10
+date: 2026-11-11
 authors: [tin]
 description: "Share agent skills through one registry. Upload ZIPs, review submissions before publication, and see who downloads them with LiteLLM Skills Gateway."
 tags: [agents, ai-gateway]
