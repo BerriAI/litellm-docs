@@ -46,7 +46,7 @@ FLUX 2 edits go to the same model-specific Black Forest Labs route as FLUX 2 gen
 
 gpt-image edits go to your Foundry resource's `/openai/deployments/<deployment>/images/edits` route, the same route Azure OpenAI uses. LiteLLM sends every `azure_ai/` model that is not a FLUX or MAI model to this route, so `azure_ai/` followed by your deployment name works whatever you named the deployment. Set `api_base` to your Foundry resource, such as `https://<your-resource>.services.ai.azure.com`.
 
-When you set no `api_version`, LiteLLM sends `2025-04-01-preview`, because Foundry answers 404 for edits on older versions such as `2025-02-01-preview`. A version you set is sent as is, and LiteLLM reads it from the model's `api_version` first, then `AZURE_AI_API_VERSION`, then `litellm.api_version`. Set `api_version: v1` to send edits to Foundry's `/openai/v1/images/edits` route instead.
+When you set no `api_version`, LiteLLM sends `2025-04-01-preview`, because Foundry answers 404 for edits on `2025-02-01-preview` and `2025-03-01-preview`. A version you set is sent as is, and LiteLLM reads it from the model's `api_version` first, then `AZURE_AI_API_VERSION`, then `litellm.api_version`. Set `api_version: v1` to send edits to Foundry's `/openai/v1/images/edits` route instead.
 
 A deployment under a name you chose has no entry in LiteLLM's cost map, so LiteLLM records no cost for it until you set `model_info.base_model` to the model the deployment serves, such as `azure/gpt-image-2.5-flare`. See [Custom pricing](../proxy/custom_pricing.md) for details.
 
@@ -346,7 +346,7 @@ Azure AI Image Editing supports the following OpenAI-compatible parameters:
 
 FLUX 2 Pro and FLUX 2 Flex edits take the same parameters as [FLUX 2 generation](./azure_ai_img#flux-2-parameters): `size` (or `width` and `height`), `output_format`, `seed`, `safety_tolerance`, `aspect_ratio`, and for Flex `guidance` and `steps`. The OpenAI-only fields `user`, `quality`, `background`, `moderation`, and `output_compression` are accepted and dropped, so an OpenAI SDK client that sets them keeps working
 
-gpt-image edits pass all OpenAI image edit parameters through to Azure, including `mask`, `size`, `quality`, and `background`.
+gpt-image edits pass every OpenAI image edit parameter through to Azure unchanged.
 
 ## Getting Started
 
