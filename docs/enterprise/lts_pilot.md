@@ -21,7 +21,7 @@ Refer to the [Release cycle](../proxy/release_cycle.md) for the weekly release s
 - Budget enforcement bug fixes
 - Security fixes
 - Any regression fix. A regression here means behavior that worked before LTS and on v1.100.x or later but is broken on LTS.
-- New models and new endpoints
+- New models and new endpoints, such as `/v1/decisions`
 
 ## What does not get backported to LTS
 
@@ -32,7 +32,7 @@ Refer to the [Release cycle](../proxy/release_cycle.md) for the weekly release s
 
 ## Why this scope
 
-LLM translation and cost tracking fixes let teams use new models with accurate pricing without upgrading to a later version. Auth, budget enforcement and security fixes protect access and spending controls. Regression fixes restore behavior that worked before LTS.
+LLM translation and cost tracking fixes let teams use new models with accurate pricing without upgrading to a later version. Auth, budget enforcement and security fixes protect access and spending controls. Regression fixes restore behavior that worked before LTS. New endpoints such as `/v1/decisions` are included because they were assessed as low risk to existing behavior.
 
 Every backport introduces a risk of regression. Keeping the scope limited lets teams stay on LTS for these fixes and model updates while reducing the changes they need to take. LTS does not receive every bug fix from later releases; new features, refactors, performance improvements and the pre-existing bugs listed above stay outside this scope.
 
