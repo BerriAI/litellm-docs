@@ -10,7 +10,7 @@ The original archive paths are `Architecture-Service-Icons_07312026/Arch_Contain
 
 AWS owns these service marks. AWS's icon page permits customers and partners to use the toolkit assets in architecture diagrams and materials such as whitepapers, presentations, data sheets and posters. This provenance records that published usage permission; it does not relicense the AWS marks under this repository's license.
 
-Preserve the original proportions, white glyphs, and category colors. Apply styling to the surrounding cards rather than modifying the icon art. Label each service next to its icon.
+Preserve the original proportions, white glyphs, and category colors. Display the icons directly on the canvas and label each service next to its icon.
 
 ## LiteLLM monogram
 

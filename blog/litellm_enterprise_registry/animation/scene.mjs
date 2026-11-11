@@ -22,11 +22,12 @@ const path=(d,color,width=3,extra='')=>`<path d="${d}" fill="none" stroke="${col
 const line=(p,color,width=3,extra='')=>path('M'+p.map(v=>v.join(',')).join(' L'),color,width,extra);
 const lerp=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t);
 const icon=(name,x,y,size)=>`<svg x="${x-size/2}" y="${y-size/2}" width="${size}" height="${size}" viewBox="${asset[name].viewBox}">${asset[name].inner}</svg>`;
-const direct=[[400,428],[1200,428]];
-const cacheIn=[[260,536],[260,630],[288,658],[660,658]];
-const cacheOut=[[940,658],[1312,658],[1340,630],[1340,536]];
-const authRequest=[[1340,320],[1340,213],[1312,185],[930,185]];
-const credential=[[800,290],[800,386]];
+const direct=[[380,428],[1280,428]];
+const cacheIn=[[260,536],[260,630],[288,658],[740,658]];
+const cacheOut=[[860,658],[1312,658],[1340,630],[1340,536]];
+const authRequest=[[1340,320],[1340,178],[1312,150],[862,150]];
+const oauthToken=[[800,277],[800,305]];
+const credential=[[800,347],[800,386]];
 function along(p,u){
   const lengths=p.slice(1).map((b,i)=>Math.hypot(b[0]-p[i][0],b[1]-p[i][1]));
   let n=clamp(u)*lengths.reduce((a,b)=>a+b,0);
@@ -37,19 +38,18 @@ function route(d,color,active=0){
   return path(d,C.line,3.5)+path(d,color,3.5,`opacity="${active}"`);
 }
 function check(x,y,color=C.blue,size=1){return `<g transform="translate(${x} ${y}) scale(${size})">${path('M-8 0 L-2 6 L9 -7',color,3)}</g>`;}
-function service({x,y,w=280,h=216,name,title,subtitle,active=0,badge=0}){
-  let s=rect(x-w/2,y,w,h,'#FFFFFF',24,'#E0E6F0',1.5,'filter="url(#elevation)"');
-  if(active>.001)s+=rect(x-w/2,y,w,h,'none',24,C.blue,2.5,`opacity="${active}"`);
-  if(name)s+=icon(name,x,y+70,name==='litellm'?104:88);
+function service({x,y,name,title,subtitle,badge=0}){
+  let s='';
+  if(name==='registry')s+=icon('litellm',x-55,y+70,90)+icon('ecr',x+55,y+70,90);
+  else if(name)s+=icon(name,x,y+70,88);
   else {
-    s+=rect(x-44,y+31,88,68,'#EEF2FF',15);
-    s+=rect(x-28,y+47,56,16,'#FFFFFF',4,'#6E85EC',2);
-    s+=rect(x-28,y+71,56,16,'#FFFFFF',4,'#6E85EC',2);
-    s+=`<circle cx="${x+16}" cy="${y+55}" r="2.8" fill="${C.blue}"/><circle cx="${x+16}" cy="${y+79}" r="2.8" fill="${C.blue}"/>`;
+    s+=rect(x-40,y+42,80,24,'none',5,'#6E85EC',2.5);
+    s+=rect(x-40,y+78,80,24,'none',5,'#6E85EC',2.5);
+    s+=`<circle cx="${x+24}" cy="${y+54}" r="3.2" fill="${C.blue}"/><circle cx="${x+24}" cy="${y+90}" r="3.2" fill="${C.blue}"/>`;
   }
-  s+=text(x,y+151,title,28,C.ink,600);
+  s+=text(x,y+151,title,name==='registry'?26:28,C.ink,600);
   if(subtitle)s+=text(x,y+183,subtitle,22,C.muted);
-  if(badge>.001)s+=`<g opacity="${badge}">${rect(x+w/2-50,y+12,34,34,'#EAF0FF',10)}${packageGlyph(x+w/2-33,y+29,16,C.blue)}</g>`;
+  if(badge>.001)s+=`<g opacity="${badge}">${packageGlyph(x+72,y+43,22,C.blue)}</g>`;
   return s;
 }
 function packageGlyph(x,y,size=20,color='#FFF'){
@@ -70,8 +70,8 @@ function pulse(p,u,color=C.blue){
   return `<circle cx="${x}" cy="${y}" r="11" fill="${color}" opacity=".1"/><circle cx="${x}" cy="${y}" r="4.5" fill="${color}"/>`;
 }
 function credentialChip(t){
-  if(t<1.12||t>1.96)return '';
-  const [x,y]=along(credential,ease((t-1.12)/.84));
+  if(t<1.27||t>1.96)return '';
+  const [x,y]=along(credential,ease((t-1.27)/.69));
   return `<g transform="translate(${x} ${y})">${rect(-21,-14,42,28,'#E5F5F7',9,C.cyan,1.5)}<circle cx="-6" cy="0" r="4" fill="none" stroke="${C.cyan}" stroke-width="2"/>${path('M-2 0H10M6 0V4',C.cyan,2)}</g>`;
 }
 function access(open){
@@ -88,24 +88,26 @@ export function frame(seconds){
   const directActive=windowed(t,1.75,4.75,.35);
   const cacheActive=windowed(t,5.2,10.95,.35);
   const populated=ramp(t,6.55,6.95)*reset;
-  const delivered=(windowed(t,3.6,4.75,.25)+windowed(t,7.7,8.6,.25)+windowed(t,9.7,10.9,.25))*reset;
-  let s=`<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}"><title>LiteLLM Enterprise Registry access and package pulls</title><desc>A direct OAuth access path through Cognito and a separate AWS IAM path through an ECR pull-through cache.</desc><defs><filter id="elevation" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#34466C" flood-opacity=".07"/></filter></defs>`;
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}"><title>LiteLLM Enterprise Registry access and package pulls</title><desc>LiteLLM's enterprise registry is hosted in Amazon ECR. Cognito provides an OAuth token, exchanged through the registry credentials API for direct pulls. A separate AWS IAM path fills the customer's ECR cache.</desc>`;
   s+=rect(0,0,WIDTH,HEIGHT,C.surface);
-  s+=route('M400 428H1200',C.blue,directActive);
-  s+=route('M260 536V630Q260 658 288 658H660',C.blue,windowed(t,5.2,7.1));
-  s+=route('M940 658H1312Q1340 658 1340 630V536',C.blue,cacheActive);
-  s+=path('M1340 320V213Q1340 185 1312 185H930','#A5C5D0',2,'stroke-dasharray="5 9"');
-  s+=line([[800,290],[800,409]],'#A5C5D0',2,'stroke-dasharray="5 9"');
+  s+=route('M380 428H1280',C.blue,directActive);
+  s+=route('M260 536V630Q260 658 288 658H740',C.blue,windowed(t,5.2,7.1));
+  s+=route('M860 658H1312Q1340 658 1340 630V536',C.blue,cacheActive);
+  s+=path('M1340 320V178Q1340 150 1312 150H862','#A5C5D0',2,'stroke-dasharray="5 9"');
+  s+=line([[800,277],[800,305]],'#A5C5D0',2,'stroke-dasharray="5 9"');
+  s+=line([[800,347],[800,409]],'#A5C5D0',2,'stroke-dasharray="5 9"');
+  s+=text(800,330,'Registry credentials API',21,C.muted);
   s+=text(1037,395,'Direct pull',22,C.muted);
   s+=pulse(authRequest,(t-.15)/.88,C.cyan);
+  s+=pulse(oauthToken,(t-1.03)/.24,C.cyan);
   s+=pulse([...direct].reverse(),(t-2.02)/.6);
   s+=pulse([...cacheOut].reverse(),(t-4.8)/.65);
   s+=pulse([...cacheIn].reverse(),(t-5.42)/.55);
   s+=pulse([...cacheOut].reverse(),(t-8.55)/.6);
-  s+=service({x:260,y:320,name:'litellm',title:'LiteLLM',subtitle:'Enterprise Registry',active:Math.max(directActive,windowed(t,5.6,6.7))});
-  s+=service({x:800,y:80,w:260,h:210,name:'cognito',title:'Amazon Cognito',subtitle:'OAuth access',active:windowed(t,.7,2.3)});
-  s+=service({x:1340,y:320,title:'Your deployment',subtitle:'Package pulls',active:delivered});
-  s+=service({x:800,y:550,name:'ecr',title:'Your Amazon ECR',subtitle:'Pull-through cache · IAM',active:cacheActive,badge:populated});
+  s+=service({x:260,y:320,name:'registry',title:'LiteLLM Enterprise Registry',subtitle:'Amazon ECR'});
+  s+=service({x:800,y:80,name:'cognito',title:'Amazon Cognito',subtitle:'OAuth token'});
+  s+=service({x:1340,y:320,title:'Your deployment',subtitle:'Package pulls'});
+  s+=service({x:800,y:588,name:'ecr',title:'Your Amazon ECR',subtitle:'Pull-through cache · IAM',badge:populated});
   s+=access(authenticated);
   s+=credentialChip(t);
   for(const a of [2.42,2.88,3.34])s+=movingParcel(direct,t,a,a+1.15);
@@ -113,7 +115,7 @@ export function frame(seconds){
   s+=movingParcel(cacheOut,t,6.98,8.08);
   s+=movingParcel(cacheOut,t,9.12,10.15);
   for(const p of [
-    {a:0,b:2.12,label:'OAuth · Authorize access'},
+    {a:0,b:2.12,label:'OAuth · Get temporary ECR credentials'},
     {a:2.12,b:4.7,label:'OAuth · Pull packages'},
     {a:4.7,b:8.48,label:'IAM · Fill your cache'},
     {a:8.48,b:11.3,label:'IAM · Pull from cache'},
