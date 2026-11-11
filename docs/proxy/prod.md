@@ -78,7 +78,7 @@ Each instance multiplies your total connections: 3 instances × 4 workers × 10 
 
 :::
 
-Size the connection budget for the autoscaler's maximum replica count. The [LiteLLM chart](./deploy/helm.md) defaults `gateway.hpa.maxReplicas` and `gateway.keda.maxReplicaCount` to 10. Ten pods with one worker and a pool limit of 10 can use 100 connections, before backend pods, migrations, and rollout overlap. Set the maximum from what your database can serve; see [how to calculate the right value](./configs.md#configure-db-pool-limits--connection-timeouts).
+Size the connection budget for the autoscaler's maximum replica count. The [LiteLLM chart](./deploy/helm.md) defaults `gateway.hpa.maxReplicas` and `gateway.keda.maxReplicaCount` to 10. Ten pods with one worker and a pool limit of 10 can use 100 connections, before backend pods, migrations, and rollout overlap. Set the maximum to fit your database connection limit. See [how to calculate the right value](./configs.md#configure-db-pool-limits--connection-timeouts).
 
 ### Keep error logs out of the database
 
@@ -130,7 +130,7 @@ export LITELLM_SALT_KEY="sk-<paste-a-long-random-key>"
 
 ### Machine specifications
 
-Give each pod 1 vCPU and 4Gi of memory, as both requests and limits, and scale both with the worker count if you run more than one worker per container. For Helm, place these container settings under `gateway.resources`.
+Set each pod's requests and limits to 1 vCPU and 4Gi of memory. Increase both in proportion to the worker count if you run multiple workers per container. For Helm, place these container settings under `gateway.resources`.
 
 ```yaml
 resources:
@@ -159,7 +159,7 @@ gateway:
     targetMemoryUtilizationPercentage: null
 ```
 
-The chart defaults to 70 percent CPU and 80 percent memory. Start with 60 percent CPU to leave room for pods to start, then tune it from load tests. Measure startup time and set `gateway.startupProbe` if needed; the chart leaves that probe unset by default.
+The chart defaults to 70 percent CPU and 80 percent memory. Start with 60 percent CPU to leave room for pods to start, then tune it from load tests. Measure startup time and set `gateway.startupProbe` if needed. The chart leaves that probe unset by default.
 
 ### Workers and scaling
 
@@ -287,7 +287,7 @@ Point your Service and Ingress at `app: litellm-serving` only, so the worker tak
 
 ## Redis
 
-Run Redis (7.0 or newer) as soon as you run more than one proxy instance. The current image uses `REDIS_HOST`, `REDIS_PORT`, and `REDIS_PASSWORD` for coordination across pods; the chart's `redis` values set these variables. Explicit `general_settings.coordination_redis` settings take precedence. Response caching is a separate opt-in, shown below. See [What Needs Redis](./redis_requirements.md) for the features that depend on it.
+Run Redis (7.0 or newer) as soon as you run more than one proxy instance. The image uses `REDIS_HOST`, `REDIS_PORT`, and `REDIS_PASSWORD` to coordinate pods. The chart's `redis` values set these variables. `general_settings.coordination_redis` settings override these variables. Enable response caching separately as shown below. See [What Needs Redis](./redis_requirements.md) for the features that depend on it.
 
 ```yaml
 router_settings:

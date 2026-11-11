@@ -3199,7 +3199,7 @@ def load_vertex_ai_credentials():
 
 :::info
 
-Trying to deploy LiteLLM on Google Cloud Run? Tutorial [here](https://docs.litellm.ai/docs/proxy/deploy/terraform)
+[Deploy LiteLLM on Google Cloud Run with Terraform](../proxy/deploy/terraform.md#gcp).
 
 :::
 

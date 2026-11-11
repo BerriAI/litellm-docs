@@ -13,7 +13,7 @@ See the [chart values reference](https://github.com/BerriAI/litellm/blob/f52f26d
 
 ## CPU and replica limits
 
-Install Kubernetes Metrics Server for CPU or memory utilization targets. Resource requests define the denominator for those percentages, so set requests before tuning targets.
+Install Kubernetes Metrics Server to scale on CPU or memory use. Targets express use as a percentage of the container's resource request. Set resource requests before tuning these targets.
 
 | Component | HPA enabled by default | Default replica range | Default targets |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Install Kubernetes Metrics Server for CPU or memory utilization targets. Resourc
 | Backend | Yes | 1–4 | 70% CPU |
 | UI | No | 1–3 when enabled | 80% CPU |
 
-Merge this example into your values. It keeps at least two gateway pods and disables the memory target; adjust the replica ceiling to your measured capacity and database budget.
+Merge this example into your values. It keeps at least two gateway pods and disables the memory target. Set the maximum replica count from your load tests and database connection budget.
 
 ```yaml
 gateway:
@@ -36,15 +36,15 @@ gateway:
         stabilizationWindowSeconds: 300
 ```
 
-With an autoscaler enabled, it owns the replica count. To use a fixed count instead, disable both `gateway.hpa.enabled` and `gateway.keda.enabled`, then set `gateway.replicaCount`. Backend and UI use their corresponding `hpa.enabled` and `replicaCount` fields.
+The autoscaler controls the replica count when you enable it. For a fixed count, disable both `gateway.hpa.enabled` and `gateway.keda.enabled`. Then set `gateway.replicaCount`. Backend and UI use their own `hpa.enabled` and `replicaCount` fields.
 
-Bound scale-out against PostgreSQL connections as well as available cluster capacity. Each worker has its own pool unless you enable `database.connectionPool`; that pool caps connections per gateway pod, not across the deployment. Reserve capacity for backend pods, migrations, and rolling updates. See [database connection limits](../prod.md#bound-database-connections).
+Limit scaling to fit PostgreSQL connections and available cluster capacity. Each worker has its own connection pool unless you enable `database.connectionPool`. That pool limits connections for each gateway pod. It does not set a limit across the deployment. Reserve capacity for backend pods, migrations, and rolling updates. See [database connection limits](../prod.md#bound-database-connections).
 
 ## Requests and tokens per pod {#scale-on-requests-and-tokens-per-pod}
 
-CPU alone can miss load from concurrent streams waiting on providers. The chart can also scale on requests per second (RPS) and tokens per second (TPS), using a Prometheus Operator ServiceMonitor and Prometheus Adapter. The adapter must expose per-pod metrics on `custom.metrics.k8s.io`.
+Streams can wait on providers while using little CPU. The chart can also scale on requests per second (RPS) and tokens per second (TPS). This setup uses a Prometheus Operator ServiceMonitor and Prometheus Adapter. The adapter must expose metrics for each pod on `custom.metrics.k8s.io`.
 
-Enable the Prometheus callback, metrics sidecar, and ServiceMonitor, then set workload targets. These example thresholds need validation against your own load test:
+Enable the Prometheus callback, metrics sidecar, and ServiceMonitor. Then set the request and token targets. Check these example thresholds with your own load test:
 
 ```yaml
 gateway:
@@ -63,9 +63,9 @@ gateway:
     targetTokensPerSecond: "6000000"
 ```
 
-Keep your existing model configuration and callbacks when merging this block. Ensure your Prometheus instance selects the ServiceMonitor, including any required `gateway.serviceMonitor.labels`. The dedicated metrics Service has no virtual-key authentication; keep it private.
+Keep your existing model configuration and callbacks when merging this block. Check that your Prometheus instance selects the ServiceMonitor. Add any required `gateway.serviceMonitor.labels`. The dedicated metrics Service has no virtual-key authentication. Keep it private.
 
-Configure [Prometheus Adapter](https://github.com/kubernetes-sigs/prometheus-adapter) to expose the two metric names used by the HPA. This is adapter configuration, separate from LiteLLM's values:
+Configure [Prometheus Adapter](https://github.com/kubernetes-sigs/prometheus-adapter) to expose the two metric names that the HPA uses. Keep this adapter configuration separate from LiteLLM's values:
 
 ```yaml title="Prometheus Adapter configuration"
 rules:
@@ -85,13 +85,13 @@ rules:
     metricsQuery: sum(rate(<<.Series>>{<<.LabelMatchers>>}[1m])) by (<<.GroupBy>>)
 ```
 
-`rate()` already returns a per-second rate. The HPA uses the metric requesting the most replicas. For example, 1,000 RPS across ten pods is 100 RPS per pod; a target of 90 requests approximately twelve replicas, subject to configured limits and scaling behavior.
+`rate()` returns a per-second rate. The HPA uses the metric that asks for the most replicas. For example, 1,000 RPS across ten pods is 100 RPS per pod. A target of 90 asks for about twelve replicas. The configured limits and scaling behavior still apply.
 
-The scrape interval, rate window, and HPA reconciliation determine reaction time. Tokens are counted when a response completes, so TPS trails long streams; use it alongside another load signal. See [Prometheus metrics](../prometheus.md) for instrumentation.
+The scrape interval, rate window, and HPA control loop determine how quickly scaling responds. LiteLLM counts tokens when a response completes. TPS therefore lags behind long streams. Use it with another load signal. See [Prometheus metrics](../prometheus.md) for metric setup.
 
 ## KEDA alternative
 
-The same chart supports `gateway.keda` in either layout. Install KEDA first and disable `gateway.hpa`; the chart rejects a configuration that enables both. The Prometheus triggers below use release-wide rates and per-replica targets, without Prometheus Adapter.
+The chart supports `gateway.keda` in both deployment modes. Install KEDA first and disable `gateway.hpa`. The chart rejects a configuration that enables both. The Prometheus triggers below use rates across the Helm release and targets for each replica. They do not need Prometheus Adapter.
 
 ```yaml
 gateway:
@@ -118,11 +118,11 @@ gateway:
       targetTokensPerSecond: "6000000"
 ```
 
-Replace the Prometheus address and thresholds. The generated queries select the metrics Service's `job` and the release namespace; preserve those labels in your scrape setup. Custom triggers go under `gateway.keda.triggers`, fallback behavior under `gateway.keda.fallback`, and HPA behavior overrides under `gateway.keda.advanced.horizontalPodAutoscalerConfig.behavior`.
+Replace the Prometheus address and thresholds. The generated queries select the metrics Service's `job` and the release namespace. Keep those labels in your scrape setup. Put custom triggers under `gateway.keda.triggers`. Set fallback behavior under `gateway.keda.fallback` and HPA behavior overrides under `gateway.keda.advanced.horizontalPodAutoscalerConfig.behavior`.
 
 ## Verify scaling
 
-After your GitOps sync or Helm upgrade, inspect the autoscaler and generate representative load:
+After your GitOps sync or Helm upgrade, inspect the autoscaler and test with your normal traffic mix:
 
 ```bash
 kubectl -n litellm get hpa
@@ -130,6 +130,6 @@ kubectl -n litellm describe hpa
 kubectl get --raw '/apis/custom.metrics.k8s.io/v1beta1/namespaces/litellm/pods/*/litellm_requests_per_second'
 ```
 
-The custom-metrics command applies to the Prometheus Adapter setup. For KEDA, also inspect `kubectl -n litellm get scaledobjects` and its generated HPA. Confirm metrics resolve, scale-out completes, requests stay healthy, and scale-in allows active streams to drain.
+The custom-metrics command applies to the Prometheus Adapter setup. For KEDA, run `kubectl -n litellm get scaledobjects` and inspect the HPA that KEDA creates. Confirm that the autoscaler reads metrics and adds replicas under load. Check that requests succeed and active streams finish before replicas stop.
 
-Use [Sizing & Scaling](./sizing.md) to establish capacity before selecting thresholds. For ECS or Cloud Run, use the scaling settings in the [Terraform guide](./terraform.md).
+Use [Sizing & Scaling](./sizing.md) to measure capacity before selecting thresholds. For ECS or Cloud Run, use the scaling settings in the [Terraform guide](./terraform.md).

@@ -36,7 +36,7 @@ clickhouseDatabase: lens
 retentionDays: 14
 ```
 
-The reference suppresses bundled ClickHouse resources. Supply your actual secret and database names. Set these storage values on the independent Lens chart; the current LiteLLM chart only configures the connection to Lens. Keep ClickHouse payloads and Keeper metadata together in backups and restores
+The reference suppresses bundled ClickHouse resources. Supply your actual secret and database names. Set these storage values on the separate Lens chart. The LiteLLM chart only configures the connection to Lens. Back up and restore ClickHouse payloads and Keeper metadata together.
 
 ## Service and administrator credentials {#service-token}
 

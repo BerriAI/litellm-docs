@@ -86,6 +86,11 @@ const config = {
           {from: ['/docs/oidc', '/docs/oidcz'], to: '/docs/proxy/model_management#workload-identity-credentials'},
           {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
           {from: '/docs/proxy/rust_gateway', to: '/rust-migration'},
+          {from: '/docs/proxy/deploy/iap/cloudflare', to: '/docs/proxy/deploy/iap/overview#cloudflare'},
+          {from: '/docs/proxy/deploy/iap/aws', to: '/docs/proxy/deploy/iap/overview#aws'},
+          {from: '/docs/proxy/deploy/iap/azure', to: '/docs/proxy/deploy/iap/overview#azure'},
+          {from: '/docs/proxy/deploy/iap/gcp', to: '/docs/proxy/deploy/iap/overview#gcp'},
+
           {
             from: '/docs/proxy/control_plane_and_data_plane',
             to: '/docs/proxy/multi_region',

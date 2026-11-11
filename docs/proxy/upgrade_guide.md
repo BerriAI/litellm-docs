@@ -51,7 +51,7 @@ Because the statements really run, the dry run takes the same table locks the up
 | Deployment | Select the release | Run migrations before rollout |
 |---|---|---|
 | [Helm](./deploy/helm.md) | Pin the chart revision and shared image. The migration Job and application use the same image. | Keep `migrationJob.enabled: true` and enable the hook for your deployment controller. Wait for the job to complete. |
-| [Terraform](./deploy/terraform.md) | Pin the module version or source revision and its shared `image`. A source checkout requires an explicit compatible image. | Run `terraform init -upgrade`, review `terraform plan`, then apply. The modules run an ECS migration task on AWS or a Cloud Run migration job on GCP before updating the services. |
+| [Terraform](./deploy/terraform.md) | Pin the module version or source revision. Set `image` to a compatible image tag or digest. | Run `terraform init -upgrade`. Review `terraform plan` before you apply it. The modules run an ECS migration task on AWS or a Cloud Run migration job on GCP before updating the services. |
 
 <details>
 <summary>Helm and Argo CD hook settings</summary>

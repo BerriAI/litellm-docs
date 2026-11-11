@@ -11,9 +11,9 @@ import SinceVersion from '@site/src/components/SinceVersion';
 
 # YAML configuration {#configyaml}
 
-Use `config.yaml` to define models, provider credentials, routing, logging, and server settings. Keep the file with your deployment configuration and reference secrets through environment variables.
+Use `config.yaml` to define models, provider credentials, routing, logging, and server settings. Keep the file with your deployment configuration. Use environment variables for secrets.
 
-This guide covers the main sections and examples. Use the [settings reference](./config_settings.md) for all options, [file management](./config_management.md) to split the configuration into multiple files, and the [CLI reference](./cli.md) for startup flags. To choose between YAML, the Admin UI, and Terraform, see the [Configuration overview](./configuration/overview.md).
+This guide covers the main sections and examples. The [settings reference](./config_settings.md) lists all options. Use [file management](./config_management.md) to split the configuration into files. See the [CLI reference](./cli.md) for startup flags. The [Configuration overview](./configuration/overview.md) helps you choose YAML, the Admin UI, the Management API, or Terraform.
 
 | Param Name           | Description                                                   |
 |----------------------|---------------------------------------------------------------|

@@ -1,4 +1,13 @@
 .figure {
+  --ingress-bg: #ffffff;
+  --ingress-text: #243345;
+  --ingress-muted: #4b5d70;
+  --ingress-border: #9aabbd;
+  --ingress-accent: #315b86;
+  --ingress-accent-bg: #e9f0f8;
+  --ingress-boundary-bg: #f6f8fb;
+  --ingress-origin-bg: #f4f9f7;
+  --ingress-origin: #2e6555;
   margin: 1.5rem 0;
   border: 1px solid var(--ifm-color-emphasis-300);
   border-radius: 8px;
@@ -21,8 +30,8 @@
 
 .canvas {
   padding: 1.25rem;
-  background: #fff;
-  color: #243345;
+  background: var(--ingress-bg);
+  color: var(--ingress-text);
 }
 
 .card {
@@ -30,8 +39,8 @@
   align-items: center;
   gap: 0.8rem;
   padding: 1rem;
-  background: #fff;
-  border: 1px solid #d0dae5;
+  background: var(--ingress-bg);
+  border: 1px solid var(--ingress-border);
   border-radius: 5px;
 }
 
@@ -43,8 +52,8 @@
   height: 24px;
   flex: 0 0 24px;
   border-radius: 50%;
-  background: #e9f0f8;
-  color: #254b79;
+  background: var(--ingress-accent-bg);
+  color: var(--ingress-accent);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -55,7 +64,7 @@
   height: 40px;
   flex: 0 0 40px;
   object-fit: contain;
-  color: #254b79;
+  color: var(--ingress-accent);
 }
 
 .cardText {
@@ -71,7 +80,7 @@
 .cardText span {
   display: block;
   margin-top: 0.2rem;
-  color: #4b5d70;
+  color: var(--ingress-muted);
   font-size: 0.78rem;
   overflow-wrap: anywhere;
 }
@@ -84,7 +93,7 @@
   min-height: 56px;
   font-size: 0.72rem;
   line-height: 1.5;
-  color: #4b5d70;
+  color: var(--ingress-muted);
 }
 
 .arrow {
@@ -93,7 +102,7 @@
   height: 32px;
   flex: 0 0 2px;
   margin: 0 14px;
-  background: #456b94;
+  background: var(--ingress-accent);
 }
 
 .arrow::after {
@@ -103,13 +112,13 @@
   left: -4px;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 7px solid #456b94;
+  border-top: 7px solid var(--ingress-accent);
 }
 
 .boundary {
   padding: 0.85rem;
-  border: 1px dashed #7d8fa6;
-  background: #f6f8fb;
+  border: 1px dashed var(--ingress-border);
+  background: var(--ingress-boundary-bg);
 }
 
 .boundaryLabel {
@@ -117,23 +126,23 @@
   font-size: 0.72rem;
   font-weight: 700;
   line-height: 1.5;
-  color: #435c78;
+  color: var(--ingress-text);
 }
 
 .origin {
-  border-color: #4d8a77;
-  background: #f4f9f7;
+  border-color: var(--ingress-origin);
+  background: var(--ingress-origin-bg);
 }
 
 .origin .boundaryLabel {
-  color: #2e6555;
+  color: var(--ingress-origin);
 }
 
 .policy {
   margin: 0.75rem 0 0;
   font-size: 0.75rem;
   line-height: 1.6;
-  color: #4b5d70;
+  color: var(--ingress-muted);
 }
 
 .note {
@@ -149,4 +158,22 @@
   .card { padding: 0.7rem; gap: 0.5rem; flex-wrap: wrap; }
   .cardText { flex: 1 1 180px; }
   .boundary { padding: 0.6rem; }
+}
+
+[data-theme='dark'] .figure {
+  --ingress-bg: #121923;
+  --ingress-text: #e6edf5;
+  --ingress-muted: #b5c4d4;
+  --ingress-border: #60748b;
+  --ingress-accent: #9bc4ff;
+  --ingress-accent-bg: #233b58;
+  --ingress-boundary-bg: #202a36;
+  --ingress-origin-bg: #192e2a;
+  --ingress-origin: #95d6bc;
+}
+
+.icon {
+  padding: 3px;
+  border-radius: 4px;
+  background: #ffffff;
 }

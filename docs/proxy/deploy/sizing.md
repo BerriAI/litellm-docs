@@ -8,9 +8,9 @@ description: Plan gateway, PostgreSQL, and Redis capacity for LiteLLM, then conf
 
 {/* keep-version-note */}
 
-Size three parts of your deployment together: the LiteLLM gateway handles requests, PostgreSQL stores keys and usage, and Redis shares state across workers. Adding gateway replicas helps only if the database and Redis can handle the extra load.
+Size the gateway, PostgreSQL, and Redis together. The gateway handles requests. PostgreSQL stores keys and usage. Redis shares state across workers. Extra gateway replicas help only if PostgreSQL and Redis can handle the extra load.
 
-Start with your expected request rate, token volume, and number of concurrent streams. Test with the models and response lengths your applications use; a long stream keeps a connection open even when gateway CPU use is low.
+Start with your expected request rate, token volume, and number of concurrent streams. Test with the models and response lengths your applications use. A long stream keeps a connection open even when gateway CPU use is low.
 
 ## Choose a guide
 

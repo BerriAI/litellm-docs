@@ -12,7 +12,7 @@ The LiteLLM Terraform provider manages teams, virtual keys, models, and other re
 
 ## Configure the provider
 
-Create a `main.tf` file with the provider declaration:
+Declare the provider in `main.tf`:
 
 ```hcl title="main.tf"
 terraform {
@@ -27,16 +27,16 @@ terraform {
 provider "litellm" {}
 ```
 
-Provider releases follow LiteLLM versions. Pin the provider to the version your gateway runs; see the [provider version guidance](https://github.com/BerriAI/litellm/tree/main/terraform/provider#versioning) and [published versions](https://registry.terraform.io/providers/BerriAI/litellm/latest).
+Provider releases follow LiteLLM versions. Pin the provider to the version your gateway runs. See the [provider version guidance](https://github.com/BerriAI/litellm/tree/main/terraform/provider#versioning) and [published versions](https://registry.terraform.io/providers/BerriAI/litellm/latest).
 
-Set the gateway URL and a LiteLLM API key with permission to manage the resources you declare. The provider reads both values from environment variables, so the key can come from your CI secret store without appearing in the Terraform configuration.
+Set the gateway URL and a LiteLLM API key with permission to manage your resources. The provider reads both values from environment variables. Load the key from your CI secret store to keep it out of your Terraform files.
 
 ```bash
 export LITELLM_API_BASE="https://llm.example.com"
 export LITELLM_API_KEY="<your-management-api-key>"
 ```
 
-The gateway must be reachable from the machine that runs Terraform and have its database configured for resource management.
+Connect the gateway to its database. Make sure the machine that runs Terraform can reach the gateway.
 
 ## Create a team
 
@@ -67,6 +67,6 @@ terraform import litellm_team.development '<team-id>'
 terraform plan
 ```
 
-Use the team ID, which can differ from its display name. Review the plan and reconcile your configuration before the next apply.
+Use the team ID, which can differ from its display name. Review the plan and update your configuration before the next apply.
 
-The [provider reference](https://registry.terraform.io/providers/BerriAI/litellm/latest/docs) lists all supported resources and data sources, including virtual keys, models, users, and MCP servers. Provider source and development instructions live in [BerriAI/litellm](https://github.com/BerriAI/litellm/tree/main/terraform/provider).
+The [provider reference](https://registry.terraform.io/providers/BerriAI/litellm/latest/docs) lists supported resources and data sources, including virtual keys, models, users, and MCP servers. Find the provider source and development instructions in [BerriAI/litellm](https://github.com/BerriAI/litellm/tree/main/terraform/provider).

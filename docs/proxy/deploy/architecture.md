@@ -28,14 +28,14 @@ Reference designs for cloud infrastructure, client access, and availability.
 
 ### Check identity before traffic reaches LiteLLM
 
-[Identity-Aware Proxy](./iap/overview.md): company sign-in and workload access with [Cloudflare](./iap/cloudflare.md), [AWS](./iap/aws.md), [Azure](./iap/azure.md), or [GCP](./iap/gcp.md). LiteLLM still enforces its own keys and permissions.
+[Identity-Aware Proxy](./iap/overview.md): company sign-in and workload access with [Cloudflare](./iap/overview.md#cloudflare), [AWS](./iap/overview.md#aws), [Azure](./iap/overview.md#azure), or [GCP](./iap/overview.md#gcp). Forward verified identity so LiteLLM can create UI sessions or apply API permissions.
 
 </TabItem>
 <TabItem value="mtls" label="mTLS">
 
 ### Require a client certificate
 
-[Client Authentication with mTLS](./mtls.md): validate client certificates at ingress, then use LiteLLM keys for model access and budgets. Includes cloud and self-managed proxy configurations.
+[Client Authentication with mTLS](./mtls.md): validate client certificates at ingress and forward the workload identity to LiteLLM. Use virtual keys for model access and budgets. Includes load balancer and API gateway configurations.
 
 </TabItem>
 <TabItem value="ha" label="High Availability">
@@ -51,7 +51,7 @@ For more than one region, use [Multi-Region Deployment](../multi_region.md), [Ro
 
 ### Manage independent deployments
 
-Use one UI to manage deployments that each have their own database, Redis, keys, and budgets. The [Global Control Plane](../global_control_plane.md) is an Enterprise feature. Each deployment remains independent; the control plane does not synchronize their state or route inference traffic between them.
+Use one UI to manage deployments that each have their own database, Redis, keys, and budgets. The [Global Control Plane](../global_control_plane.md) is an Enterprise feature. Each deployment remains independent. The control plane does not synchronize their state or route inference traffic between them.
 
 </TabItem>
 </Tabs>

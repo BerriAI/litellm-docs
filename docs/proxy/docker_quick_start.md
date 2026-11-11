@@ -32,7 +32,7 @@ docker compose -f docker-compose.quickstart.yml up -d
 
 This starts the full LiteLLM proxy on port 4000 and PostgreSQL for models, keys, and spend logs. The [compose file](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/docker/docker-compose.quickstart.yml) uses one LiteLLM image, `docker.litellm.ai/berriai/litellm`, with no component argument. Pin a tested release tag or digest before production.
 
-For Kubernetes, the [Helm guide](./deploy/helm.md) uses one chart and a shared image for either a single service or separate gateway, backend, and UI services. Its consolidated chart requires the newer component entrypoint; follow its image compatibility instructions.
+For Kubernetes, the [Helm guide](./deploy/helm.md) uses one chart and a shared image for either a single service or separate gateway, backend, and UI services. Use the image specified in that guide.
 
 The second command generates your master key, which is the credential you will use for every request below. The proxy refuses to start without it. Keep the `.env` file: regenerating `LITELLM_SALT_KEY` makes credentials already stored in the database unreadable.
 
@@ -226,9 +226,9 @@ docker build --platform linux/amd64 \
 docker push registry.example.com/platform/litellm:source-f52f26d
 ```
 
-Replace the registry with one your cluster can pull from, authenticate before pushing, and choose the platform that matches your nodes (`linux/amd64` above). Sign and scan your internal build; upstream signatures do not cover it. Use this one image reference for every component. Its [entrypoint](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/docker-entrypoint.sh) selects `proxy`, `gateway`, `backend`, `ui`, `migrations`, `metrics`, or `collector` through the first argument. No argument starts the full proxy.
+Use a registry that your cluster can pull from. Sign in before you push the image. Choose the platform that matches your nodes (`linux/amd64` above). Sign and scan your internal build with your own tools. LiteLLM's signatures only cover images that LiteLLM publishes. Use this one image reference for every component. Its [entrypoint](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/docker-entrypoint.sh) selects `proxy`, `gateway`, `backend`, `ui`, `migrations`, `metrics`, or `collector` through the first argument. No argument starts the full proxy.
 
-When a compatible release is published, replace the internal reference with a verified tag or digest from `ghcr.io/berriai/litellm` or its `docker.litellm.ai/berriai/litellm` mirror. See [image security](./docker_image_security.md).
+When LiteLLM publishes a compatible release, replace the internal image reference with a verified tag or digest from `ghcr.io/berriai/litellm` or its `docker.litellm.ai/berriai/litellm` mirror. See [image security](./docker_image_security.md).
 
 ## Next steps
 

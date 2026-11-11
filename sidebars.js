@@ -433,17 +433,7 @@ const sidebars = {
                     "proxy/deploy/cloud/gcp",
                   ],
                 },
-                {
-                  type: "category",
-                  label: "Identity-Aware Proxy",
-                  items: [
-                    { type: "doc", id: "proxy/deploy/iap/overview", label: "Overview" },
-                    "proxy/deploy/iap/cloudflare",
-                    "proxy/deploy/iap/aws",
-                    "proxy/deploy/iap/azure",
-                    "proxy/deploy/iap/gcp",
-                  ],
-                },
+                "proxy/deploy/iap/overview",
                 "proxy/deploy/mtls",
                 {
                   type: "category",

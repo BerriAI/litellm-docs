@@ -1,6 +1,6 @@
 # Official cloud architecture icons
 
-The service icons listed below are unmodified SVGs from the providers' official architecture libraries. Retrieved 2026-11-10. Keep the original colors, proportions, and artwork; render each with its service name.
+The service icons listed below are unmodified SVGs from the providers' official architecture libraries. Retrieved 2026-11-10. Keep the original colors, proportions, and artwork. Render each icon with its service name.
 
 ## AWS
 
@@ -34,7 +34,7 @@ The service icons listed below are unmodified SVGs from the providers' official 
 
 [Official library](https://cloud.google.com/icons) · [Core products](https://services.google.com/fh/files/misc/core-products-icons.zip) · [Categories](https://services.google.com/fh/files/misc/category-icons.zip)
 
-The [May 2026 product icon guide](https://services.google.com/fh/files/misc/google-cloud-product-icons.pdf) assigns the Networking category icon to Cloud DNS, Cloud Load Balancing, VPC, Cloud NAT, Cloud Router, and Private Service Connect, and the Databases category icon to Memorystore. These mappings replace the deprecated legacy console icons; retain the service names beside them.
+The [May 2026 product icon guide](https://services.google.com/fh/files/misc/google-cloud-product-icons.pdf) assigns the Networking category icon to Cloud DNS, Cloud Load Balancing, VPC, Cloud NAT, Cloud Router, and Private Service Connect, and the Databases category icon to Memorystore. These mappings replace the deprecated console icons. Keep the service names beside them.
 
 | Local file | Archive member |
 | --- | --- |

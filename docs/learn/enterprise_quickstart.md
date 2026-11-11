@@ -221,7 +221,7 @@ Your LiteLLM Gateway is now running on `http://0.0.0.0:4000`.
 
 <TabItem value="helm" label="Helm">
 
-Use the [Helm guide](../proxy/deploy/helm.md) to obtain the current chart and build its matching shared image. Provision PostgreSQL before installation; the chart does not create a database. This example uses monolith mode for a single service.
+Follow the [Helm guide](../proxy/deploy/helm.md) to publish the chart and build its image. Create PostgreSQL before installation. The chart does not create a database. This example uses monolith mode for a single service.
 
 #### 1. Create the Secrets
 
@@ -233,7 +233,7 @@ Use your secret manager to create these Kubernetes Secrets in the deployment nam
 | `litellm-db` | `username`, `password`: PostgreSQL credentials |
 | `litellm-env` | `LITELLM_LICENSE`, `LITELLM_SALT_KEY`, `OPENAI_API_KEY` |
 
-Keep the salt stable across upgrades so stored provider credentials remain readable.
+Keep the same salt across upgrades so LiteLLM can read stored provider credentials.
 
 #### 2. Create `values-enterprise.yaml`
 
@@ -275,14 +275,15 @@ gateway:
         store_model_in_db: true
 ```
 
-Add your database provider's TLS settings; see [verify the database certificate](../proxy/prod.md#verify-the-database-server-certificate-custom-ca-eg-aws-rds). Production deployments also need Redis for coordination across replicas; the [Helm guide](../proxy/deploy/helm.md) includes those values.
+Add your database provider's TLS settings to [verify the database certificate](../proxy/prod.md#verify-the-database-server-certificate-custom-ca-eg-aws-rds). Use Redis to coordinate replicas in production. See the [Helm guide](../proxy/deploy/helm.md) for Redis settings.
 
 #### 3. Deploy with Helm
 
-From your pinned LiteLLM source checkout:
+Use the [OCI chart published to your registry](../proxy/deploy/helm.md#install-the-chart). Replace `YOUR_ORG` with your registry namespace:
 
 ```bash
-helm upgrade --install mydeploy ./helm/litellm \
+helm upgrade --install mydeploy oci://ghcr.io/YOUR_ORG/charts/litellm \
+  --version 1.0.0 \
   -f values-enterprise.yaml --wait --timeout 30m
 ```
 

@@ -79,7 +79,7 @@ lens:
     key: gateway-secret
 ```
 
-`url` must be reachable by the gateway. `publicUrl` must be reachable by agent exporters. Neither address includes `/ui/` or `/v1/traces`.
+The gateway must be able to reach `url`. Agent exporters must be able to reach `publicUrl`. Neither address includes `/ui/` or `/v1/traces`.
 
 Add the tracing store setting in the same file:
 
@@ -97,18 +97,20 @@ If your deployment supplies `config.yaml` from an external ConfigMap instead, ad
 
 ### 3. Apply and check
 
-Set `GATEWAY_RELEASE` to your existing Helm release name. Set `GATEWAY_CHART` to your pinned `helm/litellm` checkout or packaged chart. You can inspect the installed release with:
+Set `GATEWAY_RELEASE` to your existing Helm release name. Set `GATEWAY_CHART` to your [OCI chart](../../deploy/helm.md#install-the-chart). Replace `YOUR_ORG` with your registry namespace. Set `GATEWAY_CHART_VERSION` to the chart version you use. You can inspect the installed release with:
 
 ```sh
 helm list --namespace "$GATEWAY_NAMESPACE"
 ```
 
-Merge these settings with your complete values file, then apply both:
+Merge these settings with your complete values file. Then apply both:
 
 ```sh
 export GATEWAY_RELEASE="YOUR_GATEWAY_RELEASE"
-export GATEWAY_CHART="./helm/litellm"
+export GATEWAY_CHART="oci://ghcr.io/YOUR_ORG/charts/litellm"
+export GATEWAY_CHART_VERSION="1.0.0"
 helm upgrade "$GATEWAY_RELEASE" "$GATEWAY_CHART" \
+  --version "$GATEWAY_CHART_VERSION" \
   --namespace "$GATEWAY_NAMESPACE" \
   -f gateway-values.yaml -f lens-connection.yaml --wait
 ```
@@ -117,7 +119,7 @@ This rolls the gateway pods to load the connection settings. For GitOps, commit 
 
 Sign in to LiteLLM, select **Lens**, and complete [the connection check](./litellm.md#5-open-lens-in-the-gateway). Then [send your first trace](../first-trace.md).
 
-If Lens is already owned by an older gateway Helm release, transfer ownership before upgrading; the current chart no longer deploys Lens or ClickHouse. Use the [ownership-transfer guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#select-versions-independently) to preserve its resources and storage first.
+If an older gateway Helm release owns Lens, transfer ownership before you upgrade. The current chart does not deploy Lens or ClickHouse. Use the [ownership-transfer guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#select-versions-independently) to preserve its resources and storage first.
 
 ## Check the installation
 

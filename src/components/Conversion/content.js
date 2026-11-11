@@ -150,9 +150,8 @@ const ONE_CLICK = [
 
 const INSTALLER = `curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install.sh | sh`;
 
-const HELM = `git clone --filter=blob:none https://github.com/BerriAI/litellm.git litellm-source
-git -C litellm-source checkout f52f26d9c636038c6e3609cc7d17cf625d434c3e
-helm upgrade --install litellm ./litellm-source/helm/litellm --namespace litellm -f values.yaml --wait --timeout 30m`;
+const HELM = `helm upgrade --install litellm oci://ghcr.io/YOUR_ORG/charts/litellm \\
+  --version 1.0.0 --namespace litellm -f values.yaml --wait --timeout 30m`;
 
 // Install options per path. The first entry is the recommended command and is
 // the only one shown up front; the rest sit under "Other ways to install",
@@ -179,7 +178,7 @@ const INSTALLS = {
       {
         id: 'helm',
         label: 'Helm',
-        when: 'You deploy to Kubernetes. Prepare values.yaml, secrets, and the matching image using the Helm guide; it also covers Argo CD.',
+        when: 'You deploy to Kubernetes. Publish the chart to your OCI registry and prepare values.yaml using the Helm guide. Replace YOUR_ORG with your registry namespace.',
         code: HELM,
         more: '/docs/proxy/deploy/helm',
       },

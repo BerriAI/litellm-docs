@@ -1,14 +1,14 @@
 ---
 title: High Availability
 sidebar_label: Overview
-description: Keep LiteLLM available through instance failures, zone outages, and upgrades with redundant services and tested recovery procedures.
+description: Keep LiteLLM available during instance failures, zone outages, and upgrades. Use redundant services and test recovery.
 ---
 
 # High Availability
 
 {/* keep-version-note */}
 
-High availability means the gateway can keep serving requests when an instance fails or you deploy a new version. Start with multiple replicas across availability zones in one region. Add another region when your recovery or latency requirements need it.
+High availability keeps the gateway serving requests when an instance fails or you deploy a new version. Start with multiple replicas across availability zones in one region. Add another region to meet recovery or latency requirements.
 
 | Topic | Use it for |
 | --- | --- |
@@ -31,15 +31,15 @@ flowchart TB
     end
 ```
 
-Run at least two serving replicas on separate nodes and distribute them across zones. Leave enough spare capacity for the remaining replicas to carry traffic after a failure. A second replica in the same failure domain does not protect against a zone outage. See [Sizing & Scaling](../sizing.md) and the cloud-specific [Reference Architectures](../architecture.md).
+Run at least two serving replicas on separate nodes and spread them across zones. Leave enough spare capacity for the remaining replicas to carry traffic after a failure. Two replicas in the same zone do not protect against a zone outage. See [Sizing & Scaling](../sizing.md) and the cloud-specific [Reference Architectures](../architecture.md).
 
-On Kubernetes, use [topology spread constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/) for placement. A [PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) limits voluntary evictions, such as a node drain; it does not prevent a node or zone from failing. Keep enough replicas available during upgrades with the Deployment rollout strategy as well.
+On Kubernetes, use [topology spread constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/) to place replicas. A [PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) limits voluntary evictions, such as a node drain. It does not prevent node or zone failures. Set the Deployment rollout strategy to keep enough replicas available during upgrades.
 
 ## Protect the data services
 
-All replicas in a deployment use the same logical PostgreSQL database. Use database replication and automated failover across zones, and test connection recovery after a writer change. Backups and restore tests cover data loss; they do not replace an available writer. Size the connection pool for the maximum replica count, including extra pods during a rollout. See [Database Sizing](../../db_sizing.md).
+All replicas in a deployment use the same logical PostgreSQL database. Use database replication and automated failover across zones. Test connection recovery after a writer change. Backups and restore tests help you recover lost data. They do not replace an available writer. Size the connection pool for the maximum replica count, including extra pods during a rollout. See [Database Sizing](../../db_sizing.md).
 
-Use shared Redis for the replicas that need common rate-limit counters, router state, and caches. Configure its own replication and failover, and test the behavior of the features you use when Redis is unavailable. Adding gateway replicas does not make either data service redundant. See [What Needs Redis](../../redis_requirements.md) and [Redis Sizing](../../redis_sizing.md).
+Use shared Redis for replicas that need common rate-limit counters, router state, and caches. Configure Redis replication and failover. Test how your features behave when Redis is unavailable. Adding gateway replicas does not make PostgreSQL or Redis redundant. See [What Needs Redis](../../redis_requirements.md) and [Redis Sizing](../../redis_sizing.md).
 
 Keep provider access redundant too. If every gateway calls the same unavailable model endpoint, healthy gateway replicas cannot complete those calls. Configure and test [model fallbacks](../../reliability.md) separately from gateway failover.
 
@@ -47,8 +47,8 @@ Keep provider access redundant too. If every gateway calls the same unavailable 
 
 Use `/health/liveliness` for process liveness and `/health/readiness` to decide whether an instance can receive traffic. Neither makes an LLM request. Add a separate, controlled synthetic request to check authentication, model access, and provider connectivity. See [Health Checks](../../health.md).
 
-By default, a configured database that is unreachable makes readiness return 503. If you deliberately enable `allow_requests_on_db_unavailable`, readiness can remain 200 during a database outage. That is a degraded service policy with authentication and enforcement implications, not proof that all features work. Read [graceful DB unavailability](../../prod.md#gracefully-handle-db-unavailability) before enabling it, and use the [multi-region health policy](../multi_region/failover.md#choose-a-health-policy) when several regions share the database.
+By default, readiness returns 503 when the configured database is unreachable. If you enable `allow_requests_on_db_unavailable`, readiness can remain 200 during a database outage. This setting changes authentication and enforcement during the outage. A 200 response does not prove that all features work. Read [graceful DB unavailability](../../prod.md#gracefully-handle-db-unavailability) before enabling it. Use the [multi-region health policy](../multi_region/failover.md#choose-a-health-policy) when several regions share the database.
 
 ## Verify recovery
 
-In a test environment, remove one replica, drain a node, trigger the managed database's failover procedure, and interrupt Redis access. Confirm that the remaining capacity meets your latency and error targets, that streams finish during planned drains, and that spend queues recover. Record the time to detect a failure and restore service. If a whole-region outage is in scope, continue with [Multi-Region](../../multi_region.md).
+In a test environment, remove one replica, drain a node, trigger database failover, and interrupt Redis access. Confirm that the remaining capacity meets your latency and error targets. Check that streams finish during planned drains and spend queues recover. Record the time to detect a failure and restore service. If your recovery plan covers a whole-region outage, continue with [Multi-Region](../../multi_region.md).

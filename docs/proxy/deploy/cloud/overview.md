@@ -1,7 +1,7 @@
 ---
 title: Cloud Deployments
 sidebar_label: Overview
-description: Compare the network, compute, database, and Redis resources around LiteLLM on Azure, AWS, and Google Cloud.
+description: Deploy LiteLLM for corporate users through private cloud frontends on Azure, AWS, and Google Cloud.
 ---
 
 import Tabs from '@theme/Tabs';
@@ -11,31 +11,33 @@ import TabItem from '@theme/TabItem';
 
 {/* keep-version-note */}
 
-Terraform diagrams show module defaults. Helm diagrams show infrastructure you provision around the chart.
+These architectures keep LiteLLM off the public internet. Corporate users and applications reach private frontends through VPN, a private cloud connection, or an approved private access service. Public model calls use a separate outbound path.
+
+The diagrams show the recommended target. The AWS and GCP Terraform modules need the private-ingress changes listed in each cloud guide. Helm deploys LiteLLM into infrastructure you provide.
 
 ## Choose a cloud
 
 <Tabs queryString="cloud">
 <TabItem value="azure" label="Azure" default>
 
-Run LiteLLM on AKS with an Application Gateway, managed PostgreSQL and Redis, and private endpoints. The [Azure architectures](./azure.md) show a single service and separate gateway, backend, and UI services.
+Run LiteLLM on AKS with a private Application Gateway frontend, managed PostgreSQL and Redis, and private endpoints. The [Azure architectures](./azure.md) show a single service and separate gateway, backend, and UI services.
 
 </TabItem>
 <TabItem value="aws" label="AWS">
 
-Use Terraform on ECS Fargate or Helm on EKS. The [AWS architectures](./aws.md) show availability zones, public and private subnets, ALB ingress, NAT egress, and optional Bedrock interface endpoints.
+Use Terraform on ECS Fargate or Helm on EKS. The [AWS architectures](./aws.md) show private ALB ingress, private workloads, NAT egress, and optional Bedrock interface endpoints across two availability zones.
 
 </TabItem>
 <TabItem value="gcp" label="GCP">
 
-Use Terraform on Cloud Run or Helm on GKE. The [GCP architectures](./gcp.md) show the load balancer, customer VPC, private database connections, and provider egress.
+Use Terraform on Cloud Run or Helm on GKE. The [GCP architectures](./gcp.md) show internal load balancers, private network access, private database connections, and NAT egress.
 
 </TabItem>
 </Tabs>
 
 ## Deployment layout {#choose-a-deployment-mode}
 
-One Docker image serves every component. One Helm chart supports both layouts; Terraform deploys separate services.
+One Docker image serves every component. One Helm chart supports both layouts. Terraform deploys separate services.
 
 | Layout | What runs | Helm value |
 | --- | --- | --- |

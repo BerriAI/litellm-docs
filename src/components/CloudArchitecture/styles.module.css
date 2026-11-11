@@ -1,39 +1,43 @@
 /* Cloud deployment architecture diagrams.
    Palette mirrors ControlPlaneArchitecture for visual consistency. */
 :root {
-  --ca-border: #e5e7eb;
+  --ca-border: #64748b;
   --ca-text: #1a1a2e;
-  --ca-text-secondary: #6b7280;
-  --ca-text-muted: #9ca3af;
-  --ca-accent: #3b82f6;
+  --ca-text-secondary: #4b5563;
+  --ca-text-muted: #526071;
+  --ca-accent: #1d4ed8;
   --ca-accent-light: #dbeafe;
-  --ca-green: #10b981;
+  --ca-green: #047857;
   --ca-green-light: #d1fae5;
-  --ca-orange: #f59e0b;
+  --ca-orange: #92400e;
   --ca-orange-light: #fef3c7;
-  --ca-red: #ef4444;
+  --ca-red: #b91c1c;
   --ca-red-light: #fee2e2;
   --ca-card-bg: #f9fafb;
   --ca-region-bg: #f8fafc;
-  --ca-connector: #d1d5db;
+  --ca-connector: #64748b;
+  --ca-canvas-bg: #ffffff;
+  --ca-chip-text: #ffffff;
 }
 
 [data-theme='dark'] {
-  --ca-border: #374151;
+  --ca-border: #64748b;
   --ca-text: #e5e7eb;
-  --ca-text-secondary: #9ca3af;
-  --ca-text-muted: #6b7280;
-  --ca-accent: #60a5fa;
+  --ca-text-secondary: #b8c4d4;
+  --ca-text-muted: #9ca3af;
+  --ca-accent: #93c5fd;
   --ca-accent-light: #1e3a5f;
-  --ca-green: #34d399;
+  --ca-green: #6ee7b7;
   --ca-green-light: #064e3b;
-  --ca-orange: #fbbf24;
+  --ca-orange: #fcd34d;
   --ca-orange-light: #78350f;
-  --ca-red: #f87171;
+  --ca-red: #fca5a5;
   --ca-red-light: #451a1a;
   --ca-card-bg: #1f2937;
   --ca-region-bg: #111827;
-  --ca-connector: #4b5563;
+  --ca-connector: #94a3b8;
+  --ca-canvas-bg: #111827;
+  --ca-chip-text: #111827;
 }
 
 .wrapper {
@@ -276,18 +280,11 @@
   gap: 0.5rem;
 }
 
-/* Keep provider artwork at its native colors and aspect ratio on a light canvas. */
+/* Theme the diagram surface. Keep provider artwork on individual light tiles. */
 .cloudCanvas {
-  --ca-text: #232f3e;
-  --ca-text-secondary: #526071;
-  --ca-connector: #68788a;
-  --ca-border: #a8b3c1;
-  --ca-card-bg: #ffffff;
-  --ca-accent: #345b80;
-  --ca-accent-light: #eef3f8;
   margin: 1rem 0;
   padding: 1.25rem;
-  background: #ffffff;
+  background: var(--ca-canvas-bg);
   border: 1px solid var(--ca-border);
   border-radius: 6px;
 }
@@ -307,7 +304,7 @@
   top: -0.65rem;
   left: 0.75rem;
   padding: 0 0.4rem;
-  background: #ffffff;
+  background: var(--ca-canvas-bg);
   color: var(--ca-text);
   font-size: 0.75rem;
   font-weight: 700;
@@ -346,6 +343,9 @@
   height: 48px;
   border-radius: 0;
   object-fit: contain;
+  padding: 4px;
+  background: #ffffff;
+  box-sizing: content-box;
 }
 
 .cloudDiagram .nodeSubtitle {
@@ -414,7 +414,7 @@
   padding: 0.75rem 0.25rem;
   border: 1px solid var(--ca-border);
   border-radius: 0;
-  background: #ffffff;
+  background: var(--ca-card-bg);
 }
 
 .regionalCanvas .regionHeader {
@@ -715,7 +715,7 @@
   height: 26px;
   border-radius: 50%;
   background: var(--ca-accent);
-  color: #fff;
+  color: var(--ca-chip-text);
   display: flex;
   align-items: center;
   justify-content: center;

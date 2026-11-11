@@ -9,31 +9,31 @@ description: Use HTTP APIs to register models, create teams and virtual keys, up
 
 {/* keep-version-note */}
 
-Use the Management API to connect an internal portal, provisioning service, or automation script to a running LiteLLM gateway. Your application can register a model, grant a team access, issue a virtual key, and revoke that key through HTTP requests.
+Use the Management API to connect an internal portal or automation service to a running LiteLLM gateway. Your application can register models, grant team access, issue virtual keys, and revoke keys through HTTP requests.
 
-The [Admin UI](./ui.md) and [Terraform provider](./terraform.md) also manage supported gateway resources through APIs. Choose direct API calls when your own application needs to make those changes. The [deployment guides](../deploy.md) cover installing LiteLLM and provisioning its infrastructure.
+The [Admin UI](./ui.md) and [Terraform provider](./terraform.md) also use APIs to manage gateway resources. Use direct API calls when your application needs to make those changes. See the [deployment guides](../deploy.md) to install LiteLLM and set up its infrastructure.
 
 ## What the API manages
 
 | Task | API | Storage and ownership | When changes apply |
 | --- | --- | --- | --- |
-| Add, update, or remove a database model | `POST /model/new`, `PATCH /model/{model_id}/update`, `POST /model/delete` | Database; requires `STORE_MODEL_IN_DB=True` | No proxy restart. Check that each replica has refreshed its model list. |
-| Create a team or update its model access and limits | `POST /team/new`, `POST /team/update` | Database | No proxy restart. Verify the resulting access through the gateway. |
-| Issue, update, or revoke a virtual key | `POST /key/generate`, `POST /key/update`, `POST /key/delete` | Database | No proxy restart. Verify access changes across serving replicas. |
-| Change a supported gateway setting | `POST /config/update` | Database for settings not owned by YAML; requires database configuration storage | Applied through configuration refresh; check the setting's documented behavior. |
+| Add, update, or remove a database model | `POST /model/new`, `PATCH /model/{model_id}/update`, `POST /model/delete` | Database. Requires `STORE_MODEL_IN_DB=True`. | No proxy restart. Check that each replica has refreshed its model list. |
+| Create a team or update its model access and limits | `POST /team/new`, `POST /team/update` | Database | No proxy restart. Test access through the gateway. |
+| Issue, update, or revoke a virtual key | `POST /key/generate`, `POST /key/update`, `POST /key/delete` | Database | No proxy restart. Test access changes across replicas. |
+| Change a supported gateway setting | `POST /config/update` | Database for settings outside YAML. Requires database configuration storage. | The gateway refreshes its configuration. Check the setting's documented behavior. |
 | Change a YAML-owned model or setting | Edit the owning `config.yaml` entry | File | Reload or restart the proxy after the file change. See the ownership rules below. |
 
-This is a starting set of operations, not a promise that every YAML field, UI control, and Terraform resource has equivalent API coverage. Use the [API reference](https://docs.litellm.ai/api-reference/) and the API documentation exposed by your running gateway to check its request schema and permissions. See [Model Management](../model_management.md#automation-api), [Virtual Keys](../virtual_keys.md), and the [configuration reference](../config_settings.md) for additional operations and settings.
+This table lists common tasks. API support varies by resource and setting. Check the request schema and permissions in the [API reference](https://docs.litellm.ai/api-reference/) and your running gateway's API docs. See [Model Management](../model_management.md#automation-api), [Virtual Keys](../virtual_keys.md), and the [configuration reference](../config_settings.md) for more operations and settings.
 
-The Admin UI's `/config/update` and `/config/field/update` endpoints are omitted from generated OpenAPI documentation. Their storage and ownership rules are covered in [YAML and database settings](../configs.md#configyaml-vs-database-settings).
+The generated OpenAPI docs omit the Admin UI's `/config/update` and `/config/field/update` endpoints. See [YAML and database settings](../configs.md#configyaml-vs-database-settings) for their storage and ownership rules.
 
 ## Before you start
 
-Start with a running gateway connected to PostgreSQL and configured with `LITELLM_MASTER_KEY`. Enable `STORE_MODEL_IN_DB=True` in the gateway's environment, or set `general_settings.store_model_in_db: true` in its YAML. Keep the credential encryption key stable; see [database model storage](../model_management.md#database-vs-configyaml-models).
+Connect the gateway to PostgreSQL and set `LITELLM_MASTER_KEY`. Set `STORE_MODEL_IN_DB=True` in the gateway's environment or `general_settings.store_model_in_db: true` in its YAML. Keep the credential encryption key unchanged. See [database model storage](../model_management.md#database-vs-configyaml-models).
 
 If you run multiple workers or replicas, [configure shared Redis](../redis_requirements.md#configure-redis) for rate limits and cache invalidation, including key revocation across workers.
 
-The example uses a proxy-admin credential authorized for the management endpoints. Your platform service holds that credential; the client application receives only the inference key created below. See [roles and permissions](../access_control.md) when assigning a credential to your automation.
+The example uses a proxy-admin credential with access to the management endpoints. Keep that credential in your platform service. Give the client application only the inference key you create below. See [roles and permissions](../access_control.md) to choose a credential for your automation.
 
 The self-hosted model must expose an OpenAI-compatible API that LiteLLM can reach. Set `SELF_HOSTED_API_KEY` on the **LiteLLM server** to the credential for that upstream service. The model definition below references that environment variable.
 
@@ -50,11 +50,11 @@ export SELF_HOSTED_MODEL="<model-name-served-by-your-upstream>"
 
 ## Provision access from your platform
 
-This workflow creates a model alias called `client-chat`, a team, and a key restricted to that model. Run the create steps once, then retain the returned IDs in your provisioning system for later updates.
+This workflow creates the `client-chat` model alias, a team, and a key that can use only that model. Run the create steps once. Save the returned IDs in your platform for later updates.
 
 ### 1. Register the self-hosted model
 
-The `model_name` is what callers send to LiteLLM. The `openai/` prefix selects the OpenAI-compatible provider; the name after it identifies the model served by your upstream.
+Clients use the `model_name` value to select this model in LiteLLM. The `openai/` prefix selects the OpenAI-compatible provider. The name after the prefix identifies the model on your upstream service.
 
 ```bash
 MODEL_ID=$(
@@ -95,7 +95,7 @@ TEAM_ID=$(
 )
 ```
 
-The team's model list and rate limit apply to its keys. Add [team budgets](../team_budgets.md) if needed; self-hosted models need appropriate [custom pricing](../custom_pricing.md) for cost-based budgets and spend reporting.
+The team's model list and rate limit apply to its keys. Add [team budgets](../team_budgets.md) if needed. Set [custom pricing](../custom_pricing.md) for self-hosted models to use cost-based budgets and spend reports.
 
 ### 3. Issue an inference key
 
@@ -118,7 +118,7 @@ CLIENT_KEY=$(
 )
 ```
 
-Deliver `CLIENT_KEY` to the application's secret store. `key_type: "llm_api"` selects the inference route preset; the model list restricts this key to `client-chat`. The application calls LiteLLM using this key.
+Save `CLIENT_KEY` in the application's secret store. `key_type: "llm_api"` selects the inference route preset. The model list limits this key to `client-chat`. The application uses this key to call LiteLLM.
 
 ### 4. Verify a model request
 
@@ -156,7 +156,7 @@ curl --fail-with-body -sS -X POST "$LITELLM_API_BASE/key/update" \
   --data-binary @-
 ```
 
-For a team-wide change, use `POST /team/update` with `team_id` and the fields to change. Read the saved model through `GET /model/info` and the team through `GET /team/info?team_id=<team-id>`, then verify requests through your normal gateway address.
+To update the team, call `POST /team/update` with `team_id` and the fields to change. Read the saved model through `GET /model/info` and the team through `GET /team/info?team_id=<team-id>`. Then test requests through your normal gateway address.
 
 ### 6. Revoke the key
 
@@ -168,15 +168,15 @@ curl --fail-with-body -sS -X POST "$LITELLM_API_BASE/key/delete" \
   --data-binary @-
 ```
 
-Repeat the completion request from step 4. It must now fail authentication. In a deployment with multiple replicas, verify revocation across them as well. Deleting the key leaves the team and model available for other applications.
+Repeat the completion request from step 4. It must now fail authentication. If you run multiple replicas, test that each rejects the key. The team and model remain available to other applications.
 
 ## When YAML and API changes meet
 
-From v1.103.0, a setting declared in `general_settings`, `router_settings`, `litellm_settings`, or `environment_variables` in YAML is owned by that file. Attempts to change it through `/config/update` or `/config/field/update` return HTTP 400. Edit and reload the file, or remove the setting from YAML to let the database own it. Removing it can reactivate a previously stored database value.
+From v1.103.0, YAML controls each setting you declare in `general_settings`, `router_settings`, `litellm_settings`, and `environment_variables`. Calls to `/config/update` or `/config/field/update` return HTTP 400 if you try to change those settings. Edit and reload the file, or remove the setting from YAML to let the database control it. If you remove the setting, a saved database value can take effect again.
 
-Models use a different rule. A database model with the same `model_name` as a YAML model adds a deployment alongside it. It does not replace the file's entry. `PATCH /model/{model_id}/update` updates database models; YAML models must be changed in their file.
+Models use a different rule. A database model with the same `model_name` as a YAML model adds a deployment alongside it. It does not replace the file's entry. Use `PATCH /model/{model_id}/update` to change database models. Edit YAML models in their file.
 
-Before v1.103.0, database settings took precedence over YAML. Read [YAML and database settings](../configs.md#configyaml-vs-database-settings) for storage prerequisites, refresh behavior, and version differences.
+Before v1.103.0, database settings took priority over YAML. See [YAML and database settings](../configs.md#configyaml-vs-database-settings) for storage requirements, refresh behavior, and version differences.
 
 ## Troubleshoot a management request
 
@@ -185,7 +185,7 @@ Before v1.103.0, database settings took precedence over YAML. Read [YAML and dat
 | Authentication or permission error | Use the platform's management credential, check its role and allowed routes, and confirm it can manage the target resource. |
 | Model creation reports missing database storage | Connect PostgreSQL and enable `STORE_MODEL_IN_DB` on the gateway. |
 | Update says a setting is controlled by the config file | Check YAML ownership and the gateway version before changing the request. |
-| Unknown route or rejected field | Compare the method and payload with the API schema for the version you run. A similar UI control or YAML field does not establish API support. |
-| Saved change is not reflected in requests | Read the resource back, check the relevant configuration refresh or cache behavior, and test each serving replica. |
+| Unknown route or rejected field | Compare the method and payload with the API schema for the version you run. Check API support even if the UI or YAML has a similar option. |
+| Requests do not use the saved change | Read the resource back, check its configuration refresh or cache behavior, and test each replica. |
 
-When an operation still fails, retain the gateway version, endpoint, redacted request and response, and whether the resource came from YAML or the database. Those details distinguish a permission or ownership issue from an unsupported operation or a bug.
+If a request still fails, record the gateway version, endpoint, request, and response. Remove secrets from these records. Note whether YAML or the database stores the resource. These details help you find permission issues, settings that YAML controls, unsupported operations, or bugs.

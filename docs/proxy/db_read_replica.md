@@ -135,7 +135,7 @@ database:
 
 <TabItem value="plain" label="Separate connection fields">
 
-Set the reader host and database name, then reference a Secret containing its username and password:
+Set the reader host and database name. Reference a Secret with its username and password:
 
 ```yaml
 database:
@@ -149,7 +149,7 @@ database:
       passwordKey: password
 ```
 
-For token authentication, set `useIAMAuth: true` or `useAzureEntraAuth: true` on both `database.writer` and `database.reader`, with the matching workload identity. The Secret then supplies the username; the runtime obtains the password token. Use one authentication method per deployment. Do not combine separate connection fields with `urlKey`.
+For token authentication, set `useIAMAuth: true` or `useAzureEntraAuth: true` on both `database.writer` and `database.reader`, with the matching workload identity. The Secret supplies the username. The runtime obtains the password token. Use one authentication method per deployment. Do not combine separate connection fields with `urlKey`.
 
 </TabItem>
 

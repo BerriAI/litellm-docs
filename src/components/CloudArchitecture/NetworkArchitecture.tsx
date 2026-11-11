@@ -8,23 +8,23 @@ import type { CloudKey, NetworkDiagram, NetworkGroup } from './networkTypes';
 import styles from './network.module.css';
 
 const PATH_COLORS = {
-  request: '#2367b4',
-  data: '#51606f',
-  egress: '#a35115',
-  optional: '#8055a6',
+  request: 'var(--network-request)',
+  data: 'var(--network-data)',
+  egress: 'var(--network-egress)',
+  optional: 'var(--network-optional)',
 };
 
 const GROUP_COLORS: Record<NetworkGroup['kind'], { stroke: string; fill: string }> = {
-  cloud: { stroke: '#232f3e', fill: '#ffffff' },
-  region: { stroke: '#6a7e8e', fill: '#ffffff' },
-  vpc: { stroke: '#8064a9', fill: '#ffffff' },
-  az: { stroke: '#8c99a6', fill: '#ffffff' },
-  public: { stroke: '#74943c', fill: '#f5f9ee' },
-  private: { stroke: '#3a8a9c', fill: '#f0f8fb' },
-  managed: { stroke: '#80909f', fill: '#f7f9fb' },
-  optional: { stroke: PATH_COLORS.optional, fill: '#fcf9ff' },
-  project: { stroke: '#667788', fill: '#ffffff' },
-  subnet: { stroke: '#4b8cbd', fill: '#f0f7fd' },
+  cloud: { stroke: 'var(--network-outline)', fill: 'var(--network-bg)' },
+  region: { stroke: 'var(--network-muted)', fill: 'var(--network-bg)' },
+  vpc: { stroke: 'var(--network-optional)', fill: 'var(--network-bg)' },
+  az: { stroke: 'var(--network-muted)', fill: 'var(--network-bg)' },
+  public: { stroke: 'var(--network-public)', fill: 'var(--network-public-bg)' },
+  private: { stroke: 'var(--network-private)', fill: 'var(--network-private-bg)' },
+  managed: { stroke: 'var(--network-muted)', fill: 'var(--network-managed-bg)' },
+  optional: { stroke: PATH_COLORS.optional, fill: 'var(--network-optional-bg)' },
+  project: { stroke: 'var(--network-muted)', fill: 'var(--network-bg)' },
+  subnet: { stroke: 'var(--network-request)', fill: 'var(--network-private-bg)' },
 };
 
 function NetworkSvg({ diagram }: { diagram: NetworkDiagram }) {
@@ -33,8 +33,8 @@ function NetworkSvg({ diagram }: { diagram: NetworkDiagram }) {
   const edgePaths = routeNetworkEdges(diagram);
   const groupColors = {
     ...GROUP_COLORS,
-    ...(diagram.provider === 'gcp' ? { vpc: { stroke: '#4285f4', fill: '#ffffff' }, project: { stroke: '#4285f4', fill: '#ffffff' } } : {}),
-    ...(diagram.provider === 'azure' ? { vpc: { stroke: '#0078d4', fill: '#ffffff' } } : {}),
+    ...(diagram.provider === 'gcp' ? { vpc: { stroke: 'var(--network-request)', fill: 'var(--network-bg)' }, project: { stroke: 'var(--network-request)', fill: 'var(--network-bg)' } } : {}),
+    ...(diagram.provider === 'azure' ? { vpc: { stroke: 'var(--network-request)', fill: 'var(--network-bg)' } } : {}),
   };
   return (
     <svg
@@ -66,7 +66,7 @@ function NetworkSvg({ diagram }: { diagram: NetworkDiagram }) {
             strokeWidth="1.5"
             strokeDasharray={group.kind === 'optional' || group.kind === 'az' ? '7 5' : undefined}
           />
-          {group.icon && <image href={`${iconRoot}${group.icon}`} x={group.x + 10} y={group.y + 9} width="22" height="22" preserveAspectRatio="xMidYMid meet" />}
+          {group.icon && <g><rect className={styles.iconTile} x={group.x + 8} y={group.y + 7} width="26" height="26" rx="3" /><image href={`${iconRoot}${group.icon}`} x={group.x + 10} y={group.y + 9} width="22" height="22" preserveAspectRatio="xMidYMid meet" /></g>}
           <text x={group.x + (group.icon ? 40 : 12)} y={group.y + 25} className={styles.groupLabel} fill={groupColors[group.kind].stroke}>
             {group.label}
           </text>
@@ -91,9 +91,9 @@ function NetworkSvg({ diagram }: { diagram: NetworkDiagram }) {
       {diagram.nodes.map(node => (
         <g key={node.id}>
           {node.icon ? (
-            <image href={`${iconRoot}${node.icon}`} x={node.x - 22} y={node.y - 22} width="44" height="44" preserveAspectRatio="xMidYMid meet" />
+            <g><rect className={styles.iconTile} x={node.x - 25} y={node.y - 25} width="50" height="50" rx="5" /><image href={`${iconRoot}${node.icon}`} x={node.x - 22} y={node.y - 22} width="44" height="44" preserveAspectRatio="xMidYMid meet" /></g>
           ) : (
-            <g fill="none" stroke="#405064" strokeWidth="2">
+            <g fill="none" stroke="var(--network-outline)" strokeWidth="2">
               <rect x={node.x - 22} y={node.y - 18} width="44" height="30" rx="2" />
               <path d={`M${node.x},${node.y + 12} v9 M${node.x - 12},${node.y + 21} h24`} />
             </g>
@@ -118,7 +118,7 @@ function Legend() {
       <span><i style={{ borderColor: PATH_COLORS.data }} />Private service traffic</span>
       <span><i style={{ borderColor: PATH_COLORS.egress }} />Internet egress</span>
       <span><i className={styles.optionalLine} style={{ borderColor: PATH_COLORS.optional }} />Optional addition</span>
-      <span>Dots connect paths; bridges keep paths separate.</span>
+      <span>Dots connect paths. Bridges keep paths separate.</span>
     </div>
   );
 }

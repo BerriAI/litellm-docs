@@ -405,7 +405,7 @@ export function MultiRegionArchitecture() {
             <div className={styles.dependencyStem} />
             <Dependencies items={[
               { ...services.data[1], subtitle: 'regional rate limits and cache' },
-              { ...services.data[0], subtitle: 'optional read replica; writes go to primary' },
+              { ...services.data[0], subtitle: 'Optional read replica. Writes go to primary.' },
             ]} />
           </Region>
         </div>

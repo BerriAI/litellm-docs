@@ -10,7 +10,7 @@ LiteLLM signs every Docker image it publishes to GHCR with [cosign](https://docs
 
 Use `ghcr.io/berriai/litellm`, mirrored at `docker.litellm.ai/berriai/litellm`. Verify the exact release tag or digest you deploy.
 
-The [current Dockerfile](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/Dockerfile) builds one shared image for proxy, gateway, backend, UI, migrations, metrics, and collector processes. Published tags can predate that consolidation. The [Helm guide](./deploy/helm.md) pins matching chart and image source; an internal source build needs your own signing process and cannot be verified with LiteLLM's upstream public key.
+The [Dockerfile](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/Dockerfile) builds one image for the proxy, gateway, backend, UI, migrations, metrics, and collector. Older release tags can use a different Dockerfile. Follow the [Helm guide](./deploy/helm.md) to match your chart and image. Sign internal builds with your own key. LiteLLM's public key only verifies images that LiteLLM signs.
 
 The current signing key was introduced in [commit `e82a3c6`](https://github.com/BerriAI/litellm/commit/e82a3c646908ba0a6ee0beddc4310d7a6cac4065) and the public key is checked into the repository at [`cosign.pub`](https://github.com/BerriAI/litellm/blob/main/cosign.pub). Its SHA-256 fingerprint is `e3fe3e08c44b16407fe0b37c43b4f8b603b3a0f4ee74c29e647bc022d762c2c0`. It signs images from `v1.103.8`, `v1.104.6`, `v1.105.4`, `v1.106.3` and every later release.
 
@@ -32,7 +32,7 @@ cosign verify \
   ghcr.io/berriai/litellm:v1.106.6
 ```
 
-Replace the example tag with the release you deploy. Successful signature verification establishes who signed the image; check its release contents separately for the entrypoint and features your chart requires.
+Replace the example tag with the release you deploy. Signature verification identifies who signed the image. Check that the release includes the entrypoint and features your chart requires.
 
 ### Verify with a release tag (convenience)
 
@@ -175,7 +175,7 @@ Avoid `latest` in production. This rolling tag points to the most recent build a
 
 ### Runtime user and entrypoint
 
-The [consolidated source image](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/Dockerfile#L212) runs as UID/GID `65532:65532`. Its entrypoint accepts `proxy`, `gateway`, `backend`, `ui`, `migrations`, `metrics`, or `collector` as the first argument. No argument, or a CLI flag such as `--config`, starts the full proxy. Keep this entrypoint intact; Kubernetes selects a component through `args`.
+The [consolidated source image](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/Dockerfile#L212) runs as UID/GID `65532:65532`. Its entrypoint accepts `proxy`, `gateway`, `backend`, `ui`, `migrations`, `metrics`, or `collector` as the first argument. No argument, or a CLI flag such as `--config`, starts the full proxy. Keep this entrypoint. Select a component in Kubernetes through `args`.
 
 Check the exact image you use before relying on that non-root default. Older published images use a different entrypoint and can run as root:
 
@@ -184,11 +184,11 @@ docker image inspect "$LITELLM_IMAGE" \
   --format '{{.Config.User}} {{json .Config.Entrypoint}}'
 ```
 
-Restrict mounted credentials to the runtime user. A read-only root filesystem requires explicit writable scratch volumes; the consolidated chart does not add them automatically. Configure security contexts and mounts for each enabled workload, including the migration Job. See the [chart values](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/helm/litellm/values.yaml).
+Restrict mounted credentials to the runtime user. If you use a read-only root filesystem, add writable volumes for temporary files. The chart does not add them automatically. Configure security contexts and mounts for each enabled workload, including the migration Job. See the [chart values](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/helm/litellm/values.yaml).
 
 ## Further reading
 
 - [CI/CD v2 announcement](https://docs.litellm.ai/blog/ci-cd-v2-improvements) explains LiteLLM's signing infrastructure.
-- [Deployment overview](./deploy.md) covers Docker, Helm, and Terraform.
+- [Deployment overview](./deploy.md) links to Helm, Terraform, and architecture guides.
 - [cosign documentation](https://docs.sigstore.dev/quickstart/quickstart-cosign/) covers signature verification and key management.
 - [Sigstore Policy Controller](https://docs.sigstore.dev/policy-controller/overview/) covers Kubernetes admission control.

@@ -661,7 +661,7 @@ Put your YAML in one of these two locations.
 
 Mount the file into the imported package's `categories/` directory and omit `category_file:`. The shared LiteLLM image uses `/app/.venv/lib/python{{python_version}}/site-packages/litellm/proxy/guardrails/content_filter_data/categories/` in both deployment modes. Update the Python minor version in the path when your image changes.
 
-Mount each file with `subPath`; mounting over the whole directory hides the built-in categories. For the [LiteLLM chart](../deploy/helm.md):
+Mount each file with `subPath`. A mount over the whole directory hides the built-in categories. For the [LiteLLM chart](../deploy/helm.md):
 
 ```yaml title="values.yaml (Helm)"
 gateway:
@@ -687,7 +687,7 @@ backend:
         name: <your-configmap-name>
 ```
 
-In componentized mode, mount the file on both the gateway, which runs the guardrail, and the backend, which serves the UI category list and editor. In monolith mode, the `gateway` mounts cover both roles and the `backend` block is unused.
+For separate services, mount the file on both the gateway and backend. The gateway runs the guardrail. The backend serves the UI category list and editor. In monolith mode, use the `gateway` mounts. This mode ignores the `backend` block.
 
 ```yaml title="config.yaml"
 guardrails:

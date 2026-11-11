@@ -3,13 +3,13 @@ import TabItem from '@theme/TabItem';
 
 # Billable Request Metering
 
-LiteLLM Enterprise [pricing is usage-based](../enterprise#how-is-pricing-structured). Billable request metering reports that usage. The proxy counts successful requests to LLM, MCP, and A2A endpoints and pushes one OpenTelemetry counter to LiteLLM's collector, authenticated with an OAuth client ID and secret issued for your deployment.
+LiteLLM Enterprise [pricing is usage-based](../enterprise#how-is-pricing-structured). Billable request metering reports that usage. The proxy counts successful requests to LLM, MCP, and A2A endpoints. It sends one OpenTelemetry counter to LiteLLM's collector. It authenticates with your deployment's OAuth client ID and secret.
 
-Metering sends request counts with the endpoint category, route, status, model ID, LiteLLM version, and license ID when available. Prompts, responses, and virtual keys never leave the deployment. The license key is sent to the LiteLLM license server only when the gateway's offline check of its signature does not pass, see [Activate your license](../enterprise/activate.md). Metering runs separately from any [OTEL logging](../observability/opentelemetry_integration) you configure and never touches your own metrics pipeline.
+Metering sends request counts with the endpoint category, route, status, model ID, LiteLLM version, and license ID when available. Prompts, responses, and virtual keys never leave the deployment. The gateway sends the license key to the LiteLLM license server only if its offline signature check fails. See [Activate your license](../enterprise/activate.md). Metering runs separately from your [OTEL logging](../observability/opentelemetry_integration) and metrics pipeline.
 
 :::info
 
-You need a `LITELLM_LICENSE` and metering credentials (OAuth client ID and secret) from your LiteLLM onboarding. Missing either? [Contact us](https://enterprise.litellm.ai/demo).
+Get a `LITELLM_LICENSE`, OAuth client ID, and OAuth client secret during LiteLLM onboarding. [Contact us](https://enterprise.litellm.ai/demo) if you need these credentials.
 
 :::
 
@@ -23,7 +23,7 @@ These OAuth settings replace the certificate settings from earlier builds. Use a
 |----------|----------|-------------|
 | `LITELLM_BILLING_METRICS_ENDPOINT` | Yes | Collector URL. Use `https://telemetry.litellm.ai` |
 | `LITELLM_BILLING_METRICS_CLIENT_ID` | Yes | OAuth client ID from LiteLLM onboarding |
-| `LITELLM_BILLING_METRICS_CLIENT_SECRET` | Yes | OAuth client secret; supply through your secret manager |
+| `LITELLM_BILLING_METRICS_CLIENT_SECRET` | Yes | OAuth client secret from your secret manager |
 | `LITELLM_BILLING_METRICS_TOKEN_URL` | Yes | HTTPS OAuth token endpoint from onboarding |
 | `LITELLM_BILLING_METRICS_EXPORT_INTERVAL_MS` | No | Push interval in milliseconds. Default `60000` |
 
@@ -48,14 +48,14 @@ The line below is logged at INFO level, so it only shows when the proxy runs wit
 Enterprise billing metrics enabled: exporting to https://telemetry.litellm.ai every 60000 ms
 ```
 
-If this line is missing, look for a warning naming the misconfigured variable. Metering problems never affect request serving. Invalid startup configuration disables metering; export failures do not stop the proxy.
+If this line is missing, look for a warning naming the misconfigured variable. Invalid startup configuration disables metering. The proxy continues to serve requests if metering fails.
 
 ## Deploy
 
 <Tabs>
 <TabItem value="helm" label="Helm">
 
-The [LiteLLM chart](./deploy/helm.md) has one `billingMetrics` block for both deployment modes. Create a Secret named `litellm-billing-metrics` with `client-id` and `client-secret` keys through your secret manager, then enable metering:
+The [LiteLLM chart](./deploy/helm.md) has one `billingMetrics` block for both deployment modes. Create a Secret named `litellm-billing-metrics` with `client-id` and `client-secret` keys through your secret manager. Then enable metering:
 
 ```yaml title="values.yaml"
 billingMetrics:
@@ -81,7 +81,7 @@ billing_metrics_endpoint  = "https://telemetry.litellm.ai"
 billing_metrics_client_id = "your-client-id"
 ```
 
-Supply `TF_VAR_billing_metrics_client_secret` through your secret manager. The module stores it in AWS Secrets Manager or Google Secret Manager and injects it into the runtime. Terraform state still contains the secret; restrict access to the state backend. Set `billing_metrics_token_url` if onboarding provides a different token endpoint.
+Supply `TF_VAR_billing_metrics_client_secret` through your secret manager. The module stores it in AWS Secrets Manager or Google Secret Manager and injects it into the runtime. Terraform state contains the secret. Restrict access to the state backend. Set `billing_metrics_token_url` if onboarding provides a different token endpoint.
 
 </TabItem>
 <TabItem value="docker" label="Docker">
@@ -99,7 +99,7 @@ docker run \
   --config /app/config.yaml
 ```
 
-Set `LITELLM_IMAGE` to your tested image reference. Keep `litellm.env` private; include the license, OAuth client ID and secret, master key, and database connection settings from your existing deployment.
+Set `LITELLM_IMAGE` to your tested image reference. Keep `litellm.env` private. Include the license, OAuth client ID and secret, master key, and database connection settings from your existing deployment.
 
 </TabItem>
 </Tabs>
@@ -116,6 +116,6 @@ The count lines up with the **successful requests** number on the Admin UI usage
 
 **What if the collector is unreachable?** Requests are unaffected. The counter is cumulative, so counts recorded during an outage are included in the next successful export.
 
-**What happens on restart?** The proxy attempts a final flush on graceful shutdown. A crash or failed flush can lose counts that were not exported.
+**What happens on restart?** The proxy attempts a final flush on graceful shutdown. A crash or failed flush can lose counts before the proxy exports them.
 
 **Air-gapped deployments?** Metering needs outbound HTTPS to the collector and OAuth token endpoint. If your deployment cannot reach it, talk to us during onboarding.

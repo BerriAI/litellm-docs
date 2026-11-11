@@ -1,4 +1,19 @@
 .viewer {
+  --network-bg: #ffffff;
+  --network-text: #243345;
+  --network-muted: #536579;
+  --network-outline: #34465b;
+  --network-border: #c5cfd9;
+  --network-request: #2367b4;
+  --network-data: #51606f;
+  --network-egress: #99450c;
+  --network-optional: #79489f;
+  --network-public: #50722c;
+  --network-private: #27758a;
+  --network-public-bg: #f5f9ee;
+  --network-private-bg: #f0f8fb;
+  --network-managed-bg: #f7f9fb;
+  --network-optional-bg: #fcf9ff;
   margin-top: 1.25rem;
 }
 
@@ -54,9 +69,9 @@
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
   padding: 0.6rem 0.75rem;
-  background: #ffffff;
-  color: #344254;
-  border: 1px solid #d2dae2;
+  background: var(--network-bg);
+  color: var(--network-text);
+  border: 1px solid var(--network-border);
   border-bottom: 0;
   font-size: 0.72rem;
 }
@@ -80,8 +95,8 @@
 .viewport,
 .expandedViewport {
   overflow: auto;
-  background: #ffffff;
-  border: 1px solid #d2dae2;
+  background: var(--network-bg);
+  border: 1px solid var(--network-border);
   overscroll-behavior: contain;
 }
 
@@ -94,7 +109,7 @@
   width: 100%;
   height: auto;
   font-family: Arial, Helvetica, sans-serif;
-  background: #ffffff;
+  background: var(--network-bg);
 }
 
 .groupLabel {
@@ -103,14 +118,14 @@
 }
 
 .nodeTitle {
-  fill: #243345;
+  fill: var(--network-text);
   font-size: 15px;
   font-weight: 600;
 }
 
 .nodeDetail,
 .annotation {
-  fill: #4d5c6c;
+  fill: var(--network-muted);
   font-size: 14px;
 }
 
@@ -118,7 +133,7 @@
   font-size: 13px;
   font-weight: 600;
   paint-order: stroke;
-  stroke: #ffffff;
+  stroke: var(--network-bg);
   stroke-width: 5px;
   stroke-linejoin: round;
 }
@@ -158,8 +173,8 @@
   padding: 0;
   border: 1px solid var(--ifm-color-emphasis-400);
   border-radius: 8px;
-  background: #ffffff;
-  color: #243345;
+  background: var(--network-bg);
+  color: var(--network-text);
 }
 
 .dialog::backdrop {
@@ -187,4 +202,28 @@
   .toolbar {
     align-items: flex-start;
   }
+}
+
+[data-theme='dark'] .viewer {
+  --network-bg: #121923;
+  --network-text: #e6edf5;
+  --network-muted: #b5c4d4;
+  --network-outline: #c5d4e5;
+  --network-border: #526479;
+  --network-request: #8abbff;
+  --network-data: #c1cfdf;
+  --network-egress: #ffb878;
+  --network-optional: #d2b1f6;
+  --network-public: #b3d78b;
+  --network-private: #80d2e5;
+  --network-public-bg: #202c20;
+  --network-private-bg: #182a36;
+  --network-managed-bg: #202a36;
+  --network-optional-bg: #292239;
+}
+
+.iconTile {
+  fill: #ffffff;
+  stroke: #d2dae2;
+  stroke-width: 0.75px;
 }

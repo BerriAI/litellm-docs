@@ -35,7 +35,7 @@ The gateway separately uses `LITELLM_LENS_URL` for its private connection and `L
 
 The independent Lens chart uses `publicUrl`, optional `ingestionUrl` and `ingress` at the top level. Its ingress can serve the standalone UI and API. Configure the hostname, TLS and ingress controller using the [Lens Helm guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md)
 
-The LiteLLM chart connects to an independent Lens deployment through `lens.enabled`, `lens.url`, `lens.publicUrl`, and Secret references. See [Connect an existing LiteLLM deployment](./kubernetes.md#existing-deployment). The current chart no longer accepts `lensWorker` or deploys Lens and ClickHouse
+The LiteLLM chart connects to an independent Lens deployment through `lens.enabled`, `lens.url`, `lens.publicUrl`, and Secret references. See [Connect an existing LiteLLM deployment](./kubernetes.md#existing-deployment). The chart does not accept `lensWorker` or deploy Lens and ClickHouse.
 
 ## Connect Docker networks {#docker-network}
 
