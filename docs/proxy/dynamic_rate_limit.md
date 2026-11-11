@@ -152,6 +152,7 @@ litellm_settings:
     default_priority: 0  # Weight (0%) assigned to keys without explicit priority metadata
     saturation_threshold: 0.50 #  A model is saturated if it has hit 50% of its RPM limit
     saturation_check_cache_ttl: 60 # How long (seconds) saturation values are cached locally
+    priority_metadata_field: priority # Team or key metadata field that names the priority (default "priority")
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY # OR set `LITELLM_MASTER_KEY=".."` in your .env
@@ -173,6 +174,19 @@ general_settings:
   - Example: When model usage is low, keys can use more than their allocated share. When model usage is high, keys are strictly limited to their allocated share.
 - **saturation_check_cache_ttl (int)**: TTL in seconds for local cache when reading saturation values from Redis (defaults to 60). In multi-node deployments, this controls how quickly nodes converge on the same saturation state. Lower values mean faster convergence but more Redis reads.
   - Example: Set to `5` for faster multi-node consistency, or `0` to always read directly from Redis.
+- **priority_metadata_field (str)**: The team or key metadata field whose value is matched against the `priority_reservation` keys (defaults to `priority`). Team metadata is read first, then key metadata. Set it when your teams already carry a priority under another name, for example `priority_class`, so you can turn the limiter on without retagging them:
+
+```yaml
+litellm_settings:
+  callbacks: ["dynamic_rate_limiter_v3"]
+  priority_reservation:
+    interactive: 0.6
+    batch: 0.4
+  priority_reservation_settings:
+    priority_metadata_field: priority_class
+```
+
+A team created with `"metadata": {"priority_class": "batch"}` then lands in the `batch` pool, and a team tagged `metadata.priority` is treated as unlabeled.
 
 **Start Proxy**
 
@@ -252,6 +266,7 @@ curl -X POST 'http://0.0.0.0:4000/key/generate' \
 **Priority Resolution Order:**
 1. If key belongs to a team with `metadata.priority` set → use team priority
 2. Else if key has `metadata.priority` set → use key priority  
+   (`priority` is the default `priority_metadata_field`; both steps read the configured field instead when it is set)
 3. Else → use `default_priority` from config
 
 #### 3. Test Priority Allocation
