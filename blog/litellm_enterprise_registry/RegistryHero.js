@@ -3,14 +3,18 @@ import animation from './cover.gif';
 import poster from './cover.png';
 import styles from './hero.module.css';
 
+const imageUrl = image => typeof image === 'string'
+  ? image
+  : image.src.images.find(variant => variant.width >= 1280)?.path ?? image.src.src;
+
 export default function RegistryHero() {
   const [paused, setPaused] = useState(false);
   return (
     <div className={styles.hero}>
       <picture>
-        <source media="(prefers-reduced-motion: reduce)" srcSet={poster} />
+        <source media="(prefers-reduced-motion: reduce)" srcSet={imageUrl(poster)} />
         <img
-          src={paused ? poster : animation}
+          src={imageUrl(paused ? poster : animation)}
           width="1600"
           height="900"
           alt="Packages move from the LiteLLM Enterprise Registry to a deployment after Cognito authorization. A separate IAM route fills an Amazon ECR cache and serves a later pull from the cached copy."

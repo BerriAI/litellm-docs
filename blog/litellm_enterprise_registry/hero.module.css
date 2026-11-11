@@ -2,7 +2,7 @@
   position: relative;
   width: 100%;
   overflow: hidden;
-  background: #0b1423;
+  background: #f7f9fd;
 }
 
 .hero picture,
@@ -16,19 +16,19 @@
   position: absolute;
   right: 12px;
   bottom: 12px;
-  border: 1px solid #516888;
+  border: 1px solid #ced7e7;
   border-radius: 6px;
   padding: 6px 10px;
-  background: #111d30;
-  color: #d5e1ef;
+  background: #fff;
+  color: #344666;
   font: 12px/1.4 system-ui, sans-serif;
   cursor: pointer;
 }
 
 .control:hover,
 .control:focus-visible {
-  background: #243a57;
-  border-color: #a2b6ff;
+  background: #eef2ff;
+  border-color: #3657f5;
 }
 
 @media (max-width: 600px) {
