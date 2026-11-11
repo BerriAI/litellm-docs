@@ -173,7 +173,7 @@ The listing uses the deployment's `api_key` and `api_base`, then `OPENROUTER_API
 
 ## OpenAI-compatible servers
 
-An `openai/*` deployment where the `api_base` is pointing at an OpenAI compatible server (e.g. vLLM, Baseten) will list each id that the server returns under the wildcard prefix. If the server's own id begins with `openai/` (e.g. `openai/gpt-oss-120b`) then the name that appears in the list will have that segment duplicated (i.e. `openai/openai/gpt-oss-120b`). Call that the duplicated name. The proxy strips off the first `openai/` and sends `openai/gpt-oss-120b` to the server.
+With `check_provider_endpoint: true` an `openai/*` deployment where the `api_base` is pointing at an OpenAI compatible server (e.g. vLLM, Baseten) will show each id that the server returns under the wildcard prefix. If the server's own id starts with `openai/` (e.g. `openai/gpt-oss-120b`) then the name that appears in the list will have that segment repeated (i.e. `openai/openai/gpt-oss-120b`). The proxy strips off the first `openai/` and passes `openai/gpt-oss-120b` on to the server.
 
 ```yaml
 model_list:
@@ -198,7 +198,11 @@ curl -s http://localhost:4000/v1/chat/completions -H "Authorization: Bearer $LIT
 # ok
 ```
 
-Ids which don't start with `openai/` (e.g. `zai-org/GLM-5.3-Flash`) get the prefix once. A custom prefix works in the same way so `model_name: my-vllm/*` over `model: openai/*` lists `my-vllm/openai/gpt-oss-120b` and a catch all `model_name: "*"` over `openai/*` lists `openai/gpt-oss-120b`.
+Ids that don't start with `openai/` (e.g. `zai-org/GLM-5.3-Flash`) get the prefix once. A custom prefix works in exactly the same way so `model_name: my-vllm/*` over `model: openai/*` will list `my-vllm/openai/gpt-oss-120b` and a catch all `model_name: "*"` over `openai/*` will list `openai/gpt-oss-120b`.
+
+A `hosted_vllm/*` deployment lists the same way, so a `model_name: openai/*` over `model: hosted_vllm/*` deployment will list `openai/openai/gpt-oss-120b`. A deployment that sets `custom_llm_provider: hosted_vllm` on `model: openai/*` will send the `openai/` segment to the server as-is, so it will only list the server ids that start with `openai/` (e.g. `model_name: my-vllm/*` lists `my-vllm/gpt-oss-120b`) and will not list ids such as `zai-org/GLM-5.3-Flash` that it can't reach.
+
+A key or team restricted to named models must have the named model in its `models`. Grant `openai/openai/gpt-oss-120b` not `openai/gpt-oss-120b`.
 
 ## Hide a model from `/v1/models`
 
