@@ -133,7 +133,7 @@ On a project endpoint LiteLLM sends no `api-version`, because that route rejects
 
 On a resource `/openai/v1` endpoint LiteLLM sends the key in the `api-key` header and passes through any `api_version` you set, such as `preview`.
 
-An OpenAI model such as `azure_ai/gpt-4.1` on a `<resource>.openai.azure.com/openai/v1` or `<resource>.cognitiveservices.azure.com/openai/v1` base goes through the [Azure OpenAI](./azure/azure) provider, and its spend is logged under `azure`. When neither the entry's `api_version` nor `AZURE_API_VERSION` is set, LiteLLM uses the Azure OpenAI v1 API there.
+An OpenAI model such as `azure_ai/gpt-4.1` on a `<resource>.openai.azure.com/openai/v1` or `<resource>.cognitiveservices.azure.com/openai/v1` base goes through the [Azure OpenAI](./azure/azure) provider, and its spend is logged under `azure`. When the entry sets no `api_version`, LiteLLM uses the Azure OpenAI v1 API there, even if `AZURE_API_VERSION` holds a dated version.
 
 ```yaml
 model_list:
