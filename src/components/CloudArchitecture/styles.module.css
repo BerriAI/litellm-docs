@@ -83,6 +83,7 @@
 /* Variant pills (Terraform vs Kubernetes path) */
 .variantRow {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: center;
   margin-bottom: 0.5rem;
@@ -267,6 +268,214 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
+}
+
+.computeIcons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Keep provider artwork at its native colors and aspect ratio on a light canvas. */
+.cloudCanvas {
+  --ca-text: #232f3e;
+  --ca-text-secondary: #526071;
+  --ca-connector: #68788a;
+  --ca-border: #a8b3c1;
+  --ca-card-bg: #ffffff;
+  --ca-accent: #345b80;
+  --ca-accent-light: #eef3f8;
+  margin: 1rem 0;
+  padding: 1.25rem;
+  background: #ffffff;
+  border: 1px solid var(--ca-border);
+  border-radius: 6px;
+}
+
+.cloudBoundary {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 1.25rem 0.75rem 0.75rem;
+  border: 1px solid var(--ca-border);
+}
+
+.cloudLabel {
+  position: absolute;
+  top: -0.65rem;
+  left: 0.75rem;
+  padding: 0 0.4rem;
+  background: #ffffff;
+  color: var(--ca-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.cloudDiagram .node,
+.cloudDiagram .computeNode {
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.4rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.cloudDiagram .computeNode {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--ca-border);
+}
+
+.cloudDiagram .computeHeader {
+  flex-direction: column;
+}
+
+.cloudDiagram .nodeText {
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.cloudDiagram .nodeIcon,
+.cloudDiagram .nodeSmall .nodeIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 0;
+  object-fit: contain;
+}
+
+.cloudDiagram .nodeSubtitle {
+  margin-top: 0.25rem;
+}
+
+.cloudDiagram .clientsIcon {
+  border: 0;
+  background: transparent;
+}
+
+.cloudDiagram .clientsIcon svg {
+  width: 30px;
+  height: 30px;
+  stroke: var(--ca-text);
+}
+
+.dependencyStem {
+  width: 2px;
+  height: 24px;
+  background: var(--ca-connector);
+}
+
+.dependencies {
+  display: grid;
+  grid-template-columns: repeat(var(--dependency-count), minmax(0, 1fr));
+  width: 100%;
+}
+
+.dependency {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.dependency::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--ca-connector);
+}
+
+.dependency:first-child::before {
+  left: 50%;
+}
+
+.dependency:last-child::before {
+  right: 50%;
+}
+
+.regionalCanvas .regionsRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.regionalCanvas .region {
+  min-width: 0;
+  max-width: none;
+  padding: 0.75rem 0.25rem;
+  border: 1px solid var(--ca-border);
+  border-radius: 0;
+  background: #ffffff;
+}
+
+.regionalCanvas .regionHeader {
+  flex-wrap: wrap;
+  margin-inline: 0.5rem;
+}
+
+.regionalCaption {
+  margin-top: 1rem;
+  color: var(--ca-text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.regionalCanvas .branch {
+  display: block;
+  max-width: none;
+}
+
+.tabs .tabIcon,
+.regionHeader .regionIcon {
+  padding: 2px;
+  background: #ffffff;
+  border-radius: 0;
+  box-sizing: content-box;
+}
+
+.tab:focus-visible,
+.variantPill:focus-visible {
+  outline: 2px solid var(--ca-accent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .cloudCanvas {
+    padding: 1rem 0.5rem;
+  }
+
+  .cloudBoundary {
+    padding-inline: 0.25rem;
+  }
+
+  .cloudDiagram .nodeTitle {
+    font-size: 0.75rem;
+  }
+
+  .cloudDiagram .nodeSubtitle {
+    font-size: 0.68rem;
+  }
+
+  .tab {
+    padding-inline: 0.65rem;
+  }
+
+  .regionalCanvas .regionsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .regionalCanvas .branch {
+    display: none;
+  }
 }
 
 /* Data stores row */
