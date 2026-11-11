@@ -16,7 +16,7 @@ export default function RegistryHero() {
         <img
           src={imageUrl(paused ? poster : animation)}
           width="1600"
-          height="900"
+          height="800"
           alt="The LiteLLM Enterprise Registry runs on Amazon ECR. An OAuth token from Cognito is exchanged through the registry credentials API for direct package pulls. A separate IAM route fills your Amazon ECR cache and serves later pulls from the cached copy."
         />
       </picture>

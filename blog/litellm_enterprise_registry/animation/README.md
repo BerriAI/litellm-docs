@@ -1,8 +1,8 @@
 # Enterprise Registry animation
 
-A 1600 by 900, 12-second GIF at 25 fps. Standalone service logos, blue connectors and simple package icons create a minimal flat design on a light background. The LiteLLM and ECR logos share one source label because the LiteLLM Enterprise Registry is hosted in Amazon ECR.
+A 1600 by 800, 10-second GIF at 25 fps. Two flowing ribbons of packages, a splitting access shutter, and retained cache copies tell the story with only two labels: OAuth and IAM. The composition takes its motion cues from the Rust router and prompt-latency covers, with the cobalt and cyan palette of cache-aware routing. Official logos stand directly on a light canvas.
 
-Cognito supplies an OAuth token on a separate control connection. The registry credentials API exchanges that token for temporary ECR credentials, shown as a key chip. Packages travel directly from LiteLLM's ECR to the customer's deployment. The second sequence fills the customer's separate ECR cache, delivers a package, then serves a later pull from that cache. A retained package glyph marks the populated cache. ECR pull-through does not pass through Cognito.
+Cognito's key gesture represents the OAuth access exchange: Cognito supplies an OAuth token, which the registry credentials API exchanges for temporary ECR credentials. The shutter opens and queued packages join a continuous stream from LiteLLM's ECR. The lower ribbon independently fills the customer's ECR cache; three package copies remain visible while the cache serves repeated downstream pulls. ECR pull-through does not pass through Cognito. The LiteLLM and ECR source logos are paired because the Enterprise Registry itself runs on ECR.
 
 This is an illustrative access flow, not a literal network trace or performance measurement. The direct-access exchange is simplified; the customer access guide documents the OAuth and registry-credential exchanges.
 
