@@ -14,7 +14,7 @@ Use **LiteAdmin** to ask about teams, budgets, models, and spend from a Slack DM
 
 Install the Slack app once, then choose one deployment below. **Enterprise** uses the worker bundled with your gateway and its existing SSO. **Standalone** runs a separate agent service with its own HTTPS address and login configuration
 
-To connect Claude Code or Codex to an MCP endpoint on your Enterprise deployment, see [Deploy LiteAdmin MCP on Enterprise](./liteadmin_mcp_enterprise.md). That guide covers `/admin/mcp` in unified and componentized images; this page configures the Slack agent worker
+To connect Claude Code or Codex to an MCP endpoint on your Enterprise deployment, see [Deploy LiteAdmin MCP on Enterprise](./liteadmin_mcp_enterprise.md). That guide covers `/admin/mcp` in monolith and componentized deployments; this page configures the Slack agent worker
 
 ## Before you start
 
@@ -133,7 +133,7 @@ Choose the deployment method you already use for the gateway. Both examples star
 <Tabs groupId="liteadmin-native-deployment">
 <TabItem value="helm" label="Kubernetes / Helm" default>
 
-Use the `helm/litellm-helm` chart from a LiteLLM checkout containing this integration. Keep your existing gateway values, including the Enterprise license, database, and SSO settings
+Use the `helm/litellm` chart from a LiteLLM checkout containing this integration. Keep your existing gateway values, including the Enterprise license, database, and SSO settings
 
 Create a Secret named `liteadmin-slack` in the gateway's namespace through your usual secret-management workflow. It must contain the five settings from **Store the worker's credentials** above. For a manual installation, save only those settings in a private `liteadmin-secrets.env` file, then run:
 
@@ -162,14 +162,13 @@ liteadmin:
   readOnly: true
 ```
 
-Replace the image with a build containing this integration. Set `gatewayUrl` and `model` to your gateway URL and model name. Use `storageClassName` under `liteadmin` if your cluster requires a particular storage class
+Replace the image with a build containing this integration. This shared image also runs the gateway, backend, UI, and migrations. Set `gatewayUrl` and `model` to your gateway URL and model name. Use `storageClassName` under `liteadmin` if your cluster requires a particular storage class
 
 Apply the configuration to your existing release. Replace `litellm` with your release name and `gateway-values.yaml` with the values file you already use:
 
 ```bash
 export LITELLM_RELEASE=litellm
-helm dependency build ./helm/litellm-helm
-helm upgrade "$LITELLM_RELEASE" ./helm/litellm-helm \
+helm upgrade "$LITELLM_RELEASE" ./helm/litellm \
   --namespace "$LITELLM_NAMESPACE" \
   -f gateway-values.yaml \
   -f liteadmin-values.yaml

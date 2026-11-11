@@ -8,7 +8,7 @@ description: Use the LiteLLM Terraform provider to manage teams, virtual keys, m
 
 {/* keep-version-note */}
 
-The LiteLLM Terraform provider manages teams, virtual keys, models, and other resources through a running gateway's API. Use it after you deploy the gateway. To create cloud infrastructure, see the [AWS](../deploy/terraform/aws.md) and [GCP](../deploy/terraform/gcp.md) deployment guides.
+The LiteLLM Terraform provider manages teams, virtual keys, models, and other resources through a running gateway's API. Use it after you deploy the gateway. To create cloud infrastructure, see the [Terraform deployment guide](../deploy/terraform.md).
 
 ## Configure the provider
 

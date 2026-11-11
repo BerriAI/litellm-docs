@@ -5,7 +5,7 @@ description: Upgrade LiteLLM with Helm or Terraform. Run schema migrations and r
 
 # Upgrade Guide
 
-Helm charts and the official Terraform modules provide a **separate migration job** for schema changes and request-log indexing. Keep `DISABLE_SCHEMA_UPDATE=true` on the gateway pods and let the job finish before rolling out the new gateway version.
+The Helm chart and official Terraform modules provide a **separate migration job** for schema changes and request-log indexing. Keep `DISABLE_SCHEMA_UPDATE=true` on the gateway pods and let the job finish before rolling out the new gateway version.
 
 ```mermaid
 flowchart LR
@@ -50,13 +50,13 @@ Because the statements really run, the dry run takes the same table locks the up
 
 | Deployment | Select the release | Run migrations before rollout |
 |---|---|---|
-| [Helm](./deploy/helm.md) | Pin the chart and image versions. Keep the migration job and application images on the same LiteLLM release. | Keep `migrationJob.enabled: true` and enable the hook for your deployment controller. Wait for the job to complete. |
-| [Terraform](./deploy/terraform.md) | Bump the module `version`. Component images default to that release; review any image overrides. | Run `terraform init -upgrade`, review `terraform plan`, then apply. The modules run an ECS migration task on AWS or a Cloud Run migration job on GCP before updating the services. |
+| [Helm](./deploy/helm.md) | Pin the chart revision and shared image. The migration Job and application use the same image. | Keep `migrationJob.enabled: true` and enable the hook for your deployment controller. Wait for the job to complete. |
+| [Terraform](./deploy/terraform.md) | Pin the module version or source revision and its shared `image`. A source checkout requires an explicit compatible image. | Run `terraform init -upgrade`, review `terraform plan`, then apply. The modules run an ECS migration task on AWS or a Cloud Run migration job on GCP before updating the services. |
 
 <details>
 <summary>Helm and Argo CD hook settings</summary>
 
-For `helm upgrade`, use these values. The componentized `litellm` chart defaults to Helm hooks; the older `litellm-helm` chart defaults to Argo CD hooks and needs this change when used with Helm directly.
+For `helm upgrade`, these are the chart's defaults in both componentized and monolith modes:
 
 ```yaml title="values.yaml"
 migrationJob:
@@ -68,7 +68,7 @@ migrationJob:
       enabled: false
 ```
 
-For Argo CD, enable `argocd` and disable `helm` instead. The PreSync job then runs before the application sync. See the chart values for [`litellm`](https://github.com/BerriAI/litellm/blob/main/helm/litellm/values.yaml) and [`litellm-helm`](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/values.yaml).
+For Argo CD, enable `argocd` and disable `helm` instead. The PreSync job then runs before the application sync. See the [chart values](https://github.com/BerriAI/litellm/blob/main/helm/litellm/values.yaml).
 
 </details>
 

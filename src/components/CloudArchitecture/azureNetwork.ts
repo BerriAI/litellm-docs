@@ -38,7 +38,7 @@ export function makeAzureNetworkDiagram(cloud: CloudKey): NetworkDiagram {
         title: ['LiteLLM pods on AKS'],
         detail: microservices
           ? ['gateway :4000, backend :4001', 'UI :3000; separate services']
-          : ['litellm-helm chart', 'Replicas; service :4000'],
+          : ['litellm chart; proxy', 'Replicas; service :4000'],
       },
       {
         id: 'aks-nsg', x: 180, y: 540,
@@ -123,13 +123,14 @@ export function makeAzureNetworkDiagram(cloud: CloudKey): NetworkDiagram {
       },
     ],
     notes: [
+      { title: 'One Helm chart', text: `The litellm chart uses one image for all components. ${microservices ? 'This layout uses the default monolith.enabled=false.' : 'Set monolith.enabled=true for this layout; gateway values configure the single service.'}` },
       {
         title: 'Infrastructure you provide',
         text: 'This example uses a customer-managed AKS cluster and virtual network. Provision Application Gateway, subnet policies, NAT Gateway, databases, private endpoints, and DNS separately. The LiteLLM Helm chart deploys the application workloads.',
       },
       {
         title: 'Application Gateway ingress',
-        text: 'AGIC configures Application Gateway to reach pod private IPs directly. It is a controller, not a traffic proxy. No second internal load balancer is shown. Configure the backend routes and health probes for the selected Helm chart.',
+        text: 'AGIC configures Application Gateway to reach pod private IPs directly. It is a controller, not a traffic proxy. No second internal load balancer is shown. Configure the backend routes and health probes for the selected service layout.',
       },
       {
         title: 'Public outbound traffic',
@@ -145,6 +146,7 @@ export function makeAzureNetworkDiagram(cloud: CloudKey): NetworkDiagram {
       },
     ],
     sources: [
+      { label: 'LiteLLM chart and layouts (pinned)', url: 'https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/helm/litellm/README.md' },
       { label: 'Application Gateway subnet requirements', url: 'https://learn.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure' },
       { label: 'Application Gateway Ingress Controller', url: 'https://learn.microsoft.com/en-us/azure/application-gateway/ingress-controller-overview' },
       { label: 'AKS NAT Gateway options', url: 'https://learn.microsoft.com/en-us/azure/aks/nat-gateway' },

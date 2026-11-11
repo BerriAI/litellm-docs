@@ -15,8 +15,6 @@ An identity-aware proxy checks who can reach LiteLLM before a request reaches yo
 
 The proxy controls access to the service. LiteLLM still checks its own [authentication](../../authentication.md), [roles, teams, and permissions](../../access_management/overview.md). An allowed employee does not automatically become a LiteLLM administrator, and an allowed service still needs a LiteLLM key or a configured LiteLLM identity flow.
 
-Start with a working [cloud deployment](../cloud/overview.md), then add one of these ingress options.
-
 ## Choose a provider
 
 <Tabs>
@@ -41,15 +39,3 @@ Start with a working [cloud deployment](../cloud/overview.md), then add one of t
 
 </TabItem>
 </Tabs>
-
-## Connect it to LiteLLM
-
-Protect the complete browser application, including its API calls, assets, and sign-in callbacks. Protecting only `/ui` leaves other routes outside the identity policy. A separate Admin UI hostname and API hostname make different browser and machine policies easier to manage.
-
-Set `PROXY_BASE_URL` to the public HTTPS origin, for example `https://llm.example.com`, and configure LiteLLM SSO callbacks for that origin. See [reverse proxy and secure cookie configuration](../../security_best_practices.md#8-configure-secure-cookies-behind-a-tls-terminating-reverse-proxy).
-
-Close direct paths to the origin, including public load balancers, node ports, and default service URLs. Configure TLS for each hop: HTTPS at the public edge does not by itself encrypt the connection from the proxy or connector to LiteLLM.
-
-## Check both authentication layers
-
-An allowed proxy identity with a valid LiteLLM credential must succeed. A denied proxy identity must stop at the proxy. A valid proxy identity with an invalid LiteLLM credential must reach LiteLLM and fail there. Also test a non-admin UI user, direct-origin access, and a streaming request that lasts as long as your expected workload.

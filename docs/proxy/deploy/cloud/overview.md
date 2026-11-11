@@ -11,9 +11,7 @@ import TabItem from '@theme/TabItem';
 
 {/* keep-version-note */}
 
-Each cloud architecture shows where LiteLLM runs, how requests enter, and how it reaches databases and model providers. The diagrams include network boundaries, subnets, load balancers, private service connections, and internet egress.
-
-Terraform diagrams describe the linked module defaults. Helm diagrams describe infrastructure you provision around the chart. Optional additions are labeled separately.
+Terraform diagrams show module defaults. Helm diagrams show infrastructure you provision around the chart.
 
 ## Choose a cloud
 
@@ -35,20 +33,11 @@ Use Terraform on Cloud Run or Helm on GKE. The [GCP architectures](./gcp.md) sho
 </TabItem>
 </Tabs>
 
-## Choose a deployment mode
+## Deployment layout {#choose-a-deployment-mode}
 
-| Mode | What runs | Guide |
+One Docker image serves every component. One Helm chart supports both layouts; Terraform deploys separate services.
+
+| Layout | What runs | Helm value |
 | --- | --- | --- |
-| Single service | One LiteLLM service handles inference, management APIs, and the Admin UI. | [Helm](../helm.md) |
-| Microservices | Gateway, backend, and UI services scale separately. The gateway uses port 4000, backend 4001, and UI 3000. | [Helm](../helm.md) or [Terraform](../terraform.md) |
-
-## Supporting infrastructure
-
-| Component | Purpose |
-| --- | --- |
-| PostgreSQL | Stores keys, teams, users, spend, and configuration. |
-| Redis | Shares rate limits, router state, and caches across replicas. See [What Needs Redis](../../redis_requirements.md). |
-| Migrations job | Applies schema updates before an upgrade. Serving instances use `DISABLE_SCHEMA_UPDATE=true`. |
-| Ingress | Accepts client traffic and forwards requests to healthy LiteLLM instances. |
-
-Use [Sizing & Scaling](../sizing.md) to plan capacity and [High Availability](../ha/overview.md) to plan replicas and safe releases. For client certificate checks, use [Client Authentication with mTLS](../mtls.md). For identity-provider access checks, use [Identity-Aware Proxy](../iap/overview.md).
+| Single service | Inference, management APIs, and Admin UI together on port 4000. | `monolith.enabled: true` |
+| Separate services (default) | Gateway on 4000, backend on 4001, and UI on 3000 scale independently. | `monolith.enabled: false` |

@@ -1,7 +1,7 @@
 ---
 title: Deploy LiteAdmin MCP on Enterprise
 sidebar_label: Deploy MCP (Enterprise)
-description: Enable LiteAdmin MCP in unified or componentized LiteLLM deployments and connect Claude Code or Codex.
+description: Enable LiteAdmin MCP in monolith or componentized LiteLLM deployments and connect Claude Code or Codex.
 toc_max_heading_level: 2
 ---
 
@@ -25,7 +25,7 @@ Connect Claude Code or Codex to your gateway at `/admin/mcp` to manage keys, tea
 Keep your existing `DATABASE_URL`, `LITELLM_MASTER_KEY`, and proxy configuration. Rename any MCP server alias called `admin` before enabling the endpoint, which reserves `/admin`
 
 <Tabs groupId="liteadmin-deployment">
-<TabItem value="unified" label="Unified Docker" default>
+<TabItem value="unified" label="Docker" default>
 
 Add these entries to your existing `litellm` service. Supply the license through your secret store or Compose environment
 
@@ -44,7 +44,7 @@ Recreate the service:
 docker compose up -d litellm
 ```
 
-Route `/admin/mcp` to the container's existing port, default `4000`. This works with unified, database, and non-root images
+Route `/admin/mcp` to the container's existing port, default `4000`. Use the shared LiteLLM image in proxy mode
 
 </TabItem>
 <TabItem value="componentized" label="Componentized (Helm)">
@@ -67,7 +67,7 @@ backend:
 
 Replace `litellm-enterprise` and `license` with your existing Secret name and key, then apply your Helm upgrade
 
-The chart's ingress routes `/admin/mcp` to the backend. For custom ingress, use the backend service port, default `4001`, and preserve the path and `Authorization` header. The gateway component does not serve this endpoint
+The chart's ingress routes `/admin/mcp` to the backend. For custom ingress, use the backend service port, default `4001`, and preserve the path and `Authorization` header. The gateway component does not serve this endpoint. With `monolith.enabled: true`, put the same environment entries under `gateway.extraEnv` and route to the monolith Service on port `4000`
 
 </TabItem>
 </Tabs>
@@ -185,8 +185,8 @@ Keep `full` responses for multiple workers or replicas. With `compact`, send `re
 | Symptom | Check |
 | --- | --- |
 | Startup fails | Check the license, enable flag, and conflicting header names in the startup error |
-| Missing MCP dependency | Use a unified or backend image <SinceVersion v="1.106.0" /> |
-| `404` | Check the image version, enable flag, and container restart. Route `/admin/mcp` unchanged to the unified proxy or backend |
+| Missing MCP dependency | Use a compatible LiteLLM image containing the MCP dependency <SinceVersion v="1.106.0" /> |
+| `404` | Check the image version, enable flag, and container restart. Route `/admin/mcp` unchanged to the proxy or backend |
 | `401` or `403` in key mode | Use an active personal `proxy_admin` key |
 | OAuth2 proxy authentication fails | Check the trusted direct peer, mapped identity headers, and stored user role |
 | Host or Origin rejected | Match `PROXY_BASE_URL` or `LITELLM_MCP_PUBLIC_URL` to your public HTTPS origin |

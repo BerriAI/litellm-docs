@@ -1,6 +1,6 @@
 import type { CloudKey, NetworkDiagram, NetworkEdge, NetworkNode } from './networkTypes';
 
-const MODULE = 'https://github.com/BerriAI/litellm/blob/11af2eb22dc799dff033c2d3ba71be991b6a8201/terraform/litellm/gcp';
+const MODULE = 'https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/gcp';
 const NETWORK_ICON = 'gcp-networking.svg';
 
 function cloudRunDiagram(): NetworkDiagram {
@@ -70,6 +70,7 @@ function cloudRunDiagram(): NetworkDiagram {
       { x: 700, y: 326, lines: ['DNS records are operator-managed.', 'The module creates the load balancer IP.'] },
     ],
     notes: [
+      { title: 'One image', text: 'The gateway, backend, UI, and migration job use the same image with a different startup argument for each component.' },
       { title: 'Created by Terraform', text: 'VPC, regional subnet, connector, Private Services Access, private Cloud SQL and Memorystore, Cloud Run services, migration job, and load balancer. Existing VPC and PSA connections can be reused.' },
       { title: 'Ingress and egress are separate', text: 'Serverless NEGs carry load-balancer requests to Cloud Run. Only gateway, backend, and migrations use the VPC connector. Public provider calls use direct Cloud Run egress by default.' },
       { title: 'Optional NAT design', text: 'The module does not create Cloud NAT or Cloud Router and hard-codes PRIVATE_RANGES_ONLY. Routing public calls through NAT requires an all-traffic egress customization. Cloud Router configures NAT; it is not a packet-forwarding hop.' },
@@ -98,7 +99,7 @@ function gkeDiagram(microservices: boolean): NetworkDiagram {
   }));
 
   return {
-    title: `Google Kubernetes Engine: ${microservices ? 'microservices' : 'single-service'} network`,
+    title: `Google Kubernetes Engine: ${microservices ? 'separate services' : 'single service'} network`,
     description: 'An illustrative network for a private GKE cluster running LiteLLM with Helm. The operator provisions the cluster, ingress, network, and managed data services; Helm installs the LiteLLM workloads.',
     provider: 'gcp',
     width: 1200,
@@ -107,7 +108,7 @@ function gkeDiagram(microservices: boolean): NetworkDiagram {
       { id: 'project', x: 20, y: 115, width: 1160, height: 850, label: 'Google Cloud • operator-managed reference', kind: 'cloud', icon: 'google-cloud.svg' },
       { id: 'vpc', x: 50, y: 350, width: 760, height: 530, label: 'Customer project VPC • global', kind: 'vpc', icon: NETWORK_ICON },
       { id: 'private-subnet', x: 80, y: 395, width: 700, height: 335, label: 'Private GKE subnet • regional node and pod IP ranges', kind: 'subnet' },
-      { id: 'cluster', x: 105, y: 455, width: 650, height: 230, label: `Existing GKE cluster • ${microservices ? 'litellm chart' : 'litellm-helm chart'}`, kind: 'managed' },
+      { id: 'cluster', x: 105, y: 455, width: 650, height: 230, label: 'Existing GKE cluster • litellm chart', kind: 'managed' },
       { id: 'producer-network', x: 850, y: 350, width: 300, height: 530, label: 'Service producer networks', kind: 'managed' },
     ],
     nodes: [
@@ -145,12 +146,14 @@ function gkeDiagram(microservices: boolean): NetworkDiagram {
       { x: 430, y: 935, lines: ['Cloud NAT enables outbound connections.', 'It does not serve inbound requests.'] },
     ],
     notes: [
+      { title: 'One Helm chart', text: `The litellm chart uses one image for all components. ${microservices ? 'This layout uses the default monolith.enabled=false.' : 'Set monolith.enabled=true for this layout; gateway values configure the single service.'}` },
       { title: 'Illustrative infrastructure', text: 'The Helm chart does not create the VPC, GKE cluster, load balancer, Cloud NAT, or managed databases. This reference uses private nodes with a separately configured ingress controller.' },
       { title: 'Private node egress', text: 'Configure Cloud NAT for the required node and pod address ranges to reach public provider APIs and external registries. Private Google Access serves supported Google APIs without requiring internet NAT.' },
       { title: 'Private data connections', text: 'Use Private Services Access to reach Cloud SQL and Memorystore private IPs. Google-managed producer networks remain outside the customer subnet.' },
       { title: 'Terraform dependencies only', text: 'The Google module can provision the data dependencies with create_runtime=false. It then omits Cloud Run, its load balancer, VPC connector, and migration job; GKE and its network configuration remain operator-managed.' },
     ],
     sources: [
+      { label: 'LiteLLM chart and layouts (pinned)', url: 'https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/helm/litellm/README.md' },
       { label: 'GKE network isolation', url: 'https://docs.cloud.google.com/kubernetes-engine/docs/how-to/latest/network-isolation' },
       { label: 'GKE networking practices', url: 'https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/networking' },
       { label: 'Private Services Access', url: 'https://docs.cloud.google.com/vpc/docs/private-services-access' },

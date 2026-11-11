@@ -100,7 +100,7 @@ Use TLS and verify the database server certificate. Mount the required CA bundle
 
 ### 3. Deploy proxy instances in each region
 
-Deploy the regional load balancer and LiteLLM replicas with [Helm](./deploy/helm.md) or [Terraform](./deploy/terraform.md). Disable additional migration jobs in secondary releases; for the monolithic Helm chart, this is `migrationJob.enabled: false`. Keep serving instances on `DISABLE_SCHEMA_UPDATE=true` everywhere.
+Deploy the regional load balancer and LiteLLM replicas with [Helm](./deploy/helm.md) or [Terraform](./deploy/terraform.md). Disable additional migration jobs in secondary releases; in the Helm chart, set `migrationJob.enabled: false`. Keep serving instances on `DISABLE_SCHEMA_UPDATE=true` everywhere.
 
 The following environment values show the shared and regional settings. Inject real secrets through your deployment's secret manager and mount the CA at `/certs/db-ca.pem`.
 

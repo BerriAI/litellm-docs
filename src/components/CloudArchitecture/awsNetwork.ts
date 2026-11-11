@@ -1,6 +1,6 @@
 import type { CloudKey, NetworkDiagram, NetworkEdge, NetworkNode } from './networkTypes';
 
-const MODULE = 'https://github.com/BerriAI/litellm/blob/732a50318b8bddc6cf79f2c21b31bcd63474b6d6/terraform/litellm/aws';
+const MODULE = 'https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/aws';
 
 /** ECS follows the pinned module; EKS is an explicitly separate infrastructure example. */
 export function makeAwsNetworkDiagram(cloud: CloudKey): NetworkDiagram {
@@ -8,7 +8,7 @@ export function makeAwsNetworkDiagram(cloud: CloudKey): NetworkDiagram {
   const micro = ecs || cloud === 'aws-eks-micro';
   const nodes: NetworkNode[] = [
     { id: 'clients', x: 310, y: 50, title: ['Clients'], detail: ['Public DNS; HTTPS 443'] },
-    { id: 'external', x: 1050, y: 50, title: ['External LLM APIs', 'and image registry'], detail: [ecs ? 'GHCR images by default' : 'Public provider / registry APIs'] },
+    { id: 'external', x: 1050, y: 50, title: ['External LLM APIs', 'and image registry'], detail: ['Public provider / registry APIs'] },
     { id: 'igw', x: 400, y: 220, icon: 'aws-internet-gateway.svg', title: ['Internet gateway'] },
     { id: 'nat-a', x: 175, y: 430, icon: 'aws-nat-gateway.svg', title: ['NAT gateway'], detail: [ecs ? 'Single NAT' : 'One per AZ'] },
     { id: 'alb-a', x: 350, y: 430, icon: 'aws-alb.svg', title: ['Application LB'], detail: ['Public; HTTPS 443', 'Shared across AZs'] },
@@ -92,7 +92,7 @@ export function makeAwsNetworkDiagram(cloud: CloudKey): NetworkDiagram {
   ];
 
   return {
-    title: ecs ? 'AWS ECS Fargate: Terraform network' : `AWS EKS: ${micro ? 'microservices' : 'single deployment'} network example`,
+    title: ecs ? 'AWS ECS Fargate: Terraform network' : `AWS EKS: ${micro ? 'separate services' : 'single service'} network example`,
     description: ecs
       ? 'Two-AZ example of the AWS Terraform module, with its single NAT gateway and optional private Bedrock access.'
       : 'A two-AZ network example to provision around Helm: public ALB, private EKS workers, managed data, and a NAT gateway in each AZ.',
@@ -131,12 +131,14 @@ export function makeAwsNetworkDiagram(cloud: CloudKey): NetworkDiagram {
       ...(ecs ? [{ x: 605, y: 430, anchor: 'middle' as const, lines: ['No NAT in AZ B', 'Uses NAT in AZ A'] }] : []),
     ],
     notes: ecs ? [
+      { title: 'One image', text: 'The gateway, backend, UI, and migration job use the same image with a different startup argument for each component.' },
       { title: 'Exact module scope', text: 'The module creates one public and one private subnet for each supplied AZ, and one NAT gateway in the first public subnet. Supply at least two AZs. With an existing VPC, provide the subnets and routes yourself. Tasks, Aurora, and Redis share the private subnet set.' },
       { title: 'Placement and availability', text: 'Gateway defaults to two tasks; backend and UI each default to one. Workload and Aurora AZ positions here are illustrative, not task placement guarantees. Both AZs use the Aurora writer endpoint and Redis primary endpoint. Aurora has a reader, and Redis has one replica by default; replication paths are omitted. Add per-AZ NAT gateways and service replicas to meet your availability requirements.' },
-      { title: 'Security and egress', text: 'Supply acm_certificate_arn for HTTPS. TLS terminates at the ALB. The task security group allows all TCP ports from the ALB security group; the diagram labels the actual target ports. Aurora allows 5432 and Redis allows 6379 from tasks only. Tasks have no public IP. External providers, GHCR, and public AWS service endpoints use NAT. DNS records, WAF, and ECR repositories are not created by this module.' },
+      { title: 'Security and egress', text: 'Supply acm_certificate_arn for HTTPS. TLS terminates at the ALB. The task security group allows all TCP ports from the ALB security group; the diagram labels the actual target ports. Aurora allows 5432 and Redis allows 6379 from tasks only. Tasks have no public IP. External providers, public registries, and public AWS service endpoints use NAT. DNS records, WAF, and ECR repositories are not created by this module.' },
       { title: 'Optional PrivateLink', text: 'Bedrock interface endpoints are additions, not module defaults. Use com.amazonaws.<region>.bedrock-runtime, private DNS, and endpoint security group ingress 443 from tasks. Grant Bedrock IAM permissions separately. The bedrock endpoint is for the control plane. Private access to your own LiteLLM service needs a separate endpoint-service design.' },
     ] : [
-      { title: 'Infrastructure around Helm', text: 'This is a recommended network example, not resources created by a Helm install. Provision the VPC, ALB integration, private EKS workers, Aurora, Redis, and per-AZ NAT gateways separately. Configure AWS Load Balancer Controller and Ingress for the chosen chart. Direct pod targets assume alb.ingress.kubernetes.io/target-type: ip; instance mode instead targets NodePorts. Configure secrets and container log collection separately.' },
+      { title: 'One Helm chart', text: `The litellm chart uses one image for all components. ${micro ? 'This layout uses the default monolith.enabled=false.' : 'Set monolith.enabled=true for this layout; gateway values configure the single service.'}` },
+      { title: 'Infrastructure around Helm', text: 'This is a recommended network example, not resources created by a Helm install. Provision the VPC, ALB integration, private EKS workers, Aurora, Redis, and per-AZ NAT gateways separately. Configure AWS Load Balancer Controller and Ingress for the selected service layout. Direct pod targets assume alb.ingress.kubernetes.io/target-type: ip; instance mode instead targets NodePorts. Configure secrets and container log collection separately.' },
       { title: 'Availability and access', text: 'Spread replicas across AZs and set disruption budgets. Both AZs use the writer and primary endpoints by default; replication paths are omitted. The data icons illustrate a writer/reader and primary/replica design; select the database and cache topology you need. Allow ALB traffic to workload targets and allow database/cache traffic only from application security groups. Use a private EKS API endpoint where appropriate.' },
       { title: 'Optional PrivateLink', text: 'The interface endpoints shown provide private Bedrock inference access through com.amazonaws.<region>.bedrock-runtime. Enable private DNS and allow HTTPS from workloads on the endpoint security group. Use pod identity and grant Bedrock permissions. Public providers and registries still need outbound access.' },
     ],
@@ -147,6 +149,7 @@ export function makeAwsNetworkDiagram(cloud: CloudKey): NetworkDiagram {
         { label: 'Terraform ECS services (pinned)', url: `${MODULE}/ecs.tf` },
         { label: 'Terraform defaults (pinned)', url: `${MODULE}/variables.tf` },
       ] : [
+        { label: 'LiteLLM chart and layouts (pinned)', url: 'https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/helm/litellm/README.md' },
         { label: 'AWS EKS load balancing', url: 'https://docs.aws.amazon.com/eks/latest/userguide/alb-ingress.html' },
         { label: 'EKS cluster endpoint access', url: 'https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html' },
       ]),

@@ -102,7 +102,7 @@ function Dependencies({ items }: {
 
 /* ────────────────────── Per-cloud single-region diagrams ────────────────────── */
 
-const MONO_PILLS = ['litellm', 'litellm', 'litellm'];
+const MONO_PILLS = ['proxy', 'proxy', 'proxy'];
 const MICRO_PILLS = ['gateway', 'backend', 'ui'];
 
 const CLOUD_SPECS: Record<
@@ -129,7 +129,7 @@ const CLOUD_SPECS: Record<
   },
   'aws-eks': {
     lb: { icon: 'aws-elb.svg', title: 'Load Balancer', subtitle: 'ALB or NLB via Service / Ingress' },
-    compute: { icon: 'aws-eks.svg', title: 'EKS', subtitle: 'litellm-helm chart, HPA on CPU', pills: MONO_PILLS },
+    compute: { icon: 'aws-eks.svg', title: 'EKS', subtitle: 'litellm chart, monolith.enabled: true', pills: MONO_PILLS },
     data: [
       { icon: 'aws-rds.svg', title: 'RDS PostgreSQL', subtitle: 'DATABASE_URL' },
       { icon: 'aws-elasticache.svg', title: 'ElastiCache Redis', subtitle: 'REDIS_HOST / PORT / PASSWORD' },
@@ -166,7 +166,7 @@ const CLOUD_SPECS: Record<
     compute: {
       icon: 'gcp-google-kubernetes-engine.svg',
       title: 'GKE',
-      subtitle: 'litellm-helm chart, HPA on CPU',
+      subtitle: 'litellm chart, monolith.enabled: true',
       pills: MONO_PILLS,
     },
     data: [
@@ -192,7 +192,7 @@ const CLOUD_SPECS: Record<
     compute: {
       icon: 'azure-kubernetes-services.svg',
       title: 'AKS',
-      subtitle: 'litellm-helm chart, HPA on CPU',
+      subtitle: 'litellm chart, monolith.enabled: true',
       pills: MONO_PILLS,
     },
     data: [
@@ -233,8 +233,8 @@ const CSP_TABS: {
     icon: 'aws.svg',
     variants: [
       { key: 'aws-ecs', label: 'Terraform on ECS Fargate' },
-      { key: 'aws-eks', label: 'EKS with Helm' },
-      { key: 'aws-eks-micro', label: 'EKS with Helm (microservices)' },
+      { key: 'aws-eks-micro', label: 'EKS: separate services' },
+      { key: 'aws-eks', label: 'EKS: single service' },
     ],
   },
   {
@@ -243,8 +243,8 @@ const CSP_TABS: {
     icon: 'google-cloud.svg',
     variants: [
       { key: 'gcp-cloud-run', label: 'Terraform on Cloud Run' },
-      { key: 'gcp-gke', label: 'GKE with Helm' },
-      { key: 'gcp-gke-micro', label: 'GKE with Helm (microservices)' },
+      { key: 'gcp-gke-micro', label: 'GKE: separate services' },
+      { key: 'gcp-gke', label: 'GKE: single service' },
     ],
   },
   {
@@ -252,8 +252,8 @@ const CSP_TABS: {
     label: 'Azure',
     icon: 'microsoft-azure.svg',
     variants: [
-      { key: 'azure-aks', label: 'AKS with Helm' },
-      { key: 'azure-aks-micro', label: 'AKS with Helm (microservices)' },
+      { key: 'azure-aks-micro', label: 'AKS: separate services' },
+      { key: 'azure-aks', label: 'AKS: single service' },
     ],
   },
 ];

@@ -12,7 +12,7 @@ import {OneClickDeploy} from '@site/src/components/Conversion';
 
 # Quickstart
 
-LiteLLM ships as a ready-to-run gateway. You start it with one command (or one click), then do everything else in your browser: connect providers, add models, create keys, and send test requests from the built-in Admin UI. No config files are required for this guide.
+Run LiteLLM and PostgreSQL locally, then use the Admin UI to add models, create keys, and send your first request.
 
 <QuickStartBox variant="gateway" showTitle={false} heading="Up and running in a minute" source="docker-quickstart">
 
@@ -30,7 +30,9 @@ printf 'LITELLM_MASTER_KEY=sk-%s\nLITELLM_SALT_KEY=sk-%s\n' "$(openssl rand -hex
 docker compose -f docker-compose.quickstart.yml up -d
 ```
 
-This brings up the gateway on port 4000 and a Postgres database that stores your models, keys, and spend logs. The [compose file](https://github.com/BerriAI/litellm/blob/main/docker/docker-compose.quickstart.yml) defines just those two services and now sits in your working directory, so you can read it before starting it, and edit it afterwards to pin a specific release tag.
+This starts the full LiteLLM proxy on port 4000 and PostgreSQL for models, keys, and spend logs. The [compose file](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/docker/docker-compose.quickstart.yml) uses one LiteLLM image, `docker.litellm.ai/berriai/litellm`, with no component argument. Pin a tested release tag or digest before production.
+
+For Kubernetes, the [Helm guide](./deploy/helm.md) uses one chart and a shared image for either a single service or separate gateway, backend, and UI services. Its consolidated chart requires the newer component entrypoint; follow its image compatibility instructions.
 
 The second command generates your master key, which is the credential you will use for every request below. The proxy refuses to start without it. Keep the `.env` file: regenerating `LITELLM_SALT_KEY` makes credentials already stored in the database unreadable.
 
@@ -175,7 +177,7 @@ console.log(response.choices[0].message.content);
 
 ## Running without a database
 
-If you only need the OpenAI-compatible API (no Admin UI model management, virtual keys, or spend tracking), you can run the plain `litellm` image with a config file instead:
+For API access without database-backed model management, virtual keys, or spend tracking, run the same image with a config file:
 
 ```yaml
 # litellm_config.yaml
@@ -187,11 +189,14 @@ model_list:
 ```
 
 ```bash
+export OPENAI_API_KEY="<your-openai-key>"
+export LITELLM_MASTER_KEY="sk-<paste-a-long-random-key>"
+
 docker run \
-  -v $(pwd)/litellm_config.yaml:/app/config.yaml \
-  -e OPENAI_API_KEY=<your-openai-key> \
-  -e LITELLM_MASTER_KEY=sk-<paste-a-long-random-key> \
-  -p 4000:4000 \
+  -v "$PWD/litellm_config.yaml:/app/config.yaml:ro" \
+  -e OPENAI_API_KEY \
+  -e LITELLM_MASTER_KEY \
+  -p 127.0.0.1:4000:4000 \
   docker.litellm.ai/berriai/litellm:latest \
   --config /app/config.yaml
 ```
@@ -208,6 +213,23 @@ If a budget is part of how you bound spend, run LiteLLM with a database as shown
 
 :::
 
+## Build from source
+
+The consolidated [Helm chart](./deploy/helm.md) uses a shared image with a component entrypoint. The published tags checked for this guide predate that change. Build the chart and image from the same [source commit](https://github.com/BerriAI/litellm/tree/f52f26d9c636038c6e3609cc7d17cf625d434c3e) in your image pipeline:
+
+```bash
+git clone --filter=blob:none https://github.com/BerriAI/litellm.git litellm-source
+git -C litellm-source checkout f52f26d9c636038c6e3609cc7d17cf625d434c3e
+
+docker build --platform linux/amd64 \
+  -t registry.example.com/platform/litellm:source-f52f26d ./litellm-source
+docker push registry.example.com/platform/litellm:source-f52f26d
+```
+
+Replace the registry with one your cluster can pull from, authenticate before pushing, and choose the platform that matches your nodes (`linux/amd64` above). Sign and scan your internal build; upstream signatures do not cover it. Use this one image reference for every component. Its [entrypoint](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/docker-entrypoint.sh) selects `proxy`, `gateway`, `backend`, `ui`, `migrations`, `metrics`, or `collector` through the first argument. No argument starts the full proxy.
+
+When a compatible release is published, replace the internal reference with a verified tag or digest from `ghcr.io/berriai/litellm` or its `docker.litellm.ai/berriai/litellm` mirror. See [image security](./docker_image_security.md).
+
 ## Next steps
 
-Going to production: the [Production Deployment guide](./deploy.md) covers Helm, Terraform, and Kubernetes on AWS, GCP, and Azure, and the [production checklist](./prod.md) covers hardening and tuning. Full container and database options, including Redis and Prometheus, are covered in the repo [docker-compose.yml](https://github.com/BerriAI/litellm/blob/main/docker-compose.yml).
+Use the [deployment guides](./deploy.md) for Helm and Terraform, and the [production checklist](./prod.md) for hardening and tuning. The repository's [docker-compose.yml](https://github.com/BerriAI/litellm/blob/main/docker-compose.yml) includes database, Redis, and Prometheus options.

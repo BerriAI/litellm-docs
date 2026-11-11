@@ -16,6 +16,6 @@ Choose Terraform on Cloud Run or Helm on an existing GKE cluster. The diagrams d
 
 ## Deploy this architecture
 
-Follow [Terraform on GCP](../terraform/gcp.md) for the Cloud Run deployment or [Helm](../helm.md) for GKE. The Cloud Run module and the GKE example have different egress paths; use the notes below the selected diagram when you configure networking.
+Follow [Terraform on GCP](../terraform.md#gcp) for the Cloud Run deployment or [Helm](../helm.md) for GKE. The Cloud Run module and the GKE example have different egress paths; use the notes below the selected diagram when you configure networking.
 
 For identity-provider access checks, see [Google Cloud IAP](../iap/gcp.md). For client certificates, see [Client Authentication with mTLS](../mtls.md). For replicas, safe rollouts, and additional regions, see [High Availability](../ha/overview.md).

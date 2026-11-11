@@ -27,7 +27,7 @@ On every rule that forwards traffic for the admin hostname, place authentication
 | First: `authenticate-oidc` | Your IdP settings; `Scope=openid`; `OnUnauthenticatedRequest=authenticate` |
 | Last: `forward` | The existing target group for that route |
 
-Keep the UI, backend, and gateway routing intact. Protect the default forwarding rule too. A rule covering only `/ui` misses its assets and management requests. The [Terraform AWS module](../terraform/aws.md) does not configure these identity rules for you; maintain them in the infrastructure code that owns the listener.
+Keep the UI, backend, and gateway routing intact. Protect the default forwarding rule too. A rule covering only `/ui` misses its assets and management requests. The [Terraform AWS module](../terraform.md#aws) does not configure these identity rules for you; maintain them in the infrastructure code that owns the listener.
 
 The ALB redirects a browser to the IdP and then uses a session cookie. A bearer token from an SDK does not replace this browser flow. Set LiteLLM's `PROXY_BASE_URL` to the public origin and retain its UI login or SSO. ALB claims do not automatically become LiteLLM roles. [ALB authentication flow](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-authenticate-users.html).
 

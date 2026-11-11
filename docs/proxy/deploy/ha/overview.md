@@ -49,12 +49,6 @@ Use `/health/liveliness` for process liveness and `/health/readiness` to decide 
 
 By default, a configured database that is unreachable makes readiness return 503. If you deliberately enable `allow_requests_on_db_unavailable`, readiness can remain 200 during a database outage. That is a degraded service policy with authentication and enforcement implications, not proof that all features work. Read [graceful DB unavailability](../../prod.md#gracefully-handle-db-unavailability) before enabling it, and use the [multi-region health policy](../multi_region/failover.md#choose-a-health-policy) when several regions share the database.
 
-## Upgrade without cutting off requests
-
-Run schema migrations once per shared database, with `DISABLE_SCHEMA_UPDATE=true` on serving instances. Before old and new versions overlap, verify that both can use the migrated schema and stored configuration. A traffic rollback does not undo a database migration.
-
-Remove an old instance from new-request routing, wait for route changes to propagate, and allow its existing requests to finish before termination. Streaming responses remain on the instance that started them. Align the gateway, ingress, server, and container shutdown timeouts with your longest supported request. The [Blue/Green guide](./blue_green.md#drain-existing-requests) gives a concrete shutdown example.
-
 ## Verify recovery
 
 In a test environment, remove one replica, drain a node, trigger the managed database's failover procedure, and interrupt Redis access. Confirm that the remaining capacity meets your latency and error targets, that streams finish during planned drains, and that spend queues recover. Record the time to detect a failure and restore service. If a whole-region outage is in scope, continue with [Multi-Region](../../multi_region.md).

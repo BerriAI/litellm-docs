@@ -4,7 +4,7 @@ Benchmark throughput: **13.5 billion tokens per minute (TPM)**. [View results](.
 
 ## Requirements
 
-- [LiteLLM microservices Helm chart](./deploy/helm.md) `1.104.2` or later.
+- The [LiteLLM Helm chart](./deploy/helm.md) in componentized mode, with a compatible shared image and support for the values below.
 - External PostgreSQL and Redis.
 - Kubernetes 1.30+ and Metrics Server for CPU and memory autoscaling.
 - Prometheus Operator to scrape each pod through a ServiceMonitor.

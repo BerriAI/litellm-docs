@@ -787,18 +787,18 @@ router_settings:
 | DASHSCOPE_API_BASE_RERANK | Base URL for DashScope rerank. Default is https://dashscope.aliyuncs.com/compatible-api/v1/reranks
 | DASHSCOPE_API_BASE_VIDEO | Base URL for DashScope video generation. Falls back to DASHSCOPE_API_BASE without its /compatible-mode/v1 path, then https://dashscope.aliyuncs.com
 | DATABASE_HOST | Hostname for the database server
-| DATABASE_HOST_READ_REPLICA | Hostname for the read-replica database server. Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True` to assemble `DATABASE_URL_READ_REPLICA` from the discrete database env vars
+| DATABASE_HOST_READ_REPLICA | Hostname for the read-replica database server. The shared image entrypoint uses it to assemble `DATABASE_URL_READ_REPLICA` when that URL is unset
 | DATABASE_NAME | Name of the database
-| DATABASE_NAME_READ_REPLICA | Database name for the read replica (defaults to `DATABASE_NAME`). Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`
+| DATABASE_NAME_READ_REPLICA | Database name for the read replica (defaults to `DATABASE_NAME`). Used when the shared image entrypoint assembles `DATABASE_URL_READ_REPLICA` from separate connection fields
 | DATABASE_PASSWORD | Password for the database user
 | DATABASE_PORT | Port number for database connection
-| DATABASE_PORT_READ_REPLICA | Port number for the read replica (default 5432). Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`
+| DATABASE_PORT_READ_REPLICA | Port number for the read replica (default 5432). Used when the shared image entrypoint assembles `DATABASE_URL_READ_REPLICA` from separate connection fields
 | DATABASE_SCHEMA | Schema name used in the database
-| DATABASE_SCHEMA_READ_REPLICA | Schema name for the read replica (defaults to `DATABASE_SCHEMA`). Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`
+| DATABASE_SCHEMA_READ_REPLICA | Schema name for the read replica (defaults to `DATABASE_SCHEMA`). Used when the shared image entrypoint assembles `DATABASE_URL_READ_REPLICA` from separate connection fields
 | DATABASE_URL | Connection URL for the database
 | DATABASE_URL_READ_REPLICA | Optional read-replica connection URL. When set, the proxy routes read-only queries (find_*, count, group_by, query_raw/_first) to this endpoint while writes continue to use `DATABASE_URL`. Falls back to writer-only behavior when unset. With `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`, the reader token is auto-refreshed alongside the writer
 | DATABASE_USER | Username for database connection
-| DATABASE_USER_READ_REPLICA | Database user for the read replica (defaults to `DATABASE_USER`). Only used by the componentized deployment when `IAM_TOKEN_DB_AUTH=True` or `AZURE_POSTGRESQL_AUTH=True`
+| DATABASE_USER_READ_REPLICA | Database user for the read replica (defaults to `DATABASE_USER`). Used when the shared image entrypoint assembles `DATABASE_URL_READ_REPLICA` from separate connection fields
 | DATABASE_USERNAME | Alias for database user
 | DATABRICKS_API_BASE | Base URL for Databricks API
 | DATABRICKS_API_KEY | API key (Personal Access Token) for Databricks API authentication
@@ -1282,9 +1282,9 @@ router_settings:
 | LITELLM_ASSETS_PATH | Path to directory for UI assets and logos. Used when running with read-only filesystem (e.g., Kubernetes). Default is `/var/lib/litellm/assets` in Docker.
 | LITELLM_AUTOROUTER_PRESETS_URL | Custom URL for fetching the auto-router preset catalog. Default is the GitHub main branch URL
 | LITELLM_BILLING_METRICS_ENDPOINT | Collector URL for [enterprise billable-request metering](billing_metrics). Requires an enterprise license; unset disables metering
-| LITELLM_BILLING_METRICS_CLIENT_CERT | mTLS client certificate for billable-request metering. Accepts a file path or inline PEM content
-| LITELLM_BILLING_METRICS_CLIENT_KEY | Private key matching `LITELLM_BILLING_METRICS_CLIENT_CERT`. Accepts a file path or inline PEM content
-| LITELLM_BILLING_METRICS_CA_CERT | CA bundle for verifying the metering collector. Only for private or test collectors; unset uses the system trust store
+| LITELLM_BILLING_METRICS_CLIENT_ID | OAuth client ID for billable-request metering {/* keep-version-note */}
+| LITELLM_BILLING_METRICS_CLIENT_SECRET | OAuth client secret for billable-request metering; supply through your secret manager {/* keep-version-note */}
+| LITELLM_BILLING_METRICS_TOKEN_URL | HTTPS OAuth client-credentials token endpoint for billable-request metering {/* keep-version-note */}
 | LITELLM_BILLING_METRICS_EXPORT_INTERVAL_MS | Push cadence for billable-request metering in milliseconds. Default is 60000
 | LITELLM_BLOG_POSTS_URL | Custom URL for fetching LiteLLM blog posts JSON. Default is the GitHub main branch URL
 | LITELLM_CLI_DISABLE_KEYRING | Set on the machine running the `lite` CLI to `1`, `true`, `yes`, or `on` to keep the CLI away from the OS keychain, so the credential from `lite login` stays in `~/.litellm/token.json` (`0600`) instead. Unset by default, which stores the credential in the keychain whenever one is reachable

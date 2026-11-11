@@ -403,15 +403,7 @@ const sidebars = {
           items: [
             { type: "doc", id: "proxy/deploy", label: "Overview" },
             { type: "doc", id: "proxy/deploy/helm", label: "Helm" },
-            {
-              type: "category",
-              label: "Terraform",
-              items: [
-                { type: "doc", id: "proxy/deploy/terraform", label: "Overview" },
-                "proxy/deploy/terraform/aws",
-                "proxy/deploy/terraform/gcp",
-              ],
-            },
+            { type: "doc", id: "proxy/deploy/terraform", label: "Terraform" },
             {
               type: "category",
               label: "Sizing & Scaling",

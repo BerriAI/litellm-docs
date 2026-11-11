@@ -114,6 +114,14 @@ const config = {
             to: '/docs/proxy/configuration/terraform',
           },
           {
+            from: '/docs/proxy/deploy/terraform/aws',
+            to: '/docs/proxy/deploy/terraform#aws',
+          },
+          {
+            from: '/docs/proxy/deploy/terraform/gcp',
+            to: '/docs/proxy/deploy/terraform#gcp',
+          },
+          {
             from: '/docs/proxy/db_deadlocks',
             to: '/docs/proxy/prod#redis-transaction-buffer',
           },
