@@ -129,11 +129,13 @@ response = completion(
 | `https://<resource>.services.ai.azure.com/openai/v1` | `/openai/v1/chat/completions` |
 | `https://<resource>.services.ai.azure.com/api/projects/<project>` | `/api/projects/<project>/openai/v1/chat/completions` |
 
-On a project endpoint LiteLLM sends no `api-version`, because that route rejects every value. It sends the key as `Authorization: Bearer`, so `api_key` can hold an API key or a Microsoft Entra token. A service principal gets a token for `https://ai.azure.com/.default` unless `azure_scope` or `AZURE_SCOPE` sets another scope. A gateway in front of a project works too, as long as its path ends in `/api/projects/<project>` or `/api/projects/<project>/openai/v1`. LiteLLM keeps the gateway's query parameters, such as `subscription-key`, and drops only `api-version`.
+On a project endpoint LiteLLM sends no `api-version`, because that route rejects every value. It sends the key as `Authorization: Bearer`, so `api_key` can hold an API key or a Microsoft Entra token. A service principal gets a token for `https://ai.azure.com/.default` unless `azure_scope` or `AZURE_SCOPE` sets another scope. A gateway in front of a project works too, as long as its path ends at `/api/projects/<project>` or goes on with `/openai`, `/models`, or `/v1`. LiteLLM keeps the gateway's query parameters, such as `subscription-key`, and drops only `api-version`.
 
 On a resource `/openai/v1` endpoint LiteLLM sends the key in the `api-key` header and passes through any `api_version` you set, such as `preview`.
 
-An OpenAI model such as `azure_ai/gpt-4.1` on a `<resource>.openai.azure.com/openai/v1` or `<resource>.cognitiveservices.azure.com/openai/v1` base goes through the [Azure OpenAI](./azure/azure) provider, and its spend is logged under `azure`. When the entry sets no `api_version`, LiteLLM uses the Azure OpenAI v1 API there, even if `AZURE_API_VERSION` holds a dated version.
+An OpenAI model such as `azure_ai/gpt-4.1` on a `<resource>.openai.azure.com/openai/v1` or `<resource>.cognitiveservices.azure.com/openai/v1` base goes through the [Azure OpenAI](./azure/azure) provider, and its spend is logged under `azure`.
+
+On any Azure OpenAI `/openai/v1` base, an entry with no `api_version` uses the Azure OpenAI v1 API for chat, embeddings, and image generation, even if `AZURE_API_VERSION` holds a dated version.
 
 ```yaml
 model_list:
