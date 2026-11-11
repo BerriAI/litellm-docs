@@ -21,10 +21,31 @@ Release candidates and stable releases now ship on Tuesday mornings instead of S
 
 We are also piloting a long-term support (LTS) line for one month. The first LTS line is 1.108.
 
-The LTS line is for teams that want to stay on one version and keep getting fixes, without upgrading every week. It gets patch releases with LLM translation fixes, cost tracking fixes, and new endpoints.
-
-We chose LLM translation and cost tracking so you can support new models with accurate pricing without upgrading to a later version.
+The LTS line is for teams that want to stay on one version and keep getting fixes, without upgrading every week. Its patch releases follow the backport scope below.
 
 While the pilot runs, the policy of patching the [four most recent stable lines](/docs/enterprise/version_support) is paused. The [LTS pilot](/docs/enterprise/lts_pilot) page has the details.
 
 **Update (November 6):** The `lts` image tag now always points to the latest LTS release. Pull `docker.litellm.ai/berriai/litellm:lts` to stay on the newest LTS patch, or pin a version such as `docker.litellm.ai/berriai/litellm:1.108.2`.
+
+## What gets backported to LTS
+
+- LLM translation bug fixes
+- Cost tracking bug fixes
+- Auth bug fixes
+- Budget enforcement bug fixes
+- Security fixes
+- Any regression fix. A regression here means behavior that worked before LTS and on v1.100.x or later but is broken on LTS.
+- New models and new endpoints
+
+## What does not get backported to LTS
+
+- New features or products
+- Refactors, including Rust
+- Performance improvements
+- Fixes for pre-existing bugs in the router, UI, MCP, logging or guardrails. Pre-existing means the bug was there before 1.100.0.
+
+## Why this scope
+
+LLM translation and cost tracking fixes let teams use new models with accurate pricing without upgrading to a later version. Auth, budget enforcement and security fixes protect access and spending controls. Regression fixes restore behavior that worked before LTS.
+
+Every backport introduces a risk of regression. Keeping the scope limited lets teams stay on LTS for these fixes and model updates while reducing the changes they need to take. LTS does not receive every bug fix from later releases; new features, refactors, performance improvements and the pre-existing bugs listed above stay outside this scope.
