@@ -7,7 +7,7 @@ export function makeAwsNetworkDiagram(cloud: CloudKey): NetworkDiagram {
   const ecs = cloud === 'aws-ecs';
   const micro = ecs || cloud === 'aws-eks-micro';
   const nodes: NetworkNode[] = [
-    { id: 'clients', x: 700, y: 50, title: ['Clients'], detail: ['Public DNS; HTTPS 443'] },
+    { id: 'clients', x: 310, y: 50, title: ['Clients'], detail: ['Public DNS; HTTPS 443'] },
     { id: 'external', x: 1050, y: 50, title: ['External LLM APIs', 'and image registry'], detail: [ecs ? 'GHCR images by default' : 'Public provider / registry APIs'] },
     { id: 'igw', x: 400, y: 220, icon: 'aws-internet-gateway.svg', title: ['Internet gateway'] },
     { id: 'nat-a', x: 175, y: 430, icon: 'aws-nat-gateway.svg', title: ['NAT gateway'], detail: [ecs ? 'Single NAT' : 'One per AZ'] },
@@ -22,13 +22,13 @@ export function makeAwsNetworkDiagram(cloud: CloudKey): NetworkDiagram {
   for (const [suffix, offset] of [['a', 0], ['b', 430]] as const) {
     nodes.push(
       {
-        id: `compute-${suffix}`, x: 200 + offset, y: 650,
+        id: `compute-${suffix}`, x: 350 + offset, y: 650,
         icon: ecs ? 'aws-fargate.svg' : 'aws-eks.svg',
         title: ecs ? ['LiteLLM', 'Fargate tasks'] : ['LiteLLM pods'],
         detail: [micro ? 'Gateway / backend / UI' : 'One Deployment', ecs ? 'Placement by ECS' : 'Private EKS workers'],
       },
       {
-        id: `endpoint-${suffix}`, x: 385 + offset, y: 650,
+        id: `endpoint-${suffix}`, x: 175 + offset, y: 650,
         icon: 'aws-vpc-endpoint.svg', title: ['Interface endpoint'],
         detail: ['Bedrock runtime', 'Optional; private DNS'],
       },
@@ -49,39 +49,47 @@ export function makeAwsNetworkDiagram(cloud: CloudKey): NetworkDiagram {
   }
 
   const edges: NetworkEdge[] = [
-    // One logical ALB has nodes in both public subnets. Arrows carry app traffic.
-    { kind: 'request', points: [[678, 50], [650, 50], [650, 295], [350, 295], [350, 408]] },
-    { kind: 'request', points: [[722, 50], [800, 50], [800, 295], [780, 295], [780, 408]] },
-    { kind: 'request', points: [[328, 430], [270, 430], [270, 535], [450, 535], [450, 615], [200, 615], [200, 628]] },
-    { kind: 'request', points: [[758, 430], [700, 430], [700, 535], [880, 535], [880, 615], [630, 615], [630, 628]] },
+    // One request trunk branches to the ALB nodes in the two public subnets.
+    { kind: 'request', points: [[310, 120], [310, 295]], arrow: false },
+    { kind: 'request', points: [[310, 295], [780, 295]], arrow: false },
+    { kind: 'request', points: [[350, 295], [350, 408]] },
+    { kind: 'request', points: [[780, 295], [780, 408]] },
+    { kind: 'request', points: [[350, 520], [350, 628]] },
+    { kind: 'request', points: [[780, 520], [780, 628]] },
 
-    // Both private routes use NAT A in the ECS module. EKS uses one NAT per AZ.
-    { kind: 'egress', points: [[178, 640], [80, 640], [80, 560], [245, 560], [245, 430], [197, 430]] },
-    { kind: 'egress', points: ecs
-      ? [[608, 640], [510, 640], [510, 560], [245, 560], [245, 430], [197, 430]]
-      : [[608, 640], [510, 640], [510, 560], [675, 560], [675, 430], [627, 430]] },
-    { kind: 'egress', points: [[175, 408], [175, 400], [430, 400], [430, 275], [335, 275], [335, 220], [378, 220]] },
-    { kind: 'egress', points: [[400, 198], [400, 135], [1130, 135], [1130, 50], [1072, 50]] },
-    // Regional services are outside the VPC; these are public HTTPS endpoints.
-    { kind: 'egress', points: [[955, 135], [955, 330], [1063, 330]] },
-    { kind: 'egress', points: [[955, 330], [955, 510], [1063, 510]] },
-    { kind: 'egress', points: [[955, 510], [955, 690], [1063, 690]] },
+    // Keep outbound routes in the space between the workload and endpoint columns.
+    { kind: 'egress', points: [[328, 640], [280, 640], [280, 560]], arrow: false },
+    { kind: 'egress', points: [[280, 560], [280, 430], [197, 430]] },
+    ...(ecs ? [
+      { kind: 'egress' as const, points: [[758, 640], [710, 640], [710, 560], [280, 560]] as [number, number][], arrow: false },
+    ] : [
+      { kind: 'egress' as const, points: [[758, 640], [710, 640], [710, 430], [627, 430]] as [number, number][] },
+    ]),
+    { kind: 'egress', points: [[153, 430], [80, 430], [80, 275], [335, 275]], arrow: false },
+    ...(!ecs ? [
+      { kind: 'egress' as const, points: [[583, 430], [510, 430], [510, 275], [335, 275]] as [number, number][], arrow: false },
+    ] : []),
+    { kind: 'egress', points: [[335, 275], [335, 220], [378, 220]] },
+    { kind: 'egress', points: [[400, 198], [400, 135], [1180, 135], [1180, 50], [1072, 50]] },
+    // The regional service endpoints share a public-egress trunk.
+    { kind: 'egress', points: [[955, 135], [955, 690]], arrow: false },
+    { kind: 'egress', points: [[955, 330], [1063, 330]] },
+    { kind: 'egress', points: [[955, 510], [1063, 510]] },
+    { kind: 'egress', points: [[955, 690], [1063, 690]] },
 
-    // Application-to-data traffic stays inside the VPC, without a NAT gateway.
-    { kind: 'data', points: [[178, 660], [120, 660], [120, 820], [200, 820], [200, 888]], label: '5432', labelX: 200, labelY: 806 },
-    { kind: 'data', points: [[120, 820], [385, 820], [385, 888]], label: '6379 / TLS', labelX: 385, labelY: 806 },
-    { kind: 'data', points: [[608, 660], [550, 660], [550, 820], [200, 820], [200, 888]] },
-    { kind: 'data', points: [[550, 820], [385, 820], [385, 888]] },
+    // Both AZs use the same writer and primary endpoints through one shared path.
+    { kind: 'data', points: [[372, 660], [450, 660], [450, 820]], arrow: false },
+    { kind: 'data', points: [[802, 660], [880, 660], [880, 820]], arrow: false },
+    { kind: 'data', points: [[200, 820], [880, 820]], arrow: false },
+    { kind: 'data', points: [[200, 820], [200, 888]], label: '5432', labelX: 200, labelY: 806 },
+    { kind: 'data', points: [[385, 820], [385, 888]], label: '6379 / TLS', labelX: 330, labelY: 806 },
 
-    // Customer-added interface endpoint ENIs, not module-created resources.
-    { kind: 'optional', points: [[222, 650], [363, 650]], label: '443', labelX: 292, labelY: 638 },
-    { kind: 'optional', points: [[652, 650], [793, 650]], label: '443', labelX: 722, labelY: 638 },
-    { kind: 'optional', points: [[407, 650], [475, 650], [475, 855], [945, 855], [945, 930], [1063, 930]] },
-    { kind: 'optional', points: [[837, 650], [905, 650], [905, 840], [955, 840], [955, 860], [1085, 860], [1085, 908]] },
+    // Optional interface endpoints join only on the dedicated PrivateLink path.
+    { kind: 'optional', points: [[328, 660], [197, 660]], label: '443', labelX: 255, labelY: 683 },
+    { kind: 'optional', points: [[758, 660], [627, 660]], label: '443', labelX: 685, labelY: 683 },
+    { kind: 'optional', points: [[153, 650], [100, 650], [100, 855], [945, 855], [945, 930], [1063, 930]] },
+    { kind: 'optional', points: [[583, 650], [530, 650], [530, 855]], arrow: false },
   ];
-  if (!ecs) {
-    edges.push({ kind: 'egress', points: [[605, 408], [605, 400], [860, 400], [860, 280], [315, 280], [315, 220], [378, 220]] });
-  }
 
   return {
     title: ecs ? 'AWS ECS Fargate: Terraform network' : `AWS EKS: ${micro ? 'microservices' : 'single deployment'} network example`,
@@ -102,6 +110,16 @@ export function makeAwsNetworkDiagram(cloud: CloudKey): NetworkDiagram {
       { id: 'regional-services', x: 970, y: 220, width: 230, height: 880, label: 'Regional AWS services', kind: 'managed' },
     ],
     nodes, edges,
+    junctions: [
+      { x: 350, y: 295, kind: 'request' },
+      { x: 955, y: 135, kind: 'egress' },
+      { x: 955, y: 330, kind: 'egress' },
+      { x: 955, y: 510, kind: 'egress' },
+      { x: 385, y: 820, kind: 'data' },
+      { x: 450, y: 820, kind: 'data' },
+      { x: 530, y: 855, kind: 'optional' },
+      ...(ecs ? [{ x: 280, y: 560, kind: 'egress' as const }] : [{ x: 335, y: 275, kind: 'egress' as const }]),
+    ],
     annotations: [
       { x: 285, y: 765, anchor: 'middle', lines: [ecs ? 'ALB to task security group' : 'ALB Ingress to workload targets', micro ? '4000 gateway; 4001 backend; 3000 UI' : 'HTTP 4000 to LiteLLM'] },
       { x: 715, y: 765, anchor: 'middle', lines: [ecs ? 'ALB to task security group' : 'ALB Ingress to workload targets', micro ? '4000 gateway; 4001 backend; 3000 UI' : 'HTTP 4000 to LiteLLM'] },

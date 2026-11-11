@@ -158,8 +158,8 @@
   padding: 0;
   border: 1px solid var(--ifm-color-emphasis-400);
   border-radius: 8px;
-  background: var(--ifm-background-color);
-  color: var(--ifm-font-color-base);
+  background: #ffffff;
+  color: #243345;
 }
 
 .dialog::backdrop {

@@ -90,7 +90,7 @@ export function makeAzureNetworkDiagram(cloud: CloudKey): NetworkDiagram {
       },
     ],
     edges: [
-      { points: [[430, 110], [430, 298]], kind: 'request', label: 'HTTPS :443', labelX: 505, labelY: 245 },
+      { points: [[430, 110], [670, 110], [670, 320], [452, 320]], kind: 'request', label: 'HTTPS :443', labelX: 685, labelY: 245 },
       {
         points: [[430, 405], [430, 518]], kind: 'request',
         label: microservices ? 'Pod ports :4000 / :4001 / :3000' : 'Pod port :4000',
@@ -98,12 +98,18 @@ export function makeAzureNetworkDiagram(cloud: CloudKey): NetworkDiagram {
       },
       { points: [[452, 540], [898, 540]], kind: 'egress', label: 'Public egress', labelX: 675, labelY: 527 },
       { points: [[942, 540], [1148, 540], [1148, 40], [1022, 40]], kind: 'egress', label: 'HTTPS :443', labelX: 1055, labelY: 522 },
-      { points: [[430, 650], [430, 715], [300, 715], [300, 783]], kind: 'data' },
-      { points: [[430, 715], [600, 715], [600, 783]], kind: 'data' },
+      { points: [[430, 650], [430, 715]], kind: 'data', arrow: false },
+      { points: [[430, 715], [300, 715], [300, 783]], kind: 'data' },
+      { points: [[430, 715], [600, 715]], kind: 'data', arrow: false },
+      { points: [[600, 715], [600, 783]], kind: 'data' },
       { points: [[600, 715], [900, 715], [900, 783]], kind: 'optional' },
       { points: [[300, 895], [300, 1008]], kind: 'data', label: 'TLS :5432', labelX: 355, labelY: 955 },
       { points: [[600, 895], [600, 1008]], kind: 'data', label: 'TLS :6380', labelX: 655, labelY: 955 },
       { points: [[900, 895], [900, 1008]], kind: 'optional', label: 'HTTPS :443', labelX: 965, labelY: 955 },
+    ],
+    junctions: [
+      { x: 430, y: 715, kind: 'data' },
+      { x: 600, y: 715, kind: 'data' },
     ],
     annotations: [
       {

@@ -38,21 +38,30 @@ function cloudRunDiagram(): NetworkDiagram {
     ],
     edges: [
       { points: [[600, 104], [600, 153]], kind: 'request' },
-      { points: [[600, 267], [600, 278], [130, 278], [130, 288]], kind: 'request' },
-      { points: [[600, 267], [600, 278], [285, 278], [285, 288]], kind: 'request' },
-      { points: [[600, 267], [600, 278], [435, 278], [435, 288]], kind: 'request' },
+      { points: [[600, 267], [600, 278], [130, 278]], kind: 'request', arrow: false },
+      { points: [[130, 278], [130, 288]], kind: 'request' },
+      { points: [[285, 278], [285, 288]], kind: 'request' },
+      { points: [[435, 278], [435, 288]], kind: 'request' },
       { points: [[130, 382], [40, 382], [40, 438], [130, 438], [130, 448]], kind: 'request' },
       { points: [[285, 382], [285, 448]], kind: 'request' },
       { points: [[435, 382], [435, 448]], kind: 'request' },
-      { points: [[130, 545], [130, 580], [530, 580], [530, 500], [678, 500]], kind: 'data', label: 'Private IP traffic', labelX: 335, labelY: 572 },
-      { points: [[285, 545], [285, 580], [530, 580], [530, 500], [678, 500]], kind: 'data' },
+      { points: [[130, 545], [130, 580], [530, 580]], kind: 'data', arrow: false, label: 'Private IP traffic', labelX: 335, labelY: 572 },
+      { points: [[285, 545], [285, 580]], kind: 'data', arrow: false },
       { points: [[307, 655], [530, 655], [530, 500], [678, 500]], kind: 'data' },
       { points: [[700, 590], [700, 678]], kind: 'data', label: 'Private ranges only', labelX: 555, labelY: 638 },
-      { points: [[700, 780], [700, 820], [700, 878]], kind: 'data' },
-      { points: [[700, 780], [700, 820], [1000, 820], [1000, 878]], kind: 'data', label: 'Private peering', labelX: 815, labelY: 815 },
+      { points: [[700, 780], [700, 820], [1000, 820]], kind: 'data', arrow: false, label: 'Private peering', labelX: 815, labelY: 812 },
+      { points: [[700, 820], [700, 878]], kind: 'data' },
+      { points: [[1000, 820], [1000, 878]], kind: 'data' },
       { points: [[108, 470], [35, 470], [35, 1115], [238, 1115]], kind: 'egress', label: 'Default: public HTTPS, no VPC or NAT', labelX: 50, labelY: 1085 },
       { points: [[722, 500], [845, 500], [845, 680], [978, 680]], kind: 'optional' },
       { points: [[1022, 680], [1165, 680], [1165, 1115], [282, 1115]], kind: 'optional', label: 'Optional static outbound IP', labelX: 760, labelY: 1095 },
+    ],
+    junctions: [
+      { x: 285, y: 278, kind: 'request' },
+      { x: 435, y: 278, kind: 'request' },
+      { x: 285, y: 580, kind: 'data' },
+      { x: 530, y: 580, kind: 'data' },
+      { x: 700, y: 820, kind: 'data' },
     ],
     annotations: [
       { x: 435, y: 555, lines: ['No VPC connector'], anchor: 'middle' },
@@ -83,9 +92,9 @@ function gkeDiagram(microservices: boolean): NetworkDiagram {
   const workloads: NetworkNode[] = positions.map((x, index) => ({
     id: `workload-${index}`, x, y: 550, icon: 'gcp-google-kubernetes-engine.svg', title: [names[index]], detail: [details[index]],
   }));
-  const requestEdges: NetworkEdge[] = positions.map(x => ({ points: [[425, 362], [800, 362], [800, 505], [x, 505], [x, 528]], kind: 'request' }));
+  const requestEdges: NetworkEdge[] = positions.map(x => ({ points: [[x, 505], [x, 528]], kind: 'request' }));
   const dataEdges: NetworkEdge[] = positions.filter((_, index) => !microservices || index < 2).map(x => ({
-    points: [[x, 630], [x, 715], [625, 715], [625, 768]], kind: 'data',
+    points: [[x, 630], [x, 715]], kind: 'data', arrow: false,
   }));
 
   return {
@@ -115,12 +124,22 @@ function gkeDiagram(microservices: boolean): NetworkDiagram {
     edges: [
       { points: [[425, 104], [425, 153]], kind: 'request' },
       { points: [[425, 247], [425, 268]], kind: 'request' },
+      { points: [[425, 362], [800, 362], [800, 505], [225, 505]], kind: 'request', arrow: false },
       ...requestEdges,
       ...dataEdges,
-      { points: [[647, 790], [825, 790], [825, 480], [978, 480]], kind: 'data' },
-      { points: [[647, 790], [825, 790], [825, 720], [978, 720]], kind: 'data', label: 'Private peering', labelX: 865, labelY: 702 },
+      { points: [[225, 715], [625, 715], [625, 768]], kind: 'data' },
+      { points: [[647, 790], [825, 790], [825, 480]], kind: 'data', arrow: false },
+      { points: [[825, 480], [978, 480]], kind: 'data' },
+      { points: [[825, 720], [978, 720]], kind: 'data', label: 'Private peering', labelX: 865, labelY: 702 },
       { points: [[203, 550], [65, 550], [65, 790], [203, 790]], kind: 'egress' },
       { points: [[225, 872], [225, 1018]], kind: 'egress', label: 'Public provider HTTPS', labelX: 245, labelY: 915 },
+    ],
+    junctions: [
+      { x: 425, y: 505, kind: 'request' },
+      { x: 625, y: 505, kind: 'request' },
+      { x: 425, y: 715, kind: 'data' },
+      ...(!microservices ? [{ x: 625, y: 715, kind: 'data' as const }] : []),
+      { x: 825, y: 720, kind: 'data' },
     ],
     annotations: [
       { x: 430, y: 935, lines: ['Cloud NAT enables outbound connections.', 'It does not serve inbound requests.'] },

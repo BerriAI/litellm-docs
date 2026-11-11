@@ -3,6 +3,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 import { makeAwsNetworkDiagram } from './awsNetwork';
 import { makeGcpNetworkDiagram } from './gcpNetwork';
 import { makeAzureNetworkDiagram } from './azureNetwork';
+import { routeNetworkEdges } from './networkRouting';
 import type { CloudKey, NetworkDiagram, NetworkGroup } from './networkTypes';
 import styles from './network.module.css';
 
@@ -29,6 +30,7 @@ const GROUP_COLORS: Record<NetworkGroup['kind'], { stroke: string; fill: string 
 function NetworkSvg({ diagram }: { diagram: NetworkDiagram }) {
   const instanceId = useId().replace(/:/g, '');
   const iconRoot = useBaseUrl('/img/cloud_icons/');
+  const edgePaths = routeNetworkEdges(diagram);
   const groupColors = {
     ...GROUP_COLORS,
     ...(diagram.provider === 'gcp' ? { vpc: { stroke: '#4285f4', fill: '#ffffff' }, project: { stroke: '#4285f4', fill: '#ffffff' } } : {}),
@@ -72,14 +74,19 @@ function NetworkSvg({ diagram }: { diagram: NetworkDiagram }) {
       ))}
       {diagram.edges.map((edge, index) => (
         <g key={index}>
-          <polyline
-            points={edge.points.map(point => point.join(',')).join(' ')}
+          <path
+            d={edgePaths[index]}
+            data-network-edge={edge.kind}
+            data-points={edge.points.map(point => point.join(',')).join(' ')}
             fill="none" stroke={PATH_COLORS[edge.kind]} strokeWidth="1.7"
             strokeLinejoin="round" strokeDasharray={edge.kind === 'optional' ? '7 5' : undefined}
-            markerEnd={`url(#${instanceId}-${edge.kind})`}
+            markerEnd={edge.arrow === false ? undefined : `url(#${instanceId}-${edge.kind})`}
           />
           {edge.label && <text x={edge.labelX} y={edge.labelY} className={styles.edgeLabel} fill={PATH_COLORS[edge.kind]}>{edge.label}</text>}
         </g>
+      ))}
+      {diagram.junctions?.map(junction => (
+        <circle key={`${junction.kind}-${junction.x}-${junction.y}`} cx={junction.x} cy={junction.y} r="3.5" fill={PATH_COLORS[junction.kind]} />
       ))}
       {diagram.nodes.map(node => (
         <g key={node.id}>
@@ -111,6 +118,7 @@ function Legend() {
       <span><i style={{ borderColor: PATH_COLORS.data }} />Private service traffic</span>
       <span><i style={{ borderColor: PATH_COLORS.egress }} />Internet egress</span>
       <span><i className={styles.optionalLine} style={{ borderColor: PATH_COLORS.optional }} />Optional addition</span>
+      <span>Dots connect paths; bridges keep paths separate.</span>
     </div>
   );
 }

@@ -24,6 +24,7 @@ export type NetworkNode = {
 export type NetworkEdge = {
   points: [number, number][];
   kind: 'request' | 'data' | 'egress' | 'optional';
+  arrow?: boolean;
   label?: string;
   labelX?: number; labelY?: number;
 };
@@ -42,6 +43,7 @@ export type NetworkDiagram = {
   groups: NetworkGroup[];
   nodes: NetworkNode[];
   edges: NetworkEdge[];
+  junctions?: { x: number; y: number; kind: NetworkEdge['kind'] }[];
   annotations?: NetworkAnnotation[];
   notes: { title: string; text: string }[];
   sources: { label: string; url: string }[];
