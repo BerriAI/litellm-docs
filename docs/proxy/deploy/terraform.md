@@ -11,9 +11,9 @@ description: Deploy LiteLLM on AWS ECS Fargate or Google Cloud Run with Terrafor
 
 Deploy LiteLLM on [AWS ECS Fargate](#aws) or [Google Cloud Run](#gcp). Both modules run the gateway, backend, UI, and migrations from one Docker image.
 
-:::note Source version
+:::note Image compatibility
 
-These examples use [LiteLLM main at `f52f26d9`](https://github.com/BerriAI/litellm/tree/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm). Build and publish the [unified image](../docker_quick_start.md#build-from-source) from the same commit to your registry. Earlier releases use separate component images and are incompatible with these module examples.
+[Build and publish a shared image](../docker_quick_start.md#build-from-source) that matches the modules. Earlier releases with separate component images are incompatible with these examples.
 
 :::
 

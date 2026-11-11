@@ -215,7 +215,7 @@ If a budget is part of how you bound spend, run LiteLLM with a database as shown
 
 ## Build from source
 
-The consolidated [Helm chart](./deploy/helm.md) uses a shared image with a component entrypoint. The published tags checked for this guide predate that change. Build the chart and image from the same [source commit](https://github.com/BerriAI/litellm/tree/f52f26d9c636038c6e3609cc7d17cf625d434c3e) in your image pipeline:
+The [Helm chart](./deploy/helm.md) uses a shared image with a component entrypoint. Build the image from the same [source revision](https://github.com/BerriAI/litellm/tree/f52f26d9c636038c6e3609cc7d17cf625d434c3e) as the chart in your image pipeline:
 
 ```bash
 git clone --filter=blob:none https://github.com/BerriAI/litellm.git litellm-source

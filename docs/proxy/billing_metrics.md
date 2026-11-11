@@ -13,7 +13,7 @@ You need a `LITELLM_LICENSE` and metering credentials (OAuth client ID and secre
 
 :::
 
-The examples follow [source revision `f52f26d`](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/litellm/proxy/enterprise_billing/billing_metrics.py). These OAuth settings replace the certificate settings from earlier builds; use an image containing this implementation.
+These OAuth settings replace the certificate settings from earlier builds. Use an image containing the [OAuth metering implementation](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/litellm/proxy/enterprise_billing/billing_metrics.py).
 
 ## Quick Start
 

@@ -9,7 +9,7 @@ description: Scale the LiteLLM Helm chart with per-component HPA settings, reque
 
 Configure scaling in the [Helm chart's values.yaml](./helm.md). `gateway.hpa` scales the gateway in separate-service mode and the full proxy in single-service mode. `backend.hpa` and `ui.hpa` apply only to separate services.
 
-These values match the [consolidated chart at `f52f26d`](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/helm/litellm/values.yaml). Use its matching image and installation instructions in the Helm guide.
+See the [chart values reference](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/helm/litellm/values.yaml) for all scaling options and the [Helm guide](./helm.md) for installation.
 
 ## CPU and replica limits
 

@@ -35,9 +35,9 @@ Have your secret manager provision the following Kubernetes Secrets in the `lite
 
 Keep these values in your platform's GitOps repository. Replace the image registry, datastore endpoints, and Redis port/TLS settings with your environment's values.
 
-:::note Current source
+:::note Image compatibility
 
-This guide uses the consolidated chart at [commit `f52f26d`](https://github.com/BerriAI/litellm/tree/f52f26d9c636038c6e3609cc7d17cf625d434c3e/helm/litellm). The published image tags checked for this guide predate its component entrypoint. [Build and publish the shared image from the same commit](../docker_quick_start.md#build-from-source); do not rely on the chart's default `appVersion` for compatibility.
+The chart requires an image with the component entrypoint. [Build and publish a matching image](../docker_quick_start.md#build-from-source); the chart's default `appVersion` does not guarantee compatibility.
 
 :::
 
