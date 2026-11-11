@@ -1,6 +1,18 @@
 [
   {
     "folders": [
+      "v1.110.0rc1"
+    ],
+    "title": "LiteLLM v1.110.0rc1 adds the Agent Skills Hub and a Rust-only router",
+    "points": [
+      "The router always runs on the Rust core, and a router config that the Rust core declines now stops the proxy at startup.",
+      "Spend goes through the `LiteLLM_SpendLogDelivery` ledger by default, and `general_settings.use_spend_logs_ledger: false` restores the previous spend queues.",
+      "The Agent Skills Hub adds skill upload and import, version history and an admin review queue for member submissions.",
+      "Streamed `/v1/responses` no longer ends with `[DONE]`, and raw response ids that the proxy did not issue are rejected by default."
+    ]
+  },
+  {
+    "folders": [
       "v1.106.8"
     ],
     "title": "LiteLLM v1.106.8 fixes transcription cost for some FLAC files",
@@ -211,17 +223,6 @@
       "Chat completions bridged to `/responses` return text and tool calls in one `choices[0]`, so agents that read only `choices[0]` run the tool.",
       "Signed thinking blocks with empty text stay on `/v1/messages` and chat completion requests, so replayed turns keep their reasoning.",
       "The `v1.104.4` token count fixes are included, and count responses carry `litellm_count_source`."
-    ]
-  },
-  {
-    "folders": [
-      "v1.103.6"
-    ],
-    "title": "LiteLLM v1.103.6 fixes realtime handshake errors and double spend logs",
-    "points": [
-      "A refused upstream realtime handshake now sends the client an `error` event and closes with 1008, 1013 or 1011.",
-      "Non-streaming requests of 256 KiB or more on the chat to Responses bridge now log spend once instead of twice.",
-      "This patch has no new database migrations."
     ]
   }
 ]
