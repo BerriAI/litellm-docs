@@ -152,6 +152,8 @@ PHOENIX_PROJECT_NAME="my-project"   # optional
 
 <TabItem value="langfuse" label="Langfuse">
 
+Moving from the SDK-based `langfuse` callback? Read the [Langfuse SDK to OpenTelemetry v2 migration guide](./langfuse_to_otel_v2_migration) before switching to `langfuse_otel` for changes to trace volume, content capture and metadata
+
 ```yaml title="config.yaml"
 litellm_settings:
   callbacks: ["langfuse_otel"]
