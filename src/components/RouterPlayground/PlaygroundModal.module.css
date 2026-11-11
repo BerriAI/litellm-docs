@@ -1,0 +1,90 @@
+.trigger {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ifm-link-color);
+  font: inherit;
+  cursor: pointer;
+}
+
+.trigger:hover {
+  text-decoration: underline;
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 15, 20, 0.5);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(1180px, 100%);
+  height: calc(100vh - 32px);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  background: var(--ifm-background-color);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+}
+
+.dialog:focus {
+  outline: none;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.title {
+  flex: 1;
+  font-weight: 600;
+}
+
+.full {
+  font-size: 0.85rem;
+}
+
+.close {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--ifm-color-emphasis-200);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .scrim {
+    align-items: flex-end;
+    padding: 8px 0 0;
+  }
+
+  .dialog {
+    height: calc(100vh - 8px);
+    border-radius: 10px 10px 0 0;
+  }
+}

@@ -1,0 +1,48 @@
+.hero {
+  position: relative;
+  margin: 0;
+  background: #36362c;
+}
+
+.stage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.tag {
+  font-family: Inter, -apple-system, 'Helvetica Neue', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.toggle {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  padding: 5px 10px;
+  border: 1px solid #5a5a4a;
+  border-radius: 4px;
+  background: #2b2b23;
+  color: #e6e0d2;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.toggle:hover {
+  background: #3d3d32;
+}
+
+.toggle:focus-visible {
+  outline: 2px solid #ffb27a;
+  outline-offset: 4px;
+}
+
+@media (max-width: 600px) {
+  .toggle {
+    font-size: 12px;
+  }
+}
