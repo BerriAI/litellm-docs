@@ -1,0 +1,18 @@
+.figure {
+  margin: 2rem 0;
+}
+
+.video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  background: #153e31;
+}
+
+.caption {
+  margin-top: 0.75rem;
+  color: var(--ifm-color-content-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
