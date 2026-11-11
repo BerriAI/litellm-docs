@@ -95,9 +95,30 @@ print(response)
 
 ### Setup Config
 
-Add this to your config.yaml:
+#### Embed queries through a model group
+
+<SinceVersion v="1.101.0" />
+
+Set `litellm_embedding_model` to a `model_name` from your `model_list`. Each search then embeds the query through the LiteLLM router, so the load balancing, retries, cooldowns and fallbacks you configure for that model group apply to search queries the same way they apply to `/v1/embeddings` calls on it. You do not set `litellm_embedding_config`; the credentials stay on the deployments.
 
 ```yaml
+model_list:
+  - model_name: query-embeddings
+    litellm_params:
+      model: azure/text-embedding-3-large
+      api_base: https://my-eastus2-resource.openai.azure.com/
+      api_key: os.environ/AZURE_EASTUS2_API_KEY
+      api_version: "2024-10-21"
+  - model_name: query-embeddings
+    litellm_params:
+      model: azure/text-embedding-3-large
+      api_base: https://my-westus3-resource.openai.azure.com/
+      api_key: os.environ/AZURE_WESTUS3_API_KEY
+      api_version: "2024-10-21"
+
+router_settings:
+  num_retries: 2
+
 vector_store_registry:
   - vector_store_name: "azure-ai-search-litellm-website-knowledgebase"
     litellm_params:
@@ -105,11 +126,28 @@ vector_store_registry:
         custom_llm_provider: "azure_ai"
         azure_search_service_name: "your-search-service"  # or api_base: https://your-search-service.search.windows.net
         api_key: os.environ/AZURE_SEARCH_API_KEY
+        litellm_embedding_model: "query-embeddings"  # model group from model_list
+```
+
+If one deployment fails, the router retries the query embedding on another deployment in the group. To fail over to a different model group, add it under `router_settings.fallbacks`, for example `fallbacks: [{"query-embeddings": ["query-embeddings-backup"]}]`. Every deployment in the group, and in any fallback group, must use the same embedding model and dimensions as the vectors in your index.
+
+#### Single embedding deployment
+
+You can also point the vector store at one embedding deployment directly and pass its credentials in `litellm_embedding_config`. This form gets no load balancing or failover.
+
+```yaml
+vector_store_registry:
+  - vector_store_name: "azure-ai-search-litellm-website-knowledgebase"
+    litellm_params:
+        vector_store_id: "my-vector-index"
+        custom_llm_provider: "azure_ai"
+        azure_search_service_name: "your-search-service"
+        api_key: os.environ/AZURE_SEARCH_API_KEY
         litellm_embedding_model: "azure/text-embedding-3-large"
         litellm_embedding_config:
-            api_base: https://krris-mh44uf7y-eastus2.cognitiveservices.azure.com/
+            api_base: https://my-eastus2-resource.openai.azure.com/
             api_key: os.environ/AZURE_API_KEY
-            api_version: "2025-09-01"
+            api_version: "2024-10-21"
 ```
 
 ### Start Proxy
@@ -139,8 +177,8 @@ curl -X POST 'http://0.0.0.0:4000/v1/vector_stores/my-vector-index/search' \
 | `vector_store_id` | string | Your Azure AI Search index name |
 | `custom_llm_provider` | string | Set to `"azure_ai"` |
 | `azure_search_service_name` | string | Name of your Azure AI Search service |
-| `litellm_embedding_model` | string | Model to generate query embeddings (e.g., `"azure/text-embedding-3-large"`) |
-| `litellm_embedding_config` | dict | Config for the embedding model (api_base, api_key, api_version) |
+| `litellm_embedding_model` | string | Model that embeds the query. On the proxy, use a model group name from `model_list` (e.g., `"query-embeddings"`) or a provider model (e.g., `"azure/text-embedding-3-large"`) |
+| `litellm_embedding_config` | dict | Credentials for the embedding model (api_base, api_key, api_version). Not needed when `litellm_embedding_model` is a proxy model group |
 | `api_key` | string | Your Azure AI Search API key |
 
 ## Supported Features
@@ -230,8 +268,8 @@ The vector dimensions must match your embedding model. For example:
 **"Failed to generate embedding for query"**
 
 Your embedding model config is wrong. Check:
-- `litellm_embedding_config` has the right api_base and api_key
-- The embedding model name is correct
+- If `litellm_embedding_model` is a model group, the name matches a `model_name` in your `model_list`. A name the proxy does not recognize is sent to the provider as a model name and fails
+- Otherwise, `litellm_embedding_config` has the right api_base and api_key
 - Your credentials work
 
 **"Index not found"**
