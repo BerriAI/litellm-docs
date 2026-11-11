@@ -1,0 +1,46 @@
+.hero {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #0b1423;
+}
+
+.hero picture,
+.hero img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.control {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  border: 1px solid #516888;
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: #111d30;
+  color: #d5e1ef;
+  font: 12px/1.4 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.control:hover,
+.control:focus-visible {
+  background: #243a57;
+  border-color: #a2b6ff;
+}
+
+@media (max-width: 600px) {
+  .control {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    display: block;
+    margin: 0 10px 10px auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control { display: none; }
+}
