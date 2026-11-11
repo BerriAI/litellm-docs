@@ -154,6 +154,6 @@ Point the DNS record for `lb_domains` at `lb_ip`. The managed TLS certificate be
 
 ## Configuration and upgrades
 
-Manage models, teams, and keys with the [UI](../configuration/ui.md), [Management API](../configuration/api.md), or [Terraform provider](../configuration/terraform.md). The examples enable database-backed models and Redis caching. To declare models with the deployment, set `proxy_config.model_list` and use `gateway_extra_secrets` for provider credentials.
+Manage models, teams, and keys with the [UI](../configuration/ui.md), [Management API](../configuration/api.md), or [Terraform provider](../configuration/terraform.md). The examples enable database-backed models and Redis caching. To declare models with the deployment, set `proxy_config.model_list`. Supply referenced provider credentials to both `gateway_extra_secrets` and `backend_extra_secrets`, since both services load this configuration.
 
 Pin the module commit and image together in your deployment repository. Review `terraform plan` before applying an upgrade; each module runs migrations when the image changes. Use [Health Checks](../health.md) to verify readiness and [High Availability](./ha/overview.md) to plan replicas and rollouts.

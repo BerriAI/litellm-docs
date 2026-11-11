@@ -144,13 +144,15 @@ const GATEWAY_DOCKER_RUN = `docker run \\
 const ONE_CLICK = [
   ['Railway', 'https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic', 'https://railway.com/button.svg'],
   ['Render', 'https://render.com/deploy?repo=https://github.com/BerriAI/litellm', 'https://render.com/images/deploy-to-render-button.svg'],
-  ['AWS', 'https://console.aws.amazon.com/cloudshell/home', '/img/deploy-on-aws.png'],
-  ['GCP', 'https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FBerriAI%2Fterraform-google-litellm&cloudshell_git_branch=v1.105.0&cloudshell_workspace=examples%2Fdefault&cloudshell_tutorial=TUTORIAL.md&cloudshell_image=gcr.io/ds-artifacts-cloudshell/deploystack_custom_image&shellonly=true', '/img/deploy-on-gcp.png'],
+  ['AWS', '/docs/proxy/deploy/terraform#aws', '/img/deploy-on-aws.png'],
+  ['GCP', '/docs/proxy/deploy/terraform#gcp', '/img/deploy-on-gcp.png'],
 ];
 
 const INSTALLER = `curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install.sh | sh`;
 
-const HELM = `helm install litellm oci://ghcr.io/berriai/litellm-helm -f values.yaml`;
+const HELM = `git clone --filter=blob:none https://github.com/BerriAI/litellm.git litellm-source
+git -C litellm-source checkout f52f26d9c636038c6e3609cc7d17cf625d434c3e
+helm upgrade --install litellm ./litellm-source/helm/litellm --namespace litellm -f values.yaml --wait --timeout 30m`;
 
 // Install options per path. The first entry is the recommended command and is
 // the only one shown up front; the rest sit under "Other ways to install",
@@ -177,7 +179,7 @@ const INSTALLS = {
       {
         id: 'helm',
         label: 'Helm',
-        when: 'You deploy to Kubernetes. Pair it with a values.yaml from the deploy guide.',
+        when: 'You deploy to Kubernetes. Prepare values.yaml, secrets, and the matching image using the Helm guide; it also covers Argo CD.',
         code: HELM,
         more: '/docs/proxy/deploy/helm',
       },
