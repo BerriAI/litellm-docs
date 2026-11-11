@@ -76,6 +76,19 @@ Example TogetherAI Usage - Note: liteLLM supports all models deployed on Togethe
 | upstage/SOLAR-0-70b-16bit           | `completion('together_ai/upstage/SOLAR-0-70b-16bit', messages)`           | `os.environ['TOGETHERAI_API_KEY']` |
 | WizardLM/WizardLM-70B-V1.0          | `completion('together_ai/WizardLM/WizardLM-70B-V1.0', messages)`          | `os.environ['TOGETHERAI_API_KEY']` |
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`together_ai/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Together AI model name. LiteLLM sends Together AI the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `together_ai/kimi-latest` | Kimi |
+| `together_ai/glm-latest` | GLM |
+| `together_ai/glm-flash-latest` | GLM Flash |
+| `together_ai/deepseek-pro-latest` | DeepSeek Pro |
+| `together_ai/qwen-flash-latest` | Qwen Flash |
 
 ## Prompt Templates
 

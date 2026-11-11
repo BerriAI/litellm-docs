@@ -52,7 +52,7 @@ This release is published as [`ghcr.io/berriai/litellm:v1.106.5`](https://github
 
 `v1.106.5` has a known performance regression compared to `v1.104.x` when clients send `Accept-Encoding: gzip`, which most HTTP clients and the OpenAI SDKs do by default. The proxy gzips non-streaming responses over 500 bytes on the event loop, which slows down those requests and every other request on the same worker, including streaming and MCP requests.
 
-Wait for `v1.106.6`, expected by end of day Wednesday, October 28, before you upgrade. The fix is backported in [PR #48680](https://github.com/BerriAI/litellm/pull/48680).
+Upgrade to [`v1.106.6`](/release_notes/v1.106.6/v1-106-6) instead, which ships the fix. The fix is backported in [PR #48680](https://github.com/BerriAI/litellm/pull/48680).
 
 :::
 

@@ -1,6 +1,6 @@
-# CLI Authentication
+# CLI sign-in
 
-Use the litellm cli to authenticate to the LiteLLM Gateway. This is great if you're trying to give a large number of developers self-serve access to the LiteLLM Gateway.
+Sign in from the `lite` CLI to obtain a credential for the LiteLLM Gateway. The CLI opens a browser and uses the gateway's configured sign-in flow, which can use your identity provider or a username and password.
 
 
 ## Demo
@@ -13,7 +13,7 @@ Use the litellm cli to authenticate to the LiteLLM Gateway. This is great if you
 
 :::warning[Beta Feature - Required]
 
-CLI SSO Authentication is currently in beta. You must set this environment variable **when starting up your LiteLLM Proxy**:
+CLI sign-in is currently in beta. You must set this environment variable **when starting up your LiteLLM Proxy**:
 
 ```bash
 export EXPERIMENTAL_UI_LOGIN="True"

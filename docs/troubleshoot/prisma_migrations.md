@@ -202,19 +202,20 @@ If you would rather let the proxy perform the rewrite at boot, raise the timeout
 
 ---
 
-### 6. `Database migration cannot proceed. Existing rows would make a pending schema change fail`
+### 6. `Database migration cannot proceed` on rows the schema change cannot take
 
-**Symptom on v1.108.0 and later:** the proxy, or the migration job, exits 2 before the first migration runs, and the log names the rows:
+**Symptom on v1.109.0 and later:** the proxy, or the migration job, exits before it serves and the log carries PostgreSQL's own error for the first migration the rows cannot take, such as `index row size 2976 exceeds btree version 4 maximum 2704 for index "LiteLLM_SpendLogs_api_key_startTime_idx"` or `column "team_alias" of relation "LiteLLM_TeamTable" contains null values`. That migration is rolled back as a whole and the ones after it never run, so the schema is a consistent older version and the old pods keep serving. `_prisma_migrations` keeps a failed row for it that stops every later boot with `Migration completion could not be verified`, so after you fix the rows, mark it rolled back with `prisma migrate resolve --rolled-back <migration_name>` as in [section 2](#2-new-migrations-cannot-be-applied-before-the-error-is-recovered-from) and start again. The dry run below spares you that step by failing before anything is recorded. To see this error before the upgrade, run `litellm --check_migrations_against_existing_data` with the new image, which applies the pending migrations in a transaction it rolls back, see the [Upgrade Guide](../proxy/upgrade_guide.md#dry-run-the-migrations-before-the-upgrade).
+
+**Symptom on v1.108.0:** the proxy, or the migration job, exits 2 before the first migration runs, with `Existing rows would make a pending schema change fail` and the rows named by a read-only count:
 
 ```
 LiteLLM Proxy: Database migration cannot proceed. Existing rows would make a pending schema change fail:
   "LiteLLM_SpendLogs".api_key, startTime: 2 row(s) with an index entry over 2704 bytes, largest 3232 bytes (api_key up to 3207 bytes)
     blocks: CREATE INDEX "LiteLLM_SpendLogs_api_key_startTime_idx" (request-log index)
     fix:    Shorten or hash the long "LiteLLM_SpendLogs" (api_key, startTime) values so every row's index entry fits.
-No schema change was made. Fix the rows and start again, or run `litellm --check_migrations_against_existing_data` with the new image to check again.
 ```
 
-`_prisma_migrations` is untouched. `litellm --check_migrations_against_existing_data` prints the same report without starting anything, see the [Upgrade Guide](../proxy/upgrade_guide.md#check-the-rows-before-the-schema).
+`_prisma_migrations` is untouched. The count runs under `LITELLM_MIGRATION_DATA_CHECK_TIMEOUT` (default 600 seconds) and a count that does not finish is also a refusal, so on a large `LiteLLM_SpendLogs` raise that value or upgrade to v1.109.0, where rows no longer stop the boot.
 
 **Symptom on v1.103.0 to v1.107.x:** the same rows fail inside the upgrade instead, with `index row size 2976 exceeds btree version 4 maximum 2704 for index "LiteLLM_SpendLogs_api_key_startTime_idx"` in the log. On v1.103.x and v1.104.x the index is created inside migration `20260823000000_add_spend_logs_api_key_starttime_index`, so that migration fails, the ones after it never run, and the pods start against a partly upgraded schema, so requests fail with errors such as `column t.tpd_limit does not exist`. From v1.105.0 the index is built after the migrations as a request-log index, so the migrations apply, the index is left `INVALID`, and the job exits 1 with `Database setup failed after multiple retries ... check your database connection` on every rerun.
 
@@ -240,7 +241,7 @@ WHERE api_key <> ''
 
 This is one way and idempotent (a hashed row matches neither pattern and is skipped). In our test it took about 8 seconds per 100,000 legacy rows and did not block inserts. Rows the proxy wrote with the raw key keep their spend and are now found under the hashed key, the same way rows written since v1.99.0 are.
 
-On v1.108.0 and later, start the proxy or the job again; the check passes and the upgrade proceeds. On an earlier version, also clean up what the failed attempt left behind. If the index was left invalid, drop it and let the next start rebuild it:
+On v1.108.0 and later, start the proxy or the job again and the index builds. On an earlier version, also clean up what the failed attempt left behind. If the index was left invalid, drop it and let the next start rebuild it:
 
 ```sql
 SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid;

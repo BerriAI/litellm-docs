@@ -17,12 +17,12 @@ variant="cards"
 items={[
   { title: "Heuristic v1", icon: <SlidersHorizontal size={18} />, tone: "local", description: "Local keyword and pattern scoring with tunable weights. No classifier API call.", to: "#tune-heuristic-v1" },
   { title: "Heuristic v2", icon: <Gauge size={18} />, tone: "local", description: "Local success estimates for four tiers. Tune the minimum success threshold.", to: "#tune-heuristic-v2" },
-  { title: "Always use the judge", icon: <BrainCircuit size={18} />, tone: "judge", description: "An LLM selects the tier whenever classification runs.", to: "#tune-the-llm-judge" },
+  { title: "LLM as a judge", icon: <BrainCircuit size={18} />, tone: "judge", description: "An LLM selects the tier whenever classification runs.", to: "#tune-the-llm-judge" },
   { title: "Heuristic first", icon: <GitBranch size={18} />, tone: "chain", description: "Run v1 or v2 up to a tier ceiling, then ask the LLM for remaining requests.", to: "#heuristic-first" },
   { title: "Hybrid", icon: <Split size={18} />, tone: "chain", description: "Run v1 or v2 locally; ask the LLM near decision boundaries.", to: "#hybrid" },
   { title: "Capability", icon: <Target size={18} />, tone: "forecast", description: "Forecast whether an efficient solver can finish the task; otherwise use a capable solver.", to: "#capability" },
   { title: "Fuse v2", icon: <Combine size={18} />, tone: "forecast", description: "Compare two solver forecasts and choose within an acceptable quality gap.", to: "#fuse-v2" },
-  { title: "OSS classifier", icon: <Server size={18} />, description: "Connect to self-hosted Laya or Bespoke Nimble, or the hosted Jev classifier.", to: "#connect-a-self-hosted-classifier" },
+  { title: "Decision Model", icon: <Server size={18} />, description: "Connect to self-hosted Laya or Bespoke Nimble, or the hosted Jev classifier.", to: "#connect-a-self-hosted-classifier" },
   { title: "Custom classifier", icon: <Braces size={18} />, description: "Route with your own Python plugin, configured at gateway startup.", to: "#custom-classifier-startup-configuration-only" },
 ]}
 />
@@ -626,6 +626,8 @@ classifier_fallback: heuristic
 
 Reuse requires a resolvable client session ID and a valid held decision. Missing/expired state still classifies. Routing plugins suppress the ordinary replay paths, and custom taxonomies do not support once-per-session mode.
 
+Claude Code sends one `x-claude-code-session-id` for the main agent and all of its subagents. In **Every new user message** mode each subagent holds its own decision, keyed on that session ID plus `x-claude-code-agent-id`, so a subagent's ask does not change the main agent's tier and the main agent's asks do not change a subagent's. Claude Code v2.1.273 and later can also label each request with `x-claude-code-request-class`, but only sends it through a gateway when `CLAUDE_CODE_GATEWAY_HINT_HEADERS=1` is set. Set it for developers who use Claude Code through the proxy; the router then treats side requests such as agent summaries as housekeeping even after a Claude Code release changes their wording.
+
 In **Sessions and efficiency > Affinity**, **Pin one model deployment per tier** maps to `deployment_affinity` (default `true`). It reuses a model/deployment within each classified tier while still permitting reclassification and tier changes. **How long a pin survives idle** maps to `session_affinity_ttl_seconds` (default `3600`, positive integer), refreshed on reuse. Session affinity implies a deployment pin even when `deployment_affinity` is false.
 
 ```yaml title="Reclassify each human ask while reusing continuation decisions"
@@ -675,7 +677,7 @@ Open **Routing rules and recovery**. Defaults and keys below apply to ordinary c
 | Semantic keyword matching | `semantic_keyword_matching: false`, `embedding_model: null`, `match_threshold: 0.5` | Uses embedding similarity instead of literal matching for the same rules. Requires an embedding model; threshold is `0` through `1`. Adds an embedding call. |
 | Escalation Keywords | `escalation_keywords` defaults to `["LITELLM ESCALATE"]` | Exact case-sensitive phrase bumps one tier. `[]` disables it. |
 | Plan-Mode Override | `plan_mode_min_tier: null`, `plan_mode_patterns: null` | Optional minimum tier while agent plan-mode markers are present. Additional patterns are case-sensitive literal sentinels. Does not rewrite the session pin. |
-| Housekeeping Routing | `route_housekeeping_to_cheapest_tier: true`, `housekeeping_patterns: null` | Recognized conversation-title calls skip classification and use the cheapest tier; keyword rules/pins still take precedence, and escalation can raise the result. Extra sentinels are case-sensitive. |
+| Housekeeping Routing | `route_housekeeping_to_cheapest_tier: true`, `housekeeping_patterns: null` | Recognized conversation-title calls, Claude Code agent progress summaries and prompt suggestions, and requests marked `x-claude-code-request-class: auxiliary` skip classification, use the cheapest tier and never become a held decision; keyword rules/pins still take precedence, and escalation can raise the result. Extra sentinels are case-sensitive. |
 | Modality Routing | `modality_routing: false`, `modality_pin_override: false` | Replaces an explicitly non-vision model on image turns with a capable higher-tier/default model. The override allows this on a pinned session for that turn only. Unknown vision support is not treated as explicitly unsupported. |
 | Context Window Escalation | `enable_context_window_escalation: false`, `context_window_escalation_buffer: 0.95` | Restricts selection to models that fit, or moves to the nearest higher tier proven to fit. Buffer is greater than `0`, at most `1`. Models with unknown windows are not proof of a fit or overflow. |
 | Stalled Task Escalation | `stall_escalation_enabled: false`, `stall_escalation_window: 6`, `stall_escalation_repeat_threshold: 3` | Escalates repeated/failing recent tool calls one tier. Repeat count must be at least `2` and no greater than the positive window. Incompatible with session affinity or `classification_mode: user_turn`. |

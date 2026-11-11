@@ -18,7 +18,7 @@ LiteLLM can act as both a resource and requesting app:
 
 Use ID-JAG when an app needs to act on a signed-in user's behalf and you want your IdP to control which apps can request access. Both the IdP and the target service's authorization server must support ID-JAG.
 
-For direct access to LiteLLM with an existing JWT, use [JWT authentication](../token_auth.md). For other token-exchange flows with an upstream MCP server, see [OBO token exchange](../../mcp_obo_auth.md).
+For direct access to LiteLLM with an existing JWT, [map its claims to users and teams](../jwt_user_team_auth.md) or [Virtual Keys](../jwt_key_mapping.md). For other token-exchange flows with an upstream MCP server, see [OBO token exchange](../../mcp_obo_auth.md).
 
 :::
 
@@ -51,12 +51,10 @@ sequenceDiagram
     API-->>Client: Response
 ```
 
-When LiteLLM is the resource app, it issues access tokens and accepts them for inference and MCP requests. When LiteLLM is the requesting app, it exchanges the user's identity assertion for an ID-JAG at the IdP, then redeems the ID-JAG for an access token at the resource authorization server before calling the MCP server.
-
 ## Identity provider setup
 
 ### Okta
 
 Okta implements ID-JAG as [Cross App Access (XAA)](https://developer.okta.com/docs/concepts/xaa/). Register the requesting app as an **AI agent** and enable Cross App Access on the resource app. An administrator connects them through a **resource connection** and selects the allowed scopes.
 
-Select **Okta** under **Get started** in [LiteLLM as resource app](./resource_app.md#get-started) or [LiteLLM as requesting app](./requesting_app.md#get-started) for the full setup.
+Select **Okta** under **Setup** in [LiteLLM as resource app](./resource_app.md#get-started) or [LiteLLM as requesting app](./requesting_app.md#get-started) for the full setup.

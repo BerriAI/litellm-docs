@@ -179,6 +179,7 @@ for chunk in client.interactions.create_stream(
 | `system_instruction` | string | No | System instructions for the model |
 | `generation_config` | object | No | Generation configuration |
 | `previous_interaction_id` | string | No | ID of previous interaction for context |
+| `continuation_token` | string | No | Token from an interaction that ended with `status: "requires_continuation"`, to resume that long decode yourself |
 
 ### Response Format
 
@@ -204,6 +205,34 @@ for chunk in client.interactions.create_stream(
   }
 }
 ```
+
+## **Long decode (answers past Google's per-request output cap)**
+
+A foreground Interactions request to a model that supports long decode (for example `gemini/gemini-4-argon`) stops at Google's per-request cap, 32,768 output tokens when not streaming and 65,536 when streaming, with `status: "requires_continuation"` and a `continuation_token`. LiteLLM passes both through unchanged, exactly as Google returns them, and does not continue the decode for you. To get the rest of the answer, send the request again with `previous_interaction_id` set to that interaction's `id` and `continuation_token` set to that token, and repeat until the status is no longer `requires_continuation`. Each hop is its own request, with its own spend log, budget check and rate limit.
+
+```python
+import litellm
+
+request = {
+    "model": "gemini/gemini-4-argon",
+    "generation_config": {"max_output_tokens": 262144, "thinking_level": "high"},
+}
+response = litellm.interactions.create(input="Write a complete, rigorous proof of the prime number theorem.", **request)
+steps = list(response.steps or [])
+while response.status == "requires_continuation":
+    response = litellm.interactions.create(
+        previous_interaction_id=response.id,
+        continuation_token=response.continuation_token,
+        **request,
+    )
+    steps.extend(response.steps or [])
+print(response.status)  # "completed"
+print("".join(c["text"] for step in steps for c in step.get("content", []) if c.get("type") == "text"))
+```
+
+Every hop re-reads the answer so far as input, so each hop's `usage.total_input_tokens` grows while `usage.initial_input_tokens` stays the size of your prompt. With `store: false` nothing is stored on Google's side, so resend `input` instead of `previous_interaction_id`. In streaming mode the `interaction.completed` event carries the same `status` and `continuation_token`.
+
+Background requests (`background: true`) are continued by Google on its side and need no client hops.
 
 ## **Calling non-Interactions API endpoints (`/interactions` to `/responses` Bridge)**
 

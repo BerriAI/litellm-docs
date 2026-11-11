@@ -23,7 +23,7 @@ LiteLLM tracks changes to the following entities and actions:
 ## Usage
 
 ### 1. Switch on audit Logs 
-With an enterprise license, audit logs are on by default, so there is nothing to configure. On other plans, or if you want to be explicit, add `store_audit_logs` to your litellm config.yaml and then start the proxy
+With an enterprise license, audit logs are on by default, so there is nothing to configure. If you want to be explicit, add `store_audit_logs` to your litellm config.yaml and then start the proxy. Without an enterprise license the proxy writes no audit logs, whatever this setting says
 ```shell
 litellm_settings:
   store_audit_logs: true
@@ -89,7 +89,7 @@ s3://<bucket>/<s3_path>/audit_logs/<YYYY-MM-DD>/<HH-MM-SS>_<audit-log-id>.json
 
 :::info
 
-`audit_log_callbacks` only fires while audit logging is enabled, which is the default on an enterprise license and otherwise needs `store_audit_logs: true`.
+`audit_log_callbacks` only fires while audit logging is enabled on an enterprise license, which is the default unless `store_audit_logs` is set to `false`, or it is unset and `LITELLM_STORE_AUDIT_LOGS` is `false`.
 
 :::
 

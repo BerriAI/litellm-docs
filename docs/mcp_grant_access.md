@@ -227,7 +227,7 @@ The response lists only tools from servers in the `research` access group. Calli
 
 When the IdP removes a user from the group, LiteLLM removes them from the team and deletes their keys for that team. If the user is added back, they need a new team key.
 
-If callers authenticate with JWTs instead of virtual keys, the token reaches the team's MCP grant only when it resolves to the SCIM team, for example by listing its `team_id` in the claim configured as `team_ids_jwt_field`, see [Control model access with Teams](./proxy/token_auth#control-model-access-with-teams).
+If callers authenticate with JWTs instead of virtual keys, the token reaches the team's MCP grant only when it resolves to the SCIM team, for example by listing its `team_id` in the claim configured as `team_ids_jwt_field`, see [Control model access with Teams](./proxy/access_management/jwt_permissions#control-model-access-with-teams).
 
 ### Direct claim mapping is not supported
 

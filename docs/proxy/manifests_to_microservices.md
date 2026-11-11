@@ -98,9 +98,9 @@ gateway:
   config:
     proxy_config:
       model_list:
-        - model_name: gpt-4o
+        - model_name: {{openai_large}}
           litellm_params:
-            model: openai/gpt-4o
+            model: openai/{{openai_large}}
             api_key: os.environ/OPENAI_API_KEY
       router_settings:
         redis_host: os.environ/REDIS_HOST
@@ -162,7 +162,7 @@ curl -s localhost:4000/health/readiness
 curl -s localhost:4000/v1/models -H "Authorization: Bearer $LITELLM_MASTER_KEY"
 curl -s localhost:4000/v1/chat/completions -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
-  -d '{"model":"gpt-4o","messages":[{"role":"user","content":"ping"}]}'
+  -d '{"model":"{{openai_large}}","messages":[{"role":"user","content":"ping"}]}'
 curl -s localhost:4001/key/info -H "Authorization: Bearer $LITELLM_MASTER_KEY"
 curl -sI localhost:3000/ui/
 ```

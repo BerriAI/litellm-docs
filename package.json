@@ -30,6 +30,8 @@
     "test:social-cards": "node --test scripts/social-card/social-cards.test.cjs",
     "test:optimize-images": "node --test plugins/optimize-images.test.cjs",
     "test:llms": "node --test plugins/llms.test.cjs",
+    "test:endpoints": "node --test scripts/endpoints-data.test.cjs",
+    "check:endpoints": "node scripts/check-endpoints-upstream.mjs",
     "sync:lens": "node scripts/sync-lens-docs.mjs",
     "test:lens": "node --test scripts/sync-lens-docs.test.mjs"
   },
@@ -49,6 +51,7 @@
     "@opentelemetry/sdk-trace-node": "2.12.0",
     "cheerio": "1.0.0-rc.12",
     "clsx": "2.1.1",
+    "js-yaml": "^4.1.1",
     "lucide-react": "^0.503.0",
     "mdast-util-from-markdown": "2.0.2",
     "minisearch": "7.2.0",
@@ -65,7 +68,8 @@
     "usehooks-ts": "3.1.1",
     "vega": "^6.4.0",
     "vega-embed": "^7.2.0",
-    "vega-lite": "^6.4.3"
+    "vega-lite": "^6.4.3",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "3.8.1",

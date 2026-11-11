@@ -448,6 +448,27 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 | databricks-mpt-30b-instruct    | `completion(model='databricks/databricks-mpt-30b-instruct', messages=messages)`   | 
 | databricks-mpt-7b-instruct    | `completion(model='databricks/databricks-mpt-7b-instruct', messages=messages)`   | 
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`databricks/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Databricks model name. LiteLLM sends Databricks the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `databricks/gpt-luna-latest` | GPT Luna |
+| `databricks/gpt-sol-latest` | GPT Sol |
+| `databricks/gpt-terra-latest` | GPT Terra |
+| `databricks/gpt-astra-latest` | GPT Astra |
+| `databricks/gpt-mini-latest` | GPT Mini |
+| `databricks/claude-opus-latest` | Claude Opus |
+| `databricks/claude-sonnet-latest` | Claude Sonnet |
+| `databricks/claude-haiku-latest` | Claude Haiku |
+| `databricks/claude-fable-latest` | Claude Fable |
+| `databricks/grok-latest` | Grok |
+| `databricks/kimi-latest` | Kimi |
+| `databricks/glm-latest` | GLM |
+| `databricks/glm-flash-latest` | GLM Flash |
 
 ## Decisions (ai_decide)
 

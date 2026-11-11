@@ -12,11 +12,9 @@ import IdJagScreenshot from '@site/src/components/IdJagScreenshot';
 
 Let an application exchange an ID-JAG for a LiteLLM access token, then use it to run inference or call MCP tools on behalf of an existing LiteLLM user.
 
-LiteLLM's `POST /token` endpoint issues the token. Inference endpoints such as `/v1/chat/completions` and the MCP gateway accept it.
+## How it works
 
-:::info
-This feature requires an enterprise license, a database, a shared Redis, and [JWT authentication](../token_auth.md). Configure Redis through `litellm_settings.cache` with Redis `cache_params` or through `general_settings.coordination_redis`, so each ID-JAG is redeemed once across all workers and replicas. Set `PROXY_BASE_URL` and allowlist at least one requesting app to enable the grant.
-:::
+LiteLLM's `POST /token` endpoint issues the token. Inference endpoints such as `/v1/chat/completions` and the MCP gateway accept it.
 
 ```mermaid
 sequenceDiagram
@@ -35,7 +33,13 @@ sequenceDiagram
     Agent->>LiteLLM: Run inference or call MCP tools as allowed by scope
 ```
 
-## Get started
+## Prerequisites
+
+:::info
+This feature requires an enterprise license, a database, shared Redis, and JWT authentication. Complete [identity provider setup](../token_auth.md). Configure Redis through `litellm_settings.cache` with Redis `cache_params` or through `general_settings.coordination_redis`, so each ID-JAG is redeemed once across all workers and replicas. Set `PROXY_BASE_URL` and allowlist at least one requesting app to enable the grant.
+:::
+
+## Setup {#get-started}
 
 Select your identity provider for the full setup.
 
@@ -179,84 +183,6 @@ curl -s https://litellm.example.com/.well-known/oauth-authorization-server \
 
 In your existing JWT configuration, use Okta's org issuer (`https://your-org.okta.com`) and JWKS URL (`https://your-org.okta.com/oauth2/v1/keys`).
 
-### 4. Sign in and request an ID-JAG
-
-Configure the requesting app's OIDC login with issuer `https://your-org.okta.com` and scopes `openid profile email`. Sign in as the assigned test user and save the login response's `id_token` as `ID_TOKEN`. Set `REQUESTED_SCOPES="litellm:mcp litellm:llm"` to try both examples below, or request just one of the scopes allowed on the resource connection.
-
-Use the agent's Okta credentials from step 1 to [exchange the ID token](https://developer.okta.com/docs/guides/xaa-request-token-ex/openidconnect/main/):
-
-```bash title="Request an ID-JAG" showLineNumbers
-curl -s -X POST https://your-org.okta.com/oauth2/v1/token \
-  -d grant_type=urn:ietf:params:oauth:grant-type:token-exchange \
-  -d requested_token_type=urn:ietf:params:oauth:token-type:id-jag \
-  -d subject_token_type=urn:ietf:params:oauth:token-type:id_token \
-  --data-urlencode "subject_token=$ID_TOKEN" \
-  -d audience=https://litellm.example.com \
-  -d resource=https://litellm.example.com \
-  --data-urlencode "scope=$REQUESTED_SCOPES" \
-  --data-urlencode "client_id=$IDP_CLIENT_ID" \
-  --data-urlencode "client_secret=$IDP_CLIENT_SECRET"
-```
-
-Save the response's `access_token` as `ID_JAG`.
-
-### 5. Get a LiteLLM access token
-
-Send the ID-JAG as `assertion` with the `jwt-bearer` grant. Use the requesting app's client ID and secret **at LiteLLM**, as configured in `id_jag_requesting_apps`.
-
-```bash title="Get a LiteLLM credential" showLineNumbers
-curl -s -X POST https://litellm.example.com/token \
-  -d grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer \
-  -d client_id=agent-client \
-  --data-urlencode "client_secret=$AGENT_CLIENT_SECRET" \
-  --data-urlencode "assertion=$ID_JAG"
-```
-
-Confidential clients can also use HTTP Basic authentication (`-u "agent-client:$AGENT_CLIENT_SECRET"`) instead of the client ID and secret form fields. Public clients send `client_id` without a secret.
-
-```json
-{
-  "access_token": "LneZuxEFqvemEwK6lRzgg6BN...",
-  "token_type": "Bearer",
-  "expires_in": 86400,
-  "scope": "litellm:mcp litellm:llm",
-  "user_id": "user@example.com",
-  "team_id": "125eca86-fbde-44de-8cb9-cf1432933fcd"
-}
-```
-
-Save `access_token` as `LITELLM_ACCESS_TOKEN`. `scope` echoes the granted scope, which limits route access. No refresh token is issued. When the credential expires, request a fresh ID-JAG and redeem it again.
-
-### 6. Call LiteLLM
-
-Use the access token for calls allowed by its scope and the user's LiteLLM permissions. Spend is attributed to their `user_id` and `team_id`.
-
-<Tabs>
-<TabItem value="inference" label="Inference" default>
-
-Replace `<your-model-name>` with a model configured on your proxy.
-
-```bash title="Run inference" showLineNumbers
-curl -s https://litellm.example.com/v1/chat/completions \
-  -H "Authorization: Bearer $LITELLM_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"<your-model-name>","messages":[{"role":"user","content":"Hello"}]}'
-```
-
-</TabItem>
-<TabItem value="mcp" label="MCP tools">
-
-```bash title="List MCP tools" showLineNumbers
-curl -s -X POST https://litellm.example.com/mcp \
-  -H "Authorization: Bearer $LITELLM_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -H "Accept: application/json, text/event-stream" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
-```
-
-</TabItem>
-</Tabs>
-
 </TabItem>
 <TabItem value="other" label="Other IdP">
 
@@ -345,14 +271,24 @@ curl -s https://litellm.example.com/.well-known/oauth-authorization-server \
   | jq '.grant_types_supported'
 ```
 
-### 4. Sign in and request an ID-JAG {#other-request-id-jag}
+</TabItem>
+</Tabs>
 
-Sign in to the requesting app as the assigned user. Save the login response's `id_token` as `ID_TOKEN`, and set `REQUESTED_SCOPES="litellm:mcp litellm:llm"` to try both examples below. Request just one scope to limit access, as allowed by your IdP policy.
+## Test authentication
 
-Replace the token endpoint below with your provider's ID-JAG endpoint. Use the IdP client credentials from step 1:
+Select the same identity provider used for setup.
+
+<Tabs groupId="id-jag-idp" queryString="idp">
+<TabItem value="okta" label="Okta" default>
+
+### 1. Sign in and request an ID-JAG {#4-sign-in-and-request-an-id-jag}
+
+Configure the requesting app's OIDC login with issuer `https://your-org.okta.com` and scopes `openid profile email`. Sign in as the assigned test user and save the login response's `id_token` as `ID_TOKEN`. Set `REQUESTED_SCOPES="litellm:mcp litellm:llm"` to try both examples below, or request just one of the scopes allowed on the resource connection.
+
+Use the agent's Okta credentials from [setup step 1](#1-register-the-requesting-app-in-okta) to [exchange the ID token](https://developer.okta.com/docs/guides/xaa-request-token-ex/openidconnect/main/):
 
 ```bash title="Request an ID-JAG" showLineNumbers
-curl -s -X POST https://idp.example.com/oauth2/v1/token \
+curl -s -X POST https://your-org.okta.com/oauth2/v1/token \
   -d grant_type=urn:ietf:params:oauth:grant-type:token-exchange \
   -d requested_token_type=urn:ietf:params:oauth:token-type:id-jag \
   -d subject_token_type=urn:ietf:params:oauth:token-type:id_token \
@@ -366,7 +302,7 @@ curl -s -X POST https://idp.example.com/oauth2/v1/token \
 
 Save the response's `access_token` as `ID_JAG`.
 
-### 5. Get a LiteLLM access token {#other-get-access-token}
+### 2. Get a LiteLLM access token {#5-get-a-litellm-access-token}
 
 Send the ID-JAG as `assertion` with the `jwt-bearer` grant. Use the requesting app's client ID and secret **at LiteLLM**, as configured in `id_jag_requesting_apps`.
 
@@ -393,7 +329,88 @@ Confidential clients can also use HTTP Basic authentication (`-u "agent-client:$
 
 Save `access_token` as `LITELLM_ACCESS_TOKEN`. `scope` echoes the granted scope, which limits route access. No refresh token is issued. When the credential expires, request a fresh ID-JAG and redeem it again.
 
-### 6. Call LiteLLM {#other-call-litellm}
+### 3. Call LiteLLM {#6-call-litellm}
+
+Use the access token for calls allowed by its scope and the user's LiteLLM permissions. Spend is attributed to their `user_id` and `team_id`.
+
+<Tabs>
+<TabItem value="inference" label="Inference" default>
+
+Replace `<your-model-name>` with a model configured on your proxy.
+
+```bash title="Run inference" showLineNumbers
+curl -s https://litellm.example.com/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"<your-model-name>","messages":[{"role":"user","content":"Hello"}]}'
+```
+
+</TabItem>
+<TabItem value="mcp" label="MCP tools">
+
+```bash title="List MCP tools" showLineNumbers
+curl -s -X POST https://litellm.example.com/mcp \
+  -H "Authorization: Bearer $LITELLM_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+<TabItem value="other" label="Other IdP">
+
+### 1. Sign in and request an ID-JAG {#other-request-id-jag}
+
+Sign in to the requesting app as the assigned user. Save the login response's `id_token` as `ID_TOKEN`, and set `REQUESTED_SCOPES="litellm:mcp litellm:llm"` to try both examples below. Request just one scope to limit access, as allowed by your IdP policy.
+
+Replace the token endpoint below with your provider's ID-JAG endpoint. Use the IdP client credentials from [setup step 1](#other-register-requesting-app):
+
+```bash title="Request an ID-JAG" showLineNumbers
+curl -s -X POST https://idp.example.com/oauth2/v1/token \
+  -d grant_type=urn:ietf:params:oauth:grant-type:token-exchange \
+  -d requested_token_type=urn:ietf:params:oauth:token-type:id-jag \
+  -d subject_token_type=urn:ietf:params:oauth:token-type:id_token \
+  --data-urlencode "subject_token=$ID_TOKEN" \
+  -d audience=https://litellm.example.com \
+  -d resource=https://litellm.example.com \
+  --data-urlencode "scope=$REQUESTED_SCOPES" \
+  --data-urlencode "client_id=$IDP_CLIENT_ID" \
+  --data-urlencode "client_secret=$IDP_CLIENT_SECRET"
+```
+
+Save the response's `access_token` as `ID_JAG`.
+
+### 2. Get a LiteLLM access token {#other-get-access-token}
+
+Send the ID-JAG as `assertion` with the `jwt-bearer` grant. Use the requesting app's client ID and secret **at LiteLLM**, as configured in `id_jag_requesting_apps`.
+
+```bash title="Get a LiteLLM credential" showLineNumbers
+curl -s -X POST https://litellm.example.com/token \
+  -d grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer \
+  -d client_id=agent-client \
+  --data-urlencode "client_secret=$AGENT_CLIENT_SECRET" \
+  --data-urlencode "assertion=$ID_JAG"
+```
+
+Confidential clients can also use HTTP Basic authentication (`-u "agent-client:$AGENT_CLIENT_SECRET"`) instead of the client ID and secret form fields. Public clients send `client_id` without a secret.
+
+```json
+{
+  "access_token": "LneZuxEFqvemEwK6lRzgg6BN...",
+  "token_type": "Bearer",
+  "expires_in": 86400,
+  "scope": "litellm:mcp litellm:llm",
+  "user_id": "user@example.com",
+  "team_id": "125eca86-fbde-44de-8cb9-cf1432933fcd"
+}
+```
+
+Save `access_token` as `LITELLM_ACCESS_TOKEN`. `scope` echoes the granted scope, which limits route access. No refresh token is issued. When the credential expires, request a fresh ID-JAG and redeem it again.
+
+### 3. Call LiteLLM {#other-call-litellm}
 
 Use the access token for calls allowed by its scope and the user's LiteLLM permissions. Spend is attributed to their `user_id` and `team_id`.
 
@@ -467,3 +484,9 @@ curl -s -X POST https://litellm.example.com/mcp \
 
 </TabItem>
 </Tabs>
+
+## Related guides
+
+See the [ID-JAG overview](./overview.md) for the exchange roles, or [LiteLLM as requesting app](./requesting_app.md) when LiteLLM needs to call an upstream MCP server on a user's behalf.
+
+Use [identity provider setup](../token_auth.md) for issuer and signing-key configuration. Configure the user's resource permissions through [LLM Access](../access_management/llm.md) and [MCP Access](../access_management/mcp.md).

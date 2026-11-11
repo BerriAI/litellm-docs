@@ -656,6 +656,17 @@ We support ALL Fireworks AI models, just set `fireworks_ai/` as a prefix when se
 
 The table above is a small selection of popular models. For the full, current list of models and routers, see the [Fireworks model library](https://fireworks.ai/models).
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`fireworks_ai/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Fireworks AI model name. LiteLLM sends Fireworks AI the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `fireworks_ai/kimi-latest` | Kimi |
+| `fireworks_ai/minimax-latest` | MiniMax |
+
 ## Supported Embedding Models
 
 :::info
