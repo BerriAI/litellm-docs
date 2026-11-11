@@ -171,6 +171,35 @@ A custom prefix keeps the vendor in each id, so `model_name: or-team/*` over `mo
 
 The listing uses the deployment's `api_key` and `api_base`, then `OPENROUTER_API_KEY` or `OR_API_KEY` and `OPENROUTER_API_BASE`, in the same order as a chat request. When the catalog call fails or takes longer than 10 seconds, the deployment adds nothing to `/v1/models`, and after a timeout the next 30 seconds of listings skip the call.
 
+## OpenAI-compatible servers
+
+An `openai/*` deployment where the `api_base` is pointing at an OpenAI compatible server (e.g. vLLM, Baseten) will list each id that the server returns under the wildcard prefix. If the server's own id begins with `openai/` (e.g. `openai/gpt-oss-120b`) then the name that appears in the list will have that segment duplicated (i.e. `openai/openai/gpt-oss-120b`). Call that the duplicated name. The proxy strips off the first `openai/` and sends `openai/gpt-oss-120b` to the server.
+
+```yaml
+model_list:
+  - model_name: openai/*
+    litellm_params:
+      model: openai/*
+      api_base: https://my-vllm.example.com/v1
+      api_key: os.environ/VLLM_API_KEY
+
+litellm_settings:
+  check_provider_endpoint: true
+```
+
+```bash
+curl -s http://localhost:4000/v1/models -H "Authorization: Bearer $LITELLM_KEY" | jq '.data[].id'
+# "openai/openai/gpt-oss-120b"
+# "openai/zai-org/GLM-5.3-Flash"
+
+curl -s http://localhost:4000/v1/chat/completions -H "Authorization: Bearer $LITELLM_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"model": "openai/openai/gpt-oss-120b", "messages": [{"role": "user", "content": "Say ok"}]}' | jq -r '.choices[0].message.content'
+# ok
+```
+
+Ids which don't start with `openai/` (e.g. `zai-org/GLM-5.3-Flash`) get the prefix once. A custom prefix works in the same way so `model_name: my-vllm/*` over `model: openai/*` lists `my-vllm/openai/gpt-oss-120b` and a catch all `model_name: "*"` over `openai/*` lists `openai/gpt-oss-120b`.
+
 ## Hide a model from `/v1/models`
 
 Set `model_info.discoverable: false` on a `model_list` entry to leave it out of the listing endpoints while keeping it callable by anyone whose key allows it. This is for models a chat client's model picker should not offer, such as embedding, classifier, or evaluator models that only your own services call. Clients like Claude Code (`CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`) and Open WebUI fill their pickers from `GET /v1/models`, and most do not filter by capability
