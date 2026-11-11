@@ -9,15 +9,11 @@ hide_table_of_contents: true
 image: ./hero.png
 ---
 
-import SkillsGatewayVideo from './SkillsGatewayVideo';
-
 Give your team one place to find and share useful agent skills. With **LiteLLM Skills Gateway**, teammates can reuse a skill's instructions and supporting files in their own AI agents.
 
-We've added ZIP uploads, admin review, and download history to help you manage those skills.
+We've added ZIP uploads, admin review, version history, and download tracking to help you manage those skills.
 
 {/* truncate */}
-
-<SkillsGatewayVideo />
 
 ## Upload a complete skill
 
@@ -51,6 +47,12 @@ With a [scanner configured](/docs/skills_gateway#optional-security-scans), an ad
 ![A completed security scan reports two findings and a risk score of 42 out of 100, including an Instruction Override finding.](./security-scan.png)
 
 *Example scan of a test skill, with findings for the admin to review.*
+
+## Keep earlier skill versions
+
+Update a skill under the same name to publish a new version. You can inspect its version history and download a retained ZIP from an earlier version.
+
+New skills start at `1.0.0`. Publish the next update as `1.0.1` with the default patch increment, or set a higher version number.
 
 ## See who downloads your skills
 
