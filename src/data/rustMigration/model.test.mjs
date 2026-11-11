@@ -102,15 +102,15 @@ test('a change names the level its work left only when it all left the same one'
 
 test('plans add partial and done work by day without touching releases', () => {
   const {goals, plans} = withPlans([
-    plan('dispatch-partial', 7, {partial: {deploy: ['dispatch']}}),
-    plan('deploy-done', 14, {done: {deploy: '*'}}),
+    plan('payload-partial', 7, {partial: {logging: ['payload']}}),
+    plan('logging-done', 14, {done: {logging: '*'}}),
   ]);
   const [goal] = goals;
-  const deploy = goal.components.find(component => component.id === 'deploy');
-  const dispatch = deploy.work.find(work => work.id === 'deploy/dispatch');
+  const logging = goal.components.find(component => component.id === 'logging');
+  const payload = logging.work.find(work => work.id === 'logging/payload');
   assert.equal(progressAt(goal, CURRENT_VERSION), progressAt(GOALS[0], CURRENT_VERSION));
-  assert.ok(Math.abs(progressAt(dispatch, plans[0]) - 80) < 1e-10);
-  assert.equal(progressAt(deploy, plans[1]), 100);
+  assert.ok(Math.abs(progressAt(payload, plans[0]) - 80) < 1e-10);
+  assert.equal(progressAt(logging, plans[1]), 100);
   const points = timelineFor(goal, plans);
   assert.deepEqual(points.filter(point => point.kind !== 'plan'), timelineFor(GOALS[0]).filter(point => point.kind !== 'plan'));
   assert.deepEqual(points.slice(-2), plans.map(point => ({...point, percent: progressAt(goal, point)})));
