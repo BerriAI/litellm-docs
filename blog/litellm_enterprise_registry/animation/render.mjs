@@ -11,7 +11,7 @@ const keys=process.argv.includes('--keyframes');
 if(!keys)for(const name of await fs.readdir(out)){
   if(/^\d{4}\.png$/.test(name)&&Number(name.slice(0,4))>=FPS*DURATION)await fs.unlink(path.join(out,name));
 }
-const times=keys?[.5,1.4,2.8,4.5,5.9,7.2,8.5,9.96]:Array.from({length:FPS*DURATION},(_,i)=>i/FPS);
+const times=keys?[.5,1.5,2.4,3.6,4.6,5.4,6.8,7.96]:Array.from({length:FPS*DURATION},(_,i)=>i/FPS);
 for(let i=0;i<times.length;i++){
   const t=times[i];
   const filename=keys?`key-${t.toFixed(2)}.png`:`${String(i).padStart(4,'0')}.png`;

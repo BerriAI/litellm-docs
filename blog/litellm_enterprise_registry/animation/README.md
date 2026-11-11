@@ -1,10 +1,10 @@
 # Enterprise Registry animation
 
-A 1600 by 800, 10-second GIF at 25 fps. Two flowing ribbons of packages, a splitting access shutter, and retained cache copies tell the story with only two labels: OAuth and IAM. The composition takes its motion cues from the Rust router and prompt-latency covers, with the cobalt and cyan palette of cache-aware routing. Official logos stand directly on a light canvas.
+A 1600 by 800, 8-second GIF at 25 fps. The Enterprise Registry forms a cohesive group in the upper left, and a mosaic of customer gateway pods anchors the lower right. One diagonal beam pulse represents one image pull. Only the receiving pod acknowledges arrival; the other workloads stay still. Official logos stand directly on a light canvas.
 
-Cognito's key gesture represents the OAuth access exchange: Cognito supplies an OAuth token, which the registry credentials API exchanges for temporary ECR credentials. The shutter opens and queued packages join a continuous stream from LiteLLM's ECR. The lower ribbon independently fills the customer's ECR cache; three package copies remain visible while the cache serves repeated downstream pulls. ECR pull-through does not pass through Cognito. The LiteLLM and ECR source logos are paired because the Enterprise Registry itself runs on ECR.
+Cognito represents OAuth access: its token is exchanged through the registry credentials API for temporary ECR credentials. The LiteLLM and ECR source logos are paired because the Enterprise Registry itself runs on ECR. The customer mosaic uses generic gateway symbols, with the LiteLLM logo beside the deployment caption. The cover focuses on image access; the article explains both OAuth and ECR pull-through access options.
 
-This is an illustrative access flow, not a literal network trace or performance measurement. The direct-access exchange is simplified; the customer access guide documents the OAuth and registry-credential exchanges.
+The beam represents an individual image pull. It does not depict throughput, request volume, or measured transfer speed. The direct-access exchange is simplified; the customer access guide documents the OAuth and registry-credential exchanges.
 
 Install Node.js, FFmpeg, and the pinned renderer dependency, then run from this directory:
 

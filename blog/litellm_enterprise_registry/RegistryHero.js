@@ -17,7 +17,7 @@ export default function RegistryHero() {
           src={imageUrl(paused ? poster : animation)}
           width="1600"
           height="800"
-          alt="The LiteLLM Enterprise Registry runs on Amazon ECR. An OAuth token from Cognito is exchanged through the registry credentials API for direct package pulls. A separate IAM route fills your Amazon ECR cache and serves later pulls from the cached copy."
+          alt="A single pulsing beam carries an image from LiteLLM's ECR Enterprise Registry at the upper left to one gateway pod in a customer deployment mosaic at the lower right. Cognito represents OAuth access."
         />
       </picture>
       <button type="button" className={styles.control} onClick={() => setPaused(value => !value)}>
