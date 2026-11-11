@@ -1,137 +1,169 @@
+---
+title: Multi-Region Deployment
+sidebar_label: Overview
+description: Run LiteLLM in multiple regions with a shared PostgreSQL database, regional Redis, and explicit routing and recovery policies.
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import Image from '@theme/IdealImage';
-import { MultiRegionArchitecture } from '@site/src/components/CloudArchitecture';
 
 # Multi-Region Deployment
 
-Run LiteLLM proxy instances in multiple regions of the same cloud provider, all connected to one shared PostgreSQL database. Clients get routed to the nearest region for low latency, while keys, teams, users, and spend tracking stay consistent everywhere because there is a single source of truth.
+{/* keep-version-note */}
 
-This page covers the supported topology, how licensing works across regions, and step-by-step setup. For deploying the proxy itself in each region, see [Production Deployment](./deploy.md).
+Run LiteLLM in more than one region when users need a nearby gateway or your recovery plan must cover a regional outage. The shared-database design on this page applies on AWS, Google Cloud, or Azure: regional gateways use one logical PostgreSQL database and a Redis instance per region.
+
+Start with [High Availability](./deploy/ha/overview.md) for replicas and zone failures within one region. Use [Routing](./deploy/multi_region/routing.md) to choose a region for each request, and [Failover](./deploy/multi_region/failover.md) to define what happens when a region or a shared dependency fails.
 
 ## Architecture
 
-<MultiRegionArchitecture />
+```mermaid
+flowchart TB
+    Clients[Applications] --> Route[Global routing layer]
+    subgraph A[Region A]
+        IngressA[Regional ingress] --> GatewayA[LiteLLM replicas]
+        GatewayA --> RedisA[(Regional Redis A)]
+        subgraph Data[Shared data service]
+            DB[(Shared PostgreSQL writer)]
+        end
+        GatewayA --> DB
+    end
+    subgraph B[Region B]
+        IngressB[Regional ingress] --> GatewayB[LiteLLM replicas]
+        GatewayB --> RedisB[(Regional Redis B)]
+    end
+    Route --> IngressA
+    Route --> IngressB
+    GatewayB -->|Private cross-region connection| DB
+```
 
-The topology has three rules:
+Each region has its own ingress, gateway capacity, and Redis. This example places the shared PostgreSQL writer in Region A. PostgreSQL holds the shared keys, teams, users, configuration, and spend records. Use a highly available database service rather than a single database process. The regional gateways still depend on the same writable database; a second gateway region does not make that database independent.
 
-1. **One database.** Every region's proxy instances point `DATABASE_URL` at the same PostgreSQL database, hosted in your primary region. This is what makes keys created in one region work in every region, and what makes budgets and spend tracking globally consistent.
-2. **One Redis per region.** Redis handles rate limiting, router state, and response caching between the instances of a region. Keep it in-region; putting a single Redis behind cross-region links adds a network round trip to every rate-limit check.
-3. **One cloud provider.** Run all regions in the same cloud provider.
+| Mode | Normal request routing | Capacity requirement |
+| --- | --- | --- |
+| Active-active | Both regions serve requests, using a latency, location, or weighted policy. | The surviving region needs headroom for the traffic it takes over. |
+| Active-passive | Region A serves requests; Region B is prepared as a standby. | Keep standby capacity and provider access ready for the required recovery time. |
 
-The same topology runs active-active (DNS routes every client to its nearest region; the goal is latency) or active-passive (all traffic on one region, a second region deployed but idle behind a DNS failover record; the goal is disaster recovery). The configuration is identical; only the DNS policy differs.
+Both modes need health monitoring and a recovery plan. Active-passive also needs regular tests of the standby; an idle deployment can have stale credentials, insufficient quota, or missing configuration.
+
+A shared database provides one authoritative state store. It does not make every change immediately visible in every process: authentication caches, configuration reloads, read-replica lag, and batched spend writes can delay visibility. See [authentication caching](./caching_redis.md#virtual-key-authentication-cache-redis) and [Database Read Replica](./db_read_replica.md).
 
 ## Licensing across regions
 
-A single LiteLLM Enterprise license covers all regions, as long as all regions share one database.
+A single LiteLLM Enterprise license covers a multi-region deployment when all regions share one database. Each instance receives and validates the same `LITELLM_LICENSE`; user and team limits are counted against that shared database.
 
-Each proxy instance independently validates the `LITELLM_LICENSE` key it is given (offline against a signed payload, or against the license server), and nothing in the license check counts instances or regions. The quantitative limits a license carries, maximum users and maximum teams, are counted from the database. When every region shares one database, those counts exist once, so the license is enforced once, globally.
+| Topology | Databases | Enterprise licenses |
+| --- | --- | --- |
+| Shared-database multi-region deployment | One logical database | One for the deployment |
+| Independent deployment per region | One per deployment | One per deployment |
+| [Global Control Plane](./global_control_plane.md) | One per worker deployment | One per worker deployment |
 
-The corollary: separate databases per region are separate deployments, and each needs its own license. Two databases means two sets of user and team counts, two sets of keys, and two licenses.
-
-| Topology | Databases | Licenses needed |
-|---|---|---|
-| Multi-region, shared database (this page) | 1 | 1 |
-| Independent deployment per region | 1 per region | 1 per region |
-| [Global Control Plane](./global_control_plane.md) | 1 per worker | 1 per worker |
-
-If you want fully independent deployments per region (own database, Redis, master key, and license) managed from a single UI, use the [Global Control Plane](./global_control_plane.md) (Enterprise) instead of this page. It trades global consistency for blast-radius isolation: a database outage in one region cannot affect another, but keys and budgets do not span regions.
+The shared-database topology itself works with the open source proxy. Enterprise features require the license above. For independent deployments managed from one UI, use the [Global Control Plane](./global_control_plane.md). Each worker has its own keys, teams, budgets, database, Redis, and master key. The control plane does not make a key from one worker valid on another.
 
 ## Requirements
 
-Every proxy instance in every region must share the following. If any of these differ between regions, the deployment will misbehave in ways that are hard to debug (instances that cannot decrypt stored credentials, keys that fail auth in one region, seat limits enforced inconsistently).
+Keep these settings consistent across every region of the shared deployment:
 
-| Setting | Must be | Why |
-|---|---|---|
-| `DATABASE_URL` | Same database in every region | Single source of truth for keys, teams, users, spend, and license seat counts |
-| `LITELLM_MASTER_KEY` | Identical in every region | Keys are validated against the shared database; the master key must match everywhere |
-| `LITELLM_SALT_KEY` | Identical in every region, never changed after setup | Encrypts and decrypts LLM credentials stored in the database. An instance with a different salt key cannot read stored model credentials |
-| `LITELLM_LICENSE` | Same license key in every region | Each instance validates the license independently; one key activates all of them |
-| `DISABLE_SCHEMA_UPDATE` | `true` on all proxy instances | Schema migrations must run exactly once (as a job), not raced by every instance in every region |
+| Setting | Requirement | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | The same logical writable database | Shared keys, configuration, spend records, and license counts. |
+| `LITELLM_MASTER_KEY` | The same secret | Consistent administrative authentication. |
+| `LITELLM_SALT_KEY` | The same stable secret | Decrypt credentials stored in the shared database. Do not replace it during a rollout. |
+| `LITELLM_LICENSE` | The same license, when using Enterprise features | Activate the shared deployment's Enterprise features. |
+| `DISABLE_SCHEMA_UPDATE` | `true` on serving instances | A single coordinated migration job updates the shared schema. |
 
-Per region, you additionally run a Redis instance and set it in that region's proxy config (`router_settings` and cache settings). Redis state is regional: rate limits and cached responses are scoped to the region that served the request.
+Use the same release and configuration source across regions, with explicit regional values for network endpoints and provider access. Store shared secrets in your secret manager and make them available to the deployment in each region.
 
-:::info
+Configure each region's Redis for its local replicas, including `router_settings` and any Redis-backed cache settings. See the [production Redis configuration](./prod.md#redis).
 
-Rate limits (TPM/RPM on keys, teams, and users) are enforced through Redis. With one Redis per region, a limit of 100 RPM means 100 RPM per region, not globally. If you need strictly global rate limiting, all instances must share one Redis, which puts a cross-region round trip in the request path for remote regions. Most deployments accept per-region enforcement.
+:::important Regional limits
+
+Separate Redis instances do not share rate-limit counters. A Redis-backed allowance of 100 RPM in each of two regions can permit 200 RPM across them. Shared PostgreSQL does not turn those counters into a global rate limit. If you need a global quota, design and test a common enforcement mechanism; a shared Redis deployment adds cross-region latency and a shared dependency. Budget and spend visibility also depend on cache and flush intervals.
 
 :::
 
-## Setup
+Regional Redis also creates separate ownership locks for shared background jobs. Coordinate database-wide cleanup, budget resets, and exports across regions, and test ownership during failover. See [background job ownership](./prod.md#run-background-jobs-on-a-dedicated-worker).
 
-The steps below assume you can already deploy a single-region production proxy (load balancer, proxy instances, Postgres, Redis). If not, start with the [Production Deployment guide](./deploy.md) and the [production checklist](./prod.md).
+## Setup
 
 ### 1. Provision the shared database
 
-Create one PostgreSQL database in your primary region and run the schema migrations against it once, using the migrations job from the [Helm charts](./deploy/helm.md) or the [Terraform modules](./deploy/terraform.md). All regions will use this database's connection string.
+Provision PostgreSQL with zone redundancy, backups, and a tested writer failover procedure. Run schema migrations once per upgrade, through the [Helm migration job](./deploy/helm.md) or your coordinated deployment pipeline. Do not launch a migration independently from every region.
+
+Decide separately whether your recovery plan needs a cross-region database replica. A replica can reduce recovery time, but promoting it and directing writers to it is a database recovery operation, not a gateway routing change. See [Failover](./deploy/multi_region/failover.md#recover-the-shared-database).
 
 ### 2. Connect the regions' networks
 
-Proxy instances in secondary regions must reach the primary region's database over a private, routed connection: [VPC peering](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) or [Transit Gateway](https://docs.aws.amazon.com/vpc/latest/tgw/what-is-transit-gateway.html) on AWS, [VPC Network Peering](https://cloud.google.com/vpc/docs/vpc-peering) on GCP (a global VPC with regional subnets also works), [VNet peering](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview) on Azure. Open the database port (5432) from each secondary region's proxy subnets in the database's security group or firewall, and require TLS on the connection (`sslmode=require`); this traffic crosses a regional boundary. Every uncached database read from a secondary region pays the inter-region round trip, which is why step 4 adds regional read replicas.
+Provide private, routed access from every region to the shared database and allow only the required database connections. Depending on your cloud, use [AWS VPC peering](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html), a [Google Cloud VPC](https://docs.cloud.google.com/vpc/docs/vpc), or [Azure VNet peering](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview). Confirm managed database networking supports the chosen route and DNS configuration.
+
+Use TLS and verify the database server certificate. Mount the required CA bundle in serving instances and migration jobs; see [database TLS](./prod.md#verify-the-database-server-certificate-custom-ca-eg-aws-rds). Cross-region database calls add network latency, so measure authentication, management operations, and connection recovery from each region.
 
 ### 3. Deploy proxy instances in each region
 
-Deploy the proxy in every region exactly as you would for a single region, with two differences: point `DATABASE_URL` at the primary region's database instead of a regional one, and run the schema migrations job only from the primary region (`migrationJob.enabled: false` in the secondary regions' Helm values), so a rollout in one region never races another region's migrations against the shared schema. Deploy every region from the same source of truth (one Helm values file or Terraform configuration, parameterized only by region) so regions cannot drift apart in version or config.
+Deploy the regional load balancer and LiteLLM replicas with [Helm](./deploy/helm.md) or [Terraform](./deploy/terraform.md). Disable additional migration jobs in secondary releases; for the monolithic Helm chart, this is `migrationJob.enabled: false`. Keep serving instances on `DISABLE_SCHEMA_UPDATE=true` everywhere.
+
+The following environment values show the shared and regional settings. Inject real secrets through your deployment's secret manager and mount the CA at `/certs/db-ca.pem`.
 
 <Tabs>
-<TabItem value="primary" label="Primary region (us-east-1)">
+<TabItem value="primary" label="Region A">
 
 ```bash
-DATABASE_URL="postgresql://litellm:<password>@db.us-east-1.internal:5432/litellm?sslmode=require"
-LITELLM_MASTER_KEY="sk-<same-everywhere>"
-LITELLM_SALT_KEY="sk-<same-everywhere-never-rotate>"
-LITELLM_LICENSE="<same-everywhere>"
+DATABASE_URL="postgresql://litellm:<password>@db-writer.internal:5432/litellm?sslmode=verify-full&sslrootcert=/certs/db-ca.pem"
+LITELLM_MASTER_KEY="sk-<shared-master-key>"
+LITELLM_SALT_KEY="<shared-stable-encryption-key>"
+LITELLM_LICENSE="<shared-enterprise-license>"
 DISABLE_SCHEMA_UPDATE="true"
-REDIS_HOST="redis.us-east-1.internal"
+REDIS_HOST="redis.region-a.internal"
 REDIS_PORT="6379"
-REDIS_PASSWORD="<regional>"
+REDIS_PASSWORD="<region-a-redis-secret>"
 ```
 
 </TabItem>
-<TabItem value="secondary" label="Secondary region (eu-west-1)">
+<TabItem value="secondary" label="Region B">
 
 ```bash
-# Same database as the primary region
-DATABASE_URL="postgresql://litellm:<password>@db.us-east-1.internal:5432/litellm?sslmode=require"
-LITELLM_MASTER_KEY="sk-<same-everywhere>"
-LITELLM_SALT_KEY="sk-<same-everywhere-never-rotate>"
-LITELLM_LICENSE="<same-everywhere>"
+# Same writable database and shared deployment secrets as Region A
+DATABASE_URL="postgresql://litellm:<password>@db-writer.internal:5432/litellm?sslmode=verify-full&sslrootcert=/certs/db-ca.pem"
+LITELLM_MASTER_KEY="sk-<shared-master-key>"
+LITELLM_SALT_KEY="<shared-stable-encryption-key>"
+LITELLM_LICENSE="<shared-enterprise-license>"
 DISABLE_SCHEMA_UPDATE="true"
-# Redis stays regional
-REDIS_HOST="redis.eu-west-1.internal"
+# Redis is regional
+REDIS_HOST="redis.region-b.internal"
 REDIS_PORT="6379"
-REDIS_PASSWORD="<regional>"
-
-# Optional: regional read replica (see next section)
-DATABASE_URL_READ_REPLICA="postgresql://litellm:<password>@db-replica.eu-west-1.internal:5432/litellm"
+REDIS_PASSWORD="<region-b-redis-secret>"
 ```
 
 </TabItem>
 </Tabs>
 
+Omit `LITELLM_LICENSE` for an open source deployment. Apply the Redis settings to your proxy configuration and enable TLS for Redis where required by the service.
+
 ### 4. Optional: add regional read replicas
 
-Every request authenticates its key against the database (with in-memory caching, so steady-state traffic does not hit the database on every call). Secondary regions can still cut their database read latency by running a PostgreSQL read replica in-region and setting `DATABASE_URL_READ_REPLICA`. LiteLLM routes read-only queries to the replica and all writes to the primary. See [Database Read Replica](./db_read_replica.md) for what routes where and how to handle replication lag.
+Set `DATABASE_URL_READ_REPLICA` to a regional reader endpoint if you need to reduce database read latency. Writes still go to `DATABASE_URL`. Configure TLS for the reader as well.
 
-Writes (key creation, config changes, spend updates) always go to the primary region's database. Spend updates are batched, so cross-region write latency does not sit in the request path.
+```bash
+DATABASE_URL_READ_REPLICA="postgresql://litellm:<password>@db-reader.region-b.internal:5432/litellm?sslmode=verify-full&sslrootcert=/certs/db-ca.pem"
+```
 
-### 5. Route clients to the nearest region
+Read replicas can lag behind the writer, so test newly created keys, revocations, and budget changes before relying on them. The [read-replica guide](./db_read_replica.md) describes query routing and reader degradation. A read replica does not automatically become the writer when the primary fails.
 
-Put latency-based or geo DNS in front of the regional load balancers: [Route 53 latency-based routing](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-latency.html) on AWS, [Cloud DNS geolocation routing policies](https://cloud.google.com/dns/docs/routing-policies) on GCP, [Traffic Manager](https://learn.microsoft.com/en-us/azure/traffic-manager/traffic-manager-routing-methods) or [Front Door](https://learn.microsoft.com/en-us/azure/frontdoor/front-door-overview) on Azure. Clients use one hostname and land on their nearest region.
+### 5. Route clients {#5-route-clients-to-the-nearest-region}
 
-Health-check each region against `/health/liveliness`, not `/health/readiness`. Readiness returns 503 whenever the database is unreachable, and the database is shared: an outage would trip every region's readiness check at once and pull all regions out of DNS rotation, exactly when `allow_requests_on_db_unavailable` would have kept them serving cached traffic. Liveliness reports whether the region's proxies are up, which is what a DNS failover decision needs.
+Give clients one gateway hostname. Choose a DNS policy, a global HTTP load balancer, or a highly available proxy tier to select a regional endpoint. See [Routing](./deploy/multi_region/routing.md) for AWS Route 53 and Global Accelerator, Google Cloud global load balancing, Azure Traffic Manager and Front Door, and HAProxy examples.
+
+Configure health checks according to the service you intend to offer during a failure. Do not use process liveness alone as proof that a region can authenticate and serve requests. Read [Failover](./deploy/multi_region/failover.md#choose-a-health-policy) before enabling automatic traffic changes.
 
 ### 6. Verify
 
-1. Open the primary region's Admin UI (`https://llm.example.com/ui`), go to **Virtual Keys**, and create a key.
+Create a virtual key through one region, then use it for a model request through the other region's endpoint. Confirm the response and eventual spend record in the Admin UI. Allow for configured caches and any read-replica lag. The [Quickstart](./docker_quick_start.md#5-create-a-virtual-key) covers key creation.
 
-2. Open the secondary region's UI directly (`https://eu.llm.example.com/ui`), go to the **Test Key** playground, paste the key you just created, and send a request. It succeeds because both regions validate keys against the same database.
-
-3. Back on **Virtual Keys**, confirm the key shows the spend from the request you made through the secondary region. The UI flows themselves are covered with screenshots in the [Quickstart](./docker_quick_start.md#5-create-a-virtual-key).
+Test routing with each region unavailable in turn. Test shared database loss separately: it can affect both regions at once. Record error rates, stream completion, recovery time, and the spare capacity needed in the surviving region.
 
 ## Optional: dedicated admin instance
 
-By default every instance serves both LLM traffic and admin traffic (UI and management APIs). In a multi-region deployment you can designate one instance as admin-only and strip admin surfaces from the regional instances. This keeps management access behind one hostname and reduces the attack surface of the instances serving LLM traffic.
+You can keep management access on one private hostname while regional gateways serve model requests. This remains one deployment with a shared database, unlike the independent workers managed by the Global Control Plane.
 
 <EnterpriseFeature>
 
@@ -139,46 +171,32 @@ By default every instance serves both LLM traffic and admin traffic (UI and mana
 
 </EnterpriseFeature>
 
+Use the same shared database and secrets on all instances, then set these additional environment values:
+
 <Tabs>
 <TabItem value="admin" label="Admin instance">
 
 ```bash
-# Serves the UI and management APIs, refuses LLM traffic
 DISABLE_LLM_API_ENDPOINTS="true"
-DATABASE_URL="postgresql://...@db.us-east-1.internal:5432/litellm"
-LITELLM_MASTER_KEY="sk-<same-everywhere>"
 ```
 
 </TabItem>
-<TabItem value="worker" label="Regional instances">
+<TabItem value="worker" label="Regional serving instances">
 
 ```bash
-# Serve LLM traffic, refuse admin traffic
 DISABLE_ADMIN_UI="true"
 DISABLE_ADMIN_ENDPOINTS="true"
-DATABASE_URL="postgresql://...@db.us-east-1.internal:5432/litellm"
-LITELLM_MASTER_KEY="sk-<same-everywhere>"
 ```
 
 </TabItem>
 </Tabs>
 
-| Variable | Default | Effect when `true` |
-|---|---|---|
-| `DISABLE_ADMIN_UI` | `false` | The web UI at `/ui` becomes unavailable |
-| `DISABLE_ADMIN_ENDPOINTS` | `false` | Management endpoints (`/key/*`, `/user/*`, `/team/*`, `/model/*`) return errors; LLM endpoints, `/health`, and `/metrics` keep working |
-| `DISABLE_LLM_API_ENDPOINTS` | `false` | LLM endpoints (`/chat/completions`, `/v1/*`, provider pass-through routes) return errors; management endpoints keep working, and `/models` stays available so the UI can list models |
+`DISABLE_ADMIN_UI` disables `/ui`. `DISABLE_ADMIN_ENDPOINTS` disables management routes while model endpoints, health checks, and metrics remain available. `DISABLE_LLM_API_ENDPOINTS` disables model-serving routes while management remains available. The componentized [Helm deployment](./deploy/helm.md) also separates gateway, backend, and UI services.
 
 ## FAQ
 
-**Do I need multi-region at all?**
-Often not. A single-region deployment with a multi-AZ database and Redis already survives zone failures; see [Production Best Practices](./prod.md). Add regions when you need lower latency for distant users or cross-region disaster recovery.
+**Do I need multi-region?** A regional deployment with replicas and redundant data services can cover instance and zone failures. Add regions for a defined latency or disaster-recovery requirement, then test the additional dependencies.
 
-**Does multi-region require an Enterprise license?**
-The shared-database topology itself runs on the open source proxy. Enterprise features are covered by one license across regions, as described in [Licensing across regions](#licensing-across-regions).
+**What if the primary region's database fails?** Both regions can lose normal database-backed operations. Gateway failover alone does not fix this. Use the [shared-database recovery procedure](./deploy/multi_region/failover.md#recover-the-shared-database), and decide in advance whether a restricted degraded mode is acceptable.
 
-**What happens if the primary region's database goes down?**
-All regions lose database access: key validation falls back to caches, and management operations fail until the database returns. The database is the single point of coupling in this architecture. Set `general_settings.allow_requests_on_db_unavailable: true` so proxies keep serving traffic for already-cached keys during the outage (see [graceful DB unavailability](./prod.md#gracefully-handle-db-unavailability)), run the database multi-AZ with automated failover, and if that is still not enough isolation, consider the [Global Control Plane](./global_control_plane.md) instead.
-
-**Can I run different LiteLLM versions in different regions?**
-Briefly, during a rolling upgrade. Do not run mixed versions steady-state; the shared database schema follows the newest version, and migrations should run exactly once per upgrade.
+**Can regions run different versions?** Only for a tested upgrade window in which both versions support the shared schema and configuration. Run migrations once and return regions to the same intended release. See [Blue/Green](./deploy/ha/blue_green.md) and [Canary](./deploy/ha/canary.md).

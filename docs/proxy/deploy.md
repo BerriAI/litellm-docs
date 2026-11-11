@@ -50,9 +50,9 @@ Start with the [Sizing & Scaling overview](./deploy/sizing.md), then use [databa
 
 ### Choose how the services fit together
 
-Compare a single LiteLLM service with separate gateway, backend, and UI services. Review the AWS, Google Cloud, and Azure diagrams before you provision infrastructure.
+Start with the Azure, AWS, or GCP network diagrams. Choose a single LiteLLM service or separate gateway, backend, and UI services, then add identity-aware access or client certificate authentication.
 
-The [Reference Architectures overview](./deploy/architecture.md) also explains when to use a shared-database [multi-region deployment](./multi_region.md) or a [Global Control Plane](./global_control_plane.md) for independent deployments.
+The [Reference Architectures overview](./deploy/architecture.md) connects these patterns with high availability, blue/green and canary releases, and multi-region routing and failover. Use a [Global Control Plane](./global_control_plane.md) when you need to manage independent deployments.
 
 </TabItem>
 </Tabs>

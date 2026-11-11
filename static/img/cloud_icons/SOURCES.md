@@ -54,6 +54,7 @@ Use the assets for architecture diagrams and documentation. Do not crop, flip, r
 
 | Local file | Archive member |
 | --- | --- |
+| `azure-enterprise-applications.svg` | `Azure_Public_Service_Icons/Icons/identity/10225-icon-service-Enterprise-Applications.svg` |
 | `azure-kubernetes-services.svg` | `Azure_Public_Service_Icons/Icons/compute/10023-icon-service-Kubernetes-Services.svg` |
 | `azure-application-gateways.svg` | `Azure_Public_Service_Icons/Icons/networking/10076-icon-service-Application-Gateways.svg` |
 | `azure-azure-database-postgresql-server.svg` | `Azure_Public_Service_Icons/Icons/databases/10131-icon-service-Azure-Database-PostgreSQL-Server.svg` |

@@ -21,6 +21,9 @@ Configure what that identity can use and manage in [Access Management](./access_
 | Identity mapping | Connect an identity provider's token to a LiteLLM identity. | [Users and teams](./jwt_user_team_auth.md), [Virtual Keys](./jwt_key_mapping.md) |
 | ID-JAG | Let an application act on a signed-in user's behalf across services. | [ID-JAG](./id_jag/overview.md) |
 | Custom Auth | Authenticate callers with your own handler. | [Custom Auth](./custom_auth.md) |
+| Client certificates | Require a client certificate at your ingress, then authorize the request with a LiteLLM key. | [Client Authentication with mTLS](./deploy/mtls.md) |
+
+To require employee or workload identity before traffic reaches LiteLLM, see [Identity-Aware Proxy](./deploy/iap/overview.md). LiteLLM still applies its own authentication and permissions after that check.
 
 ## Single sign-on
 

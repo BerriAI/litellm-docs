@@ -258,15 +258,15 @@ const CSP_TABS: {
   },
 ];
 
-export function CloudArchitectureSelector() {
+export function CloudArchitectureSelector({ provider }: { provider?: 'aws' | 'gcp' | 'azure' } = {}) {
   const [cspKey, setCspKey] = useState('aws');
-  const csp = CSP_TABS.find((t) => t.key === cspKey) ?? CSP_TABS[0];
+  const csp = CSP_TABS.find((t) => t.key === (provider ?? cspKey)) ?? CSP_TABS[0];
   const [variantByCsp, setVariantByCsp] = useState<Record<string, CloudKey>>({});
   const variant = variantByCsp[csp.key] ?? csp.variants[0].key;
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.tabs} role="group" aria-label="Cloud provider">
+      {!provider && <div className={styles.tabs} role="group" aria-label="Cloud provider">
         {CSP_TABS.map((t) => (
           <button
             key={t.key}
@@ -279,7 +279,7 @@ export function CloudArchitectureSelector() {
             {t.label}
           </button>
         ))}
-      </div>
+      </div>}
       {csp.variants.length > 1 && (
         <div className={styles.variantRow}>
           {csp.variants.map((v) => (

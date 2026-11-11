@@ -431,7 +431,46 @@ const sidebars = {
               label: "Reference Architectures",
               items: [
                 { type: "doc", id: "proxy/deploy/architecture", label: "Overview" },
-                { type: "doc", id: "proxy/multi_region", className: "sidebar-enterprise" },
+                {
+                  type: "category",
+                  label: "Cloud Deployments",
+                  items: [
+                    { type: "doc", id: "proxy/deploy/cloud/overview", label: "Overview" },
+                    "proxy/deploy/cloud/azure",
+                    "proxy/deploy/cloud/aws",
+                    "proxy/deploy/cloud/gcp",
+                  ],
+                },
+                {
+                  type: "category",
+                  label: "Identity-Aware Proxy",
+                  items: [
+                    { type: "doc", id: "proxy/deploy/iap/overview", label: "Overview" },
+                    "proxy/deploy/iap/cloudflare",
+                    "proxy/deploy/iap/aws",
+                    "proxy/deploy/iap/azure",
+                    "proxy/deploy/iap/gcp",
+                  ],
+                },
+                "proxy/deploy/mtls",
+                {
+                  type: "category",
+                  label: "High Availability",
+                  items: [
+                    { type: "doc", id: "proxy/deploy/ha/overview", label: "Overview" },
+                    "proxy/deploy/ha/blue_green",
+                    "proxy/deploy/ha/canary",
+                    {
+                      type: "category",
+                      label: "Multi-Region Deployment",
+                      items: [
+                        { type: "doc", id: "proxy/multi_region", label: "Overview" },
+                        "proxy/deploy/multi_region/routing",
+                        "proxy/deploy/multi_region/failover",
+                      ],
+                    },
+                  ],
+                },
                 { type: "doc", id: "proxy/global_control_plane", className: "sidebar-enterprise" },
               ],
             },
@@ -447,6 +486,7 @@ const sidebars = {
             { type: "doc", id: "proxy/configuration/overview", label: "Overview" },
             { type: "doc", id: "proxy/configs", label: "YAML" },
             { type: "doc", id: "proxy/configuration/ui", label: "UI" },
+            { type: "doc", id: "proxy/configuration/api", label: "Management API" },
             { type: "doc", id: "proxy/configuration/terraform", label: "Terraform" },
           ],
         },
