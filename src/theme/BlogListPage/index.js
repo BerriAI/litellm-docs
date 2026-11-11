@@ -212,9 +212,9 @@ function HeroSubscribe() {
       </div>
       <div className={styles.viaLinks}>
         <a href="/blog/rss.xml" className={styles.viaBtn}><RssIcon />RSS</a>
-        <Link to="/security/subscribe" className={styles.viaBtn} title="Join the security mailing list">
+        <a href="https://security.litellm.ai/mailinglist/" className={styles.viaBtn} title="Join the security mailing list">
           <ShieldIcon />Security announcements
-        </Link>
+        </a>
       </div>
     </div>
   );
