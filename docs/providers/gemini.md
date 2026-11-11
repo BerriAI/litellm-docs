@@ -47,6 +47,51 @@ response = completion(
 )
 ```
 
+## Decisions {#decisions}
+
+Gemini Decision 1 answers yes/no, choice and rubric score questions through LiteLLM's [`/v1/decisions` and `/v1/systemone`](../decisions.md) routes. This provider is unreleased, main after LiteLLM #GEMINI_PR
+
+Set `GEMINI_API_KEY` in the proxy environment and add this deployment to `config.yaml`
+
+```yaml showLineNumbers
+model_list:
+  - model_name: gemini/gemini-decision-1
+    litellm_params:
+      model: gemini/gemini-decision-1
+      api_key: os.environ/GEMINI_API_KEY
+```
+
+Call the proxy with an OpenAI Decisions body
+
+```bash showLineNumbers
+curl -X POST 'http://0.0.0.0:4000/v1/decisions' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{
+  "model": "gemini/gemini-decision-1",
+  "input": "The mug arrived cracked.",
+  "questions": [
+    {"type": "predicate", "name": "damaged", "instructions": "Is the mug damaged?"},
+    {
+      "type": "choice",
+      "name": "action",
+      "instructions": "Choose the next action",
+      "choices": [{"value": "replace", "description": "Broken item"}, {"value": "keep", "description": "Undamaged item"}]
+    },
+    {
+      "type": "score",
+      "name": "severity",
+      "instructions": "Rate the damage",
+      "levels": [{"label": "None"}, {"label": "Severe"}]
+    }
+  ]
+}'
+```
+
+LiteLLM sends the request to Google's [Decisions API](https://aistudio.google.com/docs/decisions-api) at `/v1beta/decisions` with `x-goog-api-key` authentication. Both LiteLLM routes use the same deployment, with answers in the format of the route you call. Usage reports input tokens and zero output tokens for cost tracking
+
+Text, images and inline audio/video are supported. Box questions return 400. PDFs and remote audio/video URLs are not mapped by LiteLLM's Decisions input schema
+
 ## Supported OpenAI Params
 - temperature
 - top_p
