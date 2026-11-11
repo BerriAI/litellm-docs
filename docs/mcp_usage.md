@@ -7,6 +7,25 @@ import Image from '@theme/IdealImage';
 
 This document covers how to use LiteLLM as an MCP Gateway. You can see how to use it with Responses API, Cursor IDE, and OpenAI SDK. For choosing between endpoints, transports, and auth patterns, see the [MCP Configuration Reference](./mcp_config_reference)
 
+### Connect once with `/mcp`
+
+You don't need one client entry per MCP server. Point any MCP client at `/mcp` with a LiteLLM key and it gets the tools from every server that key can access, each tool name prefixed with its server name (for example `github_mcp-search_issues`).
+
+```json title="One entry for every MCP server the key can access" showLineNumbers
+{
+  "mcpServers": {
+    "LiteLLM": {
+      "url": "http://localhost:4000/mcp",
+      "headers": {
+        "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>"
+      }
+    }
+  }
+}
+```
+
+Which servers and tools the key sees is decided on the proxy by the key's, team's and organization's MCP permissions (see [MCP Permission Management](./mcp_control)). When you grant the key another server, or add a server to an access group the key already has, the client picks it up on its next tool listing with no client config change. A per-server URL such as `/github_mcp/mcp` or the `x-mcp-servers` header only narrows that set and never grants access the key doesn't already have.
+
 ### Use on LiteLLM UI 
 
 Follow this walkthrough to use your MCP on LiteLLM UI
