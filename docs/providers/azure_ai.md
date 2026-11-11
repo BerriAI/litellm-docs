@@ -117,6 +117,42 @@ response = completion(
 
 </Tabs>
 
+## Foundry project and `/openai/v1` endpoints
+
+<SinceVersion v="1.111.0" />
+
+`api_base` can point at a Foundry resource, its `/openai/v1` endpoint, or a Foundry project. LiteLLM picks the chat route from the shape of `api_base`.
+
+| `api_base` | Chat route |
+|---|---|
+| `https://<resource>.services.ai.azure.com` | `/models/chat/completions` |
+| `https://<resource>.services.ai.azure.com/openai/v1` | `/openai/v1/chat/completions` |
+| `https://<resource>.services.ai.azure.com/api/projects/<project>` | `/api/projects/<project>/openai/v1/chat/completions` |
+
+On a project endpoint LiteLLM sends no `api-version`, because that route rejects every value. It sends the key as `Authorization: Bearer`, so `api_key` can hold an API key or a Microsoft Entra token. A service principal gets a token for `https://ai.azure.com/.default` unless `azure_scope` or `AZURE_SCOPE` sets another scope. A gateway in front of a project works too, as long as its path keeps `/api/projects/<project>`.
+
+On a resource `/openai/v1` endpoint LiteLLM sends the key in the `api-key` header and passes through any `api_version` you set, such as `preview`.
+
+An OpenAI model such as `azure_ai/gpt-4.1` on a `<resource>.openai.azure.com/openai/v1` or `<resource>.cognitiveservices.azure.com/openai/v1` base goes through the [Azure OpenAI](./azure/azure) provider, and its spend is logged under `azure`. Set `api_version: preview` on that entry, because that route answers 404 without it.
+
+```yaml
+model_list:
+  - model_name: gpt-4.1
+    litellm_params:
+      model: azure_ai/gpt-4.1
+      api_base: https://my-resource.services.ai.azure.com/api/projects/my-project
+      api_key: os.environ/AZURE_AI_API_KEY
+```
+
+```shell
+curl http://0.0.0.0:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"model": "gpt-4.1", "messages": [{"role": "user", "content": "What is 2+2? Answer in one word."}]}'
+```
+
+LiteLLM sends the request to `https://my-resource.services.ai.azure.com/api/projects/my-project/openai/v1/chat/completions`, and the response's message content is `Four`. The same entry also serves `/v1/responses` and `/v1/messages`.
+
 ## Passing additional params - max_tokens, temperature 
 See all litellm.completion supported params [here](../completion/input.md#translated-openai-params)
 
