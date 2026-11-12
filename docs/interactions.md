@@ -327,7 +327,7 @@ LiteLLM prices an agent interaction from that agent's row in the [model cost map
 
 ### Get, cancel and delete on Vertex AI
 
-The proxy has no way to tell from an interaction ID which deployment created it, so name it with a `model` query parameter or an `x-litellm-model` header. Either one takes a model group or a deployment ID. The create response carries the ID of the deployment that served it in its `x-litellm-model-id` header, and sending that ID pins the follow-up to the same deployment, so it reaches the project and location that hold the interaction. Your key needs access to the deployment's model group, just as it does to create. Without either, the call goes to Google AI Studio as before.
+The proxy has no way to tell from an interaction ID which deployment created it, so name it with a `model` query parameter or an `x-litellm-model` header. Either one takes a model group or a deployment ID. The create response carries the ID of the deployment that served it in its `x-litellm-model-id` header, and sending that ID pins the follow-up to the same deployment, so it reaches the project and location that hold the interaction. Your key needs access to the deployment's model group, just as it does to create. A key or team limited to model access groups can only pin a deployment in one of those access groups, and pinning another deployment of the group is refused with a 400 before anything reaches Google. Without either, the call goes to Google AI Studio as before.
 
 ```bash showLineNumbers title="Poll, cancel and delete a Vertex AI interaction"
 curl "http://localhost:4000/v1beta/interactions/{interaction_id}?model={x-litellm-model-id}" \
