@@ -92,20 +92,20 @@ export function state(seconds){
 }
 const LIGHT_STOPS=[[0,0],[.125,.08],[.25,.32],[.375,.76],[.5,1],[.625,.76],[.75,.32],[.875,.08],[1,0]];
 
-function bead(p,s,i,id){
+function beadGlow(p,s,i,id){
+  const r=n(p.r),outer=n(r*3.6);
+  const ring=`M0 ${-outer}a${outer} ${outer} 0 1 1 0 ${outer*2}a${outer} ${outer} 0 1 1 0 ${-outer*2}Z M0 ${-r}a${r} ${r} 0 1 1 0 ${r*2}a${r} ${r} 0 1 1 0 ${-r*2}Z`;
+  return `<path data-layer="bloom" transform="translate(${n(p.x)} ${n(p.y)})" d="${ring}" fill-rule="evenodd" fill="url(#${id}-afterglow)" opacity="${n(s.bloom)}"/>`;
+}
+function bead(p,s,i){
   const r=n(p.r);
   return `<g data-pod="${i}" transform="translate(${n(p.x)} ${n(p.y)})">
-    <circle data-layer="bloom" r="${n(r*3.6)}" fill="url(#${id}-afterglow)" opacity="${n(s.bloom)}"/>
-    <circle r="${r}" fill="url(#${id}-frost-body)" stroke="#9BAAB6" stroke-width=".6" stroke-opacity=".23"/>
-    <circle r="${n(r-.4)}" fill="url(#${id}-grain)" opacity=".55"/>
-    <circle data-layer="emission" r="${r}" fill="url(#${id}-emission)" opacity="${n(s.emission)}"/>
-    <g data-layer="scatter" transform="translate(${n(s.scatterX)} ${n(s.scatterY)})" opacity="${n(s.scatter)}"><circle r="${n(r*.66)}" fill="url(#${id}-surface-light)"/></g>
+    <circle r="${r}" fill="#94A4B2" fill-opacity=".7"/>
+    <circle data-layer="emission" r="${r}" fill="#DDF5FF" opacity="${n(Math.min(.96,s.emission*.92+s.scatter*.2))}"/>
   </g>`;
 }
 export function frame(seconds,prefix='registry',{includeRays=true,currentState}={}){
   const id=prefix.replace(/[^a-zA-Z0-9_-]/g,''),s=currentState??state(seconds);
-  let grain='';
-  for(let i=0;i<100;i++)grain+=`<circle cx="${n(hash(i+771)*32)}" cy="${n(hash(i+991)*32)}" r="${n(.2+hash(i+171)*.3)}" fill="${i%2?'#FFFFFF':'#6A7A85'}" opacity="${i%2?.18:.12}"/>`;
   let rays='',rayGradients='';
   if(includeRays)s.rays.forEach((ray,i)=>{
     if(ray.alpha<.0002)return;
@@ -114,10 +114,6 @@ export function frame(seconds,prefix='registry',{includeRays=true,currentState}=
     rays+=`<path d="${d}" stroke="url(#${id}-ray-${i})" stroke-width="13" opacity="${n(ray.alpha*.15)}"/><path d="${d}" stroke="url(#${id}-ray-${i})" stroke-width="3.5" opacity="${n(ray.alpha)}"/>`;
   });
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="img" aria-labelledby="${id}-title ${id}-desc"><title id="${id}-title">LiteLLM Enterprise Registry</title><desc id="${id}-desc">A cool white pulse enters from the upper left, reflects off the image edges, and refracts through frosted glass gateway beads. Absorbed light leaves a fading phosphorescent glow, illustrating a rolling deployment.</desc><defs>${rayGradients}
-    <pattern id="${id}-grain" width="32" height="32" patternUnits="userSpaceOnUse">${grain}</pattern>
-    <radialGradient id="${id}-frost-body" cx=".5" cy=".5" r=".52"><stop stop-color="#ADBAC7" stop-opacity=".24"/><stop offset=".65" stop-color="#AAB9C5" stop-opacity=".3"/><stop offset=".9" stop-color="#899EAE" stop-opacity=".4"/><stop offset="1" stop-color="#BDCAD3" stop-opacity=".18"/></radialGradient>
-    <radialGradient id="${id}-emission"><stop stop-color="#F5FFFF" stop-opacity=".98"/><stop offset=".62" stop-color="#D2F5FF" stop-opacity=".78"/><stop offset="1" stop-color="#60B9EC" stop-opacity=".35"/></radialGradient>
-    <radialGradient id="${id}-surface-light"><stop stop-color="#F4FAFF" stop-opacity=".65"/><stop offset=".5" stop-color="#E2F1FF" stop-opacity=".3"/><stop offset="1" stop-color="#D0E5F9" stop-opacity="0"/></radialGradient>
     <radialGradient id="${id}-afterglow"><stop stop-color="#A9E5FF" stop-opacity=".8"/><stop offset=".3" stop-color="#53B3ED" stop-opacity=".4"/><stop offset="1" stop-color="#389CD8" stop-opacity="0"/></radialGradient>
-  </defs><g fill="none" stroke-linecap="round">${rays}</g>${PODS.map((p,i)=>bead(p,s.pods[i],i,id)).join('')}</svg>`;
+  </defs><g fill="none" stroke-linecap="round">${rays}</g>${PODS.map((p,i)=>beadGlow(p,s.pods[i],i,id)).join('')}${PODS.map((p,i)=>bead(p,s.pods[i],i)).join('')}</svg>`;
 }
