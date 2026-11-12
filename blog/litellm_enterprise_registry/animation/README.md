@@ -1,8 +1,8 @@
 # Enterprise Registry animation
 
-A transparent animation with no logos or visible text. The 386 neutral, frosted glass circles form an organic field that is sparse at the top and wider and denser toward the bottom. A soft, cool white Gaussian pulse enters from the upper left, reflects and refracts through the beads, and leaves a phosphorescent glow that fades after the pulse passes. The canvas is 1600 by 800 at 25 fps, with a 16-second loop. The visual suggests a rolling deployment; its bead count and timing do not represent customer scale, transfer speed, or throughput.
+A transparent animation with no logos or visible text. The 386 neutral, frosted glass circles form an organic field that is sparse at the top and wider and denser toward the bottom. The entire field is uniformly fitted inside the image with room for the beads and their glow. A soft, cool white Gaussian pulse enters from the upper left, reflects and refracts through the beads, and leaves a phosphorescent glow that fades after the pulse passes. All four image edges act as ideal specular mirrors, returning light through the field; there is no visible border. The canvas is 1600 by 800 at 25 fps, with a 16-second loop. The visual suggests a rolling deployment; its bead count and timing do not represent customer scale, transfer speed, or throughput.
 
-`optics.mjs` precomputes deterministic two-dimensional light paths through the same non-overlapping circular geometry used to draw the beads. It calculates circle intersections, Snell refraction, unpolarized Fresnel reflection, optical path length, and Beer-Lambert absorption. Sampled Gaussian microfacet normals approximate a frosted surface. Early interactions split reflected and transmitted energy; later interactions use seeded sampling. The transport records absorbed energy separately from escaped or truncated energy.
+`optics.mjs` precomputes deterministic two-dimensional light paths through the same non-overlapping circular geometry used to draw the beads. It calculates circle intersections, Snell refraction, unpolarized Fresnel reflection, optical path length, and Beer-Lambert absorption. Sampled Gaussian microfacet normals approximate a frosted surface. Early interactions split reflected and transmitted energy; later interactions use seeded sampling. Mirror hits preserve packet energy and optical path timing; exact corner hits reverse both direction components. The transport records absorbed energy separately from escaped or truncated energy.
 
 `scene.mjs` applies a finite Gaussian pulse to those paths and uses deposited energy to drive the beads' absorption and decay response. `raster.mjs` accumulates the precomputed ray energy in floating-point buffers, softens the scattered field, and tone maps once to avoid bands from repeatedly blending 8-bit colors. The renderer composites that light with textured SVG glass surfaces. This is a two-dimensional geometric approximation, with no diffraction, polarization, volumetric scattering, or microfacet masking and shadowing. The refractive index, roughness, absorption, and phosphor lifetime are chosen for the illustration and are not measured material properties. Optical travel is deliberately slowed; exposure, glow footprint, and the end-of-loop emission fade are adjusted for display. This is not a calibrated simulation of a physical phosphorescent material.
 
@@ -13,7 +13,7 @@ Install Node.js, Python 3.10 or later, FFmpeg with libvpx, and the renderer depe
 ```sh
 npm install
 python3 -m pip install -r requirements.txt
-node --test optics.test.mjs raster.test.mjs
+node --test optics.test.mjs raster.test.mjs scene.test.mjs
 node render.mjs --keyframes
 node render.mjs
 node encode-video.mjs

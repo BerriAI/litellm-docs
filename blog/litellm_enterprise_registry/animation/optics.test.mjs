@@ -135,3 +135,64 @@ test('a Gaussian point-source fan diverges while conserving incident power', () 
   assert.throws(() => buildTransport([], source, target, {...settings, angularSigma: 0}), /angularSigma/);
   assert.throws(() => buildTransport([], source, target, {...settings, angularWidth: 7}), /angularWidth/);
 });
+
+test('mirrored bounds preserve straight-ray energy and optical time', () => {
+  const settings = {...options, mirrorBounds: true, maxDistance: 20,
+    bounds: {minX: 0, minY: 0, maxX: 10, maxY: 10}};
+  const transport = buildTransport([], {x: 5, y: 5}, {x: 15, y: 5}, settings);
+  assert.deepEqual(transport.segments.map(ray => [ray.x1, ray.x2]), [[5, 10], [10, 0], [0, 5]]);
+  assert.deepEqual(transport.segments.map(ray => [ray.opticalStart, ray.opticalEnd]), [[0, 5], [5, 15], [15, 20]]);
+  assert.deepEqual(transport.segments.map(ray => ray.kind), ['incident', 'air', 'air']);
+  assert.equal(transport.stats.mirrorReflections, 2);
+  assert.equal(transport.stats.escapedEnergy, 0);
+  close(transport.stats.terminatedEnergy, 1);
+  assert.ok(transport.segments.every(ray => ray.energy === 1));
+  const open = buildTransport([], {x: 5, y: 5}, {x: 15, y: 5}, {...settings, mirrorBounds: false});
+  assert.equal(open.segments.length, 1);
+  assert.equal(open.stats.mirrorReflections, 0);
+  close(open.stats.escapedEnergy, 1);
+});
+
+test('an exact mirror corner flips both direction components', () => {
+  const transport = buildTransport([], {x: 5, y: 5}, {x: 15, y: 15}, {
+    ...options, mirrorBounds: true, maxDistance: 12,
+    bounds: {minX: 0, minY: 0, maxX: 10, maxY: 10},
+  });
+  const [incoming, reflected] = transport.segments;
+  close(incoming.x2, 10); close(incoming.y2, 10);
+  close(reflected.direction.x, -Math.SQRT1_2); close(reflected.direction.y, -Math.SQRT1_2);
+  close(reflected.opticalStart, Math.sqrt(50)); close(reflected.opticalEnd, 12);
+  assert.equal(transport.stats.mirrorReflections, 1);
+  assert.equal(transport.stats.mirrorCornerReflections, 1);
+  assert.equal(transport.stats.escapedEnergy, 0);
+  close(transport.stats.accountedEnergy, 1);
+});
+
+test('a reflected ray can first reach and later re-enter a bead causally', () => {
+  const transport = buildTransport([{x: 5, y: 5, r: 1}], {x: 2, y: 5}, {x: -8, y: 5}, {
+    ...options, mirrorBounds: true, maxDistance: 24,
+    bounds: {minX: 0, minY: 0, maxX: 10, maxY: 10},
+  });
+  close(transport.firstHit.opticalTime, 6); // Two units to the left wall, then four to glass.
+  assert.equal(transport.firstHit.wallReflections, 1);
+  assert.ok(transport.events.every(event => event.opticalStart >= 6));
+  assert.ok(transport.segments.some(ray => ray.kind === 'glass' && ray.direction.x < 0 && ray.opticalStart > 6));
+  const deposits = transport.events.reduce((sum, event) => sum + event.depositedEnergy, 0);
+  close(deposits + transport.stats.terminatedEnergy, 1);
+  assert.equal(transport.stats.escapedEnergy, 0);
+  assert.ok(transport.stats.mirrorReflections > 1);
+});
+
+test('an optical horizon clips glass travel and records remaining energy separately', () => {
+  const transport = buildTransport([bead], source, target, {
+    ...options, mirrorBounds: true, maxOpticalDistance: 105,
+  });
+  const glass = transport.segments.find(ray => ray.kind === 'glass');
+  close(glass.x2, 100); close(glass.opticalEnd, 105);
+  close(transport.stats.absorbedEnergy, 0.96 * (1 - Math.exp(-0.5)));
+  assert.ok(transport.segments.every(ray => ray.opticalEnd <= 105 + 1e-10));
+  assert.ok(transport.events.every(event => event.opticalTime <= 105));
+  assert.equal(transport.stats.escapedEnergy, 0);
+  close(transport.stats.terminatedEnergy, transport.stats.opticalHorizonEnergy);
+  close(transport.stats.absorbedEnergy + transport.stats.opticalHorizonEnergy, 1);
+});

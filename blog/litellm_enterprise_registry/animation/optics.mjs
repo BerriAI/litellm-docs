@@ -117,6 +117,11 @@ function interfaceSample(direction, faceNormal, nIncident, nTransmitted, roughne
  * direction; angularSigma is its Gaussian standard deviation in radians.
  * Set beamWidth:0 for a true point-source fan. Nonzero beamWidth and divergence
  * describe an expanded source plane with direction varying across the plane.
+ * mirrorBounds:true makes all four bounds ideal specular mirrors. Wall hits
+ * preserve power and optical time; exact corner hits flip both components.
+ * Wall bounces do not consume the bead-interface Fresnel split budget.
+ * maxOpticalDistance optionally stops paths at an animation's visible horizon,
+ * in the same optical-distance units as opticalTime; default is unlimited.
  * @returns {{segments:Array,events:Array,firstHit:object|null,stats:object}}
  *
  * segments: x1/y1/x2/y2, direction, energy/energyEnd, rgb, kind, beadIndex,
@@ -137,7 +142,8 @@ export function buildTransport(pods, source, target, options = {}) {
     seed: 27913, rayCount: 192, beamWidth: 34, angularWidth: 0, maxSegments: 4096,
     maxBounces: 32, splitDepth: 2, minEnergy: 1e-7,
     nAir: 1, nGlass: 1.5, absorption: 0.008, roughness: 0.22,
-    maxDistance: 6000, rgb: [0.88, 0.95, 1], ...options,
+    maxDistance: 6000, maxOpticalDistance: Infinity, mirrorBounds: false,
+    rgb: [0.88, 0.95, 1], ...options,
   };
   for (const key of ['rayCount', 'maxSegments', 'maxBounces', 'splitDepth']) {
     if (!Number.isInteger(settings[key]) || settings[key] < (key === 'splitDepth' ? 0 : 1)) throw new Error(`Invalid optics ${key}.`);
@@ -151,6 +157,7 @@ export function buildTransport(pods, source, target, options = {}) {
   for (const key of ['beamSigma', 'angularSigma']) {
     if (settings[key] !== undefined && (!Number.isFinite(settings[key]) || settings[key] <= 0)) throw new Error(`Invalid optics ${key}.`);
   }
+  if (!(settings.maxOpticalDistance > 0) || settings.maxOpticalDistance !== Infinity && !Number.isFinite(settings.maxOpticalDistance)) throw new Error('Invalid optics maxOpticalDistance.');
   if (settings.angularWidth > Math.PI * 2) throw new Error('Optics angularWidth must not exceed 2π radians.');
   source = point(source); target = point(target);
   if (![source.x, source.y, target.x, target.y].every(Number.isFinite)) throw new Error('Optical source and target must be finite.');
@@ -184,6 +191,8 @@ export function buildTransport(pods, source, target, options = {}) {
     inputEnergy: 1, absorbedEnergy: 0, escapedEnergy: 0, terminatedEnergy: 0,
     rayCount: settings.rayCount, interfaceCount: 0, rouletteCount: 0,
     totalInternalReflections: 0, overlapCount: 0, overlapPairs: [],
+    mirrorReflections: 0, mirrorCornerReflections: 0,
+    opticalHorizonEnergy: 0,
     maxOpticalTime: 0, maxSegmentsReached: false,
   };
   for (let i = 0; i < circles.length; i++) for (let j = i + 1; j < circles.length; j++) {
@@ -277,12 +286,15 @@ export function buildTransport(pods, source, target, options = {}) {
   let nextBranch = settings.rayCount;
   const queue = launchRays.map((launch, rayIndex) => ({
     origin: launch.origin, direction: launch.direction,
-    energy: energies[rayIndex], medium: -1, interactions: 0,
+    energy: energies[rayIndex], medium: -1, interactions: 0, wallBounces: 0,
     distance: 0, optical: 0, rayIndex, branchIndex: rayIndex, parentSegment: -1,
   }));
   let head = 0;
   while (head < queue.length) {
     const ray = queue[head++];
+    if (ray.optical >= settings.maxOpticalDistance) {
+      stats.terminatedEnergy += ray.energy; stats.opticalHorizonEnergy += ray.energy; continue;
+    }
     if (segments.length >= settings.maxSegments) {
       stats.maxSegmentsReached = true; stats.terminatedEnergy += ray.energy; continue;
     }
@@ -302,7 +314,9 @@ export function buildTransport(pods, source, target, options = {}) {
       }
     }
     const edgeDistance = boundaryDistance(ray.origin, ray.direction, bounds);
-    const limit = Math.min(edgeDistance, settings.maxDistance - ray.distance);
+    const remainingDistance = Math.min(settings.maxDistance - ray.distance,
+      (settings.maxOpticalDistance - ray.optical) / indexOfRefraction);
+    const limit = Math.min(edgeDistance, remainingDistance);
     const length = Math.min(hitDistance, limit);
     const hits = hitIndex >= 0 && hitDistance <= limit;
     const end = {x: ray.origin.x + ray.direction.x * length, y: ray.origin.y + ray.direction.y * length};
@@ -313,7 +327,7 @@ export function buildTransport(pods, source, target, options = {}) {
     const opticalEnd = ray.optical + length * indexOfRefraction;
     segments.push({x1: ray.origin.x, y1: ray.origin.y, x2: end.x, y2: end.y,
       direction: ray.direction, energy: ray.energy, energyEnd, rgb,
-      kind: inside ? 'glass' : ray.interactions === 0 ? 'incident' : 'air',
+      kind: inside ? 'glass' : ray.interactions === 0 && ray.wallBounces === 0 ? 'incident' : 'air',
       beadIndex: inside ? ray.medium : -1, hitBeadIndex: hits ? hitIndex : -1,
       rayIndex: ray.rayIndex, branchIndex: ray.branchIndex, parentSegment: ray.parentSegment,
       distanceStart: ray.distance, distanceEnd: ray.distance + length,
@@ -330,9 +344,31 @@ export function buildTransport(pods, source, target, options = {}) {
       stats.absorbedEnergy += depositedEnergy;
     }
     if (!hits) {
-      if (edgeDistance <= settings.maxDistance - ray.distance) stats.escapedEnergy += energyEnd;
-      else stats.terminatedEnergy += energyEnd;
+      if (edgeDistance <= remainingDistance) {
+        if (settings.mirrorBounds) {
+          const vertical = Math.abs(end.x - bounds.minX) <= EPS * 16 || Math.abs(end.x - bounds.maxX) <= EPS * 16;
+          const horizontal = Math.abs(end.y - bounds.minY) <= EPS * 16 || Math.abs(end.y - bounds.maxY) <= EPS * 16;
+          if (!vertical && !horizontal) throw new Error('Mirror intersection did not reach a rectangular boundary.');
+          stats.mirrorReflections++;
+          if (vertical && horizontal) stats.mirrorCornerReflections++;
+          queue.push({...ray, origin: end,
+            direction: {x: vertical ? -ray.direction.x : ray.direction.x, y: horizontal ? -ray.direction.y : ray.direction.y},
+            energy: energyEnd, wallBounces: ray.wallBounces + 1,
+            distance: ray.distance + length, optical: opticalEnd,
+            branchIndex: nextBranch++, parentSegment: segmentIndex});
+        } else stats.escapedEnergy += energyEnd;
+      } else {
+        stats.terminatedEnergy += energyEnd;
+        if (opticalEnd >= settings.maxOpticalDistance - EPS) stats.opticalHorizonEnergy += energyEnd;
+      }
       continue;
+    }
+    // A mirror can redirect a launch ray to a bead outside the initial fan.
+    if (settings.mirrorBounds && !inside && (!firstHit || opticalEnd < firstHit.opticalTime)) {
+      firstHit = {beadIndex: hitIndex, x: end.x, y: end.y,
+        distance: ray.distance + length, opticalTime: opticalEnd,
+        offset: offsets[ray.rayIndex], angle: angles[ray.rayIndex], rayIndex: ray.rayIndex,
+        wallReflections: ray.wallBounces};
     }
     const circle = circles[hitIndex];
     const outward = normalize({x: end.x - circle.x, y: end.y - circle.y});
@@ -344,7 +380,8 @@ export function buildTransport(pods, source, target, options = {}) {
     const enqueue = (outgoing, energy, medium) => {
       if (!(energy > 0)) return;
       queue.push({origin: end, direction: outgoing, energy, medium,
-        interactions: ray.interactions + 1, distance: ray.distance + length, optical: opticalEnd,
+        interactions: ray.interactions + 1, wallBounces: ray.wallBounces,
+        distance: ray.distance + length, optical: opticalEnd,
         rayIndex: ray.rayIndex, branchIndex: nextBranch++, parentSegment: segmentIndex});
     };
     if (ray.interactions < settings.splitDepth) {

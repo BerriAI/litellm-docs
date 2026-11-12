@@ -20,11 +20,23 @@ for(let row=0;row<28;row++)for(let col=0;col<49;col++){
   // Non-overlapping circular sections are shared by optics and material rendering.
   PODS.push({x,y,r:11.2+hash(seed+11)*2.65,seed});
 }
+// Fit the entire organic field inside the image, including each bead's glow.
+// A uniform scale keeps the glass circles separate and preserves the layout.
+const EDGE_PADDING=56;
+const minX=Math.min(...PODS.map(p=>p.x)),maxX=Math.max(...PODS.map(p=>p.x));
+const minY=Math.min(...PODS.map(p=>p.y)),maxY=Math.max(...PODS.map(p=>p.y));
+const fieldScale=Math.min(1,(WIDTH-2*EDGE_PADDING)/(maxX-minX),(HEIGHT-2*EDGE_PADDING)/(maxY-minY));
+for(const p of PODS){
+  p.x=WIDTH-EDGE_PADDING-(maxX-p.x)*fieldScale;
+  p.y=HEIGHT-EDGE_PADDING-(maxY-p.y)*fieldScale;
+  p.r*=fieldScale;
+}
 export const SOURCE={x:8,y:8};
 export const TRANSPORT=buildTransport(PODS,SOURCE,{x:8+1000*Math.cos(.635),y:8+1000*Math.sin(.635)},{
   rayCount:4096,beamWidth:0,angularWidth:2.4,angularSigma:.4,
-  maxSegments:256000,maxBounces:96,splitDepth:2,maxDistance:12000,minEnergy:1e-8,
-  roughness:.28,absorption:.0015,bounds:{minX:-100,minY:-100,maxX:1800,maxY:950},
+  // 4100 scene units cover the entire 16-second pulse window, including its tail.
+  maxSegments:2000000,maxBounces:128,splitDepth:2,maxDistance:4100,maxOpticalDistance:4100,minEnergy:1e-8,
+  roughness:.28,absorption:.0015,mirrorBounds:true,bounds:{minX:0,minY:0,maxX:WIDTH,maxY:HEIGHT},
 });
 // Optical path is slowed for visibility. This is not a physical seconds-per-meter scale.
 const SPEED=245, PULSE_CENTER=1.15, PULSE_SIGMA=.38, LIFETIME=2.4;
@@ -101,7 +113,7 @@ export function frame(seconds,prefix='registry',{includeRays=true,currentState}=
     const d=`M${n(ray.x1)} ${n(ray.y1)}L${n(ray.x2)} ${n(ray.y2)}`;
     rays+=`<path d="${d}" stroke="url(#${id}-ray-${i})" stroke-width="13" opacity="${n(ray.alpha*.15)}"/><path d="${d}" stroke="url(#${id}-ray-${i})" stroke-width="3.5" opacity="${n(ray.alpha)}"/>`;
   });
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="img" aria-labelledby="${id}-title ${id}-desc"><title id="${id}-title">LiteLLM Enterprise Registry</title><desc id="${id}-desc">A cool white pulse enters from the upper left and reflects and refracts through frosted glass gateway beads. Absorbed light leaves a fading phosphorescent glow, illustrating a rolling deployment.</desc><defs>${rayGradients}
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="img" aria-labelledby="${id}-title ${id}-desc"><title id="${id}-title">LiteLLM Enterprise Registry</title><desc id="${id}-desc">A cool white pulse enters from the upper left, reflects off the image edges, and refracts through frosted glass gateway beads. Absorbed light leaves a fading phosphorescent glow, illustrating a rolling deployment.</desc><defs>${rayGradients}
     <pattern id="${id}-grain" width="32" height="32" patternUnits="userSpaceOnUse">${grain}</pattern>
     <radialGradient id="${id}-frost-body" cx=".5" cy=".5" r=".52"><stop stop-color="#ADBAC7" stop-opacity=".24"/><stop offset=".65" stop-color="#AAB9C5" stop-opacity=".3"/><stop offset=".9" stop-color="#899EAE" stop-opacity=".4"/><stop offset="1" stop-color="#BDCAD3" stop-opacity=".18"/></radialGradient>
     <radialGradient id="${id}-emission"><stop stop-color="#F5FFFF" stop-opacity=".98"/><stop offset=".62" stop-color="#D2F5FF" stop-opacity=".78"/><stop offset="1" stop-color="#60B9EC" stop-opacity=".35"/></radialGradient>
