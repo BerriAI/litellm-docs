@@ -126,9 +126,9 @@ Here's how to call a Nebius Token Factory model with the LiteLLM Proxy Server
   model_list:
     - model_name: my-model
       litellm_params:
-        model: nebius/<your-model-id>                     # add nebius/ prefix to use Nebius Token Factory as provider
-        api_key: os.environ/NEBIUS_API_KEY                # read the api key from the environment
-        api_base: https://api.tokenfactory.nebius.com/v1  # Token Factory endpoint
+        model: nebius/<your-model-id>       # add the nebius/ prefix
+        api_key: os.environ/NEBIUS_API_KEY  # read the key from the environment
+        api_base: https://api.tokenfactory.nebius.com/v1
 
   general_settings:
     master_key: os.environ/LITELLM_MASTER_KEY
