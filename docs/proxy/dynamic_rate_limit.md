@@ -362,7 +362,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
   }'
 ```
 
-When a key from that team asks for `luna`, the proxy checks the saturation the dynamic rate limiter already tracks for `luna` (the same value that flips priority reservation into strict mode). Below `saturation_threshold` the request goes to `luna` as usual. At or above it, the proxy walks `alternates` in order and rewrites the request to the first one that the team is allowed to call and that is itself below the threshold. If every alternate is also saturated or not in the team's `models`, the request stays on `luna` and is rate limited exactly as before.
+When a key from that team asks for `luna`, the proxy checks the saturation the dynamic rate limiter already tracks for `luna` (the same value that flips priority reservation into strict mode). Below `saturation_threshold` the request goes to `luna` as usual. At or above it, the proxy walks `alternates` in order and rewrites the request to the first one that is itself below the threshold and that the caller could have asked for directly. An alternate has to pass the same checks a budget fallback passes, so the key, team, team member, project and customer allowlists all have to permit it and every budget that would apply to it, including the budget of any model access group that grants it, has to have room. Two more cases keep the request on `luna`. A preferred model priced at zero skips the aggregate budget checks on the way in, so it is never steered to a priced alternate. An alternate whose deployments add model-level guardrails the request did not already run is skipped too, because those guardrails ran before the model was picked. If no alternate qualifies, the request stays on `luna` and is rate limited exactly as before.
 
 A steered response carries the header `x-litellm-model-steered-from` with the model the client asked for, so the client can tell the two cases apart:
 
@@ -370,7 +370,7 @@ A steered response carries the header `x-litellm-model-steered-from` with the mo
 x-litellm-model-steered-from: luna
 ```
 
-The request counts against the model that served it. Spend logs record `opus` with `opus` pricing, and the request is charged to the `opus` rate limit and leaves `luna` capacity for teams that want only `luna`. Teams with no `model_preferences`, and preferences whose `model` does not match the requested model, are untouched. The threshold is the same `priority_reservation_settings.saturation_threshold` described above, and the saturation value is cached for `saturation_check_cache_ttl` seconds, so steering can lag a sudden burst by up to that long.
+The request counts against the model that served it. Spend logs record `opus` with `opus` pricing, the model access groups charged are the ones that granted `opus`, and the request is charged to the `opus` rate limit and leaves `luna` capacity for teams that want only `luna`. Teams with no `model_preferences`, and preferences whose `model` does not match the requested model, are untouched. The threshold is the same `priority_reservation_settings.saturation_threshold` described above, and the saturation value is cached for `saturation_check_cache_ttl` seconds, so steering can lag a sudden burst by up to that long.
 
 ## PTU share ceilings on Azure provisioned deployments
 
