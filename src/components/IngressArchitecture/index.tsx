@@ -2,7 +2,7 @@ import React, { useId } from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
 
-type Kind = 'mtls' | 'iap-aws' | 'iap-azure' | 'iap-gcp' | 'iap-cloudflare';
+type Kind = 'mtls' | 'mtls-aws' | 'mtls-azure' | 'mtls-gcp' | 'mtls-nginx' | 'mtls-haproxy' | 'mtls-kong' | 'iap-aws' | 'iap-azure' | 'iap-gcp' | 'iap-cloudflare';
 type Step = { title: string; detail: string; icon?: string; symbol?: 'client' | 'shield' };
 type Architecture = {
   title: string;
@@ -15,53 +15,90 @@ type Architecture = {
   note: string;
 };
 
+const mtls: Architecture = {
+  title: 'Client certificate identity',
+  client: { title: 'Workload', detail: 'Client certificate', symbol: 'client' },
+  boundary: 'Private ingress',
+  edge: { title: 'ALB or API gateway', detail: 'Verify client certificate', symbol: 'shield' },
+  identity: 'X-MTLS-Client-ID + LiteLLM key',
+  origin: 'Customer ID + key permissions',
+  note: 'The ingress overwrites the identity header. LiteLLM records the customer ID and applies virtual-key permissions.',
+};
+
 const architectures: Record<Kind, Architecture> = {
-  mtls: {
-    title: 'Client certificate identity',
-    client: { title: 'Workload', detail: 'Client certificate', symbol: 'client' },
-    boundary: 'Private ingress',
-    edge: { title: 'ALB or API gateway', detail: 'Verify client certificate', symbol: 'shield' },
-    identity: 'X-MTLS-Client-ID + LiteLLM key',
-    origin: 'Key permissions + usage',
-    note: 'The ingress overwrites the identity header. LiteLLM records the customer ID and applies virtual-key permissions.',
+  mtls,
+  'mtls-aws': {
+    ...mtls,
+    title: 'ALB certificate authentication',
+    edge: { title: 'Internal ALB', detail: 'mTLS verify mode', icon: 'cloud_icons/aws-alb.svg' },
+    connector: { title: 'NGINX', detail: 'Certificate → workload ID', symbol: 'shield' },
+  },
+  'mtls-azure': {
+    ...mtls,
+    title: 'Application Gateway certificate authentication',
+    edge: { title: 'Application Gateway', detail: 'Strict mTLS', icon: 'cloud_icons/azure-application-gateways.svg' },
+    note: 'Application Gateway forwards the verified certificate issuer and serial. LiteLLM uses them as the customer ID.',
+  },
+  'mtls-gcp': {
+    ...mtls,
+    title: 'Google Cloud ALB certificate authentication',
+    edge: { title: 'Internal ALB', detail: 'Reject invalid certificates', icon: 'cloud_icons/gcp-cloud-load-balancing.svg' },
+    note: 'The URL map forwards the verified certificate fingerprint. LiteLLM uses it as the customer ID.',
+  },
+  'mtls-nginx': {
+    ...mtls,
+    title: 'NGINX certificate authentication',
+    edge: { title: 'NGINX', detail: 'Verify certificate + map ID', symbol: 'shield' },
+  },
+  'mtls-haproxy': {
+    ...mtls,
+    title: 'HAProxy certificate authentication',
+    edge: { title: 'HAProxy', detail: 'Verify certificate + map ID', symbol: 'shield' },
+  },
+  'mtls-kong': {
+    ...mtls,
+    title: 'Kong certificate authentication',
+    edge: { title: 'Kong Gateway', detail: 'mTLS → Consumer', symbol: 'shield' },
+    note: 'Kong maps the verified certificate to a Consumer and forwards its custom ID. LiteLLM records that customer ID.',
   },
   'iap-aws': {
-    title: 'AWS employee sign-in',
-    client: { title: 'Employee', detail: 'VPN or Direct Connect', symbol: 'client' },
+    title: 'ALB authentication and identity forwarding',
+    client: { title: 'Application', detail: 'Bearer JWT', symbol: 'client' },
     boundary: 'Private ingress',
-    edge: { title: 'Internal ALB', detail: 'OIDC authentication', icon: 'cloud_icons/aws-alb.svg' },
-    identity: 'x-amzn-oidc-data',
-    origin: 'Verify JWT → UI session',
-    note: 'ALB signs the identity header. The LiteLLM handler verifies it and maps sub to the user ID.',
+    edge: { title: 'Internal ALB', detail: 'JWT validation', icon: 'cloud_icons/aws-alb.svg' },
+    identity: 'Authorization: Bearer <JWT>',
+    origin: 'Verified claims → user / team',
+    note: 'ALB validates the caller token and forwards it unchanged. LiteLLM verifies its claims and applies user and team permissions.',
   },
   'iap-azure': {
-    title: 'Azure employee sign-in',
+    title: 'Entra authentication and identity forwarding',
     client: { title: 'Employee', detail: 'Approved device', symbol: 'client' },
     boundary: 'Microsoft Entra',
     edge: { title: 'Application Proxy', detail: 'Conditional Access', icon: 'cloud_icons/azure-enterprise-applications.svg' },
     identity: 'X-LiteLLM-User-ID + X-LiteLLM-User-Email',
-    connector: { title: 'Connectors', detail: 'Outbound channel', icon: 'cloud_icons/azure-virtual-network.svg' },
-    origin: 'Trusted headers → UI session',
-    note: 'Application Proxy sets the identity headers. LiteLLM accepts them only from trusted connectors.',
+    connector: { title: 'Connectors + NGINX', detail: 'Required identity headers', icon: 'cloud_icons/azure-virtual-network.svg' },
+    origin: 'Trusted headers → user / team',
+    note: 'Application Proxy sets the user headers. NGINX rejects missing identity and adds the approved team. LiteLLM trusts only NGINX.',
   },
   'iap-gcp': {
-    title: 'GCP employee sign-in',
-    client: { title: 'Employee', detail: 'VPN or Interconnect', symbol: 'client' },
+    title: 'IAP authentication and identity forwarding',
+    client: { title: 'Caller', detail: 'VPN or Interconnect', symbol: 'client' },
     boundary: 'Private ingress',
     edge: { title: 'Internal ALB + IAP', detail: 'IAP access policy', icon: 'cloud_icons/gcp-cloud-load-balancing.svg' },
-    identity: 'x-goog-iap-jwt-assertion',
-    origin: 'Verify JWT → UI session',
-    note: 'IAP signs the identity header. The LiteLLM handler verifies it and maps sub and email to the user.',
+    identity: 'x-goog-iap-jwt-assertion → X-LiteLLM-IAP-Token',
+    connector: { title: 'NGINX', detail: 'Add Bearer prefix', symbol: 'shield' },
+    origin: 'Verified claims → user / team',
+    note: 'IAP signs the caller identity. NGINX formats the header. LiteLLM verifies the assertion and applies user and team permissions.',
   },
   'iap-cloudflare': {
-    title: 'Cloudflare employee sign-in',
+    title: 'Access authentication and identity forwarding',
     client: { title: 'Employee', detail: 'Corporate WARP device', symbol: 'client' },
     boundary: 'Cloudflare',
     edge: { title: 'Access', detail: 'Allow policy + Gateway', icon: 'providers/cloudflare.svg' },
-    identity: 'Cf-Access-Jwt-Assertion',
-    connector: { title: 'cloudflared', detail: 'Verify Access JWT', icon: 'providers/cloudflare.svg' },
-    origin: 'Verify JWT → UI session',
-    note: 'Access signs the identity header. The tunnel reaches the private origin. LiteLLM verifies the employee identity.',
+    identity: 'Cf-Access-Jwt-Assertion → X-LiteLLM-IAP-Token',
+    connector: { title: 'cloudflared + NGINX', detail: 'Private tunnel + Bearer prefix', icon: 'providers/cloudflare.svg' },
+    origin: 'Verified claims → user / team',
+    note: 'Access signs the caller identity. The tunnel reaches private NGINX. LiteLLM verifies the assertion and applies user and team permissions.',
   },
 };
 
