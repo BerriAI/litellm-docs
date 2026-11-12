@@ -109,6 +109,10 @@ Compare the full result with the [migration files](https://github.com/BerriAI/li
 
 </details>
 
+## Rolling upgrades and spend log cleanup
+
+[Spend log cleanup](./spend_logs_deletion.md#when-the-job-runs) runs from the `LiteLLM_ScheduledJobRun` table, created by migration `20261105000000_scheduled_job_runs`. Pods on an older version schedule the same cleanup from an in-process timer with a Redis lock, or with no lock at all when Redis is not configured, and the two never see each other. During a rolling upgrade both versions therefore run cleanup at the same time until the last old pod is gone. Each side deletes in small batches under its own statement timeout and both use the same retention cutoff, so the cost is duplicate work and extra delete load for the length of the rollout, not data loss. If the table is large and the rollout is slow, unset the retention settings before the upgrade and restore them after, or accept the extra load. A pod on the old version boots fine against a database that already has the new table, and a database migrated to the new version by the first upgraded pod needs nothing from the others
+
 ## Custom deployments
 
 If your deployment does not provide a migration job, run this in a separate container using the **target LiteLLM proxy image**, with `DATABASE_URL` and the required database credentials configured:
