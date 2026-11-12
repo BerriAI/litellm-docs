@@ -720,7 +720,7 @@ router_settings:
 | BACKGROUND_INTERACTION_COST_POLLING_ENABLED | Set to `false` to stop the proxy polling `background=true` Interactions API requests for their final usage. Cost for those requests then goes untracked. Default is `true`
 | BACKGROUND_INTERACTION_COST_POLL_INITIAL_INTERVAL_SECONDS | Delay in seconds before the first poll of a background interaction. The interval doubles on each retry. Default is 5
 | BACKGROUND_INTERACTION_COST_POLL_MAX_INTERVAL_SECONDS | Ceiling in seconds that the background interaction poll interval backs off to. Default is 60
-| BACKGROUND_INTERACTION_COST_POLL_TIMEOUT_SECONDS | How long in seconds to keep polling a background interaction before giving up and releasing its budget reservation. Default is 3600 (1 hour)
+| BACKGROUND_INTERACTION_COST_POLL_TIMEOUT_SECONDS | How long in seconds to keep polling a background interaction before giving up and releasing its budget reservation. Default is 7800 (2 hours 10 minutes), long enough for a 120-minute Deep Research run on Vertex AI. Older releases default to 3600
 | BASETEN_API_BASE | Base URL for Baseten. Default is https://inference.baseten.co/v1
 | BATCH_LINE_ITEMS_MAX_PART_BYTES | Raw request and result bytes after which a batch line-item part object closes and the next record starts a new part, see [Storing every line's request and response](./managed_batches#storing-every-lines-request-and-response). Default is `16777216` (16 MB)
 | BATCH_STATUS_POLL_INTERVAL_SECONDS | Interval in seconds for polling batch status. Default is 3600 (1 hour)
