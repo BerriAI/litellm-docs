@@ -3,6 +3,8 @@ import TabItem from '@theme/TabItem';
 
 # CollieAi
 
+<SinceVersion v="1.111.0" />
+
 The [CollieAi](https://collieai.io) guardrail checks each chat completion against your CollieAi project's policy before the model is called (`pre_call`) and after it answers (`post_call`). By default it observes: the call goes on unchanged, and a finding is recorded as `guardrail_flagged` in LiteLLM's guardrail logs, spend logs and the Admin UI request detail. In block mode the calls your policy blocks are refused with a 400.
 
 The integration wraps the [`collieai-litellm-guardrail`](https://pypi.org/project/collieai-litellm-guardrail/) package. It checks non-streaming `/v1/chat/completions` text; see [Supported calls](#supported-calls) for everything else.
@@ -142,7 +144,8 @@ The refusal text never names the rule. The rule types that fired are in the guar
 | `api_key` | `COLLIEAI_API_KEY` | The CollieAi project's API key, `clai_...`; without it the guardrail reads the `COLLIEAI_API_KEY` environment variable |
 | `api_base` | `https://app.collieai.io/v1/integrations/litellm` | CollieAi's LiteLLM integration base URL; point it at your deployment for a self-hosted CollieAi |
 | `enforcement_mode` | `monitor` | `monitor` observes; `block` refuses the calls the policy blocks |
-| `deadline_ms` | `2500` | Each check's whole deadline in milliseconds: connection, send, reply and parse |
+| `deadline_ms` | `2500` | Each check's whole deadline in milliseconds: connection, send, reply and parse. Monitor waits for each check too, so a slow CollieAi adds up to two deadlines to a call |
+| `synthetic_interval_s` | `300` | Each proxy worker sends CollieAi one pre-call and one post-call check of a fixed text, never a user's, at startup and then every this many seconds; `0` turns them off |
 | `forward_conversation_id` | `false` | Forward the caller's `x-collieai-conversation-id` header, so CollieAi's Logs group the calls of one conversation |
 
 A setting the guardrail can't run with, such as a key that isn't `clai_...`, stops the proxy at startup with an error that names the setting. The package's [README](https://github.com/CollieAi/collieai-litellm-guardrail#readme) lists every setting.
