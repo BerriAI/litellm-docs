@@ -371,7 +371,8 @@ const config = {
     experimental_faster: {
       swcJsLoader: true,
       swcJsMinimizer: true,
-      swcHtmlMinimizer: true,
+      // Keep explicit <head> tags and quoted metadata for social previews.
+      swcHtmlMinimizer: false,
       lightningCssMinimizer: true,
       mdxCrossCompilerCache: true,
     },
