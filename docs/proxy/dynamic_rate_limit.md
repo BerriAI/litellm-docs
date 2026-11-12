@@ -172,6 +172,10 @@ general_settings:
 - **saturation_threshold (float)**: Saturation level (0.0 to 1.0) at which strict priority enforcement begins for a model. Saturation is calculated as `max(current_rpm/max_rpm, current_tpm/max_tpm)`. Below this threshold, generous mode allows priority borrowing from unused capacity. Above this threshold, strict mode enforces normalized priority limits.
   - Example: When model usage is low, keys can use more than their allocated share. When model usage is high, keys are strictly limited to their allocated share.
 - **saturation_check_cache_ttl (int)**: TTL in seconds for local cache when reading saturation values from Redis (defaults to 60). In multi-node deployments, this controls how quickly nodes converge on the same saturation state. Lower values mean faster convergence but more Redis reads.
+
+- **guaranteed_team_shares (bool)**: Give every team using a model its own guaranteed share of that model instead of one pool per priority class (defaults to `false`). See [Guaranteed team shares with borrowing](#guaranteed-team-shares-with-borrowing).
+
+- **default_max_borrow_multiplier (float)**: With `guaranteed_team_shares`, the most a team may use while the model is below the saturation threshold, as a multiple of its share (`2.0` lets a 50M share burst to 100M). Unset means a team may borrow up to the model ceiling. A team's metadata `max_borrow_multiplier` overrides it.
   - Example: Set to `5` for faster multi-node consistency, or `0` to always read directly from Redis.
 
 **Start Proxy**
@@ -342,6 +346,86 @@ This video walks through setting up dynamic rate limiting with priority reservat
 
 <iframe width="840" height="500" src="https://www.loom.com/embed/1b54b93139ee415d959402cc0629f3f7
 " frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+## Guaranteed team shares with borrowing
+
+Priority pools give every key of a class one shared reservation. When several services run as separate teams in one class, they compete inside that pool with no guarantee of their own, an idle class keeps capacity nobody is using, and nothing bounds how much one team borrows. `guaranteed_team_shares` fixes that by giving every team its own share of each model, derived from the class weights and from which teams are actually sending.
+
+```yaml
+model_list:
+  - model_name: {{openai_large}}
+    litellm_params:
+      model: openai/gpt-5.1
+      api_key: os.environ/OPENAI_API_KEY
+      tpm: 500000000
+
+litellm_settings:
+  callbacks: ["dynamic_rate_limiter_v3"]
+  priority_reservation:
+    interactive: 0.6
+    batch: 0.4
+  priority_reservation_settings:
+    guaranteed_team_shares: true
+    saturation_threshold: 0.5
+    saturation_check_cache_ttl: 1
+    default_max_borrow_multiplier: 2.0   # optional
+```
+
+Give each team its class in `metadata.priority`, and optionally its own burst cap:
+
+```shell
+curl -X POST "http://0.0.0.0:4000/team/new" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"team_alias": "state-generation", "metadata": {"priority": "batch", "max_borrow_multiplier": 2}}'
+```
+
+### What a share is
+
+A team's share of a model is `model capacity x class weight / active teams in that class`. The class weights are renormalized over the classes that have at least one team active on the model (a team is active once it has sent a request on that model inside the current 60 second window), and each class share is split equally among its active teams. The shares of all active teams always add up to the whole model.
+
+With the config above on a 500M TPM model, two interactive teams and four batch teams active:
+
+| Class | Team | Share |
+|---|---|---:|
+| Interactive | assistant | 150M |
+| Interactive | external-api | 150M |
+| Batch | state-generation | 50M |
+| Batch | decisioning | 50M |
+| Batch | watchtower | 50M |
+| Batch | paa | 50M |
+
+If no interactive team is sending, the batch class owns 100% and each batch team's share grows to 125M. If state-generation is the only team sending, its share is the whole model.
+
+### How borrowing works
+
+The model ceiling is always enforced. Below `saturation_threshold`, a team may use capacity beyond its share. With a burst multiplier (team metadata `max_borrow_multiplier`, else `default_max_borrow_multiplier`) the team stops at `share x multiplier`; without one, only the ceiling stops it. At or above the threshold, every team is held to its share: a team under its share is admitted, a team over it is refused, so under-share teams are served ahead of borrowers until the window frees capacity.
+
+Each 429 says why, both in the error message and in the `x-litellm-rate-limit-reason` header:
+
+| Reason | Meaning |
+|---|---|
+| `model_ceiling` | The model's own `tpm` or `rpm` is used up for this window. Any team gets this |
+| `over_share_saturated` | The model is saturated and this team has used its share for the window |
+| `burst_cap` | The model is not saturated but this team has reached `share x max_borrow_multiplier` |
+
+```json
+{
+  "error": {
+    "message": "Team share exceeded for {{openai_large}}. Team: state-generation, Priority: batch, Reason: over_share_saturated, Share: 40.0% of the model (1 active batch team(s), 2 active class(es)), Rate limit type: tokens, Limit: 200000000, Model TPM: 500000000, Model RPM: not configured, Remaining: 0, Model saturation: 92.0%",
+    "type": "throttling_error",
+    "code": "429"
+  }
+}
+```
+
+### How fast a share recovers
+
+Tokens already served cannot be taken back, so recovery has a defined bound rather than being instant. Once the model crosses the saturation threshold, a borrower above its share is refused on its next request, and a team below its share is admitted as long as the ceiling has room. Usage counts against a rolling 60 second window (`LITELLM_RATE_LIMIT_WINDOW_SIZE`), so a team regains its full share within one window of the model saturating, plus at most `saturation_check_cache_ttl` seconds for every proxy worker to see the saturation. Keep that TTL at or below a quarter of the window when team shares are on. The proxy logs a warning at startup otherwise.
+
+### What stays hard
+
+Team `model_tpm_limit` and `model_rpm_limit`, key limits, end user limits and organization limits are still hard limits enforced before the dynamic limiter, so borrowing never bypasses a hard quota. A team that wants an absolute cap on top of its share keeps `model_tpm_limit`. Keys that do not belong to a team keep using their priority pool. Rate limit 429s still trigger the fallbacks you configure, and retries and fallback attempts go through the same check.
 
 ## PTU share ceilings on Azure provisioned deployments
 
