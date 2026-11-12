@@ -47,7 +47,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 
 | Provider or feature | Release |
 |---------------------|---------|
-| [Gemini Decision 1](./providers/gemini.md#decisions) | Unreleased, main after [LiteLLM #51220](https://github.com/BerriAI/litellm/pull/51220) |
+| [Gemini Decision 1](./providers/gemini.md#decisions) | On main through [LiteLLM #51220](https://github.com/BerriAI/litellm/pull/51220), not yet in a release |
 | vLLM, Microsoft Foundry, OpenRouter spend from `usage.cost` | `v1.104.3` |
 | Databricks serving endpoints, image input on Cloudflare Clef, [audio and video input](#audio-and-video-input) on Cloudflare Clef-omni, TypeSafe images and box questions | `v1.106.0` |
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
@@ -86,7 +86,7 @@ Some of these providers need a newer LiteLLM release than the decision routes, a
 
 LiteLLM translates between the two formats, so the route you call does not limit which provider you can use. OpenAI receives OpenAI-format bodies, Gemini receives its native Decisions format and the other providers receive System One bodies. The answers come back in the format of the route you called. Text parts of an OpenAI `input` are joined into the System One `state`, and System One questions are named by their keys when they go to OpenAI
 
-Gemini Decision 1 answers yes/no, choice and rubric score questions, with text, images and inline audio/video input. Box questions return 400. PDFs and remote audio/video URLs are not mapped by LiteLLM's Decisions input schema. See the [Gemini setup](./providers/gemini.md#decisions)
+Gemini Decision 1 answers yes/no, choice and rubric score questions, with text, images and inline audio/video input. Each request accepts up to 16 images and 20 MiB of decoded image data in total, including remote images downloaded by LiteLLM. Message inputs preserve text and image order. Box questions return 400. PDFs and remote audio/video URLs are not mapped by LiteLLM's Decisions input schema. Per-request `api_base` or `base_url` overrides require an explicit `api_key` in the same request or return 400, even when the deployment has a key. Configure custom deployment URLs with their own key. See the [Gemini setup](./providers/gemini.md#decisions)
 
 Cloudflare model names without an `@cf/` prefix are expanded to `@cf/cloudflare/<model>`, and the `{"result": ...}` envelope Cloudflare returns is unwrapped so the response has the same shape as the other providers. On Databricks the model is the bare serving endpoint name and `DATABRICKS_API_BASE` points at `https://<workspace-host>/serving-endpoints`, so the request goes to that endpoint's `/invocations` route. `databricks/ai_decide` instead calls the `ai_decide` AI Function at `/api/2.0/ai-functions/ai-decide` on the same workspace, which needs the `ai_decide` preview turned on and reports no token usage. On Microsoft Foundry the model is your deployment name and `AZURE_AI_API_BASE` is the resource host, `https://<resource>.services.ai.azure.com`. A project-scoped base such as `https://<resource>.services.ai.azure.com/api/projects/<project>/openai/v1` is trimmed back to the host. Azure does not let you name a deployment `Microsoft-Decision-1`, so deploy it under another name and set `base_model` so cost tracking finds the price
 
