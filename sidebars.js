@@ -767,6 +767,7 @@ const sidebars = {
             {
               type: "category",
               label: "Performance alerts",
+              className: "sidebar-enterprise",
               link: { type: "doc", id: "proxy/alerts/performance" },
               items: ["proxy/alerts/api"],
             },

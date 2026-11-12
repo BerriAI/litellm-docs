@@ -638,7 +638,8 @@ li.tabs__item--active {
 
 /* "Enterprise" pill after the label of license-gated pages
    (className "sidebar-enterprise" in sidebars.js). */
-.sidebar-enterprise > .menu__link::after {
+.sidebar-enterprise > .menu__link::after,
+.sidebar-enterprise > .menu__list-item-collapsible > .menu__link::after {
   content: 'Enterprise';
   display: inline-block;
   flex-shrink: 0;
@@ -656,7 +657,8 @@ li.tabs__item--active {
   white-space: nowrap;
 }
 
-[data-theme='dark'] .sidebar-enterprise > .menu__link::after {
+[data-theme='dark'] .sidebar-enterprise > .menu__link::after,
+[data-theme='dark'] .sidebar-enterprise > .menu__list-item-collapsible > .menu__link::after {
   border-color: rgba(147, 197, 253, 0.3);
   background: rgba(59, 130, 246, 0.14);
   color: #93c5fd;
