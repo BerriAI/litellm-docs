@@ -350,13 +350,28 @@ litellm_settings:
     team_model_limit_borrows_idle_capacity_from_other_teams: true   # default: false
 ```
 
-With a model at `tpm: 1000`, team A at `model_tpm_limit: {"my-model": 500}` and team B idle, team A can run past 500 tokens a minute while the model is under 50% saturation. Once usage crosses the threshold, team A is held to 500 and further requests get a 429 whose `rate_limited_by` header reads `model_per_team_saturated`, while team B still has its own 500 to use. `model_rpm_limit` works the same way with requests. Aggregate traffic never exceeds the model's `tpm` or `rpm`, and borrowing only ever uses capacity on the same model, never a team's limit on another model.
+With a model at `tpm: 1000`, team A at `model_tpm_limit: {"my-model": 500}` and team B idle, team A can run past 500 tokens a minute while the model is under 50% saturation. Once usage crosses the threshold, team A is held to 500 from that moment on, and a request past that gets a 429 whose `rate_limited_by` header reads `model_per_team_saturated`, while team B still has its own 500 to use. `model_rpm_limit` works the same way with requests. Aggregate traffic never exceeds the model's `tpm` or `rpm`, and borrowing only ever uses capacity on the same model, never a team's limit on another model.
 
 The setting only changes the limits a key inherits from its team. A `model_tpm_limit` or `model_rpm_limit` set on the key itself, team-wide `tpm_limit` and `rpm_limit`, and customer limits are enforced as before. Models that have neither `tpm` nor `rpm` configured, or that the dynamic limiter does not cover, keep the hard team limits. Because saturation is cached for `saturation_check_cache_ttl` seconds, a team may run a little past its limit before the clamp engages.
 
+#### A borrower gets its share back once the model saturates
+
+What a team used while the model was idle is not charged against its share. The per-team counter this limiter holds a team to only counts requests admitted while the model is saturated, so it starts fresh the moment saturation engages. In the example above team A has used 510 tokens when the model crosses 50% saturation. Team A is not refused for the rest of the minute. It keeps its full 500 for the next 60 seconds, team B has its own 500, and a team below its share is always admitted ahead of a team past it. Tokens already consumed are never clawed back, so the model's own `tpm` still bounds what both teams get in that minute. Aggregate admitted traffic stays within it.
+
+Each node learns the model is saturated when it refreshes the saturation value, every `saturation_check_cache_ttl` seconds (60 by default). A node that did not serve the triggering traffic keeps admitting the borrower on idle terms until then, so set the TTL to a few seconds when teams share a model under contention.
+
+```yaml
+litellm_settings:
+  callbacks: ["dynamic_rate_limiter_v3"]
+  priority_reservation_settings:
+    saturation_threshold: 0.5
+    team_model_limit_borrows_idle_capacity_from_other_teams: true
+    saturation_check_cache_ttl: 2
+```
+
 #### Cap how far a team borrows
 
-While the model is idle, a borrowing team may use everything up to the model's own `tpm` and `rpm`, so one team can take most of the idle capacity on its own. To bound that, set `team_model_limit_max_borrow_multiple` in the team's metadata next to `model_tpm_limit` and `model_rpm_limit`. The team's usage on a model is then capped at its share times that multiple, for TPM and RPM alike, even while the model is idle.
+While the model is idle, a borrowing team may use everything up to the model's own `tpm` and `rpm`, so one team can take most of the idle capacity on its own. To bound that, set `team_model_limit_max_borrow_multiple` in the team's metadata next to `model_tpm_limit` and `model_rpm_limit`. The team's usage on a model is then capped at its share times that multiple, for TPM and RPM alike, even while the model is idle. A team with this cap keeps counting its idle usage, since the cap runs on the same counter as its share, so once the model saturates that team is held to its share at once rather than getting a fresh one.
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/new' \
@@ -393,7 +408,7 @@ There is nothing to configure per team. A team becomes active on a model when it
 
 The share is computed in two steps on every request. First, the class weights are renormalized over only the classes that have an active team on that model, so with no batch team sending, interactive is worth the whole model, and the moment a batch team sends it drops back to 0.6. Second, each class share is divided equally among that class's active teams. On a model with `tpm: 500000000`, two active interactive teams and four active batch teams get 150M each and 50M each. With only the four batch teams active, each gets 125M. A team that goes quiet for a window stops counting in both steps, so the others grow back.
 
-Below `saturation_threshold` teams still borrow idle capacity as usual. Once the model saturates, a team that is past its own share gets a 429 whose `rate_limited_by` header reads `priority_class_share_saturated` and whose message names the team, its class, how many teams are active in the class and the team's share in tokens or requests. A teammate that stayed within its share keeps going. Requests from keys with no team are held to the shared class pool exactly as when the setting is off, and they still count their class as active, so a class carrying only teamless traffic does not lend its share away. When `team_model_limit_borrows_idle_capacity_from_other_teams` is also on, a team's `model_tpm_limit` share applies as well and the tighter of the two wins.
+Below `saturation_threshold` teams still borrow idle capacity as usual. Once the model saturates, each team's share counter starts fresh, so what a team used while the model was idle is not charged against its share. A team that then runs past its own share gets a 429 whose `rate_limited_by` header reads `priority_class_share_saturated` and whose message names the team, its class, how many teams are active in the class and the team's share in tokens or requests. A teammate that stayed within its share keeps going. Requests from keys with no team are held to the shared class pool exactly as when the setting is off, and they still count their class as active, so a class carrying only teamless traffic does not lend its share away. When `team_model_limit_borrows_idle_capacity_from_other_teams` is also on, a team's `model_tpm_limit` share applies as well and the tighter of the two wins.
 
 ### Prometheus metrics for team shares and throttling
 
