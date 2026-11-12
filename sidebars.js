@@ -652,6 +652,7 @@ const sidebars = {
             "proxy/sync_models_github",
             "tutorials/vertex_ai_pay_go",
             "proxy/spend_logs_deletion",
+            "proxy/token_redaction_spend_logs",
           ],
         },
         {
