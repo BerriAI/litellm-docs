@@ -5,7 +5,7 @@ date: 2026-11-12
 authors:
   - yassin
 image: ./cover.png
-description: "LiteLLM Private Registry is now available to enterprise customers and open-source organizations, with OAuth and AWS ECR pull-through access."
+description: "LiteLLM Private Registry is now available. Pull images and Helm charts with OAuth or AWS ECR pull-through access."
 tags: [security]
 hide_table_of_contents: true
 ---
@@ -14,7 +14,7 @@ import RegistryHero from './RegistryHero';
 
 export const Hero = RegistryHero;
 
-The **LiteLLM Private Registry is now available**. Enterprise customers and organizations using open-source LiteLLM can request access.
+The **LiteLLM Private Registry is now available**.
 
 Public security patches can show attackers how a vulnerability works. For the most severe vulnerabilities, we share fixes privately first. This gives teams time to scan and deploy the patched version before we publish the fix and security advisory. **We continue to release all security fixes publicly.**
 
