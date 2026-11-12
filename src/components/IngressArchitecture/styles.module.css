@@ -5,8 +5,7 @@
   --ingress-border: #9aabbd;
   --ingress-accent: #315b86;
   --ingress-accent-bg: #e9f0f8;
-  --ingress-actor-bg: #f6f8fb;
-  margin: 1.5rem 0;
+  margin: 1rem 0;
   border: 1px solid var(--ifm-color-emphasis-300);
   border-radius: 8px;
   overflow: hidden;
@@ -18,14 +17,14 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0.65rem 1rem;
-  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
   font-weight: 700;
   line-height: 1.4;
 }
 
 .expandButton {
-  padding: 0.35rem 0.55rem;
+  padding: 0.25rem 0.5rem;
   border: 1px solid var(--ifm-color-emphasis-400);
   border-radius: 4px;
   background: var(--ingress-bg);
@@ -62,11 +61,6 @@
   font-family: var(--ifm-font-family-base);
 }
 
-.actorBox {
-  fill: var(--ingress-actor-bg);
-  stroke: var(--ingress-border);
-}
-
 .actorText,
 .actionText {
   fill: var(--ingress-text);
@@ -76,6 +70,15 @@
 
 .symbol {
   color: var(--ingress-accent);
+}
+
+.darkIcon,
+[data-theme='dark'] .lightIcon {
+  display: none;
+}
+
+[data-theme='dark'] .darkIcon {
+  display: block;
 }
 
 .lifeline {
@@ -121,8 +124,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.35rem 0.6rem;
-  padding: 0.6rem 1rem;
+  gap: 0.25rem 0.5rem;
+  padding: 0.4rem 0.75rem;
   border-top: 1px solid var(--ifm-color-emphasis-300);
   font-size: 0.75rem;
 }
@@ -139,7 +142,7 @@
 .figure .details {
   /* Override the site's full-width details panels inside this compact figure. */
   margin: 0 !important;
-  padding: 0 1rem 0.75rem !important;
+  padding: 0 0.75rem 0.5rem !important;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
@@ -194,5 +197,4 @@
   --ingress-border: #60748b;
   --ingress-accent: #9bc4ff;
   --ingress-accent-bg: #233b58;
-  --ingress-actor-bg: #202a36;
 }
