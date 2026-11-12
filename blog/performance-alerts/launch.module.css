@@ -43,7 +43,7 @@
 .byline small, .byline time, .byline [class*='published'] { color: var(--text) !important; }
 .intro { max-width: 750px; padding: 50px 0 32px; }
 .root .intro p:first-child { color: var(--ink); font-size: 31px; line-height: 1.35; letter-spacing: -.035em; }
-.section { display: grid; grid-template-columns: 1fr 1.5fr; gap: 70px; border-top: 1px solid var(--rule); padding: 44px 0 30px; }
+.section { display: grid; grid-template-columns: 1fr 1.5fr; gap: 24px 70px; border-top: 1px solid var(--rule); padding: 44px 0 30px; }
 .root .section h2 { margin: 0 !important; font-size: 34px !important; font-weight: 500 !important; letter-spacing: -.04em; line-height: 1.15; color: var(--ink) !important; }
 .section > div { min-width: 0; }
 .checks { margin: 30px 0 20px; }
@@ -51,6 +51,13 @@
 .checks dt { font-weight: 500; color: var(--ink); }
 .checks dd { margin: 0; }
 .root .caption { font-size: 14px; line-height: 1.6; }
+.screenshot { min-width: 0; margin: 0 0 38px; }
+.screenshot > a { display: block; border-radius: 12px; }
+.screenshot img { display: block; width: 100%; height: auto; border: 1px solid var(--rule); border-radius: 12px !important; }
+.screenshot figcaption { margin-top: 12px; font-size: 13px; line-height: 1.6; }
+.detail { grid-column: 1 / -1; margin-bottom: 6px; }
+.notifications > div > p { margin-top: 22px; }
+.notifications .screenshot { width: 100%; max-width: 384px; justify-self: center; margin-bottom: 6px; }
 .end { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px; border-top: 1px solid var(--rule); padding-top: 28px; font-size: 15px; }
 @container (max-width: 900px) {
   .inner, .article { width: calc(100% - 48px); }
@@ -60,7 +67,7 @@
   .chart { margin-top: -180px; }
   .bars { height: 360px; gap: 9px; }
   .spikeValue { font-size: 22px; }
-  .section { gap: 32px; grid-template-columns: 1fr 1.6fr; }
+  .section { column-gap: 32px; grid-template-columns: 1fr 1.6fr; }
   .root .section h2 { font-size: 29px !important; }
   .checks > div { grid-template-columns: 120px 1fr; gap: 16px; }
 }
@@ -86,6 +93,8 @@
   .section { display: block; padding: 30px 0 12px; }
   .root .section h2 { margin-bottom: 22px !important; }
   .section h2 br { display: none; }
+  .screenshot { margin-bottom: 28px; }
+  .notifications .screenshot { margin: 26px auto 16px; }
   .checks { margin-top: 24px; }
   .checks > div { grid-template-columns: 110px 1fr; gap: 14px; }
   .end { font-size: 14px; gap: 18px; }

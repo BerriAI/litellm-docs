@@ -44,12 +44,18 @@ export default function Launch() {
       <div className={styles.article} id="alerts">
         <div className={styles.byline}><PostByline horizontal /></div>
         <div className={styles.intro}>
-          <p>Performance alerts flag changes in your gateway’s usage, so you can see which resource needs a closer look.</p>
+          <p>See when spend, traffic, response times, or errors change in your gateway.</p>
           <p>Open <strong>Alerts</strong> in LiteLLM to review findings alongside model deprecations. Monitoring is on by default for gateways with a database and recorded Usage. You do not need to write rules.</p>
         </div>
+        <figure className={styles.screenshot}>
+          <a href="/img/alerts/spend-alert.webp" aria-label="Open the spend alert screenshot at full size">
+            <img src="/img/alerts/spend-alert.webp" alt="An inbox alert shows Research owner's spend at $1,200, six times its $200 baseline, with a sparkline and resolve and dismiss actions." width="2886" height="320" loading="lazy" />
+          </a>
+          <figcaption>A spend alert in the inbox. Demo data.</figcaption>
+        </figure>
 
         <section className={styles.section} aria-labelledby="checks-title">
-          <h2 id="checks-title">Four things to watch</h2>
+          <h2 id="checks-title">What triggers an alert</h2>
           <div>
             <p>LiteLLM compares the last complete day with the previous seven days across your gateway, model groups, teams, users, and virtual keys.</p>
             <dl className={styles.checks}>
@@ -60,15 +66,33 @@ export default function Launch() {
         </section>
 
         <section className={styles.section} aria-labelledby="review-title">
-          <h2 id="review-title">From a change <br />to its context</h2>
+          <h2 id="review-title">Review an alert</h2>
           <div>
             <p>Select an alert to see the daily graph, the baseline, and the affected resource. Follow its link to inspect activity or model routing. Mark it resolved after addressing it, or dismiss it if no action is needed.</p>
+          </div>
+          <figure className={`${styles.screenshot} ${styles.detail}`}>
+            <a href="/img/alerts/spend-detail.webp" aria-label="Open the alert detail screenshot at full size">
+              <img src="/img/alerts/spend-detail.webp" alt="The spend alert detail shows eight days of bars, a $200 baseline, a $1,200 spike, and a link to Research owner's activity." width="2882" height="1335" loading="lazy" />
+            </a>
+            <figcaption>Compare the daily chart, then open the resource’s activity. Demo data. <a href="/img/alerts/spend-detail.webp">View full size</a></figcaption>
+          </figure>
+        </section>
+
+        <section className={`${styles.section} ${styles.notifications}`} aria-labelledby="notifications-title">
+          <div>
+            <h2 id="notifications-title">Notifications</h2>
             <p>The notification bell shows up to five open alerts. Select one to open it, or <strong>See all</strong> for the full inbox.</p>
           </div>
+          <figure className={styles.screenshot}>
+            <a href="/img/alerts/notifications.webp" aria-label="Open the notifications screenshot at full size">
+              <img src="/img/alerts/notifications.webp" alt="The notification menu lists one model deprecation and four performance alerts, with a See all link." width="772" height="1122" loading="lazy" />
+            </a>
+            <figcaption>Model deprecations and performance alerts together. Demo data.</figcaption>
+          </figure>
         </section>
 
         <section className={styles.section} aria-labelledby="availability-title">
-          <h2 id="availability-title">On by default <br />Five alerts free</h2>
+          <h2 id="availability-title">Five free alerts</h2>
           <div>
             <p>You get five saved performance alerts per gateway database. After the fifth, monitoring stops until you add an Enterprise license. Your saved alerts remain available.</p>
             <p>Enterprise includes continued monitoring. Resolving or dismissing an alert does not reset the free allowance, and model deprecations do not count toward it.</p>
