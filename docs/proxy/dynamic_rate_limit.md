@@ -395,7 +395,6 @@ The share is computed in two steps on every request. First, the class weights ar
 
 Below `saturation_threshold` teams still borrow idle capacity as usual. Once the model saturates, a team that is past its own share gets a 429 whose `rate_limited_by` header reads `priority_class_share_saturated` and whose message names the team, its class, how many teams are active in the class and the team's share in tokens or requests. A teammate that stayed within its share keeps going. Requests from keys with no team are held to the shared class pool exactly as when the setting is off, and they still count their class as active, so a class carrying only teamless traffic does not lend its share away. When `team_model_limit_borrows_idle_capacity_from_other_teams` is also on, a team's `model_tpm_limit` share applies as well and the tighter of the two wins.
 
-||||||| 11e98716
 ### Demo Video
 
 This video walks through setting up dynamic rate limiting with priority reservation and locust tests to validate the behavior.
@@ -403,34 +402,34 @@ This video walks through setting up dynamic rate limiting with priority reservat
 <iframe width="840" height="500" src="https://www.loom.com/embed/1b54b93139ee415d959402cc0629f3f7
 " frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
-## Steer flexible teams to an alternate model when their preferred model is saturated
+## Fall back before the preferred model saturates
 
-Some teams care which model answers them, others only care that something good answers quickly. With `dynamic_rate_limiter_v3` enabled, a team can opt in to being steered off its preferred model while that model is busy by listing alternates in its metadata:
+Some teams care which model answers them, others only care that something good answers quickly. Router fallbacks normally run after a request is refused, so a flexible team keeps using its preferred model until that model is full and a team that can only use that model shares the 429s. With `dynamic_rate_limiter_v3` enabled, a key or team can set `fallback_on_saturation` in its `router_settings` to walk its fallback list as soon as the requested model reaches `saturation_threshold`, while it still has room:
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/new' \
-  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Authorization: Bearer sk-1234' \
   -H 'Content-Type: application/json' \
   -d '{
     "team_alias": "flexible-team",
     "models": ["luna", "opus"],
-    "metadata": {
-      "model_preferences": [
-        {"model": "luna", "alternates": ["opus"]}
-      ]
+    "router_settings": {
+      "fallbacks": [{"luna": ["opus"]}],
+      "fallback_on_saturation": true
     }
   }'
 ```
 
-When a key from that team asks for `luna`, the proxy checks the saturation the dynamic rate limiter already tracks for `luna` (the same value that flips priority reservation into strict mode). Below `saturation_threshold` the request goes to `luna` as usual. At or above it, the proxy walks `alternates` in order and rewrites the request to the first one that is itself below the threshold and that the caller could have asked for directly. An alternate has to pass the same checks a budget fallback passes, so the key, team, team member, project and customer allowlists all have to permit it and every budget that would apply to it, including the budget of any model access group that grants it, has to have room. A few more cases keep the request on `luna`. A preferred model priced at zero skips the aggregate budget checks on the way in, so it is never steered to a priced alternate, and with `block_requests_for_models_without_pricing` on an unpriced alternate is skipped. An alternate whose deployments add model-level guardrails, or guardrail settings, the request did not already run is skipped too, because those guardrails ran before the model was picked. An alternate that does not serve the endpoint of the request is skipped. When the request already holds a budget reservation, an alternate priced above the preferred model per token is skipped, and so is an alternate granted by a model access group the reservation does not cover, so settlement never exceeds what was reserved or charges a group that did not serve. If no alternate qualifies, the request stays on `luna` and is rate limited exactly as before.
+When a key from that team asks for `luna`, the proxy reads the saturation the dynamic rate limiter already tracks for `luna` (the same value that flips priority reservation into strict mode). Below `saturation_threshold` the request goes to `luna` as usual. At or above it, the request takes the same path a request refused by a local rate limit takes: the proxy walks the `fallbacks` entry for `luna` in order and serves the first one that is itself below the threshold and admits the request. The fallback list is resolved Key > Team > Global, so a key or team without its own `fallbacks` walks the router's. Each fallback has to pass the checks every rate-limit fallback passes, so the caller has to be allowed to call it (see [Enforce Key Model Access on Fallbacks](./reliability.md#enforce-key-model-access-on-fallbacks)), its team member budget has to have room and it has to serve the endpoint of the request. When no fallback qualifies, the request goes back to `luna` and is admitted or rate limited there exactly as before, so the setting never turns a request `luna` could have served into a 429.
 
-A steered response carries the header `x-litellm-model-steered-from` with the model the client asked for, so the client can tell the two cases apart:
+A request served by a fallback carries the usual fallback headers, with a reason that names saturation rather than a limit that refused the request:
 
 ```text
-x-litellm-model-steered-from: luna
+x-litellm-attempted-fallbacks: 1
+x-litellm-fallback-reason: rate_limit:model_saturation_fallback
 ```
 
-The request counts against the model that served it. Spend logs record `opus` with `opus` pricing, the model access groups charged are the ones that granted `opus`, and the request is charged to the `opus` rate limit and leaves `luna` capacity for teams that want only `luna`. Teams with no `model_preferences`, and preferences whose `model` does not match the requested model, are untouched. The threshold is the same `priority_reservation_settings.saturation_threshold` described above, and the saturation value is cached for `saturation_check_cache_ttl` seconds, so steering can lag a sudden burst by up to that long.
+The request counts against the model that served it. Spend logs record `opus` with `opus` pricing and the request is charged to the `opus` rate limit, which leaves `luna` capacity for teams that want only `luna`. Keys and teams without `fallback_on_saturation` are untouched, and so are models the dynamic rate limiter does not cover. The threshold is the same `priority_reservation_settings.saturation_threshold` described above, and the saturation value is cached for `saturation_check_cache_ttl` seconds, so the walk can lag a sudden burst by up to that long.
 
 ## PTU share ceilings on Azure provisioned deployments
 
