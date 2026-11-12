@@ -64,7 +64,8 @@ This page documents all command-line interface (CLI) arguments available for the
 ### --keepalive_timeout
    - **Default:** `None`
    - **Type:** `int`
-   - Set the uvicorn keepalive timeout in seconds (uvicorn timeout_keep_alive parameter).
+   - Set the uvicorn keepalive timeout in seconds (uvicorn timeout_keep_alive parameter). Uvicorn's default is 5 seconds. Behind a load balancer that reuses connections, set it above the load balancer's idle timeout, see [Keepalive timeout](./server_tuning.md#keepalive-timeout).
+   - `--run_gunicorn` ignores it, and its workers keep Gunicorn's 2-second keep-alive.
    - **Usage:** 
      ```shell
      litellm --keepalive_timeout 30
@@ -112,6 +113,7 @@ This sets Uvicorn's `h11_max_incomplete_event_size`, the number of bytes buffere
    - **Type:** `int`
    - Recycle each worker after it has served this many HTTP requests, health probes included. This is useful for mitigating memory growth over time.
    - Only safe with `--num_workers` 2 or more. With a single worker the whole proxy stops serving when the limit is hit: Uvicorn exits the process and Gunicorn accepts no connections until the replacement worker has booted. The proxy prints a warning at startup in that case.
+   - Each recycle drops requests behind a keep-alive reverse proxy, and from v1.108.0 cancels requests still running after `GRACEFUL_SHUTDOWN_TIMEOUT`. Use it only as a last resort for memory growth, see [Recycle workers](./server_tuning.md#recycle-workers).
    - For uvicorn: maps to `limit_max_requests`
    - For gunicorn: maps to `max_requests`
    - **Usage:** 
