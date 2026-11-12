@@ -349,7 +349,7 @@ Some teams care which model answers them, others only care that something good a
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/new' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "team_alias": "flexible-team",
