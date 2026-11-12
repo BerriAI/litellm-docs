@@ -310,7 +310,7 @@ job = litellm.interactions.create(
     background=True,
     input="Compare the main approaches to grid-scale energy storage.",
 )
-print(job.id, job.status)  # in_progress
+print(job.id, job.status)
 ```
 
 LiteLLM logs an agent interaction under the agent's name and prices it from that agent's row in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json), whichever model group carried the request. The `vertex_ai/deep-research-preview-04-2026` row carries Google's Standard rates of $2 input, $0.20 cached input and $12 output per 1M tokens, with thinking tokens billed as output, and $14 per 1,000 grounding search queries, counted per query ([Model Garden pricing](https://cloud.google.com/model-garden/pricing), checked 2026-11-12). Two parts of Google's bill are not modeled. Google gives a monthly allowance of free grounding queries, and LiteLLM charges every query from the first one, so spend reads high while you are inside that allowance. Google also bills a Deferred tier at $1, $0.10 and $6 per 1M tokens. LiteLLM cannot tell a Deferred job from a Standard one and prices both at Standard rates, so spend for Deferred jobs reads high.
