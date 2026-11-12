@@ -7,7 +7,7 @@ export default function RegistryHero() {
     <div className={styles.hero}>
       <RegistryIllustration
         role="img"
-        aria-label="Pull artifacts from the LiteLLM Private Registry on Amazon ECR into your LiteLLM deployment. Amazon Cognito provides OAuth authentication."
+        aria-label="Artifact pulls from the LiteLLM Private Registry on Amazon ECR into a LiteLLM deployment, with OAuth authentication through Amazon Cognito."
       />
     </div>
   );
