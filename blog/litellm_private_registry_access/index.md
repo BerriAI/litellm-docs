@@ -32,4 +32,4 @@ Mirroring artifacts into an organization's registry supports independent image s
 
 ## Request access
 
-Contact [support](mailto:support@berri.ai) to request registry access. Share feedback in the [GitHub discussion](https://github.com/BerriAI/litellm/discussions/48643).
+Customers with an existing confidentiality agreement with LiteLLM can contact [support](mailto:support@berri.ai) for registry access. LiteLLM is developing an access policy for open-source users. Share feedback in the [GitHub discussion](https://github.com/BerriAI/litellm/discussions/48643).
