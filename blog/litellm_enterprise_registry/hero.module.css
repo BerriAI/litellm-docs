@@ -26,39 +26,3 @@ div:has(> .hero) {
 .stage video {
   height: auto;
 }
-
-.control {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid var(--ifm-color-emphasis-300);
-  border-radius: 50%;
-  padding: 0;
-  background: transparent;
-  color: var(--ifm-color-emphasis-700);
-  cursor: pointer;
-}
-
-.control:hover,
-.control:focus-visible {
-  background: var(--ifm-color-emphasis-200);
-  border-color: #3657f5;
-}
-
-@media (max-width: 600px) {
-  .control {
-    position: relative;
-    right: auto;
-    bottom: auto;
-    display: block;
-    margin: 0 10px 10px auto;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .control { display: none; }
-}
