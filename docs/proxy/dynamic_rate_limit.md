@@ -359,7 +359,7 @@ While the model is idle, a borrowing team may use everything up to the model's o
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/new' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
     "metadata": {
