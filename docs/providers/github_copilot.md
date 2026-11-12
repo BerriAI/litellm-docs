@@ -111,41 +111,54 @@ Create an App with the **Copilot Requests** organization permission set to **Rea
 
 ### Dashboard setup
 
-Open **Models + Endpoints** > **LLM Credentials** > **Add Credential**. Select **Github Copilot**, choose **GitHub App** under **Auth Type**, and enter a credential name, the App client ID, installation ID, and private-key secret reference. Leave **GitHub host** empty for github.com. Click **Add Credential**.
+Open **Models + Endpoints** > **LLM Credentials** > **Add Credential**. Select **Github Copilot**, choose **GitHub App** under **Auth Type**, and enter a credential name, the App client ID, and installation ID. Leave **GitHub host** empty for github.com.
+
+Under **Private key (PEM)**, click **Click to Upload** and choose the PEM downloaded from your GitHub App's **Credentials** > **Key pairs** settings. Click **Add Credential**. The information icon beside each field explains where its value comes from.
 
 <div className="docs-screenshot">
-  <Image img={require('../../img/github-copilot-app-after.jpg')} alt="GitHub App authentication fields in the existing credential form" width={1280} height={842} />
+  <Image img={require('../../img/github-copilot-app-after.jpg')} alt="Upload a GitHub App PEM in the existing LiteLLM credential form" width={1280} height={842} />
 </div>
+
+This uses the same file-upload and encrypted credential storage flow as Vertex AI service-account credentials. It requires a configured LiteLLM database, with no PEM mount or Enterprise secret-manager integration. Use HTTPS for the dashboard and credential API. The browser reads the selected file for submission, and LiteLLM encrypts the PEM before storing it. Credential readback is masked. The form shows a supplied-key status and does not show the saved PEM.
+
+The existing proxy encryption key protects stored credentials. Keep `LITELLM_SALT_KEY` stable, high-entropy, shared across workers, and separate from the database and backups. LiteLLM falls back to its master key when no salt key is configured. Follow your deployment's credential-encryption and backup procedures. Encryption at rest does not protect against a compromised running proxy, which must use the private key to sign JWTs.
 
 Open **Add Model**, select **Github Copilot**, and choose an available model. Set its public model name and select the saved App credential under **Existing Credentials**. Click **Add Model**. Applications call this alias with their LiteLLM virtual keys. No personal GitHub connection is required.
 
-Create a separate named credential for each App, then attach each application's model deployment to the appropriate credential. Administrators can edit the credential's secret reference when rotating keys.
+Create a separate named credential for each App, then attach each application's model deployment to the appropriate credential. To rotate a key, edit the credential and upload its replacement before revoking the old key in GitHub. Leaving the uploaded-key field unchanged preserves the saved key.
 
 ### Credential API
 
-Administrators can use `POST /credentials` with the same fields. The private key remains in the server's mounted secret or secret manager. The API validates App configuration and rejects pasted PEM contents.
+Administrators can use `POST /credentials` with `github_copilot_app_private_key` containing the PEM. The endpoint validates an unencrypted RSA private key of at least 2048 bits, up to 16 KiB, before saving it through LiteLLM's credential encryption. The private key is accepted in a named credential, not in inference request bodies.
 
-```bash
-curl "$LITELLM_URL/credentials" \
-  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "credential_name": "copilot-service-a",
-    "credential_values": {
-      "github_copilot_auth_type": "github_app",
-      "github_copilot_app_id": "<App client ID>",
-      "github_copilot_app_installation_id": "<installation ID>",
-      "github_copilot_app_private_key_ref": "oidc/file//run/secrets/copilot-service-a.pem"
+```python title="Create an encrypted App credential"
+import os
+from pathlib import Path
+import httpx
+
+response = httpx.post(
+    os.environ["LITELLM_URL"] + "/credentials",
+    headers={"Authorization": "Bearer " + os.environ["LITELLM_MASTER_KEY"]},
+    json={
+        "credential_name": "copilot-service-a",
+        "credential_values": {
+            "github_copilot_auth_type": "github_app",
+            "github_copilot_app_id": os.environ["COPILOT_SERVICE_A_CLIENT_ID"],
+            "github_copilot_app_installation_id": os.environ["COPILOT_SERVICE_A_INSTALLATION_ID"],
+            "github_copilot_app_private_key": Path(os.environ["COPILOT_PEM_FILE"]).read_text(),
+        },
+        "credential_info": {"custom_llm_provider": "github_copilot"},
     },
-    "credential_info": {"custom_llm_provider": "github_copilot"}
-  }'
+    timeout=30,
+)
+response.raise_for_status()
 ```
 
-Attach `litellm_credential_name: copilot-service-a` to a deployment through `POST /model/new` or the configuration below. Use `PATCH /credentials/copilot-service-a` to update `credential_values`, with `credential_info: {}` when provider metadata is unchanged. The API validates the merged configuration before saving it.
+`COPILOT_PEM_FILE` is read by this administrator's script, not by the proxy. Attach `litellm_credential_name: copilot-service-a` to a deployment through `POST /model/new` or YAML. Use `PATCH /credentials/copilot-service-a` with a replacement `github_copilot_app_private_key` in `credential_values` and `credential_info: {}` to rotate it. Do not log the request body.
 
-### Gateway configuration
+### Server-managed configuration and SDK secrets
 
-Store the App's RSA PEM private key in a secret manager or mount it read-only into the proxy container. The example uses a mounted secret at `/run/secrets/copilot-service-a.pem`. Only the proxy service account should be able to read it. Do not put PEM contents in YAML, a model request, or a credential record.
+For deployments managed entirely through YAML or the SDK, secret references remain available. The dashboard uses PEM upload only. Store the App's RSA PEM private key in a secret manager or mount it read-only into the proxy container. The example uses a mounted secret at `/run/secrets/copilot-service-a.pem`. Only the proxy service account should be able to read it. Keep PEM contents out of YAML and inference requests. Store uploaded keys through the credential API so they are encrypted.
 
 ```yaml showLineNumbers keep-model-ids title="config.yaml"
 credential_list:
@@ -186,7 +199,7 @@ general_settings:
 
 `github_copilot_app_id` accepts the App's client ID, which GitHub recommends for JWTs, or the numeric App ID as a quoted string. Use the installation ID for the target organization, not an organization ID. Set these values in the environment before starting the proxy.
 
-`github_copilot_app_private_key_ref` is a secret reference. It accepts `oidc/file/` paths within `LITELLM_OIDC_ALLOWED_CREDENTIAL_DIRS` (standard container secret directories, including `/run/secrets`, are allowed by default), `os.environ/VARIABLE_NAME`, or a secret name in your configured LiteLLM secret manager. The reference stays a reference until authentication runs. It never accepts inline PEM. Use a mounted secret or secret manager in production, and keep private keys out of client applications.
+`github_copilot_app_private_key_ref` is a secret reference. It accepts `oidc/file/` paths within `LITELLM_OIDC_ALLOWED_CREDENTIAL_DIRS` (standard container secret directories, including `/run/secrets`, are allowed by default), `os.environ/VARIABLE_NAME`, or a secret name in your configured LiteLLM secret manager. The reference stays a reference until authentication runs. This reference field never accepts inline PEM. For this reference-based configuration, provision the secret on each worker and keep private keys out of client applications. Built-in external secret-manager integrations follow their existing Enterprise licensing.
 
 Call the public alias with a LiteLLM virtual key. Restrict each application's key to its own model alias, and assign separate team or key budgets for usage tracking. The App IDs and private-key references belong in administrator-owned configuration. Request bodies cannot select or replace those values, and App deployments reject client API key and endpoint overrides.
 
@@ -225,7 +238,7 @@ Each worker keeps a bounded in-memory token cache and coordinates concurrent ref
 
 The cache separates hosts, Apps, installations, secret references, and key contents. Updating a mounted key changes the cache identity on the next request. Secret-manager caching can delay visibility of a rotated value, so follow your backend's cache settings or restart workers. Roll out the replacement key before revoking the old key. To terminate existing installation tokens immediately, use GitHub's revocation controls and restart workers, rather than relying on deleting a private key alone.
 
-Private keys and installation tokens are not written to LiteLLM's disk token store or Redis by this authentication flow. Shared model-response caching is disabled for these requests. Keep production debug logging disabled and restrict access to process memory, mounted secrets, and any third-party logging callbacks you configure.
+Uploaded private keys are encrypted in the credential database and held in process memory when loaded. Secret references use their existing backend. Installation tokens are not written to LiteLLM's disk token store, database, or Redis by this authentication flow. Shared model-response caching is disabled for these requests. Keep production debug logging disabled and restrict access to process memory, mounted secrets, and any third-party logging callbacks you configure.
 
 The default host is `github.com`. `github_copilot_host` also accepts the provider's existing `SUBDOMAIN.ghe.com` host format. GitHub Enterprise Server and arbitrary token or model URLs are rejected. Live validation for this feature used github.com. Confirm availability of App-authenticated Copilot in your data-residency deployment before rollout.
 
