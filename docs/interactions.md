@@ -285,14 +285,24 @@ response = litellm.interactions.create(
 
 Google's Deep Research agent, `deep-research-preview-04-2026`, runs on Vertex AI as a background interaction. Send `agent` with `background: true`, then read the result by ID. Google lets one run take up to 120 minutes ([Use Deep Research](https://docs.cloud.google.com/gemini-enterprise-agent-platform/agents/use-deep-research#hard-failures), checked 2026-11-12).
 
-Through the proxy, `model` picks the Vertex deployment whose project and credentials the job runs under, and `agent` is what LiteLLM sends to Google. When a request has both, Google receives only the agent. Any Vertex model group works for this, so the deployment's own model does not have to be the agent. Give the model group a name that differs from the agent's name, because a request whose `model` equals its `agent` is treated as agent only and goes to Google AI Studio.
+Through the proxy, give the agent its own Vertex deployment whose `model` is the agent, then send that deployment's model group as `model` and the agent's name as `agent`. The deployment supplies the project and credentials, and Google receives only the agent. A request that sends both `model` and `agent` is refused with a 400 before anything reaches Google unless the agent is the model of the deployment it names, so the agent runs on its own deployment and the key needs access to that deployment's model group. Give the model group a name that differs from the agent's name, because a request whose `model` equals its `agent` is treated as agent only and goes to Google AI Studio.
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: vertex-deep-research
+    litellm_params:
+      model: vertex_ai/deep-research-preview-04-2026
+      vertex_project: os.environ/VERTEXAI_PROJECT
+      vertex_location: global
+      vertex_credentials: os.environ/VERTEX_CREDENTIALS_PATH
+```
 
 ```bash showLineNumbers title="Start a Deep Research job on Vertex AI"
 curl -X POST "http://localhost:4000/v1beta/interactions" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "vertex-gemini",
+    "model": "vertex-deep-research",
     "agent": "deep-research-preview-04-2026",
     "background": true,
     "input": "Compare the main approaches to grid-scale energy storage."
@@ -313,27 +323,27 @@ job = litellm.interactions.create(
 print(job.id, job.status)
 ```
 
-LiteLLM prices an agent interaction from that agent's row in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json), whichever model group carried the request. The proxy spend log's model column still names the deployment's model, as it does for every routed request, while the cost-map entry logged with the request is the agent's row. The `vertex_ai/deep-research-preview-04-2026` row carries Google's Standard rates of $2 input, $0.20 cached input and $12 output per 1M tokens, with thinking tokens billed as output, and $14 per 1,000 grounding search queries, counted per query ([Model Garden pricing](https://cloud.google.com/model-garden/pricing), checked 2026-11-12). Two parts of Google's bill are not modeled. Google gives a monthly allowance of free grounding queries, and LiteLLM charges every query from the first one, so spend reads high while you are inside that allowance. Google also bills a Deferred tier at $1, $0.10 and $6 per 1M tokens. LiteLLM cannot tell a Deferred job from a Standard one and prices both at Standard rates, so spend for Deferred jobs reads high.
+LiteLLM prices an agent interaction from that agent's row in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). The `vertex_ai/deep-research-preview-04-2026` row carries Google's Standard rates of $2 input, $0.20 cached input and $12 output per 1M tokens, with thinking tokens billed as output, and $14 per 1,000 grounding search queries, counted per query ([Model Garden pricing](https://cloud.google.com/model-garden/pricing), checked 2026-11-12). Two parts of Google's bill are not modeled. Google gives a monthly allowance of free grounding queries, and LiteLLM charges every query from the first one, so spend reads high while you are inside that allowance. Google also bills a Deferred tier at $1, $0.10 and $6 per 1M tokens. LiteLLM cannot tell a Deferred job from a Standard one and prices both at Standard rates, so spend for Deferred jobs reads high.
 
 ### Get, cancel and delete on Vertex AI
 
-The proxy has no way to tell from an interaction ID which deployment created it, so name the model group with a `model` query parameter or an `x-litellm-model` header. The call then uses that deployment's project and credentials, and your key needs access to that model group, just as it does to create. Without either, the call goes to Google AI Studio as before.
+The proxy has no way to tell from an interaction ID which deployment created it, so name it with a `model` query parameter or an `x-litellm-model` header. Either one takes a model group or a deployment ID. The create response carries the ID of the deployment that served it in its `x-litellm-model-id` header, and sending that ID pins the follow-up to the same deployment, so it reaches the project and location that hold the interaction. Your key needs access to the deployment's model group, just as it does to create. Without either, the call goes to Google AI Studio as before.
 
 ```bash showLineNumbers title="Poll, cancel and delete a Vertex AI interaction"
-curl "http://localhost:4000/v1beta/interactions/{interaction_id}?model=vertex-gemini" \
+curl "http://localhost:4000/v1beta/interactions/{interaction_id}?model={x-litellm-model-id}" \
   -H "Authorization: Bearer $LITELLM_API_KEY"
 
 curl -X POST "http://localhost:4000/v1beta/interactions/{interaction_id}/cancel" \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -H "x-litellm-model: vertex-gemini"
+  -H "x-litellm-model: {x-litellm-model-id}"
 
-curl -X DELETE "http://localhost:4000/v1beta/interactions/{interaction_id}?model=vertex-gemini" \
+curl -X DELETE "http://localhost:4000/v1beta/interactions/{interaction_id}?model={x-litellm-model-id}" \
   -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 Cancel is sent to Vertex AI as `POST .../interactions/{id}/cancel`, the path in Google's [Interactions API reference](https://docs.cloud.google.com/gemini-enterprise-agent-platform/reference/models/interactions-api). From the SDK, pass `custom_llm_provider="vertex_ai"` and the same Vertex settings to `litellm.interactions.get`, `cancel` and `delete`.
 
-A model group that load balances across Vertex deployments in different projects can send a GET or cancel to a project that does not hold the interaction, and that call fails. Keep each Vertex project in its own model group when you use background jobs.
+A model group name is routed like any other request, so a group that load balances across Vertex deployments in different projects or locations can send a GET, cancel or delete to one that does not hold the interaction, and that call fails. Use the deployment ID from `x-litellm-model-id` for follow-ups. If you assign deployment IDs yourself, keep them distinct from model group names, because a group name takes precedence over an identical deployment ID. Alternatively, give interactions you poll, cancel or delete a model group with a single Vertex deployment, such as the dedicated agent deployment above.
 
 ## **Background jobs and cost tracking**
 
