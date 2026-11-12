@@ -1,11 +1,11 @@
 ---
 slug: litellm-private-registry-access
-title: "Access the LiteLLM Private Registry"
+title: "LiteLLM Private Registry is now available"
 date: 2026-11-12
 authors:
   - yassin
 image: ./cover.png
-description: "Enterprise customers and vetted open-source organizations can request Private Registry access, with OAuth or AWS ECR pull-through cache."
+description: "LiteLLM Private Registry is now available to enterprise customers and vetted open-source organizations, with OAuth and AWS ECR pull-through access."
 tags: [security]
 hide_table_of_contents: true
 ---
@@ -14,13 +14,13 @@ import RegistryHero from './RegistryHero';
 
 export const Hero = RegistryHero;
 
-Enterprise customers and vetted organizations using open-source LiteLLM can request access to the **LiteLLM Private Registry**. Access is subject to vetting and a non-disclosure agreement (NDA).
+The **LiteLLM Private Registry is now available**. Enterprise customers and vetted organizations using open-source LiteLLM can request access, subject to vetting and a non-disclosure agreement (NDA).
 
 Public security patches can show attackers how a vulnerability works. For the most severe vulnerabilities, we share fixes privately first. This gives approved organizations time to scan and deploy the patched version before we publish the fix and security advisory. **We continue to release all security fixes publicly.**
 
 {/* truncate */}
 
-This builds on our [Private Registry announcement](/blog/litellm-private-registry).
+In our [October announcement](/blog/litellm-private-registry), we shared our plans for the Private Registry. You can now pull container images and Helm charts through the access options below.
 
 ## Pull images and Helm charts
 
