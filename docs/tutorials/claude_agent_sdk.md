@@ -85,7 +85,7 @@ async with ClaudeSDKClient(options=options) as client:
 
 ## Complete Example
 
-See our [cookbook example](https://github.com/BerriAI/litellm/tree/main/cookbook/anthropic_agent_sdk) for a complete interactive CLI agent that:
+See our [cookbook example](https://github.com/BerriAI/litellm/tree/f8933ecae4d610f07be2ecc3edf78537e5b1480f/cookbook/anthropic_agent_sdk) for a complete interactive CLI agent that:
 - Streams responses in real-time
 - Switches between models dynamically
 - Fetches available models from the proxy
@@ -102,4 +102,4 @@ python main.py
 
 - [Claude Agent SDK Documentation](https://github.com/anthropics/anthropic-agent-sdk)
 - [LiteLLM Proxy Quick Start](../proxy/quick_start)
-- [Complete Cookbook Example](https://github.com/BerriAI/litellm/tree/main/cookbook/anthropic_agent_sdk)
+- [Complete Cookbook Example](https://github.com/BerriAI/litellm/tree/f8933ecae4d610f07be2ecc3edf78537e5b1480f/cookbook/anthropic_agent_sdk)

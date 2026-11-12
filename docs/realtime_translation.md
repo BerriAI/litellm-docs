@@ -109,7 +109,7 @@ litellm --config /path/to/config.yaml
 
 ## Translate an audio file
 
-Use this to try the model, or to translate a recorded file. Use the script [`cookbook/gpt_realtime_translate.py`](https://github.com/BerriAI/litellm/blob/main/cookbook/gpt_realtime_translate.py) from the LiteLLM repo. The script sends a WAV file through the proxy at the speed of the recorded speech. It shows the translated text as it comes back and writes the translated speech to `translated.wav`.
+Use this to try the model, or to translate a recorded file. Use the script [`cookbook/gpt_realtime_translate.py`](https://github.com/BerriAI/litellm/blob/f8933ecae4d610f07be2ecc3edf78537e5b1480f/cookbook/gpt_realtime_translate.py) from the LiteLLM repo. The script sends a WAV file through the proxy at the speed of the recorded speech. It shows the translated text as it comes back and writes the translated speech to `translated.wav`.
 
 ```bash
 pip install websockets

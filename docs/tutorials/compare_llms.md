@@ -16,7 +16,7 @@ git clone https://github.com/BerriAI/litellm
 cd to `litellm/cookbook/benchmark` dir
 
 Located here: 
-https://github.com/BerriAI/litellm/tree/main/cookbook/benchmark
+https://github.com/BerriAI/litellm/tree/f8933ecae4d610f07be2ecc3edf78537e5b1480f/cookbook/benchmark
 ```
 cd litellm/cookbook/benchmark
 ```

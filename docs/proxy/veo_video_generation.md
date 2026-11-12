@@ -144,7 +144,7 @@ curl -X GET "http://localhost:4000/gemini/v1beta/files/VIDEO_ID:download?alt=med
 
 ## Complete Example
 
-For a full working example with error handling and logging, see our [Veo Video Generation Cookbook](https://github.com/BerriAI/litellm/blob/main/cookbook/veo_video_generation.py).
+For a full working example with error handling and logging, see our [Veo Video Generation Cookbook](https://github.com/BerriAI/litellm/blob/f8933ecae4d610f07be2ecc3edf78537e5b1480f/cookbook/veo_video_generation.py).
 
 ## How It Works
 

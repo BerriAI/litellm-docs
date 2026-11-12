@@ -31,11 +31,11 @@ This is **not** an extensive list. Please check the dropdown for all logging int
 ### Related Cookbooks
 Try out our cookbooks for code snippets and interactive demos:
 
-- [Langfuse Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/logging_observability/LiteLLM_Langfuse.ipynb)
-- [Lunary Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/logging_observability/LiteLLM_Lunary.ipynb)
-- [Arize Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/logging_observability/LiteLLM_Arize.ipynb)
-- [Proxy + Langfuse Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/logging_observability/LiteLLM_Proxy_Langfuse.ipynb)
-- [PromptLayer Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/LiteLLM_PromptLayer.ipynb)
+- [Langfuse Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/f8933ecae4d610f07be2ecc3edf78537e5b1480f/cookbook/logging_observability/LiteLLM_Langfuse.ipynb)
+- [Lunary Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/f8933ecae4d610f07be2ecc3edf78537e5b1480f/cookbook/logging_observability/LiteLLM_Lunary.ipynb)
+- [Arize Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/f8933ecae4d610f07be2ecc3edf78537e5b1480f/cookbook/logging_observability/LiteLLM_Arize.ipynb)
+- [Proxy + Langfuse Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/f8933ecae4d610f07be2ecc3edf78537e5b1480f/cookbook/logging_observability/LiteLLM_Proxy_Langfuse.ipynb)
+- [PromptLayer Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/f8933ecae4d610f07be2ecc3edf78537e5b1480f/cookbook/LiteLLM_PromptLayer.ipynb)
 
 ### Quick Start
 
