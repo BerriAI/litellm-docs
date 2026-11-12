@@ -41,7 +41,7 @@ All Require rules must pass. Apply the same requirements to every Allow policy f
 
 Run two `cloudflared` replicas in your cluster. For a token-managed tunnel, read `TUNNEL_TOKEN` from a Kubernetes Secret and run `cloudflared tunnel --no-autoupdate run`. See [Deploy cloudflared on Kubernetes](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/deployment-guides/kubernetes/).
 
-Point the tunnel at your private LiteLLM service or internal load balancer. NGINX is not required. For a locally managed tunnel, use this example route:
+Point the tunnel at your private LiteLLM service or internal load balancer. For a locally managed tunnel, use this example route:
 
 ```yaml title="Locally managed cloudflared route"
 ingress:
