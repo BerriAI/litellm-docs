@@ -174,6 +174,7 @@ general_settings:
 - **saturation_check_cache_ttl (int)**: TTL in seconds for local cache when reading saturation values from Redis (defaults to 60). In multi-node deployments, this controls how quickly nodes converge on the same saturation state. Lower values mean faster convergence but more Redis reads.
   - Example: Set to `5` for faster multi-node consistency, or `0` to always read directly from Redis.
 - **team_model_limit_borrows_idle_capacity_from_other_teams (bool)**: Lets a team run past its `model_tpm_limit` and `model_rpm_limit` on capacity other teams are not using (defaults to `false`). Only models this limiter covers are affected. While the model is below `saturation_threshold` the team may exceed its limits, and once the model saturates the team is held to them, with a 429 whose `rate_limited_by` header reads `model_per_team_saturated`. The model's own `tpm` and `rpm` are always enforced. Limits set on the key itself and customer limits stay hard. See [Team model limits that borrow idle capacity](#team-model-limits-that-borrow-idle-capacity).
+- **priority_class_share_splits_equally_among_active_teams (bool)**: Splits a priority class's share of a model among the teams actually using it (defaults to `false`). A team counts as active on a model once it sends a request there and stops counting after a rate-limit window (60 seconds) without one. The configured weights are renormalized over only the classes with an active team, and each class's share is divided equally among its active teams. Once the model saturates, each team is held to its own share, with a 429 whose `rate_limited_by` header reads `priority_class_share_saturated`. Keys with no team keep the shared class pool. See [Split a priority class share among active teams](#split-a-priority-class-share-among-active-teams).
 
 **Start Proxy**
 
@@ -373,6 +374,28 @@ With this team at `model_tpm_limit: {"my-model": 500}` and a multiple of `2`, it
 
 Leave it unset to keep the default, where the team borrows up to the model's limit. The value must be a number of at least `1`. A smaller or non-numeric value is logged as a warning and ignored, so the team behaves as if it were unset rather than every request failing. The multiple only matters while `team_model_limit_borrows_idle_capacity_from_other_teams` is on. Without it, the team's `model_tpm_limit` and `model_rpm_limit` stay hard ceilings.
 
+### Split a priority class share among active teams
+
+By default every team in a priority class draws from one shared pool, so with `interactive: 0.6` on a `tpm: 1000` model all interactive teams together get 600 tokens a minute. One busy team can empty that pool and the other interactive teams get a 429 with nothing used, while the 400 reserved for an idle `batch` class sits unused. Set `priority_class_share_splits_equally_among_active_teams: true` to split each class share among the teams that are actually using the model.
+
+```yaml
+litellm_settings:
+  callbacks: ["dynamic_rate_limiter_v3"]
+  priority_reservation:
+    interactive: 0.6
+    batch: 0.4
+  priority_reservation_settings:
+    saturation_threshold: 0.5
+    priority_class_share_splits_equally_among_active_teams: true   # default: false
+```
+
+There is nothing to configure per team. A team becomes active on a model when it sends a request there and stops counting 60 seconds (one rate-limit window) after its last one. Active teams are tracked per model in Redis, so every worker sees the same set. Teams get their class from `metadata.priority` on the team or key as before, and teams with no priority form one `default` class weighted by `default_priority`.
+
+The share is computed in two steps on every request. First, the class weights are renormalized over only the classes that have an active team on that model, so with no batch team sending, interactive is worth the whole model, and the moment a batch team sends it drops back to 0.6. Second, each class share is divided equally among that class's active teams. On a model with `tpm: 500000000`, two active interactive teams and four active batch teams get 150M each and 50M each. With only the four batch teams active, each gets 125M. A team that goes quiet for a window stops counting in both steps, so the others grow back.
+
+Below `saturation_threshold` teams still borrow idle capacity as usual. Once the model saturates, a team that is past its own share gets a 429 whose `rate_limited_by` header reads `priority_class_share_saturated` and whose message names the team, its class, how many teams are active in the class and the team's share in tokens or requests. A teammate that stayed within its share keeps going. Requests from keys with no team are held to the shared class pool exactly as when the setting is off, and they still count their class as active, so a class carrying only teamless traffic does not lend its share away. When `team_model_limit_borrows_idle_capacity_from_other_teams` is also on, a team's `model_tpm_limit` share applies as well and the tighter of the two wins.
+
+||||||| 11e98716
 ### Demo Video
 
 This video walks through setting up dynamic rate limiting with priority reservation and locust tests to validate the behavior.
