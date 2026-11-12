@@ -40,7 +40,7 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
-  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js')],
+  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js'), require.resolve('./src/clientModules/deployLegacyRedirect.js')],
   plugins: [
     require('./plugins/litellm-stats'),
     require('./plugins/release-feed'),
@@ -86,6 +86,11 @@ const config = {
           {from: ['/docs/oidc', '/docs/oidcz'], to: '/docs/proxy/model_management#workload-identity-credentials'},
           {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
           {from: '/docs/proxy/rust_gateway', to: '/rust-migration'},
+          {from: '/docs/proxy/deploy/iap/cloudflare', to: '/docs/proxy/deploy/iap/overview#cloudflare'},
+          {from: '/docs/proxy/deploy/iap/aws', to: '/docs/proxy/deploy/iap/overview#aws'},
+          {from: '/docs/proxy/deploy/iap/azure', to: '/docs/proxy/deploy/iap/overview#azure'},
+          {from: '/docs/proxy/deploy/iap/gcp', to: '/docs/proxy/deploy/iap/overview#gcp'},
+
           {
             from: '/docs/proxy/control_plane_and_data_plane',
             to: '/docs/proxy/multi_region',
@@ -104,7 +109,23 @@ const config = {
           },
           {
             from: '/docs/proxy/microservices_helm',
-            to: '/docs/proxy/deploy#deploy-with-helm',
+            to: '/docs/proxy/deploy/helm',
+          },
+          {
+            from: ['/docs/proxy/deploy/kubernetes', '/docs/proxy/manifests_to_microservices'],
+            to: '/docs/proxy/deploy/helm',
+          },
+          {
+            from: '/docs/proxy/deploy/terraform/provider',
+            to: '/docs/proxy/configuration/terraform',
+          },
+          {
+            from: '/docs/proxy/deploy/terraform/aws',
+            to: '/docs/proxy/deploy/terraform#aws',
+          },
+          {
+            from: '/docs/proxy/deploy/terraform/gcp',
+            to: '/docs/proxy/deploy/terraform#gcp',
           },
           {
             from: '/docs/proxy/db_deadlocks',

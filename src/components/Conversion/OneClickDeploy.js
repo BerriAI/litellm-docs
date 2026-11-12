@@ -9,9 +9,9 @@ export default function OneClickDeploy({source = 'docs'}) {
   return (
     <div className={styles.oneClick}>
       <div className={styles.oneClickCopy}>
-        <p className={styles.oneClickTitle}>Deploy to the cloud in one click</p>
+        <p className={styles.oneClickTitle}>Cloud deployment options</p>
         <p className={styles.oneClickText}>
-          Railway and Render host the same gateway and Postgres for you. AWS and GCP open Cloud Shell and deploy the production stack into your account with Terraform; see <a href="/docs/proxy/deploy#1-click-deploy-from-cloud-shell">the steps</a>. Use your deployment's URL wherever this guide says <code>http://localhost:4000</code>.
+          Railway and Render host the same gateway and Postgres for you. For AWS and GCP, use the <a href="/docs/proxy/deploy/terraform">Terraform deployment guide</a>. Use your deployment's URL wherever this guide says <code>http://localhost:4000</code>.
         </p>
       </div>
       <div className={styles.oneClickBadges}>

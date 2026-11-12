@@ -1,0 +1,240 @@
+.viewer {
+  --network-bg: #ffffff;
+  --network-text: #243345;
+  --network-muted: #536579;
+  --network-outline: #34465b;
+  --network-border: #c5cfd9;
+  --network-request: #2367b4;
+  --network-data: #51606f;
+  --network-egress: #99450c;
+  --network-optional: #79489f;
+  --network-public: #50722c;
+  --network-private: #27758a;
+  --network-public-bg: #f5f9ee;
+  --network-private-bg: #f0f8fb;
+  --network-managed-bg: #f7f9fb;
+  --network-optional-bg: #fcf9ff;
+  margin-top: 1.25rem;
+}
+
+.toolbar,
+.dialogHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+}
+
+.toolbar strong,
+.dialogHeader strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.expandButton {
+  flex-shrink: 0;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--ifm-color-emphasis-400);
+  border-radius: 5px;
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.expandButton:hover {
+  border-color: var(--ifm-color-primary);
+}
+
+.expandButton:focus-visible,
+.viewport:focus-visible,
+.expandedViewport:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--network-bg);
+  color: var(--network-text);
+  border: 1px solid var(--network-border);
+  border-bottom: 0;
+  font-size: 0.72rem;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend i {
+  display: inline-block;
+  width: 22px;
+  border-top: 2px solid;
+}
+
+.legend .optionalLine {
+  border-top-style: dashed;
+}
+
+.viewport,
+.expandedViewport {
+  overflow: auto;
+  background: var(--network-bg);
+  border: 1px solid var(--network-border);
+  overscroll-behavior: contain;
+}
+
+.viewport {
+  max-height: 730px;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--network-bg);
+}
+
+.groupLabel {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.nodeTitle {
+  fill: var(--network-text);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.nodeDetail,
+.annotation {
+  fill: var(--network-muted);
+  font-size: 14px;
+}
+
+.edgeLabel {
+  font-size: 13px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--network-bg);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+
+.description,
+.notes,
+.sources {
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.description {
+  margin: 0.75rem 0;
+}
+
+.details {
+  font-size: 0.85rem;
+}
+
+.details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.details .notes {
+  margin: 0.75rem 0;
+}
+
+.notes > div {
+  margin-bottom: 0.7rem;
+}
+
+.notes dt {
+  font-weight: 600;
+}
+
+.notes dd {
+  margin-left: 0;
+}
+
+.sources {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.75rem;
+}
+
+.dialog {
+  width: min(96vw, 1500px);
+  max-width: 96vw;
+  max-height: 94vh;
+  padding: 0;
+  border: 1px solid var(--ifm-color-emphasis-400);
+  border-radius: 8px;
+  background: var(--network-bg);
+  color: var(--network-text);
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 65%);
+}
+
+.dialogHeader {
+  padding: 0.75rem 1rem;
+}
+
+.expandedViewport .svg {
+  max-height: calc(94vh - 112px);
+}
+
+.expandedViewport {
+  max-height: calc(94vh - 112px);
+}
+
+@media (max-width: 600px) {
+  .dialog {
+    width: 98vw;
+    max-width: 98vw;
+  }
+
+  .toolbar {
+    align-items: flex-start;
+  }
+
+  .expandedViewport .svg {
+    min-width: 1000px;
+    max-height: none;
+  }
+}
+
+[data-theme='dark'] .viewer {
+  --network-bg: #121923;
+  --network-text: #e6edf5;
+  --network-muted: #b5c4d4;
+  --network-outline: #c5d4e5;
+  --network-border: #526479;
+  --network-request: #8abbff;
+  --network-data: #c1cfdf;
+  --network-egress: #ffb878;
+  --network-optional: #d2b1f6;
+  --network-public: #b3d78b;
+  --network-private: #80d2e5;
+  --network-public-bg: #202c20;
+  --network-private-bg: #182a36;
+  --network-managed-bg: #202a36;
+  --network-optional-bg: #292239;
+}
+
+.iconTile {
+  fill: #ffffff;
+  stroke: #d2dae2;
+  stroke-width: 0.75px;
+}

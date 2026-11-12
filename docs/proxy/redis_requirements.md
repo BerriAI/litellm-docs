@@ -5,21 +5,15 @@ description: Features that do not work, or do not work correctly, when the LiteL
 
 # What Needs Redis
 
-Redis is highly recommended for any LiteLLM proxy deployment that runs more than one worker process, and most deployments do: a single container with `--num_workers` above 1 already counts, as does any Kubernetes deployment with more than one replica.
+Use Redis when you run more than one worker process, either through `--num_workers` or multiple replicas.
 
 Almost everything the proxy enforces (rate limits, budgets, cooldowns, cache hits, config changes) is coordinated through state. With Redis, that state is shared, so every worker sees the same counters and the same invalidations. Without it, each worker keeps its own copy in memory, so a limit of 100 requests per minute across 4 workers really lets through 400, a revoked key stays usable on the workers that did not process the revocation, and cache hits only land on the worker that happened to store the response.
 
 The Admin UI shows a banner while no Redis is configured. If you deliberately run a single worker, set `LITELLM_DISABLE_NO_REDIS_WARNING=true` to hide it.
 
-:::warning
-
-Multi-pod deployments without Redis are in beta, and the list below is not exhaustive. It covers the best known functionality that we know does not work fully, or at all, across pods without Redis; other features may also misbehave in that setup. The GA approach for a multi-pod deployment is to run it with Redis.
-
-:::
-
 ## Configure Redis
 
-For provisioning Redis and wiring the proxy to it end to end, see [Set Up Redis](/docs/proxy/caching_redis). The short version:
+See [Set Up Redis](/docs/proxy/caching_redis) for provisioning and connection settings.
 
 ```yaml
 router_settings:
@@ -40,8 +34,6 @@ Setting `REDIS_HOST` and `REDIS_PORT` in the environment is not enough on its ow
 
 ## What breaks without Redis
 
-The most well-known functionality that is degraded or unavailable across pods:
-
 | Feature | Without Redis |
 | --- | --- |
 | Key, team, user, and end-user rate limits (tpm, rpm, max parallel requests) | Counted per worker, so the effective limit is multiplied by the number of workers. |
@@ -60,7 +52,3 @@ The most well-known functionality that is degraded or unavailable across pods:
 | SSO and `litellm login` from the CLI | The login flow can fail when the browser redirect lands on a different worker than the one that started it. |
 | [MCP](../mcp_oauth.md) outbound OAuth credentials | Tokens are cached per worker, so each worker refreshes independently; a provider that rotates refresh tokens on use can invalidate the others. |
 | Background responses and polling | A polled response is readable only on the worker that produced it. |
-
-## Single worker deployments
-
-None of the above applies if you truly run one worker process and one replica, since local memory is shared state in that case. That setup gives up horizontal scaling and any restart drops all cached state, so treat it as a development or low-volume configuration rather than a production one.

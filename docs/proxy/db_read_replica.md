@@ -113,42 +113,43 @@ hostname verification is independent of region selection
 
 ## Kubernetes / Helm
 
-The official Helm chart exposes two ways to wire the reader URL:
+The [LiteLLM chart](./deploy/helm.md) accepts a complete reader URL or separate connection fields. Keep your existing `database.writer` settings in both cases.
 
 <Tabs>
 
 <TabItem value="secret" label="From a Kubernetes secret (recommended)">
 
 When the reader URL embeds credentials, source it from the existing
-`db.secret.name` Kubernetes secret using `db.secret.readReplicaUrlKey`. This
+`database.reader.passwordSecret.name` Kubernetes Secret using `urlKey`. This
 keeps the URL out of the rendered pod spec and the Helm release secret.
 
 ```yaml
-db:
-  useExisting: true
-  secret:
-    name: postgres
-    usernameKey: username
-    passwordKey: password
-    # Add the reader URL to the same secret under any key, then reference it:
-    readReplicaUrlKey: read-url
+database:
+  reader:
+    passwordSecret:
+      name: litellm-reader-secret
+      urlKey: read-url # contains the complete PostgreSQL connection URL
 ```
 
 </TabItem>
 
-<TabItem value="plain" label="Plaintext value">
+<TabItem value="plain" label="Separate connection fields">
 
-For credential-less URLs (for example, when `IAM_TOKEN_DB_AUTH` or
-`AZURE_POSTGRESQL_AUTH` supplies the password at runtime),
-`db.readReplicaUrl` works:
+Set the reader host and database name. Reference a Secret with its username and password:
 
 ```yaml
-db:
-  readReplicaUrl: "postgresql://litellm@reader.aurora.local:5432/litellm"
+database:
+  reader:
+    host: reader.aurora.local
+    port: 5432
+    dbname: litellm
+    passwordSecret:
+      name: litellm-reader-secret
+      usernameKey: username
+      passwordKey: password
 ```
 
-Avoid this form if the URL embeds a password, since the value renders into the
-pod spec and the Helm release secret.
+For token authentication, set `useIAMAuth: true` or `useAzureEntraAuth: true` on both `database.writer` and `database.reader`, with the matching workload identity. The Secret supplies the username. The runtime obtains the password token. Use one authentication method per deployment. Do not combine separate connection fields with `urlKey`.
 
 </TabItem>
 

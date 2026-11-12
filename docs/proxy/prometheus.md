@@ -84,30 +84,18 @@ The dedicated listener does not use LiteLLM virtual-key authentication. `require
 ### Deployment configuration
 
 <Tabs>
-<TabItem value="helm" label="Helm: litellm-helm">
-
-```yaml title="values.yaml"
-metricsServer:
-  enabled: true
-  port: 4001
-
-serviceMonitor:
-  enabled: true
-```
-
-The chart creates a dedicated `<release>-litellm-metrics` `ClusterIP` Service and directs the ServiceMonitor to it. The primary Service is unchanged, including when `service.type` is `LoadBalancer`. `metricsServer.port` must differ from `service.port`.
-
-</TabItem>
-<TabItem value="helm-componentized" label="Helm: componentized">
+<TabItem value="helm" label="Helm">
 
 ```yaml title="values.yaml"
 gateway:
   metricsServer:
     enabled: true
     port: 4001
+  serviceMonitor:
+    enabled: true
 ```
 
-The chart runs the metrics server as a sidecar that shares Prometheus multiprocess data with the gateway. It exposes the listener through a dedicated `<release>-litellm-gateway-metrics` `ClusterIP` Service; configure Prometheus to discover that private Service. The gateway Service remains unchanged.
+The [LiteLLM chart](./deploy/helm.md) uses these values in both componentized and monolith modes. It runs a sidecar from the shared image and exposes a private metrics `ClusterIP` Service. The ServiceMonitor requires Prometheus Operator and targets that Service. Keep the metrics port separate from the gateway's serving port.
 
 </TabItem>
 <TabItem value="aws" label="Terraform: AWS">
