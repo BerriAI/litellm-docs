@@ -1,1 +1,0 @@
-{"name":"litellm-enterprise-registry-animation","private":true,"type":"module","scripts":{"keyframes":"node render.mjs --keyframes","render":"node render.mjs"},"dependencies":{"@napi-rs/canvas":"0.1.100"}}
