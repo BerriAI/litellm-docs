@@ -4,7 +4,7 @@ sidebar_label: GCP
 description: Deploy LiteLLM on Cloud Run or GKE with an internal load balancer, corporate network access, private data stores, and NAT egress.
 ---
 
-import { CloudArchitectureSelector } from '@site/src/components/CloudArchitecture';
+import { CloudArchitecture } from '@site/src/components/CloudArchitecture';
 
 # GCP
 
@@ -12,15 +12,17 @@ import { CloudArchitectureSelector } from '@site/src/components/CloudArchitectur
 
 Connect corporate users and applications through Cloud VPN, Interconnect, or an approved private access service. Use private DNS and a regional internal Application Load Balancer. Keep model API egress separate from inbound requests.
 
-<CloudArchitectureSelector provider="gcp" />
-
-## Deploy this architecture
-
-Use [Terraform on GCP](../terraform.md#gcp) for Cloud Run or [Helm](../helm.md) for GKE. Create a private frontend subnet and a separate proxy-only subnet with purpose `REGIONAL_MANAGED_PROXY` and role `ACTIVE`. Allocate the frontend IP from the frontend subnet. Reserve the proxy-only subnet for Google's load balancer proxies. See [internal load balancer setup](https://docs.cloud.google.com/load-balancing/docs/l7-internal/setting-up-l7-internal-serverless).
+Create a private frontend subnet and a separate proxy-only subnet with purpose `REGIONAL_MANAGED_PROXY` and role `ACTIVE`. Allocate the frontend IP from the frontend subnet. Reserve the proxy-only subnet for Google's load balancer proxies. See [internal load balancer setup](https://docs.cloud.google.com/load-balancing/docs/l7-internal/setting-up-l7-internal-serverless).
 
 Corporate VPN tunnels or Interconnect attachments must connect in the load balancer's region unless you enable global access. Add private DNS and routes for the frontend IP. See [internal load balancer client access](https://docs.cloud.google.com/load-balancing/docs/l7-internal#client-access).
 
-### Cloud Run module changes
+## Terraform on Cloud Run
+
+Use [Terraform on GCP](../terraform.md#gcp) to deploy LiteLLM on Cloud Run.
+
+<CloudArchitecture cloud="gcp-cloud-run" />
+
+### Private ingress {#cloud-run-module-changes}
 
 The source module creates a global external load balancer. It has no input to select an internal frontend. Make these changes in your platform's module fork before deployment:
 
@@ -35,7 +37,11 @@ Remove the old public forwarding rules and address. Internal Cloud Run ingress a
 
 Keep identity checks on the internal service. If you use IAP, grant Cloud Run Invoker to the IAP service agent and remove the module's `allUsers` invoker grants. Keep the Invoker IAM check enabled. Configure IAP on the load balancer or directly on Cloud Run, but not both. See [Google Cloud IAP](../iap/overview.md#gcp).
 
-### GKE with Helm
+## Helm on GKE {#gke-with-helm}
+
+Use the [Helm guide](../helm.md) to deploy LiteLLM on GKE. The diagram shows the chart's default separate services.
+
+<CloudArchitecture cloud="gcp-gke-micro" />
 
 Create a private GKE cluster and the network resources above. Use `gce-internal` Ingress or the `gke-l7-rilb` GatewayClass. Allow traffic from the proxy-only subnet and required health-check ranges to the pod backends. Configure routes for gateway, backend, and UI. Keep the cluster endpoint private. See [GKE internal Ingress](https://docs.cloud.google.com/kubernetes-engine/docs/how-to/internal-load-balance-ingress) and [Gateway setup](https://docs.cloud.google.com/kubernetes-engine/docs/how-to/deploying-gateways).
 

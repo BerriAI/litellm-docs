@@ -18,7 +18,7 @@ Keep LiteLLM on a private network. Allow access through your corporate network o
 | Use case | LiteLLM configuration |
 | --- | --- |
 | Sign employees into the Admin UI with their existing corporate identity | Validate the proxy's identity with the [UI sign-in handler](#admin-ui-sign-in). LiteLLM creates a session for that user and applies the user's stored role. |
-| Authorize API calls without a separate LiteLLM key | Validate a signed token with [JWT authentication](#api-identity). Map its claims to existing LiteLLM users and teams. |
+| Authorize API calls without a separate LiteLLM key | Validate a signed token with [JWT authentication](../../token_auth.md). Map its claims to existing LiteLLM users and teams. |
 | Track users behind an application that holds a virtual key | Forward a verified identity as a [customer header](../mtls.md#configure-litellm-identity). The virtual key still controls access. |
 
 ## Admin UI sign-in
@@ -35,9 +35,9 @@ general_settings:
 
 Replace the CIDR with the direct proxy or connector addresses that LiteLLM sees. Restrict network access to those same sources. Set `PROXY_BASE_URL` to your corporate HTTPS URL. Configure the handler's environment variables in the provider section below.
 
-The handler preserves existing LiteLLM roles. New users receive `internal_user_viewer`. Assign roles and teams through [Access Management](../../access_management/sso_permissions.md). The proxy does not grant an admin role. This handler creates UI sessions. API requests use the separate configuration below.
+The handler preserves existing LiteLLM roles. New users receive `internal_user_viewer`. Assign roles and teams through [Access Management](../../access_management/sso_permissions.md). The proxy does not grant an admin role. This handler creates UI sessions. For API authentication, see [Authentication](../../authentication.md).
 
-## Cloudflare
+## Cloudflare Access {#cloudflare}
 
 Use Access to authenticate employees and Tunnel to reach the private origin. Require Gateway so only devices enrolled in your Zero Trust account can connect.
 
@@ -84,9 +84,7 @@ export CF_ACCESS_AUDIENCE=ACCESS_APPLICATION_AUD
 
 The handler checks the token's signature, issuer, audience, and expiry. It maps `sub` to the LiteLLM user ID and `email` to the user email. It rejects service tokens for browser sign-in. [Cloudflare assertion format](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/application-token/).
 
-For API authentication, use the [JWT setup below](#api-identity). Cloudflare service tokens identify the workload through `common_name`. They have an empty `sub`. For a separate workload API deployment, set `user_id_jwt_field: common_name`. Update the validator below to require `common_name` and omit `user_email_jwt_field`.
-
-## AWS
+## AWS Application Load Balancer (OIDC) {#aws}
 
 Use an **internal ALB** reached through VPN, Direct Connect, or your corporate private access service. Limit listener access to corporate client CIDRs. Keep the LiteLLM targets private and allow target traffic only from the ALB security group.
 
@@ -142,11 +140,11 @@ export AWS_ALB_OIDC_ISSUER=https://idp.example.com
 
 The handler validates the ALB signature, expected signer ARN, client ID, issuer, and expiry. It maps `sub` and `email` to the LiteLLM user. ALB browser assertions use a different format from standard IdP JWTs. Do not point LiteLLM's JWKS setting at an ALB key URL.
 
-For machine API calls, use a separate hostname such as `api.corp.example.com` with a [`jwt-validation` listener rule](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-verify-jwt.html). Keep browser UI requests and their API calls on the OIDC hostname. Use RS256 tokens and configure the issuer, JWKS endpoint, audience, and required scope. ALB forwards the original IdP JWT. Use [LiteLLM JWT authentication](#api-identity) to map it to a user and team.
+For machine API calls, use a separate hostname such as `api.corp.example.com` with a [`jwt-validation` listener rule](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-verify-jwt.html). Keep browser UI requests and their API calls on the OIDC hostname. Use RS256 tokens and configure the issuer, JWKS endpoint, audience, and required scope. ALB forwards the original IdP JWT. Use [LiteLLM JWT authentication](../../token_auth.md) to map it to a user and team.
 
 ALB does not verify HTTPS target certificates. Restrict the target network to the ALB. Use an ingress that verifies backend certificates if your policy requires that check.
 
-## Azure
+## Microsoft Entra Application Proxy {#azure}
 
 Use Microsoft Entra Application Proxy to authenticate employees and reach LiteLLM through private-network connectors. Keep the origin private. Require your corporate device and access policies through Conditional Access.
 
@@ -187,7 +185,7 @@ The UI handler uses these values for the LiteLLM user ID and email. Set `trusted
 
 Application Proxy supports user sign-in and delegated user access. Use [Entra JWT authentication](../../token_auth.md) through a private API ingress for unattended service principals. Do not use an application-only token as a substitute for Application Proxy's user flow. See [Microsoft's API access guidance](https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-secure-api-access).
 
-## GCP
+## Google Cloud IAP {#gcp}
 
 Use IAP on the internal Application Load Balancer in the [GCP architecture](../cloud/gcp.md). Corporate clients reach its private address through Cloud VPN or Cloud Interconnect. Set these values to your project, region, and deployment name prefix. This example keeps the module's `-gateway-bs`, `-backend-bs`, and `-ui-bs` names after the private-ingress changes:
 
@@ -249,57 +247,9 @@ export IAP_PROVIDER=gcp
 export GCP_IAP_AUDIENCE=SIGNED_HEADER_JWT_AUDIENCE
 ```
 
-The handler verifies the signature, issuer, audience, and expiry. It maps `sub` and `email` to the LiteLLM user. Use the management backend's audience for UI sign-in and the gateway backend's audience for gateway JWT authentication. The OAuth client ID used by API clients is a different audience. See [IAP signed headers](https://docs.cloud.google.com/iap/docs/signed-headers-howto).
+The handler verifies the signature, issuer, audience, and expiry. It maps `sub` and `email` to the LiteLLM user. Use the management backend's audience for UI sign-in. See [IAP signed headers](https://docs.cloud.google.com/iap/docs/signed-headers-howto).
 
 You can also enable IAP directly on a Cloud Run service. Keep its ingress private and use that service's signed-header audience. Enable IAP at either Cloud Run or the load balancer, not both.
-
-## API identity
-
-Use JWT authentication when LiteLLM must authorize the identity from the proxy. This requires Enterprise. Create the LiteLLM user IDs and a team before enabling it. Give that team explicit model access and budgets.
-
-For Cloudflare and GCP, add a private reverse proxy between the IAP and LiteLLM. It must overwrite a dedicated auth header with the assertion. Native IAP assertion headers contain a raw JWT. LiteLLM's auth header requires the `Bearer` prefix.
-
-```nginx title="Inside the private ingress location for API routes"
-# Cloudflare. For GCP, replace both occurrences with $http_x_goog_iap_jwt_assertion.
-if ($http_cf_access_jwt_assertion = "") { return 401; }
-proxy_set_header X-LiteLLM-IAP-Token "Bearer $http_cf_access_jwt_assertion";
-proxy_set_header Authorization "";
-```
-
-Keep the existing backend TLS configuration. Restrict access to this proxy to the IAP path. Reject requests without an assertion. Overwrite the header even if a client sends its own value.
-
-Require a nonempty identity claim. Save this validator beside `config.yaml`:
-
-```python title="validate_iap.py"
-def require_subject(claims):
-    subject = claims.get("sub")
-    return isinstance(subject, str) and bool(subject.strip())
-```
-
-```yaml title="LiteLLM API configuration"
-general_settings:
-  enable_jwt_auth: true
-  litellm_key_header_name: X-LiteLLM-IAP-Token
-  litellm_jwtauth:
-    custom_validate: validate_iap.require_subject
-    user_id_jwt_field: sub
-    user_email_jwt_field: email
-    user_id_upsert: false
-    team_id_default: corporate-api
-    enforce_team_based_model_access: true
-```
-
-This configuration maps every accepted caller to the existing `corporate-api` team. It does not import IdP groups. Precreate users with the expected `sub` as their user ID. See [user and team mapping](../../jwt_user_team_auth.md) for other mappings.
-
-Set these environment variables on LiteLLM:
-
-| Provider | `JWT_PUBLIC_KEY_URL` | `JWT_ISSUER` | `JWT_AUDIENCE` |
-| --- | --- | --- | --- |
-| Cloudflare | `https://YOUR_TEAM.cloudflareaccess.com/cdn-cgi/access/certs` | `https://YOUR_TEAM.cloudflareaccess.com` | Access application audience |
-| GCP | `https://www.gstatic.com/iap/verify/public_key-jwk` | `https://cloud.google.com/iap` | Signed Header JWT Audience for the protected resource |
-| AWS machine JWT rule | Your IdP's JWKS URL | Your IdP's issuer | Your API's audience |
-
-For AWS machine JWT rules, omit `litellm_key_header_name`. LiteLLM reads the original token from `Authorization`. Do not use the ALB browser assertion with this configuration.
 
 ## Verify the configuration
 
@@ -308,9 +258,6 @@ For AWS machine JWT rules, omit `litellm_key_header_name`. LiteLLM reads the ori
 | Approved employee opens the UI through the corporate access path | LiteLLM opens a session for the expected user with the stored role |
 | User without corporate access tries the same route | The network or access proxy denies the request |
 | Client sends forged identity headers or an invalid assertion | The proxy or LiteLLM handler rejects the identity |
-| API token has a missing or empty identity claim | The custom validator rejects the request |
-| Valid identity requests a model outside its team's permissions | LiteLLM rejects the API request |
 | Client connects directly to LiteLLM | Network controls block the connection |
-| API request includes a valid token but no separate LiteLLM key | JWT authentication resolves the expected user and team |
 
-Check the user and team in LiteLLM's request logs. Test expired tokens and a token for a different application. Test a long streaming request through the complete path.
+Confirm the signed-in user's ID and role in LiteLLM. For Cloudflare Access, AWS ALB, and Google Cloud IAP, test an expired assertion and an assertion for a different application. Test a long streaming request through the complete path.

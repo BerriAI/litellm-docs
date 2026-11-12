@@ -45,7 +45,7 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* CSP selector tabs */
+/* Multi-region provider tabs */
 .tabs {
   display: flex;
   gap: 0;
@@ -82,33 +82,6 @@
   width: 18px;
   height: 18px;
   object-fit: contain;
-}
-
-/* Variant pills (Terraform vs Kubernetes path) */
-.variantRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
-  margin-bottom: 0.5rem;
-}
-
-.variantPill {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--ca-text-secondary);
-  background: none;
-  border: 1.5px solid var(--ca-border);
-  border-radius: 9999px;
-  padding: 0.25rem 0.8rem;
-  cursor: pointer;
-  transition: color 0.2s, border-color 0.2s, background 0.2s;
-}
-
-.variantPillActive {
-  color: var(--ca-accent);
-  border-color: var(--ca-accent);
-  background: var(--ca-accent-light);
 }
 
 .diagram {
@@ -442,8 +415,7 @@
   box-sizing: content-box;
 }
 
-.tab:focus-visible,
-.variantPill:focus-visible {
+.tab:focus-visible {
   outline: 2px solid var(--ca-accent);
   outline-offset: 3px;
 }

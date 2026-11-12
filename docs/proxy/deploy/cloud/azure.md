@@ -4,7 +4,7 @@ sidebar_label: Azure
 description: Deploy LiteLLM on AKS with a private Application Gateway frontend, corporate network access, private endpoints, and NAT egress.
 ---
 
-import { CloudArchitectureSelector } from '@site/src/components/CloudArchitecture';
+import { CloudArchitecture } from '@site/src/components/CloudArchitecture';
 
 # Azure
 
@@ -12,11 +12,11 @@ import { CloudArchitectureSelector } from '@site/src/components/CloudArchitectur
 
 Connect corporate users and applications through VPN, ExpressRoute, or an approved private access service. Use private DNS and a private Application Gateway frontend. Keep AKS and data connections private. NAT Gateway serves outbound provider calls.
 
-<CloudArchitectureSelector provider="azure" />
+## Helm on AKS {#deploy-this-architecture}
 
-## Deploy this architecture
+Use the [Helm guide](../helm.md). Create the VNet, private AKS cluster, Application Gateway, databases, private endpoints, and corporate network routes separately. The Helm chart deploys the LiteLLM workloads. The diagram shows the chart's default separate services.
 
-Use the [Helm guide](../helm.md). Create the VNet, private AKS cluster, Application Gateway, databases, private endpoints, and corporate network routes separately. The Helm chart deploys the LiteLLM workloads.
+<CloudArchitecture cloud="azure-aks-micro" />
 
 Use Application Gateway v2 with a private-only frontend in its dedicated subnet. Delegate that subnet to `Microsoft.Network/applicationGateways`. Allow corporate client ranges to reach HTTPS on the private frontend. Configure private DNS for the gateway hostname. See [private Application Gateway deployment](https://learn.microsoft.com/en-us/azure/application-gateway/application-gateway-private-deployment).
 
@@ -24,4 +24,4 @@ Use AGIC v1.7 or later. Set `appgw.ingress.kubernetes.io/use-private-ip: "true"`
 
 Associate NAT Gateway with the AKS subnet for outbound public API calls. Keep PostgreSQL, Redis, and optional Azure OpenAI private endpoints on their private paths. Disable public access to these data services and link their private DNS zones to the VNet.
 
-For identity checks, see [Identity-Aware Proxy on Azure](../iap/overview.md#azure). For client certificates, see [Client Authentication with mTLS](../mtls.md). For replicas and rollouts, see [High Availability](../ha/overview.md).
+For identity checks, see [Microsoft Entra Application Proxy](../iap/overview.md#azure). For client certificates, see [Client Authentication with mTLS](../mtls.md). For replicas and rollouts, see [High Availability](../ha/overview.md).

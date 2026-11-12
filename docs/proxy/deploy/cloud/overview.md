@@ -20,7 +20,7 @@ The diagrams show the recommended target. The AWS and GCP Terraform modules need
 <Tabs queryString="cloud">
 <TabItem value="azure" label="Azure" default>
 
-Run LiteLLM on AKS with a private Application Gateway frontend, managed PostgreSQL and Redis, and private endpoints. The [Azure architectures](./azure.md) show a single service and separate gateway, backend, and UI services.
+Run LiteLLM on AKS with a private Application Gateway frontend, managed PostgreSQL and Redis, and private endpoints. The [Azure architecture](./azure.md) shows separate gateway, backend, and UI services.
 
 </TabItem>
 <TabItem value="aws" label="AWS">

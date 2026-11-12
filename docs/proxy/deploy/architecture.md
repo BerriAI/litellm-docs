@@ -28,7 +28,7 @@ Reference designs for cloud infrastructure, client access, and availability.
 
 ### Check identity before traffic reaches LiteLLM
 
-[Identity-Aware Proxy](./iap/overview.md): company sign-in and workload access with [Cloudflare](./iap/overview.md#cloudflare), [AWS](./iap/overview.md#aws), [Azure](./iap/overview.md#azure), or [GCP](./iap/overview.md#gcp). Forward verified identity so LiteLLM can create UI sessions or apply API permissions.
+[Identity-Aware Proxy](./iap/overview.md): company sign-in and workload access with [Cloudflare Access](./iap/overview.md#cloudflare), [AWS ALB](./iap/overview.md#aws), [Microsoft Entra Application Proxy](./iap/overview.md#azure), or [Google Cloud IAP](./iap/overview.md#gcp). Forward verified identity so LiteLLM can create UI sessions or apply API permissions.
 
 </TabItem>
 <TabItem value="mtls" label="mTLS">
