@@ -7,7 +7,7 @@ import TabItem from '@theme/TabItem';
 
 Use [GitHub Copilot](https://docs.github.com/en/copilot) models through the LiteLLM gateway or the Python SDK. LiteLLM supports Chat Completions, Responses, Embeddings, and Anthropic Messages
 
-On the gateway, each person connects their own GitHub account and their requests use their own Copilot plan. Your GitHub Copilot plan determines which models you can use, and each model supports specific endpoints. See [supported endpoints and models](#supported-endpoints-and-models)
+Choose per-user GitHub OAuth for individual Copilot plans, or [GitHub App authentication](#github-app-authentication) for backend services billed to an organization. Your GitHub Copilot plan determines which models you can use, and each model supports specific endpoints. See [supported endpoints and models](#supported-endpoints-and-models)
 
 :::tip
 
@@ -21,7 +21,7 @@ An admin adds the model and a **Per-user GitHub OAuth** credential once. Each us
 
 ### 1. Admin: create the credential
 
-Open **Models + Endpoints** > **LLM Credentials** in the LiteLLM dashboard and click **Add Credential**. Select **GitHub Copilot** as the provider and enter `github-copilot` as the **Credential Name**. **Auth Type** is set to **Per-user GitHub OAuth**, which is the only auth type the gateway supports for GitHub Copilot. Click **Add Credential**
+Open **Models + Endpoints** > **LLM Credentials** in the LiteLLM dashboard and click **Add Credential**. Select **GitHub Copilot** as the provider and enter `github-copilot` as the **Credential Name**. **Auth Type** is set to **Per-user GitHub OAuth**, for this dashboard flow. Configure GitHub App authentication through the server configuration below. Click **Add Credential**
 
 Leave **GitHub host** empty if your users sign in on github.com. If your enterprise uses GitHub Enterprise Cloud with data residency, enter your `SUBDOMAIN.ghe.com` host, for example `octocorp.ghe.com`. LiteLLM then sends sign-in to `https://SUBDOMAIN.ghe.com`, the token exchange and user lookup to `https://api.SUBDOMAIN.ghe.com`, and model requests only to `https://copilot-api.SUBDOMAIN.ghe.com`. Each credential keeps its own host, so one gateway can serve a github.com credential and a GHE.com credential side by side. GitHub Enterprise Server hosts are rejected because GitHub does not offer Copilot on GitHub Enterprise Server. Changing the host of a credential removes every user connection on it, so users connect again on the new host.
 
@@ -103,6 +103,98 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)
 ```
 
+## GitHub App authentication
+
+Set `github_copilot_auth_type: github_app` to authenticate a backend service with a GitHub App installation. LiteLLM creates and refreshes installation tokens without a user login. This works with Chat Completions, Responses, Embeddings, and the async Anthropic Messages API, subject to each model's endpoint support.
+
+Create an App with the **Copilot Requests** organization permission set to **Read-only**, and install it in the organization that will pay for usage. The organization must allow Copilot requests from App installations. See [GitHub's server-to-server setup](https://docs.github.com/en/copilot/how-tos/copilot-sdk/auth/server-to-server-tokens#other-services-and-ci-systems) for eligibility and policy requirements.
+
+### Gateway configuration
+
+Store the App's RSA PEM private key in a secret manager or mount it read-only into the proxy container. The example uses a mounted secret at `/run/secrets/copilot-service-a.pem`. Only the proxy service account should be able to read it. Do not put PEM contents in YAML, a model request, or a credential record.
+
+```yaml showLineNumbers keep-model-ids title="config.yaml"
+credential_list:
+  - credential_name: copilot-service-a
+    credential_values:
+      github_copilot_auth_type: github_app
+      github_copilot_app_id: os.environ/COPILOT_SERVICE_A_CLIENT_ID
+      github_copilot_app_installation_id: os.environ/COPILOT_SERVICE_A_INSTALLATION_ID
+      github_copilot_app_private_key_ref: oidc/file//run/secrets/copilot-service-a.pem
+    credential_info:
+      custom_llm_provider: github_copilot
+  - credential_name: copilot-service-b
+    credential_values:
+      github_copilot_auth_type: github_app
+      github_copilot_app_id: os.environ/COPILOT_SERVICE_B_CLIENT_ID
+      github_copilot_app_installation_id: os.environ/COPILOT_SERVICE_B_INSTALLATION_ID
+      github_copilot_app_private_key_ref: oidc/file//run/secrets/copilot-service-b.pem
+    credential_info:
+      custom_llm_provider: github_copilot
+
+model_list:
+  - model_name: service-a-copilot
+    litellm_params:
+      model: github_copilot/claude-sonnet-5.5
+      litellm_credential_name: copilot-service-a
+      rpm: 30
+      tpm: 30000
+  - model_name: service-b-copilot
+    litellm_params:
+      model: github_copilot/claude-sonnet-5.5
+      litellm_credential_name: copilot-service-b
+      rpm: 10
+      tpm: 10000
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+```
+
+`github_copilot_app_id` accepts the App's client ID, which GitHub recommends for JWTs, or the numeric App ID as a quoted string. Use the installation ID for the target organization, not an organization ID. Set these values in the environment before starting the proxy.
+
+`github_copilot_app_private_key_ref` is a secret reference. It accepts `oidc/file/` paths within `LITELLM_OIDC_ALLOWED_CREDENTIAL_DIRS` (standard container secret directories, including `/run/secrets`, are allowed by default), `os.environ/VARIABLE_NAME`, or a secret name in your configured LiteLLM secret manager. The reference stays a reference until authentication runs. It never accepts inline PEM. Use a mounted secret or secret manager in production, and keep private keys out of client applications.
+
+Call the public alias with a LiteLLM virtual key. Restrict each application's key to its own model alias, and assign separate team or key budgets for usage tracking. The App IDs and private-key references belong in administrator-owned configuration. Request bodies cannot select or replace those values, and App deployments reject client API key and endpoint overrides.
+
+Each deployment retains LiteLLM's rate-limit cooldown and monitoring behavior. Configure shared Redis when running multiple proxy workers so routing counters are shared. `rpm` and `tpm` above are example gateway limits, not GitHub quotas. Separate Apps isolate credentials, but do not guarantee separate organization-level Copilot quotas. GitHub attributes billing to the installation's organization. Use GitHub billing reports as the billing authority and LiteLLM usage records to attribute requests to your applications.
+
+### Python SDK
+
+Install the JWT signing dependencies alongside LiteLLM when using the SDK without proxy extras.
+
+```bash
+pip install litellm PyJWT cryptography
+```
+
+```python showLineNumbers keep-model-ids
+import os
+from litellm import completion
+
+response = completion(
+    model="github_copilot/claude-sonnet-5.5",
+    messages=[{"role": "user", "content": "Reply with OK"}],
+    github_copilot_auth_type="github_app",
+    github_copilot_app_id=os.environ["COPILOT_SERVICE_A_CLIENT_ID"],
+    github_copilot_app_installation_id=os.environ["COPILOT_SERVICE_A_INSTALLATION_ID"],
+    github_copilot_app_private_key_ref="oidc/file//run/secrets/copilot-service-a.pem",
+)
+print(response.choices[0].message.content)
+```
+
+Pass the same authentication fields to `acompletion`, `responses`, `aresponses`, `embedding`, `aembedding`, or `anthropic.messages.acreate`. There are no process-wide App credential defaults, so a service can pass different App configurations concurrently.
+
+### Token lifecycle and rotation
+
+LiteLLM signs short-lived RS256 JWTs and requests only `organization_copilot_requests: read` when creating installation tokens. GitHub's token endpoint and Copilot endpoint come from the validated GitHub host. Authentication requests verify TLS and do not follow redirects. The provider pins the installation bearer token and the Copilot SDK integration ID on outbound model requests.
+
+Each worker keeps a bounded in-memory token cache and coordinates concurrent refreshes within that worker. Tokens are refreshed on the next request when less than two minutes remain. Both wall-clock expiry and elapsed time are checked. Refresh failures return sanitized errors and never fall back to stored user credentials or expired tokens. Short failure cooldowns limit repeated mint attempts, and GitHub rate-limit responses produce retryable rate-limit errors.
+
+The cache separates hosts, Apps, installations, secret references, and key contents. Updating a mounted key changes the cache identity on the next request. Secret-manager caching can delay visibility of a rotated value, so follow your backend's cache settings or restart workers. Roll out the replacement key before revoking the old key. To terminate existing installation tokens immediately, use GitHub's revocation controls and restart workers, rather than relying on deleting a private key alone.
+
+Private keys and installation tokens are not written to LiteLLM's disk token store or Redis by this authentication flow. Shared model-response caching is disabled for these requests. Keep production debug logging disabled and restrict access to process memory, mounted secrets, and any third-party logging callbacks you configure.
+
+The default host is `github.com`. `github_copilot_host` also accepts the provider's existing `SUBDOMAIN.ghe.com` host format. GitHub Enterprise Server and arbitrary token or model URLs are rejected. Live validation for this feature used github.com. Confirm availability of App-authenticated Copilot in your data-residency deployment before rollout.
+
 ## Supported endpoints and models
 
 Use the `github_copilot/` prefix when configuring a model. Requests to the gateway use the public model name
@@ -139,7 +231,7 @@ To serve Responses or Embeddings, add a model for that endpoint with the same `g
 
 ## Usage with the LiteLLM Python SDK
 
-Direct SDK calls run in your own process, outside the gateway, and sign in with one GitHub account. The first call starts GitHub's device flow in your terminal. LiteLLM saves the GitHub access token to `~/.config/litellm/github_copilot/access-token` and reuses it on later calls. The gateway never uses this sign-in. Direct SDK calls use the full model name, including the `github_copilot/` prefix
+By default, direct SDK calls run in your own process and sign in with one GitHub account. For a backend service, use the GitHub App configuration below. The first call starts GitHub's device flow in your terminal. LiteLLM saves the GitHub access token to `~/.config/litellm/github_copilot/access-token` and reuses it on later calls. The gateway never uses this sign-in. Direct SDK calls use the full model name, including the `github_copilot/` prefix
 
 <Tabs>
 <TabItem value="chat" label="Chat Completions">
