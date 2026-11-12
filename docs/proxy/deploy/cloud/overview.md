@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 
 {/* keep-version-note */}
 
-These architectures keep LiteLLM off the public internet. Corporate users and applications reach private frontends through VPN, a private cloud connection, or an approved private access service. Public model calls use a separate outbound path.
+Corporate users and applications reach private frontends through VPN, a private cloud connection, or an approved private access service. Public model calls use a separate outbound path.
 
 Apply each cloud guide's private-ingress changes before deploying the AWS or GCP Terraform module. Helm uses your existing cloud infrastructure.
 

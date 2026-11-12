@@ -31,7 +31,7 @@ Create the `litellm` namespace and these Secrets before installation:
 <Tabs queryString="install">
 <TabItem value="argocd" label="Argo CD" default>
 
-Add this Application to Argo CD. Set the database and Redis hosts. Add [ingress values](#ingress) for your controller.
+Set the database and Redis hosts. Add [ingress values](#ingress) for your controller.
 
 ```yaml title="application.yaml"
 apiVersion: argoproj.io/v1alpha1
@@ -112,8 +112,6 @@ backend:
       value: "True"
 ```
 
-Install the public chart with your values:
-
 ```bash
 helm upgrade --install litellm oci://ghcr.io/berriai/litellm/chart/litellm \
   --version 1.0.0 \
@@ -126,7 +124,7 @@ helm upgrade --install litellm oci://ghcr.io/berriai/litellm/chart/litellm \
 
 ## values.yaml reference
 
-The tables below list common settings and their defaults. See the [complete values.yaml](https://github.com/BerriAI/litellm/blob/main/litellm/deploy/helm/litellm/values.yaml) for all settings.
+See the [complete values.yaml](https://github.com/BerriAI/litellm/blob/main/litellm/deploy/helm/litellm/values.yaml) for all settings.
 
 `<component>` means `gateway`, `backend`, or `ui`. Short names on the same row share the first value's prefix.
 

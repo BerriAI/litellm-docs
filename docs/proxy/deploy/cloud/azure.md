@@ -20,7 +20,7 @@ Deploy separate gateway, backend, and UI services with [Helm](../helm.md). Provi
 
 Use Application Gateway v2 with a private-only frontend in its dedicated subnet. Delegate that subnet to `Microsoft.Network/applicationGateways`. Allow corporate client ranges to reach HTTPS on the private frontend. Configure private DNS for the gateway hostname. See [private Application Gateway deployment](https://learn.microsoft.com/en-us/azure/application-gateway/application-gateway-private-deployment).
 
-Use AGIC v1.7 or later. Set `appgw.ingress.kubernetes.io/use-private-ip: "true"` on the LiteLLM Ingress. Configure a private frontend first. AGIC ignores this annotation when the gateway has no private IP. It sends requests directly to pod private IPs. Set routes and health probes for your service layout. See [AGIC private IP configuration](https://learn.microsoft.com/en-us/azure/application-gateway/ingress-controller-private-ip).
+Use AGIC v1.7 or later. Set `appgw.ingress.kubernetes.io/use-private-ip: "true"` on the LiteLLM Ingress. AGIC ignores this annotation when the gateway has no private IP. It sends requests directly to pod private IPs. Set routes and health probes for your service layout. See [AGIC private IP configuration](https://learn.microsoft.com/en-us/azure/application-gateway/ingress-controller-private-ip).
 
 Associate NAT Gateway with the AKS subnet for outbound public API calls. Keep PostgreSQL, Redis, and optional Azure OpenAI private endpoints on their private paths. Disable public access to these data services and link their private DNS zones to the VNet.
 

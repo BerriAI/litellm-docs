@@ -17,10 +17,9 @@ These examples use a client certificate and a [LiteLLM virtual key](../virtual_k
 
 Use a dedicated API hostname in private DNS, such as `llm-api.example.com`. Clients connect through your corporate network, VPN, or private interconnect. Allow only the ingress to reach LiteLLM. Keep Admin UI access separate.
 
-<details id="configure-litellm-identity">
-<summary>Shared LiteLLM configuration</summary>
+## LiteLLM configuration {#configure-litellm-identity}
 
-Add this mapping to your existing `config.yaml`. Keep your models, master key, and database configuration:
+Add this mapping to `config.yaml`:
 
 ```yaml
 general_settings:
@@ -36,8 +35,6 @@ Each ingress overwrites `X-MTLS-Client-ID` and removes `X-LiteLLM-Customer-ID` a
 Close alternate listeners, node ports, and default service URLs that bypass the ingress. Apply the policy to every route on the API hostname. These examples expose `/v1/` and preserve `Authorization`.
 
 Configure backend HTTPS separately from frontend mTLS. LiteLLM's [`--ssl_certfile_path` and `--ssl_keyfile_path` options](../cli.md#ssltls-configuration) supply its server certificate and key. These flags do not configure client-certificate validation.
-
-</details>
 
 ## AWS Application Load Balancer
 
@@ -110,11 +107,11 @@ server {
 }
 ```
 
-Keep NGINX's source IP check on the direct connection. Do not configure `real_ip_header` on this mapper. Empty, duplicate, or unlisted issuer/serial pairs fail the map. With the common LiteLLM configuration above, an allowed request records `billing-worker` as its customer ID.
+Keep NGINX's source IP check on the direct connection. Do not configure `real_ip_header` on this mapper. Empty, duplicate, or unlisted issuer/serial pairs fail the map. LiteLLM records `billing-worker` as the customer ID.
 
 Set the target group's health-check path to `/ingress-health`. Keep the ALB listener rule limited to `/v1/*`. This probe checks NGINX. Monitor LiteLLM readiness separately.
 
-Forward `/v1/*` to an HTTPS target group. Restrict target access to the ALB security group. **ALB encrypts HTTPS backend traffic but does not validate the backend certificate.** If your policy requires origin identity checks, choose an ingress that validates origin certificates. See [ALB target group protocols](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html).
+**ALB encrypts HTTPS backend traffic but does not validate the backend certificate.** If your policy requires origin identity checks, choose an ingress that validates origin certificates. See [ALB target group protocols](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html).
 
 ## Azure Application Gateway
 
@@ -128,7 +125,7 @@ Configure [strict mTLS](https://learn.microsoft.com/en-us/azure/application-gate
 
 1. Open **SSL settings**, add an SSL profile, and select **Client Authentication**.
 2. Upload each trusted client CA chain in one PEM or CER file. Include its root and intermediates.
-3. Open the API's HTTPS listener, enable **SSL Profile**, and select this profile. The profile enforces client-certificate validation.
+3. Open the API's HTTPS listener, enable **SSL Profile**, and select this profile.
 4. Route `/v1/*` to your private backend. In **Backend settings**, select HTTPS. Use a hostname that matches its certificate. Upload the private root CA if needed. Keep certificate chain, expiry, and SNI validation enabled.
 
 See the [portal setup](https://learn.microsoft.com/en-us/azure/application-gateway/mutual-authentication-portal) and [backend TLS settings](https://learn.microsoft.com/en-us/azure/application-gateway/configuration-http-settings). Restrict origin access to the Application Gateway subnet. Configure its health probe separately for the private backend.
@@ -226,13 +223,11 @@ Frontend mTLS does not configure backend authentication. For supported backends,
 
 ## NGINX
 
-Use NGINX to verify client certificates and map each approved certificate to a workload ID.
-
 <IngressArchitecture kind="mtls-nginx" />
 
 ### Configuration
 
-Place both blocks inside your NGINX `http` configuration. Replace the example issuer and serial with values from an approved client certificate. The map assigns it the stable workload ID `billing-worker`. The origin must serve HTTPS with a certificate for `litellm.internal`.
+Place both blocks inside your NGINX `http` configuration. Replace the example issuer and serial with values from an approved client certificate. The origin must serve HTTPS with a certificate for `litellm.internal`.
 
 ```nginx
 map "$ssl_client_i_dn|$ssl_client_serial" $mtls_client_id {
@@ -276,12 +271,12 @@ server {
 
 ### Identity forwarding
 
-Adjust verification depth to your CA chain. Validate with `nginx -t`, then reload. NGINX requires a valid client certificate and a matching issuer/serial entry. Empty `proxy_set_header` values remove incoming headers. See the [certificate variables](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#variables), [map directive](https://nginx.org/en/docs/http/ngx_http_map_module.html#map), and [header rules](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header). Allow origin access only from NGINX.
+Adjust verification depth to your CA chain. Validate with `nginx -t`, then reload. Empty `proxy_set_header` values remove incoming headers. See the [certificate variables](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#variables), [map directive](https://nginx.org/en/docs/http/ngx_http_map_module.html#map), and [header rules](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header). Allow origin access only from NGINX.
 
 <details id="certificate-only-clients">
 <summary>Use certificates without client-supplied keys</summary>
 
-To authenticate clients with only a certificate, keep one virtual key per workload at the ingress. Map the verified workload ID to that key. LiteLLM then applies the existing key's user, team, model permissions, and budgets. Do not use the master key or a shared key for all clients.
+To authenticate clients with only a certificate, keep one virtual key per workload at the ingress. Map the verified workload ID to that key. Do not use the master key or a shared key for all clients.
 
 For NGINX, add this map in the `http` block alongside the certificate map:
 
@@ -292,7 +287,7 @@ map $mtls_client_id $mtls_litellm_key {
 }
 ```
 
-Mount the secret file with restricted access. Its format is `billing-worker sk-WORKLOAD_VIRTUAL_KEY;`. Keep it out of source control and logs.
+Mount the secret file with restricted access. Its format is `billing-worker sk-WORKLOAD_VIRTUAL_KEY;`.
 
 In the existing `/v1/` location, replace the `Authorization` directive with these directives. Keep the certificate check, identity header rules, and backend TLS settings:
 
@@ -313,13 +308,13 @@ general_settings:
       litellm_user_role: customer
 ```
 
-NGINX overwrites this header on every forwarded request. LiteLLM uses it for normal virtual-key authentication. Clients cannot choose another key through this route. Reload NGINX after a key-map change. Keep the origin private and verify that a revoked mapped key fails.
+Reload NGINX after a key-map change and verify that a revoked key fails.
 
 </details>
 
 ## HAProxy
 
-Use an HAProxy build with OpenSSL support. The community edition supports these directives. `server.pem` contains the server certificate chain and private key. The private origin serves HTTPS.
+Use an HAProxy build with OpenSSL support. `server.pem` contains the server certificate chain and private key. The private origin serves HTTPS.
 
 <IngressArchitecture kind="mtls-haproxy" />
 
@@ -357,7 +352,7 @@ backend litellm_origin
 
 ### Identity forwarding
 
-Validate with `haproxy -c -f /etc/haproxy/haproxy.cfg`, then reload. HAProxy requires a valid certificate and a fingerprint in the map. `set-header` replaces any client-supplied workload ID. The backend verifies the origin certificate and forwards `Authorization`. Allow origin access only from HAProxy. See [client certificate authentication](https://www.haproxy.com/documentation/haproxy-configuration-tutorials/security/authentication/client-certificate-authentication/) and the [configuration reference](https://docs.haproxy.org/3.2/configuration.html).
+Validate with `haproxy -c -f /etc/haproxy/haproxy.cfg`, then reload. `set-header` replaces any client-supplied workload ID. The backend verifies the origin certificate and forwards `Authorization`. Allow origin access only from HAProxy. See [client certificate authentication](https://www.haproxy.com/documentation/haproxy-configuration-tutorials/security/authentication/client-certificate-authentication/) and the [configuration reference](https://docs.haproxy.org/3.2/configuration.html).
 
 ## Kong Gateway
 
@@ -421,38 +416,6 @@ services:
 
 `consumer_by: []` disables automatic Consumer matching. The explicit credential binds the certificate SAN to `billing-worker` and its issuing CA. Kong uses the CN only when the certificate has no SAN. Leave `anonymous` and `default_consumer` unset. See [manual certificate mappings](https://developer.konghq.com/plugins/mtls-auth/#manual-mappings-between-certificate-and-consumer-objects).
 
-Post-Function runs after mTLS authentication. It reads the authenticated [Consumer object](https://developer.konghq.com/gateway/pdk/reference/kong.client/#kongclientget_consumer) and [overwrites the upstream identity header](https://developer.konghq.com/gateway/pdk/reference/kong.service.request/#kongservicerequestset_headerheader-of). It does not trust incoming `X-Consumer-*` headers. The common LiteLLM configuration records `billing-worker` as the customer ID. The virtual key still selects the LiteLLM user and team.
+Post-Function runs after mTLS authentication. It reads the authenticated [Consumer object](https://developer.konghq.com/gateway/pdk/reference/kong.client/#kongclientget_consumer) and [overwrites the upstream identity header](https://developer.konghq.com/gateway/pdk/reference/kong.service.request/#kongservicerequestset_headerheader-of). It does not trust incoming `X-Consumer-*` headers. LiteLLM records `billing-worker` as the customer ID.
 
 The Service uses HTTPS and verifies the origin certificate. See [Kong TLS configuration](https://developer.konghq.com/gateway/ssl-certificates/). Allow origin access only from Kong. Preserve `Authorization` and apply the plugin to every route to this Service. Review plugins that enable response buffering before using streaming.
-
-## Verify the architecture
-
-Run these checks from your corporate client network before you give out access. Certificate failures can appear as TLS errors or ingress HTTP errors, depending on the product. Inspect ingress and LiteLLM logs to confirm where the request stops.
-
-| Test | Expected result |
-| --- | --- |
-| Trusted, valid certificate and allowed LiteLLM key | Completion succeeds |
-| No certificate, even with a valid LiteLLM key | Ingress rejects the request |
-| Expired certificate or a certificate signed by another CA | Ingress rejects the request |
-| Valid certificate with a missing, invalid, or revoked client-supplied key | LiteLLM rejects the request in client-supplied-key mode |
-| Valid certificate and key requesting a model outside the key's permissions | LiteLLM rejects the request |
-| Certificate identity headers supplied without a client certificate | Ingress rejects the request |
-| Valid certificate missing from an alias map or Kong Consumer mapping | Ingress or mapping proxy rejects the request |
-| Valid certificate with forged workload or customer headers | LiteLLM records the mapped certificate workload ID |
-| Direct origin, alternate hostname, or alternate public listener | Client cannot bypass mTLS |
-| Streaming request lasting as long as your expected workload | Chunks arrive as the model generates them and the connection stays open |
-
-If your ingress validates origin certificates, test an untrusted certificate and one with the wrong hostname. The ingress must reject both. ALB does not validate HTTPS target certificates. For certificate-only clients, also test a missing key-map entry and a revoked mapped key.
-
-Set ingress, origin, and client timeouts for your longest request and gaps between streamed chunks. Adjust the 300-second examples to fit your workload. Keep proxy retries disabled so a retry does not replay a completion POST after the origin receives it. Keep health checks on the private backend.
-
-<details>
-<summary>Certificate and key lifecycle</summary>
-
-Issue client certificates through your PKI. Include the client-authentication usage that your ingress requires. Use a dedicated CA or issuing intermediate for the allowed clients. Keep private keys with their owners. Upload only CA certificates to ingress trust stores.
-
-Renew certificates before they expire. If you use aliases, map the new certificate to the same workload ID before clients switch. Azure's issuer/serial ID and GCP's fingerprint change with a new certificate. Update customer policies that use those IDs. During CA rotation, trust both old and new CA chains. Verify new client credentials, then remove the old CA and certificate mappings. Rotate ingress and origin server certificates separately.
-
-Configure and test certificate revocation for your ingress. Examples include ALB trust-store CRLs, Application Gateway OCSP, and proxy CRLs. If your ingress does not support revocation, use short-lived certificates and plan how to remove trust. Test a new connection after revocation. Check how existing connections and caches affect enforcement. Revoke a compromised LiteLLM key separately through [key management](../virtual_keys.md).
-
-</details>

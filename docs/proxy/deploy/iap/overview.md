@@ -41,14 +41,14 @@ All Require rules must pass. Apply the same requirements to every Allow policy f
 
 Run two `cloudflared` replicas in your cluster. For a token-managed tunnel, read `TUNNEL_TOKEN` from a Kubernetes Secret and run `cloudflared tunnel --no-autoupdate run`. See [Deploy cloudflared on Kubernetes](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/deployment-guides/kubernetes/).
 
-Point the tunnel at your private LiteLLM service or internal load balancer. For a locally managed tunnel, use this example route:
+Point the tunnel at NGINX's private HTTPS endpoint:
 
 ```yaml title="Locally managed cloudflared route"
 ingress:
   - hostname: llm.corp.example.com
-    service: https://litellm.internal.example.com:443
+    service: https://ingress.internal.example.com:443
     originRequest:
-      originServerName: litellm.internal.example.com
+      originServerName: ingress.internal.example.com
       caPool: /etc/cloudflared/origin-ca.pem
       noTLSVerify: false
       access:
@@ -68,49 +68,30 @@ Use an Okta custom authorization server with the `groups` scope and set its **Au
 
 Create LiteLLM teams with IDs `litellm-engineering` and `litellm-data-science`, then assign their [model permissions and budgets](../../access_management/jwt_permissions.md#control-model-access-with-teams). The group values must match the team IDs.
 
-LiteLLM's custom-header setting expects a `Bearer` prefix. This adapter reads the raw Access JWT and passes it to LiteLLM's JWT validation. Save it beside `config.yaml`:
+NGINX adds the `Bearer` prefix that LiteLLM expects. Add these directives to its HTTPS proxy location for LiteLLM:
 
-```python title="cloudflare_auth.py"
-from typing import Literal
-
-from fastapi import HTTPException, Request
-
-
-async def read_assertion(request: Request, api_key: str) -> str:
-    token = request.headers.get("cf-access-jwt-assertion", "").strip()
-    if not token or token.count(".") != 2:
-        raise HTTPException(status_code=401, detail="Missing Access JWT")
-    return token
-
-
-def validate_claims(token: dict) -> Literal[True]:
-    subject = token.get("sub")
-    custom = token.get("custom")
-    groups = custom.get("groups") if isinstance(custom, dict) else None
-    if not isinstance(subject, str) or not subject.strip():
-        raise ValueError("Missing user identity")
-    if not isinstance(groups, list) or not groups:
-        raise ValueError("Missing team groups")
-    if any(not isinstance(group, str) or not group.strip() for group in groups):
-        raise ValueError("Invalid team groups")
-    return True
+```nginx
+if ($http_cf_access_jwt_assertion = "") { return 401; }
+proxy_set_header X-LiteLLM-IAP-Token "Bearer $http_cf_access_jwt_assertion";
+proxy_set_header Authorization "";
+proxy_set_header litellm_user_api_key "";
 ```
+
+Keep [backend certificate verification](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_verify) enabled and [response buffering](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering) disabled.
 
 Configure LiteLLM to verify the JWT and map its claims:
 
 ```yaml title="config.yaml"
 general_settings:
-  custom_auth: cloudflare_auth.read_assertion
-  custom_auth_settings:
-    mode: "on"
   enable_jwt_auth: true
+  litellm_key_header_name: X-LiteLLM-IAP-Token
   litellm_jwtauth:
     user_id_jwt_field: sub
     user_email_jwt_field: email
     team_ids_jwt_field: custom.groups
     user_id_upsert: true
     enforce_team_based_model_access: true
-    custom_validate: cloudflare_auth.validate_claims
+    fallback_to_db_teams: false
 ```
 
 ```bash
@@ -119,9 +100,7 @@ export JWT_ISSUER=https://YOUR_TEAM.cloudflareaccess.com
 export JWT_AUDIENCE=ACCESS_APPLICATION_AUD
 ```
 
-LiteLLM checks the signature, issuer, audience, and expiry before the claim validator runs. It maps `sub` to the user and `custom.groups` to the teams. The adapter returns a token, so LiteLLM still applies its JWT permissions.
-
-Access can omit custom claims when they exceed its token size limit. The validator rejects missing groups instead of using a default team. This example accepts employee tokens. See [Access token claims](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/application-token/) and [LiteLLM user and team mappings](../../jwt_user_team_auth.md).
+LiteLLM verifies the JWT and applies the mapped team's permissions. Keep database team fallback disabled and leave `team_id_default` unset so requests without team claims are rejected. Access can omit custom claims that exceed its token size limit. Limit the group list to LiteLLM teams. See [Access token claims](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/application-token/) and [LiteLLM user and team mappings](../../jwt_user_team_auth.md).
 
 ## AWS Application Load Balancer {#aws}
 
@@ -175,7 +154,7 @@ export JWT_ISSUER=https://idp.example.com
 export JWT_AUDIENCE=litellm-proxy
 ```
 
-Map the verified claims to [LiteLLM users and teams](../../jwt_user_team_auth.md). No client LiteLLM key or header adapter is needed. The ALB scope check controls access to the route. LiteLLM applies model permissions and budgets.
+Map the verified claims to [LiteLLM users and teams](../../jwt_user_team_auth.md). The ALB scope check controls access to the route. LiteLLM applies model permissions and budgets.
 
 ALB does not verify HTTPS target certificates. Restrict target access to the ALB. Use an ingress that verifies backend certificates if your policy requires that check. See [ALB target group protocols](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html).
 
@@ -212,7 +191,7 @@ Under **Single sign-on → Header-based → Headers → Add new header**, select
 | `X-LiteLLM-User-ID` | `user.objectid` |
 | `X-LiteLLM-User-Email` | `user.mail` |
 
-Configure Application Proxy to set these headers from the authenticated user. Populate the email attribute for every assigned user. Allow only connector hosts to reach the origin. These are trusted proxy headers, not signed JWTs. See [Entra header-based SSO](https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-configure-single-sign-on-with-headers).
+Populate the email attribute for every assigned user. Allow only connector hosts to reach the origin. These are trusted proxy headers, not signed JWTs. See [Entra header-based SSO](https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-configure-single-sign-on-with-headers).
 
 At the private NGINX ingress, reject missing identity headers and supply the approved LiteLLM team. Add these directives inside its existing HTTPS location:
 
@@ -238,7 +217,7 @@ general_settings:
     team_id: X-LiteLLM-Team-ID
 ```
 
-Replace the CIDR with the direct NGINX peers that LiteLLM sees. Each mapping value is a header name. LiteLLM accepts the forwarded user and team without a client LiteLLM key. Use this mode separately from `custom_auth` and `enable_jwt_auth`.
+Replace the CIDR with the direct NGINX peers that LiteLLM sees. LiteLLM accepts the forwarded user and team without a client LiteLLM key. Use this mode separately from `custom_auth` and `enable_jwt_auth`.
 
 Entra application assignments control who can connect. A missing LiteLLM user record does not by itself deny access in this mode. The fixed team selects the stored model and budget policies. Do not accept a client-supplied team or role. See [LiteLLM configuration](../../config_settings.md) and the [trusted-header implementation](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/auth/oauth2_proxy_hook.py).
 
@@ -316,7 +295,7 @@ proxy_set_header Authorization "";
 proxy_set_header litellm_user_api_key "";
 ```
 
-The adapter adds the `Bearer` prefix. It does not authenticate the user. LiteLLM verifies the signed assertion. Restrict access to the IAP path, disable response buffering, and keep backend TLS verification enabled for separate NGINX hosts.
+LiteLLM verifies the signed assertion. Restrict access to the IAP path, disable response buffering, and keep backend TLS verification enabled for separate NGINX hosts.
 
 Add these fields to your existing LiteLLM JWT configuration:
 
@@ -340,15 +319,3 @@ In IAP, open the protected API backend's **More → Signed Header JWT Audience**
 Map `sub` and `email` through your [user and team mappings](../../jwt_user_team_auth.md). Require a nonempty `sub` with a [claim validator](../../jwt_auth_reference.md#custom-jwt-validate). See [IAP signed headers](https://docs.cloud.google.com/iap/docs/signed-headers-howto) and [Cloud Run ingress containers](https://docs.cloud.google.com/run/docs/configuring/services/containers).
 
 You can also enable IAP directly on a Cloud Run service. Keep its ingress private and use that service's signed-header audience. Enable IAP at either Cloud Run or the load balancer, not both.
-
-## Verify the architecture
-
-| Check | Expected result |
-| --- | --- |
-| Approved caller uses the protected route | LiteLLM records the forwarded user and expected team |
-| Caller fails the IAP access policy | The IAP rejects the request before it reaches LiteLLM |
-| Caller sends a forged token or identity header | The IAP, private adapter, or LiteLLM rejects it or replaces it with verified identity |
-| Caller connects directly to LiteLLM | Network controls block the connection |
-| Allowed caller requests a model outside the mapped team's permissions | LiteLLM rejects the request |
-
-For signed-token paths, test an expired token and a token for a different application. For Entra, test missing identity headers and a caller outside the assigned groups. Confirm user and team attribution in LiteLLM's request logs. Test a long streaming request through the complete path.

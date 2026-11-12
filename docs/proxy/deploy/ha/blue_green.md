@@ -20,8 +20,6 @@ flowchart LR
     Green --> State
 ```
 
-The solid and dashed ingress paths show different stages of the rollout. Blue keeps its existing requests after the switch. Their responses do not move to green.
-
 ## Prepare the replacement
 
 Deploy green with a pinned image. Use the same database, encryption salt, authentication settings, and regional Redis as blue. Use separate service names or backend pools so ingress can select each version. Both sets use production state. Tests that create keys or change configuration affect that shared state.
@@ -58,7 +56,7 @@ For the cutover, set blue's weight to `0` and green's weight to `100`, then appl
 
 Traffic weights control new requests. They do not move an open stream. Before you remove blue, wait until its active requests reach zero or your drain deadline expires. Check how your ingress controller handles persistent connections and backend removal.
 
-For example, a gateway that permits 600-second requests also needs shutdown time for routing changes and process cleanup. Merge this fragment into each Deployment's pod specification. Test these example values with your workload. They do not guarantee that every stream completes:
+For 600-second requests, allow extra shutdown time for routing changes and process cleanup. Merge this fragment into each Deployment's pod specification and test the values with your workload:
 
 ```yaml title="Deployment pod template fragment"
 spec:
@@ -88,7 +86,7 @@ LiteLLM also has an opt-in [drain endpoint](../../health.md#other-health-endpoin
 
 Run one migration job for the shared database, and set `DISABLE_SCHEMA_UPDATE=true` on both sets of serving instances. Coordinate Helm releases so they do not each launch competing migrations. See [migrations](../../prod.md#run-migrations-from-the-helm-presync-hook).
 
-Confirm that blue can still read and write after green's migration. A release can remove columns, change stored values, or require incompatible configuration. A blue/green traffic switch does not make those changes safe. Follow the release's migration procedure. Test rollback against a database copy before production.
+Confirm that blue can still read and write after green's migration. Follow the release's migration procedure and test rollback against a database copy before production.
 
 ## Roll back
 

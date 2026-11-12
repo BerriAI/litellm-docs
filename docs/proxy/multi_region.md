@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 
 {/* keep-version-note */}
 
-Run LiteLLM in more than one region when users need a nearby gateway or your recovery plan covers a regional outage. This design works on AWS, Google Cloud, and Azure. Regional gateways use one logical PostgreSQL database and a Redis instance per region.
+Run LiteLLM in more than one region when users need a nearby gateway or your recovery plan covers a regional outage. Regional gateways use one logical PostgreSQL database and a Redis instance per region.
 
 Start with [High Availability](./deploy/ha/overview.md) for replicas and zone failures within one region. Use [Routing](./deploy/multi_region/routing.md) to choose a region for each request. Use [Failover](./deploy/multi_region/failover.md) to plan for regional and shared dependency failures.
 
@@ -37,16 +37,16 @@ flowchart LR
     GatewayB -->|Private link| DB
 ```
 
-Each region has its own ingress, gateway capacity, and Redis. This example places the shared PostgreSQL writer in Region A. PostgreSQL holds the shared keys, teams, users, configuration, and spend records. Use a highly available database service. All regional gateways depend on that writable database. Adding a gateway region does not give it an independent database.
+PostgreSQL holds the shared keys, teams, users, configuration, and spend records. Use a highly available database service. All regional gateways depend on its writable primary.
 
 | Mode | Normal request routing | Capacity requirement |
 | --- | --- | --- |
 | Active-active | Both regions serve requests through a latency, location, or weighted policy. | The surviving region needs spare capacity for the traffic it takes over. |
 | Active-passive | Region A serves requests. Region B waits as a standby. | Keep standby capacity and provider access ready for the required recovery time. |
 
-Both modes need health monitoring and a recovery plan. Test the standby regularly in an active-passive deployment. An idle deployment can have stale credentials, insufficient quota, or missing configuration.
+Test the standby regularly in an active-passive deployment for stale credentials, insufficient quota, or missing configuration.
 
-A shared database holds the deployment's state. Processes do not see every change immediately. Authentication caches, configuration reloads, read-replica lag, and batched spend writes can delay updates. See [authentication caching](./caching_redis.md#virtual-key-authentication-cache-redis) and [Database Read Replica](./db_read_replica.md).
+Authentication caches, configuration reloads, read-replica lag, and batched spend writes can delay updates across regions. See [authentication caching](./caching_redis.md#virtual-key-authentication-cache-redis) and [Database Read Replica](./db_read_replica.md).
 
 ## Licensing across regions
 
@@ -58,11 +58,9 @@ A single LiteLLM Enterprise license covers a multi-region deployment when all re
 | Independent deployment per region | One per deployment | One per deployment |
 | [Global Control Plane](./global_control_plane.md) | One per worker deployment | One per worker deployment |
 
-This shared-database design works with the open source proxy. Enterprise features require the license above. Use the [Global Control Plane](./global_control_plane.md) to manage independent deployments from one UI. Each worker has its own keys, teams, budgets, database, Redis, and master key. The control plane does not make a key from one worker valid on another.
+This shared-database design works with the open source proxy. Use the [Global Control Plane](./global_control_plane.md) to manage independent deployments from one UI. Each worker has its own keys, teams, budgets, database, Redis, and master key.
 
 ## Requirements
-
-Keep these settings consistent across every region of the shared deployment:
 
 | Setting | Requirement | Purpose |
 | --- | --- | --- |
@@ -90,7 +88,7 @@ Regional Redis also creates separate ownership locks for shared background jobs.
 
 Provision PostgreSQL with zone redundancy, backups, and a tested writer failover procedure. Run schema migrations once per upgrade through the [Helm migration job](./deploy/helm.md) or a shared deployment pipeline. Do not launch a separate migration from every region.
 
-Decide whether your recovery plan needs a database replica in another region. A replica can reduce recovery time. Your database recovery procedure must promote it and direct writes to it. A gateway routing change does not perform those steps. See [Failover](./deploy/multi_region/failover.md#recover-the-shared-database).
+Add a database replica in another region if your recovery plan requires it. Define how to promote it and redirect writes in your [database recovery procedure](./deploy/multi_region/failover.md#recover-the-shared-database).
 
 ### 2. Connect the regions' networks
 
@@ -102,7 +100,7 @@ Use TLS and verify the database server certificate. Mount the required CA bundle
 
 Deploy the regional load balancer and LiteLLM replicas with [Helm](./deploy/helm.md) or [Terraform](./deploy/terraform.md). Disable migration jobs in secondary releases. In the Helm chart, set `migrationJob.enabled: false`. Keep `DISABLE_SCHEMA_UPDATE=true` on all serving instances.
 
-The following environment values show the shared and regional settings. Inject real secrets through your deployment's secret manager and mount the CA at `/certs/db-ca.pem`.
+Inject secrets through your deployment's secret manager and mount the CA at `/certs/db-ca.pem`.
 
 <Tabs>
 <TabItem value="primary" label="Region A">
@@ -163,7 +161,7 @@ Test routing with each region unavailable in turn. Test shared database loss sep
 
 ## Optional: dedicated admin instance
 
-You can keep management access on one private hostname while regional gateways serve model requests. These instances form one deployment with a shared database. Global Control Plane workers run independent deployments.
+You can keep management access on one private hostname while regional gateways serve model requests.
 
 <EnterpriseFeature>
 
@@ -171,7 +169,7 @@ You can keep management access on one private hostname while regional gateways s
 
 </EnterpriseFeature>
 
-Use the same shared database and secrets on all instances. Then set these additional environment values:
+Set these environment values:
 
 <Tabs>
 <TabItem value="admin" label="Admin instance">

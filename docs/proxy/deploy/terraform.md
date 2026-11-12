@@ -15,7 +15,7 @@ import styles from '@site/src/css/moduleReference.module.css';
 
 Use Terraform 1.9 or newer and Bash. Configure cloud credentials for Terraform and authenticate the AWS or Google Cloud CLI.
 
-Keep LiteLLM on your corporate network. Both modules create public load balancers by default. Apply the [AWS private ingress changes](./cloud/aws.md#ecs-module-changes) or [GCP private ingress changes](./cloud/gcp.md#cloud-run-module-changes) before deployment.
+Both modules create public load balancers by default. Apply the [AWS private ingress changes](./cloud/aws.md#ecs-module-changes) or [GCP private ingress changes](./cloud/gcp.md#cloud-run-module-changes) before deployment.
 
 The modules create PostgreSQL and Redis. Use the [sizing guide](./sizing.md) to choose their capacity.
 
@@ -105,8 +105,6 @@ After apply, point your private DNS record for `lb_domains` at `lb_ip`.
 
 ### Apply
 
-Initialize Terraform, review the plan, and apply it:
-
 ```bash
 terraform init
 terraform plan -out=tfplan
@@ -118,7 +116,7 @@ Use [Health Checks](../health.md) to verify the deployment.
 
 ## Inputs reference
 
-The tables below list common inputs and their defaults. See all [AWS inputs](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/aws/variables.tf) and [GCP inputs](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/gcp/variables.tf).
+See all [AWS inputs](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/aws/variables.tf) and [GCP inputs](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/gcp/variables.tf).
 
 <div className={styles.reference}>
 

@@ -78,7 +78,7 @@ Each instance multiplies your total connections: 3 instances × 4 workers × 10 
 
 :::
 
-Size the connection budget for the autoscaler's maximum replica count. The [LiteLLM chart](./deploy/helm.md) defaults `gateway.hpa.maxReplicas` and `gateway.keda.maxReplicaCount` to 10. Ten pods with one worker and a pool limit of 10 can use 100 connections, before backend pods, migrations, and rollout overlap. Set the maximum to fit your database connection limit. See [how to calculate the right value](./configs.md#configure-db-pool-limits--connection-timeouts).
+Size the connection budget for the autoscaler's maximum replica count. The [LiteLLM chart](./deploy/helm.md) defaults `gateway.hpa.maxReplicas` and `gateway.keda.maxReplicaCount` to 10. Ten pods with one worker and a pool limit of 10 can use 100 connections, before backend pods, migrations, and rollout overlap. See [how to calculate the right value](./configs.md#configure-db-pool-limits--connection-timeouts).
 
 ### Keep error logs out of the database
 
@@ -156,7 +156,7 @@ Request and token counters update when requests finish, so keep spare replicas f
 
 ### Workers and scaling
 
-On Kubernetes, run one Uvicorn worker per pod and scale by adding pods. This is the default. Set `--num_workers 1` to make it explicit.
+On Kubernetes, use the default of one Uvicorn worker per pod (`--num_workers 1`) and scale by adding pods.
 
 ```shell
 CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1"]
@@ -362,7 +362,7 @@ docker run \
   ghcr.io/berriai/litellm:main-stable --config /app/config.yaml
 ```
 
-Helm: put the bundle in a ConfigMap or Secret. Mount it separately on the gateway, backend, and migrations Job so all database clients can read it. In monolith mode, the proxy uses the gateway mounts.
+Helm: put the bundle in a ConfigMap or Secret. Mount it separately on the gateway, backend, and migrations Job. In monolith mode, the proxy uses the gateway mounts.
 
 ```bash
 kubectl create configmap rds-ca --from-file=global-bundle.pem
@@ -426,7 +426,7 @@ Replicas are placed in the window using `POD_NAME`, falling back to `HOSTNAME` a
 
 ### Run migrations from the deployment hook {#run-migrations-from-the-helm-presync-hook}
 
-The [LiteLLM chart](./deploy/helm.md) runs a separate migrations Job with the same image as the application. It uses Helm `pre-install` and `pre-upgrade` hooks by default, in both deployment modes. Configure the writer database under `database.writer` and let the Job finish before traffic reaches the new version.
+The [LiteLLM chart](./deploy/helm.md) runs a separate migrations Job through Helm `pre-install` and `pre-upgrade` hooks by default, in both deployment modes. Configure the writer database under `database.writer` and let the Job finish before traffic reaches the new version.
 
 For Argo CD, select its PreSync hook instead:
 

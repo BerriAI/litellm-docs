@@ -8,7 +8,7 @@ description: Route LiteLLM requests between regions with DNS or a global proxy. 
 
 {/* keep-version-note */}
 
-Routing chooses which region receives a new request. Use a single gateway hostname. Keep regional endpoints available for health probes and controlled tests. The [multi-region overview](../../multi_region.md) describes the shared database and regional Redis. [Failover](./failover.md) covers unhealthy regions and recovery.
+Use a single gateway hostname. Keep regional endpoints available for health probes and controlled tests. See the [multi-region overview](../../multi_region.md) for shared data and [Failover](./failover.md) for health policies and recovery.
 
 ## Choose the routing layer
 
@@ -29,9 +29,9 @@ flowchart TB
     DNS ~~~ Proxy
 ```
 
-DNS returns an address. It does not proxy the model request. Recursive resolvers and clients cache the answer. An existing connection can outlive the DNS TTL. DNS weights control how often DNS returns each address. They do not control the exact share of requests each region receives.
+Recursive resolvers and clients cache DNS answers. An existing connection can outlive the DNS TTL. DNS weights control how often DNS returns each address, not the exact share of requests each region receives.
 
-A global proxy stays in the request path and chooses an origin through its routing policy. Use it to manage HTTP behavior. Plan for its capacity, availability, TLS, and streaming timeouts. If you manage the proxy yourself, deploy redundant instances so one failure does not stop all traffic.
+A global proxy stays in the request path and chooses an origin through its routing policy. Plan for its capacity, TLS, and streaming timeouts. Deploy redundant instances if you manage it yourself.
 
 ## Choose a policy
 
@@ -46,8 +46,6 @@ Location-based routing alone does not enforce data residency. This design still 
 
 ## Implementation examples
 
-These services apply routing policies. They do not create LiteLLM deployments or keep them in sync across regions.
-
 | Implementation | Routing layer | How it fits |
 | --- | --- | --- |
 | [AWS Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html) | DNS | Latency, weighted, geolocation, and failover records select regional endpoints. |
@@ -57,7 +55,7 @@ These services apply routing policies. They do not create LiteLLM deployments or
 | [Azure Front Door](https://learn.microsoft.com/en-us/azure/frontdoor/routing-methods) | HTTP proxy | Health, priority, latency, and weights select a regional origin. Weights apply among origins eligible under the other settings. |
 | [HAProxy](https://www.haproxy.com/documentation/haproxy-configuration-tutorials/reliability/health-checks/) | Self-managed proxy | Backends represent regional ingress endpoints. Use health checks and weighted or backup servers. See the [failover example](./failover.md#example-active-passive-with-haproxy). |
 
-For Cloud Run, serverless NEGs do not support ordinary load-balancer health checks. Use the [supported serverless health and outlier-detection mechanisms](https://docs.cloud.google.com/load-balancing/docs/negs/serverless-neg-concepts). Test them during regional and dependency failures. Backend services with IAP enabled cannot use outlier detection. Account for this limit when you combine identity-aware access and regional failover.
+For Cloud Run, serverless NEGs do not support ordinary load-balancer health checks. Use the [supported serverless health and outlier-detection mechanisms](https://docs.cloud.google.com/load-balancing/docs/negs/serverless-neg-concepts). Test them during regional and dependency failures. Backend services with IAP enabled cannot use outlier detection.
 
 ## Preserve request behavior
 
@@ -65,8 +63,8 @@ Forward the client's authorization and request body through the routing layer. C
 
 Keep response streaming enabled and avoid buffering the whole response. Set idle and request timeouts at every hop to support your API behavior. A streaming response stays on its original connection. Routing changes do not transfer it to another region.
 
-Choose which operations the proxy can retry. A network error after it sends a request does not prove the provider did no work. Replaying a completion can produce duplicate output or charges. Retrying a management request can repeat a change. Let the application decide whether to retry a failed operation. Do not enable proxy retries for every POST.
+A network error can leave the request outcome unknown. Replaying a completion can produce duplicate output or charges. Retrying a management request can repeat a change. Let the application decide whether to retry a failed operation. Do not enable proxy retries for every POST.
 
 ## Verify the route
 
-Send controlled requests through the public hostname. Find them in regional ingress logs or traces. Check both regional endpoints directly, then compare actual traffic with your routing policy. Test a long stream, a new connection after a DNS change, and a request whose preferred region is unavailable. Continue with [Failover](./failover.md) for the health policy and recovery procedure.
+Send controlled requests through the gateway hostname and find them in regional ingress logs or traces. Check both regional endpoints directly, then compare actual traffic with your routing policy. Test a long stream, a new connection after a DNS change, and a request whose preferred region is unavailable. Continue with [Failover](./failover.md) for the health policy and recovery procedure.

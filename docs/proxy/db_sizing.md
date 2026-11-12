@@ -5,7 +5,7 @@ description: Size Postgres for LiteLLM Proxy through 20K RPS, with cloud recomme
 
 # Database Sizing
 
-Use Postgres for virtual keys and usage tracking. Size Redis separately with [Redis Sizing](./redis_sizing.md). See [Production Best Practices](./prod.md) for configuration and [What is stored in the DB](./db_info.md) for database contents. [Gateway benchmarks](../benchmarks.md) cover proxy throughput and latency.
+See [Production Best Practices](./prod.md) for configuration and [What is stored in the DB](./db_info.md) for database contents. Size Redis with [Redis Sizing](./redis_sizing.md). [Gateway benchmarks](../benchmarks.md) cover proxy throughput and latency.
 
 ## Workload {#what-the-proxy-asks-of-the-database}
 
@@ -99,7 +99,7 @@ log data bytes = logged requests per second × 86400 × retention days × bytes 
 | 15K | 1.296–2.592 TB |
 | 20K | 1.728–3.456 TB |
 
-These decimal TB estimates exclude indexes, WAL, and free space for maintenance. Multiply by retention days and add those costs. A fixed 1 TB volume does not cover a day of logs at 20K RPS under these assumptions.
+These decimal TB estimates exclude indexes, WAL, and free space for maintenance. Multiply by retention days and add those costs.
 
 Use these starting points for write tests, then increase storage to cover retention. Measure write latency and IOPS at 10K, 15K, and 20K because batching changes the write rate.
 
@@ -115,4 +115,4 @@ Batch spend writes with `proxy_batch_write_at: 60`. Keep [error logs out of the 
 
 ## What to monitor
 
-Watch connection count against `max_connections`, write latency, lock waits, and storage growth. Check `litellm_in_memory_spend_update_queue_size` and `litellm_redis_spend_update_queue_size` for queued spend updates. Use `litellm_pod_lock_manager_size` to check the transaction buffer flush lock. A queue that keeps growing requires investigation of database capacity, write errors, and buffer configuration.
+Watch connection count against `max_connections`, write latency, lock waits, and storage growth. Check `litellm_in_memory_spend_update_queue_size` and `litellm_redis_spend_update_queue_size` for queued spend updates. Use `litellm_pod_lock_manager_size` to check the transaction buffer flush lock.

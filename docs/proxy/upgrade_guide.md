@@ -68,7 +68,7 @@ migrationJob:
       enabled: false
 ```
 
-For Argo CD, enable `argocd` and disable `helm` instead. The PreSync job then runs before the application sync. See the [chart values](https://github.com/BerriAI/litellm/blob/main/helm/litellm/values.yaml).
+For Argo CD, enable `argocd` and disable `helm`. See the [chart values](https://github.com/BerriAI/litellm/blob/main/helm/litellm/values.yaml).
 
 </details>
 

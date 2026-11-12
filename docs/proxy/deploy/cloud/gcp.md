@@ -10,9 +10,9 @@ import { CloudArchitecture } from '@site/src/components/CloudArchitecture';
 
 {/* keep-version-note */}
 
-Connect corporate users and applications through Cloud VPN, Interconnect, or an approved private access service. Use private DNS and a regional internal Application Load Balancer. Keep model API egress separate from inbound requests.
+Connect corporate users and applications through Cloud VPN, Interconnect, or an approved private access service. Use private DNS and a regional internal Application Load Balancer.
 
-Create a private frontend subnet and a separate proxy-only subnet with purpose `REGIONAL_MANAGED_PROXY` and role `ACTIVE`. Allocate the frontend IP from the frontend subnet. Reserve the proxy-only subnet for Google's load balancer proxies. See [internal load balancer setup](https://docs.cloud.google.com/load-balancing/docs/l7-internal/setting-up-l7-internal-serverless).
+Create a private frontend subnet and a separate proxy-only subnet with purpose `REGIONAL_MANAGED_PROXY` and role `ACTIVE`. Allocate the frontend IP from the frontend subnet. See [internal load balancer setup](https://docs.cloud.google.com/load-balancing/docs/l7-internal/setting-up-l7-internal-serverless).
 
 Corporate VPN tunnels or Interconnect attachments must connect in the load balancer's region unless you enable global access. Add private DNS and routes for the frontend IP. See [internal load balancer client access](https://docs.cloud.google.com/load-balancing/docs/l7-internal#client-access).
 
@@ -34,13 +34,13 @@ The source module creates a global external load balancer. It has no input to se
 | [cloudrun.tf](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/gcp/cloudrun.tf) | Set all three services to `INGRESS_TRAFFIC_INTERNAL_ONLY`. Set connector egress to `ALL_TRAFFIC` for gateway, backend, and migrations. Remove unused public domain mappings. |
 | [outputs.tf](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/gcp/outputs.tf) | Update `lb_ip` and `lb_url` to use the regional internal address. |
 
-Remove the old public forwarding rules and address. Internal Cloud Run ingress accepts traffic from the internal load balancer. Cloud Run stays outside the customer subnet. The inbound serverless NEG path does not use the outbound VPC connector. See [Cloud Run ingress](https://docs.cloud.google.com/run/docs/securing/ingress) and [regional TLS support](https://docs.cloud.google.com/load-balancing/docs/l7-internal#ssl-certificates).
+Remove the old public forwarding rules and address. Cloud Run stays outside the customer subnet. The inbound serverless NEG path does not use the outbound VPC connector. See [Cloud Run ingress](https://docs.cloud.google.com/run/docs/securing/ingress) and [regional TLS support](https://docs.cloud.google.com/load-balancing/docs/l7-internal#ssl-certificates).
 
-Keep identity checks on the internal service. If you use IAP, grant Cloud Run Invoker to the IAP service agent and remove the module's `allUsers` invoker grants. Keep the Invoker IAM check enabled. Configure IAP on the load balancer or directly on Cloud Run, but not both. See [Google Cloud IAP](../iap/overview.md#gcp).
+If you use IAP, grant Cloud Run Invoker to the IAP service agent and remove the module's `allUsers` invoker grants. Keep the Invoker IAM check enabled. Configure IAP on the load balancer or directly on Cloud Run, but not both. See [Google Cloud IAP](../iap/overview.md#gcp).
 
 ## Helm on GKE {#gke-with-helm}
 
-Deploy with [Helm](../helm.md). This architecture uses separate gateway, backend, and UI services.
+Deploy separate gateway, backend, and UI services with [Helm](../helm.md).
 
 <CloudArchitecture cloud="gcp-gke-micro" />
 

@@ -5,7 +5,7 @@ description: Size Redis for LiteLLM Proxy through 20K RPS, with cloud recommenda
 
 # Redis Sizing
 
-Use Redis to share state across gateway instances. Size Postgres separately with [Database Sizing](./db_sizing.md). For setup, see [Redis in production](./prod.md#redis) and the [caching config](./caching_redis.md).
+For setup, see [Redis in production](./prod.md#redis) and the [caching config](./caching_redis.md). Size Postgres with [Database Sizing](./db_sizing.md).
 
 ## Workload {#what-the-proxy-asks-of-redis}
 
@@ -21,7 +21,7 @@ Without shared Redis state, each gateway enforces its own rate limits and keeps 
 
 Use these configurations as starting points for load tests. The AWS and GCP tables assume one primary shard supports 2,500 LiteLLM RPS with capacity left for bursts. This is an example assumption, not a benchmark. Measure each node type with your features enabled and calculate `primary shards = ceil(target RPS / measured RPS per primary)`.
 
-Add shards or memory if your working set exceeds usable capacity. Test the full cluster because key distribution and shared counters can limit scaling. Memory totals exclude reserved overhead and replica copies.
+Test the full cluster because key distribution and shared counters can limit scaling. Memory totals exclude reserved overhead and replica copies.
 
 ### AWS ElastiCache
 

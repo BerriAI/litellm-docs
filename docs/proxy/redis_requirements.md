@@ -5,7 +5,7 @@ description: Features that do not work, or do not work correctly, when the LiteL
 
 # What Needs Redis
 
-Redis is highly recommended for any LiteLLM proxy deployment that runs more than one worker process, and most deployments do: a single container with `--num_workers` above 1 already counts, as does any Kubernetes deployment with more than one replica.
+Use Redis when you run more than one worker process, either through `--num_workers` or multiple replicas.
 
 Almost everything the proxy enforces (rate limits, budgets, cooldowns, cache hits, config changes) is coordinated through state. With Redis, that state is shared, so every worker sees the same counters and the same invalidations. Without it, each worker keeps its own copy in memory, so a limit of 100 requests per minute across 4 workers really lets through 400, a revoked key stays usable on the workers that did not process the revocation, and cache hits only land on the worker that happened to store the response.
 
@@ -13,7 +13,7 @@ The Admin UI shows a banner while no Redis is configured. If you deliberately ru
 
 ## Configure Redis
 
-For provisioning Redis and wiring the proxy to it end to end, see [Set Up Redis](/docs/proxy/caching_redis). The short version:
+See [Set Up Redis](/docs/proxy/caching_redis) for provisioning and connection settings.
 
 ```yaml
 router_settings:
@@ -33,8 +33,6 @@ litellm_settings:
 Setting `REDIS_HOST` and `REDIS_PORT` in the environment is not enough on its own: the proxy reads them only when the config points at Redis, as above. The `router_settings` block covers router state (cooldowns, usage and latency based routing), and the cache block covers response caching and everything coordinated proxy-wide (rate limits, budgets, cache invalidation, the pod lock). Configure both. For cluster and sentinel deployments, and for pointing coordination at a different Redis than your response cache with `general_settings.coordination_redis`, see [Redis and Valkey](./caching_redis.md).
 
 ## What breaks without Redis
-
-The most well-known functionality that is degraded or unavailable across pods:
 
 | Feature | Without Redis |
 | --- | --- |

@@ -25,7 +25,7 @@ Install Kubernetes Metrics Server for CPU and memory metrics. Install Prometheus
 
 ### Helm values
 
-Enable metrics and set per-pod HPA targets in `values.yaml`. This example uses 50 RPS and 100,000 TPS. Choose targets from load tests with your models and traffic mix.
+Enable metrics and set per-pod HPA targets in `values.yaml`. Choose targets from load tests with your models and traffic mix.
 
 ```yaml title="values.yaml"
 gateway:
@@ -51,7 +51,7 @@ gateway:
         stabilizationWindowSeconds: 300
 ```
 
-The example keeps the chart's CPU and memory targets. Set container resource requests so Kubernetes can calculate utilization. Keep your model configuration and existing callbacks when you merge these values. Add `gateway.serviceMonitor.labels` if your Prometheus instance requires them to select the ServiceMonitor. Keep the metrics Service private.
+Set container resource requests so Kubernetes can calculate utilization. Keep your model configuration and existing callbacks when you merge these values. Add `gateway.serviceMonitor.labels` if your Prometheus instance requires them to select the ServiceMonitor. Keep the metrics Service private.
 
 ### Prometheus Adapter
 
@@ -79,13 +79,13 @@ Keep the `namespace` and `pod` scrape labels and scrape each pod once. `rate()` 
 
 ### Choose targets
 
-The HPA uses the metric that asks for the most replicas. For example, 400 RPS across five pods is 80 RPS per pod. A target of 50 asks for eight replicas. TPS, CPU, or memory can ask for more. The configured replica limits still apply.
+The HPA uses the metric that asks for the most replicas. For example, 400 RPS across five pods is 80 RPS per pod. A target of 50 asks for eight replicas. TPS, CPU, or memory can ask for more.
 
 LiteLLM updates its request and token counters when requests finish. Long streams delay these signals, so keep spare replicas. Test scale-up with short and long requests. See [Prometheus metrics](../prometheus.md) for metric details.
 
 ## KEDA alternative
 
-The chart supports `gateway.keda` in both deployment modes. Install KEDA and disable `gateway.hpa`. The chart rejects a configuration that enables both. This example keeps CPU and memory triggers alongside RPS and TPS. The Prometheus triggers use rates across the Helm release and targets for each replica. They do not need Prometheus Adapter. CPU and memory still require Metrics Server.
+The chart supports `gateway.keda` in both deployment modes. Install KEDA and disable `gateway.hpa`. The Prometheus triggers query Prometheus directly for rates across the Helm release with targets for each replica. CPU and memory require Metrics Server.
 
 ```yaml
 gateway:
@@ -144,14 +144,12 @@ Use [Sizing & Scaling](./sizing.md) to measure capacity before selecting thresho
 
 Set `maxReplicas` to fit your cluster capacity and PostgreSQL connection budget. Each worker has its own connection pool unless you enable `database.connectionPool`. That pool limits connections per gateway pod. Reserve connections for backend pods, migrations, and rolling updates. See [database connection limits](../prod.md#bound-database-connections).
 
-The chart defaults to the targets below. The recommended example adds RPS and TPS to the gateway's CPU and memory targets.
-
 | Component | HPA enabled by default | Default replica range | Default targets |
 | --- | --- | --- | --- |
 | Gateway or monolith | Yes | 1–10 | 70% CPU, 80% memory |
 | Backend | Yes | 1–4 | 70% CPU |
 | UI | No | 1–3 when enabled | 80% CPU |
 
-CPU and memory targets require Kubernetes Metrics Server and container resource requests. Targets express use as a percentage of those requests.
+CPU and memory targets express utilization as a percentage of container resource requests.
 
 For a fixed gateway replica count, disable both `gateway.hpa.enabled` and `gateway.keda.enabled`. Then set `gateway.replicaCount`. Backend and UI use their own `hpa.enabled` and `replicaCount` fields. See the [Helm values reference](./helm.md#valuesyaml-reference) for all settings.

@@ -10,9 +10,9 @@ import { CloudArchitecture } from '@site/src/components/CloudArchitecture';
 
 {/* keep-version-note */}
 
-Connect corporate users and applications through VPN, Direct Connect, or an approved private access service. Use private DNS and an internal ALB. Keep ECS tasks or EKS workers and data stores in private subnets. NAT gateways serve outbound traffic only.
+Connect corporate users and applications through VPN, Direct Connect, or an approved private access service. Use private DNS and an internal ALB. Place ECS tasks or EKS workers and data stores in private subnets across two availability zones. NAT gateways serve outbound traffic only.
 
-Use private subnets across two availability zones. Allow HTTPS only from corporate source ranges or the private access service. Keep routes to those clients in both directions. See [internal load balancer access](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html).
+Allow HTTPS only from corporate source ranges or the private access service. Keep routes to those clients in both directions. See [internal load balancer access](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html).
 
 ## Terraform on ECS Fargate
 
@@ -30,11 +30,11 @@ The source module creates an internet-facing ALB and opens ports 80 and 443 to `
 | [network.tf](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/aws/network.tf) | Replace the ALB's public ingress rules with port 443 from approved corporate ranges. Remove port 80 ingress if you do not need an internal redirect. Keep workload ingress limited to the ALB security group. Add routes to your private access network. |
 | Platform network and DNS | Create VPN, Direct Connect, or private access routes. Add a private DNS record for the ALB. Keep NAT in public egress subnets. |
 
-The diagram keeps the module's single NAT gateway. Add one per AZ if your availability requirements need it. The ALB, tasks, and data stores can share the private subnet set shown. Keep security groups separate.
+The module creates one NAT gateway. Add one per AZ if your availability requirements need it. Use separate security groups for the ALB, tasks, and data stores.
 
 ## Helm on EKS {#eks-with-helm}
 
-Deploy with [Helm](../helm.md). This architecture uses separate gateway, backend, and UI services.
+Deploy separate gateway, backend, and UI services with [Helm](../helm.md).
 
 <CloudArchitecture cloud="aws-eks-micro" />
 

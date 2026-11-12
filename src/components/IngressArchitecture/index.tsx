@@ -138,18 +138,18 @@ const sequences: Record<Kind, Sequence> = {
   ),
   'iap-cloudflare': {
     title: 'Cloudflare Access',
-    actors: [caller, { name: ['Cloudflare', 'Access'], icon: 'providers/cloudflare.svg' }, { name: ['cloudflared'], icon: 'providers/cloudflare.svg' }, litellm],
+    actors: [caller, { name: ['Cloudflare', 'Access'], icon: 'providers/cloudflare.svg' }, { name: ['cloudflared', '+ NGINX'], icon: 'providers/cloudflare.svg' }, litellm],
     events: [
       request(0, 1, 'Request + identity'),
       action(1, 'Check group + device'),
       request(1, 2, 'Signed assertion'),
-      action(2, 'Verify Access JWT'),
-      request(2, 3, 'Signed assertion'),
+      action(2, 'Add Bearer prefix'),
+      request(2, 3, 'Bearer assertion'),
       action(3, 'Verify JWT', 'Apply team permissions'),
       response,
     ],
-    identity: 'Cf-Access-Jwt-Assertion',
-    note: 'Access checks the Okta group and corporate device. cloudflared validates and forwards the assertion. A LiteLLM header adapter reads the JWT for signature verification and user and team mapping.',
+    identity: 'Cf-Access-Jwt-Assertion → X-LiteLLM-IAP-Token',
+    note: 'Access checks the Okta group and corporate device. cloudflared validates the assertion. NGINX adds its Bearer prefix. LiteLLM verifies the JWT and maps users and teams.',
   },
 };
 

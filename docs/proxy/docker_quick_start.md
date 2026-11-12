@@ -20,8 +20,6 @@ When the command finishes, open the Admin UI. Then you can [add your models](#3-
 
 </QuickStartBox>
 
-For detailed installation steps, follow the rest of the guide. By the end you will have LiteLLM running at `http://localhost:4000` with a model connected, a virtual key issued, and a request served through the gateway.
-
 ## 1. Start LiteLLM
 
 ```bash
@@ -30,31 +28,29 @@ printf 'LITELLM_MASTER_KEY=sk-%s\nLITELLM_SALT_KEY=sk-%s\n' "$(openssl rand -hex
 docker compose -f docker-compose.quickstart.yml up -d
 ```
 
-This starts the full LiteLLM proxy on port 4000 and PostgreSQL for models, keys, and spend logs. The [compose file](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/docker/docker-compose.quickstart.yml) uses one LiteLLM image, `docker.litellm.ai/berriai/litellm`, with no component argument. Pin a tested release tag or digest before production.
+The [compose file](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/docker/docker-compose.quickstart.yml) starts the full LiteLLM proxy on port 4000 and PostgreSQL. Pin a tested release tag or digest before production.
 
-For Kubernetes, the [Helm guide](./deploy/helm.md) uses one chart and a shared image for either a single service or separate gateway, backend, and UI services. Use the image specified in that guide.
-
-The second command generates your master key, which is the credential you will use for every request below. The proxy refuses to start without it. Keep the `.env` file: regenerating `LITELLM_SALT_KEY` makes credentials already stored in the database unreadable.
+For Kubernetes, see the [Helm guide](./deploy/helm.md).
 
 <OneClickDeploy source="docker-quickstart" />
 
 :::warning[What the two keys do]
-Running locally, the command above generated both into `.env` and the compose file refuses to start without them. On a 1-click deploy, set them in the provider's environment.
+The local setup generates both keys in `.env`. The compose file requires both keys. On a 1-click deploy, set them in the provider's environment.
 
-`LITELLM_MASTER_KEY` is the root credential for the gateway: it authorizes every management API call and, by default, doubles as the Admin UI password. Anyone holding it has full admin access, so treat it like a root password, keep it out of source control, and rotate it if it ever leaks. The `sk-` prefix in the generated value is a convention, not a requirement
+`LITELLM_MASTER_KEY` authorizes every management API call and serves as the default Admin UI password. The generated `sk-` prefix is optional.
 
 `LITELLM_SALT_KEY` encrypts the provider API keys you add in the UI. It has no in-place rotation, so keep the generated value: changing it later makes every stored credential unreadable until you re-enter it. See [key rotations](./master_key_rotations) for how the two keys relate.
 :::
 
 ## 2. Log in to the Admin UI
 
-Open [http://localhost:4000/ui](http://localhost:4000/ui). The username is `admin` and the password is your `LITELLM_MASTER_KEY` value, the one in the `.env` file you just generated.
+Open [http://localhost:4000/ui](http://localhost:4000/ui). The username is `admin` and the password is the `LITELLM_MASTER_KEY` value in `.env`.
 
 <Image img={require('../../img/ui_quickstart_login.png')} dark={require('../../img/ui_quickstart_login_dark.png')} alt="LiteLLM Admin UI login page" />
 
 ## 3. Add your first model
 
-Go to **Models + Endpoints**, open the **Add Model** tab, pick your provider and the models you want to expose, and paste your provider API key. LiteLLM ships with each provider's model catalog, so you select models rather than type them.
+Go to **Models + Endpoints**, open the **Add Model** tab, pick your provider and models, and paste your provider API key.
 
 <Image img={require('../../img/ui_quickstart_add_model.png')} dark={require('../../img/ui_quickstart_add_model_dark.png')} alt="Add Model form with OpenAI provider and gpt-5.5 selected" />
 
@@ -68,11 +64,11 @@ If you prefer to manage provider keys as environment variables, download the com
 
 ## 4. Send a test message
 
-Go to **Playground**, select your model, and send a message. The request goes through the gateway to your provider, and the response comes back with latency and token counts:
+Go to **Playground**, select your model, and send a message. The response includes latency and token counts:
 
 <Image img={require('../../img/ui_quickstart_playground.png')} dark={require('../../img/ui_quickstart_playground_dark.png')} alt="Playground showing a live response from the model with latency and token metrics" />
 
-Your gateway works end to end. The **Get Code** button in the Playground generates the equivalent API call for your language.
+The **Get Code** button generates the equivalent API call for your language.
 
 ## 5. Create a virtual key
 
@@ -82,7 +78,7 @@ Go to **Virtual Keys**, click **+ Create New Key**, give it a name, and click **
 
 <Image img={require('../../img/ui_quickstart_create_key.png')} dark={require('../../img/ui_quickstart_create_key_dark.png')} alt="Save your Key modal showing the newly created virtual key" />
 
-Copy the key now; it is shown only once.
+Copy the key now. It is shown only once.
 
 ## 6. Call the gateway from your app
 
@@ -205,11 +201,11 @@ Requests authenticate with the master key. See the [full config reference](./con
 
 :::warning[Budgets are not enforced without a database]
 
-`litellm_settings.max_budget` is not a spend cap on this path. Loading the proxy's global spend requires a database client, so without one the running total stays unknown and the global budget check never fires; a proxy configured with `max_budget: 100` keeps serving requests past $100 with no per-request error and no budget alert. The proxy does log a one-time warning at startup when a budget is configured with no database connected, and that startup line is the only signal you get
+`litellm_settings.max_budget` requires a database to load spend and enforce the global budget. Without one, `max_budget: 100` keeps serving requests past $100 with no request error or budget alert. The proxy logs a one-time warning at startup.
 
-Key and team budgets are not an alternative here either, because virtual keys themselves need a database (requests carrying one fail with `No connected db.`), so the master key is the only credential and it has no budget of its own
+Virtual keys also require a database. Requests that carry one fail with `No connected db.`. The master key has no budget of its own.
 
-If a budget is part of how you bound spend, run LiteLLM with a database as shown at the top of this page. Without one, bound spend upstream instead, at your provider's own spending limits
+To enforce LiteLLM budgets, run with a database. Otherwise, configure spending limits at your provider.
 
 :::
 

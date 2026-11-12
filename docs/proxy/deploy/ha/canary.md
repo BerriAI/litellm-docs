@@ -19,7 +19,7 @@ flowchart LR
     Canary --> State
 ```
 
-The diagram shows an example starting split. Choose a share that tests your normal traffic mix without exceeding the canary's capacity. A 5 percent request share can use more or less than 5 percent of tokens, concurrent streams, or provider cost.
+Choose a share that tests your normal traffic mix without exceeding the canary's capacity. A 5 percent request share can use more or less than 5 percent of tokens, concurrent streams, or provider cost.
 
 ## Prepare a comparable release
 
@@ -51,13 +51,13 @@ spec:
           weight: 5
 ```
 
-Weights are relative. With these two backends, `95` and `5` target a 95/5 split over many routing decisions. Actual traffic depends on sample size, connection reuse, and affinity. Check the actual split before comparing canary metrics. To route a specific team's traffic, use a trusted ingress rule. Do not authorize access through a public header that clients can set.
+Weights are relative. Actual traffic depends on sample size, connection reuse, and affinity. Check the split before comparing canary metrics. To route a specific team's traffic, use a trusted ingress rule. Do not authorize access through a public header that clients can set.
 
 ## Promote the canary
 
 Record the stable version's error rates and latency before the rollout. Set acceptable limits for the canary. Monitor authentication failures, gateway errors, time to first token, completed streams, queue depth, and database connections. Check spend records and callback delivery. See [Prometheus Metrics](../../prometheus.md).
 
-An example sequence is `5% → 25% → 50% → 100%`. At each step, wait for enough requests and long streams to complete. Use your normal traffic mix. Stop or reverse the rollout when the canary exceeds your thresholds. Give autoscaling time to add capacity before the next traffic increase.
+An example sequence is `5% → 25% → 50% → 100%`. At each step, wait for enough requests and long streams to complete. Stop or reverse the rollout when the canary exceeds your thresholds. Give autoscaling time to add capacity before the next traffic increase.
 
 Mirroring production LLM requests can call the provider twice, double the cost, and repeat side effects. Use controlled test requests or a replay process that accounts for these effects.
 
