@@ -5,143 +5,116 @@
   --ingress-border: #9aabbd;
   --ingress-accent: #315b86;
   --ingress-accent-bg: #e9f0f8;
-  --ingress-boundary-bg: #f6f8fb;
-  --ingress-origin-bg: #f4f9f7;
-  --ingress-origin: #2e6555;
+  --ingress-actor-bg: #f6f8fb;
   margin: 1.5rem 0;
   border: 1px solid var(--ifm-color-emphasis-300);
   border-radius: 8px;
   overflow: hidden;
 }
 
-
 .heading {
-  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
   font-size: 0.9rem;
   font-weight: 700;
   line-height: 1.4;
 }
 
-.viewport {
-  overflow-x: auto;
+.expandButton {
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--ifm-color-emphasis-400);
+  border-radius: 4px;
   background: var(--ingress-bg);
+  color: var(--ingress-text);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
 }
 
-.viewport:focus-visible {
+.expandButton:hover {
+  border-color: var(--ingress-accent);
+}
+
+.expandButton:focus-visible,
+.viewport:focus-visible,
+.expandedViewport:focus-visible {
   outline: 2px solid var(--ifm-color-primary);
   outline-offset: -2px;
 }
 
-.canvas {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1.2fr) 22px minmax(0, 1.2fr);
-  align-items: stretch;
-  min-width: 460px;
-  padding: 0.25rem 1rem 1rem;
+.viewport,
+.expandedViewport {
+  overflow: auto;
+  background: var(--ingress-bg);
+  overscroll-behavior: contain;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  min-width: 600px;
+  height: auto;
   color: var(--ingress-text);
+  font-family: var(--ifm-font-family-base);
 }
 
-.withConnector {
-  grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1.1fr) 20px minmax(0, 2.2fr);
-  min-width: 590px;
+.actorBox {
+  fill: var(--ingress-actor-bg);
+  stroke: var(--ingress-border);
 }
 
-.card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
-  padding: 0.35rem 0.4rem 0.65rem;
-  text-align: center;
+.actorText,
+.actionText {
+  fill: var(--ingress-text);
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.icon,
 .symbol {
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
-  object-fit: contain;
   color: var(--ingress-accent);
 }
 
-.cardText {
-  min-width: 0;
-  line-height: 1.4;
+.lifeline {
+  stroke: var(--ingress-border);
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
 }
 
-.cardText strong {
-  display: block;
-  font-size: 0.8rem;
+.actionBox {
+  fill: var(--ingress-accent-bg);
+  stroke: var(--ingress-border);
 }
 
-.cardText span {
-  display: block;
-  margin-top: 0.3rem;
-  color: var(--ingress-muted);
-  font-size: 0.72rem;
+.actionText {
+  font-size: 12.5px;
+  font-weight: 500;
 }
 
-.arrow {
-  position: relative;
-  display: block;
-  align-self: center;
-  width: 100%;
-  height: 2px;
-  background: var(--ingress-accent);
+.messageText {
+  fill: var(--ingress-text);
+  stroke: var(--ingress-bg);
+  stroke-width: 5;
+  stroke-linejoin: round;
+  paint-order: stroke;
+  font-size: 13px;
 }
 
-.arrow::after {
-  content: '';
-  position: absolute;
-  right: -1px;
-  top: -4px;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 7px solid var(--ingress-accent);
+.messageLine,
+.responseLine {
+  stroke: var(--ingress-accent);
+  stroke-width: 1.5;
 }
 
-.canvas > .arrow {
-  align-self: start;
-  margin-top: calc(2.5rem + 0.35rem + 18px);
+.responseLine {
+  stroke-dasharray: 5 4;
 }
 
-.boundary {
-  min-width: 0;
-  border: 1px dashed var(--ingress-border);
-  background: var(--ingress-boundary-bg);
-}
-
-.boundaryLabel {
-  min-height: 2.5rem;
-  padding: 0.55rem 0.4rem 0.2rem;
-  font-size: 0.68rem;
-  font-weight: 700;
-  line-height: 1.4;
-  text-align: center;
-}
-
-.origin {
-  border-color: var(--ingress-origin);
-  background: var(--ingress-origin-bg);
-}
-
-.origin .boundaryLabel {
-  color: var(--ingress-origin);
-}
-
-.originPath {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.withConnector .originPath {
-  grid-template-columns: minmax(0, 1fr) 16px minmax(0, 1fr);
-}
-
-.originPath > .arrow {
-  align-self: start;
-  margin-top: calc(0.35rem + 17px);
+.arrowhead {
+  fill: var(--ingress-accent);
 }
 
 .identity {
@@ -163,11 +136,55 @@
   overflow-wrap: anywhere;
 }
 
-.note {
-  margin: 0;
-  padding: 0 1rem 0.75rem;
+.figure .details {
+  /* Override the site's full-width details panels inside this compact figure. */
+  margin: 0 !important;
+  padding: 0 1rem 0.75rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
   font-size: 0.8rem;
   line-height: 1.5;
+}
+
+.figure .details summary {
+  padding: 0;
+  cursor: pointer;
+  color: var(--ingress-muted);
+}
+
+.details p {
+  margin: 0.6rem 0 0;
+}
+
+.dialog {
+  width: min(96vw, 1100px);
+  max-width: 96vw;
+  max-height: 94vh;
+  padding: 0;
+  border: 1px solid var(--ingress-border);
+  border-radius: 8px;
+  background: var(--ingress-bg);
+  color: var(--ingress-text);
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 65%);
+}
+
+.expandedViewport {
+  max-height: calc(94vh - 65px);
+}
+
+.expandedViewport .svg {
+  max-height: calc(94vh - 65px);
+}
+
+@media (max-width: 600px) {
+  .expandedViewport .svg {
+    max-height: none;
+  }
 }
 
 [data-theme='dark'] .figure {
@@ -177,13 +194,5 @@
   --ingress-border: #60748b;
   --ingress-accent: #9bc4ff;
   --ingress-accent-bg: #233b58;
-  --ingress-boundary-bg: #202a36;
-  --ingress-origin-bg: #192e2a;
-  --ingress-origin: #95d6bc;
-}
-
-.icon {
-  padding: 3px;
-  border-radius: 4px;
-  background: #ffffff;
+  --ingress-actor-bg: #202a36;
 }
