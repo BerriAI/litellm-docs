@@ -173,6 +173,7 @@ general_settings:
   - Example: When model usage is low, keys can use more than their allocated share. When model usage is high, keys are strictly limited to their allocated share.
 - **saturation_check_cache_ttl (int)**: TTL in seconds for local cache when reading saturation values from Redis (defaults to 60). In multi-node deployments, this controls how quickly nodes converge on the same saturation state. Lower values mean faster convergence but more Redis reads.
   - Example: Set to `5` for faster multi-node consistency, or `0` to always read directly from Redis.
+- **team_model_limit_is_floor (bool)**: When `true`, a team's `model_tpm_limit` for a model this limiter covers is a guaranteed share instead of a ceiling (defaults to `false`). While the model is below `saturation_threshold` the team may use idle capacity past its limit. Once the model saturates the team is held to its limit and gets a 429 with `rate_limited_by: team_model_floor`. The model's own `tpm` is always enforced. A `model_tpm_limit` set on the key itself, `model_rpm_limit`, and customer limits stay hard. See [Team model_tpm_limit as a guaranteed floor](#team-model_tpm_limit-as-a-guaranteed-floor).
 
 **Start Proxy**
 
@@ -335,6 +336,22 @@ Model-wide capacity exhausted (any priority):
   }
 }
 ```
+
+### Team model_tpm_limit as a guaranteed floor
+
+By default a team's `model_tpm_limit` is a hard ceiling, enforced by the regular rate limiter before this limiter runs. A team that hits it is refused even when the model has unused capacity. Set `team_model_limit_is_floor: true` to make that limit a guaranteed share for models the dynamic limiter covers.
+
+```yaml
+litellm_settings:
+  callbacks: ["dynamic_rate_limiter_v3"]
+  priority_reservation_settings:
+    saturation_threshold: 0.5
+    team_model_limit_is_floor: true
+```
+
+With a model at `tpm: 1000`, team A at `model_tpm_limit: {"my-model": 500}` and team B idle, team A can run past 500 tokens a minute while the model is under 50% saturation. Once usage crosses the threshold, team A is held to 500 and further requests get a 429 whose `rate_limited_by` header reads `team_model_floor`, while team B still has its own 500 to use. Aggregate traffic never exceeds the model's `tpm`.
+
+The flag only changes the inherited team TPM limit. A `model_tpm_limit` set on the key itself, `model_rpm_limit`, team-wide `tpm_limit`, and customer limits are enforced as before. Models that have no `tpm` configured, or that the dynamic limiter does not cover, keep the hard team limit. Because saturation is cached for `saturation_check_cache_ttl` seconds, a team may run a little past its share before the clamp engages.
 
 ### Demo Video
 
