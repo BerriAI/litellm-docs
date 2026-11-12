@@ -88,7 +88,7 @@ LABEL org.opencontainers.image.description="LiteLLM with New Relic APM and AI mo
 
 #### `entrypoint.sh`
 
-This `entrypoint.sh` replaces LiteLLM's default `docker/prod_entrypoint.sh` and runs the `litellm` process wrapped by the New Relic Python Agent.
+This `entrypoint.sh` replaces LiteLLM's default `docker-entrypoint.sh` and runs the `litellm` process wrapped by the New Relic Python Agent.
 
 ```sh
 #!/bin/sh
