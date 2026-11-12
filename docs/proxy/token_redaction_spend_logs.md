@@ -36,6 +36,8 @@ Redaction covers string values in the stored request body in `proxy_server_reque
 
 The setting filters the stored copy, not the live payload. The request sent to the provider and the response returned to the client are unchanged. It does not rewrite rows already in the database.
 
+`/v1/responses` follow-ups using `previous_response_id` rebuild history from spend logs, so replayed turns contain the masked value, while `redact_tokens_in_spend_logs: false` preserves the original in new spend logs.
+
 ## Token shapes
 
 The table lists every pattern in `_TOKEN_SHAPES`, plus the PEM private-key block pattern, from [the implementation in PR #48968](https://github.com/BerriAI/litellm/pull/48968). Matching is case-sensitive. Lengths refer to the characters after the stated prefix unless the row says otherwise.
@@ -56,8 +58,8 @@ The table lists every pattern in `_TOKEN_SHAPES`, plus the PEM private-key block
 | Hugging Face | `hf_` followed by at least 34 letters or digits. |
 | npm | `npm_` followed by exactly 36 letters or digits, then a word boundary. |
 | PyPI | `pypi-AgEIcHlwaS5vcmc` followed by at least 50 letters, digits, hyphens or underscores. |
-| SendGrid | `SG.` followed by 22 letters, digits, hyphens or underscores, a dot, then 43 characters from the same set and a word boundary. |
-| JWT | Three dot-separated segments. The first two each start with `eyJ` followed by at least 10 letters, digits, hyphens or underscores. The third contains at least one character from that set. |
+| SendGrid | `SG.` followed by 22 letters, digits, hyphens or underscores, a dot, then 43 characters from the same set. The final segment can end in `-`. It must be followed by the end of the string or a character outside `[A-Za-z0-9_-]`, using `(?![A-Za-z0-9_-])` rather than a word boundary. |
+| JWT | Three dot-separated segments. The header starts with `eyJ` followed by at least 10 letters, digits, hyphens or underscores. The payload and signature each contain at least one character from that set. The payload does not need an `eyJ` prefix, so short payloads such as `e30` (`{}`) match. |
 | PEM private key | A complete block from `-----BEGIN…PRIVATE KEY-----` through `-----END…PRIVATE KEY-----`, including multiline content. The text between `BEGIN` or `END` and `PRIVATE KEY` can contain uppercase letters, spaces and hyphens, as in RSA or EC key headers. The pattern does not require matching header and footer labels or a fixed block length. |
 
 Patterns with an exact suffix length but no trailing word boundary can match the corresponding prefix of a longer string. These are shape checks, not credential validation.
