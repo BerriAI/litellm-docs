@@ -49,7 +49,7 @@ litellm_settings:
 
 The cleanup job exists only if you ask for it. It is registered at proxy startup when any of `maximum_spend_logs_retention_period`, `maximum_autorouter_session_retention_period`, `maximum_health_check_retention_period` or `maximum_daily_tag_spend_retention_period` is set, and not otherwise; `maximum_spend_logs_size` registers the separate size check job described below. Setting one of them later through `/config/update` registers the job on the next config sync without a restart. With none set, nothing is ever deleted, no matter what the batch, budget, or interval settings say
 
-When a retention period is set and `maximum_spend_logs_cleanup_cron` is not, the schedule is an interval rather than a time of day. The interval comes from `maximum_spend_logs_retention_interval` and defaults to `1d`, plus a random offset of up to 60 seconds so a fleet of pods does not all fire at the same instant. The first run therefore lands roughly one interval after startup, not at midnight and not at boot. Set `maximum_spend_logs_cleanup_cron` if you want the job pinned to a quiet hour instead
+When a retention period is set and `maximum_spend_logs_cleanup_cron` is not, the schedule is an interval rather than a time of day, taken from `maximum_spend_logs_retention_interval` (default `1d`). The schedule lives in the database, not in any one process. Every proxy worker polls the `LiteLLM_ScheduledJobRun` table every `SCHEDULED_JOB_POLL_INTERVAL_SECONDS` (default 30) and, under a Postgres advisory lock for the job's lock group, plans the next occurrence and claims it. There is one `PENDING` row per job at a time, the claiming worker flips it to `RUNNING` with its identity in `claimed_by` (`<host>:<pid>:<id>`), and the row ends as `SUCCEEDED` or `FAILED` with a `finished_at`. The next occurrence is planned one interval after that `finished_at`, so a restart does not reset the wait and a fleet of pods never runs the same occurrence twice. The first run after you enable retention lands on the next poll, about 30 seconds later, not a full interval later. Set `maximum_spend_logs_cleanup_cron` if you want the job pinned to a quiet hour instead; cron schedules are evaluated in UTC. The retention job and the size check job share one lock group, so one never starts while the other is running. Redis plays no part in this
 
 ### The size rule
 
@@ -145,18 +145,22 @@ A cancelled statement counts as a batch failure, and `SPEND_LOG_CLEANUP_MAX_CONS
 
 ## How it works
 
-### Step 1. Lock Acquisition (Optional with Redis)
+### Step 1. Claim and lease
 
-If Redis is enabled, LiteLLM uses it to make sure only one instance runs the cleanup at a time.
+Each run is one `LiteLLM_ScheduledJobRun` row. The worker that claims it holds a lease of `maximum_spend_logs_cleanup_run_budget` plus `SCHEDULED_JOB_LEASE_GRACE_SECONDS` (300s + 300s by default), recorded in `lease_expires_at`. While that row is `RUNNING`, no worker on any pod starts the retention job or the size check job. When the run completes the worker marks the row `SUCCEEDED`, or `FAILED` if it raised
 
-- If the lock is acquired:
-  - This instance proceeds with cleanup
-  - Others skip it
-- If no lock is present:
-  - Cleanup still runs (useful for single-node setups)
+If the pod dies mid-run, the row stays `RUNNING` until the lease expires. The next worker to poll then marks it `FAILED`, logs `Scheduled job spend_log_cleanup run <id> lost its lease; marked FAILED`, and plans the next occurrence from that moment. On a graceful shutdown (SIGTERM) the in-flight run is cancelled within `SCHEDULED_JOB_SHUTDOWN_FINISH_TIMEOUT_SECONDS` plus `SCHEDULED_JOB_SHUTDOWN_CANCEL_TIMEOUT_SECONDS` (5s + 5s by default), its row is marked `FAILED` right away, and the next run resumes from the same cutoff on whichever pod claims it. Nothing here needs Redis, and the same guarantees hold with one pod or twenty
 
-![Working of spend log deletions](../../img/spend_log_deletion_working.png)  
-*Working of spend log deletions*
+To see what ran, where, and how long it took:
+
+```sql
+SELECT job_name, status, claimed_by, scheduled_for, claimed_at, finished_at
+FROM "LiteLLM_ScheduledJobRun"
+ORDER BY scheduled_for DESC
+LIMIT 20;
+```
+
+The table keeps the last `SCHEDULED_JOB_RUN_HISTORY_LIMIT` (default 1000) finished rows per job
 
 ### Step 2. Batch Deletion
 
