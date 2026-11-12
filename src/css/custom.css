@@ -657,6 +657,10 @@ li.tabs__item--active {
   white-space: nowrap;
 }
 
+.sidebar-enterprise > .menu__list-item-collapsible {
+  flex-wrap: nowrap;
+}
+
 [data-theme='dark'] .sidebar-enterprise > .menu__link::after,
 [data-theme='dark'] .sidebar-enterprise > .menu__list-item-collapsible > .menu__link::after {
   border-color: rgba(147, 197, 253, 0.3);
