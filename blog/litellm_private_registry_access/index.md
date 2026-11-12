@@ -5,7 +5,7 @@ date: 2026-11-12
 authors:
   - yassin
 image: ./cover.png
-description: "LiteLLM Private Registry is now available to enterprise customers and vetted open-source organizations, with OAuth and AWS ECR pull-through access."
+description: "LiteLLM Private Registry is now available to enterprise customers and open-source organizations, with OAuth and AWS ECR pull-through access."
 tags: [security]
 hide_table_of_contents: true
 ---
@@ -14,9 +14,9 @@ import RegistryHero from './RegistryHero';
 
 export const Hero = RegistryHero;
 
-The **LiteLLM Private Registry is now available**. Enterprise customers and vetted organizations using open-source LiteLLM can request access, subject to vetting and a non-disclosure agreement (NDA).
+The **LiteLLM Private Registry is now available**. Enterprise customers and organizations using open-source LiteLLM can request access.
 
-Public security patches can show attackers how a vulnerability works. For the most severe vulnerabilities, we share fixes privately first. This gives approved organizations time to scan and deploy the patched version before we publish the fix and security advisory. **We continue to release all security fixes publicly.**
+Public security patches can show attackers how a vulnerability works. For the most severe vulnerabilities, we share fixes privately first. This gives teams time to scan and deploy the patched version before we publish the fix and security advisory. **We continue to release all security fixes publicly.**
 
 {/* truncate */}
 
@@ -32,4 +32,4 @@ We recommend mirroring artifacts into your own registry. You can scan images ind
 
 ## Request access
 
-Join the [GitHub discussion on Private Registry access](https://github.com/BerriAI/litellm/discussions/48643) to ask about access for your organization and share feedback on the vetting process.
+Contact [support](mailto:support@berri.ai) to request access for your organization. Share feedback in the [GitHub discussion](https://github.com/BerriAI/litellm/discussions/48643).
