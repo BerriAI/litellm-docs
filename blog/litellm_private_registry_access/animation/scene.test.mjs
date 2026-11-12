@@ -3,7 +3,7 @@ import test from 'node:test';
 import {PODS, WIDTH, HEIGHT, TRANSPORT} from './scene.mjs';
 
 test('the full bead field and its glow fit inside the image', () => {
-  assert.equal(PODS.length, 386);
+  assert.equal(PODS.length, 684);
   for (const [index, pod] of PODS.entries()) {
     const extent = pod.r * 3.6;
     assert.ok(pod.x - extent >= 0 && pod.x + extent <= WIDTH, `Bead ${index} is cropped horizontally`);

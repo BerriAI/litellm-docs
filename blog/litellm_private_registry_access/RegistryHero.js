@@ -5,7 +5,7 @@ import coverGif from './cover.gif';
 import coverPoster from './cover.png';
 import styles from './hero.module.css';
 
-const accessibleDescription = 'A cool white pulse reflects off the image edges and refracts through frosted glass gateway beads. Absorbed light leaves a soft, fading phosphorescent glow.';
+const accessibleDescription = 'A cool white pulse moves through a uniform grid of LiteLLM blue gateway beads. The beads brighten and leave a soft, fading glow, illustrating a rolling deployment.';
 const posterVariants = coverPoster?.src?.images;
 const posterUrl = typeof coverPoster === 'string' ? coverPoster
   : posterVariants?.length ? posterVariants.reduce((largest, item) => item.width > largest.width ? item : largest).path

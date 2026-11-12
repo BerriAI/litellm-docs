@@ -5,31 +5,13 @@ export const WIDTH=1600, HEIGHT=800, FPS=25, DURATION=16, POSTER_TIME=6.8;
 const clamp=x=>Math.max(0,Math.min(1,x));
 const ease=x=>{x=clamp(x);return x*x*(3-2*x);};
 const ramp=(x,a,b)=>ease((x-a)/(b-a));
-const hash=n=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);};
 const n=x=>Number(x.toFixed(3));
+// Match the LiteLLM logo blue and its lighter site accent.
+const BRAND_BLUE='#0117BE', LIT_BLUE='#5566E0';
 export const PODS=[];
-for(let row=0;row<28;row++)for(let col=0;col<49;col++){
-  const seed=row*49+col;
-  const x=180+col*31+(row%2)*15.5+(hash(seed+19)-.5)*5;
-  const y=38+row*29+(hash(seed+27)-.5)*5;
-  const depth=clamp(y/HEIGHT),center=1280-145*depth+30*Math.sin(depth*7);
-  const spread=92+665*depth**1.45,distance=Math.abs((x-center)/spread);
-  const envelope=Math.exp(-(distance**3.1));
-  const pockets=.84+.12*Math.sin(col*.38+row*.22)+.08*Math.cos(row*.41-col*.17);
-  if(hash(seed+73)>(.24+.77*depth)*envelope*pockets)continue;
-  // Non-overlapping circular sections are shared by optics and material rendering.
-  PODS.push({x,y,r:11.2+hash(seed+11)*2.65,seed});
-}
-// Fit the entire organic field inside the image, including each bead's glow.
-// A uniform scale keeps the glass circles separate and preserves the layout.
-const EDGE_PADDING=56;
-const minX=Math.min(...PODS.map(p=>p.x)),maxX=Math.max(...PODS.map(p=>p.x));
-const minY=Math.min(...PODS.map(p=>p.y)),maxY=Math.max(...PODS.map(p=>p.y));
-const fieldScale=Math.min(1,(WIDTH-2*EDGE_PADDING)/(maxX-minX),(HEIGHT-2*EDGE_PADDING)/(maxY-minY));
-for(const p of PODS){
-  p.x=WIDTH-EDGE_PADDING-(maxX-p.x)*fieldScale;
-  p.y=HEIGHT-EDGE_PADDING-(maxY-p.y)*fieldScale;
-  p.r*=fieldScale;
+// A full rectangular grid with identical beads, square spacing, and room for glow.
+for(let row=0;row<18;row++)for(let col=0;col<38;col++){
+  PODS.push({x:60+col*40,y:60+row*40,r:11.2,seed:row*38+col});
 }
 export const SOURCE={x:8,y:8};
 export const TRANSPORT=buildTransport(PODS,SOURCE,{x:8+1000*Math.cos(.635),y:8+1000*Math.sin(.635)},{
@@ -100,8 +82,8 @@ function beadGlow(p,s,i,id){
 function bead(p,s,i){
   const r=n(p.r);
   return `<g data-pod="${i}" transform="translate(${n(p.x)} ${n(p.y)})">
-    <circle r="${r}" fill="#94A4B2" fill-opacity=".7"/>
-    <circle data-layer="emission" r="${r}" fill="#DDF5FF" opacity="${n(Math.min(.96,s.emission*.92+s.scatter*.2))}"/>
+    <circle r="${r}" fill="${BRAND_BLUE}"/>
+    <circle data-layer="emission" r="${r}" fill="${LIT_BLUE}" opacity="${n(Math.min(.96,s.emission*.92+s.scatter*.2))}"/>
   </g>`;
 }
 export function frame(seconds,prefix='registry',{includeRays=true,currentState}={}){
@@ -113,7 +95,7 @@ export function frame(seconds,prefix='registry',{includeRays=true,currentState}=
     const d=`M${n(ray.x1)} ${n(ray.y1)}L${n(ray.x2)} ${n(ray.y2)}`;
     rays+=`<path d="${d}" stroke="url(#${id}-ray-${i})" stroke-width="13" opacity="${n(ray.alpha*.15)}"/><path d="${d}" stroke="url(#${id}-ray-${i})" stroke-width="3.5" opacity="${n(ray.alpha)}"/>`;
   });
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="img" aria-labelledby="${id}-title ${id}-desc"><title id="${id}-title">LiteLLM Private Registry</title><desc id="${id}-desc">A cool white pulse enters from the upper left, reflects off the image edges, and refracts through frosted glass gateway beads. Absorbed light leaves a fading phosphorescent glow, illustrating a rolling deployment.</desc><defs>${rayGradients}
-    <radialGradient id="${id}-afterglow"><stop stop-color="#A9E5FF" stop-opacity=".8"/><stop offset=".3" stop-color="#53B3ED" stop-opacity=".4"/><stop offset="1" stop-color="#389CD8" stop-opacity="0"/></radialGradient>
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="img" aria-labelledby="${id}-title ${id}-desc"><title id="${id}-title">LiteLLM Private Registry</title><desc id="${id}-desc">A cool white pulse moves through a uniform grid of LiteLLM blue gateway beads. The beads brighten and leave a fading glow, illustrating a rolling deployment.</desc><defs>${rayGradients}
+    <radialGradient id="${id}-afterglow"><stop stop-color="${LIT_BLUE}" stop-opacity=".8"/><stop offset=".3" stop-color="${BRAND_BLUE}" stop-opacity=".4"/><stop offset="1" stop-color="${BRAND_BLUE}" stop-opacity="0"/></radialGradient>
   </defs><g fill="none" stroke-linecap="round">${rays}</g>${PODS.map((p,i)=>beadGlow(p,s.pods[i],i,id)).join('')}${PODS.map((p,i)=>bead(p,s.pods[i],i)).join('')}</svg>`;
 }
