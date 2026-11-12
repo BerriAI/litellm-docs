@@ -1,0 +1,20 @@
+:global(.markdown) .reference table {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+:global(.markdown) .reference table th:first-child {
+  width: 36%;
+}
+
+:global(.markdown) .reference table th:nth-child(2) {
+  width: 22%;
+}
+
+:global(.markdown) .reference table td,
+:global(.markdown) .reference table td:first-child:has(> code:only-child),
+:global(.markdown) .reference table code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

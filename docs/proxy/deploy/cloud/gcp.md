@@ -32,6 +32,7 @@ The source module creates a global external load balancer. It has no input to se
 | TLS certificate | Replace the global managed certificate with a supported regional certificate. Use a regional Compute Engine SSL certificate or a regional Certificate Manager certificate. |
 | [network.tf](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/gcp/network.tf) | Add the frontend and proxy-only subnets, corporate network routes, and private DNS. Create Cloud Router and Cloud NAT for the VPC connector subnet. |
 | [cloudrun.tf](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/gcp/cloudrun.tf) | Set all three services to `INGRESS_TRAFFIC_INTERNAL_ONLY`. Set connector egress to `ALL_TRAFFIC` for gateway, backend, and migrations. Remove unused public domain mappings. |
+| [outputs.tf](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/gcp/outputs.tf) | Update `lb_ip` and `lb_url` to use the regional internal address. |
 
 Remove the old public forwarding rules and address. Internal Cloud Run ingress accepts traffic from the internal load balancer. Cloud Run stays outside the customer subnet. The inbound serverless NEG path does not use the outbound VPC connector. See [Cloud Run ingress](https://docs.cloud.google.com/run/docs/securing/ingress) and [regional TLS support](https://docs.cloud.google.com/load-balancing/docs/l7-internal#ssl-certificates).
 
