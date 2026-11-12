@@ -309,6 +309,7 @@ const sidebars = {
           "proxy/guardrails/alice",
           "proxy/guardrails/llm_shield_proxy",
           { type: "doc", id: "proxy/guardrails/conduct", customProps: { icon: "/img/integrations/conduct.png" } },
+          { type: "doc", id: "proxy/guardrails/collieai", customProps: { icon: "/img/integrations/collieai.png" } },
         ].sort((a, b) => (typeof a === "string" ? a : a.id).localeCompare(typeof b === "string" ? b : b.id)),
       ],
     },
@@ -439,7 +440,6 @@ const sidebars = {
             "proxy/fips_mode",
             "proxy/outbound_requests",
             "proxy/security_owasp_llm_top10",
-            "proxy/rust_gateway",
           ],
         },
         {
@@ -606,6 +606,7 @@ const sidebars = {
               items: [
                 { type: "doc", id: "proxy/jwt_user_team_auth", label: "Map identities to users and teams", className: "sidebar-enterprise" },
                 { type: "doc", id: "proxy/jwt_key_mapping", label: "Map identities to Virtual Keys", className: "sidebar-enterprise" },
+                { type: "doc", id: "proxy/jwt_access_group_rules", label: "Map identities to Access Groups", className: "sidebar-enterprise" },
               ],
             },
             {
@@ -747,14 +748,32 @@ const sidebars = {
         { type: "html", value: "Observability", className: "sidebar-group-label", defaultStyle: true },
         {
           type: "category",
-          label: "Logging, Alerting, Metrics",
+          label: "Logging & Metrics",
           items: [
             { type: "doc", id: "proxy/dynamic_logging", className: "sidebar-enterprise" },
             "proxy/logging",
             "proxy/logging_spec",
             { type: "doc", id: "proxy/team_logging", className: "sidebar-enterprise" },
             { type: "ref", id: "proxy/audit_logs", label: "Audit Logs", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/prometheus", label: "Prometheus Metrics" },
+          ],
+        },
+        {
+          type: "category",
+          label: "Alerting",
+          link: { type: "doc", id: "proxy/alerts/index" },
+          items: [
+            "proxy/alerts/model-deprecations",
+            {
+              type: "category",
+              label: "Performance alerts",
+              className: "sidebar-enterprise",
+              link: { type: "doc", id: "proxy/alerts/performance" },
+              items: ["proxy/alerts/api"],
+            },
+            { type: "ref", id: "proxy/alerting", label: "Slack & Webhooks" },
             "proxy/email",
+            { type: "ref", id: "proxy/pagerduty", label: "PagerDuty", className: "sidebar-enterprise" },
           ],
         },
         { type: "html", value: "Manage", className: "sidebar-group-label", defaultStyle: true },
@@ -1039,7 +1058,7 @@ const sidebars = {
             {
               type: "link",
               label: "All Supported Endpoints",
-              href: "/docs/supported_endpoints",
+              href: "/docs/supported_endpoints#all-endpoints",
               className: "sidebar-xlink",
             },
           ],
@@ -1311,13 +1330,7 @@ const sidebars = {
     {
       type: "category",
       label: "Supported Endpoints",
-      link: {
-        type: "generated-index",
-        title: "Supported Endpoints",
-        description:
-          "Learn how to deploy + call models from different providers on LiteLLM",
-        slug: "/supported_endpoints",
-      },
+      link: {type: "doc", id: "supported_endpoints"},
       items: [
         "assistants",
         { type: "ref", id: "audio_transcription" },

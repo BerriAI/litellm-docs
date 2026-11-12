@@ -173,6 +173,7 @@ general_settings:
   - Example: When model usage is low, keys can use more than their allocated share. When model usage is high, keys are strictly limited to their allocated share.
 - **saturation_check_cache_ttl (int)**: TTL in seconds for local cache when reading saturation values from Redis (defaults to 60). In multi-node deployments, this controls how quickly nodes converge on the same saturation state. Lower values mean faster convergence but more Redis reads.
   - Example: Set to `5` for faster multi-node consistency, or `0` to always read directly from Redis.
+- **team_model_limit_borrows_idle_capacity_from_other_teams (bool)**: Lets a team run past its `model_tpm_limit` and `model_rpm_limit` on capacity other teams are not using (defaults to `false`). Only models this limiter covers are affected. While the model is below `saturation_threshold` the team may exceed its limits, and once the model saturates the team is held to them, with a 429 whose `rate_limited_by` header reads `model_per_team_saturated`. The model's own `tpm` and `rpm` are always enforced. Limits set on the key itself and customer limits stay hard. See [Team model limits that borrow idle capacity](#team-model-limits-that-borrow-idle-capacity).
 
 **Start Proxy**
 
@@ -335,6 +336,42 @@ Model-wide capacity exhausted (any priority):
   }
 }
 ```
+
+### Team model limits that borrow idle capacity
+
+By default a team's `model_tpm_limit` and `model_rpm_limit` are hard ceilings, enforced by the regular rate limiter before this limiter runs. A team that hits one is refused even when other teams are leaving the model idle. Set `team_model_limit_borrows_idle_capacity_from_other_teams: true` to let teams borrow that idle capacity on models the dynamic limiter covers.
+
+```yaml
+litellm_settings:
+  callbacks: ["dynamic_rate_limiter_v3"]
+  priority_reservation_settings:
+    saturation_threshold: 0.5
+    team_model_limit_borrows_idle_capacity_from_other_teams: true   # default: false
+```
+
+With a model at `tpm: 1000`, team A at `model_tpm_limit: {"my-model": 500}` and team B idle, team A can run past 500 tokens a minute while the model is under 50% saturation. Once usage crosses the threshold, team A is held to 500 and further requests get a 429 whose `rate_limited_by` header reads `model_per_team_saturated`, while team B still has its own 500 to use. `model_rpm_limit` works the same way with requests. Aggregate traffic never exceeds the model's `tpm` or `rpm`, and borrowing only ever uses capacity on the same model, never a team's limit on another model.
+
+The setting only changes the limits a key inherits from its team. A `model_tpm_limit` or `model_rpm_limit` set on the key itself, team-wide `tpm_limit` and `rpm_limit`, and customer limits are enforced as before. Models that have neither `tpm` nor `rpm` configured, or that the dynamic limiter does not cover, keep the hard team limits. Because saturation is cached for `saturation_check_cache_ttl` seconds, a team may run a little past its limit before the clamp engages.
+
+#### Cap how far a team borrows
+
+While the model is idle, a borrowing team may use everything up to the model's own `tpm` and `rpm`, so one team can take most of the idle capacity on its own. To bound that, set `team_model_limit_max_borrow_multiple` in the team's metadata next to `model_tpm_limit` and `model_rpm_limit`. The team's usage on a model is then capped at its share times that multiple, for TPM and RPM alike, even while the model is idle.
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/team/new' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "metadata": {
+      "model_tpm_limit": {"my-model": 500},
+      "team_model_limit_max_borrow_multiple": 2
+    }
+  }'
+```
+
+With this team at `model_tpm_limit: {"my-model": 500}` and a multiple of `2`, it can borrow up to 1000 tokens a minute on `my-model` while the model is below `saturation_threshold`. A request past that gets a 429 whose `rate_limited_by` header reads `model_per_team_max_borrow_multiple`, with a message that names the share, the multiple and the resulting cap. Once the model saturates, the team is held to its original 500 as before, with `rate_limited_by: model_per_team_saturated`. The multiple applies per team and per model, and a team's borrowing never counts against another team's cap.
+
+Leave it unset to keep the default, where the team borrows up to the model's limit. The value must be a number of at least `1`. A smaller or non-numeric value is logged as a warning and ignored, so the team behaves as if it were unset rather than every request failing. The multiple only matters while `team_model_limit_borrows_idle_capacity_from_other_teams` is on. Without it, the team's `model_tpm_limit` and `model_rpm_limit` stay hard ceilings.
 
 ### Demo Video
 

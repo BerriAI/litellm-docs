@@ -47,6 +47,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 
 | Provider or feature | Release |
 |---------------------|---------|
+| [Gemini Decision 1](./providers/gemini.md#decisions) | On main through [LiteLLM #51220](https://github.com/BerriAI/litellm/pull/51220), not yet in a release |
 | vLLM, Microsoft Foundry, OpenRouter spend from `usage.cost` | `v1.104.3` |
 | Databricks serving endpoints, image input on Cloudflare Clef, [audio and video input](#audio-and-video-input) on Cloudflare Clef-omni, TypeSafe images and box questions | `v1.106.0` |
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
@@ -59,8 +60,8 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | Logging | Yes | Works across all integrations |
 | Virtual keys, budgets, rate limits | Yes | Normal proxy key auth |
 | Load balancing, fallbacks | Yes | Goes through the router like `/chat/completions` |
-| Image input | OpenAI, Cloudflare Clef, Nace Drex Max and TypeSafe | TypeSafe needs the `TypeSafe-Danger-Zone-Images: true` header. Other providers return a 400, or drop the images under `drop_params` |
-| Audio and video input | Cloudflare Clef-omni | Other models return a 400, or drop the clips under `drop_params`, unless a [deployment flag](#audio-and-video-on-other-deployments) turns clips on. `openai/` and `azure/` deployments refuse clips whatever the flag says |
+| Image input | OpenAI, Gemini, Cloudflare Clef, Nace Drex Max and TypeSafe | TypeSafe needs the `TypeSafe-Danger-Zone-Images: true` header. Other providers return a 400, or drop the images under `drop_params` |
+| Audio and video input | Gemini Decision 1 and Cloudflare Clef-omni | Other models return a 400, or drop the clips under `drop_params`, unless a [deployment flag](#audio-and-video-on-other-deployments) turns clips on. `openai/` and `azure/` deployments refuse clips whatever the flag says |
 | Streaming | No | |
 
 ## Supported providers
@@ -68,6 +69,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | Provider | Example model | Credentials | LiteLLM endpoint | Images |
 |----------|---------------|-------------|------------------|--------|
 | [OpenAI](https://developers.openai.com/api/docs/guides/decisions) | `openai/gpt-6-luna` | `OPENAI_API_KEY`, optional `OPENAI_BASE_URL` | `/v1/decisions` | Yes |
+| [Gemini](./providers/gemini.md#decisions) | `gemini/gemini-decision-1` | `GEMINI_API_KEY` | `/v1/systemone` | Yes |
 | [TypeSafe Jev](https://docs.typesafe.ai/api) | `typesafe/jev-latest` | `TYPESAFE_API_KEY`, optional `TYPESAFE_API_BASE` | `/v1/systemone` | With the [images header](#typesafe-images-box-questions-and-long-context) |
 | [OpenRouter](./providers/openrouter.md#decisions-jev) | `openrouter/typesafe/jev-1.14` | `OPENROUTER_API_KEY`, optional `OPENROUTER_API_BASE` | `/v1/systemone` | No |
 | [Fireworks AI](https://docs.fireworks.ai) (private preview) | `fireworks_ai/accounts/fireworks/routers/rune` | `FIREWORKS_AI_API_KEY` or `FIREWORKS_API_KEY`, optional `FIREWORKS_API_BASE` | `/v1/systemone` | No |
@@ -84,7 +86,9 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 
 Some of these providers need a newer LiteLLM release than the decision routes, as listed in [Availability and supported features](#availability-and-supported-features)
 
-LiteLLM translates between the two formats, so the route you call does not limit which provider you can use. OpenAI receives OpenAI-format bodies and every other provider receives System One bodies, and the answers come back in the format of the route you called. Text parts of an OpenAI `input` are joined into the System One `state`, and System One questions are named by their keys when they go to OpenAI
+LiteLLM translates between the two formats, so the route you call does not limit which provider you can use. OpenAI receives OpenAI-format bodies, Gemini receives its native Decisions format and the other providers receive System One bodies. The answers come back in the format of the route you called. Text parts of an OpenAI `input` are joined into the System One `state`, and System One questions are named by their keys when they go to OpenAI
+
+Gemini Decision 1 answers yes/no, choice and rubric score questions, with text, images and inline audio/video input. Each request accepts up to 16 images and 20 MiB of decoded image data in total, including remote images downloaded by LiteLLM. Message inputs preserve text and image order. Box questions return 400. PDFs and remote audio/video URLs are not mapped by LiteLLM's Decisions input schema. Per-request `api_base` or `base_url` overrides require an explicit `api_key` in the same request or return 400, even when the deployment has a key. Configure custom deployment URLs with their own key. See the [Gemini setup](./providers/gemini.md#decisions)
 
 Cloudflare model names without an `@cf/` prefix are expanded to `@cf/cloudflare/<model>`, and the `{"result": ...}` envelope Cloudflare returns is unwrapped so the response has the same shape as the other providers. On Databricks the model is the bare serving endpoint name and `DATABRICKS_API_BASE` points at `https://<workspace-host>/serving-endpoints`, so the request goes to that endpoint's `/invocations` route. `databricks/ai_decide` instead calls the `ai_decide` AI Function at `/api/2.0/ai-functions/ai-decide` on the same workspace, which needs the `ai_decide` preview turned on and reports no token usage. On Microsoft Foundry the model is your deployment name and `AZURE_AI_API_BASE` is the resource host, `https://<resource>.services.ai.azure.com`. A project-scoped base such as `https://<resource>.services.ai.azure.com/api/projects/<project>/openai/v1` is trimmed back to the host. Azure does not let you name a deployment `Microsoft-Decision-1`, so deploy it under another name and set `base_model` so cost tracking finds the price
 
@@ -215,7 +219,7 @@ A question the model will not answer comes back as `{"type": "refusal", "name": 
 
 ### Image input
 
-OpenAI, Cloudflare Clef and TypeSafe models take `input_image` parts, TypeSafe only with the [images header](#typesafe-images-box-questions-and-long-context). `image_url` is an image URL or a data URL, and `detail` is optional and only used by OpenAI.
+OpenAI, Gemini, Cloudflare Clef and TypeSafe models take `input_image` parts, TypeSafe only with the [images header](#typesafe-images-box-questions-and-long-context). `image_url` is an image URL or a data URL, and `detail` is optional and only used by OpenAI.
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/v1/decisions' \
@@ -380,7 +384,7 @@ Changing `"model"` to `"luna"` asks OpenAI instead and still returns System One 
 | `model` | string | A proxy model name, or `<provider>/<model>` in the SDK |
 | `state` | string, object or array | The thing being judged, such as a support ticket, a document or a chat transcript |
 | `questions` | object | 1 to 128 named questions. Each key becomes a key in `answers` |
-| `images` | array, optional | Image URLs or data URLs. OpenAI and Cloudflare Clef only, with the rules in [Image input](#image-input) |
+| `images` | array, optional | Image URLs or data URLs, with provider support and rules in [Image input](#image-input) |
 | `assets` | object, optional | Images keyed by a name you use in `state`, each `{"type": "image", "format": "png", "jpg" or "jpeg", "data_base64": ...}`. TypeSafe only, with the [images header](#typesafe-images-box-questions-and-long-context) |
 | `audio` | array, optional | Up to 4 audio clips, with the rules in [Audio and video input](#audio-and-video-input) |
 | `videos` | array, optional | Up to 2 video clips, with the rules in [Audio and video input](#audio-and-video-input) |
@@ -398,7 +402,7 @@ On both routes, requests that break these rules, such as no questions at all, du
 
 ## Audio and video input
 
-Cloudflare Clef-omni reads audio and video clips along with the text. Send them in the top-level `audio` and `videos` fields, next to `state` on `/v1/systemone` or next to `input` on `/v1/decisions`. A request takes up to 4 audio clips and up to 2 video clips. Each clip is a base64 data URL such as `data:audio/wav;base64,...` or `data:video/mp4;base64,...`, with no media type parameters such as `;codecs=` before `;base64`, or an object such as `{"content_type": "audio/wav", "base64": "..."}`. `null` or an empty list means no clips of that kind. A clip in another form, or a request with more clips, gets a 400 before the provider is called. LiteLLM checks the number of clips, their form, and that an audio clip's media type starts with `audio/` and a video clip's with `video/`. Limits on clip length, size and exact format are the provider's.
+Gemini Decision 1 and Cloudflare Clef-omni read audio and video clips along with the text. Send them in the top-level `audio` and `videos` fields, next to `state` on `/v1/systemone` or next to `input` on `/v1/decisions`. A request takes up to 4 audio clips and up to 2 video clips. Each clip is a base64 data URL such as `data:audio/wav;base64,...` or `data:video/mp4;base64,...`, with no media type parameters such as `;codecs=` before `;base64`, or an object such as `{"content_type": "audio/wav", "base64": "..."}`. `null` or an empty list means no clips of that kind. A clip in another form, or a request with more clips, gets a 400 before the provider is called. LiteLLM checks the number of clips, their form, and that an audio clip's media type starts with `audio/` and a video clip's with `video/`. Limits on clip length, size and exact format are the provider's.
 
 ```yaml showLineNumbers
 model_list:

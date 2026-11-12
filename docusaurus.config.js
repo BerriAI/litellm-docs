@@ -85,6 +85,7 @@ const config = {
           {from: '/docs/proxy/jwt_auth_arch', to: '/docs/proxy/access_management/jwt_permissions#beta-control-access-with-oidc-roles'},
           {from: ['/docs/oidc', '/docs/oidcz'], to: '/docs/proxy/model_management#workload-identity-credentials'},
           {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
+          {from: '/docs/proxy/rust_gateway', to: '/rust-migration'},
           {
             from: '/docs/proxy/control_plane_and_data_plane',
             to: '/docs/proxy/multi_region',
@@ -370,7 +371,8 @@ const config = {
     experimental_faster: {
       swcJsLoader: true,
       swcJsMinimizer: true,
-      swcHtmlMinimizer: true,
+      // Keep explicit <head> tags and quoted metadata for social previews.
+      swcHtmlMinimizer: false,
       lightningCssMinimizer: true,
       mdxCrossCompilerCache: true,
     },
@@ -406,9 +408,9 @@ const config = {
       // rendered; it holds the evergreen entry so the config still reads true.
       // Bump `id` to resurface the bar for readers who dismissed the last one.
       announcementBar: {
-        id: 'townhall_oct_23_2026_decisions_api',
+        id: 'decisions_api_gemini_2026_11',
         content:
-          '<a class="announcement-link" href="/docs/decisions"><strong>Decisions API is here.</strong> Call Jev, Clef or any decision model through one /v1/decisions endpoint. &rarr;</a>',
+          '<a class="announcement-link" href="/docs/decisions"><strong>Decisions API is here.</strong> Call Gemini Decision 1, Jev, Clef or any decision model through one /v1/decisions endpoint. &rarr;</a>',
         isCloseable: true,
       },
       docs: {
@@ -488,7 +490,7 @@ const config = {
               {label: 'Production deployment', to: '/docs/proxy/deploy'},
               {label: 'MCP Gateway', to: '/docs/mcp'},
               {label: 'Agent Gateway', to: '/docs/a2a'},
-              {label: 'Rust AI Gateway (beta)', to: '/docs/proxy/rust_gateway'},
+              {label: 'Rust migration', to: '/rust-migration'},
               {label: 'Enterprise', to: '/docs/enterprise'},
             ],
           },
