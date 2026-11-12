@@ -99,6 +99,20 @@ spec:
                 command: ["sh", "-c", "sleep 5"]
 ```
 
+## Event loop
+
+<SinceVersion v="1.109.0" />
+
+On Linux and macOS the proxy runs Uvicorn on [uvloop](https://github.com/MagicStack/uvloop). If workers crash inside the event loop, such as a segmentation fault (exit code 139) with uvloop in the native backtrace, set `LITELLM_EVENT_LOOP=asyncio` to run on asyncio instead and see whether the crashes stop.
+
+```shell
+docker run -e LITELLM_EVENT_LOOP=asyncio docker.litellm.ai/berriai/litellm:latest \
+    --config /app/config.yaml \
+    --port 4000
+```
+
+The variable applies to the default Uvicorn server only, and `UVICORN_LOOP` has no effect because the proxy passes the loop to Uvicorn itself. `--run_hypercorn` already runs on asyncio. `--run_gunicorn` starts Uvicorn workers that pick uvloop whenever it is installed, and `--run_granian` uses its own loop selection, so both ignore `LITELLM_EVENT_LOOP`. The variable first shipped in v1.109.0, and v1.108.x releases always use uvloop.
+
 ## TLS at the proxy
 
 For TLS terminated by the proxy itself (rather than your load balancer), pass the key and cert paths:
