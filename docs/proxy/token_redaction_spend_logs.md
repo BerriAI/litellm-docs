@@ -5,6 +5,8 @@ description: Mask known token-shaped secrets in stored spend log content without
 
 # Token Redaction in Spend Logs
 
+<SinceVersion v="1.110.0" />
+
 LiteLLM replaces known token-shaped secrets in stored spend log content with `REDACTED_BY_LITELM`. The `general_settings.redact_tokens_in_spend_logs` flag is **on by default**. Leaving it unset or setting it to `true` enables redaction. Set it explicitly to `false` to opt out.
 
 This setting applies only to content retained with `store_prompts_in_spend_logs: true`. It does not enable prompt storage itself. A key or team that [opts out of prompt storage](./ui_logs.md#turn-off-prompt-storage-for-a-key-or-team) still stores no request or response content.
