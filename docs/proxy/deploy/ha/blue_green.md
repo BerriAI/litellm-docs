@@ -52,7 +52,7 @@ spec:
           weight: 0
 ```
 
-For the cutover, change blue's weight to `0` and green's weight to `100` in your deployment source. Apply the route through your normal release process. Confirm that the controller accepts the route and new requests reach green. Keep blue ready until the routing change takes effect and its requests finish. Outside Gateway API, use load balancer backend weights or a service selector for the same pattern.
+For the cutover, set blue's weight to `0` and green's weight to `100`, then apply the route. Confirm that the controller accepts the route and new requests reach green. Keep blue ready until the routing change takes effect and its requests finish. Outside Gateway API, use load balancer backend weights or a service selector for the same pattern.
 
 ## Drain existing requests
 

@@ -16,13 +16,13 @@ Use private subnets across two availability zones. Allow HTTPS only from corpora
 
 ## Terraform on ECS Fargate
 
-Use [Terraform on AWS](../terraform.md#aws) to deploy LiteLLM on ECS Fargate.
+Deploy with [Terraform on AWS](../terraform.md#aws).
 
 <CloudArchitecture cloud="aws-ecs" />
 
 ### Private ingress {#ecs-module-changes}
 
-The source module creates an internet-facing ALB and opens ports 80 and 443 to `0.0.0.0/0`. It has no input to select private ingress. Apply these changes in your platform's module fork before deployment:
+The source module creates an internet-facing ALB and opens ports 80 and 443 to `0.0.0.0/0`. It has no input to select private ingress. Apply these changes to the module before deployment:
 
 | File | Required change |
 | --- | --- |
@@ -34,10 +34,10 @@ The diagram keeps the module's single NAT gateway. Add one per AZ if your availa
 
 ## Helm on EKS {#eks-with-helm}
 
-Use the [Helm guide](../helm.md) to deploy LiteLLM on EKS. The diagram shows the chart's default separate services.
+Deploy with [Helm](../helm.md). This architecture uses separate gateway, backend, and UI services.
 
 <CloudArchitecture cloud="aws-eks-micro" />
 
-Create the private cluster, data stores, network access, and AWS Load Balancer Controller before you install LiteLLM. Set `alb.ingress.kubernetes.io/scheme: internal` and select private ALB subnets. Use `alb.ingress.kubernetes.io/target-type: ip` for direct pod targets. Configure the ALB security group for corporate HTTPS sources. The chart's [ingress example](../helm.md#ingress) uses an internal ALB. See [EKS load balancing](https://docs.aws.amazon.com/eks/latest/userguide/alb-ingress.html).
+Create the private cluster, data stores, network access, and AWS Load Balancer Controller before you install LiteLLM. Set `alb.ingress.kubernetes.io/scheme: internal` and select private ALB subnets. Use `alb.ingress.kubernetes.io/target-type: ip` for direct pod targets. Configure the ALB security group for corporate HTTPS sources. See the chart's [ingress settings](../helm.md#ingress) and [EKS load balancing](https://docs.aws.amazon.com/eks/latest/userguide/alb-ingress.html).
 
 For identity checks, see [AWS ALB authentication](../iap/overview.md#aws). For client certificates, see [Client Authentication with mTLS](../mtls.md). For replicas and rollouts, see [High Availability](../ha/overview.md).

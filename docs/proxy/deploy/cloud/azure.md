@@ -14,7 +14,7 @@ Connect corporate users and applications through VPN, ExpressRoute, or an approv
 
 ## Helm on AKS {#deploy-this-architecture}
 
-Use the [Helm guide](../helm.md). Create the VNet, private AKS cluster, Application Gateway, databases, private endpoints, and corporate network routes separately. The Helm chart deploys the LiteLLM workloads. The diagram shows the chart's default separate services.
+Deploy separate gateway, backend, and UI services with [Helm](../helm.md). Provide the VNet, private AKS cluster, Application Gateway, databases, private endpoints, and corporate network routes.
 
 <CloudArchitecture cloud="azure-aks-micro" />
 

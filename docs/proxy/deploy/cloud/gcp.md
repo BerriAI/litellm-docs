@@ -18,13 +18,13 @@ Corporate VPN tunnels or Interconnect attachments must connect in the load balan
 
 ## Terraform on Cloud Run
 
-Use [Terraform on GCP](../terraform.md#gcp) to deploy LiteLLM on Cloud Run.
+Deploy with [Terraform on GCP](../terraform.md#gcp).
 
 <CloudArchitecture cloud="gcp-cloud-run" />
 
 ### Private ingress {#cloud-run-module-changes}
 
-The source module creates a global external load balancer. It has no input to select an internal frontend. Make these changes in your platform's module fork before deployment:
+The source module creates a global external load balancer. It has no input to select an internal frontend. Make these changes to the module before deployment:
 
 | Source area | Required change |
 | --- | --- |
@@ -39,7 +39,7 @@ Keep identity checks on the internal service. If you use IAP, grant Cloud Run In
 
 ## Helm on GKE {#gke-with-helm}
 
-Use the [Helm guide](../helm.md) to deploy LiteLLM on GKE. The diagram shows the chart's default separate services.
+Deploy with [Helm](../helm.md). This architecture uses separate gateway, backend, and UI services.
 
 <CloudArchitecture cloud="gcp-gke-micro" />
 

@@ -13,15 +13,15 @@ Deploy LiteLLM on [AWS ECS Fargate](#aws) or [Google Cloud Run](#gcp). Both modu
 
 Keep LiteLLM private and allow access from your corporate network.
 
-Run Terraform 1.9 or later in your deployment pipeline. Install Bash and sign in to the AWS or Google Cloud CLI on the runner. Store Terraform state in a remote backend.
+Use Terraform 1.9 or later, Bash, and an authenticated AWS or Google Cloud CLI.
 
 ## AWS
 
 The [AWS module](https://github.com/BerriAI/litellm/tree/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/aws) creates ECS Fargate services, an ALB, Aurora PostgreSQL, ElastiCache Redis, Secrets Manager entries, S3, and a VPC. See the [AWS reference architecture](./cloud/aws.md) for subnets, routing, and availability defaults.
 
-The upstream module creates a public ALB. Apply the [private ingress changes](./cloud/aws.md#ecs-module-changes) in your platform fork before deploying. Replace the example module source URL and `DEPLOYMENT_VERSION` with your fork and tested version.
+The upstream module creates a public ALB. Apply the [private ingress changes](./cloud/aws.md#ecs-module-changes) to the module before deploying. Set `source` to your updated module location and version.
 
-Provide an ACM certificate for your corporate gateway hostname. Use an image URI that ECS can pull. Give your deployment runner permission to create the AWS resources and IAM roles.
+Provide an ACM certificate for your corporate gateway hostname and an image URI that ECS can pull. Terraform needs permission to create the AWS resources and IAM roles.
 
 ```hcl title="main.tf"
 provider "aws" {
@@ -69,7 +69,7 @@ output "ecs_cluster" {
 }
 ```
 
-Set the input variables through your pipeline. Set `litellm_image` to the [image you built for these modules](../docker_quick_start.md#build-from-source). Choose an Aurora version that your AWS region supports. Some regions do not support the module's default version. Set `litellm_license` if you use Enterprise features. The module generates a master key in Secrets Manager.
+Choose an Aurora version that your AWS region supports. Some regions do not support the module's default version. Set `litellm_license` if you use Enterprise features. The module generates a master key in Secrets Manager.
 
 ### Existing infrastructure
 
@@ -98,9 +98,9 @@ aws ecs wait services-stable --cluster "$LITELLM_CLUSTER" \
 
 The [GCP module](https://github.com/BerriAI/litellm/tree/f52f26d9c636038c6e3609cc7d17cf625d434c3e/terraform/litellm/gcp) creates Cloud Run services, an HTTPS load balancer, Cloud SQL PostgreSQL, Memorystore Redis, Secret Manager entries, GCS, and a VPC. See the [GCP reference architecture](./cloud/gcp.md) for private data connections and provider egress.
 
-The upstream module creates a public load balancer. Apply the [private ingress changes](./cloud/gcp.md#cloud-run-module-changes) in your platform fork before deploying. Replace the example module source URL and `DEPLOYMENT_VERSION` with your fork and tested version.
+The upstream module creates a public load balancer. Apply the [private ingress changes](./cloud/gcp.md#cloud-run-module-changes) to the module before deploying. Set `source` to your updated module location and version.
 
-Publish the LiteLLM image to Artifact Registry. Grant the Cloud Run service agent permission to pull it. Cloud Run cannot pull directly from GHCR. Give your deployment runner permission to create the GCP resources and run the migration job.
+Use a LiteLLM image in Artifact Registry and grant the Cloud Run service agent permission to pull it. Cloud Run cannot pull directly from GHCR. Terraform needs permission to create the GCP resources and run the migration job.
 
 ```hcl title="main.tf"
 provider "google" {
@@ -140,7 +140,7 @@ output "lb_ip" {
 }
 ```
 
-Set `litellm_image` to the [image you built for these modules](../docker_quick_start.md#build-from-source). Set `litellm_license` if you use Enterprise features. The module generates the master key and database password in Secret Manager.
+Set `litellm_license` if you use Enterprise features. The module generates the master key and database password in Secret Manager.
 
 ### Existing infrastructure
 
@@ -156,4 +156,4 @@ Point the private DNS record for `lb_domains` at the internal load balancer IP. 
 
 Manage models, teams, and keys with the [UI](../configuration/ui.md), [Management API](../configuration/api.md), or [Terraform provider](../configuration/terraform.md). The examples enable database-backed models and Redis caching. To declare models with the deployment, set `proxy_config.model_list`. Add provider credentials to both `gateway_extra_secrets` and `backend_extra_secrets`. Both services load this configuration.
 
-Pin the module commit and image together in your deployment repository. Review `terraform plan` before you apply an upgrade. Each module runs migrations when the image changes. Use [Health Checks](../health.md) to verify readiness and [High Availability](./ha/overview.md) to plan replicas and rollouts.
+Pin the module and image versions. Review `terraform plan` before an upgrade. Each module runs migrations when the image changes. Use [Health Checks](../health.md) to verify readiness and [High Availability](./ha/overview.md) to plan replicas and rollouts.

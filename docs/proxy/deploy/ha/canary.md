@@ -53,7 +53,7 @@ spec:
 
 Weights are relative. With these two backends, `95` and `5` target a 95/5 split over many routing decisions. Actual traffic depends on sample size, connection reuse, and affinity. Check the actual split before comparing canary metrics. To route a specific team's traffic, use a trusted ingress rule. Do not authorize access through a public header that clients can set.
 
-## Promote with explicit gates
+## Promote the canary
 
 Record the stable version's error rates and latency before the rollout. Set acceptable limits for the canary. Monitor authentication failures, gateway errors, time to first token, completed streams, queue depth, and database connections. Check spend records and callback delivery. See [Prometheus Metrics](../../prometheus.md).
 

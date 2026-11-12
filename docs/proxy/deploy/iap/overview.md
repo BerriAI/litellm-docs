@@ -15,7 +15,7 @@ An identity-aware proxy authenticates the caller before forwarding the request t
 
 Keep LiteLLM private. Allow access only from the proxy or its private connector. These examples use LiteLLM Enterprise and an existing database. Configure your users, teams, and model access through [Access Management](../../access_management/overview.md).
 
-Each section shows the proxy configuration and the identity it forwards. General authentication setup lives in [Authentication](../../authentication.md).
+For general setup, see [Authentication](../../authentication.md).
 
 ## Cloudflare Access {#cloudflare}
 
@@ -54,7 +54,7 @@ ingress:
   - service: http_status:404
 ```
 
-Run connectors on separate hosts. Allow origin access only from the connectors. For a remotely managed tunnel, set the same origin options in its published application route. See [Tunnel origin settings](https://developers.cloudflare.com/tunnel/reference/origin-parameters/).
+For a remotely managed tunnel, set the same origin options in its published application route. See [Tunnel origin settings](https://developers.cloudflare.com/tunnel/reference/origin-parameters/).
 
 ### Identity forwarding
 

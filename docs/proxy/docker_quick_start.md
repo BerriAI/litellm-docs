@@ -213,23 +213,6 @@ If a budget is part of how you bound spend, run LiteLLM with a database as shown
 
 :::
 
-## Build from source
-
-The [Helm chart](./deploy/helm.md) uses a shared image with a component entrypoint. Build the image from the same [source revision](https://github.com/BerriAI/litellm/tree/f52f26d9c636038c6e3609cc7d17cf625d434c3e) as the chart in your image pipeline:
-
-```bash
-git clone --filter=blob:none https://github.com/BerriAI/litellm.git litellm-source
-git -C litellm-source checkout f52f26d9c636038c6e3609cc7d17cf625d434c3e
-
-docker build --platform linux/amd64 \
-  -t registry.example.com/platform/litellm:source-f52f26d ./litellm-source
-docker push registry.example.com/platform/litellm:source-f52f26d
-```
-
-Use a registry that your cluster can pull from. Sign in before you push the image. Choose the platform that matches your nodes (`linux/amd64` above). Sign and scan your internal build with your own tools. LiteLLM's signatures only cover images that LiteLLM publishes. Use this one image reference for every component. Its [entrypoint](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/docker-entrypoint.sh) selects `proxy`, `gateway`, `backend`, `ui`, `migrations`, `metrics`, or `collector` through the first argument. No argument starts the full proxy.
-
-When LiteLLM publishes a compatible release, replace the internal image reference with a verified tag or digest from `ghcr.io/berriai/litellm` or its `docker.litellm.ai/berriai/litellm` mirror. See [image security](./docker_image_security.md).
-
 ## Next steps
 
 Use the [deployment guides](./deploy.md) for Helm and Terraform, and the [production checklist](./prod.md) for hardening and tuning. The repository's [docker-compose.yml](https://github.com/BerriAI/litellm/blob/main/docker-compose.yml) includes database, Redis, and Prometheus options.

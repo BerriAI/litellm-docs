@@ -9,7 +9,7 @@ description: Scale the LiteLLM Helm chart with per-component HPA settings, reque
 
 Configure scaling in the [Helm chart's values.yaml](./helm.md). `gateway.hpa` scales the gateway in separate-service mode and the full proxy in single-service mode. `backend.hpa` and `ui.hpa` apply only to separate services.
 
-See the [chart values reference](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/helm/litellm/values.yaml) for all scaling options and the [Helm guide](./helm.md) for installation.
+See the [values reference](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/helm/litellm/values.yaml) for all scaling options.
 
 ## CPU and replica limits
 
@@ -122,7 +122,7 @@ Replace the Prometheus address and thresholds. The generated queries select the 
 
 ## Verify scaling
 
-After your GitOps sync or Helm upgrade, inspect the autoscaler and test with your normal traffic mix:
+After applying the values, inspect the autoscaler and test with your normal traffic mix:
 
 ```bash
 kubectl -n litellm get hpa

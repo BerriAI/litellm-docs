@@ -61,7 +61,7 @@ For Cloud Run, serverless NEGs do not support ordinary load-balancer health chec
 
 ## Preserve request behavior
 
-Forward the client's authorization and request body through the routing layer. Configure TLS from clients to ingress and from cross-region proxies to origins. Check that each regional endpoint accepts the public hostname and required paths. Include model APIs and any management routes you expose.
+Forward the client's authorization and request body through the routing layer. Configure TLS from clients to ingress and from cross-region proxies to origins. Check that each regional endpoint accepts the shared hostname and required paths. Include model APIs and any management routes you expose.
 
 Keep response streaming enabled and avoid buffering the whole response. Set idle and request timeouts at every hop to support your API behavior. A streaming response stays on its original connection. Routing changes do not transfer it to another region.
 

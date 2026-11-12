@@ -7,11 +7,11 @@ description: Deployment guides for Helm, Terraform, sizing, reference architectu
 
 # Deploy LiteLLM
 
-Deploy LiteLLM on Kubernetes with Helm, or on AWS and GCP with Terraform. Use the guides below for sizing, reference architectures, production readiness, upgrades, and health checks.
+Deploy LiteLLM with Helm on Kubernetes or Terraform on AWS and GCP. These guides cover capacity, network design, and production operations.
 
 | Topic | Pages |
 | --- | --- |
-| [Helm](./deploy/helm.md) | Kubernetes deployment with `values.yaml` and Argo CD |
+| [Helm](./deploy/helm.md) | Kubernetes deployment with `values.yaml` |
 | [Terraform](./deploy/terraform.md) | [AWS](./deploy/terraform.md#aws), [GCP](./deploy/terraform.md#gcp) |
 | [Sizing & Scaling](./deploy/sizing.md) | [Autoscaling](./deploy/autoscaling.md), [PostgreSQL](./db_sizing.md), [Redis](./redis_sizing.md), [Server Tuning](./server_tuning.md) |
 | [Reference Architectures](./deploy/architecture.md) | [Cloud Deployments](./deploy/cloud/overview.md), [Identity-Aware Proxy](./deploy/iap/overview.md), [mTLS](./deploy/mtls.md), [High Availability](./deploy/ha/overview.md), [Multi-Region](./multi_region.md), [Global Control Plane](./global_control_plane.md) |
