@@ -45,6 +45,7 @@ const config = {
     require('./plugins/litellm-stats'),
     require('./plugins/release-feed'),
     require('./plugins/llms'),
+    require('./plugins/mcp-models-snapshot'),
     // vega-canvas tries to load the optional node `canvas` package during SSR.
     // Charts render as SVG, so resolve it to an empty module.
     () => ({
