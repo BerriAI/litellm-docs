@@ -1927,6 +1927,7 @@ const providersSidebar = {
     { type: "category", label: "Perplexity AI", className: "sidebar-provider", link: { type: "doc", id: "providers/perplexity" }, items: [
       "providers/perplexity_embedding",
     ] },
+    "providers/phase_router",
     "providers/predibase",
     "providers/prism",
     "providers/publicai",
