@@ -353,6 +353,26 @@ With a model at `tpm: 1000`, team A at `model_tpm_limit: {"my-model": 500}` and 
 
 The setting only changes the limits a key inherits from its team. A `model_tpm_limit` or `model_rpm_limit` set on the key itself, team-wide `tpm_limit` and `rpm_limit`, and customer limits are enforced as before. Models that have neither `tpm` nor `rpm` configured, or that the dynamic limiter does not cover, keep the hard team limits. Because saturation is cached for `saturation_check_cache_ttl` seconds, a team may run a little past its limit before the clamp engages.
 
+#### Cap how far a team borrows
+
+While the model is idle, a borrowing team may use everything up to the model's own `tpm` and `rpm`, so one team can take most of the idle capacity on its own. To bound that, set `team_model_limit_max_borrow_multiple` in the team's metadata next to `model_tpm_limit` and `model_rpm_limit`. The team's usage on a model is then capped at its share times that multiple, for TPM and RPM alike, even while the model is idle.
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/team/new' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "metadata": {
+      "model_tpm_limit": {"my-model": 500},
+      "team_model_limit_max_borrow_multiple": 2
+    }
+  }'
+```
+
+With this team at `model_tpm_limit: {"my-model": 500}` and a multiple of `2`, it can borrow up to 1000 tokens a minute on `my-model` while the model is below `saturation_threshold`. A request past that gets a 429 whose `rate_limited_by` header reads `model_per_team_max_borrow_multiple`, with a message that names the share, the multiple and the resulting cap. Once the model saturates, the team is held to its original 500 as before, with `rate_limited_by: model_per_team_saturated`. The multiple applies per team and per model, and a team's borrowing never counts against another team's cap.
+
+Leave it unset to keep the default, where the team borrows up to the model's limit. The value must be a number of at least `1`. A smaller or non-numeric value is logged as a warning and ignored, so the team behaves as if it were unset rather than every request failing. The multiple only matters while `team_model_limit_borrows_idle_capacity_from_other_teams` is on. Without it, the team's `model_tpm_limit` and `model_rpm_limit` stay hard ceilings.
+
 ### Demo Video
 
 This video walks through setting up dynamic rate limiting with priority reservation and locust tests to validate the behavior.
