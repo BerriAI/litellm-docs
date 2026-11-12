@@ -343,6 +343,35 @@ This video walks through setting up dynamic rate limiting with priority reservat
 <iframe width="840" height="500" src="https://www.loom.com/embed/1b54b93139ee415d959402cc0629f3f7
 " frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
+## Steer flexible teams to an alternate model when their preferred model is saturated
+
+Some teams care which model answers them, others only care that something good answers quickly. With `dynamic_rate_limiter_v3` enabled, a team can opt in to being steered off its preferred model while that model is busy by listing alternates in its metadata:
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/team/new' \
+  -H 'Authorization: Bearer sk-1234' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "team_alias": "flexible-team",
+    "models": ["luna", "opus"],
+    "metadata": {
+      "model_preferences": [
+        {"model": "luna", "alternates": ["opus"]}
+      ]
+    }
+  }'
+```
+
+When a key from that team asks for `luna`, the proxy checks the saturation the dynamic rate limiter already tracks for `luna` (the same value that flips priority reservation into strict mode). Below `saturation_threshold` the request goes to `luna` as usual. At or above it, the proxy walks `alternates` in order and rewrites the request to the first one that the team is allowed to call and that is itself below the threshold. If every alternate is also saturated or not in the team's `models`, the request stays on `luna` and is rate limited exactly as before.
+
+A steered response carries the header `x-litellm-model-steered-from` with the model the client asked for, so the client can tell the two cases apart:
+
+```text
+x-litellm-model-steered-from: luna
+```
+
+The request counts against the model that served it. Spend logs record `opus` with `opus` pricing, and the request is charged to the `opus` rate limit and leaves `luna` capacity for teams that want only `luna`. Teams with no `model_preferences`, and preferences whose `model` does not match the requested model, are untouched. The threshold is the same `priority_reservation_settings.saturation_threshold` described above, and the saturation value is cached for `saturation_check_cache_ttl` seconds, so steering can lag a sudden burst by up to that long.
+
 ## PTU share ceilings on Azure provisioned deployments
 
 An Azure provisioned throughput (PTU) deployment split across teams with `model_info.ptu_shares` gets a per-team, per-minute ceiling without any `model_tpm_limit` worked out by hand. The proxy converts each team's share through the Azure sizing table it ships (input TPM per PTU and the output-to-input ratio for the model) and charges each request in Azure's normalized tokens, so the ceiling stays in step with the reservation when the shares change:
