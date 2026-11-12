@@ -1,112 +1,111 @@
-import fs from 'node:fs';
+export {drawLight} from './raster.mjs';
+import {buildTransport} from './optics.mjs';
 
-export const WIDTH = 1600;
-export const HEIGHT = 800;
-export const FPS = 25;
-export const DURATION = 10;
-export const POSTER_TIME = 4.7;
-
-const clamp = t => Math.max(0, Math.min(1, t));
-const ease = t => { t = clamp(t); return t * t * (3 - 2 * t); };
-const ramp = (t, a, b) => ease((t - a) / (b - a));
-const mix = (a, b, u) => a + (b - a) * u;
-const hash = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
-const color = (a, b, u) => {
-  const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
-  return `rgb(${rgb(a).map((v, i) => Math.round(mix(v, rgb(b)[i], clamp(u)))).join(',')})`;
+export const WIDTH=1600, HEIGHT=800, FPS=25, DURATION=16, POSTER_TIME=6.8;
+const clamp=x=>Math.max(0,Math.min(1,x));
+const ease=x=>{x=clamp(x);return x*x*(3-2*x);};
+const ramp=(x,a,b)=>ease((x-a)/(b-a));
+const hash=n=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);};
+const n=x=>Number(x.toFixed(3));
+export const PODS=[];
+for(let row=0;row<28;row++)for(let col=0;col<49;col++){
+  const seed=row*49+col;
+  const x=180+col*31+(row%2)*15.5+(hash(seed+19)-.5)*5;
+  const y=38+row*29+(hash(seed+27)-.5)*5;
+  const depth=clamp(y/HEIGHT),center=1280-145*depth+30*Math.sin(depth*7);
+  const spread=92+665*depth**1.45,distance=Math.abs((x-center)/spread);
+  const envelope=Math.exp(-(distance**3.1));
+  const pockets=.84+.12*Math.sin(col*.38+row*.22)+.08*Math.cos(row*.41-col*.17);
+  if(hash(seed+73)>(.24+.77*depth)*envelope*pockets)continue;
+  // Non-overlapping circular sections are shared by optics and material rendering.
+  PODS.push({x,y,r:11.2+hash(seed+11)*2.65,seed});
+}
+export const SOURCE={x:8,y:8};
+export const TRANSPORT=buildTransport(PODS,SOURCE,{x:8+1000*Math.cos(.635),y:8+1000*Math.sin(.635)},{
+  rayCount:4096,beamWidth:0,angularWidth:2.4,angularSigma:.4,
+  maxSegments:256000,maxBounces:96,splitDepth:2,maxDistance:12000,minEnergy:1e-8,
+  roughness:.28,absorption:.0015,bounds:{minX:-100,minY:-100,maxX:1800,maxY:950},
+});
+// Optical path is slowed for visibility. This is not a physical seconds-per-meter scale.
+const SPEED=245, PULSE_CENTER=1.15, PULSE_SIGMA=.38, LIFETIME=2.4;
+const events=PODS.map(()=>[]);
+for(const event of TRANSPORT.events)events[event.beadIndex].push(event);
+const rayExposure=125;
+const gaussian=x=>Math.exp(-x*x/2);
+const erf=x=>{
+  const sign=x<0?-1:1,a=Math.abs(x),t=1/(1+.3275911*a);
+  return sign*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-a*a));
 };
-const line = (d, stroke, width = 1, opacity = 1, extra = '') => `<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${width}" opacity="${opacity}" stroke-linecap="round" stroke-linejoin="round" ${extra}/>`;
-const assets = Object.fromEntries(['litellm'].map(name => {
-  const svg = fs.readFileSync(new URL(`./assets/${name}.svg`, import.meta.url), 'utf8');
-  const tag = svg.match(/<svg\b([^>]*)>([\s\S]*)<\/svg>/);
-  return [name, {viewBox: tag[1].match(/viewBox="([^"]+)"/)[1], inner: tag[2]}];
-}));
-function icon(name, x, y, size) {
-  const prefix = `${name}-${x}-${y}-`;
-  const art = assets[name].inner.replace(/id="([^"]+)"/g, (_, id) => `id="${prefix}${id}"`).replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${prefix}${id})`);
-  return `<svg x="${x - size / 2}" y="${y - size / 2}" width="${size}" height="${size}" viewBox="${assets[name].viewBox}">${art}</svg>`;
+const cdf=x=>(1+erf(x/Math.SQRT2))/2;
+const pulseNorm=cdf(3)-cdf(-3);
+function charge(age){
+  if(age<=-3*PULSE_SIGMA)return 0;
+  const shift=PULSE_SIGMA*PULSE_SIGMA/LIFETIME;
+  return Math.exp(-age/LIFETIME+PULSE_SIGMA*PULSE_SIGMA/(2*LIFETIME*LIFETIME))
+    *(cdf((Math.min(age,3*PULSE_SIGMA)-shift)/PULSE_SIGMA)-cdf((-3*PULSE_SIGMA-shift)/PULSE_SIGMA))/pulseNorm;
 }
+export function state(seconds){
+  const t=((seconds%DURATION)+DURATION)%DURATION;
+  const center=(t-PULSE_CENTER)*SPEED,sigma=PULSE_SIGMA*SPEED;
+  return {
 
-// A dense, seeded fleet. Every glyph is one pod, not one network request.
-const shades = ['#5363D6', '#7483E5', '#9BA9EF', '#394FC5', '#9D9AE0', '#6B86BA', '#58B4CA', '#B5C4ED', '#7F9CDA', '#5153A7'];
-export const PODS = [];
-for (let row = 0; row < 38; row++) {
-  for (let col = 0; col < 65; col++) {
-    const n = row * 65 + col;
-    const x = 210 + col * 22.1 + (row % 2) * 11 + (hash(n + 19) - .5) * 4;
-    const y = 38 + row * 21 + (hash(n + 27) - .5) * 4;
-    const depth = clamp(y / HEIGHT);
-    const center = 1280 - 145 * depth + 30 * Math.sin(depth * 7);
-    const spread = 92 + 665 * depth ** 1.45;
-    const distance = Math.abs((x - center) / spread);
-    // A soft, widening plume crosses the midpoint toward the bottom.
-    // Density falls gradually at its wandering edge; there is no half-canvas cutoff.
-    const envelope = Math.exp(-(distance ** 3.1));
-    const pockets = .84 + .12 * Math.sin(col * .38 + row * .22)
-      + .08 * Math.cos(row * .41 - col * .17);
-    const density = (.24 + .77 * depth) * envelope * pockets;
-    if (hash(n + 73) > density) continue;
-    PODS.push({x, y, r: 7.7 + hash(n + 11) * 2.7, seed: n, fill: shades[Math.floor(hash(n + 9) * shades.length)]});
-  }
+    rays:TRANSPORT.segments.flatMap(ray=>{
+      const extent=ray.opticalEnd-ray.opticalStart;
+      const localCenter=center;
+      if(localCenter+3*sigma<=ray.opticalStart||localCenter-3*sigma>=ray.opticalEnd)return [];
+      const start=clamp((localCenter-3*sigma-ray.opticalStart)/extent);
+      const end=clamp((localCenter+3*sigma-ray.opticalStart)/extent);
+      const g1=(localCenter-3*sigma-ray.opticalStart)/extent,g2=(localCenter+3*sigma-ray.opticalStart)/extent;
+      const dx=ray.x2-ray.x1,dy=ray.y2-ray.y1;
+      return [{start,span:Math.max(0,end-start),alpha:end>start?Math.min(.7,ray.energy*rayExposure):0,
+        energy:ray.energy*(1-ramp(t,14,16)),diffuse:ray.kind!=='incident',x1:ray.x1,y1:ray.y1,x2:ray.x2,y2:ray.y2,
+        gx1:ray.x1+dx*g1,gy1:ray.y1+dy*g1,gx2:ray.x1+dx*g2,gy2:ray.y1+dy*g2}];
+    }),
+    pods:PODS.map((p,i)=>{
+      let stored=0,direct=0,dx=0,dy=0;
+      for(const event of events[i]){
+        const age=t-PULSE_CENTER-event.opticalTime/SPEED;
+        stored+=event.depositedEnergy*charge(age)*.65;
+        const surfaceAge=t-PULSE_CENTER-event.opticalStart/SPEED;
+        const hit=Math.abs(surfaceAge)<=3*PULSE_SIGMA?gaussian(surfaceAge/PULSE_SIGMA)*event.incidentEnergy:0;
+        direct+=hit;dx+=(event.x-p.x)*hit;dy+=(event.y-p.y)*hit;
+      }
+      const emission=Math.pow(1-Math.exp(-stored*60000),.45)*(1-ramp(t,14,16));
+      const scatter=(1-Math.exp(-direct*280))*(1-ramp(t,14,16));
+      const length=Math.hypot(dx,dy);
+      return {emission,bloom:Math.min(1,emission*.95+scatter*.5),scatter,
+        scatterX:length?dx/length*p.r*.36:0,scatterY:length?dy/length*p.r*.36:0};
+    }),
+  };
 }
-function hex(x, y, r) {
-  return `M${x} ${y - r}L${x + r * .866} ${y - r * .5}V${y + r * .5}L${x} ${y + r}L${x - r * .866} ${y + r * .5}V${y - r * .5}Z`;
-}
-function pod(p, t, glowOnly = false) {
-  const distance = Math.hypot((p.x - 850), (p.y - 435) * .92);
-  const arrival = 3.45 + distance / 235 + hash(p.seed + 4) * .18;
-  const age = t - arrival;
-  const peak = Math.exp(-(((age - .36) / .29) ** 2));
-  const cycle = age > 0 && age < 1.1 ? (.5 + .5 * Math.sin(age * Math.PI * 3.4)) * Math.sin(age / 1.1 * Math.PI) : 0;
-  const reset = 1 - ramp(t, 8.65, 9.65);
-  const pulse = Math.max(peak, cycle * .58) * reset;
-  const deployed = ramp(age, .35, .95) * reset;
-  if (glowOnly) return pulse > .04 ? `<circle cx="${p.x}" cy="${p.y}" r="${16 + pulse * 6}" fill="#61CFF4" opacity="${pulse * .48}"/>` : '';
-  const rest = color(p.fill, '#63B8DE', deployed * .3);
-  const fill = pulse > .01 ? color(p.fill, '#D8FAFF', pulse * .88) : rest;
-  const size = p.r * (1 + pulse * .095);
-  let s = `<path d="${hex(p.x, p.y, size)}" fill="${fill}" stroke="${pulse > .25 ? '#BEF8FF' : '#AABCF1'}" stroke-width="${.5 + pulse * 1.2}"/>`;
-  // Small facets, ports, and status marks vary by workload without adding lettering.
-  s += line(`M${p.x - 4.8} ${p.y - 4.2}h9.6`, '#EBF6FF', .8, .25 + pulse * .6);
-  if (p.seed % 4 === 0) s += line(`M${p.x - 3} ${p.y - 1}l3 2 -3 2M${p.x + 2} ${p.y + 3}h3`, '#EAF9FF', .85, .68);
-  else if (p.seed % 4 === 1) s += `<rect x="${p.x - 3.8}" y="${p.y - 1}" width="7.6" height="4.8" rx=".8" fill="#DCEBFF" opacity=".48"/>`;
-  else s += line(`M${p.x - 4} ${p.y + 1}h${p.seed % 3 + 3}M${p.x + 2} ${p.y + 1}h2`, '#DBF4FF', 1.4, .68);
-  if (deployed > .5) s += `<circle cx="${p.x}" cy="${p.y + 6}" r="1" fill="#DCFFF6"/>`;
-  return s;
-}
+const LIGHT_STOPS=[[0,0],[.125,.08],[.25,.32],[.375,.76],[.5,1],[.625,.76],[.75,.32],[.875,.08],[1,0]];
 
-// The source is just the LiteLLM mark; its own negative space stays white.
-function registry() {
-  return '<rect x="236" y="164" width="128" height="128" rx="13" fill="#FFFFFF"/>'
-    + icon('litellm', 300, 228, 128);
-}
-
-const START = [366, 270], END = [1200, 525];
-const length = Math.hypot(END[0] - START[0], END[1] - START[1]);
-const angle = Math.atan2(END[1] - START[1], END[0] - START[0]) * 180 / Math.PI;
-function beam(t) {
-  const travel = clamp((t - .85) / 4.7);
-  const active = ramp(t, .6, 1.25) * (1 - ramp(t, 5.0, 5.8));
-  if (active < .001) return '';
-  const center = length * travel;
-  const width = 48 + 48 * travel;
-  // Only light moves. There is no persistent cone, track, or connection line.
-  return `<g transform="translate(${START}) rotate(${angle})" opacity="${active}">
-    <ellipse cx="${center}" cy="0" rx="175" ry="${width}" fill="url(#beam-bloom)"/>
-    <ellipse cx="${center - 60}" cy="0" rx="205" ry="${width * .72}" fill="url(#beam-bloom)" opacity=".48"/>
-    <ellipse cx="${center + 18}" cy="0" rx="85" ry="${width * .29}" fill="url(#beam-core)"/>
+function bead(p,s,i,id){
+  const r=n(p.r);
+  return `<g data-pod="${i}" transform="translate(${n(p.x)} ${n(p.y)})">
+    <circle data-layer="bloom" r="${n(r*3.6)}" fill="url(#${id}-afterglow)" opacity="${n(s.bloom)}"/>
+    <circle r="${r}" fill="url(#${id}-frost-body)" stroke="#9BAAB6" stroke-width=".6" stroke-opacity=".23"/>
+    <circle r="${n(r-.4)}" fill="url(#${id}-grain)" opacity=".55"/>
+    <circle data-layer="emission" r="${r}" fill="url(#${id}-emission)" opacity="${n(s.emission)}"/>
+    <g data-layer="scatter" transform="translate(${n(s.scatterX)} ${n(s.scatterY)})" opacity="${n(s.scatter)}"><circle r="${n(r*.66)}" fill="url(#${id}-surface-light)"/></g>
   </g>`;
 }
-export function frame(seconds) {
-  const t = ((seconds % DURATION) + DURATION) % DURATION;
-  let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}"><title>LiteLLM Enterprise Registry image pull and rolling deployment</title><desc>A broad, slowly traveling pulse of light leaves the LiteLLM mark and reaches a flowing field of ${PODS.length} varied gateway pods, sparse at the top and wider and denser toward the bottom. Each workload lights up in a staggered rolling deployment.</desc><defs>
-    <radialGradient id="beam-bloom"><stop stop-color="#BAEFFF" stop-opacity=".8"/><stop offset=".25" stop-color="#65C6F4" stop-opacity=".62"/><stop offset=".55" stop-color="#567DEB" stop-opacity=".3"/><stop offset="1" stop-color="#5877EB" stop-opacity="0"/></radialGradient>
-    <radialGradient id="beam-core"><stop stop-color="#E0FCFF" stop-opacity=".92"/><stop offset=".4" stop-color="#8EE5FF" stop-opacity=".62"/><stop offset="1" stop-color="#72C8FF" stop-opacity="0"/></radialGradient>
-    <filter id="fleet-glow" x="-25%" y="-40%" width="150%" height="180%"><feGaussianBlur stdDeviation="9"/></filter>
-  </defs>`;
-  s += beam(t);
-  s += `<g filter="url(#fleet-glow)">${PODS.map(p => pod(p, t, true)).join('')}</g>`;
-  s += PODS.map(p => pod(p, t)).join('');
-  s += registry(t);
-  return s + '</svg>';
+export function frame(seconds,prefix='registry',{includeRays=true,currentState}={}){
+  const id=prefix.replace(/[^a-zA-Z0-9_-]/g,''),s=currentState??state(seconds);
+  let grain='';
+  for(let i=0;i<100;i++)grain+=`<circle cx="${n(hash(i+771)*32)}" cy="${n(hash(i+991)*32)}" r="${n(.2+hash(i+171)*.3)}" fill="${i%2?'#FFFFFF':'#6A7A85'}" opacity="${i%2?.18:.12}"/>`;
+  let rays='',rayGradients='';
+  if(includeRays)s.rays.forEach((ray,i)=>{
+    if(ray.alpha<.0002)return;
+    rayGradients+=`<linearGradient id="${id}-ray-${i}" gradientUnits="userSpaceOnUse" x1="${n(ray.gx1)}" y1="${n(ray.gy1)}" x2="${n(ray.gx2)}" y2="${n(ray.gy2)}">${LIGHT_STOPS.map(([offset,alpha])=>`<stop offset="${offset}" stop-color="#E0F2FF" stop-opacity="${alpha}"/>`).join('')}</linearGradient>`;
+    const d=`M${n(ray.x1)} ${n(ray.y1)}L${n(ray.x2)} ${n(ray.y2)}`;
+    rays+=`<path d="${d}" stroke="url(#${id}-ray-${i})" stroke-width="13" opacity="${n(ray.alpha*.15)}"/><path d="${d}" stroke="url(#${id}-ray-${i})" stroke-width="3.5" opacity="${n(ray.alpha)}"/>`;
+  });
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="img" aria-labelledby="${id}-title ${id}-desc"><title id="${id}-title">LiteLLM Enterprise Registry</title><desc id="${id}-desc">A cool white pulse enters from the upper left and reflects and refracts through frosted glass gateway beads. Absorbed light leaves a fading phosphorescent glow, illustrating a rolling deployment.</desc><defs>${rayGradients}
+    <pattern id="${id}-grain" width="32" height="32" patternUnits="userSpaceOnUse">${grain}</pattern>
+    <radialGradient id="${id}-frost-body" cx=".5" cy=".5" r=".52"><stop stop-color="#ADBAC7" stop-opacity=".24"/><stop offset=".65" stop-color="#AAB9C5" stop-opacity=".3"/><stop offset=".9" stop-color="#899EAE" stop-opacity=".4"/><stop offset="1" stop-color="#BDCAD3" stop-opacity=".18"/></radialGradient>
+    <radialGradient id="${id}-emission"><stop stop-color="#F5FFFF" stop-opacity=".98"/><stop offset=".62" stop-color="#D2F5FF" stop-opacity=".78"/><stop offset="1" stop-color="#60B9EC" stop-opacity=".35"/></radialGradient>
+    <radialGradient id="${id}-surface-light"><stop stop-color="#F4FAFF" stop-opacity=".65"/><stop offset=".5" stop-color="#E2F1FF" stop-opacity=".3"/><stop offset="1" stop-color="#D0E5F9" stop-opacity="0"/></radialGradient>
+    <radialGradient id="${id}-afterglow"><stop stop-color="#A9E5FF" stop-opacity=".8"/><stop offset=".3" stop-color="#53B3ED" stop-opacity=".4"/><stop offset="1" stop-color="#389CD8" stop-opacity="0"/></radialGradient>
+  </defs><g fill="none" stroke-linecap="round">${rays}</g>${PODS.map((p,i)=>bead(p,s.pods[i],i,id)).join('')}</svg>`;
 }

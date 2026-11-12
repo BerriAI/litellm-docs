@@ -8,8 +8,10 @@ GIF uses one 255-color palette, a fixed 8x8 Bayer alpha screen, and full-frame
 disposal-2 records. WebP defaults to quality-85 RGB and lossless continuous
 alpha; --webp-lossless preserves RGB too. --review-dir writes light/dark
 source-versus-WebP composites for visual inspection.
---width resizes RGBA sources with Lanczos before palette creation, encoding,
-and verification, without changing the original PNGs or animation timing.
+WebP keeps source dimensions by default; GIF defaults to at most 960 pixels
+wide. --width resizes both formats; --gif-width overrides GIF width separately.
+Resizing uses Lanczos before palette creation, encoding, and verification,
+without changing the original PNGs or animation timing.
 """
 
 import argparse
@@ -137,6 +139,7 @@ def encode_webp(paths, output, size, duration, lossless, quality, load):
 def verify_gif(paths, output, size, duration, palette, screen, load):
     elapsed = 0
     with Image.open(output) as animation:
+        assert animation.size == size, 'GIF dimensions changed'
         assert animation.n_frames == len(paths), 'GIF frame count changed'
         assert animation.info.get('loop') == 0, 'GIF must loop indefinitely'
         for index, filename in enumerate(paths):
@@ -184,6 +187,7 @@ def verify_webp(paths, output, size, duration, lossless, quality, load, review_d
     alpha_weight = 0
     reviews = []
     with Image.open(output) as animation:
+        assert animation.size == size, 'WebP dimensions changed'
         assert animation.info.get('loop') == 0, 'WebP must loop indefinitely'
         encoded_frames = animation.n_frames
         for index in range(encoded_frames):
@@ -236,11 +240,13 @@ def main():
     parser.add_argument('--stem', default='cover')
     parser.add_argument('--fps', type=int, required=True)
     parser.add_argument('--count', type=int, required=True)
-    parser.add_argument('--formats', default='gif,webp')
+    parser.add_argument('--formats', default='gif')
     parser.add_argument('--webp-lossless', action='store_true')
     parser.add_argument('--webp-quality', type=int, default=85)
     parser.add_argument('--review-dir', type=Path)
-    parser.add_argument('--width', type=int)
+    parser.add_argument('--width', type=int, help='Resize both formats to this width')
+    parser.add_argument('--gif-width', type=int,
+                        help='Override GIF width; defaults to --width, or at most 960')
     args = parser.parse_args()
     if args.count < 1 or args.fps < 1 or 100 % args.fps:
         parser.error('count must be positive; fps must divide 100 for exact GIF timing')
@@ -248,6 +254,8 @@ def main():
         parser.error('webp-quality must be between 0 and 100')
     if args.width is not None and args.width < 1:
         parser.error('width must be positive')
+    if args.gif_width is not None and args.gif_width < 1:
+        parser.error('gif-width must be positive')
     if Path(args.stem).name != args.stem:
         parser.error('stem must be a filename without directories')
     formats = list(dict.fromkeys(args.formats.split(',')))
@@ -259,17 +267,18 @@ def main():
             parser.error(f'Missing source frame: {filename}; render the complete scene first')
     with read_rgba(paths[0]) as first:
         source_size = first.size
-    size = source_size
-    if args.width is not None:
-        size = (args.width, max(1, round(source_size[1] * args.width / source_size[0])))
-    load = partial(read_rgba, source_size=source_size, target_size=size)
+    webp_width = args.width if args.width is not None else source_size[0]
+    gif_width = (args.gif_width if args.gif_width is not None else
+                 args.width if args.width is not None else min(960, source_size[0]))
+    widths = {'webp': webp_width, 'gif': gif_width}
     duration = 1000 // args.fps
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    report = {'width': size[0], 'height': size[1], 'fps': args.fps,
+    report = {'fps': args.fps,
               'source_width': source_size[0], 'source_height': source_size[1],
-              'resampling': 'Lanczos' if size != source_size else 'none',
               'source_frames': args.count, 'exports': {}}
     for fmt in formats:
+        size = (widths[fmt], max(1, round(source_size[1] * widths[fmt] / source_size[0])))
+        load = partial(read_rgba, source_size=source_size, target_size=size)
         final = args.output_dir / f'{args.stem}.{fmt}'
         pending = final.with_name(f'.{final.name}.pending')
         try:
@@ -285,7 +294,10 @@ def main():
             pending.replace(final)
         finally:
             pending.unlink(missing_ok=True)
-        report['exports'][fmt] = {'path': str(final), 'bytes': final.stat().st_size, **checked}
+        report['exports'][fmt] = {
+            'path': str(final), 'bytes': final.stat().st_size,
+            'width': size[0], 'height': size[1],
+            'resampling': 'Lanczos' if size != source_size else 'none', **checked}
     report_path = args.output_dir / f'{args.stem}-export-check.json'
     report_path.write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report, indent=2))

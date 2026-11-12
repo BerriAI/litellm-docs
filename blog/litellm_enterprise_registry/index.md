@@ -4,7 +4,7 @@ title: "Introducing the LiteLLM Enterprise Registry"
 date: 2026-11-11
 authors:
   - yassin
-image: ./cover.gif
+image: ./cover.png
 description: "Access LiteLLM Enterprise images and Helm charts through OAuth or AWS ECR pull-through cache, with private mirroring and independent image scanning."
 tags: [security, enterprise]
 hide_table_of_contents: true

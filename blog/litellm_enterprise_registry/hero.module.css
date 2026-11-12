@@ -11,10 +11,19 @@ div:has(> .hero) {
   background: transparent;
 }
 
-.hero picture,
-.hero img {
+.stage {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+}
+
+.stage video,
+.stage img {
   display: block;
   width: 100%;
+}
+
+.stage img,
+.stage video {
   height: auto;
 }
 
