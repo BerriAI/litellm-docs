@@ -16,6 +16,13 @@ Monitoring is on by default for gateways with a connected PostgreSQL database. K
 3. Follow **View key activity**, **View team activity**, or **View user activity** to inspect that resource over the alert's date range. Model alerts link to model routing.
 4. Select **Mark resolved** after addressing the finding, or **Dismiss** if it needs no action. Both preserve the alert. Select **Reopen** to return it to Open.
 
+<figure style={{margin: '24px 0'}}>
+  <a href="/img/alerts/spend-detail.webp">
+    <img src="/img/alerts/spend-detail.webp" alt="A spend alert shows $1,200 against a $200 daily baseline, the daily chart, observed and detection dates, and a View user activity link for Research owner." width="2882" height="1335" loading="lazy" style={{display: 'block', width: '100%', height: 'auto'}} />
+  </a>
+  <figcaption style={{fontSize: '0.85em', marginTop: '8px'}}>A spend increase to six times the baseline. Demo data. <a href="/img/alerts/spend-detail.webp">View full size</a></figcaption>
+</figure>
+
 The bell shows at most five open alerts, including model deprecations. Select **See all** for the full inbox. Performance alerts do not send email or webhook notifications.
 
 ## What LiteLLM checks
