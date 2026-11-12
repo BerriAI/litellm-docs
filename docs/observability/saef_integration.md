@@ -21,6 +21,8 @@ pip install "saef[litellm]"
 Add `SaefLogger` to `litellm.callbacks`. The logger works with every provider LiteLLM supports, because it only needs the usage block of the response.
 
 ```python
+import time
+
 import litellm
 from saef.integrations.litellm import SaefLogger
 
@@ -33,10 +35,14 @@ response = litellm.completion(
     mock_response="Hi there",
 )
 
+time.sleep(1)  # success callbacks run in a background thread
+
 totals = logger.totals()
 print(totals["calls"], totals["input_tokens"], totals["output_tokens"])
 print(totals["kg_co2e"], totals["kg_co2e_high_case"], totals["water_ml"])
 ```
+
+LiteLLM runs success callbacks in a background thread for synchronous calls, so read the totals after a short pause or at the end of a batch.
 
 The estimate for the call is also available on the response.
 
