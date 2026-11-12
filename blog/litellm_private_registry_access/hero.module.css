@@ -5,24 +5,16 @@ div:has(> .hero) {
 }
 
 .hero {
-  position: relative;
   width: 100%;
-  overflow: hidden;
   background: transparent;
 }
 
-.stage {
-  width: 100%;
-  aspect-ratio: 2 / 1;
-}
-
-.stage video,
-.stage img {
+.hero svg {
   display: block;
   width: 100%;
+  height: auto;
 }
 
-.stage img,
-.stage video {
-  height: auto;
+[data-theme='dark'] .hero :global(.registry-logo) {
+  fill: #fff;
 }
