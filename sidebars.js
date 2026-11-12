@@ -534,7 +534,10 @@ const sidebars = {
             {
               type: "category",
               label: "Cursor",
-              items: [{ type: "doc", id: "tutorials/cursor_integration", label: "Setup" }],
+              items: [
+                { type: "doc", id: "tutorials/cursor_integration", label: "IDE setup" },
+                { type: "doc", id: "tutorials/cursor_cli_subscription", label: "CLI subscription" },
+              ],
             },
             {
               type: "category",
