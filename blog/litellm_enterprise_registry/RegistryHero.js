@@ -13,7 +13,6 @@ const posterUrl = typeof coverPoster === 'string' ? coverPoster
 
 export default function RegistryHero() {
   const stageRef = useRef(null);
-  const [paused, setPaused] = useState(false);
   const [canAnimate, setCanAnimate] = useState(false);
   const [format, setFormat] = useState('webm');
   const tryNextFormat = () => setFormat(value => value === 'webm' ? 'mov' : 'gif');
@@ -57,7 +56,7 @@ export default function RegistryHero() {
   return (
     <div className={styles.hero}>
       <div ref={stageRef} className={styles.stage}>
-        {!paused && canAnimate ? (
+        {canAnimate ? (
           format === 'gif' ? (
             <img src={coverGif} width="1600" height="800" loading="lazy" decoding="async" alt={accessibleDescription} />
           ) : (
@@ -67,11 +66,6 @@ export default function RegistryHero() {
           <img src={posterUrl} width="1600" height="800" loading="lazy" decoding="async" alt={accessibleDescription} />
         )}
       </div>
-      <button type="button" className={styles.control} aria-label={paused ? 'Play animation' : 'Pause animation'} aria-pressed={paused} onClick={() => setPaused(value => !value)}>
-        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
-          {paused ? <path d="M6 3l11 7-11 7z" fill="currentColor" /> : <path d="M5 4h3v12H5zM12 4h3v12h-3z" fill="currentColor" />}
-        </svg>
-      </button>
     </div>
   );
 }
