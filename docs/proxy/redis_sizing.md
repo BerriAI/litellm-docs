@@ -17,29 +17,52 @@ Without shared Redis state, each gateway enforces its own rate limits and keeps 
 
 ## Sizing by request rate
 
-These are planning starting points, and the 10K–20K tiers require a load test to measure each shard's capacity with your features enabled.
+<span id="cloud-recommendations" />
 
-| Sustained RPS | Compute starting point | Primary RAM starting point |
-| --- | --- | --- |
-| Up to 1K | 2 vCPU | 8 GB |
-| 1K to 5K | 4 vCPU | 16 GB |
-| 5K to 10K | 8+ aggregate vCPU and at least `ceil(10000 / R_shard)` primary shards | 32 GB+, based on the working set |
-| 10K to 15K | 8+ aggregate vCPU and at least `ceil(15000 / R_shard)` primary shards | 32 GB+, based on the working set |
-| 15K to 20K | 8+ aggregate vCPU and at least `ceil(20000 / R_shard)` primary shards | 32 GB+, based on the working set |
+Use these configurations as starting points for load tests. The AWS and GCP tables assume one primary shard supports 2,500 LiteLLM RPS with capacity left for bursts. This is an example assumption, not a benchmark. Measure each node type with your features enabled and calculate `primary shards = ceil(target RPS / measured RPS per primary)`.
 
-`R_shard` is the LiteLLM RPS that one primary shard supports in your load test while it meets your latency target and retains capacity for bursts. For illustration, `R_shard = 2,500` gives 4, 6, and 8 primary shards for 10K, 15K, and 20K RPS. Replace 2,500 with your test result. Test the full cluster because key distribution and shared counters can limit scaling.
+Add shards or memory if your working set exceeds usable capacity. Test the full cluster because key distribution and shared counters can limit scaling. Memory totals exclude reserved overhead and replica copies.
 
-RAM totals cover primary nodes. Replicas add capacity for availability, not additional writable keyspace. Check each service's usable memory after its reserved overhead.
+### AWS ElastiCache
 
-## Cloud recommendations
+| Target RPS | Node type | Primary shards | Usable primary memory |
+| --- | --- | --- | --- |
+| Up to 1K | `cache.m7g.xlarge` | 1 | About 9.70 GiB |
+| 1K to 5K | `cache.m7g.xlarge` | 2 | About 19.40 GiB |
+| 5K to 10K | `cache.m7g.xlarge` | 4 | About 38.79 GiB |
+| 10K to 15K | `cache.m7g.xlarge` | 6 | About 58.19 GiB |
+| 15K to 20K | `cache.m7g.xlarge` | 8 | About 77.58 GiB |
 
-| Cloud | Service and size | Production settings |
-| --- | --- | --- |
-| AWS | ElastiCache with Valkey or Redis OSS. After the default [25% memory reserve](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/redis-memory-management.html), `cache.m7g.xlarge`, `cache.m7g.2xlarge`, and `cache.m7g.4xlarge` provide about 9.70, 19.53, and 39.20 GiB for data. These meet the 8, 16, and 32 GB memory starting points. Size shard count from measured throughput. [Node specifications](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/CacheNodes.SupportedTypes.html). | Enable [Multi-AZ and automatic failover](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/AutoFailover.html). Use [Redis Cluster config](./caching_redis.md#redis-cluster) when you add shards. |
-| GCP | Memorystore for Redis Cluster. Three `redis-standard-small` shards provide 15.6 GB of writable keyspace. Three `redis-highmem-medium` shards provide 31.2 GB. Add shards to meet measured throughput. [Node specifications](https://docs.cloud.google.com/memorystore/docs/cluster/cluster-node-specification). | Use [Redis Cluster config](./caching_redis.md#redis-cluster). Avoid `redis-shared-core-nano` for production because it has variable performance and no SLA. |
-| Azure | Azure Managed Redis Balanced for general use. Choose Compute Optimized when command throughput is the constraint. Match usable memory and measured throughput to the tiers above. [Capacity planning](https://learn.microsoft.com/en-us/azure/redis/plan-tiers-and-capacity). | Enable high availability and zone redundancy where available. Check current SKU capacity and shard counts because they can change. |
+Each [node](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/CacheNodes.SupportedTypes.html) has 12.93 GiB before the default [25% memory reserve](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/redis-memory-management.html). Add one replica per primary and enable [Multi-AZ and automatic failover](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/AutoFailover.html). Use [Redis Cluster config](./caching_redis.md#redis-cluster) for multiple shards.
 
 ElastiCache Serverless supports response caching. [Valkey semantic caching](./caching_semantic.md#valkey) requires a node-based cluster with the search module.
+
+### Google Cloud Memorystore for Redis Cluster
+
+| Target RPS | Node type | Primary shards | Usable primary memory |
+| --- | --- | --- | --- |
+| Up to 1K | `redis-highmem-medium` | 1 | 10.4 GB |
+| 1K to 5K | `redis-highmem-medium` | 2 | 20.8 GB |
+| 5K to 10K | `redis-highmem-medium` | 4 | 41.6 GB |
+| 10K to 15K | `redis-highmem-medium` | 6 | 62.4 GB |
+| 15K to 20K | `redis-highmem-medium` | 8 | 83.2 GB |
+
+Each [node](https://docs.cloud.google.com/memorystore/docs/cluster/cluster-node-specification) has 2 vCPU and 10.4 GB of writable memory after reserved overhead. Use [Redis Cluster config](./caching_redis.md#redis-cluster), [multi-zone placement, and one replica per primary](https://docs.cloud.google.com/memorystore/docs/cluster/create-instances).
+
+### Azure Managed Redis
+
+These SKUs are starting points for memory capacity. Azure manages each SKU's shard count. Validate throughput with a load test before you select a SKU.
+
+| Target RPS | Balanced SKU | Memory | Usable memory |
+| --- | --- | --- | --- |
+| Up to 1K | `B10` | 12 GB | About 9.6 GB |
+| 1K to 5K | `B20` | 24 GB | About 19.2 GB |
+| 5K to 10K | `B50` | 60 GB | About 48 GB |
+| 10K to 20K | `B100` | 120 GB | About 96 GB |
+
+These [SKU sizes](https://azure.microsoft.com/en-us/pricing/details/managed-redis/) show usable memory after Azure's [20% reserve](https://learn.microsoft.com/en-us/azure/redis/plan-tiers-and-capacity#reserved-memory). If throughput limits capacity while memory remains available, test the Compute Optimized SKU with the same suffix, such as `X50` instead of `B50`.
+
+Enable [high availability](https://learn.microsoft.com/en-us/azure/redis/overview#high-availability). Azure distributes nodes across zones in regions that support availability zones.
 
 ## Capacity planning
 

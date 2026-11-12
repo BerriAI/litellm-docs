@@ -15,25 +15,44 @@ Accounting updates key, user, team, and organization spend. Per-request logs go 
 
 ## Sizing by request rate
 
-The 10K–20K rows extrapolate the 5K baseline with unchanged logging, batching, and query mix, so validate these planning estimates with a load test.
+These instance sizes are planning estimates. The 10K–20K tier extrapolates the 5K baseline with unchanged logging, batching, and query mix. Validate it with a load test. These instance families jump from 16 to 32 vCPU, so 10K–20K uses one tier.
 
-| Sustained RPS | vCPU | RAM |
-| --- | --- | --- |
-| Up to 1K | 4 | 16 GB |
-| 1K to 5K | 8 | 32 GB |
-| 5K to 10K | 16 | 64 GB |
-| 10K to 15K | 24 | 96 GB |
-| 15K to 20K | 32 | 128 GB |
+Size storage from retention and connections from the worker pool budget below. A [read replica](./db_read_replica.md) can serve supported read traffic, but it does not remove write contention on the primary.
 
-Use the next available instance size that meets both CPU and memory targets. Size storage from retention and connections from the worker pool budget below. A [read replica](./db_read_replica.md) can serve supported read traffic, but it does not remove write contention on the primary.
+<span id="cloud-recommendations" />
 
-## Cloud recommendations
+### AWS RDS for PostgreSQL
 
-| Cloud | Service and size | Production settings |
-| --- | --- | --- |
-| AWS | RDS for PostgreSQL on Graviton. `db.m7g.xlarge` provides 4 vCPU and 16 GiB. `db.m7g.2xlarge` provides 8 vCPU and 32 GiB. Use larger classes for the higher tiers. [Instance specifications](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.Summary.html). | Use [gp3 storage](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage), [Multi-AZ](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.html), and [Database Insights](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DatabaseInsights.html). Aurora PostgreSQL also supports LiteLLM's [read replica routing](./db_read_replica.md). |
-| GCP | Cloud SQL for PostgreSQL Enterprise Plus with N2 machine types. The 4-vCPU type has 32 GB and the 8-vCPU type has 64 GB. Select a type that meets both targets above. [Machine specifications](https://docs.cloud.google.com/sql/docs/postgres/machine-series-overview). | Enable regional high availability and automatic storage increase. SSD throughput depends on both disk size and vCPU limits. Check the [storage limits](https://cloud.google.com/sql/docs/postgres/storage-options-overview). |
-| Azure | Azure Database for PostgreSQL flexible server, General Purpose tier. `D4ds_v5` provides 4 vCore and 16 GiB. `D8ds_v5` provides 8 vCore and 32 GiB. Use Memory Optimized when the working set needs more RAM. [Compute options](https://learn.microsoft.com/en-us/azure/postgresql/compute-storage/concepts-compute). | Use [Premium SSD v2](https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-storage) and [zone-redundant high availability](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-high-availability). The built-in [PgBouncer](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-pgbouncer) provides connection pooling on port `6432`. |
+| Sustained RPS | Instance type | vCPU | RAM |
+| --- | --- | --- | --- |
+| Up to 1K | `db.m7g.xlarge` | 4 | 16 GiB |
+| 1K to 5K | `db.m7g.2xlarge` | 8 | 32 GiB |
+| 5K to 10K | `db.m7g.4xlarge` | 16 | 64 GiB |
+| 10K to 20K | `db.m7g.8xlarge` | 32 | 128 GiB |
+
+See [RDS instance specifications](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.Summary.html). Use [gp3 storage](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage), [Multi-AZ](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.html), and [Database Insights](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DatabaseInsights.html).
+
+### Google Cloud SQL for PostgreSQL
+
+| Sustained RPS | Instance type (Enterprise Plus) | vCPU | RAM |
+| --- | --- | --- | --- |
+| Up to 1K | `db-perf-optimized-N-4` | 4 | 32 GB |
+| 1K to 5K | `db-perf-optimized-N-8` | 8 | 64 GB |
+| 5K to 10K | `db-perf-optimized-N-16` | 16 | 128 GB |
+| 10K to 20K | `db-perf-optimized-N-32` | 32 | 256 GB |
+
+See [Cloud SQL machine specifications](https://docs.cloud.google.com/sql/docs/postgres/machine-series-overview#n2-machine-types). Enable regional high availability and automatic storage increase. SSD throughput depends on both disk size and vCPU limits. Check the [storage limits](https://cloud.google.com/sql/docs/postgres/storage-options-overview).
+
+### Azure Database for PostgreSQL
+
+| Sustained RPS | Instance type (General Purpose) | vCore | RAM |
+| --- | --- | --- | --- |
+| Up to 1K | `D4ds_v5` | 4 | 16 GiB |
+| 1K to 5K | `D8ds_v5` | 8 | 32 GiB |
+| 5K to 10K | `D16ds_v5` | 16 | 64 GiB |
+| 10K to 20K | `D32ds_v5` | 32 | 128 GiB |
+
+See [Azure compute options](https://learn.microsoft.com/en-us/azure/postgresql/compute-storage/concepts-compute). Use [Premium SSD v2](https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-storage) and [zone-redundant high availability](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-high-availability). The built-in [PgBouncer](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-pgbouncer) provides connection pooling on port `6432`.
 
 ## Capacity planning
 
