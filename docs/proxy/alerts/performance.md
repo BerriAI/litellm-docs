@@ -1,11 +1,11 @@
 ---
 title: Performance alerts
-description: Find changes in spend, traffic, response time, and error rate from your gateway's recorded daily Usage.
+description: Detect spend spikes, traffic spikes, higher error rates, and slower responses from your gateway's recorded daily Usage.
 ---
 
 <SinceVersion v="1.110.0" />
 
-Performance alerts flag changes in your gateway's recorded Usage. Open **Alerts** in the Admin UI to see what changed, compare daily values, and open the affected resource.
+Performance alerts flag spend spikes, traffic spikes, higher error rates, and slower responses in your gateway's recorded Usage. Open **Alerts** in the Admin UI to compare daily values and open the affected resource.
 
 Monitoring is on by default for gateways with a connected PostgreSQL database. Keep daily Usage recording enabled and retain at least eight days of aggregates. You do not need to create rules or configure a notification destination.
 
@@ -33,17 +33,16 @@ Spend and traffic baselines are seven-day totals divided by seven. Response time
 
 | Finding | Condition |
 | --- | --- |
-| Spend increase | At least 3 times the daily baseline and at least $50 more. |
-| Traffic increase | At least 10 times the daily baseline and at least 1,000 more requests. |
-| Traffic drop | Below 20% of the daily baseline, with a baseline of at least 500 requests per day. |
+| Spend spike | At least 3 times the daily baseline and at least $50 more. |
+| Traffic spike | At least 10 times the daily baseline and at least 1,000 more requests. |
 | Slower responses | At least 3 times the baseline mean response time and at least 500 ms slower. |
 | Higher error rate | At least 3 times the baseline error rate and an increase of at least 2 percentage points. |
 
-These are four alert types. Traffic increases and drops share the `traffic` type. Response time means recorded total response time, not time to first token. Spend and response-time checks require a baseline above zero.
+Response time means recorded total response time, not time to first token. Spend and response-time checks require a baseline above zero.
 
-Spend increases, traffic increases, and error-rate findings require traffic on at least four baseline days. Traffic drops require traffic on all seven baseline days. Response-time findings require timed requests on at least four baseline days and at least 100 timed requests on the evaluated day. Error-rate findings require at least 500 requests on the evaluated day.
+Spend spikes, traffic spikes, and error-rate findings require traffic on at least four baseline days. Response-time findings require timed requests on at least four baseline days and at least 100 timed requests on the evaluated day. Error-rate findings require at least 500 requests on the evaluated day.
 
-For traffic drops, LiteLLM excludes deleted users, deleted or blocked teams, and deleted, blocked, or expired virtual keys. Requests authenticated without a virtual key can contribute to gateway, model, user, or team checks when Usage records those identities.
+Requests authenticated without a virtual key can contribute to gateway, model, user, or team checks when Usage records those identities.
 
 ## Five free alerts, then Enterprise
 
@@ -72,7 +71,7 @@ LiteLLM starts a bounded background run about every five minutes and resumes fro
 
 Detection is best effort. On a large or busy database, a sweep can leave resources unchecked. A new day starts a new comparison, and an unfinished scope resumes from its previous position before wrapping around. These are daily findings, not real-time outage alerts.
 
-Alerts describe recorded Usage. Missing or delayed accounting can resemble a traffic drop. The one-hour delay does not prove that all requests have arrived. Check **Usage** before treating a drop as an outage.
+Alerts describe recorded Usage. Missing or delayed accounting can affect the comparison.
 
 The saved comparison stays fixed. The chart reads current Usage and can change if accounting arrives later. Missing chart data appears as a gap. Resolving an alert records your decision; it does not change traffic or stop a new alert for a later day.
 

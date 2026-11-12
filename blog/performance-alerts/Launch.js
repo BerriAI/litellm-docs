@@ -5,10 +5,10 @@ import styles from './launch.module.css';
 
 const dailySpend = [160, 180, 220, 200, 240, 180, 220, 1200];
 const checks = [
-  ['Spend', 'A rise in daily spend compared with your recent average.'],
-  ['Traffic', 'A sharp increase or drop in request volume.'],
-  ['Response time', 'Requests taking longer to complete.'],
-  ['Error rate', 'A larger share of requests failing.'],
+  ['Spend spikes', 'A rise in daily spend compared with your recent average.'],
+  ['Traffic spikes', 'A sharp increase in request volume.'],
+  ['Slower responses', 'Requests taking longer to complete.'],
+  ['Error rates', 'A larger share of requests failing.'],
 ];
 
 export default function Launch() {
@@ -44,7 +44,7 @@ export default function Launch() {
       <div className={styles.article} id="alerts">
         <div className={styles.byline}><PostByline horizontal /></div>
         <div className={styles.intro}>
-          <p>See when spend, traffic, response times, or errors change in your gateway.</p>
+          <p>Performance alerts flag spend spikes, traffic spikes, higher error rates, and slower responses in your gateway.</p>
           <p>Open <strong>Alerts</strong> in LiteLLM to review findings alongside model deprecations. Monitoring is on by default for gateways with a database and recorded Usage. You do not need to write rules.</p>
         </div>
         <figure className={styles.screenshot}>
