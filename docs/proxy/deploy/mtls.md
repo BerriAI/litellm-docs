@@ -11,7 +11,7 @@ import { IngressArchitecture } from '@site/src/components/IngressArchitecture';
 
 {/* keep-version-note */}
 
-Use mutual TLS (mTLS) for services, agents, and client applications that have certificates from your PKI. The ingress verifies each certificate and forwards its identity to LiteLLM for usage tracking and customer policies.
+Use mutual TLS (mTLS) for services, agents, and client applications that have certificates from your PKI. The ingress verifies each certificate and forwards its identity to LiteLLM for usage tracking and access policies.
 
 These examples use a client certificate and a [LiteLLM virtual key](../virtual_keys.md). The certificate identifies the workload. The key controls its user, team, models, and budget. For clients that send only a certificate, [map each workload to its own key at the ingress](#certificate-only-clients).
 
@@ -28,7 +28,7 @@ general_settings:
       litellm_user_role: customer
 ```
 
-This mapping assigns the [customer ID](../customers.md) for usage attribution and customer policies. It does not authenticate the request or select a LiteLLM user or team. LiteLLM still validates the virtual key.
+This mapping stores the workload identity in LiteLLM's [customer ID field](../customers.md) for usage tracking and access policies. The field can identify a service, agent, or application. The virtual key selects the LiteLLM user and team.
 
 Each ingress overwrites `X-MTLS-Client-ID` and removes `X-LiteLLM-Customer-ID` and `X-LiteLLM-End-User-ID`. Those standard headers take precedence over this mapping. AWS, NGINX, HAProxy, and Kong map approved certificates to workload aliases. Azure and GCP forward IDs from certificates that pass CA validation.
 
@@ -107,7 +107,7 @@ server {
 }
 ```
 
-Keep NGINX's source IP check on the direct connection. Do not configure `real_ip_header` on this mapper. Empty, duplicate, or unlisted issuer/serial pairs fail the map. LiteLLM records `billing-worker` as the customer ID.
+Keep NGINX's source IP check on the direct connection. Do not configure `real_ip_header` on this mapper. Empty, duplicate, or unlisted issuer/serial pairs fail the map. LiteLLM records `billing-worker` as the workload ID.
 
 Set the target group's health-check path to `/ingress-health`. Keep the ALB listener rule limited to `/v1/*`. This probe checks NGINX. Monitor LiteLLM readiness separately.
 
@@ -132,7 +132,7 @@ See the [portal setup](https://learn.microsoft.com/en-us/azure/application-gatew
 
 ### Identity forwarding
 
-Create a rewrite set that forwards the verified issuer and serial as one customer ID. Empty values remove competing headers:
+Create a rewrite set that forwards the verified issuer and serial as one workload ID. Empty values remove competing headers:
 
 ```bash
 az network application-gateway rewrite-rule set create \
@@ -152,7 +152,7 @@ az network application-gateway rule update \
   --name "$API_ROUTING_RULE" --rewrite-rule-set litellm-mtls
 ```
 
-This attachment command targets a basic routing rule. For path-based rules, attach the rewrite set to the API's URL path-map rule. Merge these actions into any existing rewrite set. With the common LiteLLM configuration, `issuer|serial` becomes the customer ID. Certificate renewal changes that ID. Use a private mapper, as in the AWS example, if you need a stable alias. See [rewrite commands](https://learn.microsoft.com/en-us/cli/azure/network/application-gateway/rewrite-rule?view=azure-cli-latest) and [certificate variables](https://learn.microsoft.com/en-us/azure/application-gateway/rewrite-http-headers-url).
+This attachment command targets a basic routing rule. For path-based rules, attach the rewrite set to the API's URL path-map rule. Merge these actions into any existing rewrite set. With the common LiteLLM configuration, `issuer|serial` becomes the workload ID. Certificate renewal changes that ID. Use a private mapper, as in the AWS example, if you need a stable alias. See [rewrite commands](https://learn.microsoft.com/en-us/cli/azure/network/application-gateway/rewrite-rule?view=azure-cli-latest) and [certificate variables](https://learn.microsoft.com/en-us/azure/application-gateway/rewrite-http-headers-url).
 
 ## Google Cloud Application Load Balancer
 
@@ -217,7 +217,7 @@ gcloud compute url-maps import "$URL_MAP" \
   --source=url-map.yaml --region="$REGION"
 ```
 
-`REJECT_INVALID` rejects missing or invalid client certificates. The URL map replaces the incoming identity header with the verified certificate's Base64-encoded SHA-256 fingerprint. The common LiteLLM configuration uses that fingerprint as the customer ID. Renewal changes the ID. Internal load balancers use URL-map header actions rather than backend-service custom headers. See [frontend mTLS setup](https://docs.cloud.google.com/load-balancing/docs/https/setting-up-mtls-ccm) and [internal load balancer header actions](https://docs.cloud.google.com/load-balancing/docs/l7-internal/custom-headers).
+`REJECT_INVALID` rejects missing or invalid client certificates. The URL map replaces the incoming identity header with the verified certificate's Base64-encoded SHA-256 fingerprint. The common LiteLLM configuration uses that fingerprint as the workload ID. Renewal changes the ID. Internal load balancers use URL-map header actions rather than backend-service custom headers. See [frontend mTLS setup](https://docs.cloud.google.com/load-balancing/docs/https/setting-up-mtls-ccm) and [internal load balancer header actions](https://docs.cloud.google.com/load-balancing/docs/l7-internal/custom-headers).
 
 Frontend mTLS does not configure backend authentication. For supported backends, configure [backend authenticated TLS](https://docs.cloud.google.com/load-balancing/docs/backend-authenticated-tls-backend-mtls). Use a separate backend trust config and authentication config. Selecting HTTPS alone does not validate origin certificates. Restrict backend access with firewall rules. For Cloud Run, [set ingress to internal](https://docs.cloud.google.com/run/docs/securing/ingress), disable the default service URL, and remove direct domain mappings.
 
@@ -416,6 +416,6 @@ services:
 
 `consumer_by: []` disables automatic Consumer matching. The explicit credential binds the certificate SAN to `billing-worker` and its issuing CA. Kong uses the CN only when the certificate has no SAN. Leave `anonymous` and `default_consumer` unset. See [manual certificate mappings](https://developer.konghq.com/plugins/mtls-auth/#manual-mappings-between-certificate-and-consumer-objects).
 
-Post-Function runs after mTLS authentication. It reads the authenticated [Consumer object](https://developer.konghq.com/gateway/pdk/reference/kong.client/#kongclientget_consumer) and [overwrites the upstream identity header](https://developer.konghq.com/gateway/pdk/reference/kong.service.request/#kongservicerequestset_headerheader-of). It does not trust incoming `X-Consumer-*` headers. LiteLLM records `billing-worker` as the customer ID.
+Post-Function runs after mTLS authentication. It reads the authenticated [Consumer object](https://developer.konghq.com/gateway/pdk/reference/kong.client/#kongclientget_consumer) and [overwrites the upstream identity header](https://developer.konghq.com/gateway/pdk/reference/kong.service.request/#kongservicerequestset_headerheader-of). It does not trust incoming `X-Consumer-*` headers. LiteLLM records `billing-worker` as the workload ID.
 
 The Service uses HTTPS and verifies the origin certificate. See [Kong TLS configuration](https://developer.konghq.com/gateway/ssl-certificates/). Allow origin access only from Kong. Preserve `Authorization` and apply the plugin to every route to this Service. Review plugins that enable response buffering before using streaming.
