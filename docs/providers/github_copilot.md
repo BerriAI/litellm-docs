@@ -21,7 +21,7 @@ An admin adds the model and a **Per-user GitHub OAuth** credential once. Each us
 
 ### 1. Admin: create the credential
 
-Open **Models + Endpoints** > **LLM Credentials** in the LiteLLM dashboard and click **Add Credential**. Select **GitHub Copilot** as the provider and enter `github-copilot` as the **Credential Name**. **Auth Type** is set to **Per-user GitHub OAuth**, for this dashboard flow. Configure GitHub App authentication through the server configuration below. Click **Add Credential**
+Open **Models + Endpoints** > **LLM Credentials** in the LiteLLM dashboard and click **Add Credential**. Select **GitHub Copilot** as the provider and enter `github-copilot` as the **Credential Name**. Select **Per-user GitHub OAuth** under **Auth Type** for this dashboard flow. For service applications, select [GitHub App](#github-app-authentication) instead. Click **Add Credential**
 
 Leave **GitHub host** empty if your users sign in on github.com. If your enterprise uses GitHub Enterprise Cloud with data residency, enter your `SUBDOMAIN.ghe.com` host, for example `octocorp.ghe.com`. LiteLLM then sends sign-in to `https://SUBDOMAIN.ghe.com`, the token exchange and user lookup to `https://api.SUBDOMAIN.ghe.com`, and model requests only to `https://copilot-api.SUBDOMAIN.ghe.com`. Each credential keeps its own host, so one gateway can serve a github.com credential and a GHE.com credential side by side. GitHub Enterprise Server hosts are rejected because GitHub does not offer Copilot on GitHub Enterprise Server. Changing the host of a credential removes every user connection on it, so users connect again on the new host.
 
@@ -108,6 +108,40 @@ print(response.choices[0].message.content)
 Set `github_copilot_auth_type: github_app` to authenticate a backend service with a GitHub App installation. LiteLLM creates and refreshes installation tokens without a user login. This works with Chat Completions, Responses, Embeddings, and the async Anthropic Messages API, subject to each model's endpoint support.
 
 Create an App with the **Copilot Requests** organization permission set to **Read-only**, and install it in the organization that will pay for usage. The organization must allow Copilot requests from App installations. See [GitHub's server-to-server setup](https://docs.github.com/en/copilot/how-tos/copilot-sdk/auth/server-to-server-tokens#other-services-and-ci-systems) for eligibility and policy requirements.
+
+### Dashboard setup
+
+Open **Models + Endpoints** > **LLM Credentials** > **Add Credential**. Select **Github Copilot**, choose **GitHub App** under **Auth Type**, and enter a credential name, the App client ID, installation ID, and private-key secret reference. Leave **GitHub host** empty for github.com. Click **Add Credential**.
+
+<div className="docs-screenshot">
+  <Image img={require('../../img/github-copilot-app-after.jpg')} alt="GitHub App authentication fields in the existing credential form" width={1280} height={842} />
+</div>
+
+Open **Add Model**, select **Github Copilot**, and choose an available model. Set its public model name and select the saved App credential under **Existing Credentials**. Click **Add Model**. Applications call this alias with their LiteLLM virtual keys. No personal GitHub connection is required.
+
+Create a separate named credential for each App, then attach each application's model deployment to the appropriate credential. Administrators can edit the credential's secret reference when rotating keys.
+
+### Credential API
+
+Administrators can use `POST /credentials` with the same fields. The private key remains in the server's mounted secret or secret manager. The API validates App configuration and rejects pasted PEM contents.
+
+```bash
+curl "$LITELLM_URL/credentials" \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "credential_name": "copilot-service-a",
+    "credential_values": {
+      "github_copilot_auth_type": "github_app",
+      "github_copilot_app_id": "<App client ID>",
+      "github_copilot_app_installation_id": "<installation ID>",
+      "github_copilot_app_private_key_ref": "oidc/file//run/secrets/copilot-service-a.pem"
+    },
+    "credential_info": {"custom_llm_provider": "github_copilot"}
+  }'
+```
+
+Attach `litellm_credential_name: copilot-service-a` to a deployment through `POST /model/new` or the configuration below. Use `PATCH /credentials/copilot-service-a` to update `credential_values`, with `credential_info: {}` when provider metadata is unchanged. The API validates the merged configuration before saving it.
 
 ### Gateway configuration
 
