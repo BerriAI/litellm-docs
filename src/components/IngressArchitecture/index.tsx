@@ -136,12 +136,21 @@ const sequences: Record<Kind, Sequence> = {
     'x-goog-iap-jwt-assertion',
     'Cloud IAP authenticates the caller and signs its identity. NGINX formats the header. LiteLLM verifies it and applies user and team permissions.',
   ),
-  'iap-cloudflare': assertionSequence(
-    { name: ['Cloudflare', 'Access'], icon: 'providers/cloudflare.svg' },
-    { name: ['cloudflared', '+ NGINX'], icon: 'providers/cloudflare.svg' },
-    'Cf-Access-Jwt-Assertion',
-    'Access checks the caller and corporate device. The tunnel reaches private NGINX. LiteLLM verifies the Access assertion and applies user and team permissions.',
-  ),
+  'iap-cloudflare': {
+    title: 'Cloudflare Access',
+    actors: [caller, { name: ['Cloudflare', 'Access'], icon: 'providers/cloudflare.svg' }, { name: ['cloudflared'], icon: 'providers/cloudflare.svg' }, litellm],
+    events: [
+      request(0, 1, 'Request + identity'),
+      action(1, 'Check group + device'),
+      request(1, 2, 'Signed assertion'),
+      action(2, 'Verify Access JWT'),
+      request(2, 3, 'Signed assertion'),
+      action(3, 'Verify JWT', 'Apply team permissions'),
+      response,
+    ],
+    identity: 'Cf-Access-Jwt-Assertion',
+    note: 'Access checks the Okta group and corporate device. cloudflared validates and forwards the assertion. A LiteLLM header adapter reads the JWT for signature verification and user and team mapping.',
+  },
 };
 
 function Symbol({ kind, x, y }: { kind: 'client' | 'shield'; x: number; y: number }) {

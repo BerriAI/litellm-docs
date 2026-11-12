@@ -13,7 +13,7 @@ import { IngressArchitecture } from '@site/src/components/IngressArchitecture';
 
 An identity-aware proxy authenticates the caller before forwarding the request to LiteLLM. It sends the verified identity in a signed token or trusted headers. LiteLLM reads that identity and applies user and team permissions.
 
-Keep LiteLLM private. Allow access only from the proxy or its private connector. These examples use LiteLLM Enterprise and an existing database. Configure your users, teams, and model access through [Access Management](../../access_management/overview.md).
+These examples use LiteLLM Enterprise and an existing database. Configure your users, teams, and model access through [Access Management](../../access_management/overview.md).
 
 For general setup, see [Authentication](../../authentication.md).
 
@@ -27,24 +27,28 @@ Use Access to authenticate employees and Tunnel to reach the private origin. Req
 
 Enroll employee devices in the Cloudflare One Client with **Traffic and DNS** or **Traffic only** mode. In **Zero Trust → Reusable components → Posture checks**, add the **Gateway** check. Route the application, IdP, and team domain through the client. See [Require Gateway](https://developers.cloudflare.com/cloudflare-one/reusable-components/posture-checks/client-checks/require-gateway/) and [posture routing](https://developers.cloudflare.com/cloudflare-one/reusable-components/posture-checks/).
 
-Create a self-hosted Access application for `llm.corp.example.com` with no path limit. Configure this **Allow** policy:
+Create a self-hosted Access application for `llm.corp.example.com` with no path limit. Allow IdP groups that correspond to LiteLLM teams. For example, this **Allow** policy grants access to two Okta groups:
 
 | Rule | Selector | Value |
 | --- | --- | --- |
-| Include | Emails | `employee@example.com` and other approved employees |
-| Require | Login Methods | Your corporate IdP |
+| Include | Okta Groups | `litellm-engineering`, `litellm-data-science` |
+| Require | Login Methods | Your Okta integration |
 | Require | Gateway | Select the enabled Gateway check |
+
+Configure Okta to return these groups in its `groups` claim. Push the groups through SCIM to populate the **Okta Groups** selector. See [Cloudflare's Okta setup](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/okta/).
 
 All Require rules must pass. Apply the same requirements to every Allow policy for this hostname. Remove Bypass policies. The Gateway check requires your organization's client connection. The WARP check alone also accepts consumer WARP. See [Access policies](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/) and [Require Gateway](https://developers.cloudflare.com/cloudflare-one/reusable-components/posture-checks/client-checks/require-gateway/).
 
-Configure a Tunnel connector that can reach your private ingress:
+Run two `cloudflared` replicas in your cluster. For a token-managed tunnel, read `TUNNEL_TOKEN` from a Kubernetes Secret and run `cloudflared tunnel --no-autoupdate run`. See [Deploy cloudflared on Kubernetes](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/deployment-guides/kubernetes/).
 
-```yaml title="cloudflared configuration"
+Point the tunnel at your private LiteLLM service or internal load balancer. NGINX is not required. For a locally managed tunnel, use this example route:
+
+```yaml title="Locally managed cloudflared route"
 ingress:
   - hostname: llm.corp.example.com
-    service: https://identity.internal.example.com:443
+    service: https://litellm.internal.example.com:443
     originRequest:
-      originServerName: identity.internal.example.com
+      originServerName: litellm.internal.example.com
       caPool: /etc/cloudflared/origin-ca.pem
       noTLSVerify: false
       access:
@@ -58,26 +62,55 @@ For a remotely managed tunnel, set the same origin options in its published appl
 
 ### Identity forwarding
 
-Access sends the signed identity in `Cf-Access-Jwt-Assertion`. Route the tunnel to a private NGINX ingress. Add these directives inside its existing HTTPS location for LiteLLM:
+Access sends a signed JWT in `Cf-Access-Jwt-Assertion`. `cloudflared` forwards it unchanged.
 
-```nginx
-if ($http_cf_access_jwt_assertion = "") { return 401; }
-proxy_set_header X-LiteLLM-IAP-Token "Bearer $http_cf_access_jwt_assertion";
-proxy_set_header Authorization "";
-proxy_set_header litellm_user_api_key "";
+Use an Okta custom authorization server with the `groups` scope and set its **Authorization Server ID** in Cloudflare's [Okta integration](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/okta/). Add `groups` under **OIDC Claims** so Access includes it in the JWT as `custom.groups`. Limit the Okta claim to your LiteLLM groups. See [custom OIDC claims](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/generic-oidc/#custom-oidc-claims).
+
+Create LiteLLM teams with IDs `litellm-engineering` and `litellm-data-science`, then assign their [model permissions and budgets](../../access_management/jwt_permissions.md#control-model-access-with-teams). The group values must match the team IDs.
+
+LiteLLM's custom-header setting expects a `Bearer` prefix. This adapter reads the raw Access JWT and passes it to LiteLLM's JWT validation. Save it beside `config.yaml`:
+
+```python title="cloudflare_auth.py"
+from typing import Literal
+
+from fastapi import HTTPException, Request
+
+
+async def read_assertion(request: Request, api_key: str) -> str:
+    token = request.headers.get("cf-access-jwt-assertion", "").strip()
+    if not token or token.count(".") != 2:
+        raise HTTPException(status_code=401, detail="Missing Access JWT")
+    return token
+
+
+def validate_claims(token: dict) -> Literal[True]:
+    subject = token.get("sub")
+    custom = token.get("custom")
+    groups = custom.get("groups") if isinstance(custom, dict) else None
+    if not isinstance(subject, str) or not subject.strip():
+        raise ValueError("Missing user identity")
+    if not isinstance(groups, list) or not groups:
+        raise ValueError("Missing team groups")
+    if any(not isinstance(group, str) or not group.strip() for group in groups):
+        raise ValueError("Invalid team groups")
+    return True
 ```
 
-NGINX overwrites the header and adds the `Bearer` prefix that LiteLLM expects. Allow only tunnel connectors to reach NGINX and only NGINX to reach LiteLLM. Keep [backend certificate verification](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_verify) enabled and [response buffering](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering) disabled.
-
-Add these fields to your existing LiteLLM JWT configuration:
+Configure LiteLLM to verify the JWT and map its claims:
 
 ```yaml title="config.yaml"
 general_settings:
+  custom_auth: cloudflare_auth.read_assertion
+  custom_auth_settings:
+    mode: "on"
   enable_jwt_auth: true
-  litellm_key_header_name: X-LiteLLM-IAP-Token
   litellm_jwtauth:
     user_id_jwt_field: sub
     user_email_jwt_field: email
+    team_ids_jwt_field: custom.groups
+    user_id_upsert: true
+    enforce_team_based_model_access: true
+    custom_validate: cloudflare_auth.validate_claims
 ```
 
 ```bash
@@ -86,7 +119,9 @@ export JWT_ISSUER=https://YOUR_TEAM.cloudflareaccess.com
 export JWT_AUDIENCE=ACCESS_APPLICATION_AUD
 ```
 
-LiteLLM verifies the Access assertion and reads `sub` and `email`. Merge these fields with your [user and team mappings](../../jwt_user_team_auth.md). Require a nonempty `sub` with a [claim validator](../../jwt_auth_reference.md#custom-jwt-validate). This example uses employee tokens. Cloudflare service tokens use `common_name` instead of `sub` and need a separate Access policy and identity mapping. See [Access token validation](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/) and [token claims](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/application-token/).
+LiteLLM checks the signature, issuer, audience, and expiry before the claim validator runs. It maps `sub` to the user and `custom.groups` to the teams. The adapter returns a token, so LiteLLM still applies its JWT permissions.
+
+Access can omit custom claims when they exceed its token size limit. The validator rejects missing groups instead of using a default team. This example accepts employee tokens. See [Access token claims](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/application-token/) and [LiteLLM user and team mappings](../../jwt_user_team_auth.md).
 
 ## AWS Application Load Balancer {#aws}
 
