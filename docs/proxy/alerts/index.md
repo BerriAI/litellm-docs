@@ -23,7 +23,7 @@ Gateway admins can manage alerts. View-only admins can read them.
 | Alert | What you see | Availability |
 | --- | --- | --- |
 | [Model deprecations](./model-deprecations.md) | Models in use that have retired or will retire within 30 days, with migration details. | Does not consume the performance alert allowance. |
-| [Performance alerts](./performance.md) | Changes in spend, traffic, response time, or error rate compared with recent Usage. | On by default. Five saved alerts free, then Enterprise. |
+| [Performance alerts](./performance.md) | Spend spikes, traffic spikes, higher error rates, or slower responses compared with recent Usage. | On by default. Five saved alerts free, then Enterprise. |
 
 The notification bell shows up to five open alerts across both categories. Select one to open its details, or **See all** to open the Alerts page.
 

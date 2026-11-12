@@ -37,7 +37,7 @@ curl --get "$LITELLM_BASE_URL/alerts" \
 | `limit` | `25` | Integer from 1 to 100 |
 | `cursor` | First page | `next_cursor` from the preceding response |
 
-`performance` includes the four performance types. `model_deprecation` only matches persisted records of that type; it does not load the dashboard's live deprecation feed.
+`performance` includes spend spikes (`spend`), traffic spikes (`traffic`), slower responses (`latency`), and higher error rates (`reliability`). `model_deprecation` only matches persisted records of that type; it does not load the dashboard's live deprecation feed.
 
 Example response with synthetic data. Spend is in USD, and this team rose from a $200 daily baseline to $1,200.
 
