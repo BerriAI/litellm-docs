@@ -748,14 +748,31 @@ const sidebars = {
         { type: "html", value: "Observability", className: "sidebar-group-label", defaultStyle: true },
         {
           type: "category",
-          label: "Logging, Alerting, Metrics",
+          label: "Logging & Metrics",
           items: [
             { type: "doc", id: "proxy/dynamic_logging", className: "sidebar-enterprise" },
             "proxy/logging",
             "proxy/logging_spec",
             { type: "doc", id: "proxy/team_logging", className: "sidebar-enterprise" },
             { type: "ref", id: "proxy/audit_logs", label: "Audit Logs", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/prometheus", label: "Prometheus Metrics" },
+          ],
+        },
+        {
+          type: "category",
+          label: "Alerting",
+          link: { type: "doc", id: "proxy/alerts/index" },
+          items: [
+            "proxy/alerts/model-deprecations",
+            {
+              type: "category",
+              label: "Performance alerts",
+              link: { type: "doc", id: "proxy/alerts/performance" },
+              items: ["proxy/alerts/api"],
+            },
+            { type: "ref", id: "proxy/alerting", label: "Slack & Webhooks" },
             "proxy/email",
+            { type: "ref", id: "proxy/pagerduty", label: "PagerDuty", className: "sidebar-enterprise" },
           ],
         },
         { type: "html", value: "Manage", className: "sidebar-group-label", defaultStyle: true },
