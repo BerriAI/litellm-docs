@@ -105,3 +105,100 @@ test('endpoint catalog and flow become markdown in the export', () => {
   assert.match(out, /### Chat and responses/);
   assert.doesNotMatch(out, /<Endpoint/);
 });
+
+const {headingIndex, pageEntry, navTree, plainText} = require('./mcp-manifest');
+
+test('page index gives headings the anchor ids the rendered page uses', () => {
+  const md = [
+    '---',
+    'title: "Logging"',
+    '---',
+    '# Logging',
+    '',
+    '## Logging',
+    '',
+    '## Quick Start {#quick-start-custom}',
+    '',
+    '### `config.yaml` setup',
+    '',
+    '```bash',
+    '# not a heading',
+    '```',
+    '',
+    '## Send to [Langfuse](https://langfuse.com) **now**',
+    '',
+    '## Quick Start',
+    '',
+    '## Quick Start',
+    '',
+  ].join('\n');
+  const headings = headingIndex(md);
+  assert.deepEqual(
+    headings.map((h) => [h.depth, h.title, h.id]),
+    [
+      [1, 'Logging', null],
+      [2, 'Logging', 'logging-1'],
+      [2, 'Quick Start', 'quick-start-custom'],
+      [3, 'config.yaml setup', 'configyaml-setup'],
+      [2, 'Send to Langfuse now', 'send-to-langfuse-now'],
+      [2, 'Quick Start', 'quick-start'],
+      [2, 'Quick Start', 'quick-start-1'],
+    ],
+  );
+  // A front matter title takes no slug, so the first "## Logging" is "logging".
+  assert.deepEqual(headingIndex(md, {titleInSource: false}).slice(0, 2).map((h) => h.id), [null, 'logging']);
+});
+
+test('page index sections cover the text up to the next heading of the same level', () => {
+  const md = '# Page\n\nintro\n\n## A\n\na text\n\n### A.1\n\nsub\n\n## B\n\nb text\n';
+  const [page, a, a1, b] = headingIndex(md);
+  assert.equal(md.slice(a.start, a.end), '## A\n\na text\n\n### A.1\n\nsub\n\n');
+  assert.equal(md.slice(a1.start, a1.end), '### A.1\n\nsub\n\n');
+  assert.equal(md.slice(b.start, b.end), '## B\n\nb text\n');
+  assert.deepEqual([page.start, page.end], [0, md.length]);
+});
+
+test('page index entries point at the .md file the build writes', () => {
+  assert.equal(pageEntry({url: '/docs/proxy/logging', title: 'Logging', type: 'docs', markdown: '# Logging\n'}).md, 'docs/proxy/logging.md');
+  assert.equal(pageEntry({url: '/docs/', title: 'Docs', type: 'docs', markdown: ''}).md, 'docs/index.md');
+  assert.equal(pageEntry({url: '/', title: 'Home', type: 'home', markdown: ''}).md, 'index.md');
+  assert.equal(plainText('Use `a_b` with _emphasis_ and snake_case'), 'Use a_b with emphasis and snake_case');
+});
+
+test('nav tree keeps sidebar order and drops unpublished docs', () => {
+  const byId = new Map([
+    ['proxy/logging', {permalink: '/docs/proxy/logging', title: 'Logging'}],
+    ['proxy/intro', {permalink: '/docs/proxy/intro', title: 'Intro'}],
+  ]);
+  const tree = navTree(
+    {
+      tutorialSidebar: [
+        {type: 'doc', id: 'proxy/intro'},
+        {
+          type: 'category',
+          label: 'Observability',
+          link: {type: 'generated-index', permalink: '/docs/observability'},
+          items: [{type: 'doc', id: 'proxy/logging', label: 'Logging'}, {type: 'doc', id: 'proxy/draft'}, {type: 'html', value: '<hr>'}],
+        },
+        {type: 'category', label: 'Empty', items: [{type: 'doc', id: 'proxy/draft'}]},
+        {type: 'link', label: 'GitHub', href: 'https://github.com/BerriAI/litellm'},
+      ],
+    },
+    byId,
+  );
+  assert.deepEqual(tree, {
+    tutorialSidebar: [
+      {title: 'Intro', url: '/docs/proxy/intro'},
+      {title: 'Observability', url: '/docs/observability', items: [{title: 'Logging', url: '/docs/proxy/logging'}]},
+      {title: 'GitHub', url: 'https://github.com/BerriAI/litellm'},
+    ],
+  });
+});
+
+test('heading text follows CommonMark: code keeps underscores, loose emphasis stays literal, nested link text', () => {
+  const md = '# T\n\n#### `litellm/__init__.py`\n\n#### [** API DOCS**](https://x)\n\n## [[PROXY-Only] Control Access](/docs/a)\n\n## Related pages\n';
+  const headings = headingIndex(md, {sourceEnd: md.indexOf('## Related')});
+  assert.deepEqual(headings.map((h) => h.id), [null, 'litellm__init__py', '-api-docs', 'proxy-only-control-access', null]);
+  const nested = headingIndex('# T\n\n   ## Indented\n\n> ## Quoted\n\n    ## Code block\n\n## C# client\n\n## Closed ##\n');
+  assert.deepEqual(nested.map((h) => h.id), [null, 'indented', 'quoted', 'c-client', 'closed']);
+});

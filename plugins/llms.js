@@ -21,6 +21,7 @@ const {pathToFileURL} = require('url');
 const {substitute} = require('../src/remark/docs-models');
 const {sinceVersionAsText} = require('../src/remark/since-version');
 const {getStats, formatStats, FALLBACK: STATS_FALLBACK} = require('./litellm-stats');
+const {pageEntry, navTree} = require('./mcp-manifest');
 const {ONE_CLICK, PROMPTS, INSTALLS, QUICKSTART, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, USE_CASES, PRODUCT_CARDS, CARD_GROUPS} = require('../src/components/Conversion/content');
 
 const SITE = 'https://docs.litellm.ai';
@@ -645,7 +646,11 @@ module.exports = function llmsPlugin(context) {
       }
 
       const updated = lastUpdatedDates(context.siteDir);
-      const writeMd = async (permalink, content) => {
+      // Every page written here is also listed in mcp-pages.json, the page
+      // index the docs MCP server serves from (see mcp-manifest.js).
+      const pages = [];
+      const writeMd = async (permalink, content, page) => {
+        pages.push(pageEntry({url: permalink, markdown: content, ...page}));
         const target = mdPath(outDir, permalink);
         await fs.promises.mkdir(path.dirname(target), {recursive: true});
         await fs.promises.writeFile(target, content);
@@ -678,13 +683,14 @@ module.exports = function llmsPlugin(context) {
         });
         const header = `# ${title}\n\n> Index of all LiteLLM docs: ${SITE}/llms.txt\n\n`;
         let content = body.startsWith('# ') ? body.replace(/^# .*\n/, header) : header + body;
+        const sourceEnd = meta.length + content.length;
         if (related.length) {
           content +=
             '\n## Related pages\n\n' +
             related.map((r) => `- [${clean(r.title)}](${mdUrl(r.permalink)})`).join('\n') +
             '\n';
         }
-        await writeMd(doc.permalink, meta + content);
+        await writeMd(doc.permalink, meta + content, {title, type: kind, titleInSource: body.startsWith('# '), sourceEnd});
         return content;
       };
 
@@ -715,6 +721,7 @@ module.exports = function llmsPlugin(context) {
               link.permalink,
               frontMatter({title, url: link.permalink, canonical_url: `${SITE}${link.permalink}`, type: 'index', summary: link.description}) +
                 `# ${title}\n\n${link.description ? `${clean(link.description)}\n\n` : ''}${list.join('\n')}\n`,
+              {title, type: 'index', titleInSource: false},
             ));
           }
           walkCategories(item.items);
@@ -724,14 +731,16 @@ module.exports = function llmsPlugin(context) {
       await Promise.all(indexWrites);
 
       // The docs home.
-      await fs.promises.writeFile(
-        path.join(outDir, 'index.md'),
+      await writeMd(
+        '/',
         frontMatter({title: 'LiteLLM documentation', url: '/', canonical_url: `${SITE}/`, type: 'home', summary: SUMMARY}) +
           `# LiteLLM documentation\n\n> ${SUMMARY}\n\n${expandComponent('<QuickStartBox />')}\n${expandComponent('<PathFinder />')}\n${useCasesMarkdown()}\n${NOTES}\n\n${facts()}\n\n## Start here\n\n` +
           START_HERE.filter(([id]) => byId.has(id))
             .map(([id, label, note]) => `- [${label}](${mdUrl(byId.get(id).permalink)}): ${note}`)
             .join('\n') +
           `\n\nEvery page: ${SITE}/sitemap.md. Agent prompts, MCP, and skills: ${SITE}/docs/agent_resources.md\n`,
+        // The home page is a React page; its markdown headings have no anchors.
+        {title: 'LiteLLM documentation', type: 'home', titleInSource: false, sourceEnd: 0},
       );
 
       // llms.txt
@@ -812,7 +821,11 @@ module.exports = function llmsPlugin(context) {
             authors: (m.authors || []).map((a) => a.name).filter(Boolean),
             summary: m.description ? oneLine(m.description, 240) : null,
           });
-          await writeMd(m.permalink, meta + (body.startsWith('# ') ? body.replace(/^# .*\n/, header) : header + body));
+          await writeMd(m.permalink, meta + (body.startsWith('# ') ? body.replace(/^# .*\n/, header) : header + body), {
+            title: clean(m.title),
+            type: 'blog',
+            titleInSource: body.startsWith('# '),
+          });
         }),
       );
       if (blogPosts.length) {
@@ -861,6 +874,10 @@ module.exports = function llmsPlugin(context) {
         for (const m of blogPosts) sitemap.push(`- [${clean(m.title)}](${mdUrl(m.permalink)})`);
       }
       await fs.promises.writeFile(path.join(outDir, 'sitemap.md'), sitemap.join('\n') + '\n');
+
+      pages.sort((a, b) => a.url.localeCompare(b.url));
+      await fs.promises.writeFile(path.join(outDir, 'mcp-pages.json'), JSON.stringify({version: 1, site: SITE, pages}));
+      await fs.promises.writeFile(path.join(outDir, 'mcp-nav.json'), JSON.stringify({version: 1, sidebars: navTree(sidebars, byId, clean)}));
     },
   };
 };
