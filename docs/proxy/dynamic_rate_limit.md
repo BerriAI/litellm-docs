@@ -173,7 +173,7 @@ general_settings:
   - Example: When model usage is low, keys can use more than their allocated share. When model usage is high, keys are strictly limited to their allocated share.
 - **saturation_check_cache_ttl (int)**: TTL in seconds for local cache when reading saturation values from Redis (defaults to 60). In multi-node deployments, this controls how quickly nodes converge on the same saturation state. Lower values mean faster convergence but more Redis reads.
   - Example: Set to `5` for faster multi-node consistency, or `0` to always read directly from Redis.
-- **team_model_limit_mode (`hard` | `soft`)**: How a team's `model_tpm_limit` is enforced on models this limiter covers (defaults to `hard`). `hard` is a ceiling, as today. `soft` lets the team use idle capacity past its limit while the model is below `saturation_threshold`, then holds the team to its limit once the model saturates, with a 429 whose `rate_limited_by` header reads `team_model_soft_limit`. The model's own `tpm` is always enforced. A `model_tpm_limit` set on the key itself, `model_rpm_limit`, and customer limits stay hard. See [Team model_tpm_limit as a soft limit](#team-model_tpm_limit-as-a-soft-limit).
+- **team_model_limit_borrows_idle_capacity_from_other_teams (bool)**: Lets a team run past its `model_tpm_limit` and `model_rpm_limit` on capacity other teams are not using (defaults to `false`). Only models this limiter covers are affected. While the model is below `saturation_threshold` the team may exceed its limits, and once the model saturates the team is held to them, with a 429 whose `rate_limited_by` header reads `model_per_team_saturated`. The model's own `tpm` and `rpm` are always enforced. Limits set on the key itself and customer limits stay hard. See [Team model limits that borrow idle capacity](#team-model-limits-that-borrow-idle-capacity).
 
 **Start Proxy**
 
@@ -337,21 +337,21 @@ Model-wide capacity exhausted (any priority):
 }
 ```
 
-### Team model_tpm_limit as a soft limit
+### Team model limits that borrow idle capacity
 
-By default a team's `model_tpm_limit` is a hard ceiling, enforced by the regular rate limiter before this limiter runs. A team that hits it is refused even when the model has unused capacity. Set `team_model_limit_mode: soft` to make that limit a guaranteed share for models the dynamic limiter covers.
+By default a team's `model_tpm_limit` and `model_rpm_limit` are hard ceilings, enforced by the regular rate limiter before this limiter runs. A team that hits one is refused even when other teams are leaving the model idle. Set `team_model_limit_borrows_idle_capacity_from_other_teams: true` to let teams borrow that idle capacity on models the dynamic limiter covers.
 
 ```yaml
 litellm_settings:
   callbacks: ["dynamic_rate_limiter_v3"]
   priority_reservation_settings:
     saturation_threshold: 0.5
-    team_model_limit_mode: soft   # default: hard
+    team_model_limit_borrows_idle_capacity_from_other_teams: true   # default: false
 ```
 
-With a model at `tpm: 1000`, team A at `model_tpm_limit: {"my-model": 500}` and team B idle, team A can run past 500 tokens a minute while the model is under 50% saturation. Once usage crosses the threshold, team A is held to 500 and further requests get a 429 whose `rate_limited_by` header reads `team_model_soft_limit`, while team B still has its own 500 to use. Aggregate traffic never exceeds the model's `tpm`.
+With a model at `tpm: 1000`, team A at `model_tpm_limit: {"my-model": 500}` and team B idle, team A can run past 500 tokens a minute while the model is under 50% saturation. Once usage crosses the threshold, team A is held to 500 and further requests get a 429 whose `rate_limited_by` header reads `model_per_team_saturated`, while team B still has its own 500 to use. `model_rpm_limit` works the same way with requests. Aggregate traffic never exceeds the model's `tpm` or `rpm`, and borrowing only ever uses capacity on the same model, never a team's limit on another model.
 
-The mode only changes the inherited team TPM limit. A `model_tpm_limit` set on the key itself, `model_rpm_limit`, team-wide `tpm_limit`, and customer limits are enforced as before. Models that have no `tpm` configured, or that the dynamic limiter does not cover, keep the hard team limit. Because saturation is cached for `saturation_check_cache_ttl` seconds, a team may run a little past its share before the clamp engages.
+The setting only changes the limits a key inherits from its team. A `model_tpm_limit` or `model_rpm_limit` set on the key itself, team-wide `tpm_limit` and `rpm_limit`, and customer limits are enforced as before. Models that have neither `tpm` nor `rpm` configured, or that the dynamic limiter does not cover, keep the hard team limits. Because saturation is cached for `saturation_check_cache_ttl` seconds, a team may run a little past its limit before the clamp engages.
 
 ### Demo Video
 
