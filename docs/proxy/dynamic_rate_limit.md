@@ -395,6 +395,36 @@ The share is computed in two steps on every request. First, the class weights ar
 
 Below `saturation_threshold` teams still borrow idle capacity as usual. Once the model saturates, a team that is past its own share gets a 429 whose `rate_limited_by` header reads `priority_class_share_saturated` and whose message names the team, its class, how many teams are active in the class and the team's share in tokens or requests. A teammate that stayed within its share keeps going. Requests from keys with no team are held to the shared class pool exactly as when the setting is off, and they still count their class as active, so a class carrying only teamless traffic does not lend its share away. When `team_model_limit_borrows_idle_capacity_from_other_teams` is also on, a team's `model_tpm_limit` share applies as well and the tighter of the two wins.
 
+### Prometheus metrics for team shares and throttling
+
+With the `prometheus` callback enabled next to `dynamic_rate_limiter_v3`, the limiter publishes what each team is entitled to on a model, how far it is running past that, and why it was refused. These series are enough to tell a team that is starved from one that is over its share, without reading proxy logs.
+
+```yaml
+litellm_settings:
+  callbacks: ["dynamic_rate_limiter_v3", "prometheus"]
+  priority_reservation_settings:
+    saturation_threshold: 0.5
+    team_model_limit_borrows_idle_capacity_from_other_teams: true
+```
+
+| Metric | Type | Meaning |
+|--------|------|---------|
+| `litellm_dynamic_limiter_share_tokens` | gauge | The team's token share of the model for the current window, as of the team's last settled request. This is the team's `model_tpm_limit`, or its slice of the priority class share when `priority_class_share_splits_equally_among_active_teams` is on, whichever is smaller. |
+| `litellm_dynamic_limiter_borrowed_tokens` | gauge | Tokens the team has used above that share this window. `0` while the team is under its share. |
+| `litellm_dynamic_limiter_throttled_total` | counter | Requests the limiter refused, by team, model and reason. |
+
+The gauges carry `model_group`, `team`, `team_alias` and `priority`. The counter adds `rate_limit_type` (`tokens` or `requests`) and `reason`. The `reason` label is the value of the `rate_limited_by` header on the 429 the caller received, so a dashboard and a client log always agree. The values are `model_per_team_saturated` (the team is past its `model_tpm_limit` or `model_rpm_limit` and the model is saturated), `model_per_team_max_borrow_multiple` (the team hit its `team_model_limit_max_borrow_multiple` ceiling while borrowing) and `priority_class_share_saturated` (the team is past its slice of the class share and the model is saturated).
+
+Both gauges are refreshed from actual usage when a request settles, successful or failed, so a team that stops sending keeps its last values until its next request settles. With several proxy workers the gauges aggregate with `livemostrecent`, so `/metrics` shows one series per team and model carrying the value the worker that settled the team's latest request wrote, and a new window's first settlement replaces the old window's value whichever worker handles it. A scrape of `/metrics` after team A ran past a 100 token share on a saturated model looks like this.
+
+```
+litellm_dynamic_limiter_share_tokens{model_group="my-model",priority="default",team="team-a",team_alias="analytics"} 100.0
+litellm_dynamic_limiter_borrowed_tokens{model_group="my-model",priority="default",team="team-a",team_alias="analytics"} 260.0
+litellm_dynamic_limiter_throttled_total{model_group="my-model",priority="default",rate_limit_type="tokens",reason="model_per_team_saturated",team="team-a",team_alias="analytics"} 4.0
+```
+
+A failure in the metrics sink is logged and never changes whether a request is admitted or refused.
+
 ### Demo Video
 
 This video walks through setting up dynamic rate limiting with priority reservation and locust tests to validate the behavior.
