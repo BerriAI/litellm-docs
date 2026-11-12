@@ -12,6 +12,8 @@ Size the gateway, PostgreSQL, and Redis together. The gateway handles requests. 
 
 Start with your expected request rate, token volume, and number of concurrent streams. Test with the models and response lengths your applications use. A long stream keeps a connection open even when gateway CPU use is low.
 
+On Kubernetes, add requests per second (RPS) and tokens per second (TPS) to your HPA's CPU and memory targets. See [HPA metrics](./autoscaling.md#scale-on-requests-and-tokens-per-pod).
+
 ## Choose a guide
 
 | What you need to decide | Guide |
@@ -20,7 +22,7 @@ Start with your expected request rate, token volume, and number of concurrent st
 | Database compute, storage, and connection limits | [Database Sizing](../db_sizing.md) |
 | Which features need shared state | [What Needs Redis](../redis_requirements.md) |
 | Redis memory and connection capacity | [Redis Sizing](../redis_sizing.md) |
-| When to add or remove gateway replicas | [Autoscaling](./autoscaling.md) |
+| Scale gateway replicas with RPS and TPS | [Autoscaling](./autoscaling.md) |
 | How to reduce database pressure at high traffic | [High-Throughput Deployment](../high_throughput.md) |
 | How to send database reads to a replica | [Database Read Replica](../db_read_replica.md) |
 | How to tune workers, shutdown, and the server | [Server Tuning](../server_tuning.md) |

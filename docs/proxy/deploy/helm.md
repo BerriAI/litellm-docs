@@ -213,7 +213,7 @@ In single-service mode, built-in and component-targeted paths use the monolith S
 | `gateway.keda.prometheus` | Empty server address and workload targets | Set `serverAddress` with either `targetRequestsPerSecond` or `targetTokensPerSecond` to add a workload trigger. |
 | `<component>.pdb` | Disabled, empty `minAvailable` and `maxUnavailable` | Pod disruption budget. Set one limit. Enabling with neither uses `maxUnavailable: 1`. |
 
-See [Sizing & Scaling](./sizing.md) and [Autoscaling](./autoscaling.md) for capacity planning and metrics setup.
+Add [RPS and TPS targets](./autoscaling.md#scale-on-requests-and-tokens-per-pod) alongside CPU and memory for gateway autoscaling. See [Sizing & Scaling](./sizing.md) for capacity planning.
 
 </details>
 

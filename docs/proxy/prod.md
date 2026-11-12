@@ -150,20 +150,13 @@ The largest statements come from spend logging with `store_prompts_in_spend_logs
 
 ### Autoscaling
 
-Scale on CPU, and leave the memory target unset. Memory is not a usable scaling signal for the proxy: the query engine's resident memory reflects the largest write a pod has ever done rather than what it is doing now, so a memory target ratchets replicas up after one large write and never scales them back in. Provision memory as the floor above and let CPU drive the replica count.
+Use requests per second (RPS) and tokens per second (TPS) alongside CPU and memory targets in your HPA. CPU use can stay low while requests wait on model providers. Follow the [HPA metrics guide](./deploy/autoscaling.md#scale-on-requests-and-tokens-per-pod) to expose per-pod metrics and set targets from load tests.
 
-```yaml
-gateway:
-  hpa:
-    targetCPUUtilizationPercentage: 60
-    targetMemoryUtilizationPercentage: null
-```
-
-The chart defaults to 70 percent CPU and 80 percent memory. Start with 60 percent CPU to leave room for pods to start, then tune it from load tests. Measure startup time and set `gateway.startupProbe` if needed. The chart leaves that probe unset by default.
+Request and token counters update when requests finish, so keep spare replicas for long streams and traffic spikes. Measure pod startup time and set `gateway.startupProbe` if needed.
 
 ### Workers and scaling
 
-On Kubernetes, or anywhere else a pod-level autoscaler is reading CPU, run one Uvicorn worker per pod and scale horizontally (more pods) rather than vertically (more workers per pod). This is the default, so you only need `--num_workers 1`; one process per pod keeps latency predictable, lets the Horizontal Pod Autoscaler read the [CPU threshold above](#autoscaling) against a single process, and makes rolling restarts hitless because Kubernetes drains one pod at a time.
+On Kubernetes, run one Uvicorn worker per pod and scale by adding pods. This is the default. Set `--num_workers 1` to make it explicit.
 
 ```shell
 CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1"]
