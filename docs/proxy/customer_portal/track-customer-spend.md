@@ -50,7 +50,7 @@ Keep keys on your server. Your backend authenticates the customer and selects th
 
 ## 1. Set up budget webhooks
 
-Use a build containing [customer budget webhook support](https://github.com/BerriAI/litellm/pull/51579) and the [customer budget alert fix](https://github.com/BerriAI/litellm/pull/51645). The alert fix is pending; the recurring-budget and member events below require it. Prepare a POST endpoint in your product that accepts JSON and returns a successful `2xx` response within 10 seconds. The gateway must be able to reach it.
+Customer budget webhooks are on `main` through [customer budget webhook support](https://github.com/BerriAI/litellm/pull/51579) and the [customer budget alert fix](https://github.com/BerriAI/litellm/pull/51645). Use a build containing both changes for the recurring-budget and member events below. Prepare a POST endpoint in your product that accepts JSON and returns a successful `2xx` response within 10 seconds. The gateway must be able to reach it.
 
 Replace the example endpoint below with your receiver URL. Add this configuration before importing customers or sending requests, then restart the gateway:
 
@@ -92,7 +92,7 @@ After a positive spend update commits, LiteLLM checks the affected organization,
 
 `budget` is the triggering threshold. `period` is the recorded next reset timestamp, or `"lifetime"` if no reset is recorded. Route the event with `customer_org_id` to update the customer's balance in your product. A member budget covers that member across teams, so member events contain the organization and member IDs; the team fields are `null`.
 
-Return a successful `2xx` response within 10 seconds. Delivery is best effort: a cache claim suppresses the same event, scope, entity, and period until the budget reset, including after failure. Lifetime budgets use a long-lived claim. Cross-worker deduplication needs shared Redis; a local fallback can produce duplicates. The HTTP client retries a connection error once, but there is no durable retry queue or schedule for timeouts or unsuccessful HTTP responses. Reconcile through the usage APIs to recover missed events.
+Return a successful `2xx` response within 10 seconds. Delivery is best effort: a cache claim suppresses the same event, scope, entity, and period until the budget reset, including after failure. Lifetime budgets use a cache claim with a 100-year TTL. Cross-worker deduplication needs shared Redis; a local fallback can produce duplicates. The HTTP client retries a connection error once, but there is no durable retry queue or schedule for timeouts or unsuccessful HTTP responses. Reconcile through the usage APIs to recover missed events.
 
 Verify delivery in [step 4](#4-check-budgets-and-webhook-delivery), after the customer and SDK examples are ready.
 
@@ -118,14 +118,14 @@ curl --request POST "$LITELLM_BASE_URL/management/v1/customer_organizations" \
     "default_budgets": [
       {
         "name": "standard",
-        "is_default": true,
         "max_budget": 50,
         "soft_budget": 40,
         "budget_duration": "30d",
         "rpm_limit": 60,
         "tpm_limit": 100000
       }
-    ]
+    ],
+    "default_budget_template": "standard"
   }'
 ```
 
@@ -363,7 +363,7 @@ curl --request PATCH "$LITELLM_BASE_URL/management/v1/customer_organizations/org
   }'
 ```
 
-The first exhausted scope rejects a request: organization, then team, then member. Fresh customer spend counters across workers require [#51568](https://github.com/BerriAI/litellm/pull/51568). Without that change, admission can use cached spend until refresh. Allow for requests already in flight and background accounting when you show balances.
+The first exhausted scope rejects a request: organization, then team, then member. Fresh customer spend counters across workers are on `main` through [#51568](https://github.com/BerriAI/litellm/pull/51568). Use a build containing that change; older builds can admit requests against cached spend until refresh. Allow for requests already in flight and background accounting when you show balances.
 
 ## 5. Fetch usage for your product
 
