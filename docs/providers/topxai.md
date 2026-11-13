@@ -8,7 +8,7 @@ import TabItem from '@theme/TabItem';
 
 # TopxAI
 
-https://ai.topxea.com/docs
+https://api.topxai.xyz/docs
 
 :::tip
 
@@ -21,19 +21,19 @@ Use `model="topxai/<model-id>"` for the text models below. Endpoint support vari
 | Description | One OpenAI- and Anthropic-compatible endpoint for Claude, GPT and Grok, and private GLM, Kimi and DeepSeek deployments, at fixed USD prices on prepaid credit; prompts and completions are relayed in memory and never stored. |
 | Provider Route on LiteLLM | `topxai/` |
 | Supported Endpoints | `/chat/completions`, `/responses` |
-| API Reference | [TopxAI API reference](https://ai.topxea.com/docs/api-reference) |
+| API Reference | [TopxAI API reference](https://api.topxai.xyz/docs/api-reference) |
 
 ## Required Variables
 
 ```python showLineNumbers title="Environment Variables"
-os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key, from https://ai.topxea.com/keys
+os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key, from https://api.topxai.xyz/keys
 ```
 
-`TOPXAI_API_BASE` overrides the default base URL `https://ai.topxea.com/v1`.
+`TOPXAI_API_BASE` overrides the default base URL `https://api.topxai.xyz/v1`.
 
 ## Available Models
 
-The live table is at https://ai.topxea.com/pricing and as JSON at `GET https://ai.topxea.com/api/pricing`. The following models and Auto-route prices were verified on November 10, 2026. Prices are USD per million tokens.
+The live table is at https://api.topxai.xyz/pricing and as JSON at `GET https://api.topxai.xyz/api/pricing`. The following models and Auto-route prices were verified on November 10, 2026. Prices are USD per million tokens.
 
 | Model | Input | Output | Notes |
 |-------|-------|--------|-------|
@@ -56,7 +56,7 @@ Cost tracking in LiteLLM uses the Auto-route prices above. For a key pinned to a
 
 Cache reads cost $0.30 per million tokens on Kimi, $0.105 on DeepSeek Abliterated, $0.004 on DeepSeek Flash Fast, $0.45 on GLM-5.3-Abliterated and $0.075 on GLM-5.3-Flash-Abliterated. These five publish no cache-write price; caching is automatic. The cost map also includes the published Claude, GPT and Grok cache prices, including Claude's one-hour writes.
 
-Kimi K3.1 Pro always reasons, with `low`, `high` and `max` efforts and `low` as the default. Use base64 data URIs for images. Public image URLs, forced named-tool calls and strict response schemas are not covered by this integration's verified capabilities. See the [Kimi model guide](https://ai.topxea.com/docs/kimi-k3-1-pro).
+Kimi K3.1 Pro always reasons, with `low`, `high` and `max` efforts and `low` as the default. Use base64 data URIs for images. Public image URLs, forced named-tool calls and strict response schemas are not covered by this integration's verified capabilities. See the [Kimi model guide](https://api.topxai.xyz/docs/kimi-k3-1-pro).
 
 `kimi-k3`, `deepseek-flash`, `deepseek-v4-pro` and `claude-fable-5-1` are retired; Claude Fable 5.2 replaced Fable 5.1 on November 10, 2026. Select a current model explicitly. TopxAI rejects retired IDs with HTTP 403 and does not alias them to a replacement.
 
@@ -174,7 +174,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ## Notes
 
-- The current Claude models accept automatic tool selection or `tool_choice="none"`. They reject `required` and forced named-tool calls with HTTP 400. For structured output, use a JSON Schema response format and validate the result in your application; Claude accepts a subset of JSON Schema. See the [structured-output guide](https://ai.topxea.com/docs/use-topxai-with-langchain).
+- The current Claude models accept automatic tool selection or `tool_choice="none"`. They reject `required` and forced named-tool calls with HTTP 400. For structured output, use a JSON Schema response format and validate the result in your application; Claude accepts a subset of JSON Schema. See the [structured-output guide](https://api.topxai.xyz/docs/use-topxai-with-langchain).
 - The endpoint table above lists the native TopxAI transports used by this provider. LiteLLM's generated endpoint matrix also marks protocol bridges to Chat Completions; those flags do not mean TopxAI exposes those additional endpoints directly.
-- Claude models are also served on TopxAI's Anthropic Messages endpoint; use `model="anthropic/claude-sonnet-5-5"` with `api_base="https://ai.topxea.com"` and your TopxAI key as `api_key` when you want the Messages request shape with `cache_control` breakpoints. LiteLLM prices those calls at Anthropic's list price, twice the shared-pool price, unless you set TopxAI's prices through [Custom Pricing](../proxy/custom_pricing).
-- Image generation (`gpt-image-2.6-sunburst`, `gpt-image-2.6-flare`), video generation and TypeSafe's Jev (`/v1/systemone`) are outside the `topxai/` route; see the [API reference](https://ai.topxea.com/docs/api-reference).
+- Claude models are also served on TopxAI's Anthropic Messages endpoint; use `model="anthropic/claude-sonnet-5-5"` with `api_base="https://api.topxai.xyz"` and your TopxAI key as `api_key` when you want the Messages request shape with `cache_control` breakpoints. LiteLLM prices those calls at Anthropic's list price, twice the shared-pool price, unless you set TopxAI's prices through [Custom Pricing](../proxy/custom_pricing).
+- Image generation (`gpt-image-2.6-sunburst`, `gpt-image-2.6-flare`), video generation and TypeSafe's Jev (`/v1/systemone`) are outside the `topxai/` route; see the [API reference](https://api.topxai.xyz/docs/api-reference).
