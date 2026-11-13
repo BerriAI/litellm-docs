@@ -1154,7 +1154,7 @@ router_settings:
 | GENERIC_AUTHORIZATION_ENDPOINT | Authorization endpoint for generic OAuth providers
 | GENERIC_CLIENT_ID | Client ID for generic OAuth providers
 | GENERIC_CLIENT_SECRET | Client secret for generic OAuth providers
-| GENERIC_CLIENT_STATE | Optional state parameter for generic client authentication. Leave unset to generate a random state for each UI login. Ignored for CLI logins, which supply their own state. A fixed value breaks concurrent logins when PKCE is enabled.
+| GENERIC_CLIENT_STATE | Optional state parameter for generic client authentication. Leave unset to generate a random state for each UI login. CLI start/poll logins supply their own state and ignore this setting. A fixed value breaks concurrent logins when PKCE is enabled, including browser sign-in for `login --pkce`.
 | GENERIC_CLIENT_USE_PKCE | Enable PKCE (Proof Key for Code Exchange) for generic OAuth providers. Set to "true" when your OAuth provider requires PKCE. **Default is false**
 | GENERIC_SSO_HEADERS | Comma-separated list of additional headers to add to the request - e.g. Authorization=Bearer `<token>`, Content-Type=application/json, etc.
 | GENERIC_INCLUDE_CLIENT_ID | Include client ID in requests for OAuth
