@@ -1952,6 +1952,7 @@ const providersSidebar = {
     "providers/inception",
     "providers/inferenceapis",
     "providers/jina_ai",
+    "providers/keln",
     "providers/lambda_ai",
     "providers/llamagate",
     "providers/manus",

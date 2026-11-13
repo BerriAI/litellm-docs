@@ -588,6 +588,12 @@
       "rerank"
     ]
   },
+  "providers/keln": {
+    "prefix": "keln",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/lambda_ai": {
     "prefix": "lambda_ai",
     "capabilities": [
