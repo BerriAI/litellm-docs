@@ -10,7 +10,7 @@ LiteLLM supports all models from [Ollama](https://github.com/ollama/ollama)
 
 :::info 
 
-We recommend using [ollama_chat](#using-ollama-apichat) for better responses.
+We recommend using [`ollama_chat/`](#using-ollama-apichat) for chat models. The `ollama/` prefix flattens your messages into a single text prompt and replaces the model's own chat template, which usually lowers response quality. See [Prompt templates and the `ollama/` prefix](#prompt-templates).
 
 :::
 
@@ -262,6 +262,64 @@ print(response)
 ```
 </TabItem>
 </Tabs>
+
+## Prompt templates and the `ollama/` prefix {#prompt-templates}
+
+`ollama/` is the completion provider. It posts to `/api/generate`, which takes a single text prompt rather than a messages array, so LiteLLM flattens your `messages` into one string before sending it. When no prompt template is registered for the model, it uses a hard-coded `### System:` / `### User:` / `### Assistant:` template:
+
+```text
+### System:
+You are a helpful assistant
+
+### User:
+respond in 20 words. who are you?
+
+```
+
+That default replaces the chat template stored in the model itself, the one Ollama would apply on `/api/chat`. Models trained on a different format have never seen `### System:` during instruction tuning (Llama 3.x uses `<|start_header_id|>`, for example), and some of them continue the injected pattern and emit those markers back as response content. The request still returns HTTP 200, so the substitution is easy to miss.
+
+There are two ways to avoid it.
+
+**Use `ollama_chat/`**, which is the recommendation for any chat model. Ollama then applies the model's own template. See [Using ollama `api/chat`](#using-ollama-apichat).
+
+**Register your own template**, if you need the `/api/generate` path. A registered template replaces the default:
+
+```python
+import litellm
+
+litellm.register_prompt_template(
+    model="ollama/llama2",
+    roles={
+        "system": {"pre_message": "[INST] <<SYS>>\n", "post_message": "\n<</SYS>>\n [/INST]\n"},
+        "user": {"pre_message": "[INST] ", "post_message": " [/INST]"},
+        "assistant": {"pre_message": "\n", "post_message": "\n"},
+    },
+)
+```
+
+On the proxy, set the same template in your `config.yaml` under `litellm_params`. All three of `roles`, `initial_prompt_value` and `final_prompt_value` have to be set:
+
+```yaml
+model_list:
+  - model_name: llama2
+    litellm_params:
+      model: ollama/llama2
+      api_base: http://localhost:11434
+      initial_prompt_value: "\n"
+      roles:
+        system:
+          pre_message: "[INST] <<SYS>>\n"
+          post_message: "\n<</SYS>>\n [/INST]\n"
+        user:
+          pre_message: "[INST] "
+          post_message: " [/INST]"
+        assistant:
+          pre_message: "\n"
+          post_message: "\n"
+      final_prompt_value: "\n"
+```
+
+See [prompt formatting](../completion/prompt_formatting.md) for the full API, and [Set Custom Prompt Templates](../proxy/configs.md#set-custom-prompt-templates) for the proxy form.
 
 ## Using ollama `api/chat` 
 To send ollama requests to `POST /api/chat` on your ollama server, set the model prefix to `ollama_chat`
