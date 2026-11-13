@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1040" viewBox="0 0 1120 1040" role="img" aria-labelledby="aws-title aws-desc">
   <title id="aws-title">Moyai AWS deployment with Lambda MicroVMs</title>
-  <desc id="aws-desc">Browser and optional Slack requests reach an HTTPS load balancer in public subnets. One private EC2 host runs Moyai, Temporal, and LiteLLM. The host stores application records in RDS, uses S3 for artifacts and checkpoints, and manages Lambda MicroVMs through authenticated AWS endpoints. LiteLLM invokes Bedrock with the host IAM role. Guests receive scoped S3 checkpoint URLs and no application credentials. Encrypted EBS retains installation keys and Temporal's PostgreSQL data. Secrets Manager supplies runtime credentials to the trusted host.</desc>
+  <desc id="aws-desc">Send browser or Slack requests through an HTTPS load balancer to one private EC2 host running Moyai, Temporal, and LiteLLM. Use RDS for application records, S3 for artifacts and checkpoints, and encrypted EBS for installation keys and Temporal's PostgreSQL data. Run guest tools in Lambda MicroVMs and call Bedrock through LiteLLM with the host IAM role. Keep runtime credentials in Secrets Manager on the trusted side. Give guests scoped S3 checkpoint URLs without application credentials.</desc>
   <defs>
     <marker id="aws-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0 0L10 5L0 10Z" fill="#767386"/>
@@ -85,11 +85,11 @@
     <path d="M640 587H768" class="aws-wire"/>
     <text x="710" y="571" text-anchor="middle" class="aws-small">Models</text>
 
-    <text x="776" y="686" class="aws-small">MicroVMs run outside the</text>
-    <text x="776" y="714" class="aws-small">application VPC through</text>
-    <text x="776" y="742" class="aws-small">AWS authenticated endpoints.</text>
-    <text x="776" y="790" class="aws-small">Host outbound traffic uses</text>
-    <text x="776" y="818" class="aws-small">the VPC's NAT gateway.</text>
+    <text x="776" y="686" class="aws-small">Connect to MicroVMs through</text>
+    <text x="776" y="714" class="aws-small">AWS-authenticated endpoints</text>
+    <text x="776" y="742" class="aws-small">outside the application VPC.</text>
+    <text x="776" y="790" class="aws-small">Route host outbound traffic</text>
+    <text x="776" y="818" class="aws-small">through the NAT gateway.</text>
 
     <rect x="768" y="870" width="304" height="78" rx="10" class="aws-box"/>
     <text x="920" y="902" text-anchor="middle" class="aws-label">Secrets Manager</text>

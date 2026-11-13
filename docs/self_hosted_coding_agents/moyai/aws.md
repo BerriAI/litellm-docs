@@ -11,25 +11,25 @@ import AwsInfrastructure from './aws-infrastructure.svg';
 
 {/* keep-version-note */}
 
-Run Moyai in your AWS account with **Lambda MicroVMs as the agent computers**. The application runs on a private EC2 host with Temporal and a LiteLLM gateway. The gateway uses the host's IAM role to call Amazon Bedrock. You do not need Modal credentials, an external model API key, or a Temporal Cloud account for this deployment.
+Deploy Moyai on a private EC2 host and run agent tools in **AWS Lambda MicroVMs**. Use the bundled Temporal service for durable execution and LiteLLM gateway for Bedrock inference. Authenticate Bedrock requests with the EC2 IAM role.
 
-This guide follows Moyai's native Pydantic AI and Temporal implementation at commit [`b73f74d`](https://github.com/BerriAI/moyai/tree/b73f74dc357004c2079018d77a4c97954c0b4f05). The upstream [AWS quickstart](https://github.com/BerriAI/moyai/blob/main/deploy/aws/README.md) and [MicroVM guide](https://github.com/BerriAI/moyai/blob/main/docs/aws-lambda-microvms.md) contain the full operational procedures.
+Source: Moyai's native Pydantic AI and Temporal implementation at [`b73f74d`](https://github.com/BerriAI/moyai/tree/b73f74dc357004c2079018d77a4c97954c0b4f05). See the upstream [AWS quickstart](https://github.com/BerriAI/moyai/blob/main/deploy/aws/README.md) for operations and the [MicroVM guide](https://github.com/BerriAI/moyai/blob/main/docs/aws-lambda-microvms.md) for manual configuration.
 
 :::note Deployment scope
-The Terraform quickstart creates a **new, single-instance installation** with one application/Temporal host and one NAT gateway. It has no automatic application failover and needs outbound access for AWS APIs, images, and optional Slack integration. For an existing EKS installation, use the [Helm integration instructions](https://github.com/BerriAI/moyai/blob/main/docs/aws-lambda-microvms.md#deploy-the-application-on-aws).
+Use this quickstart for a **new, single-instance installation**. You get one application/Temporal host and one NAT gateway, with no automatic application failover. Allow outbound access for AWS APIs, images, and Slack if enabled. For EKS, follow the [Helm integration instructions](https://github.com/BerriAI/moyai/blob/main/docs/aws-lambda-microvms.md#deploy-the-application-on-aws).
 :::
 
 ## Infrastructure
 
-<div role="region" aria-label="AWS infrastructure diagram; scroll horizontally on smaller screens" tabIndex={0} style={{overflowX: 'auto'}}>
+<div role="region" aria-label="AWS infrastructure diagram; scroll left or right on smaller screens" tabIndex={0} style={{overflowX: 'auto'}}>
   <AwsInfrastructure style={{display: 'block', width: '100%', minWidth: 760, height: 'auto'}} />
 </div>
 
-[Open the full-size infrastructure diagram](./aws-infrastructure.svg). On smaller screens, scroll the diagram horizontally.
+[Open the full-size diagram](./aws-infrastructure.svg), or scroll it left and right on smaller screens.
 
-The diagram shows runtime dependencies. Route 53 directs your hostname to the ALB, which uses an ACM certificate for HTTPS. The EC2 host has no public IP or SSH ingress; use Systems Manager for maintenance. Host traffic to AWS APIs and the internet leaves through the NAT gateway. Lambda MicroVMs use AWS-managed authenticated endpoints; the diagram does not place them inside the application's private subnets.
+Use Route 53 DNS and an ACM certificate for HTTPS access through the ALB. Access the private EC2 host through Systems Manager; it has no public IP or SSH ingress. Route outbound traffic through the NAT gateway and connect to MicroVMs through AWS-authenticated endpoints outside the application VPC.
 
-Terraform also creates a private ECR image repository, scoped IAM roles, a Secrets Manager secret, CloudWatch logs, and daily AWS Backup recovery points for the EBS state volume.
+With the Terraform module, provision a private ECR repository, scoped IAM roles, Secrets Manager, CloudWatch logs, and daily AWS Backup recovery points for the EBS state volume.
 
 | Boundary | What runs there |
 |---|---|
@@ -39,11 +39,11 @@ Terraform also creates a private ECR image repository, scoped IAM roles, a Secre
 
 ## Before you start
 
-Install Git, Python 3.13, [uv](https://docs.astral.sh/uv/getting-started/installation/), the AWS CLI, Terraform 1.9 or newer but below 2.0, and Docker with an AMD64 Buildx builder. Local source installation also needs Node.js 22 or newer and Rust 1.88 or newer for the UI and AgentChat SDK builds. {/* keep-python-version */}
+Install Git, [uv](https://docs.astral.sh/uv/getting-started/installation/), the AWS CLI, Terraform 1.9 or newer but below 2.0, and Docker with an AMD64 Buildx builder. For local `uv sync`, install Python 3.13, Node.js 22 or newer, and Rust 1.88 or newer to build the UI and AgentChat SDK. {/* keep-python-version */}
 
-The application image uses AMD64; the guest image packager selects ARM64 with at least 8 GiB of memory.
+Build the application for AMD64. The guest packager uses ARM64 with at least 8 GiB of memory.
 
-Your AWS account needs **Lambda MicroVM access in the selected region**, with capacity to build images and launch VMs. Ordinary Lambda function access is insufficient. You also need an existing public Route 53 hosted zone, an unused hostname, and permission to provision the resources in the diagram, pass scoped roles, and use SSM Run Command.
+Confirm **Lambda MicroVM access in your AWS region** and capacity to build images and launch VMs. Lambda function access alone is insufficient. You need an existing public Route 53 hosted zone, an unused hostname, and permission to provision the resources, pass scoped roles, and use SSM Run Command.
 
 Enable a Bedrock model or inference profile and verify that your account can invoke it. For a cross-region inference profile, allow both the profile ARN and every destination model ARN. Inspect the profile with:
 
@@ -53,7 +53,7 @@ aws bedrock get-inference-profile \
   --inference-profile-identifier YOUR_PROFILE_ID
 ```
 
-Cloud resources, guest computers, image builds, and inference incur charges. Suspending a guest leaves the application services running.
+Budget for compute, storage, image builds, and inference. You continue paying for application services while guests are suspended.
 
 ## 1. Prepare the checkout and AWS configuration
 
@@ -66,7 +66,7 @@ aws sts get-caller-identity
 cp deploy/aws/terraform.tfvars.example deploy/aws/terraform.tfvars
 ```
 
-Run the remaining commands from this checkout. Use the same revision for the application image and deployment bundle. Edit `deploy/aws/terraform.tfvars`:
+Continue from the Moyai checkout. Use the same revision for the application image and deployment bundle. Edit `deploy/aws/terraform.tfvars`:
 
 | Setting | Value to supply |
 |---|---|
@@ -77,17 +77,17 @@ Run the remaining commands from this checkout. Use the same revision for the app
 | `bedrock_invoke_resources` | Exact allowed profile/model ARNs, including cross-region destinations |
 | `computer_lifetime`, `computer_idle_timeout` | VM lifetime and idle suspension window in seconds; the template uses `28800` and `600` |
 
-Leave `moyai_image` unset for the first apply. Keep AWS keys and secret values out of `.tfvars`. For a retained installation, configure your organization's encrypted remote Terraform backend with state locking before initialization.
+Leave `moyai_image` unset for the first apply. Keep AWS keys and secrets out of `.tfvars`. For an installation you plan to keep, configure encrypted remote Terraform state with locking before `terraform init`.
 
 ## 2. Provision AWS infrastructure
+
+Review the plan, then apply it to create the infrastructure, empty ECR repository, and Secrets Manager secret:
 
 ```bash
 terraform -chdir=deploy/aws init
 terraform -chdir=deploy/aws plan -out=installation.tfplan
 terraform -chdir=deploy/aws apply installation.tfplan
 ```
-
-Review the plan before applying it. This creates infrastructure, including an empty ECR repository and Secrets Manager secret; the application installation comes next.
 
 ## 3. Build and pin the application image
 
@@ -111,18 +111,18 @@ aws ecr describe-images --region "$MOYAI_REGION" \
   --query 'imageDetails[0].imageDigest' --output text
 ```
 
-Set `moyai_image` in `terraform.tfvars` to the repository URL followed by `@` and the returned `sha256:` digest. The installer requires an immutable image reference.
+Pin `moyai_image` in `terraform.tfvars` to the repository URL followed by `@` and the returned `sha256:` digest.
 
 ```bash
 terraform -chdir=deploy/aws plan -out=application.tfplan
 terraform -chdir=deploy/aws apply application.tfplan
 ```
 
-Keep the quickstart's pinned LiteLLM image unless you have qualified a replacement. Its gateway exposes a `bedrock/<model ID>` alias for Moyai and uses IAM credentials from the trusted host.
+Keep the quickstart's pinned LiteLLM image unless you have tested a replacement. Use its `bedrock/<model ID>` alias for Moyai; the gateway authenticates with the host IAM role.
 
 ## 4. Initialize credentials
 
-Create a JSON file outside the checkout with file mode `0600`. Use `{}` to start without Slack. To enable Slack, supply all six settings together:
+Create a JSON file outside the checkout with file mode `0600`. Use `{}` to start without Slack. To enable Slack, supply all six fields:
 
 ```json
 {
@@ -135,14 +135,14 @@ Create a JSON file outside the checkout with file mode `0600`. Use `{}` to start
 }
 ```
 
-`GOOGLE_ALLOWED_DOMAINS` also controls Slack identity eligibility. An empty policy rejects Slack users; Google OAuth is not required.
+Set `GOOGLE_ALLOWED_DOMAINS` to your Slack users' email domains. An empty policy rejects them. You do not need to enable Google OAuth.
 
 ```bash
 uv run python deploy/aws/quickstart.py secrets \
   --secret-file /secure/path/moyai.json
 ```
 
-The helper generates separate application database, gateway, and administrator passwords and stores them in Secrets Manager. It preserves existing credentials on identical retries. You can supply `WORKSPACE_PASSWORD` in the input JSON if it has at least 24 characters.
+Run `secrets` to generate database, gateway, and administrator passwords in Secrets Manager. Reuse the same input on retries to retain existing credentials. To choose the administrator password, set `WORKSPACE_PASSWORD` in the JSON to at least 24 characters.
 
 ## 5. Build the MicroVM image and install Moyai
 
@@ -153,26 +153,26 @@ uv run python deploy/aws/quickstart.py status
 terraform -chdir=deploy/aws output -raw app_url
 ```
 
-The image command packages the guest tools and suspend/resume hooks, submits the AWS image build, and records its pinned version. Installation uses SSM to start the Docker split bundle on EC2. The host reads its credentials from Secrets Manager and retains installation keys on encrypted EBS.
+Use `image` to build and pin the guest with its tools and suspend/resume hooks. Use `install` to start the Docker split bundle on EC2 through SSM. The host reads credentials from Secrets Manager and keeps installation keys on encrypted EBS.
 
 The installer sets `SANDBOX_PROVIDER=lambda`, `LAMBDA_REGION`, `LAMBDA_IMAGE`, `LAMBDA_IMAGE_VERSION`, and `LAMBDA_CHECKPOINT_BUCKET` from the provisioned resources. For an existing deployment, use the [manual Lambda configuration](https://github.com/BerriAI/moyai/blob/main/docs/aws-lambda-microvms.md).
 
-Open `app_url` and sign in as `admin`. Retrieve `WORKSPACE_PASSWORD` from the secret named by `terraform -chdir=deploy/aws output -raw runtime_secret_arn` through your private secret-management workflow.
+Find the runtime secret ARN with `terraform -chdir=deploy/aws output -raw runtime_secret_arn`, then read `WORKSPACE_PASSWORD` in Secrets Manager. Open `app_url` and sign in as `admin`.
 
-**Check:** `status` reports installer completion. Verify model execution and recovery through the running application before treating the deployment as ready.
+Check `status` for installer completion, then test model execution and recovery in the app.
 
 ## 6. Verify a task and workspace recovery
 
-In the browser, ask Moyai to create a uniquely named file under `/workspace`, run a command that reads it, and save it for download. Confirm the tool output, downloadable artifact, and completed checkpoint. Send a follow-up in the same conversation that reads the existing file.
+Ask Moyai to create a file with a unique name under `/workspace`, read it, and save it for download. Check the tool output, download the file, and confirm the checkpoint. Send a follow-up in the same conversation asking Moyai to read the saved file.
 
 | Test | Expected result |
 |---|---|
-| Let a completed session become `SUSPENDED`, then send a follow-up | The same VM ID resumes with files, memory, and background processes retained |
+| Let a completed session become `SUSPENDED`, then send a follow-up | The same VM resumes with its files, memory, and background processes |
 | Keep a task active beyond the idle window | Moyai's health probes keep the VM active during the turn and checkpoint save |
 | Let a test VM reach its lifetime limit, then send a follow-up | A new VM restores the last accepted S3 filesystem checkpoint; RAM and running processes are gone |
-| Restart the application while retaining RDS, S3, and EBS | Sign-in, session history, and a real follow-up still work |
+| Restart the application while retaining RDS, S3, and EBS | You can sign in, read session history, and complete a follow-up |
 
-For a disposable acceptance deployment, set `computer_lifetime=600` and `computer_idle_timeout=60` **before installation** to exercise expiry without an eight-hour wait. Verify file checksums, installed packages, permissions, symlinks, and deletions if your workload depends on them. Use the [full acceptance procedure](https://github.com/BerriAI/moyai/blob/main/docs/aws-lambda-microvms.md#slack-and-checkpointrestore-acceptance) to record VM IDs and checkpoint evidence.
+In a disposable test installation, set `computer_lifetime=600` and `computer_idle_timeout=60` **before installation** to test expiry with a ten-minute VM lifetime. Check file checksums, installed packages, permissions, symlinks, and deletions that your workload depends on. Record VM IDs and checkpoint results with the [upstream acceptance checks](https://github.com/BerriAI/moyai/blob/main/docs/aws-lambda-microvms.md#slack-and-checkpointrestore-acceptance).
 
 ### Connect Slack
 
@@ -184,19 +184,19 @@ Register these URLs under your `app_url` in a dedicated Slack app:
 | Events | `/hooks/slack/events` |
 | Interactions | `/hooks/slack/interactions` |
 
-Complete OAuth through **Connections → Slack** with the requested scopes and event subscriptions. Keep the signed webhook reachable over HTTPS. Repeat the task and recovery checks in one Slack thread, including artifact delivery, and verify that unsigned Slack events and anonymous application API requests are rejected.
+Complete OAuth through **Connections → Slack** with the requested scopes and event subscriptions. Keep the signed webhook reachable over HTTPS. Repeat the task and recovery checks in one Slack thread, including artifact delivery. Check that Moyai denies unsigned Slack events and anonymous application API requests.
 
 ## Limits and operations
 
-Lambda MicroVMs support native shell, file, and browser tools plus authenticated desktop screenshots and actions. Interactive desktop streaming remains Modal-only. A Modal environment image cannot serve as a Lambda guest image.
+Use Lambda MicroVMs for shell, file, and browser tools, plus authenticated desktop screenshots and actions. For interactive desktop streaming, choose Modal. Build a separate Lambda image for prepared environments; you cannot reuse a Modal environment image.
 
-Idle suspension preserves a live VM's memory and processes. The maximum lifetime is eight hours, **including suspended time**. After expiry, Moyai restores files and installed packages into a new VM from the pinned image and S3 checkpoint. An unfinished turn with no accepted checkpoint is not recovered by replaying its commands.
+Set a VM lifetime of at most eight hours, **including suspended time**. During idle suspension, you retain memory and processes until that deadline. After expiry, Moyai restores files and installed packages into a new VM from the pinned image and S3 checkpoint. Moyai does not replay unfinished turns that lack an accepted checkpoint.
 
-Checkpoint storage currently requires SSE-S3 (`AES256`); SSE-KMS-only buckets are unsupported. Keep the original guest image versions while retained checkpoints reference them.
+Use SSE-S3 (`AES256`) for checkpoints; SSE-KMS-only buckets are unsupported. Keep the guest image versions referenced by retained checkpoints.
 
-Back up installation keys with the application database and S3 references. Daily EBS backups are crash-consistent; perform a coordinated restore drill before relying on the deployment for production. Use the [maintenance procedure](https://github.com/BerriAI/moyai/blob/main/deploy/docker/README.md#maintenance-upgrades) for application changes. Applying Terraform alone does not upgrade the running app or rewrite its private configuration.
+Back up installation keys with the application database and S3 references. Test restoring them before production use; daily EBS backups are crash-consistent. Follow the [maintenance procedure](https://github.com/BerriAI/moyai/blob/main/deploy/docker/README.md#maintenance-upgrades) for app upgrades and configuration changes. `terraform apply` alone does not perform them.
 
-For teardown, follow the [AWS operations guide](https://github.com/BerriAI/moyai/blob/main/deploy/aws/README.md#operations-upgrades-and-teardown). Terraform does not manage guest image deletion, and retained S3 objects, ECR images, backups, and deletion protection require deliberate cleanup.
+For teardown, follow the [AWS cleanup steps](https://github.com/BerriAI/moyai/blob/main/deploy/aws/README.md#operations-upgrades-and-teardown) for guest images, retained S3 objects, ECR images, backups, and deletion protection. Delete guest images through the MicroVM API; Terraform does not manage them.
 
 ## Troubleshooting
 
@@ -205,6 +205,6 @@ For teardown, follow the [AWS operations guide](https://github.com/BerriAI/moyai
 | MicroVM image build or launch denied | Region-specific MicroVM access, image/VM capacity, scoped IAM permissions, and the pinned image's `SUCCESSFUL` state |
 | Installation refuses the image | `moyai_image` must contain the ECR digest and match the checkout used for the deployment bundle |
 | Bedrock invocation denied | Model access and every ARN required by the inference profile, including destination regions |
-| Installer completes but tasks fail | Real model/tool output in the app, SSM invocation details, and the service's CloudWatch logs |
+| Installer completes but tasks fail | Model/tool output in the app, SSM invocation details, and the service's CloudWatch logs |
 | Slack user cannot sign in or send a task | OAuth installation, team/user allowlist, and `GOOGLE_ALLOWED_DOMAINS` |
 | Workspace cannot restore | Accepted checkpoint, original pinned image/version, S3 prefix permissions, and SSE-S3 encryption |
