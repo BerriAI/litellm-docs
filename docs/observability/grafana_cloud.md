@@ -1,3 +1,8 @@
+---
+title: "Grafana Cloud Tracing for LiteLLM: OTLP Setup"
+sidebar_label: "Grafana Cloud"
+description: "Send LiteLLM AI Gateway traces and GenAI metrics to Grafana Cloud over OTLP, with Basic auth token setup, a ready dashboard and Prometheus metrics."
+---
 # Grafana Cloud
 
 Send LiteLLM traces and GenAI metrics to [Grafana Cloud](https://grafana.com/products/cloud/) over OTLP

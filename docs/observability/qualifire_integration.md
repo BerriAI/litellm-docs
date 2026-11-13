@@ -1,3 +1,8 @@
+---
+title: "Qualifire Logging for LiteLLM AI Gateway"
+sidebar_label: "Qualifire"
+description: "Send LiteLLM calls to Qualifire from the Python SDK or AI Gateway for evaluation and observability, with env var setup and what gets logged."
+---
 import Image from '@theme/IdealImage';
 
 # Qualifire
