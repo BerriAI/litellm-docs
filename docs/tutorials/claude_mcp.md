@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 This tutorial shows how to connect MCP servers to Claude Code via LiteLLM Proxy. For endpoint, transport, and credential selection, see the [MCP Configuration Reference](../mcp_config_reference)
 
-Note: LiteLLM supports OAuth for MCP servers as well. [Learn more](https://docs.litellm.ai/docs/mcp#mcp-oauth)
+For OAuth setup, callback URLs, and redirect validation, see the [MCP OAuth guide](../mcp_oauth.md#interactive-oauth-pkce).
 
 ## Demo
 
@@ -57,18 +57,20 @@ The server name under `mcp_servers:` (e.g. `atlassian_mcp`, `github_mcp`) **must
 
 2. Start LiteLLM Proxy
 
-Since Claude Code needs a publicly accessible URL for the OAuth callback, expose your proxy via ngrok or a similar tool.
+For a public proxy URL, start a tunnel to port 4000 with ngrok or a similar tool. If your proxy already has a public HTTPS URL, use that URL instead.
 
 ```bash
-litellm --config /path/to/config.yaml
-
-# RUNNING on http://0.0.0.0:4000
-```
-
-```bash
-# In a separate terminal — expose proxy for OAuth callbacks
 ngrok http 4000
 ```
+
+In a separate terminal, set `PROXY_BASE_URL` to the tunnel's HTTPS origin and start LiteLLM. Use the same origin in the Claude Code commands below.
+
+```bash
+export PROXY_BASE_URL=https://your-ngrok-url.ngrok-free.dev
+litellm --config /path/to/config.yaml
+```
+
+For an upstream OAuth application with a configured `client_id`, register `https://your-ngrok-url.ngrok-free.dev/callback` as its callback URL. The MCP client's own callback URL is separate. See [Redirect URLs for static OAuth clients](../mcp_oauth.md#static-client-redirect-urls) for the two callback URLs and their validation rules. Update `PROXY_BASE_URL` and the registered upstream callback if the tunnel URL changes.
 
 3. Add the MCP server to Claude Code
 
