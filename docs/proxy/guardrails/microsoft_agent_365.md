@@ -1,3 +1,8 @@
+---
+title: "Microsoft Agent 365 Guardrail for LiteLLM MCP"
+sidebar_label: "Microsoft Agent 365 Guardrail"
+description: "Send each MCP tool call from the LiteLLM AI Gateway to Microsoft Agent 365, so Microsoft Defender allows or blocks it and records it under the user."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';

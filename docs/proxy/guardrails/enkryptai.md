@@ -1,3 +1,8 @@
+---
+title: "EnkryptAI Guardrails on LiteLLM AI Gateway"
+sidebar_label: "EnkryptAI Guardrails"
+description: "Add EnkryptAI content moderation and safety checks to LLM inputs and outputs on the LiteLLM AI Gateway, with custom policies and observability."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,8 @@
+---
+title: "Decision Model Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Decision Model Guardrail"
+description: "Ask a decision model such as TypeSafe Jev yes/no questions about each request on the LiteLLM AI Gateway, and block or log above a threshold."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

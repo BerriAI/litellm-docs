@@ -1,3 +1,8 @@
+---
+title: "Prompt Security Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Prompt Security"
+description: "Block prompt injection, jailbreaks, PII leaks and malicious files with Prompt Security on the LiteLLM AI Gateway, with file sanitization and streaming."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

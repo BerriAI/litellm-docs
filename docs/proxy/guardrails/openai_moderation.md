@@ -1,3 +1,8 @@
+---
+title: "OpenAI Moderation Guardrails on LiteLLM Gateway"
+sidebar_label: "OpenAI Moderation"
+description: "Block hate speech, harassment, self-harm, sexual content and violence with the OpenAI Moderation API on the LiteLLM AI Gateway, with streaming."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

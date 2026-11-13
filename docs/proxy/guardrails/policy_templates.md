@@ -1,3 +1,8 @@
+---
+title: "Guardrail Policy Templates in LiteLLM"
+sidebar_label: "Policy Templates"
+description: "Start from pre-configured guardrail policy templates in the LiteLLM Admin UI and deploy one in a click, or write and contribute your own as JSON."
+---
 # Policy Templates
 
 Policy templates provide pre-configured guardrail policies that you can use as a starting point for your organization. Instead of manually creating policies and guardrails, you can select a template that matches your use case and deploy it with one click.
