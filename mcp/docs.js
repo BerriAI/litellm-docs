@@ -72,7 +72,13 @@ function outline(page, from = 0, maxDepth = 3) {
     .join('\n');
 }
 
-function createDocsTools({buildDir = path.join(process.cwd(), 'build'), readFile = fs.readFile} = {}) {
+// The build directory comes from the environment so Vercel's file tracer
+// cannot resolve it. A static path here makes the tracer bundle all of build/
+// (about 800 MB) into the function; vercel.json includeFiles lists the files
+// the server reads.
+const defaultBuildDir = () => path.join(process.cwd(), process.env.LITELLM_DOCS_BUILD_DIR || 'build');
+
+function createDocsTools({buildDir = defaultBuildDir(), readFile = fs.readFile} = {}) {
   const root = path.resolve(buildDir);
   const once = (load) => {
     let promise;

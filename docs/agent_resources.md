@@ -47,7 +47,7 @@ Connect your agent to `https://docs.litellm.ai/mcp` and it can search and read t
 
 <Command code="claude mcp add --scope user --transport http litellm-docs https://docs.litellm.ai/mcp" id="docs-mcp-claude" note="Claude Code. For Codex: codex mcp add litellm-docs --url https://docs.litellm.ai/mcp" />
 
-In Cursor, [add it in one click](https://cursor.com/en-US/install-mcp?name=litellm-docs&config=eyJ1cmwiOiJodHRwczovL2RvY3MubGl0ZWxsbS5haS9tY3AifQ==). In VS Code, [install it](vscode:mcp/install?%7B%22name%22%3A%22litellm-docs%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fdocs.litellm.ai%2Fmcp%22%7D) or add `{"servers": {"litellm-docs": {"type": "http", "url": "https://docs.litellm.ai/mcp"}}}` to `.vscode/mcp.json`. In Claude.ai or Claude Desktop, add it as a custom connector with the same URL. To make your agent use it without being asked, add this line to `AGENTS.md` or `CLAUDE.md`: "Use the litellm-docs MCP server for any question about LiteLLM."
+In Cursor, [add it in one click](https://cursor.com/en-US/install-mcp?name=litellm-docs&config=eyJ1cmwiOiJodHRwczovL2RvY3MubGl0ZWxsbS5haS9tY3AifQ==). In VS Code, [install it](https://insiders.vscode.dev/redirect/mcp/install?name=litellm-docs&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fdocs.litellm.ai%2Fmcp%22%7D) or add `{"servers": {"litellm-docs": {"type": "http", "url": "https://docs.litellm.ai/mcp"}}}` to `.vscode/mcp.json`. In Claude.ai or Claude Desktop, add it as a custom connector with the same URL. To make your agent use it without being asked, add this line to `AGENTS.md` or `CLAUDE.md`: "Use the litellm-docs MCP server for any question about LiteLLM."
 
 ## More prompts
 
