@@ -1,3 +1,8 @@
+---
+title: "DeepSeek Search API with LiteLLM: Setup"
+sidebar_label: "DeepSeek Search"
+description: "Add DeepSeek web search to LiteLLM with DEEPSEEK_API_KEY: call search() in the Python SDK or /v1/search on the AI Gateway, with full page content."
+---
 # DeepSeek Search
 
 **Get API Key:** [https://platform.deepseek.com](https://platform.deepseek.com)

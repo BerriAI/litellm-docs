@@ -1,3 +1,8 @@
+---
+title: "Grounding with Bing Search API with LiteLLM"
+sidebar_label: "Grounding with Bing Search (Microsoft Foundry)"
+description: "Use Grounding with Bing Search in LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, through a Microsoft Foundry project."
+---
 # Grounding with Bing Search (Microsoft Foundry)
 
 [Grounding with Bing Search](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/tools/bing-grounding) runs a web search through a model deployment in a [Microsoft Foundry](https://learn.microsoft.com/en-us/azure/ai-foundry/) project, using the project's Responses API. The model performs the search and returns cited results, so search traffic stays inside your Foundry project and is billed by Azure

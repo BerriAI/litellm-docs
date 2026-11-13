@@ -1,4 +1,11 @@
+---
+title: "Linkup Search API with LiteLLM: Python and Gateway"
+sidebar_label: "Linkup Search"
+description: "Add Linkup web search to LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, with deep search, sourced answers and date filters."
+---
 # Linkup Search
+
+[Linkup](https://linkup.so) is a web search API that returns search results or sourced answers for AI applications; LiteLLM exposes it through one `search()` call in the Python SDK and the `/v1/search` endpoint on the AI Gateway.
 
 **Get API Key:** [https://linkup.so](https://linkup.so)
 

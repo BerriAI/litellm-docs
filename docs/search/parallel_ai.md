@@ -1,4 +1,11 @@
+---
+title: "Parallel AI Search API with LiteLLM for Agents"
+sidebar_label: "Parallel AI Search"
+description: "Add Parallel AI web search to LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, with base or pro processors and interception."
+---
 # Parallel AI Search
+
+[Parallel AI](https://www.parallel.ai) is a web search API built for AI agents; LiteLLM exposes it through one `search()` call in the Python SDK and the `/v1/search` endpoint on the AI Gateway.
 
 **Get API Key:** [https://www.parallel.ai](https://www.parallel.ai)
 
