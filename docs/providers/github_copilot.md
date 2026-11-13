@@ -127,10 +127,10 @@ Open **Add Model**, select **Github Copilot**, and choose an available model. Se
 
 Create a separate named credential for each App, then attach each application's model deployment to the appropriate credential. To rotate a key, edit the credential and upload its replacement before revoking the old key in GitHub. Leaving the uploaded-key field unchanged preserves the saved key.
 
-For a database credential created through the API, the form shows the GitHub Copilot name and logo. A PEM upload replaces any existing private-key secret reference.
+For a database credential created through the API, the form shows the GitHub Copilot name and logo. You can edit its settings without uploading another PEM. The saved key or secret reference stays in place. A PEM upload replaces any existing private-key secret reference. The dashboard only offers file upload, not a secret-reference field.
 
 <div className="docs-screenshot">
-  <Image img={require('../../img/github-copilot-app-edit.jpg')} alt="Edit a GitHub App credential with the provider name and logo" />
+  <Image img={require('../../img/github-copilot-app-edit.jpg')} alt="Edit a GitHub App credential while preserving its saved key and offering PEM upload for replacement" />
 </div>
 
 ### Credential API
