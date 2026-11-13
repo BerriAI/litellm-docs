@@ -48,6 +48,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | Provider or feature | Release |
 |---------------------|---------|
 | [Gemini Decision 1](./providers/gemini.md#decisions) | On main through [LiteLLM #51220](https://github.com/BerriAI/litellm/pull/51220), not yet in a release |
+| [Bineric Zuse](./providers/bineric.md#zuse-decision-models) | Needs [LiteLLM #51621](https://github.com/BerriAI/litellm/pull/51621), not yet merged |
 | vLLM, Microsoft Foundry, OpenRouter spend from `usage.cost` | `v1.104.3` |
 | Databricks serving endpoints, image input on Cloudflare Clef, [audio and video input](#audio-and-video-input) on Cloudflare Clef-omni, TypeSafe images and box questions | `v1.106.0` |
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
@@ -72,6 +73,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | [TypeSafe Jev](https://docs.typesafe.ai/api) | `typesafe/jev-latest` | `TYPESAFE_API_KEY`, optional `TYPESAFE_API_BASE` | `/v1/systemone` | With the [images header](#typesafe-images-box-questions-and-long-context) |
 | [OpenRouter](./providers/openrouter.md#decisions-jev) | `openrouter/typesafe/jev-1.14` | `OPENROUTER_API_KEY`, optional `OPENROUTER_API_BASE` | `/v1/systemone` | No |
 | [Fireworks AI](https://docs.fireworks.ai) (private preview) | `fireworks_ai/accounts/fireworks/routers/rune` | `FIREWORKS_AI_API_KEY` or `FIREWORKS_API_KEY`, optional `FIREWORKS_API_BASE` | `/v1/systemone` | No |
+| [Bineric Zuse](./providers/bineric.md#zuse-decision-models) | `bineric/zuse-27b` or `bineric/zuse-9b` | `BINERIC_API_KEY`, optional `BINERIC_API_BASE` | `/v1/systemone` | No |
 | [Perplexity](https://docs.perplexity.ai/docs/decisions/quickstart) | `perplexity/pplx-decider-v1-27b` | `PERPLEXITYAI_API_KEY` or `PERPLEXITY_API_KEY`, optional `PERPLEXITY_API_BASE` | `/v1/systemone` | No |
 | [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/) | `cloudflare/clef`, `cloudflare/clef-flash` or `cloudflare/clef-omni` | `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, or `api_base` | `/v1/systemone` | Yes |
 | [Databricks](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | `databricks/databricks-openjev-qwen35-4b` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/v1/systemone` | No |

@@ -1913,6 +1913,7 @@ const providersSidebar = {
     "providers/apertis",
     "providers/aws_sagemaker",
     "providers/baseten",
+    "providers/bineric",
     "providers/black_forest_labs",
     "providers/black_forest_labs_img_edit",
     "providers/bytez",
