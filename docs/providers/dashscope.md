@@ -1,3 +1,9 @@
+---
+title: "DashScope API (Qwen) with LiteLLM: Setup"
+sidebar_label: "Dashscope API (Qwen models)"
+description: "Call Alibaba Qwen models through LiteLLM with the dashscope/ prefix. Set DASHSCOPE_API_KEY and DASHSCOPE_API_BASE, stream and use -latest aliases."
+---
+
 # Dashscope API (Qwen models)
 https://dashscope.console.aliyun.com/
 

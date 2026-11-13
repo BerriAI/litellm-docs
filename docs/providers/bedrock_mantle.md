@@ -1,3 +1,9 @@
+---
+title: "Bedrock Mantle API with LiteLLM: Setup"
+sidebar_label: "Amazon Bedrock Mantle"
+description: "Call Amazon Bedrock Mantle's OpenAI-compatible API through LiteLLM with Bedrock pricing. Set BEDROCK_MANTLE_API_KEY and region, then use /responses."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

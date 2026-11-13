@@ -1,3 +1,9 @@
+---
+title: "Azure AI Foundry Agents with LiteLLM"
+sidebar_label: "Azure AI Foundry Agents"
+description: "Call Azure AI Foundry Agents in the OpenAI format via LiteLLM from the Python SDK or AI Gateway. Set up Entra ID auth, keep threads, use the A2A Gateway."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

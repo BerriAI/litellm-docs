@@ -1,3 +1,9 @@
+---
+title: "Xinference with LiteLLM: Embeddings and Images"
+sidebar_label: "Xinference [Xorbits Inference]"
+description: "Run embeddings and image generation on Xinference (Xorbits Inference) via LiteLLM from the Python SDK or AI Gateway. Set XINFERENCE_API_BASE and api_key."
+---
+
 # Xinference [Xorbits Inference]
 https://inference.readthedocs.io/en/latest/index.html
 

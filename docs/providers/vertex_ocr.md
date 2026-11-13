@@ -1,3 +1,9 @@
+---
+title: "Vertex AI Mistral OCR with LiteLLM"
+sidebar_label: "Vertex AI OCR"
+description: "Extract text from PDFs and images with Mistral OCR on Gemini Enterprise Agent Platform (formerly Vertex AI) via LiteLLM from the Python SDK or AI Gateway."
+---
+
 # Vertex AI OCR
 
 ## Overview

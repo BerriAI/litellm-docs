@@ -1,3 +1,9 @@
+---
+title: "Ollama with LiteLLM: OpenAI-Compatible API"
+sidebar_label: "Ollama"
+description: "Call local Ollama models through LiteLLM with the ollama_chat/ prefix from the Python SDK or AI Gateway. Stream, use JSON mode, call tools and send images."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

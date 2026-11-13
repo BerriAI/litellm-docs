@@ -1,3 +1,9 @@
+---
+title: "Azure AI Image Generation (FLUX) with LiteLLM"
+sidebar_label: "Azure AI Image Generation (Black Forest Labs - Flux)"
+description: "Generate and edit images with Black Forest Labs FLUX models on Azure AI via LiteLLM. Set AZURE_AI_API_KEY and AZURE_AI_API_BASE for the SDK or AI Gateway."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "GMI Cloud API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "GMI Cloud"
+description: "Call GMI Cloud models through LiteLLM from the Python SDK or AI Gateway. Set GMI_API_KEY, stream responses and see the supported OpenAI parameters."
+---
+
 # GMI Cloud
 
 ## Overview

@@ -1,3 +1,9 @@
+---
+title: "LangGraph Agents with LiteLLM"
+sidebar_label: "LangGraph"
+description: "Call LangGraph agents in the OpenAI chat format via LiteLLM from the Python SDK or AI Gateway, run a local LangGraph server and add it to the A2A Gateway."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

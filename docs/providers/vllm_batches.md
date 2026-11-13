@@ -1,3 +1,9 @@
+---
+title: "vLLM Batch and Files API with LiteLLM"
+sidebar_label: "vLLM - Batch + Files API"
+description: "Run OpenAI Batch API jobs against a hosted vLLM server through the LiteLLM AI Gateway, which stores the input file, runs each line and serves the results."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "LlamaGate API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "LlamaGate"
+description: "Call LlamaGate open-source models through LiteLLM from the Python SDK or AI Gateway. Set LLAMAGATE_API_KEY, stream and send images to vision models."
+---
+
 # LlamaGate
 
 ## Overview

@@ -1,3 +1,9 @@
+---
+title: "AWS Polly Text to Speech with LiteLLM"
+sidebar_label: "AWS Polly Text to Speech (tts)"
+description: "Run AWS Polly text to speech via LiteLLM from the Python SDK or AI Gateway. Pick a Polly engine and voice, send SSML, and map OpenAI voice names to Polly."
+---
+
 # AWS Polly Text to Speech (tts)
 
 ## Overview

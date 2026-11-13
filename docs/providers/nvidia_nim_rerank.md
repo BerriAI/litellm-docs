@@ -1,3 +1,9 @@
+---
+title: "NVIDIA NIM Rerank with LiteLLM"
+sidebar_label: "Nvidia NIM - Rerank"
+description: "Rerank documents with NVIDIA NIM rerank models through LiteLLM from the Python SDK or AI Gateway. Set NVIDIA_NIM_API_KEY and call /v1/ranking models."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

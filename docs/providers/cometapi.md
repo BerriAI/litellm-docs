@@ -1,3 +1,9 @@
+---
+title: "CometAPI in Python with LiteLLM"
+sidebar_label: "CometAPI"
+description: "Call CometAPI models from the LiteLLM Python SDK with the cometapi/ prefix. Set COMETAPI_KEY, pass an explicit API key, and stream sync or async responses."
+---
+
 # CometAPI
 LiteLLM supports all AI models from [CometAPI](https://www.cometapi.com/). CometAPI provides access to 500+ AI models through a unified API interface, including cutting-edge models like GPT-5, Claude Opus 4.1, and various other state-of-the-art language models.
 

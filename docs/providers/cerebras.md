@@ -1,7 +1,16 @@
+---
+title: "Cerebras API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Cerebras"
+description: "Call Cerebras models through LiteLLM with the cerebras/ prefix from the Python SDK or AI Gateway. Set CEREBRAS_API_KEY, stream and add config.yaml."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Cerebras
+
+LiteLLM calls every Cerebras model with the `cerebras/` prefix from the Python SDK or AI Gateway; set `CEREBRAS_API_KEY` to authenticate.
+
 https://inference-docs.cerebras.ai/api-reference/chat-completions
 
 :::tip

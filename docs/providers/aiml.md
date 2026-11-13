@@ -1,3 +1,9 @@
+---
+title: "AI/ML API with LiteLLM: Chat, Embeddings, Images"
+sidebar_label: "AI/ML API"
+description: "Call AI/ML API models through the LiteLLM Python SDK. Set AIML_API_KEY, then run completions, streaming, async embeddings and async image generation calls."
+---
+
 # AI/ML API  
 https://aimlapi.com/
 

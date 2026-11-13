@@ -1,3 +1,9 @@
+---
+title: "Cognition API with LiteLLM: SWE Models Setup"
+sidebar_label: "Cognition"
+description: "Call Cognition SWE models through LiteLLM from the Python SDK or AI Gateway. Set COGNITION_API_KEY, stream responses, call tools and track spend per model."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

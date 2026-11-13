@@ -1,3 +1,9 @@
+---
+title: "ChatGPT Subscription (Codex) with LiteLLM"
+sidebar_label: "ChatGPT Subscription"
+description: "Use a ChatGPT subscription that includes Codex through LiteLLM with OAuth device flow, from the Python SDK or AI Gateway, on Responses and Chat Completions."
+---
+
 # ChatGPT Subscription
 
 Use a ChatGPT subscription that includes Codex (see OpenAI's [Codex pricing](https://developers.openai.com/codex/pricing) for the plans, from Plus and Pro to Business and Enterprise) through LiteLLM with OAuth device flow authentication.

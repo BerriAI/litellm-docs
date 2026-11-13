@@ -1,3 +1,9 @@
+---
+title: "RunwayML Text to Speech with LiteLLM"
+sidebar_label: "RunwayML - Text-to-Speech"
+description: "Run RunwayML text to speech through LiteLLM from the Python SDK or AI Gateway. Set RUNWAYML_API_KEY, use OpenAI voice names or presets, and track cost."
+---
+
 # RunwayML - Text-to-Speech
 
 ## Overview

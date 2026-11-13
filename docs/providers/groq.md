@@ -1,7 +1,16 @@
+---
+title: "Groq API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Groq"
+description: "Call Groq models via LiteLLM with the groq/ prefix from the Python SDK or AI Gateway. Set GROQ_API_KEY, stream, call tools, send images and run Whisper."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Groq
+
+LiteLLM calls every Groq model, including Llama chat models and Whisper speech to text, with the `groq/` prefix through one OpenAI-format API from the Python SDK or AI Gateway.
+
 https://groq.com/
 
 :::tip

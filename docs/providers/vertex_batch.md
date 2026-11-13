@@ -1,3 +1,9 @@
+---
+title: "Vertex AI Batch Prediction with LiteLLM"
+sidebar_label: "Vertex Batch APIs"
+description: "Run batch prediction on Gemini Enterprise Agent Platform (formerly Vertex AI) with the LiteLLM Batch API: set gcs_bucket_name in config.yaml."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

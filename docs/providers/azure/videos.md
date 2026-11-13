@@ -1,3 +1,9 @@
+---
+title: "Azure OpenAI Video Generation (Sora) with LiteLLM"
+sidebar_label: "Azure Video Generation"
+description: "Generate videos with Sora on Azure OpenAI via LiteLLM from the Python SDK or AI Gateway. Retrieve video content, remix videos and track per-second cost."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

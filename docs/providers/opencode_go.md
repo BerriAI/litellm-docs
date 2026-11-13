@@ -1,6 +1,7 @@
 ---
-title: OpenCode Go
-description: Use OpenCode Go through LiteLLM with one API key, automatic model routing, session affinity, and estimated token usage costs.
+title: "OpenCode Go API with LiteLLM AI Gateway"
+sidebar_label: "OpenCode Go"
+description: "Use OpenCode Go through LiteLLM with one API key, automatic API format selection, session affinity, and estimated token usage costs."
 ---
 
 # OpenCode Go

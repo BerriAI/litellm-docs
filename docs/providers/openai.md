@@ -1,3 +1,9 @@
+---
+title: "OpenAI API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "OpenAI"
+description: "Call OpenAI models through LiteLLM from the Python SDK or AI Gateway. Set OPENAI_API_KEY, use the Responses API bridge, vision, PDFs and fine-tuned models."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "GitHub Models API with LiteLLM: Setup"
+sidebar_label: "Github"
+description: "Call GitHub Models through LiteLLM with the github/ prefix from the Python SDK or AI Gateway. Set GITHUB_API_KEY, stream responses and call tools."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

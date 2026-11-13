@@ -1,3 +1,9 @@
+---
+title: "Heroku Inference API with LiteLLM: Setup"
+sidebar_label: "Heroku"
+description: "Call Heroku Inference chat models from the LiteLLM Python SDK. Attach a model to your Heroku app, then set HEROKU_API_KEY and HEROKU_API_BASE or pass api_key."
+---
+
 # Heroku
 
 ## Provision a Model

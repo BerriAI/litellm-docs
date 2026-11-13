@@ -1,3 +1,9 @@
+---
+title: "PublicAI API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "PublicAI"
+description: "Call PublicAI models through LiteLLM with the publicai/ prefix from the Python SDK or AI Gateway. Set PUBLICAI_API_KEY, override the base URL and stream."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "Oracle OCI Generative AI with LiteLLM"
+sidebar_label: "Oracle Cloud Infrastructure (OCI)"
+description: "Call Oracle Cloud Infrastructure (OCI) Generative AI models through LiteLLM from the Python SDK or AI Gateway, with streaming, tool calling and embeddings."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

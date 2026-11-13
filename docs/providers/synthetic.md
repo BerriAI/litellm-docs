@@ -1,3 +1,9 @@
+---
+title: "Synthetic API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Synthetic"
+description: "Call open-source models on Synthetic through LiteLLM from the Python SDK or AI Gateway. Set SYNTHETIC_API_KEY, stream responses and see supported params."
+---
+
 # Synthetic
 
 ## Overview

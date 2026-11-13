@@ -1,3 +1,9 @@
+---
+title: "AWS Bedrock API with LiteLLM AI Gateway"
+sidebar_label: "Bedrock"
+description: "Call any AWS Bedrock model via LiteLLM from the Python SDK or AI Gateway. Set up boto3 or API key auth in config.yaml, stream, call tools and use thinking."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

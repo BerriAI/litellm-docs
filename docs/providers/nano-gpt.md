@@ -1,3 +1,9 @@
+---
+title: "NanoGPT API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "NanoGPT"
+description: "Call NanoGPT models through LiteLLM from the Python SDK or AI Gateway. Set NANOGPT_API_KEY, stream responses, call tools and see supported OpenAI params."
+---
+
 # NanoGPT
 
 ## Overview

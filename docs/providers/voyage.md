@@ -1,3 +1,9 @@
+---
+title: "Voyage AI API with LiteLLM: Embeddings, Rerank"
+sidebar_label: "VoyageAI by MongoDB"
+description: "Create embeddings and rerank with VoyageAI by MongoDB via LiteLLM with the voyage/ prefix from the Python SDK or AI Gateway, with contextual embeddings."
+---
+
 # VoyageAI by MongoDB
 https://docs.voyageai.com/embeddings/
 

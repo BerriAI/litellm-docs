@@ -1,3 +1,9 @@
+---
+title: "CompactifAI API with LiteLLM: Setup and Models"
+sidebar_label: "CompactifAI"
+description: "Call CompactifAI compressed models from the LiteLLM Python SDK or AI Gateway. Set COMPACTIFAI_API_KEY, stream responses, call functions and run async requests."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

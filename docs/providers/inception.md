@@ -1,3 +1,9 @@
+---
+title: "Inception Mercury API with LiteLLM: Setup"
+sidebar_label: "Inception"
+description: "Call Inception Mercury models via LiteLLM from the Python SDK or AI Gateway. Set INCEPTION_API_KEY, stream, set reasoning_effort and run FIM completion."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

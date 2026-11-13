@@ -1,3 +1,9 @@
+---
+title: "GigaChat API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "GigaChat"
+description: "Call Sber GigaChat models via LiteLLM with the gigachat/ prefix from the Python SDK or AI Gateway. Stream, call functions, get structured output and embed."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

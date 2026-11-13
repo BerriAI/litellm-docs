@@ -1,3 +1,9 @@
+---
+title: "Perplexity Embeddings with LiteLLM"
+sidebar_label: "Perplexity Embeddings"
+description: "Create embeddings with Perplexity pplx-embed models via LiteLLM with the perplexity/ prefix from the Python SDK or AI Gateway. Set PERPLEXITYAI_API_KEY."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

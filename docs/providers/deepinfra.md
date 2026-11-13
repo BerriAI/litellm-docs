@@ -1,7 +1,16 @@
+---
+title: "DeepInfra API with LiteLLM: Chat and Rerank"
+sidebar_label: "DeepInfra"
+description: "Call DeepInfra models via LiteLLM with the deepinfra/ prefix from the Python SDK or AI Gateway. Set DEEPINFRA_API_KEY, stream and use the /rerank endpoint."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # DeepInfra
+
+LiteLLM calls every DeepInfra model with the `deepinfra/` prefix from the Python SDK or AI Gateway and adds a Cohere-compatible `/rerank` endpoint for DeepInfra rerank models.
+
 https://deepinfra.com/
 
 :::tip

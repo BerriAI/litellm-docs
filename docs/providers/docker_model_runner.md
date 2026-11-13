@@ -1,3 +1,9 @@
+---
+title: "Docker Model Runner with LiteLLM: Local Models"
+sidebar_label: "Docker Model Runner"
+description: "Call local Docker Model Runner models through LiteLLM with the docker_model_runner/ prefix from the Python SDK or AI Gateway. Set the API base and engine."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

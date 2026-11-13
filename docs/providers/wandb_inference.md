@@ -1,3 +1,9 @@
+---
+title: "W&B Inference API with LiteLLM: Setup"
+sidebar_label: "Weights & Biases Inference"
+description: "Call Weights & Biases Inference models through LiteLLM with the wandb/ prefix from the Python SDK or AI Gateway. Set WANDB_API_KEY and stream responses."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

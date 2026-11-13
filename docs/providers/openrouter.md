@@ -1,3 +1,9 @@
+---
+title: "OpenRouter API in Python with LiteLLM"
+sidebar_label: "OpenRouter"
+description: "Call OpenRouter models via LiteLLM with the openrouter/ prefix. Set OPENROUTER_API_KEY, pass transforms, models and route, and run embeddings and images."
+---
+
 # OpenRouter
 LiteLLM supports all the text / chat / vision / embedding models from [OpenRouter](https://openrouter.ai/docs)
 

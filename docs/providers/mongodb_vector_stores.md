@@ -1,3 +1,9 @@
+---
+title: "MongoDB Atlas Vector Search with LiteLLM"
+sidebar_label: "MongoDB - Vector Store (BETA)"
+description: "Use MongoDB Vector Search indexes as a LiteLLM vector store (beta) via the MongoDB sidecar: connect an index, retrieve context in chat, search from Python."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

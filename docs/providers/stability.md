@@ -1,3 +1,9 @@
+---
+title: "Stability AI Image Generation with LiteLLM"
+sidebar_label: "Stability AI"
+description: "Generate and edit images with Stability AI via LiteLLM from the Python SDK or AI Gateway. Set STABILITY_API_KEY, map size to aspect ratio, or use Bedrock."
+---
+
 # Stability AI
 https://stability.ai/
 

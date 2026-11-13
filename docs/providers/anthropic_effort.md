@@ -1,3 +1,9 @@
+---
+title: "Anthropic Effort Parameter in LiteLLM"
+sidebar_label: "Anthropic Effort Parameter"
+description: "Use the Anthropic effort parameter in LiteLLM to trade answer depth for token use on Claude, from the Python SDK or AI Gateway, with tools and thinking."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

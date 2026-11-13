@@ -1,3 +1,9 @@
+---
+title: "OpenAI Text Completion API with LiteLLM"
+sidebar_label: "OpenAI (Text Completion)"
+description: "Call OpenAI text completion and instruct models through LiteLLM from the Python SDK or AI Gateway. Set OPENAI_API_KEY and see which models still answer."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

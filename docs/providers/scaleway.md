@@ -1,3 +1,9 @@
+---
+title: "Scaleway Generative APIs with LiteLLM"
+sidebar_label: "Scaleway"
+description: "Call Scaleway Generative APIs models through LiteLLM with the scaleway/ prefix from the Python SDK or AI Gateway. Set SCW_SECRET_KEY and transcribe audio."
+---
+
 
 # Scaleway 
 LiteLLM supports all [models available on Scaleway Generative APIs ↗](https://www.scaleway.com/en/docs/generative-apis/reference-content/supported-models/). 
