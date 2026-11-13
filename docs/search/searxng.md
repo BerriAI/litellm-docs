@@ -1,4 +1,11 @@
+---
+title: "SearXNG Search API with LiteLLM: Self-Hosted"
+sidebar_label: "SearXNG Search"
+description: "Add SearXNG metasearch to LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, on a self-hosted or public instance, by category."
+---
 # SearXNG Search
+
+[SearXNG](https://github.com/searxng/searxng) is an open-source metasearch engine that you can self-host or use through public instances; LiteLLM exposes it through one `search()` call in the Python SDK and the `/v1/search` endpoint on the AI Gateway.
 
 **Open Source:** [https://github.com/searxng/searxng](https://github.com/searxng/searxng)
 
