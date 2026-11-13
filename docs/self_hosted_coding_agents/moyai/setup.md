@@ -9,6 +9,8 @@ import {GuideNav} from '@site/src/components/Moyai';
 
 <GuideNav active="setup" />
 
+For an AWS installation with EC2, Bedrock, and Lambda MicroVM sandboxes, follow the [AWS deployment guide](./aws.md).
+
 Deploy the web app and agent sandboxes on Modal, then verify a task before connecting your repositories. This guide uses the Claude Agent SDK harness with the `openai/gpt-6-astra` gateway alias, the pair in Moyai's [getting-started guide](https://github.com/BerriAI/moyai/blob/main/docs/getting-started.md). Your gateway must support that model through the Messages API.
 
 You run the installation commands on your computer. After deployment, use Moyai from a browser or Slack; your computer can be offline. Modal bills for hosting, sandboxes, and storage. Your model provider bills for inference through LiteLLM.
