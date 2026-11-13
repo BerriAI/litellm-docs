@@ -1401,6 +1401,8 @@ router_settings:
 | LITELLM_PRISMA_MIGRATE_DEPLOY_TIMEOUT | Seconds one `prisma migrate deploy` may run before it is killed and retried. That command applies every pending migration in one go, so a fresh or long-idle database needs far longer than any other Prisma command. Raise it when applying the backlog takes longer than ten minutes; lower it to fail faster on a database that never answers. A value that is not a positive number is ignored with a warning and the default applies. When it is not set, the budget is the larger of 600 and `LITELLM_PRISMA_COMMAND_TIMEOUT`, so a deployment that already raised the per-command timeout to get through a slow deploy keeps that larger budget. **Default is 600**
 | LITELM_ENVIRONMENT | Environment for LiteLLM Instance. This is currently only logged to DeepEval to determine the environment for DeepEval integration.
 | LITELLM_ASYNCIO_QUEUE_MAXSIZE | Maximum size for asyncio queues (e.g. log queues, spend update queues, and cookbook examples such as realtime audio in `nova_sonic_realtime.py`). Bounds in-memory growth to prevent OOM. Default is 1000.
+| LLAMAY_API_BASE | Base URL for llamay. Default is http://localhost:11435/v1
+| LLAMAY_API_KEY | API key for llamay. Optional, a placeholder is sent when unset
 | LOGFIRE_TOKEN | Token for Logfire logging service
 | LOGFIRE_BASE_URL | Base URL for Logfire logging service (useful for self hosted deployments)
 | LOGGING_WORKER_CONCURRENCY | Maximum number of concurrent coroutine slots for the logging worker on the asyncio event loop. Default is 100. Setting too high will flood the event loop with logging tasks which will lower the overall latency of the requests.
