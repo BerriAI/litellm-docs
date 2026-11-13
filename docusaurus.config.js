@@ -60,6 +60,7 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          {from: '/docs/proxy/customer_portal/api_reference_guide', to: '/docs/proxy/customer_portal/track-customer-spend'},
           // The decisions page was split into subpages for a few days in October 2026.
           {from: '/docs/decisions/providers', to: '/docs/decisions#supported-providers'},
           {from: '/docs/decisions/openai_format', to: '/docs/decisions#v1decisions'},

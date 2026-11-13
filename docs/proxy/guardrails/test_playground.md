@@ -1,3 +1,8 @@
+---
+title: "Test Guardrails in the LiteLLM Playground"
+sidebar_label: "Guardrail Testing Playground"
+description: "Test and compare several guardrails side by side with sample inputs in the LiteLLM Admin UI playground before you turn them on for live traffic."
+---
 import Image from '@theme/IdealImage';
 
 # Guardrail Testing Playground

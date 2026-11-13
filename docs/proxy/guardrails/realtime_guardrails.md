@@ -1,3 +1,8 @@
+---
+title: "Guardrails for the Realtime API on LiteLLM"
+sidebar_label: "Realtime API Guardrails"
+description: "Guard voice conversations on the LiteLLM AI Gateway Realtime API by checking each speech transcription before the model responds, per virtual key."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

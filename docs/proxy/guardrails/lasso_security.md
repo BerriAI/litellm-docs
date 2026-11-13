@@ -1,3 +1,8 @@
+---
+title: "Lasso Security Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Lasso Security"
+description: "Block prompt injection and mask PII with Lasso Security on the LiteLLM AI Gateway, scanning inputs and outputs with user and conversation tracking."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

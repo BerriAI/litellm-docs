@@ -1,3 +1,8 @@
+---
+title: "RepelloAI Argus Guardrails on LiteLLM Gateway"
+sidebar_label: "RepelloAI Argus"
+description: "Scan prompts and responses with RepelloAI Argus on the LiteLLM AI Gateway against the policies you set per asset in the Repello dashboard, with streaming."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

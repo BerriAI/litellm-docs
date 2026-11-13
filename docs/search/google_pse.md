@@ -1,4 +1,11 @@
+---
+title: "Google Programmable Search Engine API with LiteLLM"
+sidebar_label: "Google Programmable Search Engine (PSE)"
+description: "Add Google Programmable Search to LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, with date, language and file type filters."
+---
 # Google Programmable Search Engine (PSE)
+
+[Google Programmable Search Engine](https://programmablesearchengine.google.com/) returns Google results for the whole web or only for the sites you choose; LiteLLM exposes it through one `search()` call in the Python SDK and the `/v1/search` endpoint on the AI Gateway.
 
 **Get API Key:** [Google Cloud Console](https://console.cloud.google.com/apis/credentials)  
 **Create Search Engine:** [Programmable Search Engine](https://programmablesearchengine.google.com/)

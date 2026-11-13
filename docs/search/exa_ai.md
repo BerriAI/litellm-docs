@@ -1,4 +1,11 @@
+---
+title: "Exa AI Search API with LiteLLM: Python and Gateway"
+sidebar_label: "Exa AI Search"
+description: "Add Exa AI search to LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, with neural or keyword search and result highlights."
+---
 # Exa AI Search
+
+[Exa](https://exa.ai) is a search engine built for AI applications that supports neural (embeddings-based) and keyword search; LiteLLM exposes it through one `search()` call in the Python SDK and the `/v1/search` endpoint on the AI Gateway.
 
 **Get API Key:** [https://exa.ai](https://exa.ai)
 

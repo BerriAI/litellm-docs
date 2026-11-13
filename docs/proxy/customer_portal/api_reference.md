@@ -6,7 +6,7 @@ description: Manage customer organizations, teams, members, budget templates, an
 
 # API reference
 
-Use these APIs from your backend to import customers, set budgets, and return usage to your product. For a complete integration, follow [Track customer spend](./api_reference_guide.md).
+Use these APIs from your backend to import customers, set budgets, and return usage to your product. For a complete integration, follow [Track customer spend](./track-customer-spend.md).
 
 The management base path is `/management/v1`. Customer organizations, teams, and members are separate from LiteLLM's internal organizations, teams, users, and `/customer` end-user records.
 
@@ -20,10 +20,10 @@ The management and usage routes below are on `main`. Check your gateway's `/open
 | --- | --- |
 | Organization, team, member, template, and usage APIs | On `main`; members use `budget_id`. |
 | Identity headers, first-request member registration, and hierarchy budget checks | On `main`, including [#51546](https://github.com/BerriAI/litellm/pull/51546). |
-| Fresh shared customer spend counters | Preview: [#51568](https://github.com/BerriAI/litellm/pull/51568). Main can use cached spend until refresh. |
+| Fresh shared customer spend counters | On `main`, including [#51568](https://github.com/BerriAI/litellm/pull/51568). |
 | Member email field and email identity header | Preview: [#51617](https://github.com/BerriAI/litellm/pull/51617). |
-| Customer identity fields in request logs | Preview: [#51596](https://github.com/BerriAI/litellm/pull/51596). |
-| Customer budget events and webhook callback | Preview: [#51579](https://github.com/BerriAI/litellm/pull/51579), verified at `a129fa7`. |
+| Customer identity fields in request logs | On `main`, including [#51596](https://github.com/BerriAI/litellm/pull/51596). |
+| Customer budget events and webhook callback | On `main`, including [#51579](https://github.com/BerriAI/litellm/pull/51579) and the recurring-period, member-event, and team-override fixes in [#51645](https://github.com/BerriAI/litellm/pull/51645). |
 | Native upserts and first-request organization creation | Under review in [#51607](https://github.com/BerriAI/litellm/pull/51607); not documented as a supported contract. |
 | Fail-open customer identity handling | Under review in [#51604](https://github.com/BerriAI/litellm/pull/51604); configuration and asserted-identity logging remain unverified. |
 
@@ -60,7 +60,7 @@ Organizations and teams accept `budget`. Members inherit a template through `bud
 | Field | Type and default | Meaning |
 | --- | --- | --- |
 | `max_budget` | Number or `null`; default `null` | Spend cap in USD. Must be finite and at least `0`. |
-| `soft_budget` | Number or `null`; default `null` | Soft threshold in USD, finite and at least `0`. This value does not block requests. Notifications require the [customer budget callback](#customer-budget-events-preview). |
+| `soft_budget` | Number or `null`; default `null` | Soft threshold in USD, finite and at least `0`. This value does not block requests. Notifications require the [customer budget callback](#customer-budget-events). |
 | `rpm_limit` | Integer or `null`; default `null` | Requests per minute. Must be at least `0`. |
 | `tpm_limit` | Integer or `null`; default `null` | Tokens per minute. Must be at least `0`. |
 | `allowed_models` | Array of strings or `null`; default `null` | Allowed gateway model names. A non-empty member override replaces the inherited list. An empty override list inherits the template's list. |
@@ -72,7 +72,7 @@ Organizations and teams accept `budget`. Members inherit a template through `bud
 
 With customer identity headers, LiteLLM checks the organization, team, and member budgets before inference. A scope at or above `max_budget` causes a budget error; the organization takes precedence over the team and member. LiteLLM also checks each scope's model access and rate limits. Requests without these headers do not enter this hierarchy enforcement path.
 
-Main currently caches hierarchy spend with its policy data. Until your build includes [#51568](https://github.com/BerriAI/litellm/pull/51568), newly accrued spend can take until cache refresh to affect admission. Allow for requests already in flight and background accounting when you display balances.
+Builds preceding the [shared customer spend counter fix](https://github.com/BerriAI/litellm/pull/51568) can use cached hierarchy spend until refresh. Use a build containing that change. Allow for requests already in flight and background accounting when you display balances.
 
 The reset job updates `budget_reset_at` and the resource's running `spend` counter for a configured duration. Read the returned timestamp; use the usage APIs for historical dates. Budget resets do not erase historical daily usage.
 
@@ -105,7 +105,9 @@ Each organization, team, and member includes these fields in addition to its res
 | `customer_org_id` | Optional, generated when omitted | Not accepted | Stable organization ID. |
 | `alias` | Optional, default `null` | Optional; `null` clears it | Display name and value used by `x-litellm-customer-org-alias`. Use a unique alias for header lookup. |
 | `budget` | Optional, default `null` | Optional; `null` removes the overall budget | Organization [budget object](#budget-object). |
-| `default_budgets` | Optional, default `[]` | Not accepted | Named member templates. With several templates, mark exactly one `is_default: true`. A single template becomes the default. |
+| `default_budgets` | Optional, default `[]` | Not accepted | Named member templates. A single template becomes the default; with several, select one by name through `default_budget_template`. |
+| `default_budget_template` | Optional, default `null` | Not accepted | Name from `default_budgets` to use for new members. Required when creating several templates. |
+| `default_budget_template_id` | Not accepted | Optional; `null` clears the default | Template ID from this organization's `default_budgets`. Changes the default for new members. |
 
 | Additional response field | Type | Meaning |
 | --- | --- | --- |
@@ -114,7 +116,7 @@ Each organization, team, and member includes these fields in addition to its res
 | `budget` | Budget object or `null` | Organization's overall limits. |
 | `member_count` | Integer | Registered members across the organization's teams. |
 | `default_budget_template_id` | String or `null` | Default member template ID. |
-| `default_budgets` | Array | Member templates, each with budget fields plus `budget_id`, `name`, and `is_default`. |
+| `default_budgets` | Array | Member templates, each with budget fields plus `budget_id` and `name`. Compare `budget_id` with `default_budget_template_id` to identify the default. |
 
 ```bash title="Create an organization with a default member template"
 curl --request POST \
@@ -131,11 +133,11 @@ curl --request POST \
     "default_budgets": [
       {
         "name": "standard",
-        "is_default": true,
         "max_budget": 50,
         "budget_duration": "30d"
       }
-    ]
+    ],
+    "default_budget_template": "standard"
   }'
 ```
 
@@ -246,7 +248,7 @@ Templates belong to a customer organization. Updating a template changes the set
 | `PATCH` | `/management/v1/customer_organizations/{customer_org_id}/default_budgets/{budget_id}` | `200`, updated organization. |
 | `DELETE` | `/management/v1/customer_organizations/{customer_org_id}/default_budgets/{budget_id}` | `204`. Template must be unused and must not be the default. |
 
-Creation accepts a [budget object](#budget-object) plus required non-empty `name` and optional `is_default` (default `false`). Names must be unique within the organization. The first template becomes the default. Updating accepts the same fields as optional fields. Set `is_default: true` on another template before removing the current default; setting the current default to `false` returns `422`.
+Creation accepts a [budget object](#budget-object) plus required non-empty `name`. Names must be unique within the organization. The first template becomes the default. Updating accepts budget fields and optional `name`. Template requests do not accept `is_default`; select the default through the organization's `default_budget_template_id` field.
 
 ```bash title="Add a named member template"
 curl --request POST \
@@ -259,6 +261,18 @@ curl --request POST \
     "budget_duration": "30d"
   }'
 ```
+
+To make this template the default for new members, copy its `budget_id` from the response's `default_budgets` array. Replace `<budget_id>` below with that value:
+
+```bash title="Choose the default member template"
+curl --request PATCH \
+  "$LITELLM_BASE_URL/management/v1/customer_organizations/org-acme" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{"default_budget_template_id":"<budget_id>"}'
+```
+
+Changing the default does not reassign existing members. Select another default or clear it before deleting the current template; a referenced template still cannot be deleted.
 
 ## Budget increase requests
 
@@ -321,7 +335,7 @@ Send these headers with the inference key you use for your application. They wor
 
 With both headers, LiteLLM checks that the member belongs to that organization. An unknown member joins the organization's `default` team when the organization has a default member budget. LiteLLM generates that team's ID as `{customer_org_id}:default`. An unknown organization alias returns `401`; a shared alias returns `400`; a mismatched member and organization returns `403`.
 
-Use your existing application key across customers. Your backend chooses the organization alias and member ID from the authenticated customer session and passes them in the SDK request. See the [OpenAI Responses and Deep Agents examples](./api_reference_guide.md).
+Use your existing application key across customers. Your backend chooses the organization alias and member ID from the authenticated customer session and passes them in the SDK request. See the [OpenAI Responses and Deep Agents examples](./track-customer-spend.md).
 
 | Supported inference API | Route |
 | --- | --- |
@@ -413,16 +427,16 @@ Paginated activity limits stored rows before grouping them by date. The same dat
 
 Accounting writes usage in the background. Check the date range and customer headers if a successful inference request has no usage yet. A zero-cost model can report tokens and requests with no spend.
 
-## Customer budget events (preview)
+## Customer budget events
 
-Requires [#51579](https://github.com/BerriAI/litellm/pull/51579), verified at commit `a129fa7`. Register `customer_budget_webhook` in `litellm_settings.callbacks`. Configure it through top-level `callback_settings.customer_budget_webhook`:
+Customer budget events are on `main` through [#51579](https://github.com/BerriAI/litellm/pull/51579) and the [customer budget alert fix, #51645](https://github.com/BerriAI/litellm/pull/51645), for recurring periods, member events, and team overrides. Use a build containing both changes. Register `customer_budget_webhook` in `litellm_settings.callbacks`. Configure it through top-level `callback_settings.customer_budget_webhook`:
 
 | Setting | Type | Meaning |
 | --- | --- | --- |
 | `endpoint` | HTTP or HTTPS URL | Receiver URL. Falls back to `CUSTOMER_BUDGET_WEBHOOK_URL` when omitted. Required through one of these sources. |
 | `headers` | Object of string values | Additional request headers. Overrides matching values from `CUSTOMER_BUDGET_WEBHOOK_HEADERS`, a JSON object supplied through the environment. Defaults to `Content-Type: application/json`. |
 
-The callback posts the event directly as JSON. [The guide provides a complete configuration and sample payload](./api_reference_guide.md#7-receive-budget-events-preview). It uses the same event object as `CustomLogger.async_on_customer_budget_event(event: CustomerBudgetEvent)`.
+The callback posts the event directly as JSON. [The guide provides a complete configuration and sample payload](./track-customer-spend.md#1-set-up-budget-webhooks). It uses the same event object as `CustomLogger.async_on_customer_budget_event(event: CustomerBudgetEvent)`.
 
 | Event field | Type | Meaning |
 | --- | --- | --- |
@@ -430,16 +444,16 @@ The callback posts the event directly as JSON. [The guide provides a complete co
 | `scope` | `"customer_org"`, `"customer_team"`, or `"customer_member"` | Scope whose threshold was reached. |
 | `entity_id` | String | ID at the event's scope. |
 | `customer_org_id`, `customer_org_alias` | String or `null` | Resolved customer organization. |
-| `customer_team_id`, `customer_team_alias` | String or `null` | Resolved team for team and member events; `null` for organization events. |
+| `customer_team_id`, `customer_team_alias` | String or `null` | Resolved team for team events; `null` for organization and member events. |
 | `customer_member_id`, `customer_member_alias` | String or `null` | Resolved member for member events; `null` at other scopes. |
 | `spend` | Number | Recorded spend in USD after accounting. |
 | `budget` | Number | Threshold in USD: `soft_budget` or `max_budget`, according to `event`. |
 | `period` | String | Recorded next reset timestamp, or `"lifetime"` when no reset is recorded. |
 | `timestamp` | Datetime | Time the event was detected. |
 
-Members use their effective template and active override. One update can emit both event types at multiple scopes. Requests rejected before inference, zero-cost updates, and refunds do not trigger this detector.
+Teams and members use their effective template and active override. Member budgets cover the member across teams, so member events have no team ID or alias. One update can emit both event types at multiple scopes. Requests rejected before inference, zero-cost updates, and refunds do not trigger this detector.
 
-The webhook accepts successful `2xx` responses and has a 10-second timeout. Delivery is best effort. An event claim is keyed by `(event, scope, entity_id, period)` for 24 hours and is retained even if delivery fails. Shared Redis coordinates claims across workers; an in-memory fallback can produce duplicates. The HTTP client retries a connection error once. There is no durable retry queue, backoff, or replay API for HTTP errors or timeouts. Use usage reads to reconcile missed events; do not use the callback as your only billing record.
+The webhook accepts successful `2xx` responses and has a 10-second timeout. Delivery is best effort. An event claim is keyed by `(event, scope, entity_id, period)` until that budget period resets and is retained even if delivery fails. Lifetime budgets use a cache claim with a 100-year TTL. Shared Redis coordinates claims across workers; an in-memory fallback can produce duplicates. The HTTP client retries a connection error once. There is no durable retry queue, backoff, or replay API for HTTP errors or timeouts. Use usage reads to reconcile missed events; do not use the callback as your only billing record.
 
 ## Errors
 
