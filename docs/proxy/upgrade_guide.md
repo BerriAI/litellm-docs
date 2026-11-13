@@ -19,6 +19,51 @@ flowchart LR
 
 Read the [release notes](/release_notes) for the versions you will cross. Check breaking changes and database changes, take a database snapshot, and test the upgrade against a restored copy of production to measure its duration. Rolling back an image does not undo database changes.
 
+### Upgrading from a version before v1.104.0
+
+:::danger Old pods can drop the upgraded schema
+
+Before the migration job or the first new pod runs, set `DISABLE_SCHEMA_UPDATE=true` on **every old LiteLLM deployment that shares the database**. Finish rolling out that setting while the database still has the old schema, so a restarted pod cannot run schema setup with the old image. Include other deployments, restart policies, and automated image rollbacks in this check
+
+The legacy migration resolver can diff the live database against the old image's `schema.prisma` and execute that diff. It drops tables and columns the old image does not know, including their data, but leaves their completed migrations in `_prisma_migrations`. An old pod restart during a rollout, an image rollback, or another deployment on the same database can trigger this
+
+Before v1.84.0 the post-migration sanity check runs even when no migrations are pending. In v1.84.0 through v1.103.x it can still run after migrations or during `P3009` / `P3018` recovery. v1.104.0 makes the v2 resolver the default, which does not execute this schema diff. Explicitly selecting the legacy resolver with `USE_V2_MIGRATION_RESOLVER=false` or `--use_legacy_migration_resolver` keeps the risk on later versions too
+
+Do not roll back only the image after the new version has touched the database. Stop the deployment and restore the pre-upgrade database snapshot together with the matching old image. Plan for writes since that snapshot to be lost or recovered separately
+
+:::
+
+Keep schema updates disabled on gateway pods and run the target version's migration job separately. This prevents the old resolver from changing the schema; it does not guarantee that old application code is compatible with every new schema. Test the mixed-version window against a restored database before production
+
+#### Recovery when migration history is ahead of the schema
+
+If an old pod already ran schema setup, stop **all LiteLLM instances and migration jobs** on that database and prevent automatic restarts. Back up the damaged database before recovery. The safest recovery is to restore the pre-upgrade snapshot and repeat the upgrade with schema updates disabled on the old deployments
+
+A missing table such as `LiteLLM_DailyEndUserSpend` can cause `P3018` with PostgreSQL error `42P01` during migration, or runtime failures even when startup reports `No pending migrations to apply`. The migration ledger alone does not prove the tables still exist. Deleting only the failed migration entry does not recreate a missing table whose creation migration is still recorded as complete
+
+If restoring a snapshot is not possible, have your database administrator test a schema repair on a copy of the damaged database first. Confirm that the live schema matches the exact old image's `schema.prisma`, then compare the ledger with the migration directories shipped in that old image. Remove only ledger rows for migrations absent from that image, and let the target image re-apply them. Do not clear the whole ledger or mark missing-table migrations as applied. If the schema is only partly reset or has other changes, do not use this procedure
+
+<details>
+<summary>Version-specific example for v1.80.0-stable.1 to v1.105.0</summary>
+
+Use this SQL **only** when v1.80.0-stable.1's legacy resolver has reset the database to that image's schema during an upgrade to v1.105.0, with every LiteLLM process stopped and a backup taken. It removes the newer migration records so v1.105.0 can replay them. The three explicit names are backdated migrations that a timestamp cutoff alone misses. Other source or target versions need their own migration comparison
+
+```sql
+DELETE FROM "_prisma_migrations"
+WHERE migration_name > '20251115120539_baseline_diff'
+   OR migration_name IN (
+     '20251113000000_add_project_table',
+     '20251113000001_add_project_fields',
+     '20251114180624_Add_org_usage_table'
+   );
+```
+
+Run the v1.105.0 migration job with schema updates enabled, leaving every old deployment stopped. Require a successful exit, compare the repaired schema with the target image's `schema.prisma` using `prisma migrate diff`, and verify affected reads and writes before resuming traffic with gateway schema updates disabled
+
+</details>
+
+Replaying migrations recreates schema, **not data dropped by the old pod**. Recover that data from backups. Never run the old image with schema updates enabled against the repaired database
+
 ### Dry-run the migrations before the upgrade
 
 From v1.109.0 the proxy applies the pending migrations at boot and lets PostgreSQL report the first one the database cannot take, the same way it reports any other failed migration (see [migration troubleshooting](../troubleshoot/prisma_migrations.md#6-database-migration-cannot-proceed-on-rows-the-schema-change-cannot-take)). To see that outcome before the upgrade window, run the dry run from any machine that can reach the database, with the **target** image:
@@ -111,7 +156,9 @@ Compare the full result with the [migration files](https://github.com/BerriAI/li
 
 ## Rolling upgrades and spend log cleanup
 
-[Spend log cleanup](./spend_logs_deletion.md#when-the-job-runs) runs from the `LiteLLM_ScheduledJobRun` table, created by migration `20261105000000_scheduled_job_runs`. Pods on an older version schedule the same cleanup from an in-process timer with a Redis lock, or with no lock at all when Redis is not configured, and the two never see each other. During a rolling upgrade both versions therefore run cleanup at the same time until the last old pod is gone. Each side deletes in small batches under its own statement timeout and both use the same retention cutoff, so the cost is duplicate work and extra delete load for the length of the rollout, not data loss. If the table is large and the rollout is slow, unset the retention settings before the upgrade and restore them after, or accept the extra load. A pod on the old version boots fine against a database that already has the new table, and a database migrated to the new version by the first upgraded pod needs nothing from the others
+[Spend log cleanup](./spend_logs_deletion.md#when-the-job-runs) runs from the `LiteLLM_ScheduledJobRun` table, created by migration `20261105000000_scheduled_job_runs`. Pods on an older version schedule the same cleanup from an in-process timer with a Redis lock, or with no lock at all when Redis is not configured, and the two never see each other. During a rolling upgrade both versions therefore run cleanup at the same time until the last old pod is gone. Each side deletes in small batches under its own statement timeout and both use the same retention cutoff, so the cost is duplicate work and extra delete load for the length of the rollout, not data loss. If the table is large and the rollout is slow, unset the retention settings before the upgrade and restore them after, or accept the extra load
+
+The extra table does not prevent an old pod from booting when it uses the v2 resolver or has `DISABLE_SCHEMA_UPDATE=true`. This is not safe with schema updates enabled on the legacy resolver, which can drop the new table. Follow the [pre-v1.104.0 safeguards](#upgrading-from-a-version-before-v11040) before the target migration job runs, including for any later image that explicitly selects the legacy resolver. Keep gateway schema updates disabled throughout the rollout
 
 ## Custom deployments
 
