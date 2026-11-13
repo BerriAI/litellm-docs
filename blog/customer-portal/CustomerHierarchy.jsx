@@ -34,18 +34,60 @@ export function CostComplexity() {
   </figure>;
 }
 
+function EntityGlyph({scope, active = false}) {
+  return <g className={`${styles.entityGlyph} ${active ? styles.activeGlyph : ''}`}>
+    {scope === 'customer_org' ? <>
+      <rect x="-10" y="-12" width="20" height="24" rx="1" />
+      {[-5, 3].flatMap(x => [-7, -2, 3].map(y => <rect key={`${x}-${y}`} x={x} y={y} width="2" height="2" className={styles.glyphDetail} />))}
+      <path d="M-2,12 V7 H2 V12" />
+    </> : scope === 'customer_team' ? <>
+      <circle cy="-6" r="4" /><circle cx="-9" cy="-3" r="3" /><circle cx="9" cy="-3" r="3" />
+      <path d="M-8,12 C-8,1 8,1 8,12 M-15,10 C-15,3 -11,1 -7,4 M15,10 C15,3 11,1 7,4" />
+    </> : <>
+      <circle cy="-6" r="4.5" /><path d="M-9,12 C-9,-1 9,-1 9,12" />
+    </>}
+  </g>;
+}
+
+function HierarchyTree({compact}) {
+  const orgX = compact ? 150 : 300;
+  const teams = compact ? [75, 225] : [160, 440];
+  const members = compact ? [35, 115, 185, 265] : [80, 240, 360, 520];
+  const memberY = compact ? 212 : 199;
+  const treePaths = [
+    ...teams.map(x => `M${orgX},64 C${orgX},80 ${x},70 ${x},88`),
+    ...members.map((x, index) => `M${teams[Math.floor(index / 2)]},158 C${teams[Math.floor(index / 2)]},175 ${x},169 ${x},${memberY - 16}`),
+  ];
+  const activePath = `M${members[0]},${memberY - 16} C${members[0]},169 ${teams[0]},175 ${teams[0]},158 M${teams[0]},88 C${teams[0]},70 ${orgX},80 ${orgX},64`;
+  return <svg viewBox={compact ? '0 0 300 270' : '0 0 600 250'} role="img" aria-label="A customer organization contains Sales and Engineering customer teams. Each team has two customer members. The blue path links the selected member to Sales and the organization." className={compact ? styles.mobileHierarchy : styles.desktopHierarchy}>
+    <g className={styles.treeConnections}>{treePaths.map(path => <path key={path} d={path} />)}</g>
+    <path d={activePath} className={styles.selectedTreePath} />
+    <path d={activePath} className={styles.treePacket} aria-hidden="true" />
+    <g transform={`translate(${orgX} 22)`}><EntityGlyph scope="customer_org" active /></g>
+    <text x={orgX} y="54" className={styles.treeScope}>Customer organization</text>
+    {teams.map((x, index) => <g key={x}>
+      <g transform={`translate(${x} 103)`}><EntityGlyph scope="customer_team" active={index === 0} /></g>
+      <text x={x} y="132" className={styles.treeName}>{index === 0 ? 'Sales' : 'Engineering'}</text>
+      <text x={x} y="148" className={styles.treeScope}>Customer team</text>
+    </g>)}
+    {members.map((x, index) => <g key={x}>
+      <g transform={`translate(${x} ${memberY})`}><EntityGlyph scope="customer_member" active={index === 0} /></g>
+      {compact ? <text x={x} y={memberY + 30} className={styles.treeScope}><tspan x={x}>Customer</tspan><tspan x={x} dy="13">member</tspan></text> : <text x={x} y="236" className={styles.treeScope}>Customer member</text>}
+    </g>)}
+  </svg>;
+}
+
 export function CustomerHierarchyBreakdown() {
   return <figure className={styles.figure} data-customer-graphic="hierarchy">
     <div className={styles.window}>
-      <WindowHeader label="Your customer hierarchy" />
+      <WindowHeader label="Your customers" />
       <FlowLine />
-      <div className={styles.complexityBody}>
-        <div className={styles.customerHierarchy}>
-          <span>Customer organization</span><i className={styles.connector} aria-hidden="true" /><span>Customer teams</span><i className={styles.connector} aria-hidden="true" /><span>Customer members</span>
-        </div>
+      <div className={styles.hierarchyBody}>
+        <HierarchyTree />
+        <HierarchyTree compact />
       </div>
     </div>
-    <figcaption>Track spend and budgets at each level of your customer's organization.</figcaption>
+    <figcaption>The blue path links a customer's member to their team and organization.</figcaption>
   </figure>;
 }
 
@@ -247,4 +289,55 @@ export function CustomerMargin({stage = 'uncontrolled'}) {
 
 export function CustomerBudgetAlert() {
   return <CustomerMargin stage="workflow" />;
+}
+
+const CUSTOMER_ENTITY_BUDGETS = [
+  {scope: 'customer_org', label: 'organization', cap: 1000, baseline: 300},
+  {scope: 'customer_team', label: 'team', cap: 250, baseline: 100},
+  {scope: 'customer_member', label: 'member', cap: 60, baseline: 0},
+];
+
+function EntityBudgetBar({spend, cap}) {
+  return <div className={styles.entityBudgetBar} aria-hidden="true">
+    {Array.from({length: 20}, (_, index) => <i key={index}><b style={{height: `${Math.max(0, Math.min(1, spend / cap * 20 - index)) * 100}%`}} /></i>)}
+  </div>;
+}
+
+export function CustomerEntityBudgets() {
+  const figureRef = useRef(null);
+  const {elapsed, playing} = useMarginAnimation(figureRef);
+  const state = getCustomerMarginState('budget', elapsed);
+  return <figure ref={figureRef} className={styles.figure} data-customer-graphic="entity-budgets" data-member-spend={state.cost} data-price="100" data-profit-margin={state.profitMargin} data-status={state.paused ? 'paused' : 'running'} data-limiting-scope={state.paused ? 'customer_member' : undefined} aria-label="Illustrative customer budget checks. A member's spend rises from $20 to $60. Organization spend rises from $320 to $360 against a $1,000 cap; team spend rises from $120 to $160 against a $250 cap. The $60 member cap pauses requests while the parents retain headroom. At a $100 monthly member plan price, profit margin after AI costs is 40%, before other expenses. These scopes overlap; do not add their spend together.">
+    <div className={styles.window} data-playing={playing} data-paused={state.paused}>
+      <WindowHeader label="Customer budget checks" branded />
+      <FlowLine />
+      <div className={styles.entityBudgetsBody}>
+        <div className={styles.entityLegend}><span>% of each entity budget</span><span>$100/member/month plan</span></div>
+        <div className={styles.entityBudgetColumns}>
+          {CUSTOMER_ENTITY_BUDGETS.map(entity => {
+            const spend = entity.baseline + state.cost;
+            const headroom = entity.cap - spend;
+            const limiting = entity.scope === 'customer_member' && state.paused;
+            return <div key={entity.scope} className={styles.entityBudgetColumn} data-entity={entity.scope} data-scope={entity.scope} data-cap={entity.cap} data-spend={spend} data-headroom={headroom} data-percent={Math.round(spend / entity.cap * 1000) / 10} data-rollup-base={entity.baseline} data-limiting={limiting}>
+              <div className={styles.entityColumnHead}>
+                <svg viewBox="-16 -16 32 32" aria-hidden="true"><EntityGlyph scope={entity.scope} active /></svg>
+                <span>Customer<br />{entity.label}</span>
+              </div>
+              <div className={styles.entityAmounts}><strong>${spend}</strong><span>/ ${entity.cap.toLocaleString('en-US')}</span></div>
+              <div className={styles.entityPlot}>
+                <div className={styles.entityCapMarker} aria-hidden="true" />
+                <EntityBudgetBar spend={spend} cap={entity.cap} />
+              </div>
+              <div className={styles.entityHeadroom}>{limiting ? 'Limit reached' : `$${headroom} left`}</div>
+            </div>;
+          })}
+        </div>
+        <div className={styles.entityBudgetSummary}>
+          <span>{state.paused ? 'Member cap reached · Requests paused' : 'Same member cost → Team → Organization'}</span>
+          <span>Profit margin <strong>{state.profitMargin}%</strong> <small>after AI costs</small></span>
+        </div>
+      </div>
+    </div>
+    <figcaption>Illustrative overlapping views of the same member usage. Do not add organization, team, and member spend together.</figcaption>
+  </figure>;
 }

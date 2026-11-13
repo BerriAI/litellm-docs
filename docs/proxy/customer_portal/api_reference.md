@@ -29,6 +29,8 @@ The management and usage routes below are on `main`. Check your gateway's `/open
 
 Preview features require a build containing the linked change while it remains unmerged.
 
+Free-tier support limits the customer portal to 5 organizations, 5 teams per organization, and 5 members per team without Enterprise. Check `/openapi.json` for `/management/v1/customer_portal/limits` to confirm your build includes it.
+
 ## Authentication and conventions
 
 Send `Authorization: Bearer $LITELLM_ADMIN_KEY` on management requests. These routes require `proxy_admin`, including list, retrieve, and usage requests. Keep this key on your server and authorize the customer before returning data to your application.
@@ -87,6 +89,37 @@ Each organization, team, and member includes these fields in addition to its res
 | `budget_reset_at` | Datetime or `null` | Next recorded reset time. |
 | `created_at`, `updated_at` | Datetime | Creation and last-update timestamps. |
 | `created_by`, `updated_by` | String | Actor recorded for each write. |
+
+## Customer portal limits
+
+`GET /management/v1/customer_portal/limits` requires a proxy admin key and returns `200` with current customer portal capacity. It accepts no query parameters or request body.
+
+```bash
+curl "$LITELLM_BASE_URL/management/v1/customer_portal/limits" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY"
+```
+
+| Response field | Type | Meaning |
+| --- | --- | --- |
+| `limits_apply` | Boolean | `true` without a LiteLLM Enterprise license. |
+| `organization_limit` | Integer | Free-tier organization limit, `5`. |
+| `teams_per_organization_limit` | Integer | Free-tier teams per organization, `5`. Includes the auto-created `default` team. |
+| `members_per_team_limit` | Integer | Free-tier members per team, `5`. A member counts toward every team in its `parent_team_ids`. |
+| `organization_count` | Integer | Total registered customer organizations. |
+| `any_limit_reached` | Boolean | `true` when limits apply and the organization count is at least 5, any organization has at least 5 teams, or any team has at least 5 members. Always `false` with Enterprise. |
+
+```json title="Free-tier deployment at the organization limit"
+{
+  "limits_apply": true,
+  "organization_limit": 5,
+  "teams_per_organization_limit": 5,
+  "members_per_team_limit": 5,
+  "organization_count": 5,
+  "any_limit_reached": true
+}
+```
+
+Enterprise removes the limits. The numeric fields still report the free-tier thresholds when `limits_apply` is `false`. See [free-tier behavior](./track-customer-spend.md#free-tier-limits) for request tracking at capacity and after a license lapses.
 
 ## Customer organizations
 
@@ -464,6 +497,7 @@ Management errors use problem details with `type`, `title`, `status`, and `detai
 | `400` | Unknown or repeated query parameter, invalid date range, or invalid pagination. Check the route's parameter table. |
 | `401` | Missing or invalid authentication. On inference, also check an unknown member or organization alias. |
 | `403` | Caller lacks `proxy_admin`, or the member does not belong to the supplied customer organization. |
+| `403` | Free-tier create limit. Type `urn:litellm:error:customer-hierarchy-free-tier-limit`, title `Free customer portal limit reached`, detail `Free customer portal limit reached: up to 5 customer organizations, 5 teams per organization and 5 members per team without a LiteLLM Enterprise license. Upgrade to Enterprise to remove the limits: https://www.litellm.ai/enterprise`. Upgrade to Enterprise or free capacity before retrying. |
 | `404` | Resource or parent does not exist. Retrieve or create the parent first. |
 | `409` | Duplicate ID, parent still has children, or template remains default or referenced. |
 | `422` | Invalid body, budget value, template selection, or missing member budget. Inference budget rejection also uses `422` with an inference error body. |

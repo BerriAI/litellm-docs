@@ -18,7 +18,7 @@ draft: true
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CustomerPortalHero from './CustomerPortalHero';
-import {CostComplexity, CustomerHierarchyBreakdown, CustomerMargin, CustomerBudgetAlert} from './CustomerHierarchy';
+import {CostComplexity, CustomerHierarchyBreakdown, CustomerEntityBudgets, CustomerMargin, CustomerBudgetAlert} from './CustomerHierarchy';
 import {PostByline} from '@theme/BlogPostPage';
 import styles from './customer-portal-hero.module.css';
 
@@ -128,9 +128,11 @@ Use your application key and a gateway model alias. `LITELLM_BASE_URL` is the ga
 
 ### Set customer budgets that protect your margin
 
-If you charge $100 per member, you can give that member a $60 AI allowance. Set limits at the customer organization, team, and member levels so one customer's usage does not run away with your margin.
+If you charge $100 per member, you can give that member a $60 AI allowance. Set separate budgets for the customer organization, each team, and each member:
 
-<CustomerMargin stage="budget" />
+<CustomerEntityBudgets />
+
+The same request's cost rolls up from the member to their team and organization. Here, the member hits their $60 cap while both parents still have room, so further requests pause.
 
 Choose the organization cap and default member profile when you onboard a customer. These examples use a 30-day budget period:
 
@@ -249,9 +251,9 @@ Read `metadata.total_spend`, `total_tokens`, and `total_api_requests`. Fetch cap
 | Customer Portal | LiteLLM OSS | LiteLLM Enterprise |
 | --- | --- | --- |
 | Customer organizations | Up to 5 | More than 5 |
-| Customer teams | Up to 5 | More than 5 |
-| Customer members | Up to 5 | More than 5 |
+| Customer teams per organization | Up to 5 | More than 5 |
+| Customer members per team | Up to 5 | More than 5 |
 
-Start with the [walkthrough](/docs/proxy/customer_portal/track-customer-spend) and [API reference](/docs/proxy/customer_portal/api_reference). For more than five of each, [talk to us about Enterprise](https://www.litellm.ai/enterprise).
+Start with the [walkthrough](/docs/proxy/customer_portal/track-customer-spend) and [API reference](/docs/proxy/customer_portal/api_reference). For larger customer hierarchies, [talk to us about Enterprise](https://www.litellm.ai/enterprise).
 
 This draft targets `main`; a published release containing the complete flow has not been verified. Check [availability](/docs/proxy/customer_portal/api_reference#availability) before deploying.

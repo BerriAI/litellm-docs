@@ -212,11 +212,7 @@ PROXY_LOGOUT_URL="https://www.google.com"
 
 ### Okta security settings {#step-4-configure-okta-security-settings}
 
-**GENERIC_CLIENT_STATE** is recommended for Okta to prevent CSRF attacks:
-
-```bash
-GENERIC_CLIENT_STATE="random-string"
-```
+Leave `GENERIC_CLIENT_STATE` unset. LiteLLM generates a random state for each UI login. With `GENERIC_CLIENT_USE_PKCE=true`, a fixed state makes logins that happen at the same time overwrite each other's PKCE verifier and fail.
 
 **PKCE (Proof Key for Code Exchange).** If your Okta application is configured to require PKCE, enable it by setting:
 
@@ -262,7 +258,6 @@ GENERIC_USER_FIRST_NAME_ATTRIBUTE="first_name"
 GENERIC_USER_LAST_NAME_ATTRIBUTE="last_name"
 GENERIC_USER_PROVIDER_ATTRIBUTE="provider"
 GENERIC_USER_EXTRA_ATTRIBUTES="department,employee_id,manager" # comma-separated list of additional fields to extract from SSO response
-GENERIC_CLIENT_STATE="some-state" # if the provider needs a state parameter
 GENERIC_INCLUDE_CLIENT_ID="false" # some providers enforce that the client_id is not in the body
 GENERIC_SCOPE="openid profile email" # default scope openid is sometimes not enough to retrieve basic user info like first_name and last_name located in profile scope
 ```

@@ -6,6 +6,12 @@ description: Import customers, pass their identity with LLM requests, and fetch 
 
 # Track customer spend
 
+:::info
+
+Without a LiteLLM Enterprise license, the customer portal is free for up to 5 customer organizations, 5 customer teams per organization, and 5 customer members per team. The auto-created `default` team counts toward the team limit. [LiteLLM Enterprise](https://www.litellm.ai/enterprise) removes these limits.
+
+:::
+
 Use one application API key for your customers. Pass the customer's organization alias and member ID with each request. LiteLLM resolves the member's team and organization, checks their budgets, and records spend, tokens, and requests at all three levels.
 
 Set up budget notifications, then import Acme, its Support team, and two members. Send a request for Alice and fetch usage and budgets to display in your product.
@@ -17,6 +23,14 @@ Set up budget notifications, then import Acme, its Support team, and two members
 {/* keep-version-note: This guide distinguishes the verified main-branch API from pending changes. A published release containing the complete integration has not been verified. */}
 
 Use a build containing the customer hierarchy APIs, identity headers, usage routes, and database migrations on `main`. Check `/openapi.json` for `/management/v1/customer_members`. Preview requirements appear beside the steps that need them; see the [availability reference](./api_reference.md#availability) for the required changes.
+
+## Free tier limits
+
+Management creates that would exceed a free-tier limit return `403`. A member counts toward the limit of every team in its `parent_team_ids`.
+
+Requests with a valid virtual key keep working, subject to the usual authentication, model access, budget, and rate-limit checks. If a limit prevents auto-registration, new organization aliases or member IDs are not auto-registered or tracked at that customer level. The proxy logs a `CUSTOMER TRACKING OFF` warning. Existing customer levels on the request remain tracked.
+
+The Customers dashboard shows a banner when any free-tier limit is reached. If an Enterprise license lapses, existing rows keep being tracked, even when their counts exceed the free-tier limits. The limits restrict new creates, not existing tracking. Proxy admins can check current capacity with [the limits API](./api_reference.md#customer-portal-limits).
 
 ## Before you start
 
