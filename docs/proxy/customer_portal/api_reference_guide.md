@@ -4,11 +4,26 @@ sidebar_label: API reference guide
 description: Import customer organizations, teams, and members, attribute requests by member ID, and fetch usage and configured caps for your product.
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Customer Portal API reference guide
 
 Import your customers into LiteLLM, send requests with a customer member ID, and show each customer's spend, tokens, requests, and configured caps in your product.
 
 In this guide, you create Acme, its Support team, and two members. LiteLLM resolves each member's team and organization when you send a request. You then fetch usage at each level through the API.
+
+**For Chat Completions, pass the customer member ID in the request's `metadata` object:**
+
+```json title="Customer identity in the request body"
+{
+  "metadata": {
+    "customer_member_id": "acme-alice"
+  }
+}
+```
+
+LiteLLM resolves `acme-alice` to the Support team and Acme organization from the hierarchy you import below. Responses and Anthropic requests use `litellm_metadata`. [See complete curl and SDK requests](#send-a-request-for-alice).
 
 ![Acme organization usage with spend, requests, tokens, and a daily Support team chart](../../../static/img/customer_portal/usage-overview.png)
 
@@ -146,14 +161,21 @@ To assign a different template, pass its `budget_id` as `budget_template_id`. To
 
 Create each record once. A duplicate ID returns `409`; fetch the existing record or use `PATCH` to update it.
 
-## 2. Send identifying information with requests
+## 2. Pass customer identity with LLM requests
+
+Bind your virtual key to a customer organization, then pass the current member's ID in each LLM request:
+
+| Where | Field | Example |
+| --- | --- | --- |
+| Virtual key's stored metadata | `customer_org_id` | `acme` |
+| Chat Completions request body's `metadata` | `customer_member_id` | `acme-alice` |
 
 ### Create a key bound to the customer
 
 Create a virtual key with `metadata.customer_org_id`. LiteLLM requires this admin-assigned organization binding on non-admin keys that track customer usage.
 
 ```bash title="POST /key/generate"
-CUSTOMER_KEY="$(
+LITELLM_CUSTOMER_KEY="$(
   jq -n --arg model "$LITELLM_MODEL" '{
     key_alias: "acme-application",
     models: [$model],
@@ -164,29 +186,153 @@ CUSTOMER_KEY="$(
     -H "Content-Type: application/json" \
     --data-binary @- | jq -er '.key'
 )"
+export LITELLM_CUSTOMER_KEY
 ```
 
-Store `CUSTOMER_KEY` in your server's secret store. The command captures the key without printing it.
+Store `LITELLM_CUSTOMER_KEY` in your server's secret store. The command captures the key without printing it and exports it for the SDK examples below.
 
 ### Send a request for Alice
 
-Set `metadata.customer_member_id` from your authenticated application user. You can send the member ID without repeating the team and organization IDs in the request body.
+Set `customer_member_id` to the ID you supplied when you created the member. Use the member ID from your authenticated application user. Choose the request field for your endpoint:
+
+| Endpoint | Top-level request body field |
+| --- | --- |
+| `POST /v1/chat/completions` | `metadata.customer_member_id` |
+| `POST /v1/responses` | `litellm_metadata.customer_member_id` |
+| `POST /v1/messages` | `litellm_metadata.customer_member_id` |
+
+The examples below send Alice's member ID. LiteLLM looks up her parent team and organization, so you can omit those two IDs from the request.
+
+<Tabs>
+<TabItem value="curl" label="curl" default>
 
 ```bash title="POST /v1/chat/completions"
-jq -n --arg model "$LITELLM_MODEL" '{
-  model: $model,
-  messages: [{role: "user", content: "Write a short welcome message."}],
-  metadata: {customer_member_id: "acme-alice"}
-}' | curl --fail-with-body --silent --show-error \
+curl --fail-with-body --silent --show-error \
   "$LITELLM_BASE_URL/v1/chat/completions" \
-  -H "Authorization: Bearer $CUSTOMER_KEY" \
+  -H "Authorization: Bearer $LITELLM_CUSTOMER_KEY" \
   -H "Content-Type: application/json" \
-  --data-binary @- | jq
+  --data-binary @- <<JSON
+{
+  "model": "$LITELLM_MODEL",
+  "messages": [{"role": "user", "content": "Write a short welcome message."}],
+  "metadata": {
+    "customer_member_id": "acme-alice"
+  }
+}
+JSON
 ```
+
+</TabItem>
+<TabItem value="python" label="OpenAI Python (Chat)">
+
+Run `uv add openai` in your application project. Save this as `customer_request.py`, then run `uv run python customer_request.py` in the terminal where you exported the variables above.
+
+```python title="customer_request.py"
+import os
+
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["LITELLM_CUSTOMER_KEY"],
+    base_url=f"{os.environ['LITELLM_BASE_URL'].rstrip('/')}/v1",
+)
+
+completion = client.chat.completions.create(
+    model=os.environ["LITELLM_MODEL"],
+    messages=[{"role": "user", "content": "Write a short welcome message."}],
+    metadata={"customer_member_id": "acme-alice"},
+)
+
+print(completion.choices[0].message.content)
+```
+
+</TabItem>
+<TabItem value="javascript" label="OpenAI JavaScript (Chat)">
+
+Run `npm install openai` in your application project. Save this as `customer-request.mjs`, then run `node customer-request.mjs` in the terminal where you exported the variables above.
+
+```javascript title="customer-request.mjs"
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.LITELLM_CUSTOMER_KEY,
+  baseURL: `${process.env.LITELLM_BASE_URL.replace(/\/$/, "")}/v1`,
+});
+
+const completion = await client.chat.completions.create({
+  model: process.env.LITELLM_MODEL,
+  messages: [{ role: "user", content: "Write a short welcome message." }],
+  metadata: { customer_member_id: "acme-alice" },
+});
+
+console.log(completion.choices[0].message.content);
+```
+
+</TabItem>
+<TabItem value="responses" label="OpenAI Responses">
+
+Run `uv add openai` in your application project. Save this as `customer_response.py`, then run `uv run python customer_response.py` in the terminal where you exported the variables above. Use `extra_body` to send LiteLLM's `litellm_metadata` field.
+
+```python title="customer_response.py"
+import os
+
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["LITELLM_CUSTOMER_KEY"],
+    base_url=f"{os.environ['LITELLM_BASE_URL'].rstrip('/')}/v1",
+)
+
+response = client.responses.create(
+    model=os.environ["LITELLM_MODEL"],
+    input="Write a short welcome message.",
+    extra_body={"litellm_metadata": {"customer_member_id": "acme-alice"}},
+)
+
+print(response.output_text)
+```
+
+</TabItem>
+<TabItem value="anthropic" label="Anthropic messages">
+
+Use a model alias that supports your gateway's Anthropic Messages endpoint.
+
+```bash title="POST /v1/messages"
+curl --fail-with-body --silent --show-error \
+  "$LITELLM_BASE_URL/v1/messages" \
+  -H "Authorization: Bearer $LITELLM_CUSTOMER_KEY" \
+  -H "Content-Type: application/json" \
+  -H "anthropic-version: 2023-06-01" \
+  --data-binary @- <<JSON
+{
+  "model": "$LITELLM_MODEL",
+  "max_tokens": 128,
+  "messages": [{"role": "user", "content": "Write a short welcome message."}],
+  "litellm_metadata": {
+    "customer_member_id": "acme-alice"
+  }
+}
+JSON
+```
+
+</TabItem>
+</Tabs>
 
 LiteLLM looks up `acme-alice`, follows `parent_team_id` to `acme-support`, then follows `parent_org_id` to `acme`. It attributes the request to all three records and checks that Acme matches the key's organization binding. Conflicting IDs or a member from another organization cause an error before the provider call.
 
-Use `metadata.customer_member_id` for this hierarchy. The OpenAI `user` field and the `x-litellm-customer-id` header identify the separate [customer/end-user tracker](../customers.md).
+The resolved identity for this request is:
+
+```json title="Resolved attribution (not an extra request field)"
+{
+  "customer_org_id": "acme",
+  "customer_team_id": "acme-support",
+  "customer_member_id": "acme-alice"
+}
+```
+
+If your application already has all three IDs, you can include them together in `metadata` for Chat Completions or `litellm_metadata` for Responses and Anthropic requests. LiteLLM checks that the IDs belong to the same hierarchy.
+
+Use the customer identity fields above for this hierarchy. The OpenAI `user` field and the `x-litellm-customer-id` header identify the separate [customer/end-user tracker](../customers.md).
 
 ### Resolve the hierarchy from a member ID
 
