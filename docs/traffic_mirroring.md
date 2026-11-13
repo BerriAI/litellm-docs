@@ -4,6 +4,8 @@ sidebar_label: "Traffic Mirroring"
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Image from '@theme/IdealImage';
+import ThemedVideo from '@site/src/components/ThemedVideo';
 
 # A/B Testing - Traffic Mirroring
 
@@ -335,3 +337,33 @@ The script prints the primary answer before waiting for the callbacks. Pass a pa
 Use the printed trace ID to find the `primary` and `shadow` generations in Langfuse. The JSON uses the callback's mirror marker to assign each role. For OTLP inspection, each recorded `litellm_call_id` matches that generation's `langfuse.observation.id` attribute.
 
 Run this example as a standalone process. When the comparison finishes, `asyncio.run()` cancels tasks still pending on its event loop. On normal process exit, the preset's OpenTelemetry SDK shuts down its exporter and attempts to send the completed spans. The exporter uses the configured HTTP timeout. The JSON file is written before shutdown, so it is available even if export fails.
+
+### Example: compare two different answers
+
+This demo runs the recipe above against a local mock OpenAI-compatible server and self-hosted Langfuse 4.79.0. Model A is the primary deployment; model B is its shadow. Both receive the same question, but the mock server returns a different fixed answer for each model. The responses and token counts are synthetic; the displayed costs come from those token counts.
+
+Open the trace and select `chat primary` to read model A's concise answer, then select `chat shadow` to read model B's longer explanation. Both generations share the trace ID. Langfuse displays the Router aliases `primary` and `shadow` as the model labels.
+
+<ThemedVideo
+  src={require('../img/langfuse-shadow-comparison.mp4')}
+  poster={require('../img/langfuse-shadow-primary.png')}
+  title="Compare model A and model B mock responses in one Langfuse trace"
+  aspectRatio="4 / 3"
+/>
+
+<Tabs>
+<TabItem value="primary-answer" label="Model A (primary)">
+
+> The sky is blue because air molecules scatter short-wavelength blue sunlight more strongly than red light.
+
+<Image img={require('../img/langfuse-shadow-primary.png')} alt="Langfuse shows the shared prompt and model A's concise primary response" />
+
+</TabItem>
+<TabItem value="shadow-answer" label="Model B (shadow)">
+
+> Sunlight contains every visible color; Rayleigh scattering redirects blue wavelengths across the atmosphere, so blue light reaches your eyes from every direction.
+
+<Image img={require('../img/langfuse-shadow-response.png')} alt="Langfuse shows the same prompt and model B's different shadow response in the same trace" />
+
+</TabItem>
+</Tabs>
