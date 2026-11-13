@@ -375,7 +375,19 @@ litellm_settings:
 
 #### Cap how far a caller borrows
 
-While the model is idle, a borrowing team may use everything up to the model's own `tpm` and `rpm`, so one team can take most of the idle capacity on its own. To bound that, set `model_limit_max_borrow_multiple` in the team's metadata next to `model_tpm_limit` and `model_rpm_limit`. The same field goes in a key's metadata for the key's own limits and on a customer organization's `budget` for its limits. In key and team metadata only a proxy admin can set, change or remove it. The team's usage on a model is then capped at its share times that multiple, for TPM and RPM alike, even while the model is idle. The cap runs on its own counter that counts everything the team used this window, idle or not, while the share counter still only counts what the team used once the model saturated, so a capped team gets its fresh share at saturation like any other.
+While the model is idle, a borrower may use everything up to the model's own `tpm` and `rpm`, so one caller can take most of the idle capacity on its own. To bound that for every borrower, set `max_borrow_multiple` under `model_limit_borrowing_config`. It applies to each team, key and customer organization listed in `borrow_idle_capacity`.
+
+```yaml
+litellm_settings:
+  callbacks: ["dynamic_rate_limiter_v3"]
+  priority_reservation_settings:
+    saturation_threshold: 0.5
+    model_limit_borrowing_config:
+      borrow_idle_capacity: ["team", "key", "customer_organization"]
+      max_borrow_multiple: 2   # default: no cap
+```
+
+To give one team or key a different cap, set `model_limit_max_borrow_multiple` in its metadata next to `model_tpm_limit` and `model_rpm_limit`. That value replaces the configured one for that team or key, and only a proxy admin can set, change or remove it. A customer organization always uses the configured value. The team's usage on a model is then capped at its share times that multiple, for TPM and RPM alike, even while the model is idle. The cap runs on its own counter that counts everything the team used this window, idle or not, while the share counter still only counts what the team used once the model saturated, so a capped team gets its fresh share at saturation like any other.
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/new' \
@@ -391,7 +403,7 @@ curl -X POST 'http://0.0.0.0:4000/team/new' \
 
 With this team at `model_tpm_limit: {"my-model": 500}` and a multiple of `2`, it can borrow up to 1000 tokens a minute on `my-model` while the model is below `saturation_threshold`. A request past that gets a 429 whose `rate_limited_by` header reads `model_per_team_max_borrow_multiple`, with a message that names the share, the multiple and the resulting cap. Once the model saturates, the team is held to its original 500 as before, with `rate_limited_by: model_per_team_saturated`. The multiple applies per team and per model, and a team's borrowing never counts against another team's cap. A key or a customer organization past its cap gets `model_per_key_max_borrow_multiple` or `model_per_customer_org_max_borrow_multiple`.
 
-Leave it unset to keep the default, where the team borrows up to the model's limit. The value must be a number of at least `1`. A smaller or non-numeric value is logged as a warning and ignored, so the team behaves as if it were unset rather than every request failing. The multiple only matters for an entity type listed in `borrow_idle_capacity`. Without it, the `model_tpm_limit` and `model_rpm_limit` stay hard ceilings.
+Leave both unset to keep the default, where a borrower may use everything up to the model's limit. Each value must be a number of at least `1`. A smaller or non-numeric value in metadata is logged as a warning and ignored, so the team or key uses the configured value rather than every request failing, and the proxy rejects an invalid `max_borrow_multiple` in the config at startup. The multiple only matters for an entity type listed in `borrow_idle_capacity`. Without it, the `model_tpm_limit` and `model_rpm_limit` stay hard ceilings.
 
 ### Split a priority class share among active callers
 
