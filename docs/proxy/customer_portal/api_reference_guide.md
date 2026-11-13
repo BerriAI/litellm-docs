@@ -97,7 +97,7 @@ Expect `201` with `parent_org_id: "org-acme"`.
 
 ### Create Alice and Bob
 
-Create each member with the Support team's ID. Omitting `budget_id` selects Acme's default member template.
+Create each member with the Support team's ID in `parent_team_ids`. Omitting `budget_id` selects Acme's default member template.
 
 ```bash title="Create Alice"
 curl --request POST "$LITELLM_BASE_URL/management/v1/customer_members" \
@@ -105,7 +105,7 @@ curl --request POST "$LITELLM_BASE_URL/management/v1/customer_members" \
   --header "Content-Type: application/json" \
   --data '{
     "customer_member_id": "acme-alice",
-    "parent_team_id": "acme-support",
+    "parent_team_ids": ["acme-support"],
     "alias": "Alice"
   }'
 ```
@@ -116,7 +116,7 @@ curl --request POST "$LITELLM_BASE_URL/management/v1/customer_members" \
   --header "Content-Type: application/json" \
   --data '{
     "customer_member_id": "acme-bob",
-    "parent_team_id": "acme-support",
+    "parent_team_ids": ["acme-support"],
     "alias": "Bob"
   }'
 ```
@@ -145,7 +145,7 @@ curl "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
   --header "Authorization: Bearer $LITELLM_ADMIN_KEY"
 ```
 
-After confirming `parent_team_id` is `acme-support`, update Alice:
+After confirming `parent_team_ids` contains `acme-support`, update Alice:
 
 ```bash title="Update the existing member"
 curl --request PATCH "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
@@ -366,7 +366,7 @@ curl "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
 
 Read `budget.max_budget` for an organization or team and `effective_budget.max_budget` for a member. The same objects contain `rpm_limit`, `tpm_limit`, model limits, and allowed models. A member's effective budget combines the selected template with active overrides; an expired override no longer applies.
 
-`spend` is the running budget counter. `budget_reset_at` records the next reset. Use date-range usage for historical costs because a reset changes the counter without erasing historical usage. To resolve a member's parents in your product, read its `parent_team_id`, then retrieve that team and read `parent_org_id`.
+`spend` is the running budget counter. `budget_reset_at` records the next reset. Use date-range usage for historical costs because a reset changes the counter without erasing historical usage. To resolve a member's parents in your product, read its `parent_org_id` and `parent_team_ids`. The first team is its default team.
 
 Open **Customer Portal → Customers**, select **Acme**, and choose **Select Time Range** to include your requests. The usage page shows spend, requests, tokens, and the member caps. Choose **Teams** in **Break down by** to inspect Support.
 
@@ -461,7 +461,7 @@ Fail-open identity handling remains under review in [#51604](https://github.com/
 | Result | Check |
 | --- | --- |
 | `409` during import | Retrieve the existing ID, verify its parent, then patch mutable fields. |
-| `422` during member creation | Use `budget_id`. Supply a template or override if the organization has no default template. |
+| `422` during member creation | Use `parent_team_ids` and `budget_id`. Supply a template or override if the organization has no default template. |
 | `401` on inference | Check the organization alias and member ID. A new member needs an existing organization alias and default template for registration. |
 | `403` on inference | Confirm that the organization alias matches the member's organization. |
 | Budget `422` | Read organization, team, and member spend and caps to find the first exhausted scope. |
