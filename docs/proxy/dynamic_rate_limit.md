@@ -371,7 +371,7 @@ litellm_settings:
 
 #### Cap how far a team borrows
 
-While the model is idle, a borrowing team may use everything up to the model's own `tpm` and `rpm`, so one team can take most of the idle capacity on its own. To bound that, set `team_model_limit_max_borrow_multiple` in the team's metadata next to `model_tpm_limit` and `model_rpm_limit`. The team's usage on a model is then capped at its share times that multiple, for TPM and RPM alike, even while the model is idle. A team with this cap keeps counting its idle usage, since the cap runs on the same counter as its share, so once the model saturates that team is held to its share at once rather than getting a fresh one.
+While the model is idle, a borrowing team may use everything up to the model's own `tpm` and `rpm`, so one team can take most of the idle capacity on its own. To bound that, set `team_model_limit_max_borrow_multiple` in the team's metadata next to `model_tpm_limit` and `model_rpm_limit`. The team's usage on a model is then capped at its share times that multiple, for TPM and RPM alike, even while the model is idle. The cap runs on its own counter that counts everything the team used this window, idle or not, while the share counter still only counts what the team used once the model saturated, so a capped team gets its fresh share at saturation like any other.
 
 ```bash
 curl -X POST 'http://0.0.0.0:4000/team/new' \
