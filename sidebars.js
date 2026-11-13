@@ -1378,6 +1378,7 @@ const sidebars = {
           link: {type: "doc", id: "self_hosted_coding_agents/moyai"},
           items: [
             "self_hosted_coding_agents/moyai/setup",
+            "self_hosted_coding_agents/moyai/aws",
             "self_hosted_coding_agents/moyai/architecture",
           ],
         },

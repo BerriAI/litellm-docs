@@ -18,7 +18,7 @@ draft: true
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CustomerPortalHero from './CustomerPortalHero';
-import {CostComplexity, CustomerMargin, CustomerBudgetAlert} from './CustomerHierarchy';
+import {CostComplexity, CustomerHierarchyBreakdown, CustomerMargin, CustomerBudgetAlert} from './CustomerHierarchy';
 import {PostByline} from '@theme/BlogPostPage';
 import styles from './customer-portal-hero.module.css';
 
@@ -36,13 +36,17 @@ For AI-native companies building production agents using LiteLLM AI Gateway who 
 
 ## The problem
 
-Tracking costs across models and providers is hard.
+With B2B AI agents, cost tracking gets complicated across customer organizations, teams, and individual members. Your customer's AI spend can exceed what you charge them.
+
+<CustomerMargin stage="uncontrolled" />
+
+Different models, providers, and request parameters multiply that complexity.
 
 <CostComplexity />
 
-With B2B AI agents, you also have customer organizations, teams, and members with different budgets. Your customer's AI spend can exceed what you charge them.
+Track that spend by customer organization, team, and member:
 
-<CustomerMargin stage="uncontrolled" />
+<CustomerHierarchyBreakdown />
 
 That's a bunch of glue code to build around your agent. Since LiteLLM is already your source of truth for model costs, we're exposing APIs to track customer spend, set budgets, and build these controls into your product.
 
@@ -191,17 +195,15 @@ curl --fail-with-body --request POST \
   }'
 ```
 
-### Trigger workflows before a customer hits their limit
+### Trigger a webhook when a customer hits their limit
 
 <CustomerBudgetAlert />
 
-A soft-budget webhook lets your backend notify the customer or open an approval request before the hard cap. Your receiver can format the Slack alert above; LiteLLM sends the JSON event. [Configure and test delivery](/docs/proxy/customer_portal/track-customer-spend#1-set-up-budget-webhooks). Delivery is best effort, so reconcile missed alerts with usage reads.
+When a member reaches their $60 cap, use the budget webhook to alert your team or open an approval request. Your receiver formats the notification from LiteLLM's JSON event. [Configure and test delivery](/docs/proxy/customer_portal/track-customer-spend#1-set-up-budget-webhooks); reconcile missed alerts with usage reads because delivery is best effort.
 
-### Increase the allowance when your customer upgrades
+### Approve a temporary increase when your customer upgrades
 
-If a customer needs more, tie the increase to a plan upgrade or extra charge in your product. For example, charge $150 per member and approve a temporary $90 AI allowance:
-
-<CustomerMargin stage="increase" />
+If the customer needs more, tie the increase to a plan upgrade or extra charge in your product. The workflow above shows a $150 price and an approved temporary $90 AI allowance.
 
 Set `INCREASE_EXPIRES_AT` to a future timestamp with a timezone, then apply the temporary member override:
 

@@ -1,3 +1,8 @@
+---
+title: "DeepEval Tracing for LiteLLM: Confident AI"
+sidebar_label: "DeepEval"
+description: "Send LiteLLM Python SDK traces to Confident AI, the DeepEval platform, with the deepeval callbacks to debug, monitor and evaluate LLM calls."
+---
 import Image from '@theme/IdealImage';
 
 # DeepEval

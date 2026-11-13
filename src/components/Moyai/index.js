@@ -14,6 +14,7 @@ export function GuideNav({active}) {
       {[
         ['overview', '', 'Moyai'],
         ['setup', '/setup', 'Setup'],
+        ['aws', '/aws', 'AWS deployment'],
         ['architecture', '/architecture', 'Architecture'],
       ].map(([id, path, label]) => (
         <Link key={id} to={`${root}${path}`} aria-current={active === id ? 'page' : undefined}>
@@ -119,6 +120,11 @@ export function GuideCards() {
       <Link to={`${root}/architecture`} className={styles.guideCard}>
         <Network size={26} aria-hidden="true" />
         <div><h3>Architecture</h3><p>Explore sandboxes, checkpoints, and recovery.</p></div>
+        <ArrowRight className={styles.guideArrow} size={22} aria-hidden="true" />
+      </Link>
+      <Link to={`${root}/aws`} className={styles.guideCard}>
+        <Network size={26} aria-hidden="true" />
+        <div><h3>AWS deployment</h3><p>Run Moyai on EC2 with Lambda MicroVMs.</p></div>
         <ArrowRight className={styles.guideArrow} size={22} aria-hidden="true" />
       </Link>
     </nav>

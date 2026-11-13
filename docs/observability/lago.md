@@ -1,3 +1,8 @@
+---
+title: "Lago Usage Billing for LiteLLM AI Gateway"
+sidebar_label: "Lago"
+description: "Send LiteLLM usage and cost to Lago for usage-based billing from the Python SDK or AI Gateway, with a config.yaml callback and the Lago log object."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

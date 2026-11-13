@@ -1,3 +1,8 @@
+---
+title: "Langfuse Tracing for LiteLLM: Setup"
+sidebar_label: "Langfuse"
+description: "Send LiteLLM traces to Langfuse from the Python SDK or AI Gateway, set trace IDs, user IDs, tags and metadata per request, and redact messages."
+---
 import Image from '@theme/IdealImage';
 
 # Langfuse

@@ -1,3 +1,8 @@
+---
+title: "Migrate Langfuse Callback to OpenTelemetry v2"
+sidebar_label: "Migrate the Langfuse SDK callback to OpenTelemetry v2"
+description: "Move the LiteLLM Langfuse SDK callback to langfuse_otel on OpenTelemetry v2: what changes, LLM-only or full-trace scope, destinations and rollback."
+---
 # Migrate the Langfuse SDK callback to OpenTelemetry v2
 
 {/* keep-version-note */}
