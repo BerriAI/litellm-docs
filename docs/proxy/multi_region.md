@@ -56,9 +56,8 @@ A single LiteLLM Enterprise license covers a multi-region deployment when all re
 | --- | --- | --- |
 | Shared-database multi-region deployment | One logical database | One for the deployment |
 | Independent deployment per region | One per deployment | One per deployment |
-| [Global Control Plane](./global_control_plane.md) | One per worker deployment | One per worker deployment |
 
-This shared-database design works with the open source proxy. Use the [Global Control Plane](./global_control_plane.md) to manage independent deployments from one UI. Each worker has its own keys, teams, budgets, database, Redis, and master key.
+This shared-database design works with the open source proxy. The [Global Control Plane](./global_control_plane.md) adds central management and reporting for independent deployments. Each data plane keeps its own keys, teams, budgets, database, Redis, and master key. The control-plane service requires an Enterprise license.
 
 ## Requirements
 
