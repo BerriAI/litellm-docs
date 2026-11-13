@@ -34,7 +34,7 @@ for key in (
 PY
 ```
 
-Output from LiteLLM main with the bundled rules shown below.
+Your output will look similar to this illustration. Capabilities and token limits depend on the cost map loaded by your LiteLLM installation.
 
 ```text
 Mapped entry: False
@@ -116,27 +116,7 @@ Host the full JSON document and set `LITELLM_MODEL_COST_MAP_URL` before importin
 
 To propose defaults for everyone, edit the main cost map and add coverage in [test_fallback_generalizations.py](https://github.com/BerriAI/litellm/blob/main/tests/unit/litellm_core_utils/test_fallback_generalizations.py). Keep routing tests separate from capability tests and check that mapped entries retain their own values.
 
-## Current rules
-
-The following table follows the 15 rules in the source JSON, in file order. Names and fields come from that document. Matching follows the actual regex, not a comparison of version numbers. In particular, the Claude newer-major patterns cover single-digit majors 5 through 9.
-
-| Rule | Kind | Effect |
-| --- | --- | --- |
-| `bedrock-claude-ids` | Routing | Routes Bedrock-style `anthropic.claude-` IDs, optionally with a dotted region prefix, to `bedrock` |
-| `anthropic-claude-ids` | Routing | Routes bare Claude family and version IDs to `anthropic` |
-| `typesafe-jev-ids` | Routing | Routes `jev-latest`, `jev-preview`, `jev-1.13.0` and `jev-1.14.0` to `typesafe` |
-| `claude-family-baseline` | Capability | Supplies Claude chat mode, 200,000 input and 64,000 output tokens, tools, vision, reasoning, PDF input and other baseline flags |
-| `claude-adaptive-thinking` | Capability | Sets adaptive thinking for Claude 4.6 through 4.99 and majors 5 through 9 |
-| `claude-legacy-thinking` | Capability | Sets legacy thinking support for Claude 4.6, including dated IDs |
-| `claude-always-on-thinking` | Capability | Marks Claude Fable and Mythos as always thinking |
-| `claude-thinking-on-by-default` | Capability | Marks Claude majors 5 through 9 as thinking by default |
-| `claude-mid-conversation-system` | Capability | Sets mid-conversation system support for Claude 4.8 through 4.99 and majors 5 through 9 |
-| `claude-tool-search` | Capability | Sets tool search support for Claude 4.5 through 4.99 and majors 5 through 9 |
-| `claude-per-turn-control` | Capability | Sets the per-turn-control flag for the same versions as tool search. Enables Bedrock beta forwarding, not a guarantee of per-turn output control |
-| `wandb-reasoning-baseline` | Capability | Sets reasoning support for unmapped IDs under `wandb/` |
-| `minimax-reasoning-baseline` | Capability | Sets reasoning support for unmapped IDs under `minimax/` |
-| `openai-reasoning-family-baseline` | Capability | Sets reasoning for o-series, GPT majors 5 through 9, Codex, deep-research and chat-latest shapes. Excludes search-api IDs |
-| `gemini-chat-baseline` | Capability | Supplies chat and capability flags for matching Gemini Pro and Flash IDs from 2.5 onward. Excludes specialized TTS, image, live, audio and other non-chat lines |
+For the current rules, use the [`fallback_generalizations` block in the cost map on LiteLLM main](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json) as the source of truth.
 
 ## Implementation
 
