@@ -143,7 +143,7 @@ const GATEWAY_DOCKER_RUN = `docker run \\
 // One-click hosted deploys, offered to phone visitors who cannot run Docker.
 const ONE_CLICK = [
   ['Railway', 'https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic', 'https://railway.com/button.svg'],
-  ['Render', 'https://render.com/deploy?repo=https://github.com/BerriAI/litellm&blueprintPath=litellm/deploy/render/render.yaml', 'https://render.com/images/deploy-to-render-button.svg'],
+  ['Render', 'https://render.com/deploy?repo=https://github.com/BerriAI/litellm&path=litellm/deploy/render/render.yaml', 'https://render.com/images/deploy-to-render-button.svg'],
   ['AWS', '/docs/proxy/deploy/terraform#aws', '/img/deploy-on-aws.png'],
   ['GCP', '/docs/proxy/deploy/terraform#gcp', '/img/deploy-on-gcp.png'],
 ];
