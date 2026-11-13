@@ -6,6 +6,8 @@ To add pricing or context window information for a model, simply make a PR to th
 
 **[model_prices_and_context_window.json](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json)**
 
+For new model IDs that do not have an entry yet, [fallback generalizations](../fallback_generalizations.md) can infer a provider and capability defaults. Exact entries take precedence, and the shipped rules do not supply pricing.
+
 ### Sample Spec
 
 Here's the full specification with all available fields:
