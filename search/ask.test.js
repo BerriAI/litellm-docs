@@ -144,6 +144,56 @@ async function withServer(fn, overrides = {}) {
 const post = (question = 'Lens', extra = {}) => ({method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({question}), ...extra});
 const neverFetch = () => assert.fail('must not call model');
 
+test('Ask uses request OIDC tokens without retaining them across requests, then falls back to the API key', async () => {
+  const credentials = [];
+  await withServer(async origin => {
+    for (const token of ['request-token-one', 'request-token-two', undefined]) {
+      const response = await fetch(origin + '/api/docs/ask', post('Lens', {headers: {
+        'Content-Type': 'application/json', ...(token ? {'x-vercel-oidc-token': token} : {}),
+      }}));
+      assert.equal(response.status, 200);
+    }
+  }, {fetchImpl: async (_url, request) => {
+    credentials.push(request.headers.Authorization);
+    return JSON.parse(request.body).tools ? modelSteps([ready]).fetch(_url, request) : modelResponse('A helpful answer.');
+  }});
+  assert.deepEqual(credentials, ['request-token-one', 'request-token-two', config.apiKey].flatMap(key => [`Bearer ${key}`, `Bearer ${key}`]));
+});
+test('Ask accepts OIDC without an API key and prefers the request header over the environment token', async () => {
+  const envConfig = readConfig({VERCEL_OIDC_TOKEN: 'environment-token'});
+  const credentials = [];
+  await withServer(async origin => {
+    for (const token of ['request-token', undefined, '']) {
+      const response = await fetch(origin + '/api/docs/ask', post('Lens', {headers: {
+        'Content-Type': 'application/json', ...(token !== undefined ? {'x-vercel-oidc-token': token} : {}),
+      }}));
+      assert.equal(response.status, 200);
+    }
+  }, {config: {...config, apiKey: undefined, vercelOidcToken: envConfig.vercelOidcToken},
+    fetchImpl: async (_url, request) => {
+      credentials.push(request.headers.Authorization);
+      return JSON.parse(request.body).tools ? modelSteps([ready]).fetch(_url, request) : modelResponse('A helpful answer.');
+    }});
+  assert.deepEqual(credentials, ['request-token', 'environment-token', 'environment-token'].flatMap(key => [`Bearer ${key}`, `Bearer ${key}`]));
+});
+test('Ask rejects upstream OIDC failures and token echoes without exposing credentials or retrying the API key', async () => {
+  for (const echo of [false, true]) {
+    let calls = 0;
+    await withServer(async origin => {
+      const response = await fetch(origin + '/api/docs/ask', post('Lens', {headers: {
+        'Content-Type': 'application/json', 'x-vercel-oidc-token': 'request-token',
+      }}));
+      assert.equal(response.status, 502);
+      assert.deepEqual(await response.json(), {error: 'Ask AI is temporarily unavailable. Please try again or use document search.'});
+    }, {fetchImpl: async (_url, request) => {
+      calls++;
+      assert.equal(request.headers.Authorization, 'Bearer request-token');
+      return echo ? modelResponse('request-token') : Response.json({error: {message: 'request-token'}}, {status: 401});
+    }});
+    assert.equal(calls, 1);
+  }
+});
+
 test('API rejects cross-origin requests, incorrect methods, and malformed transport input', async () => {
   await withServer(async origin => {
     const url = origin + '/api/docs/ask';
@@ -305,8 +355,9 @@ test('upstream errors are not cached', async () => {
 
 test('bot route requires its service credential and dedicated model key, independently of public opt-in', async () => {
   const botConfig = {...config, publicAIEnabled: false, host: '0.0.0.0',
-    botServiceToken: 'service-test-secret', botApiKey: 'dedicated-bot-key'};
+    botServiceToken: 'service-test-secret', botApiKey: 'dedicated-bot-key', vercelOidcToken: 'environment-token'};
   const request = token => post('Lens', {headers: {'Content-Type': 'application/json',
+    'x-vercel-oidc-token': 'request-token',
     ...(token ? {Authorization: `Bearer ${token}`} : {})}});
   await withServer(async origin => {
     const url = origin + '/api/docs/bot-ask';

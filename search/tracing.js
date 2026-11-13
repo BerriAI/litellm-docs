@@ -68,7 +68,7 @@ function createTracing(config) {
   });
   const tracer = provider.getTracer(AGENT_NAME);
   const active = new AsyncLocalStorage();
-  const secrets = [config.apiKey, config.tracing.key].filter(Boolean);
+  const secrets = [config.apiKey, config.oidcToken, config.vercelOidcToken, config.tracing.key].filter(Boolean);
   const clean = value => typeof value === 'string'
     ? secrets.reduce((text, secret) => text.replaceAll(secret, '[REDACTED]'), value)
     : Array.isArray(value) ? value.map(clean) : value;
