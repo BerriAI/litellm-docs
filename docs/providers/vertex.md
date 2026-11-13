@@ -1806,6 +1806,10 @@ When you use [Vertex AI PayGo](https://cloud.google.com/vertex-ai/generative-ai/
 
 See [Spend Tracking](../proxy/cost_tracking.md) for general cost tracking setup.
 
+## Interactions API and Deep Research
+
+`vertex_ai` deployments serve Google's Interactions API natively at `/v1beta/interactions`, including the `deep-research-preview-04-2026` agent as a background job. Give the agent its own deployment whose `model` is the agent, then send that deployment's model group as `model` and the agent as `agent`. To poll, cancel or delete a job through the proxy, send the deployment ID from the create response's `x-litellm-model-id` header, or the model group it was created on, as a `model` query parameter or an `x-litellm-model` header. [Interactions on Vertex AI](../interactions.md#vertex-ai) has the config, requests and cost tracking details.
+
 ## Private Service Connect (PSC) Endpoints
 
 LiteLLM supports Vertex AI models deployed to Private Service Connect (PSC) endpoints, allowing you to use custom `api_base` URLs for private deployments.
