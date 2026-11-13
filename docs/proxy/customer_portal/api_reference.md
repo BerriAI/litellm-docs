@@ -6,7 +6,7 @@ description: Manage customer organizations, teams, members, budget templates, an
 
 # API reference
 
-Use these APIs from your backend to import customers, set budgets, and return usage to your product. For a complete integration, follow [Budget and charge back customers](./api_reference_guide.md).
+Use these APIs from your backend to import customers, set budgets, and return usage to your product. For a complete integration, follow [Track customer spend](./api_reference_guide.md).
 
 The management base path is `/management/v1`. Customer organizations, teams, and members are separate from LiteLLM's internal organizations, teams, users, and `/customer` end-user records.
 
@@ -23,7 +23,7 @@ The management and usage routes below are on `main`. Check your gateway's `/open
 | Fresh shared customer spend counters | Preview: [#51568](https://github.com/BerriAI/litellm/pull/51568). Main can use cached spend until refresh. |
 | Member email field and email identity header | Preview: [#51617](https://github.com/BerriAI/litellm/pull/51617). |
 | Customer identity fields in request logs | Preview: [#51596](https://github.com/BerriAI/litellm/pull/51596). |
-| Customer budget events and webhook callback | Preview: [#51579](https://github.com/BerriAI/litellm/pull/51579), verified at `1d3b7154b9`. |
+| Customer budget events and webhook callback | Preview: [#51579](https://github.com/BerriAI/litellm/pull/51579), verified at `a129fa7`. |
 | Native upserts and first-request organization creation | Under review in [#51607](https://github.com/BerriAI/litellm/pull/51607); not documented as a supported contract. |
 | Fail-open customer identity handling | Under review in [#51604](https://github.com/BerriAI/litellm/pull/51604); configuration and asserted-identity logging remain unverified. |
 
@@ -33,7 +33,7 @@ Preview features require a build containing the linked change while it remains u
 
 Send `Authorization: Bearer $LITELLM_ADMIN_KEY` on management requests. These routes require `proxy_admin`, including list, retrieve, and usage requests. Keep this key on your server and authorize the customer before returning data to your application.
 
-Examples use `LITELLM_BASE_URL` for your gateway's base URL, without `/v1` or `/ui`. They assume Bash or Zsh, `curl`, and `jq`.
+Examples use `LITELLM_BASE_URL` for your gateway's base URL, without `/v1` or `/ui`. They use `curl` from your terminal.
 
 ```bash
 export LITELLM_BASE_URL="http://localhost:4000"
@@ -115,21 +115,26 @@ Each organization, team, and member includes these fields in addition to its res
 | `default_budgets` | Array | Member templates, each with budget fields plus `budget_id`, `name`, and `is_default`. |
 
 ```bash title="Create an organization with a default member template"
-curl --fail-with-body --silent --show-error \
+curl --request POST \
   "$LITELLM_BASE_URL/management/v1/customer_organizations" \
   -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
   -H "Content-Type: application/json" \
   --data '{
     "customer_org_id": "org-acme",
     "alias": "Acme",
-    "budget": {"max_budget": 1000, "budget_duration": "30d"},
-    "default_budgets": [{
-      "name": "standard",
-      "is_default": true,
-      "max_budget": 50,
+    "budget": {
+      "max_budget": 1000,
       "budget_duration": "30d"
-    }]
-  }' | jq
+    },
+    "default_budgets": [
+      {
+        "name": "standard",
+        "is_default": true,
+        "max_budget": 50,
+        "budget_duration": "30d"
+      }
+    ]
+  }'
 ```
 
 ## Customer teams
@@ -156,7 +161,7 @@ curl --fail-with-body --silent --show-error \
 | `budget` | Budget object or `null` | Team limits. An absent team budget does not remove organization or member limits. |
 
 ```bash title="Create a customer team"
-curl --fail-with-body --silent --show-error \
+curl --request POST \
   "$LITELLM_BASE_URL/management/v1/customer_teams" \
   -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
   -H "Content-Type: application/json" \
@@ -164,8 +169,11 @@ curl --fail-with-body --silent --show-error \
     "customer_team_id": "acme-support",
     "parent_org_id": "org-acme",
     "alias": "Support",
-    "budget": {"max_budget": 250, "budget_duration": "30d"}
-  }' | jq
+    "budget": {
+      "max_budget": 250,
+      "budget_duration": "30d"
+    }
+  }'
 ```
 
 ## Customer members
@@ -182,6 +190,7 @@ curl --fail-with-body --silent --show-error \
 | --- | --- | --- | --- |
 | `customer_member_id` | Optional, generated when omitted | Not accepted | Stable member ID. |
 | `parent_team_id` | Required | Not accepted | Existing customer team ID. |
+| `email` | Optional, default `null`; preview #51617 | Optional; `null` clears it; preview #51617 | String of 1–254 characters after trimming and lowercasing. Unique within the customer organization. |
 | `alias` | Optional, default `null` | Optional; `null` clears it | Display name. |
 | `budget_id` | Optional; omitted or `null` uses the organization's default template | Optional; `null` detaches the template | Member template ID from the same customer organization. |
 | `budget_override` | Optional, default `null` | Optional; `null` removes it | Member [budget fields](#budget-object) that override the template. |
@@ -192,7 +201,7 @@ Use `budget_id` for the selected member template. The current API rejects the ol
 A member needs a selected template or `budget_override`. LiteLLM merges non-null override fields with the template. A non-empty `allowed_models` override replaces inherited models. Read `effective_budget` to display the settings that apply now, including override expiry.
 
 ```bash title="Create a member using the organization's default template"
-curl --fail-with-body --silent --show-error \
+curl --request POST \
   "$LITELLM_BASE_URL/management/v1/customer_members" \
   -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
   -H "Content-Type: application/json" \
@@ -200,12 +209,13 @@ curl --fail-with-body --silent --show-error \
     "customer_member_id": "acme-alice",
     "parent_team_id": "acme-support",
     "alias": "Alice"
-  }' | jq
+  }'
 ```
 
 | Additional response field | Type | Meaning |
 | --- | --- | --- |
 | `customer_member_id`, `parent_team_id` | String | Member ID and parent team. Retrieve that team to obtain `parent_org_id`. |
+| `email` | String or `null`; preview #51617 | Normalized email, when the build includes member email support. |
 | `budget_id` | String or `null` | Selected organization template. |
 | `budget_override_id` | String or `null` | Owned override record. |
 | `budget_override` | Budget object or `null` | Stored override, including an override that has expired. |
@@ -231,11 +241,15 @@ Templates belong to a customer organization. Updating a template changes the set
 Creation accepts a [budget object](#budget-object) plus required non-empty `name` and optional `is_default` (default `false`). Names must be unique within the organization. The first template becomes the default. Updating accepts the same fields as optional fields. Set `is_default: true` on another template before removing the current default; setting the current default to `false` returns `422`.
 
 ```bash title="Add a named member template"
-curl --fail-with-body --silent --show-error \
+curl --request POST \
   "$LITELLM_BASE_URL/management/v1/customer_organizations/org-acme/default_budgets" \
   -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
   -H "Content-Type: application/json" \
-  --data '{"name": "extended", "max_budget": 100, "budget_duration": "30d"}' | jq
+  --data '{
+    "name": "extended",
+    "max_budget": 100,
+    "budget_duration": "30d"
+  }'
 ```
 
 ## List pagination
@@ -251,12 +265,12 @@ Organization, team, and member lists share these query parameters. Unknown param
 | `parent_team_id` | Unset | Member lists only. Restrict to one team. |
 
 ```bash title="List a customer's teams"
-curl --fail-with-body --silent --show-error --get \
+curl --get \
   "$LITELLM_BASE_URL/management/v1/customer_teams" \
   -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
   --data-urlencode "parent_org_id=org-acme" \
   --data-urlencode "page=1" \
-  --data-urlencode "page_size=100" | jq
+  --data-urlencode "page_size=100"
 ```
 
 The response contains `data` (resource objects), `meta.total_count`, `meta.page`, `meta.page_size`, `meta.total_pages`, and `links.self`, `first`, `prev`, `next`, and `last`. `prev` and `next` are `null` when no such page exists. Follow `links.next` or stop at `meta.total_pages`.
@@ -272,26 +286,14 @@ Send these headers with the inference key you use for your application. They wor
 
 With both headers, LiteLLM checks that the member belongs to that organization. An unknown member joins the organization's `default` team when the organization has a default member budget. LiteLLM generates that team's ID as `{customer_org_id}:default`. An unknown organization alias returns `401`; a shared alias returns `400`; a mismatched member and organization returns `403`.
 
-Bind the application's key to its customer with `metadata.customer_org_id` through `/key/generate` or `/key/update`. A bound key cannot act for another customer organization. Your backend must choose the header values from its authenticated customer session.
+Use your existing application key across customers. Your backend chooses the organization alias and member ID from the authenticated customer session and passes them in the SDK request. See the [OpenAI Responses and Deep Agents examples](./api_reference_guide.md).
 
-```bash title="Chat Completions"
-curl --fail-with-body --silent --show-error \
-  "$LITELLM_BASE_URL/v1/chat/completions" \
-  -H "Authorization: Bearer $LITELLM_CUSTOMER_KEY" \
-  -H "Content-Type: application/json" \
-  -H "x-litellm-customer-org-alias: Acme" \
-  -H "x-litellm-customer-member-id: acme-alice" \
-  --data '{"model":"portal-chat","messages":[{"role":"user","content":"Hello"}]}'
-```
-
-Use the same headers with the endpoint's normal body. Replace `portal-chat` with a configured model alias.
-
-| Endpoint | Example JSON body |
+| Supported inference API | Route |
 | --- | --- |
-| `POST /v1/responses` | `{"model":"portal-chat","input":"Hello"}` |
-| `POST /v1/messages` | `{"model":"portal-chat","max_tokens":128,"messages":[{"role":"user","content":"Hello"}]}` |
+| OpenAI Responses | `POST /v1/responses` |
+| Chat Completions | `POST /v1/chat/completions` |
+| Anthropic Messages | `POST /v1/messages` |
 
-For Anthropic Messages, also send `anthropic-version: 2023-06-01`. See the guide for [complete requests](./api_reference_guide.md).
 
 ## Customer usage
 
@@ -319,13 +321,31 @@ All four reads require a proxy admin key. Dates use inclusive UTC calendar days.
 Unknown query parameters and repeated parameters return `400`. The aggregated route accepts at most a 400-day difference between its start and end dates. It returns complete spend, request, and token totals; its API key breakdown includes only the top key.
 
 ```bash title="Complete organization totals for your product"
-curl --fail-with-body --silent --show-error --get \
+curl --get \
   "$LITELLM_BASE_URL/management/v1/customer_organizations/daily/activity/aggregated" \
   -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
   --data-urlencode "customer_org_ids=org-acme" \
   --data-urlencode "start_date=$START_DATE" \
-  --data-urlencode "end_date=$END_DATE" | jq
+  --data-urlencode "end_date=$END_DATE"
 ```
+
+### Usage pagination
+
+Organization aggregated usage returns the complete range in one response. Team and member daily activity use `page` and `page_size`.
+
+For another page, repeat the request with the next page number:
+
+```bash title="Second page of member usage"
+curl --get "$LITELLM_BASE_URL/management/v1/customer_members/daily/activity" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  --data-urlencode "customer_member_ids=acme-alice" \
+  --data-urlencode "start_date=$START_DATE" \
+  --data-urlencode "end_date=$END_DATE" \
+  --data-urlencode "page=2" \
+  --data-urlencode "page_size=100"
+```
+
+Sum each page's totals once. Stop when `metadata.has_more` is `false`; merge matching dates when building a chart.
 
 ### Usage response
 
@@ -337,18 +357,18 @@ curl --fail-with-body --silent --show-error --get \
 | `metadata.total_spend`, `total_tokens`, `total_api_requests` | Totals for this response. |
 | `metadata.page`, `total_pages`, `has_more` | Page information. Aggregated responses use `1`, `1`, and `false`. |
 
-Paginated activity limits stored rows before grouping them by date. The same date can appear on more than one page. Sum each page's totals once and merge matching dates until `metadata.has_more` is `false`. Use the guide's [complete team and member totals helper](./api_reference_guide.md#fetch-every-usage-page) to follow every page.
+Paginated activity limits stored rows before grouping them by date. The same date can appear on more than one page. Sum each page's totals once and merge matching dates until `metadata.has_more` is `false`. Increment `page` until `metadata.has_more` is `false`.
 
 ```json title="Usage response excerpt"
 {
   "results": [{
     "date": "2026-11-13",
-    "metrics": {"spend": 0.14, "total_tokens": 3000, "api_requests": 3}
+    "metrics": {"spend": 0.14, "total_tokens": 120, "api_requests": 1}
   }],
   "metadata": {
     "total_spend": 0.14,
-    "total_tokens": 3000,
-    "total_api_requests": 3,
+    "total_tokens": 120,
+    "total_api_requests": 1,
     "page": 1,
     "total_pages": 1,
     "has_more": false
@@ -360,7 +380,7 @@ Accounting writes usage in the background. Check the date range and customer hea
 
 ## Customer budget events (preview)
 
-Requires [#51579](https://github.com/BerriAI/litellm/pull/51579), verified at commit `1d3b7154b9`. Register `customer_budget_webhook` in `litellm_settings.callbacks`. Configure it through top-level `callback_settings.customer_budget_webhook`:
+Requires [#51579](https://github.com/BerriAI/litellm/pull/51579), verified at commit `a129fa7`. Register `customer_budget_webhook` in `litellm_settings.callbacks`. Configure it through top-level `callback_settings.customer_budget_webhook`:
 
 | Setting | Type | Meaning |
 | --- | --- | --- |
@@ -384,7 +404,7 @@ The callback posts the event directly as JSON. [The guide provides a complete co
 
 Members use their effective template and active override. One update can emit both event types at multiple scopes. Requests rejected before inference, zero-cost updates, and refunds do not trigger this detector.
 
-The webhook accepts successful `2xx` responses and has a 10-second timeout. Delivery is best effort. An event claim is keyed by `(event, scope, entity_id, period)` for 24 hours and is retained even if delivery fails. Shared Redis coordinates claims across workers; an in-memory fallback can produce duplicates. The HTTP client retries a connection error once. There is no durable retry queue, backoff, or replay API for HTTP errors or timeouts. This preview reads spend through the configured database reader, so replica lag can miss an event. Use usage reads to reconcile missed events; do not use the callback as your only billing record.
+The webhook accepts successful `2xx` responses and has a 10-second timeout. Delivery is best effort. An event claim is keyed by `(event, scope, entity_id, period)` for 24 hours and is retained even if delivery fails. Shared Redis coordinates claims across workers; an in-memory fallback can produce duplicates. The HTTP client retries a connection error once. There is no durable retry queue, backoff, or replay API for HTTP errors or timeouts. Use usage reads to reconcile missed events; do not use the callback as your only billing record.
 
 ## Errors
 
@@ -394,7 +414,7 @@ Management errors use problem details with `type`, `title`, `status`, and `detai
 | --- | --- |
 | `400` | Unknown or repeated query parameter, invalid date range, or invalid pagination. Check the route's parameter table. |
 | `401` | Missing or invalid authentication. On inference, also check an unknown member or organization alias. |
-| `403` | Caller lacks `proxy_admin`, or inference identity conflicts with the key's customer binding. |
+| `403` | Caller lacks `proxy_admin`, or the member does not belong to the supplied customer organization. |
 | `404` | Resource or parent does not exist. Retrieve or create the parent first. |
 | `409` | Duplicate ID, parent still has children, or template remains default or referenced. |
 | `422` | Invalid body, budget value, template selection, or missing member budget. Inference budget rejection also uses `422` with an inference error body. |
