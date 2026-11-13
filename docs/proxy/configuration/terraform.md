@@ -27,7 +27,7 @@ terraform {
 provider "litellm" {}
 ```
 
-Provider releases follow LiteLLM versions. Pin the provider to the version your gateway runs. See the [provider version guidance](https://github.com/BerriAI/litellm/tree/main/terraform/provider#versioning) and [published versions](https://registry.terraform.io/providers/BerriAI/litellm/latest).
+Provider releases follow LiteLLM versions. Pin the provider to the version your gateway runs. See the [provider version guidance](https://github.com/BerriAI/litellm/tree/main/litellm/deploy/terraform/provider#versioning) and [published versions](https://registry.terraform.io/providers/BerriAI/litellm/latest).
 
 Set the gateway URL and a LiteLLM API key with permission to manage your resources. The provider reads both values from environment variables. Load the key from your CI secret store to keep it out of your Terraform files.
 
@@ -69,4 +69,4 @@ terraform plan
 
 Use the team ID, which can differ from its display name. Review the plan and update your configuration before the next apply.
 
-The [provider reference](https://registry.terraform.io/providers/BerriAI/litellm/latest/docs) lists supported resources and data sources, including virtual keys, models, users, and MCP servers. Find the provider source and development instructions in [BerriAI/litellm](https://github.com/BerriAI/litellm/tree/main/terraform/provider).
+The [provider reference](https://registry.terraform.io/providers/BerriAI/litellm/latest/docs) lists supported resources and data sources, including virtual keys, models, users, and MCP servers. Find the provider source and development instructions in [BerriAI/litellm](https://github.com/BerriAI/litellm/tree/main/litellm/deploy/terraform/provider).

@@ -45,7 +45,7 @@ Please note that in order to combat low-quality AI spam, all vulnerability repor
 ## Vulnerability Scanning
 
 - LiteLLM runs [`grype`](https://github.com/anchore/grype) security scans on all built Docker images.
-    - See [`grype litellm` check on ci/cd](https://github.com/BerriAI/litellm/blob/main/.circleci/config.yml#L1099). 
+    - See the [archived `grype litellm` CI check](https://github.com/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/.circleci/config.yml#L1099).
     - Current Status: ✅ Passing. 0 High/Critical severity vulnerabilities found.
 
 ## Legal/Compliance FAQs

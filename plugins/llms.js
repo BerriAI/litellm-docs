@@ -65,7 +65,7 @@ const NOTES = `- Which one: use the AI Gateway when several apps, teams, users, 
 const fence = (lang, code) => '```' + lang + '\n' + code + '\n```';
 
 // What an agent needs to run the gateway end to end, taken from
-// scripts/quickstart.sh in BerriAI/litellm (the same commands as QuickStartBox).
+// litellm/scripts/quickstart.sh in BerriAI/litellm (the same commands as QuickStartBox).
 const gatewaySection = () => `## Start the AI Gateway
 
 One command installs and starts the gateway, a Postgres database, and the Admin UI with Docker Compose. It needs Docker, Podman, or Rancher Desktop with Compose v2.
@@ -83,7 +83,7 @@ ${fence('powershell', QUICKSTART.gateway.windows)}
 - Admin UI: http://localhost:4000/ui, username \`admin\`, password is the \`LITELLM_MASTER_KEY\` value in \`.env\`. Add a model under Models + Endpoints > Add Model, then create a virtual key under Virtual Keys.
 - Agents and CI: the script asks nothing when there is no terminal, under CI or Claude Code, with \`--yes\` (\`curl -fsSL <url> | sh -s -- --yes\`), or on Windows with \`$env:LITELLM_YES=1\`. \`LITELLM_DIR\` and \`LITELLM_PORT\` override the folder and port.
 - Manage it: \`curl -fsSL <url> | sh -s -- <action>\` or the \`litellm-gateway\` command it installs, with \`status\`, \`start\`, \`stop\`, \`restart\`, \`logs\`, \`open\`, \`update\`, or \`uninstall\`.
-- Read the script first: https://github.com/BerriAI/litellm/blob/main/scripts/quickstart.sh and https://github.com/BerriAI/litellm/blob/main/scripts/quickstart.ps1
+- Read the script first: https://github.com/BerriAI/litellm/blob/main/litellm/scripts/quickstart.sh and https://github.com/BerriAI/litellm/blob/main/litellm/scripts/quickstart.ps1
 
 Other ways to run it:
 

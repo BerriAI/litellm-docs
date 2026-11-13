@@ -23,7 +23,7 @@ When the command finishes, open the Admin UI. Then you can [add your models](#3-
 ## 1. Start LiteLLM
 
 ```bash
-curl -sSLO https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml
+curl -sSLO https://github.com/BerriAI/litellm/raw/main/litellm/deploy/docker/docker-compose.quickstart.yml
 printf 'LITELLM_MASTER_KEY=sk-%s\nLITELLM_SALT_KEY=sk-%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" > .env
 docker compose -f docker-compose.quickstart.yml up -d
 ```
@@ -211,4 +211,4 @@ To enforce LiteLLM budgets, run with a database. Otherwise, configure spending l
 
 ## Next steps
 
-Use the [deployment guides](./deploy.md) for Helm and Terraform, and the [production checklist](./prod.md) for hardening and tuning. The repository's [docker-compose.yml](https://github.com/BerriAI/litellm/blob/main/docker-compose.yml) includes database, Redis, and Prometheus options.
+Use the [deployment guides](./deploy.md) for Helm and Terraform, and the [production checklist](./prod.md) for hardening and tuning. The repository's [docker-compose.yml](https://github.com/BerriAI/litellm/blob/main/litellm/deploy/compose/docker-compose.yml) includes database, Redis, and Prometheus options.
