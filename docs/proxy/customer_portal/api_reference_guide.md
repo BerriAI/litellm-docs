@@ -1,80 +1,65 @@
 ---
-title: API reference guide
-sidebar_label: API reference guide
-description: Import customer organizations, teams, and members, attribute requests by member ID, and fetch usage and configured caps for your product.
+title: Budget and charge back customers
+sidebar_label: Budget and charge back customers
+description: Set customer organization and member budgets, attribute LLM requests, and fetch usage for chargebacks through the LiteLLM API.
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Customer Portal API reference guide
+# Budget and charge back customers
 
-Import your customers into LiteLLM, send requests with a customer member ID, and show each customer's spend, tokens, requests, and configured caps in your product.
+Create a customer organization, add its teams and members, then pass customer identity with each LLM request. LiteLLM checks the customer's budgets and attributes spend, tokens, and requests to the member, team, and organization. Use the usage APIs to show those costs in your product or calculate chargebacks.
 
-In this guide, you create Acme, its Support team, and two members. LiteLLM resolves each member's team and organization when you send a request. You then fetch usage at each level through the API.
+The same two headers work with Responses, Chat Completions, and Anthropic Messages:
 
-**For Chat Completions, pass the customer member ID in the request's `metadata` object:**
-
-```json title="Customer identity in the request body"
-{
-  "metadata": {
-    "customer_member_id": "acme-alice"
-  }
-}
+```http
+x-litellm-customer-org-alias: Acme
+x-litellm-customer-member-id: acme-alice
 ```
 
-LiteLLM resolves `acme-alice` to the Support team and Acme organization from the hierarchy you import below. Responses and Anthropic requests use `litellm_metadata`. [See complete curl and SDK requests](#send-a-request-for-alice).
+In this guide, Alice belongs to Acme's Support team. LiteLLM resolves her member ID to the team and organization you create below.
 
 ![Acme organization usage with spend, requests, tokens, and a daily Support team chart](../../../static/img/customer_portal/usage-overview.png)
 
-*Customer Portal usage preview with seeded sample API responses. Your totals depend on the requests you send.*
+*Customer Portal preview with seeded sample API responses. Your totals depend on the requests you send.*
 
-{/* keep-version-note: This walkthrough covers several APIs on main; no published release containing both changes has been verified. */}
+{/* keep-version-note: This guide distinguishes the verified main-branch API from pending changes. A published release containing the complete integration has not been verified. */}
 
-:::info[Preview availability]
-
-This guide covers the customer hierarchy and usage APIs on `main`, including [customer hierarchy #51459](https://github.com/BerriAI/litellm/pull/51459) and [customer usage #51495](https://github.com/BerriAI/litellm/pull/51495). Confirm that your deployment includes both changes and their database migrations. Check your gateway's `/openapi.json` for `/management/v1/customer_members` and `/management/v1/customer_members/daily/activity` before you start. These endpoints are absent from older releases.
-
-:::
-
-```mermaid
-flowchart LR
-  O["Acme · customer organization"] --> T["Support · customer team"]
-  T --> A["Alice · customer member"]
-  T --> B["Bob · customer member"]
-```
+Use a build containing the customer hierarchy APIs, identity headers, usage routes, and database migrations on `main`. Check `/openapi.json` for `/management/v1/customer_members` before you start. Email, fresh spend counters, request-log identity fields, and webhooks have preview requirements beside their steps. See the [availability reference](./api_reference.md#availability) for the exact changes; a published release containing the complete integration has not been verified.
 
 ## Before you start
 
-You need a running [LiteLLM Gateway](../docker_quick_start.md), a connected PostgreSQL database with the customer migrations applied, and a proxy admin key. The hierarchy and usage endpoints require the `proxy_admin` role, including read requests.
+You need a running [LiteLLM Gateway](../docker_quick_start.md), a connected PostgreSQL database with the customer migrations, and a proxy admin key. Customer management and usage reads require `proxy_admin`.
 
-Use Bash or Zsh with `curl` and `jq`. Set these variables in the terminal where you run the examples:
+Use Bash or Zsh with `curl` and `jq`. Set the base URL and a model alias from your gateway's `/models` response:
 
 ```bash
 set -o pipefail
 export LITELLM_BASE_URL="http://localhost:4000"
-export LITELLM_ADMIN_KEY="<your-proxy-admin-key>"
 export LITELLM_MODEL="portal-chat"
+export END_DATE="$(date -u +%Y-%m-%d)"
+export START_DATE="$END_DATE"
 ```
 
-Use your gateway's base URL without `/v1` or `/ui`. Replace `portal-chat` with a model alias from your gateway's `/models` response. Use your existing master key or a key with the `proxy_admin` role for `LITELLM_ADMIN_KEY`.
+The usage examples query today in UTC. Set `START_DATE` to an earlier `YYYY-MM-DD` value when you need a longer range.
 
-Keep the admin key on your server. Your browser or mobile app should call your backend, which authenticates the customer and fetches only that customer's data.
+Set `LITELLM_ADMIN_KEY` through your secret store or existing terminal environment. Keep it on your server. Your application should call your backend, which authenticates the customer and returns only that customer's data.
 
-Customer attribution requires the spend accounting ledger. Keep it enabled in your gateway configuration:
+Keep the spend accounting ledger enabled in your gateway configuration:
 
-```yaml title="config.yaml (addition to your existing configuration)"
+```yaml title="config.yaml, addition to your existing configuration"
 general_settings:
   use_spend_logs_ledger: true
 ```
 
-## 1. Import your customers
+## 1. Import the customer and its members
 
-Create parents before their children. Use IDs from your application, with a customer prefix to keep them unique across your gateway. Save the returned IDs if you let LiteLLM generate them.
+Create Acme with ID `org-acme`, its Support team, then Alice and Bob. Use IDs from your application and save the returned IDs when you let LiteLLM generate them.
 
-### Create a customer organization
+### Create the organization and default member budget
 
-Create Acme with an overall configured budget of $1,000 and a default member budget template of $50. Each member who inherits `standard` receives their own budget settings.
+Acme has a $1,000 organization budget. Each member who inherits the `standard` template has a $50 budget and the template's rate limits.
 
 ```bash title="POST /management/v1/customer_organizations"
 curl --fail-with-body --silent --show-error \
@@ -82,16 +67,14 @@ curl --fail-with-body --silent --show-error \
   -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
   -H "Content-Type: application/json" \
   --data '{
-    "customer_org_id": "acme",
+    "customer_org_id": "org-acme",
     "alias": "Acme",
-    "budget": {
-      "max_budget": 1000,
-      "budget_duration": "30d"
-    },
+    "budget": {"max_budget": 1000, "budget_duration": "30d"},
     "default_budgets": [{
       "name": "standard",
       "is_default": true,
       "max_budget": 50,
+      "soft_budget": 40,
       "budget_duration": "30d",
       "rpm_limit": 60,
       "tpm_limit": 100000
@@ -99,11 +82,9 @@ curl --fail-with-body --silent --show-error \
   }' | jq
 ```
 
-Expect `201 Created`. The response includes `customer_org_id`, the organization's `budget`, and `default_budgets` with their generated `budget_id` values. Mark exactly one template as `is_default` when you supply templates.
+Expect `201 Created`. Save `customer_org_id` and `default_budget_id`. A soft budget records a notification threshold; it does not block requests. [Configure a webhook](#7-receive-budget-events-preview) to receive events on a build with customer budget callback support.
 
-### Create a customer team
-
-Set `parent_org_id` to the organization you created. The team has its own configured budget.
+### Create the team
 
 ```bash title="POST /management/v1/customer_teams"
 curl --fail-with-body --silent --show-error \
@@ -112,22 +93,19 @@ curl --fail-with-body --silent --show-error \
   -H "Content-Type: application/json" \
   --data '{
     "customer_team_id": "acme-support",
-    "parent_org_id": "acme",
+    "parent_org_id": "org-acme",
     "alias": "Support",
-    "budget": {
-      "max_budget": 250,
-      "budget_duration": "30d"
-    }
+    "budget": {"max_budget": 250, "budget_duration": "30d"}
   }' | jq
 ```
 
-Expect `201 Created` with `customer_team_id: "acme-support"` and `parent_org_id: "acme"`.
+Expect `201` with `parent_org_id: "org-acme"`.
 
-### Create customer members
+### Create the members
 
-Create one member per request. Alice and Bob inherit Acme's default member template because you omit `budget_template_id` and `budget_override`.
+Create one member per request. Omitting `budget_id` assigns Acme's default member template.
 
-```bash title="POST /management/v1/customer_members (one request per member)"
+```bash title="POST /management/v1/customer_members"
 for member in alice bob; do
   jq -n --arg id "acme-$member" --arg alias "$member" '{
     customer_member_id: $id,
@@ -141,45 +119,48 @@ for member in alice bob; do
 done
 ```
 
-Expect `201 Created` for each member. The response includes the inherited settings in `effective_budget`. Example excerpt:
+Expect `201` for each member. Read `effective_budget` to verify the inherited $50 budget. To choose another template, pass its `budget_id`. To customize a member, pass `budget_override`, for example `{"max_budget": 100}`. The current API rejects the old `budget_template_id` field.
 
-```json title="Alice (response excerpt)"
-{
-  "customer_member_id": "acme-alice",
-  "parent_team_id": "acme-support",
-  "effective_budget": {
-    "max_budget": 50,
-    "budget_duration": "30d",
-    "rpm_limit": 60,
-    "tpm_limit": 100000
-  },
-  "spend": 0
-}
+If your build includes [#51617](https://github.com/BerriAI/litellm/pull/51617), you can add Alice's email. Older builds reject this field:
+
+```bash title="Optional, requires member email support"
+curl --fail-with-body --silent --show-error --request PATCH \
+  "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{"email":"alice@acme.example"}' | jq
 ```
 
-To assign a different template, pass its `budget_id` as `budget_template_id`. To customize a member, pass `budget_override`, for example `{"max_budget": 100}`. LiteLLM merges non-null budget and rate overrides with the template; use a non-empty `allowed_models` list to override inherited models. If the organization has no default template, supply a template or an override when you create the member.
+### Repeat an import without duplicate customers
 
-Create each record once. A duplicate ID returns `409`; fetch the existing record or use `PATCH` to update it.
+A repeated `POST` returns `409` for an existing ID. Your backend can implement an upsert with the existing APIs: on `409` or an uncertain create response, retrieve that ID, verify its parent, then patch the mutable fields. Do not generate another ID to retry the same customer.
 
-## 2. Pass customer identity with LLM requests
+```bash title="Retrieve and update the existing member"
+curl --fail-with-body --silent --show-error \
+  "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  | jq '{customer_member_id, parent_team_id, effective_budget}'
 
-Bind your virtual key to a customer organization, then pass the current member's ID in each LLM request:
+# Continue after confirming parent_team_id is acme-support.
+curl --fail-with-body --silent --show-error --request PATCH \
+  "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{"alias":"Alice"}' | jq
+```
 
-| Where | Field | Example |
-| --- | --- | --- |
-| Virtual key's stored metadata | `customer_org_id` | `acme` |
-| Chat Completions request body's `metadata` | `customer_member_id` | `acme-alice` |
+Use the same create, retrieve, and patch pattern for organizations and teams. Update named templates through their [template routes](./api_reference.md#member-budget-templates). Native upsert and automatic organization creation remain under review in #51607.
 
-### Create a key bound to the customer
+## 2. Bind a key and send a Responses request
 
-Create a virtual key with `metadata.customer_org_id`. LiteLLM requires this admin-assigned organization binding on non-admin keys that track customer usage.
+Bind your application's inference key to Acme. This prevents the key from acting for another customer organization.
 
-```bash title="POST /key/generate"
+```bash title="Create and capture a customer-bound key"
 LITELLM_CUSTOMER_KEY="$(
   jq -n --arg model "$LITELLM_MODEL" '{
     key_alias: "acme-application",
     models: [$model],
-    metadata: {customer_org_id: "acme"}
+    metadata: {customer_org_id: "org-acme"}
   }' | curl --fail-with-body --silent --show-error \
     "$LITELLM_BASE_URL/key/generate" \
     -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
@@ -189,43 +170,43 @@ LITELLM_CUSTOMER_KEY="$(
 export LITELLM_CUSTOMER_KEY
 ```
 
-Store `LITELLM_CUSTOMER_KEY` in your server's secret store. The command captures the key without printing it and exports it for the SDK examples below.
+Store the generated key in your server's secret store. The command captures it without printing it.
 
-### Send a request for Alice
+Send the current member's ID from your authenticated application session. Save the response headers so you can trace the request in step 6.
 
-Set `customer_member_id` to the ID you supplied when you created the member. Use the member ID from your authenticated application user. Choose the request field for your endpoint:
+```bash title="POST /v1/responses"
+LITELLM_RESPONSE_HEADERS="$(mktemp)"
+export LITELLM_RESPONSE_HEADERS
 
-| Endpoint | Top-level request body field |
-| --- | --- |
-| `POST /v1/chat/completions` | `metadata.customer_member_id` |
-| `POST /v1/responses` | `litellm_metadata.customer_member_id` |
-| `POST /v1/messages` | `litellm_metadata.customer_member_id` |
-
-The examples below send Alice's member ID. LiteLLM looks up her parent team and organization, so you can omit those two IDs from the request.
-
-<Tabs>
-<TabItem value="curl" label="curl" default>
-
-```bash title="POST /v1/chat/completions"
-curl --fail-with-body --silent --show-error \
-  "$LITELLM_BASE_URL/v1/chat/completions" \
+jq -n --arg model "$LITELLM_MODEL" '{
+  model: $model,
+  input: "Write a short welcome message."
+}' | curl --fail-with-body --silent --show-error \
+  "$LITELLM_BASE_URL/v1/responses" \
   -H "Authorization: Bearer $LITELLM_CUSTOMER_KEY" \
   -H "Content-Type: application/json" \
-  --data-binary @- <<JSON
-{
-  "model": "$LITELLM_MODEL",
-  "messages": [{"role": "user", "content": "Write a short welcome message."}],
-  "metadata": {
-    "customer_member_id": "acme-alice"
-  }
-}
-JSON
+  -H "x-litellm-customer-org-alias: Acme" \
+  -H "x-litellm-customer-member-id: acme-alice" \
+  --dump-header "$LITELLM_RESPONSE_HEADERS" \
+  --data-binary @- | jq
 ```
 
-</TabItem>
-<TabItem value="python" label="OpenAI Python (Chat)">
+Expect a successful Responses result. LiteLLM resolves `acme-alice` to `acme-support`, then `org-acme`. It checks the applicable budgets, model access, and rate limits, and attributes the request to those three records.
 
-Run `uv add openai` in your application project. Save this as `customer_request.py`, then run `uv run python customer_request.py` in the terminal where you exported the variables above.
+You can use an existing member ID without the organization header. With an organization alias and a new member ID, LiteLLM registers the member under `org-acme:default` and assigns the organization's default member template. The organization must already exist and have a default template. An alias alone charges only the organization.
+
+:::info Member email
+
+With #51617, replace `x-litellm-customer-member-id` with `x-litellm-customer-member-email: alice@acme.example` and keep the organization alias header. An email in the member-ID header is an ID string, not an email lookup. Check the [email availability note](./api_reference.md#customer-members) before using this path.
+
+:::
+
+### Use the same identity in your SDK
+
+<Tabs>
+<TabItem value="python" label="OpenAI Python" default>
+
+Run `uv add openai` in your application project. Save this as `customer_request.py`, then run `uv run python customer_request.py` from the terminal where you exported the variables above.
 
 ```python title="customer_request.py"
 import os
@@ -236,20 +217,21 @@ client = OpenAI(
     api_key=os.environ["LITELLM_CUSTOMER_KEY"],
     base_url=f"{os.environ['LITELLM_BASE_URL'].rstrip('/')}/v1",
 )
-
-completion = client.chat.completions.create(
+response = client.responses.create(
     model=os.environ["LITELLM_MODEL"],
-    messages=[{"role": "user", "content": "Write a short welcome message."}],
-    metadata={"customer_member_id": "acme-alice"},
+    input="Write a short welcome message.",
+    extra_headers={
+        "x-litellm-customer-org-alias": "Acme",
+        "x-litellm-customer-member-id": "acme-alice",
+    },
 )
-
-print(completion.choices[0].message.content)
+print(response.output_text)
 ```
 
 </TabItem>
-<TabItem value="javascript" label="OpenAI JavaScript (Chat)">
+<TabItem value="javascript" label="OpenAI JavaScript">
 
-Run `npm install openai` in your application project. Save this as `customer-request.mjs`, then run `node customer-request.mjs` in the terminal where you exported the variables above.
+Run `npm install openai` in your application project. Save this as `customer-request.mjs`, then run `node customer-request.mjs` in the same terminal environment.
 
 ```javascript title="customer-request.mjs"
 import OpenAI from "openai";
@@ -258,298 +240,374 @@ const client = new OpenAI({
   apiKey: process.env.LITELLM_CUSTOMER_KEY,
   baseURL: `${process.env.LITELLM_BASE_URL.replace(/\/$/, "")}/v1`,
 });
-
-const completion = await client.chat.completions.create({
-  model: process.env.LITELLM_MODEL,
-  messages: [{ role: "user", content: "Write a short welcome message." }],
-  metadata: { customer_member_id: "acme-alice" },
-});
-
-console.log(completion.choices[0].message.content);
-```
-
-</TabItem>
-<TabItem value="responses" label="OpenAI Responses">
-
-Run `uv add openai` in your application project. Save this as `customer_response.py`, then run `uv run python customer_response.py` in the terminal where you exported the variables above. Use `extra_body` to send LiteLLM's `litellm_metadata` field.
-
-```python title="customer_response.py"
-import os
-
-from openai import OpenAI
-
-client = OpenAI(
-    api_key=os.environ["LITELLM_CUSTOMER_KEY"],
-    base_url=f"{os.environ['LITELLM_BASE_URL'].rstrip('/')}/v1",
-)
-
-response = client.responses.create(
-    model=os.environ["LITELLM_MODEL"],
-    input="Write a short welcome message.",
-    extra_body={"litellm_metadata": {"customer_member_id": "acme-alice"}},
-)
-
-print(response.output_text)
-```
-
-</TabItem>
-<TabItem value="anthropic" label="Anthropic messages">
-
-Use a model alias that supports your gateway's Anthropic Messages endpoint.
-
-```bash title="POST /v1/messages"
-curl --fail-with-body --silent --show-error \
-  "$LITELLM_BASE_URL/v1/messages" \
-  -H "Authorization: Bearer $LITELLM_CUSTOMER_KEY" \
-  -H "Content-Type: application/json" \
-  -H "anthropic-version: 2023-06-01" \
-  --data-binary @- <<JSON
-{
-  "model": "$LITELLM_MODEL",
-  "max_tokens": 128,
-  "messages": [{"role": "user", "content": "Write a short welcome message."}],
-  "litellm_metadata": {
-    "customer_member_id": "acme-alice"
-  }
-}
-JSON
+const response = await client.responses.create(
+  {
+    model: process.env.LITELLM_MODEL,
+    input: "Write a short welcome message.",
+  },
+  {
+    headers: {
+      "x-litellm-customer-org-alias": "Acme",
+      "x-litellm-customer-member-id": "acme-alice",
+    },
+  },
+);
+console.log(response.output_text);
 ```
 
 </TabItem>
 </Tabs>
 
-LiteLLM looks up `acme-alice`, follows `parent_team_id` to `acme-support`, then follows `parent_org_id` to `acme`. It attributes the request to all three records and checks that Acme matches the key's organization binding. Conflicting IDs or a member from another organization cause an error before the provider call.
+### Chat Completions and Anthropic Messages
 
-The resolved identity for this request is:
+Keep the same headers and use the endpoint's normal body. `metadata.customer_member_id` and `litellm_metadata.customer_member_id` support a separate attribution path; sending those fields alone does not enter the header-based hierarchy budget checks.
 
-```json title="Resolved attribution (not an extra request field)"
+<Tabs>
+<TabItem value="chat" label="Chat Completions" default>
+
+```bash
+jq -n --arg model "$LITELLM_MODEL" '{
+  model: $model,
+  messages: [{role: "user", content: "Write a short welcome message."}]
+}' | curl --fail-with-body --silent --show-error \
+  "$LITELLM_BASE_URL/v1/chat/completions" \
+  -H "Authorization: Bearer $LITELLM_CUSTOMER_KEY" \
+  -H "Content-Type: application/json" \
+  -H "x-litellm-customer-org-alias: Acme" \
+  -H "x-litellm-customer-member-id: acme-alice" \
+  --data-binary @- | jq
+```
+
+</TabItem>
+<TabItem value="messages" label="Anthropic Messages">
+
+Use a model alias that supports the Anthropic Messages endpoint.
+
+```bash
+jq -n --arg model "$LITELLM_MODEL" '{
+  model: $model,
+  max_tokens: 128,
+  messages: [{role: "user", content: "Write a short welcome message."}]
+}' | curl --fail-with-body --silent --show-error \
+  "$LITELLM_BASE_URL/v1/messages" \
+  -H "Authorization: Bearer $LITELLM_CUSTOMER_KEY" \
+  -H "Content-Type: application/json" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "x-litellm-customer-org-alias: Acme" \
+  -H "x-litellm-customer-member-id: acme-alice" \
+  --data-binary @- | jq
+```
+
+</TabItem>
+</Tabs>
+
+## 3. Verify the budget check
+
+Use a separate test customer so you can check rejection without changing Acme's budget or model configuration. The admin key below stays on your server and can address this test customer without the Acme application's key binding.
+
+```bash title="Create a zero-cap test customer"
+curl --fail-with-body --silent --show-error \
+  "$LITELLM_BASE_URL/management/v1/customer_organizations" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "customer_org_id":"org-budget-check",
+    "alias":"Budget check",
+    "budget":{"max_budget":0}
+  }' | jq
+```
+
+Send a request with the test customer's alias. The model must be an alias your key can use, so a model-access failure cannot mask the budget result.
+
+```bash title="Expect HTTP 422 before a provider request"
+jq -n --arg model "$LITELLM_MODEL" '{model:$model,input:"Budget check"}' \
+  | curl --silent --show-error \
+    "$LITELLM_BASE_URL/v1/responses" \
+    -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+    -H "Content-Type: application/json" \
+    -H "x-litellm-customer-org-alias: Budget check" \
+    --write-out '\nHTTP %{http_code}\n' \
+    --data-binary @-
+```
+
+Expect HTTP `422` and a budget error naming `customer_org=org-budget-check`. A deployment can customize the budget error status. This request should not reach the provider.
+
+To test admission after the budget changes, set the test cap to a positive value, rerun the request, then restore `0`. A successful request can incur provider cost.
+
+```bash title="Change the test cap; restore it after the check"
+curl --fail-with-body --silent --show-error --request PATCH \
+  "$LITELLM_BASE_URL/management/v1/customer_organizations/org-budget-check" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{"budget":{"max_budget":1}}' | jq
+
+# Rerun the Responses request above, then restore the test cap.
+curl --fail-with-body --silent --show-error --request PATCH \
+  "$LITELLM_BASE_URL/management/v1/customer_organizations/org-budget-check" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{"budget":{"max_budget":0}}' | jq
+```
+
+Organization, team, and member caps apply to their own recorded spend. The first exhausted scope rejects the request. Main can read stale cached spend until refresh; #51568 adds shared spend counters and reseeding. Verify that change in your deployment before relying on prompt cross-worker rejection after a paid request.
+
+## 4. Fetch costs and usage for chargebacks
+
+Use the organization aggregated endpoint for complete totals over a date range. It returns spend, tokens, and requests for up to 100 customer organization IDs in one response, with no raw-row pagination.
+
+```bash title="GET complete organization usage"
+curl --fail-with-body --silent --show-error --get \
+  "$LITELLM_BASE_URL/management/v1/customer_organizations/daily/activity/aggregated" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  --data-urlencode "customer_org_ids=org-acme" \
+  --data-urlencode "start_date=$START_DATE" \
+  --data-urlencode "end_date=$END_DATE" | jq
+```
+
+Dates are inclusive UTC days. The maximum difference between start and end is 400 days. Read the top-level totals for your product:
+
+```json title="Illustrative response excerpt"
 {
-  "customer_org_id": "acme",
-  "customer_team_id": "acme-support",
-  "customer_member_id": "acme-alice"
+  "metadata": {
+    "total_spend": 0.14,
+    "total_tokens": 3000,
+    "total_api_requests": 3
+  }
 }
 ```
 
-If your application already has all three IDs, you can include them together in `metadata` for Chat Completions or `litellm_metadata` for Responses and Anthropic requests. LiteLLM checks that the IDs belong to the same hierarchy.
+`total_spend` is recorded cost in USD. Use it as input to your own pricing and chargeback calculation. LiteLLM does not create invoices, collect payment, or apply your product's markup through this API. The aggregated endpoint's key breakdown shows the top key; the totals include all keys.
 
-Use the customer identity fields above for this hierarchy. The OpenAI `user` field and the `x-litellm-customer-id` header identify the separate [customer/end-user tracker](../customers.md).
+### Fetch team and member usage
 
-### Resolve the hierarchy from a member ID
-
-Your backend can follow the same relationships through the read APIs:
-
-```bash title="Resolve Alice → Support → Acme"
-MEMBER="$(curl --fail-with-body --silent --show-error \
-  "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
-  -H "Authorization: Bearer $LITELLM_ADMIN_KEY")"
-TEAM_ID="$(printf '%s' "$MEMBER" | jq -er '.parent_team_id')"
-
-TEAM="$(curl --fail-with-body --silent --show-error \
-  "$LITELLM_BASE_URL/management/v1/customer_teams/$TEAM_ID" \
-  -H "Authorization: Bearer $LITELLM_ADMIN_KEY")"
-ORG_ID="$(printf '%s' "$TEAM" | jq -er '.parent_org_id')"
-
-curl --fail-with-body --silent --show-error \
-  "$LITELLM_BASE_URL/management/v1/customer_organizations/$ORG_ID" \
-  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" | jq
-```
-
-For these sample IDs, `TEAM_ID` is `acme-support` and `ORG_ID` is `acme`. URL-encode IDs that contain reserved characters when constructing paths in your application.
-
-## 3. Fetch usage for your product
-
-Fetch spend in USD, token counts, and request counts for an inclusive UTC date range. The APIs return daily metrics and breakdowns by model, provider, API key, and the customer entity you queried.
-
-Choose dates that include your requests. These example dates cover November 2026:
-
-```bash
-export START_DATE="2026-11-01"
-export END_DATE="2026-11-30"
-```
-
-| Scope | Endpoint | ID filter |
-| --- | --- | --- |
-| Customer organization | `GET /management/v1/customer_organizations/daily/activity` | `customer_org_ids` |
-| Customer team | `GET /management/v1/customer_teams/daily/activity` | `customer_team_ids` |
-| Customer member | `GET /management/v1/customer_members/daily/activity` | `customer_member_ids` |
-
-```bash title="Fetch organization, team, and member usage"
-curl --fail-with-body --silent --show-error --get \
-  "$LITELLM_BASE_URL/management/v1/customer_organizations/daily/activity" \
-  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
-  --data-urlencode "customer_org_ids=acme" \
-  --data-urlencode "start_date=$START_DATE" \
-  --data-urlencode "end_date=$END_DATE" \
-  --data-urlencode "page=1" --data-urlencode "page_size=100" | jq
-
+```bash title="Support team usage"
 curl --fail-with-body --silent --show-error --get \
   "$LITELLM_BASE_URL/management/v1/customer_teams/daily/activity" \
   -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
   --data-urlencode "customer_team_ids=acme-support" \
   --data-urlencode "start_date=$START_DATE" \
   --data-urlencode "end_date=$END_DATE" \
-  --data-urlencode "page=1" --data-urlencode "page_size=100" | jq
+  --data-urlencode "page_size=100" | jq
+```
 
+```bash title="Alice's usage"
 curl --fail-with-body --silent --show-error --get \
   "$LITELLM_BASE_URL/management/v1/customer_members/daily/activity" \
   -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
   --data-urlencode "customer_member_ids=acme-alice" \
   --data-urlencode "start_date=$START_DATE" \
   --data-urlencode "end_date=$END_DATE" \
-  --data-urlencode "page=1" --data-urlencode "page_size=100" | jq
+  --data-urlencode "page_size=100" | jq
 ```
 
-Each ID filter accepts a comma-separated list. You can also filter by `model` or `api_key`, or omit the ID filter to fetch activity across customers as a proxy admin. Your backend should choose the IDs that the signed-in customer can access.
+These two APIs paginate stored usage rows. Follow `metadata.has_more`, increment `page`, sum each page's totals once, and merge dates that occur on several pages. A single page is not a complete billing-period total. Organization, team, and member totals overlap, so do not add them together.
 
-Example member response excerpt with sample data:
+### Fetch every usage page
 
-```json title="Usage response excerpt (sample data)"
-{
-  "results": [{
-    "date": "2026-11-12",
-    "metrics": {
-      "spend": 0.14,
-      "prompt_tokens": 100,
-      "completion_tokens": 20,
-      "total_tokens": 120,
-      "api_requests": 1
-    }
-  }],
-  "metadata": {
-    "total_spend": 0.14,
-    "total_tokens": 120,
-    "total_api_requests": 1,
-    "page": 1,
-    "total_pages": 1,
-    "has_more": false
-  }
-}
+Use this helper on your backend to retrieve complete team or member totals. It follows every page and parses cost as `Decimal` before summing. For daily charts, merge each page's `results` by date as well; the totals below do not build a daily breakdown.
+
+```bash
+python -m pip install httpx pydantic
 ```
 
-The same request contributes to its member, team, and organization totals. Display each scope as a view of that usage; adding the three totals would count the request three times.
-
-### Read every page
-
-Continue until `metadata.has_more` is `false`. The `metadata.total_*` fields cover the current page. Sum each page once for a range total. A date can appear on multiple pages because LiteLLM paginates stored usage rows before grouping them by day; merge matching dates when you build a chart.
-
-For example, your backend can fetch an organization's range totals with Python and `httpx`. Run `uv add httpx` in your backend project, then save this as `customer_usage.py`:
-
-```python title="customer_usage.py"
+```python title="Complete team and member usage totals"
 import json
 import os
 from decimal import Decimal
+from typing import Literal
 
 import httpx
+from pydantic import BaseModel, ConfigDict
 
 
-def organization_usage(
-    client: httpx.Client, organization_id: str, start_date: str, end_date: str
-) -> dict[str, str | int]:
-    spend = Decimal("0")
-    tokens = 0
-    requests = 0
+class UsageTotals(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    total_spend: Decimal
+    total_tokens: int
+    total_api_requests: int
+
+
+class PageMetadata(UsageTotals):
+    page: int
+    has_more: bool
+
+
+class UsagePage(BaseModel):
+    metadata: PageMetadata
+
+
+def fetch_usage_totals(
+    client: httpx.Client,
+    resource: Literal["customer_teams", "customer_members"],
+    customer_id: str,
+) -> UsageTotals:
+    id_filter = "customer_team_ids" if resource == "customer_teams" else "customer_member_ids"
+    totals = UsageTotals(total_spend=Decimal("0"), total_tokens=0, total_api_requests=0)
     page = 1
     while True:
         response = client.get(
-            "/management/v1/customer_organizations/daily/activity",
+            f"/management/v1/{resource}/daily/activity",
             params={
-                "customer_org_ids": organization_id,
-                "start_date": start_date,
-                "end_date": end_date,
+                id_filter: customer_id,
+                "start_date": os.environ["START_DATE"],
+                "end_date": os.environ["END_DATE"],
                 "page": page,
                 "page_size": 100,
             },
         )
         response.raise_for_status()
-        metadata = response.json()["metadata"]
-        spend += Decimal(str(metadata["total_spend"]))
-        tokens += metadata["total_tokens"]
-        requests += metadata["total_api_requests"]
-        if not metadata["has_more"]:
-            return {"spend_usd": str(spend), "tokens": tokens, "requests": requests}
+        payload: object = json.loads(response.text, parse_float=Decimal)
+        metadata = UsagePage.model_validate(payload).metadata
+        if metadata.page != page:
+            raise ValueError("The usage response did not match the requested page")
+        totals = UsageTotals(
+            total_spend=totals.total_spend + metadata.total_spend,
+            total_tokens=totals.total_tokens + metadata.total_tokens,
+            total_api_requests=totals.total_api_requests + metadata.total_api_requests,
+        )
+        if not metadata.has_more:
+            return totals
         page += 1
 
 
-if __name__ == "__main__":
-    with httpx.Client(
-        base_url=os.environ["LITELLM_BASE_URL"],
-        headers={"Authorization": f"Bearer {os.environ['LITELLM_ADMIN_KEY']}"},
-        timeout=30,
-    ) as client:
-        summary = organization_usage(
-            client, "acme", os.environ["START_DATE"], os.environ["END_DATE"]
-        )
-        print(json.dumps(summary))
+with httpx.Client(
+    base_url=os.environ["LITELLM_BASE_URL"],
+    headers={"Authorization": f"Bearer {os.environ['LITELLM_ADMIN_KEY']}"},
+    timeout=30,
+) as client:
+    team = fetch_usage_totals(client, "customer_teams", "acme-support")
+    member = fetch_usage_totals(client, "customer_members", "acme-alice")
+    print("Support:", team.model_dump_json())
+    print("Alice:", member.model_dump_json())
 ```
 
-Run `uv run python customer_usage.py` from that project. In your product, derive `organization_id` from the authenticated customer's account and return the usage summary from your backend.
+Accounting runs in the background. After a successful request, allow time for it to finish and check the UTC date range. Zero-cost models can produce request and token counts with $0 spend.
 
-## 4. Fetch configured caps
+## 5. Show budgets alongside usage
 
-Use the resource APIs to read budget settings alongside usage. Each response also includes recorded `spend` and `budget_reset_at`.
+Fetch the resource's running budget counter and configured cap separately from date-range usage:
 
-| Scope | Endpoint | Settings field |
+| Scope | Resource read | Budget field |
 | --- | --- | --- |
-| Organization | `GET /management/v1/customer_organizations/{customer_org_id}` | `budget` |
-| Team | `GET /management/v1/customer_teams/{customer_team_id}` | `budget` |
-| Member | `GET /management/v1/customer_members/{customer_member_id}` | `effective_budget` |
+| Acme | `GET /management/v1/customer_organizations/org-acme` | `budget` |
+| Support | `GET /management/v1/customer_teams/acme-support` | `budget` |
+| Alice | `GET /management/v1/customer_members/acme-alice` | `effective_budget` |
 
-```bash title="Read Alice's configured caps"
+```bash title="Alice's current budget settings"
 curl --fail-with-body --silent --show-error \
   "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
   -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
   | jq '{customer_member_id, parent_team_id, spend, budget_reset_at, effective_budget}'
 ```
 
-Read `max_budget` for the USD cap, `rpm_limit` for requests per minute, `tpm_limit` for tokens per minute, `allowed_models` for the model list, and `budget_duration` for the configured duration. A null field has no value at that level. Use the member's `effective_budget` to include inherited template values and active overrides.
+Read `effective_budget.max_budget`, `rpm_limit`, and `tpm_limit` for Alice's current settings. LiteLLM combines her selected template with active overrides and drops an override's effect after `budget_override_expires_at`. Read `budget_reset_at` for the next recorded reset. Use date-range usage for historical cost; budget resets can make it differ from the running `spend` counter.
 
-:::note[Configured caps and enforcement]
+To resolve an existing member's organization, retrieve the member's `parent_team_id`, then retrieve that team and read `parent_org_id`. To list a customer's teams or members, use the [parent filters](./api_reference.md#list-pagination).
 
-The customer hierarchy APIs store and return these settings. This preview does not enforce the customer hierarchy's spending or rate caps on inference requests. Use [virtual-key budgets](../virtual_keys.md) and [team budgets](../team_budgets.md) for request enforcement. Return the recorded `spend` and `budget_reset_at` as supplied; use the daily activity APIs for usage in a selected date range.
-
-:::
-
-### List customers and their caps
-
-Use the collection endpoints to populate customer, team, and member tables in your product:
-
-```bash title="List Acme's teams and Support's members"
-curl --fail-with-body --silent --show-error --get \
-  "$LITELLM_BASE_URL/management/v1/customer_teams" \
-  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
-  --data-urlencode "parent_org_id=acme" \
-  --data-urlencode "page=1" --data-urlencode "page_size=100" | jq
-
-curl --fail-with-body --silent --show-error --get \
-  "$LITELLM_BASE_URL/management/v1/customer_members" \
-  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
-  --data-urlencode "parent_team_id=acme-support" \
-  --data-urlencode "page=1" --data-urlencode "page_size=100" | jq
-```
-
-Call `GET /management/v1/customer_organizations` to list customer organizations. Collection responses use `data`, `meta`, and `links`, with `meta.total_pages` and a maximum `page_size` of 100. Usage responses use `results` and `metadata`; keep the pagination logic for each response format separate.
-
-## 5. Check the result in Customer Portal
-
-Open `/ui/customers/usage/?org=acme` on your gateway and choose a date range that includes your requests. Review spend, requests, and tokens, then choose **Teams** in **Break down by**. Select **Support**, then a member, to inspect that member's usage and configured caps.
-
-Add `&team=acme-support&member=acme-alice` to the URL to open Alice's view. Link to this route from your admin tools after you create the organization.
+Open **Customer Portal → Customers**, select **Acme**, and use **Select Time Range** to include your requests. Check **Spend**, **Total Requests**, and **Total Tokens**. Choose **Teams** in **Break down by** to inspect Support. You can also open `/ui/customers/usage/?org=org-acme`; add `&team=acme-support&member=acme-alice` for Alice's view.
 
 ![Customer Portal member spend table showing Alice and Bob, their token usage, and their configured dollar caps](../../../static/img/customer_portal/member-caps.png)
 
-*Member spend and configured caps in the usage components, with seeded sample API responses.*
+*Seeded UI preview. The table compares selected-range usage with each member's recorded budget spend and cap.*
 
-LiteLLM writes accounting data in the background. If you see no usage after a successful request, allow the accounting writes to finish, check the date filter, and confirm that the request included the member metadata and used the customer-bound key. A zero-cost or mocked model can report tokens and requests with $0 spend.
+## 6. Debug a request in spend logs
+
+Extract the LiteLLM call ID from the headers saved in step 2:
+
+```bash
+LITELLM_CALL_ID="$(
+  awk 'tolower($1)=="x-litellm-call-id:" {gsub("\r", "", $2); print $2}' \
+    "$LITELLM_RESPONSE_HEADERS"
+)"
+export LITELLM_CALL_ID
+```
+
+Fetch the request's cost, status, and saved customer hierarchy. The identity fields below require [#51596](https://github.com/BerriAI/litellm/pull/51596). The public log API requires a date range even when you pass a request ID:
+
+```bash title="GET /spend/logs/v2"
+curl --fail-with-body --silent --show-error --get \
+  "$LITELLM_BASE_URL/spend/logs/v2" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  --data-urlencode "request_id=$LITELLM_CALL_ID" \
+  --data-urlencode "start_date=$START_DATE 00:00:00" \
+  --data-urlencode "end_date=$END_DATE 23:59:59" \
+  | jq '.data[]
+    | {request_id, litellm_call_id, model, spend, total_tokens,
+       status: .metadata.status,
+       customer_identity: (.metadata | {
+         user_api_key_customer_member_id,
+         user_api_key_customer_member_alias,
+         user_api_key_customer_team_id,
+         user_api_key_customer_team_alias,
+         user_api_key_customer_org_id,
+         user_api_key_customer_org_alias
+       })}'
+```
+
+Verify `user_api_key_customer_member_id: "acme-alice"`, `user_api_key_customer_team_id: "acme-support"`, and `user_api_key_customer_org_id: "org-acme"`. These saved fields show the hierarchy resolved for the request. Compare its cost and status with the usage date range.
+
+The log API has no customer organization, team, or member filter. `user_id`, `team_id`, and `end_user` filters refer to separate LiteLLM entities. Use the saved call ID to locate this request; use the customer usage APIs for customer totals.
+
+## 7. Receive budget events (preview)
+
+This setup requires [#51579](https://github.com/BerriAI/litellm/pull/51579). The configuration and payload below were verified against commit `1d3b7154b9`; they are not available on main without that change.
+
+Add the callback to your gateway configuration and restart the gateway:
+
+```yaml title="config.yaml, additions to your existing configuration"
+litellm_settings:
+  callbacks: [customer_budget_webhook]
+
+callback_settings:
+  customer_budget_webhook:
+    endpoint: https://billing.example.com/litellm/customer-budget
+    headers:
+      X-Source: litellm
+```
+
+Merge these entries with existing `litellm_settings` and `callback_settings`. For endpoint and authentication headers supplied through your secret store, use `CUSTOMER_BUDGET_WEBHOOK_URL` and `CUSTOMER_BUDGET_WEBHOOK_HEADERS` instead; the [API reference](./api_reference.md#customer-budget-events-preview) describes their precedence.
+
+After a positive spend update commits, LiteLLM checks each affected organization, team, and member. A recorded spend at or above `soft_budget` produces `soft_budget_crossed`; a spend at or above `max_budget` produces `budget_crossed`. One update can produce both events at several levels. Free requests and requests rejected before inference do not produce a customer budget spend event.
+
+For Alice's $40 soft threshold, your endpoint receives a JSON object like this:
+
+```json title="POST to your customer budget webhook"
+{
+  "event": "soft_budget_crossed",
+  "scope": "customer_member",
+  "entity_id": "acme-alice",
+  "customer_org_id": "org-acme",
+  "customer_org_alias": "Acme",
+  "customer_team_id": "acme-support",
+  "customer_team_alias": "Support",
+  "customer_member_id": "acme-alice",
+  "customer_member_alias": "Alice",
+  "spend": 41.25,
+  "budget": 40,
+  "period": "2026-12-01T00:00:00+00:00",
+  "timestamp": "2026-11-13T12:00:00Z"
+}
+```
+
+`budget` is the threshold that triggered this event. `period` is the recorded next reset timestamp, or `"lifetime"` when none is recorded. Your receiver can route the event using `customer_org_id`, then update the balance shown in your product.
+
+Return a successful `2xx` response within the 10-second timeout. Delivery is best effort: a cache claim suppresses the same event, scope, entity, and period for 24 hours, including after a failed delivery. Cross-worker deduplication needs shared Redis; a local fallback can produce duplicates. The HTTP client retries a connection error once, but there is no durable queue or retry schedule for timeouts or unsuccessful HTTP responses. This preview also reads customer spend through the configured database reader, so replica lag can miss a threshold event. Reconcile through the usage APIs so your product can recover missed events.
+
+## Fail-open handling (pending)
+
+Fail-open identity handling remains under review in [#51604](https://github.com/BerriAI/litellm/pull/51604). Main rejects identities it cannot resolve or register, and identities that conflict. A validated configuration that preserves asserted customer IDs in logs is required before this guide can provide a copyable setup.
 
 ## Troubleshooting
 
-| Response | Action |
+| Result | Check |
 | --- | --- |
-| `404` for the route | Check that your gateway includes the preview hierarchy and usage APIs. |
-| `403` on a management or usage API | Use a `proxy_admin` credential. A customer-bound inference key cannot read these endpoints. |
-| `409` when importing | Fetch the existing ID. Use `PATCH` to change the record. |
-| `422` when creating a member | Supply an organization default template, a valid `budget_template_id`, or `budget_override`. |
-| `400` or `403` on an attributed request | Check the member's parent team and organization, then compare them with the key's `metadata.customer_org_id`. |
-| `503` on an attributed request | Check the database connection and `general_settings.use_spend_logs_ledger`. |
+| `409` during import | Retrieve the existing ID, verify its parent, then patch mutable fields. |
+| `422` during member creation | Use `budget_id`, not `budget_template_id`. Supply a template or an override if the organization has no default template. |
+| `401` on inference | Check the organization alias and member ID. An unknown member needs an organization alias and default member template for registration. |
+| `403` on inference | Compare the member's organization with the alias and the key's `metadata.customer_org_id`. |
+| Budget `422` | Read organization, team, and member spend and caps. Check the first exhausted scope. |
+| `429` | Read the scope's RPM and TPM limits, including model-specific limits. |
+| No usage yet | Check accounting completion, UTC dates, customer headers, and the selected IDs. |
+| Missing customer IDs in logs | Check whether your build includes #51596. |
 
-After importing Acme, repeat the parent-first creation sequence for your other customers. Bind each customer's inference key to its organization and serve usage and cap data through your backend.
+Use the [API reference](./api_reference.md) to add more customers, change member templates, or fetch usage and caps for your own product.

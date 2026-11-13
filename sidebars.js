@@ -660,7 +660,10 @@ const sidebars = {
             {
               type: "category",
               label: "Customer Portal",
-              items: ["proxy/customer_portal/api_reference_guide"],
+              items: [
+                "proxy/customer_portal/api_reference_guide",
+                "proxy/customer_portal/api_reference",
+              ],
             },
             "proxy/model_cost_map",
             "proxy/request_tags",
