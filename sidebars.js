@@ -661,7 +661,7 @@ const sidebars = {
               type: "category",
               label: "Customer Portal",
               items: [
-                "proxy/customer_portal/api_reference_guide",
+                "proxy/customer_portal/track-customer-spend",
                 "proxy/customer_portal/api_reference",
               ],
             },

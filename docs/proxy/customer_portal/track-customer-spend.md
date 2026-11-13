@@ -8,7 +8,7 @@ description: Import customers, pass their identity with LLM requests, and fetch 
 
 Use one application API key for your customers. Pass the customer's organization alias and member ID with each request. LiteLLM resolves the member's team and organization, checks their budgets, and records spend, tokens, and requests at all three levels.
 
-This guide imports Acme, its Support team, and two members. You then send an LLM request for Alice and fetch usage and budgets to display in your product.
+Set up budget notifications, then import Acme, its Support team, and two members. Send a request for Alice and fetch usage and budgets to display in your product.
 
 ![Customer Portal usage for Acme, with $0.14 spend, one request, and 120 tokens](../../../static/img/customer_portal/usage-overview.jpg)
 
@@ -34,14 +34,55 @@ Make these values available in your application's environment and the terminal w
 
 Keep keys on your server. Your backend authenticates the customer and selects the identity headers from that customer's session before it calls LiteLLM. It also authorizes customer access before it returns usage to your product.
 
-Keep the spend accounting ledger enabled in the gateway configuration:
+## 1. Set up budget webhooks
 
-```yaml title="config.yaml, addition to your existing configuration"
+Use a build containing [customer budget webhook support](https://github.com/BerriAI/litellm/pull/51579) and the [customer budget alert fix](https://github.com/BerriAI/litellm/pull/51645). The alert fix is pending; the recurring-budget and member events below require it. Prepare a POST endpoint in your product that accepts JSON and returns a successful `2xx` response within 10 seconds. The gateway must be able to reach it.
+
+Replace the example endpoint below with your receiver URL. Add this configuration before importing customers or sending requests, then restart the gateway:
+
+```yaml title="config.yaml, additions to your existing configuration"
 general_settings:
   use_spend_logs_ledger: true
+
+litellm_settings:
+  callbacks: [customer_budget_webhook]
+
+callback_settings:
+  customer_budget_webhook:
+    endpoint: https://billing.example.com/litellm/customer-budget
+    headers:
+      X-Source: litellm
 ```
 
-## 1. Import a customer
+Merge these entries with your existing configuration. If you already have callbacks, add `customer_budget_webhook` to that list. For values supplied through your secret store, use `CUSTOMER_BUDGET_WEBHOOK_URL` and `CUSTOMER_BUDGET_WEBHOOK_HEADERS`; see [configuration precedence](./api_reference.md#customer-budget-events).
+
+After a positive spend update commits, LiteLLM checks the affected organization, team, and member. Spend at or above `soft_budget` produces `soft_budget_crossed`; spend at or above `max_budget` produces `budget_crossed`. One update can produce both events at several levels. Free requests and requests rejected before inference do not produce a customer budget spend event.
+
+```json title="Example event for Alice's $40 soft threshold"
+{
+  "event": "soft_budget_crossed",
+  "scope": "customer_member",
+  "entity_id": "acme-alice",
+  "customer_org_id": "org-acme",
+  "customer_org_alias": "Acme",
+  "customer_team_id": null,
+  "customer_team_alias": null,
+  "customer_member_id": "acme-alice",
+  "customer_member_alias": "Alice",
+  "spend": 41.25,
+  "budget": 40,
+  "period": "2026-12-13T12:00:00+00:00",
+  "timestamp": "2026-11-13T12:00:00Z"
+}
+```
+
+`budget` is the triggering threshold. `period` is the recorded next reset timestamp, or `"lifetime"` if no reset is recorded. Route the event with `customer_org_id` to update the customer's balance in your product. A member budget covers that member across teams, so member events contain the organization and member IDs; the team fields are `null`.
+
+Return a successful `2xx` response within 10 seconds. Delivery is best effort: a cache claim suppresses the same event, scope, entity, and period until the budget reset, including after failure. Lifetime budgets use a long-lived claim. Cross-worker deduplication needs shared Redis; a local fallback can produce duplicates. The HTTP client retries a connection error once, but there is no durable retry queue or schedule for timeouts or unsuccessful HTTP responses. Reconcile through the usage APIs to recover missed events.
+
+Verify delivery in [step 4](#4-check-budgets-and-webhook-delivery), after the customer and SDK examples are ready.
+
+## 2. Import a customer
 
 Create the organization first, then its team and members. Use IDs from your application, or save the IDs LiteLLM returns when you omit them.
 
@@ -74,7 +115,7 @@ curl --request POST "$LITELLM_BASE_URL/management/v1/customer_organizations" \
   }'
 ```
 
-Expect `201 Created`. A soft budget is a notification threshold and does not block requests. [Webhook delivery](#7-receive-budget-events-preview) requires the customer budget callback.
+Expect `201 Created`. A soft budget is a notification threshold and does not block requests. [Webhook delivery](#1-set-up-budget-webhooks) requires the customer budget callback.
 
 ### Create the team
 
@@ -158,7 +199,7 @@ curl --request PATCH "$LITELLM_BASE_URL/management/v1/customer_members/acme-alic
 
 Use the same create, retrieve, and update flow for organizations and teams. Native upserts and automatic organization creation remain under review in [#51607](https://github.com/BerriAI/litellm/pull/51607).
 
-## 2. Send a request for Alice
+## 3. Send a request for Alice
 
 Use your existing application key and pass Alice's identity in request headers:
 
@@ -229,7 +270,7 @@ An existing member ID can resolve its parents without the organization header. W
 
 With [#51617](https://github.com/BerriAI/litellm/pull/51617), replace the member-ID header with `x-litellm-customer-member-email: alice@acme.example`; keep the organization alias header. An email string in the member-ID header is an ID, not an email lookup.
 
-## 3. Check budget enforcement
+## 4. Check budgets and webhook delivery
 
 Create a separate customer with a zero budget to check rejection without changing Acme's settings:
 
@@ -246,35 +287,55 @@ curl --request POST "$LITELLM_BASE_URL/management/v1/customer_organizations" \
   }'
 ```
 
-Use the `client` from step 2 with the same application key and model, and this customer's alias:
+Use the `client` from step 3 with the same application key and model, and this customer's alias:
 
 ```python
 from openai import APIStatusError
 
 try:
-    client.responses.create(
+    response = client.responses.create(
         model=os.environ["LITELLM_MODEL"],
         input="Budget check",
+        max_output_tokens=128,
         extra_headers={"x-litellm-customer-org-alias": "Budget check"},
     )
+    print("Request succeeded:", response.id)
 except APIStatusError as error:
     print(error.status_code)
 ```
 
 Expect `422` and a budget error naming `customer_org=org-budget-check`, before a provider request. A deployment can customize the budget error status.
 
-To check admission after changing the budget, set the test cap to $1, rerun that SDK call, then restore the cap to zero. A successful request can incur provider cost.
+Use a positive-cost model to test the webhook. Set the test cap to $1 and the soft threshold to $0, then rerun the same SDK call. The request succeeds and incurs the model's normal cost. Zero-cost requests do not produce a spend event.
 
-```bash title="Set the test cap to $1"
+```bash title="Allow the test request and trigger a soft-budget alert"
 curl --request PATCH "$LITELLM_BASE_URL/management/v1/customer_organizations/org-budget-check" \
   --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
   --header "Content-Type: application/json" \
   --data '{
     "budget": {
-      "max_budget": 1
+      "max_budget": 1,
+      "soft_budget": 0
     }
   }'
 ```
+
+After accounting commits the request's cost, check your webhook receiver for `soft_budget_crossed`, with `scope: "customer_org"` and `entity_id: "org-budget-check"`. The event's `budget` is `0` and its `spend` is greater than `0`. The earlier rejected request does not generate this event.
+
+```json title="Expected webhook excerpt, using the local demo cost"
+{
+  "event": "soft_budget_crossed",
+  "scope": "customer_org",
+  "entity_id": "org-budget-check",
+  "customer_org_id": "org-budget-check",
+  "spend": 0.14,
+  "budget": 0
+}
+```
+
+If the event does not arrive, confirm that the callback is enabled, the gateway can reach your endpoint, and accounting has recorded positive spend. Check gateway logs for delivery errors. Use a fresh test organization ID and alias when repeating this test: duplicate events remain suppressed for the budget period, including after a failed delivery.
+
+Restore the test customer's zero cap and remove its soft threshold:
 
 ```bash title="Restore the test cap after the check"
 curl --request PATCH "$LITELLM_BASE_URL/management/v1/customer_organizations/org-budget-check" \
@@ -282,14 +343,15 @@ curl --request PATCH "$LITELLM_BASE_URL/management/v1/customer_organizations/org
   --header "Content-Type: application/json" \
   --data '{
     "budget": {
-      "max_budget": 0
+      "max_budget": 0,
+      "soft_budget": null
     }
   }'
 ```
 
 The first exhausted scope rejects a request: organization, then team, then member. Fresh customer spend counters across workers require [#51568](https://github.com/BerriAI/litellm/pull/51568). Without that change, admission can use cached spend until refresh. Allow for requests already in flight and background accounting when you show balances.
 
-## 4. Fetch usage for your product
+## 5. Fetch usage for your product
 
 The organization aggregated endpoint returns complete spend, token, and request totals for the date range, without pagination. It accepts up to 100 customer organization IDs.
 
@@ -341,7 +403,7 @@ These endpoints paginate stored rows. Follow `metadata.has_more` and increment `
 
 Accounting runs in the background. If usage has not appeared after a successful request, check accounting completion, the UTC dates, and the identity headers. Zero-cost models can report requests and tokens with $0 spend.
 
-## 5. Fetch budgets and caps
+## 6. Fetch budgets and caps
 
 Retrieve Acme's running budget spend and organization cap:
 
@@ -364,7 +426,7 @@ curl "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
   --header "Authorization: Bearer $LITELLM_ADMIN_KEY"
 ```
 
-Read `budget.max_budget` for an organization or team and `effective_budget.max_budget` for a member. The same objects contain `rpm_limit`, `tpm_limit`, model limits, and allowed models. A member's effective budget combines the selected template with active overrides; an expired override no longer applies.
+Read `budget.max_budget` for an organization and `effective_budget.max_budget` for a team or member. The same objects contain `rpm_limit`, `tpm_limit`, model limits, and allowed models. A team or member's effective budget combines its template with active overrides; an expired override no longer applies.
 
 `spend` is the running budget counter. `budget_reset_at` records the next reset. Use date-range usage for historical costs because a reset changes the counter without erasing historical usage. To resolve a member's parents in your product, read its `parent_org_id` and `parent_team_ids`. The first team is its default team.
 
@@ -374,7 +436,7 @@ Open **Customer Portal → Customers**, select **Acme**, and choose **Select Tim
 
 *Actual customer records and accounting data in the local Customer Portal. Alice's controlled-provider request records $0.14 and 120 tokens.*
 
-## 6. Debug a request in spend logs
+## 7. Debug a request in spend logs
 
 Use the `x-litellm-call-id` printed by the Responses SDK. Make that value available as `LITELLM_CALL_ID` in the environment where you run curl.
 
@@ -410,47 +472,6 @@ Open `/ui/logs/?log_id=<x-litellm-call-id>`. In the request details, check **Cus
 *Actual saved request in the local gateway, using a controlled provider and the accounting ledger. The Customer section requires #51596.*
 
 The log API has no customer organization, team, or member filter. `user_id`, `team_id`, and `end_user` refer to separate LiteLLM entities. Find an individual request by its call ID and use the customer usage APIs for customer totals.
-
-## 7. Receive budget events (preview)
-
-This setup requires [#51579](https://github.com/BerriAI/litellm/pull/51579), verified at commit `a129fa7`. Add the callback and restart the gateway:
-
-```yaml title="config.yaml, additions to your existing configuration"
-litellm_settings:
-  callbacks: [customer_budget_webhook]
-
-callback_settings:
-  customer_budget_webhook:
-    endpoint: https://billing.example.com/litellm/customer-budget
-    headers:
-      X-Source: litellm
-```
-
-Merge these entries with existing callback settings. For values supplied through your secret store, use `CUSTOMER_BUDGET_WEBHOOK_URL` and `CUSTOMER_BUDGET_WEBHOOK_HEADERS`; see [configuration precedence](./api_reference.md#customer-budget-events-preview).
-
-After a positive spend update commits, LiteLLM checks the affected organization, team, and member. Spend at or above `soft_budget` produces `soft_budget_crossed`; spend at or above `max_budget` produces `budget_crossed`. One update can produce both events at several levels. Free requests and requests rejected before inference do not produce a customer budget spend event.
-
-```json title="Example event for Alice's $40 soft threshold"
-{
-  "event": "soft_budget_crossed",
-  "scope": "customer_member",
-  "entity_id": "acme-alice",
-  "customer_org_id": "org-acme",
-  "customer_org_alias": "Acme",
-  "customer_team_id": "acme-support",
-  "customer_team_alias": "Support",
-  "customer_member_id": "acme-alice",
-  "customer_member_alias": "Alice",
-  "spend": 41.25,
-  "budget": 40,
-  "period": "2026-12-13T12:00:00+00:00",
-  "timestamp": "2026-11-13T12:00:00Z"
-}
-```
-
-`budget` is the triggering threshold. `period` is the recorded next reset timestamp, or `"lifetime"` if no reset is recorded. Route the event with `customer_org_id` to update the customer's balance in your product.
-
-Return a successful `2xx` response within 10 seconds. Delivery is best effort: a cache claim suppresses the same event, scope, entity, and period for 24 hours, including after failure. Cross-worker deduplication needs shared Redis; a local fallback can produce duplicates. The HTTP client retries a connection error once, but there is no durable retry queue or schedule for timeouts or unsuccessful HTTP responses. Reconcile through the usage APIs to recover missed events.
 
 ## Fail-open handling (pending)
 
