@@ -657,6 +657,11 @@ const sidebars = {
           label: "Spend Tracking",
           items: [
             "proxy/cost_tracking",
+            {
+              type: "category",
+              label: "Customer Portal",
+              items: ["proxy/customer_portal/api_reference_guide"],
+            },
             "proxy/model_cost_map",
             "proxy/request_tags",
             "proxy/billing",
