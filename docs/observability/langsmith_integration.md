@@ -1,3 +1,8 @@
+---
+title: "LangSmith Tracing for LiteLLM AI Gateway"
+sidebar_label: "LangSmith"
+description: "Send LiteLLM traces to LangSmith from the Python SDK or AI Gateway, set project, run name and tags per request, and tune batch size and base URL."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

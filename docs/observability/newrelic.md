@@ -1,3 +1,8 @@
+---
+title: "New Relic Monitoring for LiteLLM AI Gateway"
+sidebar_label: "New Relic"
+description: "Send LiteLLM AI Gateway LLM events to New Relic with the newrelic callback and Python agent, with message redaction and per-team routing on OTel v2."
+---
 import Image from '@theme/IdealImage';
 
 # New Relic

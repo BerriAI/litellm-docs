@@ -1,3 +1,8 @@
+---
+title: "Scrub PII and Redact Messages in LiteLLM Logs"
+sidebar_label: "Scrub Logged Data"
+description: "Mask PII and redact messages before LiteLLM sends data to logging integrations such as Langfuse, with a custom callback using sync or async hooks."
+---
 # Scrub Logged Data
 
 Redact messages / mask PII before sending data to logging integrations (langfuse/etc.).

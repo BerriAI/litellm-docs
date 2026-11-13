@@ -1,3 +1,8 @@
+---
+title: "Log Raw LLM Requests and Responses in LiteLLM"
+sidebar_label: "Raw Request/Response Logging"
+description: "See the raw request LiteLLM sends to each provider in logging tools such as Langfuse or OpenTelemetry, and return raw OpenAI response headers."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

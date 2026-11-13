@@ -1,3 +1,8 @@
+---
+title: "LiteLLM Callbacks for Logging and Observability"
+sidebar_label: "Callbacks"
+description: "Use LiteLLM input, success and failure callbacks to send Python SDK call data to tools such as Langfuse, LangSmith, Helicone, PostHog and Sentry."
+---
 # Callbacks
 
 ## Use Callbacks to send Output Data to Posthog, Sentry etc
