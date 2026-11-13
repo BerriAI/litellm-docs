@@ -8,22 +8,16 @@ description: Manage independent LiteLLM deployments through one API, compare usa
 
 {/* keep-version-note */}
 
-The Global Control Plane gives platform teams one API to manage independent LiteLLM deployments across regions and clouds. Each deployment is a **data plane** that serves inference requests and keeps its own keys, teams, budgets, PostgreSQL database, and Redis.
+The Global Control Plane provides one API to manage independent LiteLLM deployments across regions and clouds. Each deployment is a **data plane** that serves inference requests and keeps its own keys, teams, budgets, PostgreSQL database, and Redis.
 
 <EnterpriseFeature />
-
-:::info Availability
-
-This guide covers the new control-plane implementation in [PR #49662](https://github.com/BerriAI/litellm/pull/49662) and its dependency PRs. It requires a build that includes those changes. For the existing `worker_registry` Admin UI, see [UI Deployment Selector](./global_control_plane/legacy_ui.md).
-
-:::
 
 ## Use cases
 
 | Need | How the control plane helps |
 | --- | --- |
 | Separate deployments by region or business unit | Manage each deployment through its private endpoint while keeping its database, credentials, and budgets separate. |
-| Give platform teams one management endpoint | Read and update keys, users, teams, models, budgets, and other supported resources on a selected data plane. |
+| Manage resources through one endpoint | Read and update keys, users, teams, models, budgets, and other supported resources on a selected data plane. |
 | Compare usage across deployments | Aggregate spend, requests, and tokens. Group results by data plane, model, provider, team, or API key. |
 | Give operators limited access | Assign control-plane roles and restrict callers to named data planes. Each data plane also checks the caller's local permissions. |
 | Centralize administrative audit logs | Export control-plane activity to logs, an OTLP collector, S3, Splunk, or Microsoft Sentinel. |
