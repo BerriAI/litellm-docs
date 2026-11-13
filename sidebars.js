@@ -658,6 +658,7 @@ const sidebars = {
           items: [
             "proxy/cost_tracking",
             "proxy/model_cost_map",
+            { type: "doc", id: "fallback_generalizations", label: "Fallback generalizations" },
             "proxy/request_tags",
             "proxy/billing",
             "proxy/custom_pricing",
@@ -1794,7 +1795,6 @@ const providersSidebar = {
     { type: "doc", id: "providers/index", label: "All providers" },
     { type: "link", label: "Models & Pricing", href: "https://models.litellm.ai" },
     { type: "doc", id: "model_latest_aliases", label: "Latest model aliases" },
-    { type: "doc", id: "fallback_generalizations", label: "Fallback generalizations" },
     { type: "html", value: "Popular", className: "sidebar-group-label", defaultStyle: true },
     { type: "category", label: "OpenAI", className: "sidebar-provider", link: { type: "doc", id: "providers/openai" }, items: [
       "providers/openai/responses_api",
