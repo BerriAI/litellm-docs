@@ -32,8 +32,8 @@ function Fig({n, eyebrow, title, label, viewBox, caption, children}) {
 // Each gateway keeps one color in every chart: Rust and Python take the Rust orange and Python
 // blue from the router post, and the other gateways take two grays.
 const GW = {
-  rust: {name: 'Rust', v: 'Rs'},
-  python: {name: 'Python', v: 'Py'},
+  rust: {name: 'LiteLLM Rust', v: 'Rs'},
+  python: {name: 'LiteLLM Python', v: 'Py'},
   bifrost: {name: 'Bifrost', v: 'Gray'},
   portkey: {name: 'Portkey', v: 'Pale'},
 };
@@ -47,8 +47,8 @@ const ms = v => (v >= 1000 ? `${num(v / 1000)} s` : `${num(v)} ms`);
 
 // Horizontal bars, one per gateway. A value past `max` runs off the end with a break mark.
 function BarPanel({x, y, w, title, unit, max, ticks, rows}) {
-  const left = x + 62;
-  const span = w - 62 - 92;
+  const left = x + 92;
+  const span = w - 92 - 88;
   const sx = v => left + (Math.min(v, max) / max) * span;
   const top = y + 22;
   const step = 30;
@@ -90,7 +90,7 @@ function BarPanel({x, y, w, title, unit, max, ticks, rows}) {
 // x axis (for rates that double).
 function LineChart({x, y, w, h, title, xs, xLog, yDomain, yTicks, yFmt, log, series, marks = []}) {
   const left = x + 52;
-  const right = x + w - 64;
+  const right = x + w - 96;
   const top = y + 26;
   const bottom = y + h - 22;
   const fx = xLog ? Math.log2 : v => v;
@@ -153,7 +153,7 @@ export function HeadlineChart() {
       eyebrow="50 REQUESTS / SEC · FULL FEATURES"
       title="Same load, less overhead"
       viewBox="0 0 760 370"
-      label="At 50 requests per second with full features. Median overhead: Rust 0.9 ms, Bifrost 1.2 ms, Portkey 2.1 ms, Python 79.3 ms. p99 overhead: Rust 1.8 ms, Bifrost 4.2 ms, Portkey 5.3 ms, Python 1,587.8 ms. CPU used: Rust 0.15 cores, Bifrost 0.41, Portkey 0.49, Python 2.92. Peak memory: Rust 357 MiB, Bifrost 2,809 MiB, Portkey 609 MiB, Python 9,553 MiB."
+      label="At 50 requests per second with full features. Median overhead: LiteLLM Rust 0.9 ms, Bifrost 1.2 ms, Portkey 2.1 ms, LiteLLM Python 79.3 ms. p99 overhead: LiteLLM Rust 1.8 ms, Bifrost 4.2 ms, Portkey 5.3 ms, LiteLLM Python 1,587.8 ms. CPU used: LiteLLM Rust 0.15 cores, Bifrost 0.41, Portkey 0.49, LiteLLM Python 2.92. Peak memory: LiteLLM Rust 357 MiB, Bifrost 2,809 MiB, Portkey 609 MiB, LiteLLM Python 9,553 MiB."
       caption="Lower is better. Five minutes per gateway, 4 cores and 16 GiB each, single run, every request served. Latency subtracts a direct-to-mock run at the same rate. Portkey runs with no features; OpenRouter used a separate test.">
       {HEADLINE.map((panel, i) => (
         <BarPanel key={panel.title} x={i % 2 ? 400 : 20} y={i < 2 ? 24 : 202} w={340} {...panel} />
@@ -182,9 +182,9 @@ export function SweepChart() {
     <Fig
       n="02"
       eyebrow="BY REQUEST RATE · FULL FEATURES"
-      title="Rust gets cheaper per request as load rises"
+      title="LiteLLM Rust gets cheaper per request as load rises"
       viewBox="0 0 760 540"
-      label="Four line charts against 10, 25, 50, 75 and 100 requests per second. Median overhead on a log scale: Rust falls from 1.7 to 0.4 ms, Bifrost from 2.0 to 1.2 ms, Portkey from 2.6 to 1.8 ms, Python rises from 36.5 ms to 57 seconds. p99 overhead on a log scale: Rust 2.7 to 0.9 ms, Bifrost about 4 to 5 ms, Portkey 7.7 to 4.7 ms, Python 80 ms to 173 seconds. CPU: Rust 0.04 to 0.26 cores, Bifrost 0.11 to 0.84, Portkey 0.12 to 0.78, Python 0.6 to 3.86. Peak memory: Rust 117 to 659 MiB, Bifrost 1.0 to 5.2 GiB, Portkey 529 to 743 MiB, Python 3.8 to 15.7 GiB. Python was overloaded at 75 and 100 requests per second."
+      label="Four line charts against 10, 25, 50, 75 and 100 requests per second. Median overhead on a log scale: LiteLLM Rust falls from 1.7 to 0.4 ms, Bifrost from 2.0 to 1.2 ms, Portkey from 2.6 to 1.8 ms, LiteLLM Python rises from 36.5 ms to 57 seconds. p99 overhead on a log scale: LiteLLM Rust 2.7 to 0.9 ms, Bifrost about 4 to 5 ms, Portkey 7.7 to 4.7 ms, LiteLLM Python 80 ms to 173 seconds. CPU: LiteLLM Rust 0.04 to 0.26 cores, Bifrost 0.11 to 0.84, Portkey 0.12 to 0.78, LiteLLM Python 0.6 to 3.86. Peak memory: LiteLLM Rust 117 to 659 MiB, Bifrost 1.0 to 5.2 GiB, Portkey 529 to 743 MiB, LiteLLM Python 3.8 to 15.7 GiB. LiteLLM Python was overloaded at 75 and 100 requests per second."
       caption="Latency axes are logarithmic and subtract a direct-to-mock run at the same rate (runs drift about ±0.7 ms). Open circles: Python was overloaded and served only 78.9% of requests at 75 rps and 29.3% at 100 rps. Portkey runs with no features.">
       <LineChart
         x={20}
@@ -225,7 +225,7 @@ export function BigBodiesChart() {
       eyebrow="1M-TOKEN REQUESTS · ~4 MB EACH · STREAMED"
       title="Large requests: flat first byte, flat memory"
       viewBox="0 0 760 530"
-      label="Three line charts against 0.5, 1, 2, 4 and 8 requests per second, with 870k to 1M token requests, every one streamed. First-byte overhead at p50: Rust about 20 ms throughout, Bifrost 35 to 41 ms, Portkey 73 to 80 ms. At p99: Rust 30 to 35 ms, Bifrost 78 to 93 ms, Portkey 109 to 187 ms. Peak memory: Rust 0.2 to 0.6 GiB, Portkey 0.7 to 4.1 GiB, Bifrost 1.7 to 13.6 GiB."
+      label="Three line charts against 0.5, 1, 2, 4 and 8 requests per second, with 870k to 1M token requests, every one streamed. First-byte overhead at p50: LiteLLM Rust about 20 ms throughout, Bifrost 35 to 41 ms, Portkey 73 to 80 ms. At p99: LiteLLM Rust 30 to 35 ms, Bifrost 78 to 93 ms, Portkey 109 to 187 ms. Peak memory: LiteLLM Rust 0.2 to 0.6 GiB, Portkey 0.7 to 4.1 GiB, Bifrost 1.7 to 13.6 GiB."
       caption="Basic features; Portkey has none. Three minutes per rate, 4 cores and 16 GiB per pod. First byte includes moving 4 MB over two hops, with no direct-to-mock run subtracted. Portkey served 99.85% at 4 rps; every other point served 100%.">
       <LineChart x={20} y={20} w={360} h={240} {...common} title="First-byte overhead, p50" yDomain={[0, 100]} yTicks={[0, 25, 50, 75, 100]} yFmt={ms} series={bigSeries('p50')} />
       <LineChart x={400} y={20} w={360} h={240} {...common} title="First-byte overhead, p99" yDomain={[0, 200]} yTicks={[0, 50, 100, 150, 200]} yFmt={ms} series={bigSeries('p99')} />
@@ -237,15 +237,15 @@ export function BigBodiesChart() {
 // 4. One request, split by phase.
 const PHASES = ['auth', 'limits and hooks', 'build request, call provider', 'everything else'];
 const REQUESTS = [
-  {g: 'python', label: 'Python, cached key', ms: [7.483, 2.768, 18.662, 4.78]},
-  {g: 'python', label: 'Python, uncached key', ms: [19.989, 5.592, 18.841, 7.118]},
-  {g: 'rust', label: 'Rust, cached key', ms: [0.143, 0.712, 0.789, 0.083]},
-  {g: 'rust', label: 'Rust, uncached key', ms: [2.72, 0.592, 0.785, 0.08]},
+  {g: 'python', label: 'LiteLLM Python, cached key', ms: [7.483, 2.768, 18.662, 4.78]},
+  {g: 'python', label: 'LiteLLM Python, uncached key', ms: [19.989, 5.592, 18.841, 7.118]},
+  {g: 'rust', label: 'LiteLLM Rust, cached key', ms: [0.143, 0.712, 0.789, 0.083]},
+  {g: 'rust', label: 'LiteLLM Rust, uncached key', ms: [2.72, 0.592, 0.785, 0.08]},
 ];
 
 function StackRows({y, max, ticks, rows}) {
-  const left = 170;
-  const span = 510;
+  const left = 200;
+  const span = 480;
   const sx = v => left + (v / max) * span;
   const step = 34;
   const bottom = y + rows.length * step - 6;
@@ -262,7 +262,7 @@ function StackRows({y, max, ticks, rows}) {
         let at = 0;
         return (
           <g key={r.label}>
-            <text x={160} y={by + 15} className={cx('s', r.g === 'rust' && 'tRs')} textAnchor="end">{r.label}</text>
+            <text x={190} y={by + 15} className={cx('s', r.g === 'rust' && 'tRs')} textAnchor="end">{r.label}</text>
             {r.ms.map((v, p) => {
               const x0 = sx(at);
               at += v;
@@ -283,7 +283,7 @@ export function RequestPhasesChart() {
       eyebrow="ONE NON-STREAMED CHAT COMPLETION"
       title="Where a request spends its time"
       viewBox="0 0 760 350"
-      label="One request through each gateway, split into auth, limits and hooks, building the request and calling the provider, and everything else. Python with a cached key: 7.5, 2.8, 18.7 and 4.8 ms, 33.7 ms in all. Python with an uncached key: 20.0, 5.6, 18.8 and 7.1 ms, 51.5 ms in all. Rust with a cached key: 0.14, 0.71, 0.79 and 0.08 ms, 1.7 ms in all. Rust with an uncached key: 2.72, 0.59, 0.79 and 0.08 ms, 4.2 ms in all. A second scale enlarges the two Rust requests twelve times."
+      label="One request through each gateway, split into auth, limits and hooks, building the request and calling the provider, and everything else. LiteLLM Python with a cached key: 7.5, 2.8, 18.7 and 4.8 ms, 33.7 ms in all. LiteLLM Python with an uncached key: 20.0, 5.6, 18.8 and 7.1 ms, 51.5 ms in all. LiteLLM Rust with a cached key: 0.14, 0.71, 0.79 and 0.08 ms, 1.7 ms in all. LiteLLM Rust with an uncached key: 2.72, 0.59, 0.79 and 0.08 ms, 4.2 ms in all. A second scale enlarges the two LiteLLM Rust requests twelve times."
       caption="One pinned core per gateway, all callbacks on. Python phases are VizTracer times scaled to the untraced time of the same request; Rust phases come from in-gateway span timers.">
       <defs>
         <marker id="bb-phase-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
@@ -294,9 +294,9 @@ export function RequestPhasesChart() {
       <StackRows y={36} max={55} ticks={[0, 10, 20, 30, 40, 50]} rows={REQUESTS} />
 
       {/* The Rust bars are slivers at this scale, so frame them and enlarge them below. */}
-      <rect x={165} y={100} width={36} height={60} rx={6} className={s.frame} />
-      <path d="M183 160V222" className={s.wireSoft} markerEnd="url(#bb-phase-head)" />
-      <text x={20} y={220} className={s.e}>RUST ONLY · 12× ZOOM</text>
+      <rect x={195} y={100} width={36} height={60} rx={6} className={s.frame} />
+      <path d="M213 160V222" className={s.wireSoft} markerEnd="url(#bb-phase-head)" />
+      <text x={20} y={220} className={s.e}>LITELLM RUST ONLY · 12× ZOOM</text>
       <StackRows y={236} max={4.5} ticks={[0, 1, 2, 3, 4]} rows={REQUESTS.slice(2)} />
 
       {PHASES.map((name, p) => (
@@ -360,7 +360,7 @@ export function HeapChart() {
       eyebrow="500K-TOKEN STREAM · 2.45 MB BODY"
       title="Heap held per open stream"
       viewBox={`0 0 760 ${height}`}
-      label="Heap held for each open stream of a 500k-token, 2.45 MB request. LiteLLM Python holds 10.95 MB: the parsed request, 3.22 MB; the raw body, 2.85 MB; a json.dumps copy for logging, 2.45 MB; and the outbound bytes, 2.43 MB; about four and a half copies of the body. Bifrost holds 11.16 MB: the parsed request, 3.59 MB; re-encoded messages, 1.9 MB; trace text, 1.89 MB; a trace summary, 1.88 MB; the outbound body, 1.5 MB; and the inbound read, 0.4 MB. LiteLLM Rust holds 0.47 MB of read buffers and per-call state, and no copy of the body. With S3 logs on, Rust holds 2.92 MB: one copy of the body for the log, 2.45 MB, plus the same buffers."
+      label="Heap held for each open stream of a 500k-token, 2.45 MB request. LiteLLM Python holds 10.95 MB: the parsed request, 3.22 MB; the raw body, 2.85 MB; a json.dumps copy for logging, 2.45 MB; and the outbound bytes, 2.43 MB; about four and a half copies of the body. Bifrost holds 11.16 MB: the parsed request, 3.59 MB; re-encoded messages, 1.9 MB; trace text, 1.89 MB; a trace summary, 1.88 MB; the outbound body, 1.5 MB; and the inbound read, 0.4 MB. LiteLLM Rust holds 0.47 MB of read buffers and per-call state, and no copy of the body. With S3 logs on, LiteLLM Rust holds 2.92 MB: one copy of the body for the log, 2.45 MB, plus the same buffers."
       caption="Profiled heap allocations, not process RSS: memray for Python, pprof for Bifrost, heaptrack for Rust, one core per gateway. With S3 logs on, Rust keeps one copy of the body for the stream's life.">
       {[1, 2, 3, 4].map(k => (
         <g key={k}>
