@@ -1,7 +1,7 @@
 ---
 slug: better-benchmarks
 title: "Better Benchmarks"
-date: 2026-11-11T12:57:00
+date: 2026-11-13T12:57:00
 authors:
   - nate
 description: "We mentioned last week that we would be posting updated, more representative benchmarks with common features enabled. The headline numbers are in, and they're great!"
