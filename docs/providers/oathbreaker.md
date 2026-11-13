@@ -4,7 +4,7 @@
 
 Use [Oathbreaker AI](https://oathbreaker.ai) through LiteLLM with the `oathbreaker/` model prefix. LiteLLM reads `OATHBREAKER_API_KEY` and sends Chat Completions requests to `https://oathbreaker.ai/v1`.
 
-Oathbreaker serves Refuseless's abliterated GLM-5.3 variant, based on Z.ai GLM. It provides the gateway and account experience. See the [model details](https://oathbreaker.ai/models/glm-5-3-abliterated).
+Oathbreaker serves abliterated GLM-5.3 and GLM-5.3 Flash variants, based on Z.ai GLM. It provides the gateway and account experience. See the [GLM-5.3 details](https://oathbreaker.ai/models/glm-5-3-abliterated) and [Flash details](https://oathbreaker.ai/models/glm-5-3-flash-abliterated) for model provenance.
 
 ## Get started
 
@@ -31,13 +31,16 @@ print(response.choices[0].message.content)
 
 A successful request returns an assistant reply and token usage. You do not need to set `api_base`.
 
-## Model and pricing
+## Models and pricing
 
-The [provider documentation](https://oathbreaker.ai/docs) and [pricing](https://oathbreaker.ai/pricing) publish these limits and USD prices per million tokens, checked November 11, 2026.
+The [provider documentation](https://oathbreaker.ai/docs) and [pricing](https://oathbreaker.ai/pricing) publish these limits and USD prices per million tokens, checked November 13, 2026.
 
 | Model ID | Shared context budget | Max output | Input | Cached input | Output |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | `oathbreaker-glm-5.3` | 131,072 | 32,768 | $3.00 | $0.30 | $5.00 |
+| `oathbreaker-glm-5.3-flash` | 131,072 | 32,768 | $0.50 | $0.05 | $1.50 |
+
+Use `oathbreaker/oathbreaker-glm-5.3-flash` in the SDK or gateway configuration to select Flash. Both models use the same API key and base URL.
 
 Input, safety headroom, and requested output share the context budget. Reasoning tokens count toward output. The provider supports text input and output. Image input, audio, and embeddings are not supported.
 
