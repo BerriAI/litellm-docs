@@ -168,7 +168,7 @@ Apply the configuration to your existing release. Replace `litellm` with your re
 
 ```bash
 export LITELLM_RELEASE=litellm
-helm upgrade "$LITELLM_RELEASE" ./helm/litellm \
+helm upgrade "$LITELLM_RELEASE" ./litellm/deploy/helm/litellm \
   --namespace "$LITELLM_NAMESPACE" \
   -f gateway-values.yaml \
   -f liteadmin-values.yaml
@@ -184,7 +184,7 @@ Gateway autoscaling does not scale the worker. Keep the worker at one replica an
 From a LiteLLM checkout containing this integration, build the image or use a published build that contains it:
 
 ```bash
-docker build -t litellm-native-admin:local .
+docker build -f litellm/deploy/docker/Dockerfile -t litellm-native-admin:local .
 ```
 
 Keep your existing gateway `.env` and Compose configuration, including its license, database, model, and SSO settings. Save the worker settings in a separate private file:
@@ -208,7 +208,8 @@ Start the gateway and worker with the additional Compose file:
 ```bash
 chmod 600 liteadmin.env
 docker compose --env-file .env --env-file liteadmin.env \
-  -f docker-compose.yml -f docker-compose.liteadmin.yml up -d
+  -f litellm/deploy/compose/docker-compose.yml \
+  -f litellm/deploy/compose/docker-compose.liteadmin.yml up -d
 ```
 
 Use Docker Compose v2. Keep worker credentials in `liteadmin.env`; the base gateway configuration loads its own `.env`. The overlay starts the same image with `--admin-agent`, sets the private worker address on the gateway, and creates the `liteadmin_state` volume. It publishes no worker port
@@ -239,7 +240,8 @@ For **Docker Compose**, run the same readiness check inside the worker:
 
 ```bash
 docker compose --env-file .env --env-file liteadmin.env \
-  -f docker-compose.yml -f docker-compose.liteadmin.yml \
+  -f litellm/deploy/compose/docker-compose.yml \
+  -f litellm/deploy/compose/docker-compose.liteadmin.yml \
   exec liteadmin /opt/liteadmin/bin/python -c \
   "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:10000/readyz').read().decode())"
 ```

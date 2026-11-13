@@ -1,3 +1,86 @@
+:global(html:has(#customer-portal-title)) {
+  --ifm-background-color: #020304;
+  --ifm-background-surface-color: #0d0f12;
+  --ifm-navbar-background-color: #020304;
+  --ifm-font-color-base: #c6c9cf;
+  --ifm-heading-color: #f4f5f7;
+  --ifm-color-primary: #739bff;
+  --ifm-link-color: #739bff;
+  --ifm-link-hover-color: #adc2ff;
+  --ifm-color-emphasis-300: #2b2f35;
+  --ifm-color-emphasis-400: #42464f;
+  --ifm-color-emphasis-500: #686e78;
+  --ifm-color-emphasis-600: #969ca7;
+  --ifm-color-emphasis-700: #b7bdc8;
+  --aurora-surface: #020304;
+  --aurora-nav-bg: rgba(2, 3, 4, 0.92);
+  --aurora-muted: #969ca7;
+  --aurora-soft: #969ca7;
+  --aurora-line: #20242b;
+  --aurora-line-strong: #2b2f35;
+  --aurora-tint: #0d0f12;
+  --aurora-accent-line: #2b2f35;
+  --aurora-accent-ink: #adc2ff;
+  --aurora-active-bg: #111419;
+  --aurora-code-bg: #0d0f12;
+  --aurora-inline-code-bg: #111419;
+  --aurora-grad-border: linear-gradient(#2b2f35, #2b2f35);
+  --aurora-shadow: none;
+}
+
+:global(html:has(#customer-portal-title)) .byline {
+  --lb-ink: #f4f5f7;
+  --lb-text: #c6c9cf;
+  --lb-muted: #969ca7;
+  --lb-line: #2b2f35;
+  --lb-accent: #739bff;
+}
+
+:global(html:has(#customer-portal-title) .navbar__logo img) {
+  filter: brightness(0) invert(1);
+}
+
+:global(html:has(#customer-portal-title) article .markdown) {
+  color: #c6c9cf;
+}
+
+:global(html:has(#customer-portal-title) article .markdown :is(h2, h3)) {
+  color: #f4f5f7;
+}
+
+:global(html:has(#customer-portal-title) article .markdown a:not(.button)) {
+  color: #739bff;
+}
+
+:global(html:has(#customer-portal-title) article .markdown a:not(.button):hover) {
+  color: #adc2ff;
+}
+
+:global(html:has(#customer-portal-title) article .markdown :not(pre) > code) {
+  color: #dbe3f2;
+  background: #111419;
+  border-color: #2b2f35;
+}
+
+:global(html:has(#customer-portal-title) article .markdown pre code),
+:global(html:has(#customer-portal-title) article .markdown pre code span) {
+  color: #dbe3f2 !important;
+}
+
+:global(html:has(#customer-portal-title) .lite-footer) {
+  background: #020304;
+  border-top: 1px solid #20242b;
+}
+
+:global(html:has(#customer-portal-title) .lite-footer form [type='submit']) {
+  background: #174bff;
+  color: #f4f5f7 !important;
+}
+
+:global(html:has(#customer-portal-title) .lite-footer form [type='submit']:hover:not(:disabled)) {
+  background: #3260ff;
+}
+
 .hero {
   --portal-white: #f4f5f7;
   position: relative;

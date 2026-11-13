@@ -13,6 +13,9 @@ export default function OneClickDeploy({source = 'docs'}) {
         <p className={styles.oneClickText}>
           Railway and Render host the same gateway and Postgres for you. For AWS and GCP, use the <a href="/docs/proxy/deploy/terraform">Terraform deployment guide</a>. Use your deployment's URL wherever this guide says <code>http://localhost:4000</code>.
         </p>
+        <p className={styles.oneClickText}>
+          On Render, set <strong>Blueprint Path</strong> to <code>litellm/deploy/render/render.yaml</code> after signing in, before you deploy.
+        </p>
       </div>
       <div className={styles.oneClickBadges}>
         {ONE_CLICK.map(([name, url, badge]) => (

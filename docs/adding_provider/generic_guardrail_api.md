@@ -391,7 +391,7 @@ response = client.chat.completions.create(
 
 ## Implementation Example
 
-See [mock_bedrock_guardrail_server.py](https://github.com/BerriAI/litellm/blob/main/cookbook/mock_guardrail_server/mock_bedrock_guardrail_server.py) for a complete reference implementation.
+See [mock_bedrock_guardrail_server.py](https://github.com/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/mock_guardrail_server/mock_bedrock_guardrail_server.py) for a complete reference implementation.
 
 **Minimal FastAPI example:**
 
@@ -495,4 +495,3 @@ async def apply_guardrail(request: GuardrailRequest):
 ## Questions?
 
 This is a **beta API**. We're actively improving it based on feedback. Open an issue or PR if you need additional capabilities.
-

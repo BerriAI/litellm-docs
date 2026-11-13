@@ -74,7 +74,7 @@ billingMetrics:
 </TabItem>
 <TabItem value="terraform" label="Terraform (AWS / GCP)">
 
-The reference stacks at [`terraform/litellm/aws`](https://github.com/BerriAI/litellm/tree/main/terraform/litellm/aws) (ECS Fargate) and [`terraform/litellm/gcp`](https://github.com/BerriAI/litellm/tree/main/terraform/litellm/gcp) (Cloud Run) enable metering when `billing_metrics_endpoint` is set:
+The reference stacks at [`terraform/litellm/aws`](https://github.com/BerriAI/litellm/tree/main/litellm/deploy/terraform/litellm/aws) (ECS Fargate) and [`terraform/litellm/gcp`](https://github.com/BerriAI/litellm/tree/main/litellm/deploy/terraform/litellm/gcp) (Cloud Run) enable metering when `billing_metrics_endpoint` is set:
 
 ```hcl
 billing_metrics_endpoint  = "https://telemetry.litellm.ai"

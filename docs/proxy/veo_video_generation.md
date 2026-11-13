@@ -144,7 +144,7 @@ curl -X GET "http://localhost:4000/gemini/v1beta/files/VIDEO_ID:download?alt=med
 
 ## Complete Example
 
-For a full working example with error handling and logging, see our [Veo Video Generation Cookbook](https://github.com/BerriAI/litellm/blob/main/cookbook/veo_video_generation.py).
+For a full working example with error handling and logging, see our [Veo Video Generation Cookbook](https://github.com/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/veo_video_generation.py).
 
 ## How It Works
 
@@ -164,4 +164,3 @@ LiteLLM handles:
 ```bash
 export GEMINI_API_KEY="your_google_ai_studio_api_key"
 ```
-
