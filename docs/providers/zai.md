@@ -1,7 +1,16 @@
+---
+title: "Z.AI (Zhipu) GLM API with LiteLLM: Setup"
+sidebar_label: "Z.AI (Zhipu AI)"
+description: "Call Z.AI (Zhipu AI) GLM models through LiteLLM with the zai/ prefix from the Python SDK or AI Gateway. Set ZAI_API_KEY, stream, use -latest aliases."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Z.AI (Zhipu AI)
+
+Z.AI (Zhipu AI) makes the GLM model family; LiteLLM calls the GLM text and chat models with the `zai/` prefix from the Python SDK or AI Gateway.
+
 https://z.ai/
 
 **We support Z.AI GLM text/chat models, just set `zai/` as a prefix when sending completion requests**

@@ -1,3 +1,9 @@
+---
+title: "NVIDIA Triton Inference Server with LiteLLM"
+sidebar_label: "Triton Inference Server"
+description: "Call NVIDIA Triton Inference Server via LiteLLM with the triton/ prefix: /generate and /infer for chat, /embeddings for embedding, set up in config.yaml."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

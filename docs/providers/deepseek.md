@@ -1,7 +1,16 @@
+---
+title: "DeepSeek API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Deepseek"
+description: "Call DeepSeek models through LiteLLM with the deepseek/ prefix from the Python SDK or AI Gateway. Set DEEPSEEK_API_KEY, stream, and turn on thinking mode."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Deepseek
+
+DeepSeek builds the DeepSeek chat and reasoning models; LiteLLM calls them with the `deepseek/` prefix from the Python SDK or AI Gateway, including thinking mode.
+
 https://deepseek.com/
 
 **We support ALL Deepseek models, just set `deepseek/` as a prefix when sending completion requests**

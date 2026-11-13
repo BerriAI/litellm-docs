@@ -1,3 +1,9 @@
+---
+title: "CLF AI Gateway API with LiteLLM: Setup"
+sidebar_label: "CLF AI Gateway"
+description: "Call open-weight models on CLF AI Gateway through LiteLLM with the clf_ai_gateway/ prefix from the Python SDK or AI Gateway, with streaming and reasoning."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

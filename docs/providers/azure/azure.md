@@ -1,9 +1,17 @@
+---
+title: "Azure OpenAI API with LiteLLM AI Gateway"
+sidebar_label: "Azure OpenAI"
+description: "Call Azure OpenAI deployments through LiteLLM from the Python SDK or AI Gateway. Set AZURE_API_KEY and AZURE_API_BASE, pick an API version or use Entra ID."
+---
+
 
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Azure OpenAI
+
+Azure OpenAI Service provides REST API access to OpenAI models such as GPT-5 and GPT-4o; LiteLLM calls your Azure deployments with the `azure/` prefix through the same OpenAI-format API from the Python SDK or AI Gateway.
 
 ## Overview
 

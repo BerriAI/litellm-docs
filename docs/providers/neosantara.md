@@ -1,3 +1,9 @@
+---
+title: "Neosantara API with LiteLLM AI Gateway"
+sidebar_label: "Neosantara"
+description: "Call Neosantara models via LiteLLM with the neosantara/ prefix from the Python SDK or AI Gateway. Set NEOSANTARA_API_KEY, call functions, use Responses."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

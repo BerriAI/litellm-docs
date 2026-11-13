@@ -1,3 +1,9 @@
+---
+title: "RAGFlow Vector Stores with LiteLLM"
+sidebar_label: "RAGFlow Vector Stores"
+description: "Create and manage RAGFlow datasets as LiteLLM vector stores from the Python SDK or AI Gateway, with chunk methods, ingestion pipelines and parser config."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';

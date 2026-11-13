@@ -1,3 +1,9 @@
+---
+title: "Tensormesh API with LiteLLM AI Gateway"
+sidebar_label: "Tensormesh"
+description: "Call Tensormesh serverless models via LiteLLM with the tensormesh/ prefix from the Python SDK or AI Gateway. Stream, call tools, reason and use Responses."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

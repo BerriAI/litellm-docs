@@ -1,3 +1,9 @@
+---
+title: "ScaleDown API with LiteLLM: Classify, Compress"
+sidebar_label: "ScaleDown"
+description: "Use ScaleDown through LiteLLM to classify text, extract fields, summarize documents and compress prompts via /chat/completions. Set SCALEDOWN_API_KEY."
+---
+
 # ScaleDown
 
 Use [ScaleDown](https://scaledown.ai) to classify text, extract fields, summarize documents supplied as text, or compress prompts. LiteLLM calls ScaleDown's native APIs and returns the result through `/chat/completions`.

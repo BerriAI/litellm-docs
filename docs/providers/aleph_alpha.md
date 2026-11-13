@@ -1,3 +1,9 @@
+---
+title: "Aleph Alpha API with LiteLLM: Setup and Models"
+sidebar_label: "Aleph Alpha"
+description: "Call Aleph Alpha Luminous models from the LiteLLM Python SDK with completion(). Set ALEPHALPHA_API_KEY and pick a supported model such as luminous-supreme."
+---
+
 # Aleph Alpha
 
 LiteLLM supports all models from [Aleph Alpha](https://www.aleph-alpha.com/). 

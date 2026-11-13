@@ -1,4 +1,13 @@
+---
+title: "Cloudflare Workers AI API with LiteLLM"
+sidebar_label: "Cloudflare Workers AI"
+description: "Call Cloudflare Workers AI models from the LiteLLM Python SDK. Set CLOUDFLARE_API_KEY and CLOUDFLARE_ACCOUNT_ID, stream responses and use decision models."
+---
+
 # Cloudflare Workers AI
+
+LiteLLM calls Cloudflare Workers AI chat and decision models with the `cloudflare/` prefix, your `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID` from the Python SDK, with streaming.
+
 https://developers.cloudflare.com/workers-ai/models/text-generation/
 
 ## Chat and decision model endpoints

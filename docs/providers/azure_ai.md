@@ -1,3 +1,9 @@
+---
+title: "Azure AI Foundry (AI Studio) API with LiteLLM"
+sidebar_label: "Azure AI"
+description: "Call Azure AI Foundry (formerly Azure AI Studio) models via LiteLLM from the Python SDK or AI Gateway. Set AZURE_AI_API_KEY and AZURE_AI_API_BASE, use rerank."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "Anthropic Tool Input Examples in LiteLLM"
+sidebar_label: "Anthropic Tool Input Examples"
+description: "Add input_examples to tool definitions so Claude learns valid inputs. LiteLLM adds the beta header for you, with examples for nested and formatted inputs."
+---
+
 # Anthropic Tool Input Examples
 
 Provide concrete examples of valid tool inputs to help Claude understand how to use your tools more effectively. This is particularly useful for complex tools with nested objects, optional parameters, or format-sensitive inputs.

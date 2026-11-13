@@ -1,7 +1,16 @@
+---
+title: "SambaNova API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "SambaNova"
+description: "Call SambaNova models through LiteLLM with the sambanova/ prefix from the Python SDK or AI Gateway. Set SAMBANOVA_API_KEY, stream, call tools and embed."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # SambaNova
+
+SambaNova Cloud serves chat, vision and embedding models; LiteLLM calls every SambaNova model with the `sambanova/` prefix from the Python SDK or AI Gateway.
+
 [https://cloud.sambanova.ai/](http://cloud.sambanova.ai?utm_source=litellm&utm_medium=external&utm_campaign=cloud_signup)
 
 :::tip

@@ -1,3 +1,9 @@
+---
+title: "Poe API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Poe"
+description: "Call models on Quora's Poe platform through LiteLLM from the Python SDK or AI Gateway. Set POE_API_KEY, stream and see supported OpenAI parameters."
+---
+
 # Poe
 
 ## Overview

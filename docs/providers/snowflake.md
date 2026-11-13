@@ -1,5 +1,7 @@
 ---
+title: "Snowflake Cortex API with LiteLLM: Setup"
 sidebar_label: Snowflake Cortex
+description: "Call Snowflake Cortex models through LiteLLM with the snowflake/ prefix. Authenticate with a PAT or JWT, stream, call tools, use thinking and embeddings."
 ---
 
 import Tabs from '@theme/Tabs';

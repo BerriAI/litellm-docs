@@ -1,3 +1,9 @@
+---
+title: "Galadriel API with LiteLLM: Setup and Models"
+sidebar_label: "Galadriel"
+description: "Call Galadriel models from the LiteLLM Python SDK with the galadriel/ prefix. Set GALADRIEL_API_KEY, send chat requests, stream responses and see models."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

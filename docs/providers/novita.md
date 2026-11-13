@@ -1,8 +1,16 @@
+---
+title: "Novita AI API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Novita AI"
+description: "Call Novita AI models through LiteLLM with the novita/ prefix from the Python SDK or AI Gateway. Set NOVITA_API_KEY, call tools, use JSON mode, see params."
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Novita AI
+
+Novita AI is an AI cloud platform that serves models through a simple API; LiteLLM calls them with the `novita/` prefix from the Python SDK or AI Gateway, with tool calling and JSON mode.
 
 | Property | Details |
 |-------|-------|

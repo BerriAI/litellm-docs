@@ -1,3 +1,9 @@
+---
+title: "Manus Agents API with LiteLLM: Responses API"
+sidebar_label: "Manus"
+description: "Run Manus AI agents via LiteLLM's Responses API with the manus/ prefix from the Python SDK or AI Gateway. Set MANUS_API_KEY, poll tasks and upload files."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

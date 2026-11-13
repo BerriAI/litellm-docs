@@ -1,3 +1,9 @@
+---
+title: "Prism API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Prism"
+description: "Call Prism models via LiteLLM with the prism/ prefix from the Python SDK or AI Gateway. Set PRISM_API_KEY, stream, call functions, get structured output."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

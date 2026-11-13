@@ -1,3 +1,9 @@
+---
+title: "Vertex AI Veo Video Generation with LiteLLM"
+sidebar_label: "Vertex AI Video Generation (Veo)"
+description: "Generate Veo videos on Gemini Enterprise Agent Platform (formerly Vertex AI) via LiteLLM from the Python SDK or AI Gateway, with cost tracking."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

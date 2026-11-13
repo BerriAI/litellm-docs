@@ -1,3 +1,9 @@
+---
+title: "Inference APIs with LiteLLM AI Gateway"
+sidebar_label: "Inference APIs"
+description: "Call Inference APIs chat models via LiteLLM with the inferenceapis/ prefix from the Python SDK or AI Gateway. Set INFERENCEAPIS_API_KEY and track spend."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

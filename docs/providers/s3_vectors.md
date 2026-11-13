@@ -1,3 +1,9 @@
+---
+title: "AWS S3 Vectors as a LiteLLM Vector Store"
+sidebar_label: "AWS S3 Vectors"
+description: "Use Amazon S3 Vectors as the vector store behind LiteLLM RAG: set up config.yaml, ingest documents, search the store and use it in chat completions."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

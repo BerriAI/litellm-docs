@@ -1,3 +1,9 @@
+---
+title: "Apertis AI API with LiteLLM: Stima API Setup"
+sidebar_label: "Apertis AI (Stima API)"
+description: "Call Apertis AI (Stima API) models through LiteLLM from the Python SDK or AI Gateway. Set STIMA_API_KEY, stream and see supported OpenAI parameters."
+---
+
 # Apertis AI (Stima API)
 
 ## Overview

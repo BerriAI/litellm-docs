@@ -1,3 +1,9 @@
+---
+title: "Crusoe API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Crusoe"
+description: "Call Crusoe models through LiteLLM with the crusoe/ prefix from the Python SDK or AI Gateway. Set CRUSOE_API_KEY, stream responses and call functions."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "Databricks API with LiteLLM AI Gateway"
+sidebar_label: "Databricks"
+description: "Call Databricks model serving endpoints through LiteLLM from the Python SDK or AI Gateway. Use OAuth M2M or a PAT, run thinking models and embeddings."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

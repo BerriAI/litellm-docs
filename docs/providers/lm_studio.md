@@ -1,3 +1,9 @@
+---
+title: "LM Studio with LiteLLM: Local Models Setup"
+sidebar_label: "LM Studio"
+description: "Call local LM Studio models via LiteLLM with the lm_studio/ prefix from the Python SDK or AI Gateway. Set LM_STUDIO_API_BASE, stream, embed and get JSON."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

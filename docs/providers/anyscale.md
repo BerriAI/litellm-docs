@@ -1,3 +1,9 @@
+---
+title: "Anyscale Endpoints API in Python with LiteLLM"
+sidebar_label: "Anyscale"
+description: "Call Anyscale Endpoints models from the LiteLLM Python SDK. Set ANYSCALE_API_KEY, use the anyscale/ prefix, stream responses and see the supported models."
+---
+
 # Anyscale
 https://app.endpoints.anyscale.com/
 

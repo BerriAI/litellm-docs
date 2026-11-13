@@ -1,3 +1,9 @@
+---
+title: "RAGFlow API with LiteLLM: Chat and Agents"
+sidebar_label: "RAGFlow"
+description: "Call RAGFlow chat and agent endpoints through LiteLLM from the Python SDK or AI Gateway. Set RAGFLOW_API_KEY and RAGFLOW_API_BASE, and stream responses."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

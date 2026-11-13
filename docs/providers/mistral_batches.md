@@ -1,3 +1,9 @@
+---
+title: "Mistral AI Batch API with LiteLLM"
+sidebar_label: "Mistral AI Batch API"
+description: "Run Mistral batch jobs through LiteLLM's /v1/files and /v1/batches endpoints: add the model to config.yaml, upload input, create, poll and track OCR cost."
+---
+
 # Mistral AI Batch API
 
 LiteLLM routes the OpenAI-compatible `/v1/files` and `/v1/batches` endpoints to Mistral's [Files](https://docs.mistral.ai/api/#tag/files) and [Batch](https://docs.mistral.ai/api/#tag/batch) APIs. A Mistral batch job runs one model for every line of the input file, so the model is picked once, on the file upload or the batch request, instead of per line. The job can target `/v1/chat/completions` or `/v1/ocr`, and OCR pages inside a batch are billed at Mistral's batch rate.

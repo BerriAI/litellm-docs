@@ -1,3 +1,9 @@
+---
+title: "Strands Decider Model with LiteLLM"
+sidebar_label: "Strands Decider"
+description: "Serve the Strands Decider model behind LiteLLM's /v1/decisions and /v1/systemone routes: proxy setup, SDK calls, cost tracking and Auto Router use."
+---
+
 # Strands Decider
 
 [Strands Decider](https://huggingface.co/StrandsAgents/strands-decider-2B-hobson-v19) is a small decision model that you run on your own server. It does not generate text. It answers typed questions about an input, such as a yes or no question, a pick from a fixed list of options, or a level on a scale, and gives every answer a calibrated probability. LiteLLM serves it on the [decision routes](../decisions.md), `/v1/decisions` for the OpenAI Decisions format and `/v1/systemone` for the System One format.

@@ -1,3 +1,9 @@
+---
+title: "Microsoft 365 Copilot with LiteLLM AI Gateway"
+sidebar_label: "Microsoft 365 Copilot"
+description: "Connect Microsoft 365 Copilot to the LiteLLM AI Gateway with Entra ID SSO: register an app, add Graph permissions, add the model. Needs Enterprise JWT auth."
+---
+
 import Image from '@theme/IdealImage';
 import ThemedVideo from '@site/src/components/ThemedVideo';
 

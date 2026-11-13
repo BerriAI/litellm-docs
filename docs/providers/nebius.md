@@ -1,3 +1,9 @@
+---
+title: "Nebius AI Studio API with LiteLLM: Setup"
+sidebar_label: "Nebius AI Studio"
+description: "Call Nebius AI Studio models through LiteLLM with the nebius/ prefix from the Python SDK or AI Gateway. Set NEBIUS_API_KEY, stream, and create embeddings."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

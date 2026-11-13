@@ -1,3 +1,9 @@
+---
+title: "Lemonade Server with LiteLLM: Local Models"
+sidebar_label: "Lemonade"
+description: "Call local models on Lemonade Server, built for AMD GPUs and NPUs, from the LiteLLM Python SDK. Set LEMONADE_API_BASE, stream, call functions and get JSON."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

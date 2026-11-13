@@ -1,3 +1,9 @@
+---
+title: "Anthropic Tool Search in LiteLLM"
+sidebar_label: "Tool Search"
+description: "Use Claude tool search via LiteLLM to load tools on demand from large catalogs, with regex and BM25 variants on Chat Completions, Messages and Responses."
+---
+
 # Tool Search
 
 Tool search enables Claude to dynamically discover and load tools on-demand from large tool catalogs (10,000+ tools). Instead of loading all tool definitions into the context window upfront, Claude searches your tool catalog and loads only the tools it needs.

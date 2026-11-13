@@ -1,3 +1,9 @@
+---
+title: "Anthropic Claude API with LiteLLM AI Gateway"
+sidebar_label: "Anthropic"
+description: "Call Claude models through LiteLLM from the Python SDK or AI Gateway. Set ANTHROPIC_API_KEY, stream, call tools, use prompt caching and structured outputs."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

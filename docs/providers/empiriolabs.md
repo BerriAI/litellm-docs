@@ -1,3 +1,9 @@
+---
+title: "EmpirioLabs AI API with LiteLLM: Setup"
+sidebar_label: "EmpirioLabs AI"
+description: "Call EmpirioLabs AI chat models through LiteLLM with the empiriolabs/ prefix from the Python SDK or AI Gateway. Set EMPIRIOLABS_API_KEY and stream."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

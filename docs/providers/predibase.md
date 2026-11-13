@@ -1,3 +1,9 @@
+---
+title: "Predibase API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Predibase"
+description: "Call Predibase models via LiteLLM from the Python SDK or AI Gateway. Set PREDIBASE_API_KEY, apply prompt templates, and pass adapter_id and adapter_source."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "Gemini Veo Video Generation with LiteLLM"
+sidebar_label: "Gemini Video Generation (Veo)"
+description: "Generate videos with Google Veo via LiteLLM with the gemini/ prefix from the Python SDK or AI Gateway. Map size to aspect ratio, poll status, track cost."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

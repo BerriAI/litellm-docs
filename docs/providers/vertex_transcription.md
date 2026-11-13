@@ -1,3 +1,9 @@
+---
+title: "Vertex AI Speech to Text with LiteLLM"
+sidebar_label: "Vertex AI Audio Transcription"
+description: "Transcribe audio with Gemini and Chirp 3 models on Gemini Enterprise Agent Platform (formerly Vertex AI) via LiteLLM from the Python SDK or AI Gateway."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

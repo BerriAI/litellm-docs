@@ -1,3 +1,9 @@
+---
+title: "Infinity Embeddings and Rerank with LiteLLM"
+sidebar_label: "Infinity"
+description: "Run embeddings and rerank on a self-hosted Infinity server via LiteLLM from the Python SDK or AI Gateway. Set INFINITY_API_BASE and add it to config.yaml."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

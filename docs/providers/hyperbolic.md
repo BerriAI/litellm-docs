@@ -1,3 +1,9 @@
+---
+title: "Hyperbolic API with LiteLLM AI Gateway"
+sidebar_label: "Hyperbolic"
+description: "Call Hyperbolic models through LiteLLM with the hyperbolic/ prefix from the Python SDK or AI Gateway. Set HYPERBOLIC_API_KEY, stream and call functions."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

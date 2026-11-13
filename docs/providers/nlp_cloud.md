@@ -1,3 +1,9 @@
+---
+title: "NLP Cloud API with LiteLLM: Setup"
+sidebar_label: "NLP Cloud"
+description: "Call NLP Cloud models such as dolphin and chatdolphin from the LiteLLM Python SDK. Set NLP_CLOUD_API_KEY, stream and route other NLP Cloud models."
+---
+
 # NLP Cloud
 
 LiteLLM supports all LLMs on NLP Cloud.

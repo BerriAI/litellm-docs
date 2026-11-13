@@ -1,3 +1,9 @@
+---
+title: "Meta Llama API with LiteLLM AI Gateway"
+sidebar_label: "Meta Llama"
+description: "Call Meta Llama API models through LiteLLM from the Python SDK or AI Gateway. Set LLAMA_API_KEY, stream responses, call functions and add config.yaml."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

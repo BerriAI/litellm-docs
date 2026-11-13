@@ -1,3 +1,9 @@
+---
+title: "Mistral Codestral API with LiteLLM: FIM and Chat"
+sidebar_label: "Codestral API [Mistral AI]"
+description: "Call Mistral Codestral through LiteLLM for fill-in-the-middle (FIM) text completions and chat completions. Set CODESTRAL_API_KEY and stream responses."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "Llamafile with LiteLLM: Local Models Setup"
+sidebar_label: "Llamafile"
+description: "Call a Llamafile server via LiteLLM with the llamafile/ prefix and your api_base, from the Python SDK or AI Gateway, for chat completions and embeddings."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

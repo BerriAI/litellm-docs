@@ -1,3 +1,9 @@
+---
+title: "Custom LLM Server Handler in LiteLLM"
+sidebar_label: "Custom API Server (Custom Format)"
+description: "Call your own model API through LiteLLM with a custom handler class: chat, streaming, image generation, video and /v1/messages, wired up in config.yaml."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';

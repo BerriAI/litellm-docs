@@ -1,3 +1,9 @@
+---
+title: "Abliteration API with LiteLLM AI Gateway"
+sidebar_label: "Abliteration"
+description: "Call Abliteration models with the abliteration/ prefix from the LiteLLM Python SDK or AI Gateway. Set ABLITERATION_API_KEY, stream responses and use tools."
+---
+
 # Abliteration
 
 Use [Abliteration](https://abliteration.ai) through LiteLLM with the `abliteration/` model prefix. LiteLLM reads `ABLITERATION_API_KEY` and sends requests to `https://api.abliteration.ai/v1`.

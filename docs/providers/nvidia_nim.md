@@ -1,7 +1,16 @@
+---
+title: "NVIDIA NIM API with LiteLLM AI Gateway"
+sidebar_label: "Nvidia NIM"
+description: "Call NVIDIA NIM models through LiteLLM with the nvidia_nim/ prefix from the Python SDK or AI Gateway. Set NVIDIA_NIM_API_KEY, stream and create embeddings."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Nvidia NIM
+
+NVIDIA NIM is a platform with a simple API for deploying and using AI models; LiteLLM calls them with the `nvidia_nim/` prefix from the Python SDK or AI Gateway, for chat and embeddings.
+
 https://docs.api.nvidia.com/nim/reference/
 
 :::tip

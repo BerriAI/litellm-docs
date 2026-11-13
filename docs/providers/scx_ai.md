@@ -1,3 +1,9 @@
+---
+title: "SCX.ai API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "SCX.ai"
+description: "Call SCX.ai chat models through LiteLLM with the scx-ai/ prefix from the Python SDK or AI Gateway. Set SCX_API_KEY, stream, call functions and send images."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

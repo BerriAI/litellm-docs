@@ -1,3 +1,9 @@
+---
+title: "Gemini File Search RAG with LiteLLM"
+sidebar_label: "Gemini File Search"
+description: "Use Gemini File Search for RAG via LiteLLM: ingest files into a vector store, search it, set custom chunking and metadata filters, and extract citations."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

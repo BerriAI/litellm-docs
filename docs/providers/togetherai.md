@@ -1,3 +1,9 @@
+---
+title: "Together AI API with LiteLLM AI Gateway"
+sidebar_label: "Together AI"
+description: "Call Together AI models through LiteLLM with the together_ai/ prefix from the Python SDK or AI Gateway. Set TOGETHERAI_API_KEY, toggle thinking and rerank."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

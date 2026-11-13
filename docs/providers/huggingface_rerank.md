@@ -1,3 +1,9 @@
+---
+title: "Hugging Face Rerank with LiteLLM"
+sidebar_label: "HuggingFace Rerank"
+description: "Rerank documents with Hugging Face rerank models or custom endpoints via LiteLLM from the Python SDK or AI Gateway. Set HUGGINGFACE_API_KEY in config.yaml."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';

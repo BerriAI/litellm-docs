@@ -1,3 +1,9 @@
+---
+title: "Bedrock Embeddings with LiteLLM"
+sidebar_label: "Bedrock Embedding"
+description: "Create embeddings with AWS Bedrock models through LiteLLM, including TwelveLabs Marengo and Amazon Nova multimodal embeddings, with async invoke for video."
+---
+
 # Bedrock Embedding
 
 ## Supported Embedding Models

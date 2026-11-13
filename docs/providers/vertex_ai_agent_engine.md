@@ -1,3 +1,9 @@
+---
+title: "Vertex AI Agent Engine with LiteLLM"
+sidebar_label: "Vertex AI Agent Engine"
+description: "Call Agent Engine agents on Gemini Enterprise Agent Platform (formerly Vertex AI) in the OpenAI format via the LiteLLM Python SDK, AI Gateway or A2A."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

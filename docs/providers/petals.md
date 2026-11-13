@@ -1,3 +1,9 @@
+---
+title: "Petals with LiteLLM: Distributed Inference"
+sidebar_label: "Petals"
+description: "Call models on the Petals distributed network from the LiteLLM Python SDK. Install petals, use the petals/ prefix for every model, and stream responses."
+---
+
 # Petals
 Petals: https://github.com/bigscience-workshop/petals
 

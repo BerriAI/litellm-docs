@@ -1,3 +1,9 @@
+---
+title: "Anthropic Programmatic Tool Calling in LiteLLM"
+sidebar_label: "Anthropic Programmatic Tool Calling"
+description: "Use Anthropic programmatic tool calling (public beta) via LiteLLM so Claude calls your tools from code in a container, with allowed_callers and caller fields."
+---
+
 # Anthropic Programmatic Tool Calling
 
 Programmatic tool calling allows Claude to write code that calls your tools programmatically within a code execution container, rather than requiring round trips through the model for each tool invocation. This reduces latency for multi-tool workflows and decreases token consumption by allowing Claude to filter or process data before it reaches the model's context window.

@@ -1,3 +1,9 @@
+---
+title: "Fal AI Image Generation with LiteLLM"
+sidebar_label: "Fal AI"
+description: "Generate images with FLUX, Stable Diffusion and Imagen on Fal AI through LiteLLM from the Python SDK or AI Gateway. Set FAL_AI_API_KEY, pass model params."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

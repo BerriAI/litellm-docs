@@ -1,3 +1,9 @@
+---
+title: "Sarvam AI API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Sarvam.ai"
+description: "Call Sarvam AI text models through LiteLLM with the sarvam/ prefix from the Python SDK or AI Gateway. Set SARVAM_API_KEY and add models to config.yaml."
+---
+
 # Sarvam.ai
 
 import Tabs from '@theme/Tabs';

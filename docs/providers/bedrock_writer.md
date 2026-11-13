@@ -1,3 +1,9 @@
+---
+title: "Writer Palmyra on Bedrock with LiteLLM"
+sidebar_label: "Bedrock - Writer Palmyra"
+description: "Call Writer Palmyra models on AWS Bedrock via LiteLLM from the Python SDK or AI Gateway, with config.yaml setup, multi-step tool calling and PDF inputs."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "Vercel AI Gateway with LiteLLM: Setup"
+sidebar_label: "Vercel AI Gateway"
+description: "Call models through Vercel AI Gateway with the vercel_ai_gateway/ prefix from the LiteLLM Python SDK or proxy. Set VERCEL_AI_GATEWAY_API_KEY, stream and embed."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

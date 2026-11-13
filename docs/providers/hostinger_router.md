@@ -1,3 +1,9 @@
+---
+title: "Hostinger AI Router with LiteLLM: Setup"
+sidebar_label: "Hostinger AI Router"
+description: "Call Hostinger AI Router models via LiteLLM with the hostinger_router/ prefix from the Python SDK or AI Gateway: chat, streaming, Responses and embeddings."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

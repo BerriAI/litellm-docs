@@ -1,3 +1,9 @@
+---
+title: "Refuseless API with LiteLLM AI Gateway"
+sidebar_label: "Refuseless"
+description: "Call Refuseless models with the refuseless/ prefix from the LiteLLM Python SDK or AI Gateway. Set REFUSELESS_API_KEY, stream, use tools and Responses."
+---
+
 # Refuseless
 
 Use [Refuseless](https://refuseless.com) through LiteLLM with the `refuseless/` model prefix. LiteLLM reads `REFUSELESS_API_KEY` and sends requests to `https://api.refuseless.com/v1`.

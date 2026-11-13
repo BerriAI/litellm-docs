@@ -1,3 +1,9 @@
+---
+title: "Tencent TokenHub API with LiteLLM: Setup"
+sidebar_label: "Tencent TokenHub"
+description: "Call Tencent TokenHub models such as DeepSeek, GLM, Kimi and Hunyuan through LiteLLM with the tencent/ prefix. Set TENCENT_API_KEY and use thinking mode."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

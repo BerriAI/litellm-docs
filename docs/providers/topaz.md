@@ -1,3 +1,9 @@
+---
+title: "Topaz Image Variations API with LiteLLM"
+sidebar_label: "Topaz"
+description: "Call the Topaz Labs enhance API via LiteLLM's image_variation() with the topaz/ prefix. Set TOPAZ_API_KEY and pass response_format and size for each image."
+---
+
 # Topaz
 
 | Property | Details |

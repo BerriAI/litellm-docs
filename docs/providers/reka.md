@@ -1,3 +1,9 @@
+---
+title: "Reka API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Reka"
+description: "Call Reka models through LiteLLM with the reka/ prefix from the Python SDK or AI Gateway. Set REKA_API_KEY, stream, send images and video, and track spend."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
