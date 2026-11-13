@@ -4,6 +4,8 @@ sidebar_label: "Traffic Mirroring"
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Image from '@theme/IdealImage';
+import ThemedVideo from '@site/src/components/ThemedVideo';
 
 # A/B Testing - Traffic Mirroring
 
@@ -125,7 +127,7 @@ LiteLLM marks each mirrored call with `is_silent_experiment: true` in these plac
 |---|---|
 | Spend logs | `metadata.is_silent_experiment` |
 | Logging callbacks | `standard_logging_object["metadata"]["is_silent_experiment"]` |
-| Langfuse | Generation metadata |
+| Langfuse (`langfuse` callback) | Generation metadata |
 | Prometheus | `metadata_is_silent_experiment` label |
 | Datadog Cloud Cost Management | `is_silent_experiment` cost tag |
 
@@ -179,3 +181,189 @@ callback_settings:
 ```
 
 The router is the only source of this label and this tag. A client's request metadata or request tags and an admin's key or team metadata do not set them, even when they contain `is_silent_experiment`.
+
+## Compare responses in Langfuse
+
+This Router SDK example sends one non-streaming chat request and mirrors it to one silent model. It creates a trace for the comparison and can save the primary and shadow results to a JSON file of your choice.
+
+The example was tested with Python 3.12, LiteLLM 1.109.1, and OpenTelemetry 1.45.1. {/* keep-python-version */}
+
+```shell
+pip install 'litellm==1.109.1' 'opentelemetry-sdk==1.45.1' 'opentelemetry-exporter-otlp-proto-http==1.45.1'
+```
+
+Set `OPENAI_API_KEY` for the model calls and `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_HOST` for your [Langfuse project](./observability/langfuse_integration). Then enable the [OpenTelemetry v2 preset](./observability/opentelemetry_v2) and its message capture:
+
+```shell
+export LITELLM_OTEL_V2=true
+export LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only
+export OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=span_only
+export OTEL_EXPORTER_OTLP_TRACES_TIMEOUT=5
+```
+
+Langfuse receives prompt and response content, and the optional JSON file contains response text. Use a test prompt and save the file in a directory where you control access.
+
+Save this as `compare_shadow.py`:
+
+```python title="compare_shadow.py"
+import argparse
+import asyncio
+import json
+from pathlib import Path
+from time import monotonic
+from uuid import uuid4
+
+import litellm
+from litellm.integrations.custom_logger import CustomLogger
+from opentelemetry.sdk.trace import TracerProvider
+
+PRIMARY_MODEL = "openai/{{openai_small}}"
+SHADOW_MODEL = "openai/{{openai_large}}"
+SHADOW_WAIT_SECONDS = 5
+
+
+class Comparison(CustomLogger):
+    def __init__(self, comparison_id):
+        super().__init__()
+        self.comparison_id = comparison_id
+        self.results = {}
+        self.done = asyncio.Event()
+
+    async def async_log_success_event(self, kwargs, response_obj, start_time, end_time):
+        self.record(kwargs, "success", response_obj)
+
+    async def async_log_failure_event(self, kwargs, response_obj, start_time, end_time):
+        self.record(kwargs, "error")
+
+    def record(self, kwargs, status, response=None):
+        payload = kwargs.get("standard_logging_object") or {}
+        metadata = payload.get("metadata") or {}
+        requester = metadata.get("requester_metadata") or {}
+        if requester.get("comparison_id") != self.comparison_id:
+            return
+
+        role = "shadow" if metadata.get("is_silent_experiment") is True else "primary"
+        error = payload.get("error_information") or {}
+        text = response.choices[0].message.content if response and response.choices else None
+        self.results[role] = {
+            "status": status,
+            "model": payload.get("model"),
+            "response": text,
+            "latency_seconds": payload.get("response_time"),
+            "cost_usd": kwargs.get("response_cost") if status == "success" else None,
+            "litellm_call_id": payload.get("litellm_call_id"),
+            "error_type": error.get("error_class") or None,
+        }
+        if "primary" in self.results and "shadow" in self.results:
+            self.done.set()
+
+
+async def compare(trace_id, output):
+    comparison = Comparison(uuid4().hex)
+    litellm.callbacks = ["langfuse_otel", comparison]
+    router = litellm.Router(
+        model_list=[
+            {
+                "model_name": "primary",
+                "litellm_params": {"model": PRIMARY_MODEL, "silent_model": "shadow"},
+            },
+            {"model_name": "shadow", "litellm_params": {"model": SHADOW_MODEL}},
+        ],
+        num_retries=0,
+        timeout=30,
+    )
+
+    start = monotonic()
+    response = await router.acompletion(
+        model="primary",
+        messages=[{"role": "user", "content": "Why is the sky blue? Answer in one sentence."}],
+        metadata={"metadata": {"comparison_id": comparison.comparison_id}},
+        stream=False,
+        caching=False,
+    )
+    primary_latency = monotonic() - start
+    answer = response.choices[0].message.content if response.choices else None
+    print("Primary response:", answer, flush=True)
+    print("Trace ID:", trace_id, flush=True)
+
+    try:
+        await asyncio.wait_for(comparison.done.wait(), timeout=SHADOW_WAIT_SECONDS)
+    except TimeoutError:
+        pass
+
+    primary = {
+        "model": PRIMARY_MODEL,
+        "latency_seconds": primary_latency,
+        "cost_usd": None,
+        "litellm_call_id": None,
+        "error_type": None,
+        **comparison.results.get("primary", {}),
+        "status": "success",
+        "response": answer,
+    }
+    shadow = comparison.results.get("shadow", {"model": SHADOW_MODEL, "status": "unobserved"})
+    if output is not None:
+        record = {
+            "comparison_id": comparison.comparison_id,
+            "trace_id": trace_id,
+            "primary": primary,
+            "shadow": shadow,
+        }
+        data = json.dumps(record, ensure_ascii=False, indent=2)
+        with output.open("x", encoding="utf-8") as file:
+            file.write(data + "\n")
+    print("Shadow status:", shadow["status"], flush=True)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("output", nargs="?", type=Path, help="Path to a new comparison JSON file")
+    args = parser.parse_args()
+    if args.output is not None and args.output.exists():
+        parser.error(f"Output file already exists: {args.output}")
+
+    # This provider supplies the trace context. The Langfuse preset owns its exporter.
+    tracer = TracerProvider().get_tracer("shadow-comparison")
+    with tracer.start_as_current_span("compare-shadow") as span:
+        asyncio.run(compare(f"{span.get_span_context().trace_id:032x}", args.output))
+```
+
+```shell
+python compare_shadow.py comparison.json
+```
+
+The script prints the primary answer before waiting for the callbacks. Pass a path to a new file for offline comparison, or omit the path to use Langfuse alone. In the JSON, `error` means the shadow failure callback ran. `unobserved` means the five-second wait after the primary returned ended without a shadow callback. The script preserves the primary answer in both cases. A `null` cost means LiteLLM did not report a cost.
+
+Use the printed trace ID to find the `primary` and `shadow` generations in Langfuse. The JSON uses the callback's mirror marker to assign each role. For OTLP inspection, each recorded `litellm_call_id` matches that generation's `langfuse.observation.id` attribute.
+
+Run this example as a standalone process. When the comparison finishes, `asyncio.run()` cancels tasks still pending on its event loop. On normal process exit, the preset's OpenTelemetry SDK shuts down its exporter and attempts to send the completed spans. The exporter uses the configured HTTP timeout. The JSON file is written before shutdown, so it is available even if export fails.
+
+### Example: compare two different answers
+
+This demo runs the recipe above against a local mock OpenAI-compatible server and self-hosted Langfuse 4.79.0. Model A is the primary deployment; model B is its shadow. Both receive the same question, but the mock server returns a different fixed answer for each model. The responses and token counts are synthetic; the displayed costs come from those token counts.
+
+Open the trace and select `chat primary` to read model A's concise answer, then select `chat shadow` to read model B's longer explanation. Both generations share the trace ID. Langfuse displays the Router aliases `primary` and `shadow` as the model labels.
+
+<ThemedVideo
+  src={require('../img/langfuse-shadow-comparison.mp4')}
+  poster={require('../img/langfuse-shadow-primary.png')}
+  title="Compare model A and model B mock responses in one Langfuse trace"
+  aspectRatio="4 / 3"
+/>
+
+<Tabs>
+<TabItem value="primary-answer" label="Model A (primary)">
+
+> The sky is blue because air molecules scatter short-wavelength blue sunlight more strongly than red light.
+
+<Image img={require('../img/langfuse-shadow-primary.png')} alt="Langfuse shows the shared prompt and model A's concise primary response" />
+
+</TabItem>
+<TabItem value="shadow-answer" label="Model B (shadow)">
+
+> Sunlight contains every visible color; Rayleigh scattering redirects blue wavelengths across the atmosphere, so blue light reaches your eyes from every direction.
+
+<Image img={require('../img/langfuse-shadow-response.png')} alt="Langfuse shows the same prompt and model B's different shadow response in the same trace" />
+
+</TabItem>
+</Tabs>
