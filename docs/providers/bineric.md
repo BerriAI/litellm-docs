@@ -7,7 +7,7 @@ import TabItem from '@theme/TabItem';
 
 | Property | Details |
 |-------|-------|
-| Description | Bineric is an EU-hosted model API. One key reaches Claude through Amazon Bedrock, GPT through Azure, open models, the National Library of Norway's Borealis 2, and Bineric's own Lynx and Zuse models. Zuse is a decision model trained on European languages. |
+| Description | Bineric trains its own European models, Zuse, a decision model trained on European languages, and Lynx, a European general model. Bineric also makes NorskGPT, a Norwegian AI assistant. The same EU-hosted API, with one key, also serves Borealis 2 from the National Library of Norway, Claude through Amazon Bedrock, GPT through Azure, and open models. |
 | Provider Route on LiteLLM | `bineric/` |
 | Link to Provider Doc | [Bineric API documentation ↗](https://bineric.com/platform/docs) |
 | Base URL | `https://api.bineric.com/v1` |
@@ -23,18 +23,20 @@ Most Bineric models run in EU data centres, and some run in the US, such as the 
 
 ## Available models (selection)
 
-Every chat model in Bineric's catalogue works with the `bineric/` prefix. A few of them:
+Every model in Bineric's catalogue works with the `bineric/` prefix. Bineric's own models come first, then a few of the others:
 
 | Model | Description | Hosting | Context window |
 |-------|-------------|---------|----------------|
+| `bineric/zuse-27b` | Zuse, Bineric's European decision model, larger and more accurate | EU | 8,192 tokens |
+| `bineric/zuse-9b` | Zuse, Bineric's European decision model, faster and cheaper | EU | 64K tokens |
+| `bineric/lynx-30b` | Lynx, Bineric's European general model | EU | 262K tokens |
+| `bineric/borealis-2` | Norwegian model from the National Library of Norway, strong in Bokmål and Nynorsk | EU | 16K tokens |
 | `bineric/claude-sonnet-5.5` | Anthropic Claude Sonnet 5.5 through Amazon Bedrock | EU | 1M tokens |
 | `bineric/claude-haiku-5.5` | Anthropic Claude Haiku 5.5 through Amazon Bedrock | EU | 100K tokens |
 | `bineric/gpt-5.4` | OpenAI GPT 5.4 through Azure | EU | 272K tokens |
-| `bineric/borealis-2` | Norwegian model from the National Library of Norway, strong in Bokmål and Nynorsk | EU | 16K tokens |
-| `bineric/lynx-30b` | Bineric's own general model | EU | 262K tokens |
 | `bineric/qwen-3-235b` | Qwen 3 235B | EU | 262K tokens |
-| `bineric/zuse-27b` | Zuse decision model, larger and more accurate | EU | 8,192 tokens |
-| `bineric/zuse-9b` | Zuse decision model, faster and cheaper | EU | 64K tokens |
+
+Zuse models answer typed questions instead of generating text, so they use `/v1/systemone`, as shown in [Zuse decision models](#zuse-decision-models).
 
 ## Required variables
 
@@ -55,7 +57,7 @@ from litellm import completion
 os.environ["BINERIC_API_KEY"] = ""  # your Bineric API key
 
 response = completion(
-    model="bineric/borealis-2",
+    model="bineric/lynx-30b",
     messages=[{"role": "user", "content": "Hva er hovedstaden i Norge?"}],
 )
 
@@ -82,10 +84,20 @@ for chunk in response:
 
 ## Usage - LiteLLM Proxy
 
-Add Bineric models to your proxy config. The chat models and Zuse go in the same `model_list`.
+Add Bineric models to your proxy config. Zuse and the chat models go in the same `model_list`.
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
+  - model_name: zuse-27b
+    litellm_params:
+      model: bineric/zuse-27b
+      api_key: os.environ/BINERIC_API_KEY
+
+  - model_name: lynx-30b
+    litellm_params:
+      model: bineric/lynx-30b
+      api_key: os.environ/BINERIC_API_KEY
+
   - model_name: borealis-2
     litellm_params:
       model: bineric/borealis-2
@@ -94,11 +106,6 @@ model_list:
   - model_name: claude-haiku-5.5
     litellm_params:
       model: bineric/claude-haiku-5.5
-      api_key: os.environ/BINERIC_API_KEY
-
-  - model_name: zuse-27b
-    litellm_params:
-      model: bineric/zuse-27b
       api_key: os.environ/BINERIC_API_KEY
 ```
 
@@ -120,7 +127,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="borealis-2",
+    model="lynx-30b",
     messages=[{"role": "user", "content": "Hva er hovedstaden i Norge?"}],
 )
 
@@ -135,7 +142,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-proxy-api-key" \
   -d '{
-    "model": "borealis-2",
+    "model": "lynx-30b",
     "messages": [{"role": "user", "content": "Hva er hovedstaden i Norge?"}]
   }'
 ```
@@ -145,7 +152,7 @@ curl http://localhost:4000/v1/chat/completions \
 
 ## Zuse decision models
 
-Zuse reads a text and answers typed questions about it with probabilities instead of generated text, such as a yes/no probability or a pick from a fixed list. It is trained on European languages and hosted in the EU. Zuse takes the Jev request format, so LiteLLM serves it on [`/v1/systemone`](../decisions.md) like the other decision providers. `zuse-27b` reads documents up to 8,192 tokens and `zuse-9b` up to 65,536. Both are priced per input token, with no output tokens.
+Zuse is Bineric's own European decision model. It reads a text and answers typed questions about it with probabilities instead of generated text, such as a yes/no probability or a pick from a fixed list. It is trained on European languages and hosted in the EU. Zuse takes the Jev request format, so LiteLLM serves it on [`/v1/systemone`](../decisions.md) like the other decision providers. `zuse-27b` reads documents up to 8,192 tokens and `zuse-9b` up to 65,536. Both are priced per input token, with no output tokens.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
