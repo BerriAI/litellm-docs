@@ -127,6 +127,12 @@ Open **Add Model**, select **Github Copilot**, and choose an available model. Se
 
 Create a separate named credential for each App, then attach each application's model deployment to the appropriate credential. To rotate a key, edit the credential and upload its replacement before revoking the old key in GitHub. Leaving the uploaded-key field unchanged preserves the saved key.
 
+For a database credential created through the API, the form shows the GitHub Copilot name and logo. A PEM upload replaces any existing private-key secret reference.
+
+<div className="docs-screenshot">
+  <Image img={require('../../img/github-copilot-app-edit.jpg')} alt="Edit a GitHub App credential with the provider name and logo" />
+</div>
+
 ### Credential API
 
 Administrators can use `POST /credentials` with `github_copilot_app_private_key` containing the PEM. The endpoint validates an unencrypted RSA private key of at least 2048 bits, up to 16 KiB, before saving it through LiteLLM's credential encryption. The private key is accepted in a named credential, not in inference request bodies.
@@ -155,6 +161,8 @@ response.raise_for_status()
 ```
 
 `COPILOT_PEM_FILE` is read by this administrator's script, not by the proxy. Attach `litellm_credential_name: copilot-service-a` to a deployment through `POST /model/new` or YAML. Use `PATCH /credentials/copilot-service-a` with a replacement `github_copilot_app_private_key` in `credential_values` and `credential_info: {}` to rotate it. Do not log the request body.
+
+If the credential uses a private-key secret reference, also send `credential_values_to_delete: ["github_copilot_app_private_key_ref"]` in the PATCH body. The dashboard handles this replacement automatically.
 
 ### Server-managed configuration and SDK secrets
 
