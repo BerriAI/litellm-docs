@@ -1,101 +1,62 @@
 .figure {
-  width: min(1200px, calc(100% - 48px)) !important;
-  margin: 72px auto !important;
+  width: min(1120px, calc(100% - 48px)) !important;
+  margin: 48px auto !important;
   color: #f4f5f7;
 }
 
-.figure svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
+.figure {
   font-family: Geist, Arial, sans-serif;
-  text-anchor: middle;
 }
 
-.figure .mobile {
-  display: none;
+.complexityFigure {
+  padding: 16px 0;
 }
 
-.connections path {
-  fill: none;
-  stroke: #454c59;
-  stroke-width: 1.1;
+.formula {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1.2fr;
+  align-items: start;
+  gap: clamp(8px, 1.5vw, 24px);
+  padding-bottom: 24px;
 }
 
-.traffic path {
-  fill: none;
-  stroke: #739bff;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-dasharray: 5 140;
-  animation: flow 6s linear infinite;
+.factor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  min-width: 0;
 }
 
-.junction {
-  fill: #174bff;
-  stroke: #739bff;
-  stroke-width: 1;
-}
-
-.sourceLabel,
-.organizationLabel {
-  fill: #f4f5f7;
-  font-size: 26px;
-  font-weight: 450;
-  letter-spacing: -0.7px;
-}
-
-.organizationDetail,
-.gatewayLabel {
-  fill: #aeb7c6;
-  font-size: 19px;
+.factorLabel {
+  font-size: clamp(22px, 3.8vw, 54px);
   font-weight: 350;
+  line-height: 1.15;
+  letter-spacing: -0.055em;
 }
 
-.eyebrow {
-  fill: #8d98aa;
-  font-family: 'Geist Mono', monospace;
-  font-size: 13px;
-  letter-spacing: 2px;
+.multiply {
+  color: #739bff;
+  font-size: clamp(22px, 3.8vw, 54px);
+  font-weight: 250;
+  line-height: 1.15;
 }
 
-.scopeLabel {
-  fill: #aeb7c6;
-  font-size: 17px;
+.combinations {
+  display: grid;
+  grid-template-columns: repeat(3, 4px);
+  grid-auto-rows: 4px;
+  align-content: center;
+  gap: 5px;
+  min-height: 22px;
 }
 
-.teamName {
-  fill: #f4f5f7;
-  font-size: 27px;
-  font-weight: 450;
-  letter-spacing: -0.6px;
+.manyCombinations {
+  grid-template-columns: repeat(9, 4px);
 }
 
-.allowance {
-  fill: #adc2ff;
-  font-family: 'Geist Mono', monospace;
-  font-size: 15px;
-}
-
-.agent,
-.person {
-  fill: none;
-  stroke: #f4f5f7;
-  stroke-width: 1.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.memberRing {
-  fill: #020304;
-  stroke: #596372;
-  stroke-width: 1;
-}
-
-.memberLabel {
-  fill: #c6c9cf;
-  font-size: 15px;
+.combinations i {
+  background: #739bff;
 }
 
 .figure figcaption {
@@ -104,6 +65,137 @@
   color: #969ca7;
   font-size: 14px;
   line-height: 1.6;
+}
+
+.complexityFigure figcaption {
+  text-align: center;
+}
+
+.marginFigure {
+  max-width: 928px;
+  padding: 0;
+}
+
+.marginTitle {
+  color: #f4f5f7;
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 400;
+  letter-spacing: -0.8px;
+  line-height: 1.25;
+}
+
+.marginEyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  margin-bottom: 22px;
+}
+
+.marginEyebrow .previewLabel {
+  margin-bottom: 0;
+}
+
+.marginLogo {
+  display: block;
+  width: 106px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.scopeLine {
+  margin-top: 12px;
+  color: #969ca7;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.comparison {
+  margin: 30px 0 0;
+}
+
+.comparisonRow,
+.contribution {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 8px 24px;
+}
+
+.comparisonRow {
+  margin-bottom: 24px;
+  color: #c6c9cf;
+  font-size: 16px;
+}
+
+.comparisonRow strong,
+.contribution strong {
+  font-size: 26px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  letter-spacing: -0.9px;
+}
+
+.barTrack {
+  position: relative;
+  grid-column: 1 / -1;
+  height: 10px;
+  background: #20242b;
+}
+
+.revenueBar,
+.costBar,
+.budgetBar,
+.overrunBar {
+  height: 100%;
+}
+
+.revenueBar {
+  background: #c6c9cf;
+}
+
+.costBar {
+  background: #6f7784;
+}
+
+.budgetBar {
+  background: #174bff;
+}
+
+.overrunBar {
+  position: absolute;
+  top: 0;
+  background: #e36e70;
+}
+
+.contribution {
+  padding-top: 18px;
+  border-top: 1px solid #303641;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.positive strong {
+  color: #739bff;
+}
+
+.negative strong {
+  color: #e36e70;
+}
+
+.marginFigure .marginNote {
+  margin: 22px 0 14px;
+  color: #c6c9cf;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.marginFigure figcaption {
+  max-width: none;
+  color: #969ca7;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .alertFigure {
@@ -228,34 +320,9 @@
   margin-top: 16px;
 }
 
-@keyframes flow {
-  to { stroke-dashoffset: -580; }
-}
-
 @media (max-width: 800px) {
   .figure {
-    max-width: 580px;
-    margin: 48px auto !important;
-  }
-
-  .figure .desktop {
-    display: none;
-  }
-
-  .figure .mobile {
-    display: block;
-  }
-
-  .memberLabel {
-    font-size: 20px;
-  }
-
-  .allowance {
-    font-size: 17px;
-  }
-
-  .scopeLabel {
-    font-size: 21px;
+    margin: 40px auto !important;
   }
 
   .alertPreview {
@@ -265,13 +332,5 @@
   .workflow {
     gap: 8px;
     font-size: 11px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .traffic path {
-    animation: none;
-    stroke-dasharray: none;
-    opacity: 0.4;
   }
 }

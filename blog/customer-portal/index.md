@@ -18,7 +18,7 @@ draft: true
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CustomerPortalHero from './CustomerPortalHero';
-import CustomerHierarchy, {CustomerBudgetAlert} from './CustomerHierarchy';
+import {CostComplexity, CustomerMargin, CustomerBudgetAlert} from './CustomerHierarchy';
 import {PostByline} from '@theme/BlogPostPage';
 import styles from './customer-portal-hero.module.css';
 
@@ -36,38 +36,22 @@ For AI-native companies building production agents using LiteLLM AI Gateway who 
 
 ## The problem
 
-The simple version:
+Tracking costs across models and providers is hard.
 
-- Tracking costs across models and providers is hard.
-- With B2B AI agents, the complexity grows. You need cost tracking, budgets, and chargebacks for each customer organization, team, and member.
-- Within the same customer, you have default users and power users who need different allowances.
+<CostComplexity />
 
-Your customer's Sales admin might want each member to spend up to $100 a month. Engineering might need $500 per member. Both teams still sit under the same customer organization's overall budget.
+With B2B AI agents, you also have customer organizations, teams, and members with different budgets. Your customer's AI spend can exceed what you charge them.
 
-<CustomerHierarchy />
+<CustomerMargin stage="uncontrolled" />
 
-When you serve an agent to customers, you need a way to charge them for their usage. With B2B agents, you also need to account for their hierarchy: **customer organization → customer teams → customer members**. Your customers want spend tracking and budget controls at each level.
+That's a bunch of glue code to build around your agent. Since LiteLLM is already your source of truth for model costs, we're exposing APIs to track customer spend, set budgets, and build these controls into your product.
 
-We want you to have the controls you need to protect your agent's profit margin: set allowances at the right level, see which users keep hitting their limits, and create budget profiles for default users and power users.
+## How to use LiteLLM AI Gateway for this problem
 
-That's a bunch of glue code to build around your agent. Add the different prices for each model, provider, and request parameter, and your application's billing logic gets more complex.
-
-Since LiteLLM is already your source of truth for model costs, we're exposing APIs to consume that data and control spend for your customers. Use them in your own product for customer onboarding, usage pages, budget settings, and chargebacks. Your billing system applies your prices, creates invoices, and collects payment.
-
-## How to use LiteLLM AI Gateway
-
-### Step 1. Identify your customer organization and member
-
-For an existing customer, the change to your model call is two headers: the **customer organization alias** and the **customer member ID**. LiteLLM resolves the member's team and organization and attributes the request's cost at each level.
-
-The examples below use `Acme` and `acme-alice` as sample IDs. Register the organization, team, and member using Step 2 before running the SDK example. Use IDs from your own product in production.
-
-Set `LITELLM_BASE_URL` to your gateway URL without `/v1`, `LITELLM_API_KEY` to your application's gateway key, and `LITELLM_MODEL` to a model alias that key can use. The same application key can serve your customers; your backend chooses the identity from the authenticated customer's session.
+Point your agent to LiteLLM AI Gateway and send your customer's organization alias and member ID:
 
 <Tabs groupId="customer-portal-sdk">
 <TabItem value="openai" label="OpenAI Responses" default>
-
-Install it with `pip install openai`, then add `extra_headers` to your Responses call:
 
 ```python
 import os
@@ -94,10 +78,10 @@ print(response.output_text)
 print("LiteLLM call ID:", raw_response.headers.get("x-litellm-call-id"))
 ```
 
+Install with `pip install openai`.
+
 </TabItem>
 <TabItem value="deepagents" label="LangChain Deep Agents">
-
-Install them with `pip install deepagents langchain-openai`. Pass the headers through your model's `default_headers`:
 
 ```python
 import os
@@ -122,32 +106,32 @@ result = agent.invoke({"messages": [{"role": "user", "content": "Say hello to Al
 print(result["messages"][-1].text)
 ```
 
-Use a model configuration scoped to that customer's request. Configure other models your agent calls with the same customer identity. See [Deep Agents model configuration](https://docs.langchain.com/oss/python/deepagents/models#openai-and-the-responses-api).
+Install with `pip install deepagents langchain-openai`. Configure the model for the authenticated customer; pass the same identity to any other models the agent calls.
 
 </TabItem>
 </Tabs>
 
-That's it for the model call: send LiteLLM the organization alias and the member ID within that organization. We'll track the spend. The same headers work with Chat Completions and Anthropic Messages.
+That's it for attributing the call. LiteLLM resolves the member's customer team and organization and records the spend. The same headers work with Responses, Chat Completions, and Anthropic Messages.
 
-Your spend lands in **Customer Portal → Customers** in the LiteLLM UI. Open the customer to see its spend, requests, tokens, and model breakdown.
+Use your application key and a gateway model alias. `LITELLM_BASE_URL` is the gateway root URL; [register the customer first](/docs/proxy/customer_portal/track-customer-spend#2-import-a-customer), and select their identity from your authenticated session.
 
-<figure data-full-width className={styles.productShot}>
-  <a className={styles.screenshotLink} href="/img/customer_portal/launch-usage-overview.webp" target="_blank" rel="noopener noreferrer" aria-label="Open the customer organization usage screenshot at full resolution">
-    <img src="/img/customer_portal/launch-usage-overview.webp" width="3270" height="4266" alt="Customer organization usage in LiteLLM, with spend and token totals, a daily trend across three models, and a per-model breakdown." loading="lazy" />
+<figure data-full-width className={`${styles.productShot} ${styles.requestShot}`}>
+  <a className={styles.screenshotLink} href="/img/customer_portal/launch-spend-log.webp" target="_blank" rel="noopener noreferrer" aria-label="Open the request customer attribution screenshot at full resolution">
+    <img src="/img/customer_portal/launch-spend-log.webp" width="2020" height="1052" alt="A saved request's Customer section shows its customer organization, team, and member, alongside $0.14 cost and 120 tokens in Metrics." loading="lazy" />
   </a>
-  <figcaption>Demo usage across three models, with 13 days of activity. Track the customer's total and inspect the model costs behind it. <a href="/img/customer_portal/launch-usage-overview.webp" target="_blank" rel="noopener noreferrer">View full size.</a></figcaption>
+  <figcaption>Follow a request into spend logs to see its customer organization, team, member, and cost. Demo data. <a href="/img/customer_portal/launch-spend-log.webp" target="_blank" rel="noopener noreferrer">View full size.</a></figcaption>
 </figure>
 
-### Step 2. Set a customer organization budget and a default member profile
+### Set customer budgets that protect your margin
 
-Give the customer an overall budget and choose a default allowance for its members. In this example, the organization has a $1,000 cap and each default member has a $100 cap. The examples use a 30-day budget period.
+If you charge $100 per member, you can give that member a $60 AI allowance. Set limits at the customer organization, team, and member levels so one customer's usage does not run away with your margin.
 
-Run management calls from your backend using `LITELLM_ADMIN_KEY`, a proxy admin credential. Keep this credential on your server and authorize the customer's access before exposing budget or usage data through your product.
+<CustomerMargin stage="budget" />
+
+Choose the organization cap and default member profile when you onboard a customer. These examples use a 30-day budget period:
 
 <Tabs groupId="customer-portal-budget-setup">
 <TabItem value="api" label="API" default>
-
-Create the organization and its default member profile:
 
 ```bash
 curl --fail-with-body --request POST \
@@ -163,50 +147,20 @@ curl --fail-with-body --request POST \
     },
     "default_budgets": [{
       "name": "default-user",
-      "max_budget": 100,
-      "soft_budget": 80,
+      "max_budget": 60,
+      "soft_budget": 48,
       "budget_duration": "30d"
     }],
     "default_budget_template": "default-user"
   }'
 ```
 
-Create a team within that organization, then add a member. Omitting `budget_id` assigns the organization's default member profile:
-
-```bash
-curl --fail-with-body --request POST \
-  "$LITELLM_BASE_URL/management/v1/customer_teams" \
-  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
-  --header "Content-Type: application/json" \
-  --data '{
-    "customer_team_id": "acme-sales",
-    "parent_org_id": "org-acme",
-    "alias": "Sales",
-    "budget": {"max_budget": 500, "budget_duration": "30d"}
-  }'
-
-curl --fail-with-body --request POST \
-  "$LITELLM_BASE_URL/management/v1/customer_members" \
-  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
-  --header "Content-Type: application/json" \
-  --data '{
-    "customer_member_id": "acme-alice",
-    "alias": "Alice",
-    "parent_org_id": "org-acme",
-    "parent_team_ids": ["acme-sales"]
-  }'
-```
-
-Each create returns `201`. Use `PATCH` on the existing resource when you need to change a budget; repeating a create with the same ID returns `409`.
+Use a server-side proxy admin credential as `LITELLM_ADMIN_KEY`. [Add the customer's teams and members](/docs/proxy/customer_portal/track-customer-spend#2-import-a-customer); new members inherit the default profile.
 
 </TabItem>
 <TabItem value="ui" label="LiteLLM UI">
 
-Open **Customer Portal → Customers**, select your customer, then open **Settings**. Use **Set budget** or **Edit budget** to set its **Spend limit (USD)** and **Reset period**.
-
-In the customer's teams and members, use **Budget and limits** to inspect the applicable controls. A member's **Budget template** supplies its default settings. You can inspect member spend and allowances together in the customer usage view:
-
-
+Open **Customer Portal → Customers → your customer → Settings**. Use **Set budget** or **Edit budget** to set **Spend limit (USD)** and **Reset period**. Select a member's **Budget template** for its default allowance.
 
 </TabItem>
 </Tabs>
@@ -218,15 +172,11 @@ In the customer's teams and members, use **Budget and limits** to inspect the ap
   <figcaption>Demo members and their configured allowances in the LiteLLM admin UI. <a href="/img/customer_portal/launch-member-caps.webp" target="_blank" rel="noopener noreferrer">View full size.</a></figcaption>
 </figure>
 
-The organization cap covers the customer's total usage. The team cap covers that team's usage, and the member cap covers that person's usage. LiteLLM checks the applicable caps before allowing a model request. Accounting runs in the background, so allow for updates and requests already in flight when you display a remaining balance.
+At the cap, LiteLLM rejects new requests based on recorded spend. Leave room for accounting delays and requests already in flight.
 
-### Step 3. Create budget profiles for your customer's members
+### Give default users and power users different profiles
 
-Some enterprise customers want different profiles for different users. Give default users $100 and power users $500, or let a customer's admin choose profiles for Sales and Engineering members.
-
-Expose these APIs through your product so your customers can manage those allowances. A budget profile maps to an organization-owned **member budget template** in the API. Team and organization caps remain separate controls.
-
-Create a power-user profile:
+Some customers need more allowance. Create a power-user profile, then assign its returned `budget_id` when you create new members. Use the same APIs in your product so your customer's admins can manage these profiles.
 
 ```bash
 curl --fail-with-body --request POST \
@@ -235,72 +185,51 @@ curl --fail-with-body --request POST \
   --header "Content-Type: application/json" \
   --data '{
     "name": "power-user",
-    "max_budget": 500,
-    "soft_budget": 400,
+    "max_budget": 90,
+    "soft_budget": 72,
     "budget_duration": "30d"
   }'
 ```
 
-The response includes the organization's updated `default_budgets`. Save the `budget_id` for `power-user` as `PROFILE_BUDGET_ID`. When you create a new member, assign that profile using `budget_id`. The following example uses the Sales team created above:
-
-```bash
-curl --fail-with-body --request POST \
-  "$LITELLM_BASE_URL/management/v1/customer_members" \
-  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
-  --header "Content-Type: application/json" \
-  --data "{
-    \"customer_member_id\": \"acme-power-user\",
-    \"parent_org_id\": \"org-acme\",
-    \"parent_team_ids\": [\"acme-sales\"],
-    \"budget_id\": \"$PROFILE_BUDGET_ID\"
-  }"
-```
-
-You can also `PATCH /management/v1/customer_members/{customer_member_id}` with `budget_id` to change an existing member's profile. Updating a template changes the settings its assigned members inherit. Changing the organization's default affects new members; it does not reassign existing ones. Read a member's `effective_budget` to show the limits that apply, including active overrides.
-
-### Step 4. Trigger workflows when a customer reaches a budget
-
-With a $100 member cap and an $80 soft threshold, you can notify your team before the member runs out of allowance. Configure the customer budget callback in your gateway and point it at your backend's webhook receiver:
-
-```yaml title="Add to your existing gateway config.yaml"
-general_settings:
-  use_spend_logs_ledger: true
-
-litellm_settings:
-  callbacks: [customer_budget_webhook]
-
-callback_settings:
-  customer_budget_webhook:
-    endpoint: https://billing.example.com/litellm/customer-budget
-```
-
-Merge this with your existing settings and restart the gateway before testing delivery. Keep any existing callbacks in the list.
-
-After a positive spend update commits, LiteLLM emits `soft_budget_crossed` at the soft threshold and `budget_crossed` at the hard cap. The JSON event includes the customer scope and IDs, spend, triggering budget, and budget period. Your receiver can use that information to send a Slack alert:
+### Trigger workflows before a customer hits their limit
 
 <CustomerBudgetAlert />
 
-LiteLLM sends JSON to your receiver. Your workflow formats the Slack message; a Slack incoming-webhook URL needs that adapter. See [Slack's incoming-webhook format](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/).
+A soft-budget webhook lets your backend notify the customer or open an approval request before the hard cap. Your receiver can format the Slack alert above; LiteLLM sends the JSON event. [Configure and test delivery](/docs/proxy/customer_portal/track-customer-spend#1-set-up-budget-webhooks). Delivery is best effort, so reconcile missed alerts with usage reads.
 
-Set the hard cap up front so LiteLLM can reject later requests when the recorded spend reaches it. A soft-budget alert does not pause traffic. Your workflow can notify the customer, open an approval request, or update a cap after a policy check.
+### Increase the allowance when your customer upgrades
 
-For example, after approving a larger allowance for an existing member, your backend can set a $250 override:
+If a customer needs more, tie the increase to a plan upgrade or extra charge in your product. For example, charge $150 per member and approve a temporary $90 AI allowance:
+
+<CustomerMargin stage="increase" />
+
+Set `INCREASE_EXPIRES_AT` to a future timestamp with a timezone, then apply the temporary member override:
 
 ```bash
 curl --fail-with-body --request PATCH \
   "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
   --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
   --header "Content-Type: application/json" \
-  --data '{"budget_override": {"max_budget": 250}}'
+  --data "{
+    \"budget_override\": {\"max_budget\": 90},
+    \"budget_override_expires_at\": \"$INCREASE_EXPIRES_AT\"
+  }"
 ```
 
-This preserves recorded spend. The team's and organization's caps still apply. Add `budget_override_expires_at` with a future timestamp to make an increase temporary, or use the [budget increase request and approval APIs](/docs/proxy/customer_portal/api_reference#budget-increase-requests) for a review queue.
+Your billing system handles the price change. LiteLLM applies the allowance until it expires; the organization and team caps still apply. Use the [approval APIs](/docs/proxy/customer_portal/api_reference#budget-increase-requests) if your workflow needs a review queue.
 
-Return `2xx` from your receiver within 10 seconds. Delivery is best effort, and LiteLLM suppresses repeat events for the same scope, entity, and budget period even after a delivery failure. Use usage reads to reconcile missed events. The [walkthrough](/docs/proxy/customer_portal/track-customer-spend#4-check-budgets-and-webhook-delivery) shows how to test budget rejection and webhook delivery.
+### Put the usage and budget controls in your own product
 
-## Put the usage and budget controls in your own product
+Now give the customer a usage page next to their plan, allowance, and upgrade options. Our APIs let your backend fetch their spend and budget settings, so the customer sees the same costs you use for chargebacks:
 
-Use the usage APIs to build a customer-facing dashboard, display a remaining allowance, or feed your chargeback calculations. Fetch complete organization totals for a date range:
+<figure data-full-width className={styles.productShot}>
+  <a className={styles.screenshotLink} href="/img/customer_portal/launch-usage-overview.webp" target="_blank" rel="noopener noreferrer" aria-label="Open the customer organization usage screenshot at full resolution">
+    <img src="/img/customer_portal/launch-usage-overview.webp" width="3270" height="4266" alt="Customer organization usage in LiteLLM, with spend and token totals, a daily trend across three models, and a per-model breakdown." loading="lazy" />
+  </a>
+  <figcaption>Demo usage across three models, with 13 days of activity. Track the customer's total and inspect the model costs behind it. <a href="/img/customer_portal/launch-usage-overview.webp" target="_blank" rel="noopener noreferrer">View full size.</a></figcaption>
+</figure>
+
+Fetch complete organization totals for a date range:
 
 ```bash
 curl --fail-with-body --silent --show-error --get \
@@ -311,18 +240,7 @@ curl --fail-with-body --silent --show-error --get \
   --data-urlencode "end_date=2026-11-30"
 ```
 
-Read `metadata.total_spend`, `total_tokens`, and `total_api_requests`. Team and member activity APIs provide the breakdowns; resource reads provide running spend, caps, and reset timestamps. Your backend authorizes the customer, calls LiteLLM, and returns the data they can access.
-
-Use the organization total for the customer's overall cost. Team and member totals include the same requests, so adding all three levels together counts usage more than once. Your product applies any markup or plan pricing before handing the result to your billing system.
-
-If you need to debug a charge, follow the request's `x-litellm-call-id` into spend logs to inspect its customer organization, team, member, cost, and token counts:
-
-<figure data-full-width className={`${styles.productShot} ${styles.requestShot}`}>
-  <a className={styles.screenshotLink} href="/img/customer_portal/launch-spend-log.webp" target="_blank" rel="noopener noreferrer" aria-label="Open the request customer attribution screenshot at full resolution">
-    <img src="/img/customer_portal/launch-spend-log.webp" width="2020" height="1052" alt="A saved request's Customer section shows its customer organization, team, and member, alongside $0.14 cost and 120 tokens in Metrics." loading="lazy" />
-  </a>
-  <figcaption>A saved request with demo customer data: inspect the resolved hierarchy and request cost. <a href="/img/customer_portal/launch-spend-log.webp" target="_blank" rel="noopener noreferrer">View full size.</a></figcaption>
-</figure>
+Read `metadata.total_spend`, `total_tokens`, and `total_api_requests`. Fetch caps from the organization, team, and member records; keep admin credentials on your backend and authorize each customer's access. Your billing system applies your prices and collects payment.
 
 ## OSS and Enterprise
 
@@ -332,6 +250,6 @@ If you need to debug a charge, follow the request's `x-litellm-call-id` into spe
 | Customer teams | Up to 5 | More than 5 |
 | Customer members | Up to 5 | More than 5 |
 
-Start with the [Customer Portal walkthrough](/docs/proxy/customer_portal/track-customer-spend) and [API reference](/docs/proxy/customer_portal/api_reference). For more than five customer organizations, teams, or members, [talk to us about LiteLLM Enterprise](https://www.litellm.ai/enterprise).
+Start with the [walkthrough](/docs/proxy/customer_portal/track-customer-spend) and [API reference](/docs/proxy/customer_portal/api_reference). For more than five of each, [talk to us about Enterprise](https://www.litellm.ai/enterprise).
 
-This launch draft targets the current `main` implementation. We have not verified a published release containing the complete flow. Check [availability](/docs/proxy/customer_portal/api_reference#availability) before deploying it.
+This draft targets `main`; a published release containing the complete flow has not been verified. Check [availability](/docs/proxy/customer_portal/api_reference#availability) before deploying.

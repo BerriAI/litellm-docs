@@ -34,6 +34,31 @@
   --lb-muted: #969ca7;
   --lb-line: #2b2f35;
   --lb-accent: #739bff;
+  width: min(960px, calc(100% - 48px));
+  max-width: min(960px, calc(100% - 48px));
+}
+
+:global(html:has(#customer-portal-title)) .byline > div {
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+}
+
+:global(html:has(#customer-portal-title)) .byline > div > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: start;
+  gap: 20px;
+  width: 100%;
+}
+
+:global(html:has(#customer-portal-title)) .byline > div > div > span {
+  max-width: none;
+}
+
+:global(html:has(#customer-portal-title)) .byline b {
+  white-space: nowrap;
 }
 
 :global(html:has(#customer-portal-title) .navbar__logo img) {
@@ -189,6 +214,11 @@
 }
 
 @media (max-width: 760px) {
+  :global(html:has(#customer-portal-title)) .byline > div > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 24px;
+  }
+
   .hero {
     min-height: 0;
   }
