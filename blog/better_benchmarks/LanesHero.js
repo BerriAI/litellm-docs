@@ -77,7 +77,7 @@ function lane(top, hold, color, fill, tag) {
   return {top, hold, color, fill, tag, boxTop, boxH, threads, tallyY: top + 188};
 }
 
-const LANES = [lane(14, PY_HOLD, PY, 0.16, 'PYTHON'), lane(236, RS_HOLD, RS, 0.26, 'RUST')];
+const LANES = [lane(14, PY_HOLD, PY, 0.16, 'LITELLM PYTHON'), lane(236, RS_HOLD, RS, 0.26, 'LITELLM RUST')];
 const T_IN = BX / SPEED;
 const T_OUT = (W - BX - BW) / SPEED;
 
@@ -173,7 +173,7 @@ export default function LanesHero() {
         className={styles.stage}
         viewBox={`0 0 ${W} ${H}`}
         role="img"
-        aria-label="The same stream of requests flows through two gateways, Python on top and Rust below. In the Python gateway, every request slows to a crawl, and the box fills with slow-moving requests. In the Rust gateway, requests flash straight across. Under each gateway, the time its requests spent inside adds up as a bar: Python's bar grows block by block across the whole width, while Rust's stays a sliver.">
+        aria-label="The same stream of requests flows through two gateways, LiteLLM Python on top and LiteLLM Rust below. In the LiteLLM Python gateway, every request slows to a crawl, and the box fills with slow-moving requests. In the LiteLLM Rust gateway, requests flash straight across. Under each gateway, the time its requests spent inside adds up as a bar: Python's bar grows block by block across the whole width, while Rust's stays a sliver.">
         <rect x="0" y="0" width={W} height={H} fill="#36362c" />
         {LANES.map(ln => {
           const {dots, done, since} = scene(ln, now);
