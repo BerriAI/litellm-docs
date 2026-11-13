@@ -186,12 +186,16 @@
   display: block;
   width: 100%;
   height: auto;
+  padding: 14px;
+  background: #202020;
   border: 1px solid rgba(140, 156, 183, 0.2);
-  border-radius: 12px;
+  border-radius: 20px;
 }
 
 .screenshotLink {
   display: block;
+  overflow: hidden;
+  border-radius: 20px;
   cursor: zoom-in;
 }
 
@@ -205,6 +209,15 @@
 
 .requestShot {
   width: min(928px, calc(100% - 48px)) !important;
+}
+
+.usageShot {
+  width: min(760px, calc(100% - 48px)) !important;
+}
+
+.usageShot .screenshotLink {
+  max-width: 760px;
+  margin: 0 auto;
 }
 
 @media (min-width: 2200px) {

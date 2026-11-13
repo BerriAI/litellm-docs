@@ -533,6 +533,217 @@
   color: #adc2ff;
 }
 
+.fallbackBody {
+  position: relative;
+  padding: 14px 20px 18px;
+}
+
+.modelRoutes {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: start;
+  gap: 8px;
+  min-height: 76px;
+  margin-bottom: 20px;
+}
+
+.routeLines {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: 56px;
+  pointer-events: none;
+}
+
+.routeLines path {
+  fill: none;
+  stroke-width: 1;
+}
+
+.premiumRoute {
+  stroke: #d6a17f;
+  opacity: 0.7;
+}
+
+.economyRoute {
+  stroke: #739bff;
+  opacity: 0.25;
+}
+
+.window[data-rerouted='true'] .premiumRoute {
+  opacity: 0.25;
+}
+
+.window[data-rerouted='true'] .economyRoute {
+  opacity: 0.7;
+}
+
+.routePacket {
+  stroke-dasharray: 0.08 0.92;
+  animation: packetFlow 1.8s linear infinite;
+}
+
+.premiumPacket {
+  stroke: #e7b995;
+}
+
+.economyPacket {
+  stroke: #adc2ff;
+}
+
+.window[data-playing='false'] .routePacket {
+  animation-play-state: paused;
+}
+
+.modelNode, .gatewayNode {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  text-align: center;
+}
+
+.modelNode img, .gatewayNode img {
+  position: relative;
+  z-index: 1;
+  background: #020304;
+}
+
+.modelNode img {
+  border-radius: 50%;
+}
+
+.modelNode strong {
+  color: #f4f5f7;
+  font: 400 12px / 1.4 'Geist Mono', monospace;
+}
+
+.modelNode small, .gatewayNode small {
+  color: #969ca7;
+  font: 400 9px / 1.4 'Geist Mono', monospace;
+}
+
+.gatewayNode {
+  padding-top: 7px;
+}
+
+.gatewayNode small {
+  max-width: 95px;
+  margin-top: 7px;
+}
+
+.fallbackComparison {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 28px;
+  align-items: center;
+}
+
+.fallbackCharts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  text-align: center;
+}
+
+.fallbackCharts > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+
+.fallbackCharts strong {
+  color: #f4f5f7;
+  font: 400 15px / 1.4 'Geist Mono', monospace;
+}
+
+.fallbackCharts span {
+  color: #aeb7c6;
+  font: 400 10px / 1.4 'Geist Mono', monospace;
+}
+
+.fallbackCredits .entityBudgetBar, .fallbackSpendBar {
+  width: 38px;
+  height: 120px;
+}
+
+.fallbackCredits .entityBudgetBar b {
+  background: #bdc4cf;
+}
+
+.fallbackSpendBar {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 1px;
+}
+
+.fallbackSpendBar i {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  background: #25292f;
+}
+
+.fallbackSpendBar b, .fallbackSpendBar em {
+  position: absolute;
+  inset: auto 0 0;
+}
+
+.fallbackSpendBar b {
+  background: #d6a17f;
+}
+
+.fallbackSpendBar em {
+  background: #739bff;
+}
+
+.fallbackActualPlot {
+  position: relative;
+}
+
+.fallbackActualPlot::after {
+  position: absolute;
+  right: -10px;
+  bottom: 48px;
+  left: -10px;
+  border-top: 1px dashed #e7b995;
+  content: '';
+}
+
+.fallbackSummary {
+  display: grid;
+  gap: 8px;
+  color: #969ca7;
+  font: 400 10px / 1.4 'Geist Mono', monospace;
+}
+
+.fallbackSummary p {
+  margin: 0;
+  font: inherit;
+}
+
+.fallbackSummary .premiumLabel {
+  color: #e7b995;
+}
+
+.fallbackSummary .economyLabel {
+  color: #adc2ff;
+}
+
+.fallbackSummary > strong {
+  color: #739bff;
+  font: 400 30px / 1.3 Geist, Arial, sans-serif;
+}
+
+.fallbackSummary small {
+  color: #aeb7c6;
+  font: 400 10px / 1.4 'Geist Mono', monospace;
+}
+
 @keyframes packetFlow {
   to { stroke-dashoffset: -1; }
 }
@@ -565,6 +776,11 @@
   .chart { --plot-height: 135px; }
   .chartLabels { font-size: 10px; }
   .windowHeader { gap: 8px; padding-inline: 12px; font-size: 9px; }
+  .fallbackBody { padding-inline: 12px; }
+  .fallbackComparison { grid-template-columns: minmax(140px, 1fr) minmax(0, 1fr); gap: 14px; }
+  .fallbackSummary { font-size: 9px; }
+  .modelNode strong { font-size: 10px; }
+  .modelNode small, .gatewayNode small { font-size: 8px; }
 }
 
 @media (max-width: 380px) {
@@ -580,6 +796,7 @@
   .flowPacket,
   .connector::after,
   .treePacket { animation: none; }
+  .routePacket { animation: none; stroke-dasharray: none; opacity: 0.5; }
   .flowPacket { stroke-dasharray: none; opacity: 0.3; }
   .window { transition: none; }
 }
