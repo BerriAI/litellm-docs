@@ -18,7 +18,7 @@ draft: false
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CustomerPortalHero from './CustomerPortalHero';
-import {CostComplexity, CustomerHierarchyBreakdown, CustomerEntityBudgets, CustomerMargin, CustomerBudgetAlert} from './CustomerHierarchy';
+import {CostComplexity, CustomerHierarchyBreakdown, CustomerEntityBudgets, CustomerMargin, CustomerBudgetAlert, CustomerBudgetFallback} from './CustomerHierarchy';
 import {PostByline} from '@theme/BlogPostPage';
 import styles from './customer-portal-hero.module.css';
 
@@ -36,7 +36,7 @@ For AI-native companies building production agents using LiteLLM AI Gateway who 
 
 ## The problem
 
-With B2B AI agents, cost tracking gets complicated across customer organizations, teams, and individual members. Your customer's AI spend can exceed what you charge them.
+With B2B AI agents, cost tracking gets complicated across customer organizations, teams, and individual members. If you sell pay-as-you-go credits or usage-based plans, actual spend can exceed what your customer paid and hurt your margin.
 
 <CustomerMargin stage="uncontrolled" />
 
@@ -120,15 +120,15 @@ That's it for attributing the call. LiteLLM resolves the member's customer team 
 Use your application key and a gateway model alias. `LITELLM_BASE_URL` is the gateway root URL; [register the customer first](/docs/proxy/customer_portal/track-customer-spend#2-import-a-customer), and select their identity from your authenticated session.
 
 <figure data-full-width className={`${styles.productShot} ${styles.requestShot}`}>
-  <a className={styles.screenshotLink} href="/img/customer_portal/launch-spend-log.webp" target="_blank" rel="noopener noreferrer" aria-label="Open the request customer attribution screenshot at full resolution">
-    <img src="/img/customer_portal/launch-spend-log.webp" width="2020" height="1052" alt="A saved request's Customer section shows its customer organization, team, and member, alongside $0.14 cost and 120 tokens in Metrics." loading="lazy" />
+  <a className={styles.screenshotLink} href="/img/customer_portal/launch-spend-log-dark.webp" target="_blank" rel="noopener noreferrer" aria-label="Open the request customer attribution screenshot at full resolution">
+    <img src="/img/customer_portal/launch-spend-log-dark.webp" width="2481" height="1533" alt="A saved request's Customer section shows its customer organization, team, and member, alongside $0.14 cost and 120 tokens in Metrics." loading="lazy" />
   </a>
-  <figcaption>Follow a request into spend logs to see its customer organization, team, member, and cost. Demo data. <a href="/img/customer_portal/launch-spend-log.webp" target="_blank" rel="noopener noreferrer">View full size.</a></figcaption>
+  <figcaption>Follow a request into spend logs to see its customer organization, team, member, and cost. Demo data. <a href="/img/customer_portal/launch-spend-log-dark.webp" target="_blank" rel="noopener noreferrer">View full size.</a></figcaption>
 </figure>
 
 ### Set customer budgets that protect your margin
 
-If you charge $100 per member, you can give that member a $60 AI allowance. Set separate budgets for the customer organization, each team, and each member:
+If a member buys $100 in credits, set a $60 budget for actual spend to protect your margin. Set separate budgets for the customer organization, each team, and each member:
 
 <CustomerEntityBudgets />
 
@@ -172,10 +172,10 @@ Open **Customer Portal → Customers → your customer → Settings**. Use **Set
 </Tabs>
 
 <figure data-full-width className={styles.productShot}>
-  <a className={styles.screenshotLink} href="/img/customer_portal/launch-member-caps.webp" target="_blank" rel="noopener noreferrer" aria-label="Open the customer member budgets screenshot at full resolution">
-    <img src="/img/customer_portal/launch-member-caps.webp" width="3172" height="1153" alt="Customer member spend and budgets in LiteLLM, with token counts and $50 caps for two demo members." loading="lazy" />
+  <a className={styles.screenshotLink} href="/img/customer_portal/launch-member-caps-dark.webp" target="_blank" rel="noopener noreferrer" aria-label="Open the customer member budgets screenshot at full resolution">
+    <img src="/img/customer_portal/launch-member-caps-dark.webp" width="4008" height="789" alt="Customer member spend in the latest LiteLLM UI, with monthly and yearly budget windows, share of customer spend, tokens, and status." loading="lazy" />
   </a>
-  <figcaption>Demo members and their configured allowances in the LiteLLM admin UI. <a href="/img/customer_portal/launch-member-caps.webp" target="_blank" rel="noopener noreferrer">View full size.</a></figcaption>
+  <figcaption>Customer member spend and budget windows in the latest LiteLLM UI. Seeded demo data. <a href="/img/customer_portal/launch-member-caps-dark.webp" target="_blank" rel="noopener noreferrer">View full size.</a></figcaption>
 </figure>
 
 At the cap, LiteLLM rejects new requests based on recorded spend. Leave room for accounting delays and requests already in flight.
@@ -205,7 +205,7 @@ When a member reaches their $60 cap, use the budget webhook to alert your team o
 
 ### Approve a temporary increase when your customer upgrades
 
-If the customer needs more, tie the increase to a plan upgrade or extra charge in your product. The workflow above shows a $150 price and an approved temporary $90 AI allowance.
+When the customer buys another $50 in credits, their total becomes $150. After approval, apply a temporary $90 cap on actual spend, as shown above.
 
 Set `INCREASE_EXPIRES_AT` to a future timestamp with a timezone, then apply the temporary member override:
 
@@ -220,17 +220,17 @@ curl --fail-with-body --request PATCH \
   }"
 ```
 
-Your billing system handles the price change. LiteLLM applies the allowance until it expires; the organization and team caps still apply. Use the [approval APIs](/docs/proxy/customer_portal/api_reference#budget-increase-requests) if your workflow needs a review queue.
+Your product manages credit purchases and balances. LiteLLM applies the spend allowance until it expires; the organization and team caps still apply. Use the [approval APIs](/docs/proxy/customer_portal/api_reference#budget-increase-requests) if your workflow needs a review queue.
 
 ### Put the usage and budget controls in your own product
 
-Now give the customer a usage page next to their plan, allowance, and upgrade options. Our APIs let your backend fetch their spend and budget settings, so the customer sees the same costs you use for chargebacks:
+Put usage next to the customer's credits and top-up options. Our APIs let your backend fetch actual spend and budget settings, so the customer sees the same costs you use for chargebacks:
 
-<figure data-full-width className={styles.productShot}>
-  <a className={styles.screenshotLink} href="/img/customer_portal/launch-usage-overview.webp" target="_blank" rel="noopener noreferrer" aria-label="Open the customer organization usage screenshot at full resolution">
-    <img src="/img/customer_portal/launch-usage-overview.webp" width="3270" height="4266" alt="Customer organization usage in LiteLLM, with spend and token totals, a daily trend across three models, and a per-model breakdown." loading="lazy" />
+<figure data-full-width className={`${styles.productShot} ${styles.usageShot}`}>
+  <a className={styles.screenshotLink} href="/img/customer_portal/launch-usage-overview-dark.webp" target="_blank" rel="noopener noreferrer" aria-label="Open the customer organization usage screenshot at full resolution">
+    <img src="/img/customer_portal/launch-usage-overview-dark.webp" width="4008" height="2262" alt="Customer organization usage in the dark LiteLLM UI, with spend and token totals and a daily trend across three models." loading="lazy" />
   </a>
-  <figcaption>Demo usage across three models, with 13 days of activity. Track the customer's total and inspect the model costs behind it. <a href="/img/customer_portal/launch-usage-overview.webp" target="_blank" rel="noopener noreferrer">View full size.</a></figcaption>
+  <figcaption>Demo usage across three models, with 13 days of activity. Track the customer's total and inspect the model costs behind it. <a href="/img/customer_portal/launch-usage-overview-dark.webp" target="_blank" rel="noopener noreferrer">View full size.</a></figcaption>
 </figure>
 
 Fetch complete organization totals for a date range:
@@ -245,6 +245,14 @@ curl --fail-with-body --silent --show-error --get \
 ```
 
 Read `metadata.total_spend`, `total_tokens`, and `total_api_requests`. Fetch caps from the organization, team, and member records; keep admin credentials on your backend and authorize each customer's access. Your billing system applies your prices and collects payment.
+
+### Keep serving requests with a lower-cost model
+
+Give a customer's dedicated virtual key an Opus allowance, then configure a lower-cost fallback for when that model allowance runs out. The customer can keep using your agent while they still have room in their overall budget.
+
+<CustomerBudgetFallback />
+
+Set `model_max_budget` and `budget_fallbacks` on the key with your configured model aliases. These [per-model key budgets](/docs/proxy/users#-virtual-key-model-specific) require Enterprise. A shared key pools its model budget across callers; customer organization, team, and member hard caps still stop requests when exhausted. See [Budget Fallbacks](/docs/proxy/budget_fallbacks) for the API setup.
 
 ## OSS and Enterprise
 
