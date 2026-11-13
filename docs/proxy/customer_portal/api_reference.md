@@ -67,6 +67,8 @@ Organizations and teams accept `budget`. Members inherit a template through `bud
 | `budget_duration` | String or `null`; default `null` | Reset interval, for example `"1h"`, `"24h"`, `"7d"`, or `"30d"`. Must resolve to a positive duration. |
 | `model_rpm_limit` | Object or `null`; default `null` | Model name to non-negative requests-per-minute limit. |
 | `model_tpm_limit` | Object or `null`; default `null` | Model name to non-negative tokens-per-minute limit. |
+| `budget_limits` | Array or `null`; default `null` | Extra spend caps, each with `budget_duration` set to `"1mo"` or `"12mo"` and a `max_budget`. Each window resets on its own and blocks requests when reached. |
+| `cap_policy` | `"pause_until_reset"`, `"pause_allow_increase"`, or `null`; default `null` | What a member can do at its cap. `null` and `"pause_until_reset"` wait for the reset. `"pause_allow_increase"` lets the member [request a temporary increase](#budget-increase-requests). |
 
 With customer identity headers, LiteLLM checks the organization, team, and member budgets before inference. A scope at or above `max_budget` causes a budget error; the organization takes precedence over the team and member. LiteLLM also checks each scope's model access and rate limits. Requests without these headers do not enter this hierarchy enforcement path.
 
@@ -111,7 +113,7 @@ Each organization, team, and member includes these fields in addition to its res
 | `budget_id` | String or `null` | Organization's own budget record. |
 | `budget` | Budget object or `null` | Organization's overall limits. |
 | `member_count` | Integer | Registered members across the organization's teams. |
-| `default_budget_id` | String or `null` | Default member template ID. |
+| `default_budget_template_id` | String or `null` | Default member template ID. |
 | `default_budgets` | Array | Member templates, each with budget fields plus `budget_id`, `name`, and `is_default`. |
 
 ```bash title="Create an organization with a default member template"
@@ -153,12 +155,16 @@ curl --request POST \
 | `parent_org_id` | Required | Not accepted | Existing customer organization ID. |
 | `alias` | Optional, default `null` | Optional; `null` clears it | Display name. |
 | `budget` | Optional, default `null` | Optional; `null` removes it | Team [budget object](#budget-object). |
+| `budget_override` | Optional, default `null` | Optional; `null` removes it | Team [budget fields](#budget-object) that override `budget`. |
+| `budget_override_expires_at` | Optional, default `null` | Optional; `null` removes expiry | Timestamp with a timezone. After expiry, the team uses `budget`. |
 
 | Additional response field | Type | Meaning |
 | --- | --- | --- |
 | `customer_team_id`, `parent_org_id` | String | Team ID and its customer organization ID. |
 | `budget_id` | String or `null` | Team's own budget record. |
 | `budget` | Budget object or `null` | Team limits. An absent team budget does not remove organization or member limits. |
+| `budget_override_id`, `budget_override`, `budget_override_expires_at` | String, budget object, and datetime, each nullable | Stored team override and its expiry. |
+| `effective_budget` | Budget object | Team budget plus its active override. |
 
 ```bash title="Create a customer team"
 curl --request POST \
@@ -189,7 +195,8 @@ curl --request POST \
 | Request field | Create | Update | Meaning |
 | --- | --- | --- | --- |
 | `customer_member_id` | Optional, generated when omitted | Not accepted | Stable member ID. |
-| `parent_team_id` | Required | Not accepted | Existing customer team ID. |
+| `parent_team_ids` | Required, non-empty array | Not accepted | Existing customer team IDs from one customer organization. The first team is the member's default team. |
+| `parent_org_id` | Optional | Not accepted | Customer organization ID. When set, it must match the teams' organization. |
 | `email` | Optional, default `null`; preview #51617 | Optional; `null` clears it; preview #51617 | String of 1–254 characters after trimming and lowercasing. Unique within the customer organization. |
 | `alias` | Optional, default `null` | Optional; `null` clears it | Display name. |
 | `budget_id` | Optional; omitted or `null` uses the organization's default template | Optional; `null` detaches the template | Member template ID from the same customer organization. |
@@ -207,14 +214,15 @@ curl --request POST \
   -H "Content-Type: application/json" \
   --data '{
     "customer_member_id": "acme-alice",
-    "parent_team_id": "acme-support",
+    "parent_team_ids": ["acme-support"],
     "alias": "Alice"
   }'
 ```
 
 | Additional response field | Type | Meaning |
 | --- | --- | --- |
-| `customer_member_id`, `parent_team_id` | String | Member ID and parent team. Retrieve that team to obtain `parent_org_id`. |
+| `customer_member_id`, `parent_org_id` | String | Member ID and its customer organization ID. |
+| `parent_team_ids` | Array of strings | Member's customer teams, default team first. |
 | `email` | String or `null`; preview #51617 | Normalized email, when the build includes member email support. |
 | `budget_id` | String or `null` | Selected organization template. |
 | `budget_override_id` | String or `null` | Owned override record. |
@@ -252,6 +260,33 @@ curl --request POST \
   }'
 ```
 
+## Budget increase requests
+
+A member whose effective budget has `cap_policy: "pause_allow_increase"` can ask for a temporary cap. The budget error at the cap names this route. Members with any other policy get `422`.
+
+| Method | Path | Result |
+| --- | --- | --- |
+| `POST` | `/management/v1/customer_budget_increase_requests` | `201`, request with `status: "pending_review"`. |
+| `GET` | `/management/v1/customer_budget_increase_requests` | `200`, review queue. |
+| `GET` | `/management/v1/customer_budget_increase_requests/{request_id}` | `200`, one request. |
+| `PUT` | `/management/v1/customer_budget_increase_requests/{request_id}/approve` | `200`. The member's override takes `requested_max_budget` until `expires_at`. |
+| `PUT` | `/management/v1/customer_budget_increase_requests/{request_id}/reject` | `200`. The member stays paused. Accepts optional `review_notes`. |
+
+Creation requires `customer_member_id`, `requested_max_budget`, and a timezone-aware `expires_at`, and accepts an optional `reason`.
+
+```bash title="Request a temporary increase"
+curl --request POST \
+  "$LITELLM_BASE_URL/management/v1/customer_budget_increase_requests" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "customer_member_id": "acme-alice",
+    "requested_max_budget": 75,
+    "expires_at": "2026-12-01T00:00:00Z",
+    "reason": "Quarter-end workload"
+  }'
+```
+
 ## List pagination
 
 Organization, team, and member lists share these query parameters. Unknown parameters and repeated query parameters return `400`.
@@ -262,7 +297,7 @@ Organization, team, and member lists share these query parameters. Unknown param
 | `page_size` | `50` | Requested rows, at least `1`. The server caps it at `100`. |
 | `q` | `""` | Organization lists only. Case-insensitive substring of organization ID or alias. |
 | `parent_org_id` | Unset | Team lists only. Restrict to one organization. |
-| `parent_team_id` | Unset | Member lists only. Restrict to one team. |
+| `parent_team_id` | Unset | Member lists only. Restrict to members of one team. |
 
 ```bash title="List a customer's teams"
 curl --get \
