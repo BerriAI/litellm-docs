@@ -1,3 +1,8 @@
+---
+title: "LLM Guardrails on LiteLLM AI Gateway: Quick Start"
+sidebar_label: "Guardrails - Quick Start"
+description: "Add prompt injection detection and PII masking to the LiteLLM AI Gateway: define guardrails in config.yaml, pick a mode and set default-on rules."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

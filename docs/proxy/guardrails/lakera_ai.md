@@ -1,3 +1,8 @@
+---
+title: "Lakera AI Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Lakera AI"
+description: "Block prompt injection and mask PII with Lakera Guard on the LiteLLM AI Gateway: config.yaml setup plus pre_call, during_call and post_call modes."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

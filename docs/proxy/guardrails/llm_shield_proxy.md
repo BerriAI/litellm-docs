@@ -1,3 +1,8 @@
+---
+title: "LLM Shield Proxy PII Guardrail on LiteLLM"
+sidebar_label: "LLM Shield Proxy"
+description: "Swap personal data for stand-in values before it reaches the model and restore it in the reply with LLM Shield Proxy on the LiteLLM AI Gateway."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

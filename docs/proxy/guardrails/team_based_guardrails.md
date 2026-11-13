@@ -1,3 +1,8 @@
+---
+title: "Team Bring-Your-Own Guardrails on LiteLLM"
+sidebar_label: "Team Bring-Your-Own Guardrails"
+description: "Let developers register a Generic Guardrail API guardrail for their team on the LiteLLM AI Gateway, then approve or reject it in the Admin UI."
+---
 import Image from '@theme/IdealImage';
 
 # Team Bring-Your-Own Guardrails

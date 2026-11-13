@@ -1,3 +1,8 @@
+---
+title: "Noma Security Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Noma Security"
+description: "Add Noma Security moderation and safety guardrails to the LiteLLM AI Gateway with noma_v2, including MCP call modes and a monitor-only mode."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

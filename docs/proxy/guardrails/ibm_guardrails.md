@@ -1,3 +1,8 @@
+---
+title: "IBM FMS Guardrails on LiteLLM AI Gateway"
+sidebar_label: "IBM Guardrails"
+description: "Detect jailbreaks, PII and hate speech with IBM FMS Guardrails on the LiteLLM AI Gateway, calling a detector server or the orchestrator from config.yaml."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
