@@ -346,4 +346,4 @@ Open `/fallback/login` to sign in with a username and password while SSO is enab
 - [SSO permissions](./access_management/sso_permissions.md): sign-in restrictions, roles, team membership, and key creation.
 - [CLI sign-in](./cli_sso.md): sign in from a command-line client.
 - [Custom SSO](./custom_sso.md): customize the sign-in integration.
-- [Customize UI branding](./ui/ui_edit_logo.md): logos and color themes.
+- [Customize UI branding](./ui/ui_edit_logo.md): logos and favicon.
