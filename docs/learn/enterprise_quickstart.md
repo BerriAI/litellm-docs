@@ -54,7 +54,7 @@ The full list is in [Production best practices](/docs/proxy/prod) and [Security 
 Follow the [Quickstart](/docs/proxy/docker_quick_start). Condensed steps:
 
 ```bash
-curl -O https://raw.githubusercontent.com/BerriAI/litellm/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/deploy/compose/docker-compose.yml
 ```
 
 Create `.env`:
@@ -84,8 +84,20 @@ general_settings:
   store_model_in_db: true
 ```
 
+Create `docker-compose.override.yml` to mount the config file:
+
+```yaml title="docker-compose.override.yml"
+services:
+  litellm:
+    command: ["--config", "/app/config.yaml"]
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+```
+
+Point the downloaded Compose file at the `.env` in this directory, then start it:
+
 ```bash
-docker compose up
+LITELLM_ENV_FILE=.env docker compose up -d
 ```
 
 </TabItem>

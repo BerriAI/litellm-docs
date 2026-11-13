@@ -82,7 +82,7 @@ Manage a running gateway from Claude Code with a personal admin key, never the m
 
 Launches Claude Code or Codex through your gateway, with its URL and your key already set.
 
-<Command code="curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install-cli.sh | sh" id="lite-cli" note="Installs the lite client only. The gateway runs elsewhere." />
+<Command code="curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/scripts/install-cli.sh | sh" id="lite-cli" note="Installs the lite client only. The gateway runs elsewhere." />
 
 <Tiles columns={3} items={[
   {icon: 'agent', title: 'Claude Code', text: 'Route Claude Code through the gateway, including non-Anthropic models.', to: '/docs/proxy/client_setup/claude_code'},

@@ -19,7 +19,7 @@ For proxy setup and the full configuration reference, see [Auto Routing](../prox
 `lite autoroute start` runs a throwaway proxy on your machine, so it needs the full proxy runtime: the thin `install-cli.sh` one-liner from the [CLI quick start](../proxy/management_cli.md#quick-start) installs only `litellm[cli]`, which is not enough here, and the command below replaces that install. It installs `litellm[proxy]` from `main` with a single curl command; `uv` is bootstrapped automatically if it is missing.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install.sh | \
+curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/scripts/install.sh | \
   LITELLM_CLI_REF=main sh
 ```
 

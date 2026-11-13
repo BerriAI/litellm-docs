@@ -85,21 +85,25 @@ async with ClaudeSDKClient(options=options) as client:
 
 ## Complete Example
 
-See our [cookbook example](https://github.com/BerriAI/litellm/tree/main/cookbook/anthropic_agent_sdk) for a complete interactive CLI agent that:
+See our [archived cookbook example](https://github.com/BerriAI/litellm/tree/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/anthropic_agent_sdk) for a complete interactive CLI agent that:
 - Streams responses in real-time
 - Switches between models dynamically
 - Fetches available models from the proxy
 
+The cookbook was removed from `main`. Check out the archived commit before entering the example directory:
+
 ```bash
-# Clone and run the example
 git clone https://github.com/BerriAI/litellm.git
-cd litellm/cookbook/anthropic_agent_sdk
-uv add -r requirements.txt
-python main.py
+cd litellm
+git checkout 89a6b5fbb26b632ef0faf633b0d3cf317d73deaa
+cd cookbook/anthropic_agent_sdk
+uv venv
+uv pip install -r requirements.txt
+uv run --no-project python main.py
 ```
 
 ## Related Resources
 
 - [Claude Agent SDK Documentation](https://github.com/anthropics/anthropic-agent-sdk)
 - [LiteLLM Proxy Quick Start](../proxy/quick_start)
-- [Complete Cookbook Example](https://github.com/BerriAI/litellm/tree/main/cookbook/anthropic_agent_sdk)
+- [Complete Cookbook Example](https://github.com/BerriAI/litellm/tree/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/anthropic_agent_sdk)
