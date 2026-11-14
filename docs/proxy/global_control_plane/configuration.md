@@ -111,6 +111,12 @@ See the [JWT configuration reference](../jwt_auth_reference.md) for additional d
 
 ## Data plane registry
 
+Use static configuration, runtime configuration, or both to register data planes. Runtime entries cannot replace static entries.
+
+### Static configuration
+
+Load registry entries from YAML or JSON at startup. This option needs no PostgreSQL or Redis for the control plane. Restart the control-plane replicas to apply changes.
+
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
 | `CONTROL_PLANE_DATAPLANES_FILE` | Unset | Path to the YAML registry. |
@@ -132,34 +138,11 @@ dataplanes:
       token: REPLACE_WITH_SERVICE_TOKEN
 ```
 
-### Registry entries
+Store the YAML registry in a Secret and set `CONTROL_PLANE_DATAPLANES_FILE` to its mounted path. Registry values are literal and do not expand `os.environ/` references.
 
-Each entry needs `service_token`, `oidc_exchange`, or both. Store the YAML registry in a Secret and set `CONTROL_PLANE_DATAPLANES_FILE` to its mounted path. Registry values are literal and do not expand `os.environ/` references.
+### Runtime configuration
 
-| Field | Default | Purpose |
-| --- | --- | --- |
-| Registry map key | Required | Stable data plane ID used in API paths and access claims. `control-plane` is reserved. |
-| `url` | Required | Data plane base URL without userinfo. Use HTTPS. |
-| `name` | Registry ID | Display name. |
-| `service_token.token` | Unset | Data plane virtual key with impersonation permission. |
-| `oidc_exchange.token_endpoint` | Required for exchange | IdP HTTPS token endpoint. |
-| `oidc_exchange.client_id`, `oidc_exchange.client_secret` | Required for exchange | Token-exchange application credentials. |
-| `oidc_exchange.profile` | `rfc8693` | `rfc8693` or `jwt_bearer_obo`. |
-| `oidc_exchange.audience` | Unset | Target audience for RFC 8693 exchange. |
-| `oidc_exchange.scope` | Unset | Requested scopes. Required for `jwt_bearer_obo`. |
-| `allow_insecure_http` | `false` | Permit plain HTTP for a local or in-cluster data plane. |
-
-With `profile: rfc8693`, the control plane uses [OAuth 2.0 Token Exchange (RFC 8693)](https://www.rfc-editor.org/rfc/rfc8693.html). It submits the caller's access token as `subject_token` with type `urn:ietf:params:oauth:token-type:access_token`. It includes `audience` and `scope` when configured.
-
-With `profile: jwt_bearer_obo`, it uses the [Microsoft Entra on-behalf-of flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow). Set `scope` to the data plane API's delegated scope. This profile does not send `audience`.
-
-Both profiles require an IdP JWT access token authenticated by the control plane. The IdP must return a signed JWT for the data plane. If both credential methods are configured, the control plane falls back to the service token when exchange cannot produce a token.
-
-Service tokens are LiteLLM virtual API keys sent as bearer credentials. They need `permissions: {impersonate: true}`. Match each operator's local data plane `user_id` to their control plane OIDC `sub` or password-login username. The data plane applies that user's local permissions. This method does not require JWT authentication on the data plane. Calls with the control plane master key use the service token's own identity.
-
-## Runtime configuration
-
-Runtime storage is optional. With neither database nor Redis configured, the service uses startup registry entries and roles as before. Reads remain available, including `GET /api/v1/roles`, but runtime PUT and DELETE routes return `503` after authorization.
+Add, update, or delete runtime registry entries through the [API](./api_reference.md#runtime-data-plane-writes) without a rolling restart. This option requires dedicated control-plane PostgreSQL and Redis.
 
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
@@ -184,7 +167,7 @@ export CONTROL_PLANE_SALT_KEY='REPLACE_WITH_SHARED_ENCRYPTION_KEY'
 
 Use a TLS-enabled Redis connection with `rediss://` when required by your Redis deployment.
 
-### Migration job
+#### Migration job
 
 Run this one-shot job before deploying a new control-plane version or starting replicas against a new database:
 
@@ -198,11 +181,36 @@ Use a direct PostgreSQL connection for this job rather than a transaction pooler
 
 Server startup only checks the schema version and loads the snapshot. It does not create or upgrade tables. A missing or outdated schema is logged with the migration command. Reads use config-only state and runtime writes return `503`. If a replica started before migrations completed, restart it after the job succeeds to enable runtime storage.
 
-### Effective state and secrets
+#### Effective state and secrets
 
 Runtime entries merge into the configured registry and role policy. Config-defined entries and included default roles remain authoritative and read-only through the API. Runtime entries extend that base but cannot shadow or replace protected names. Use the [write APIs](./api_reference.md#runtime-data-plane-writes) for runtime entries and startup settings for protected entries.
 
 The service encrypts `oidc_exchange.client_secret` and `service_token.token` before publishing to Redis or writing PostgreSQL. API responses expose credential method names, not secrets. Runtime deletes remove the database row. Replicas load persisted state after restart, so changes do not depend on retaining every stream event. Audit queues and recent audit records remain process-local and are not stored in the runtime configuration database or stream.
+
+### Registry entries
+
+Static and runtime entries use these fields. Each entry needs `service_token`, `oidc_exchange`, or both.
+
+| Field | Default | Purpose |
+| --- | --- | --- |
+| Data plane ID | Required | Static registry map key or runtime API path ID. `control-plane` is reserved. |
+| `url` | Required | Data plane base URL without userinfo. Use HTTPS. |
+| `name` | Registry ID | Display name. |
+| `service_token.token` | Unset | Data plane virtual key with impersonation permission. |
+| `oidc_exchange.token_endpoint` | Required for exchange | IdP HTTPS token endpoint. |
+| `oidc_exchange.client_id`, `oidc_exchange.client_secret` | Required for exchange | Token-exchange application credentials. |
+| `oidc_exchange.profile` | `rfc8693` | `rfc8693` or `jwt_bearer_obo`. |
+| `oidc_exchange.audience` | Unset | Target audience for RFC 8693 exchange. |
+| `oidc_exchange.scope` | Unset | Requested scopes. Required for `jwt_bearer_obo`. |
+| `allow_insecure_http` | `false` | Permit plain HTTP for a local or in-cluster data plane. |
+
+With `profile: rfc8693`, the control plane uses [OAuth 2.0 Token Exchange (RFC 8693)](https://www.rfc-editor.org/rfc/rfc8693.html). It submits the caller's access token as `subject_token` with type `urn:ietf:params:oauth:token-type:access_token`. It includes `audience` and `scope` when configured.
+
+With `profile: jwt_bearer_obo`, it uses the [Microsoft Entra on-behalf-of flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow). Set `scope` to the data plane API's delegated scope. This profile does not send `audience`.
+
+Both profiles require an IdP JWT access token authenticated by the control plane. The IdP must return a signed JWT for the data plane. If both credential methods are configured, the control plane falls back to the service token when exchange cannot produce a token.
+
+Service tokens are LiteLLM virtual API keys sent as bearer credentials. They need `permissions: {impersonate: true}`. Match each operator's local data plane `user_id` to their control plane OIDC `sub` or password-login username. The data plane applies that user's local permissions. This method does not require JWT authentication on the data plane. Calls with the control plane master key use the service token's own identity.
 
 ## Requests and usage
 
