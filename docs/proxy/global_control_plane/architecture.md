@@ -13,10 +13,6 @@ import { GlobalControlPlaneArchitecture } from '@site/src/components/GlobalContr
 
 Run the control plane in a management network and connect it to each data plane over private HTTPS. Corporate operators use the control-plane endpoint. Applications use their regional inference endpoint.
 
-These reference designs use Kubernetes, one control-plane replica, and two independent data planes. Each cloud example uses one account, subscription, or project. The hybrid example connects AWS to an on-premises data center.
-
-The diagrams show configuration-only control planes, which do not need PostgreSQL or Redis. To enable runtime registry and role writes, add a dedicated control-plane PostgreSQL database and a shared Redis stream, separate from every data plane's stores. Those optional control-plane stores are not drawn below. Multiple control-plane replicas can share them, with one worker per replica.
-
 See [Configuration](./configuration.md) for service settings. Use the [cloud deployment guides](../deploy/cloud/overview.md) for each data plane's replicas, availability zones, and model-provider connections.
 
 For [OIDC token exchange](./configuration.md#data-plane-jwt-authentication), allow outbound HTTPS to the IdP from the control plane and each data plane. The control plane exchanges tokens. Each data plane fetches the IdP's signing keys and validates the exchanged token with its own JWT configuration.
