@@ -764,6 +764,7 @@ export const PASS_THROUGH = [
   {label: 'OpenAI', doc: 'pass_through/openai_passthrough', route: '/openai_passthrough'},
   {label: 'TinyFish', doc: 'pass_through/tinyfish', route: '/tinyfish'},
   {label: 'Amazon Transcribe', doc: 'pass_through/transcribe', route: '/transcribe'},
+  {label: 'Tripo', doc: 'pass_through/tripo', route: '/tripo'},
   {label: 'Typesafe', doc: 'pass_through/typesafe', route: '/typesafe'},
   {label: 'Managed IDs', doc: 'proxy/passthrough_managed_ids'},
   {label: 'Gemini Enterprise Agent Platform (formerly Vertex AI)', doc: 'pass_through/vertex_ai', route: '/vertex_ai'},
