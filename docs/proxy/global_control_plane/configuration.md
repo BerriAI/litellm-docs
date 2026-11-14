@@ -9,7 +9,7 @@ description: Environment variables, data plane registry fields, and JWT settings
 
 {/* keep-version-note */}
 
-The control plane reads environment variables and its data plane registry at startup. Restart it after changing these settings. See [API Reference](./api_reference.md) for endpoints and permissions.
+The control plane reads environment variables and its configured data plane registry at startup. Restart it after changing startup settings. With [runtime configuration](#runtime-configuration) enabled, API changes to runtime registry entries and roles propagate without a restart. See [API Reference](./api_reference.md) for endpoints and permissions.
 
 ## Server
 
@@ -17,7 +17,7 @@ The control plane reads environment variables and its data plane registry at sta
 litellm --control-plane --host 0.0.0.0 --port 4000 --num_workers 1
 ```
 
-Run one worker per replica.
+Run one worker per replica and scale with replicas. The control-plane server rejects `--num_workers` values above `1`, `--reload`, `--run_gunicorn`, `--run_hypercorn`, and `--run_granian`. For server-side TLS, set both `--ssl_keyfile_path` and `--ssl_certfile_path`.
 
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
@@ -63,6 +63,8 @@ Allow HTTPS access to the IdP's [OpenID Connect Discovery](https://openid.net/sp
 | `CONTROL_PLANE_ROLES` | `{}` | JSON map of role names to `scopes` and optional `inherits`. Custom roles replace built-in roles with the same name. |
 | `CONTROL_PLANE_INCLUDE_DEFAULT_ROLES` | `true` | Include the built-in roles. |
 
+Config-defined roles and included default roles cannot be changed through the runtime API. Runtime role changes affect later JWT verification without rebuilding the service. JWT role names still come from the caller's claims, and a scope claim can still narrow the resolved grants.
+
 ## Data plane registry
 
 | Environment variable | Default | Purpose |
@@ -93,7 +95,7 @@ Each entry needs `service_token`, `oidc_exchange`, or both. Store the YAML regis
 | Field | Default | Purpose |
 | --- | --- | --- |
 | Registry map key | Required | Stable data plane ID used in API paths and access claims. `control-plane` is reserved. |
-| `url` | Required | Data plane base URL. Use HTTPS. |
+| `url` | Required | Data plane base URL without userinfo. Use HTTPS. |
 | `name` | Registry ID | Display name. |
 | `service_token.token` | Unset | Data plane virtual key with impersonation permission. |
 | `oidc_exchange.token_endpoint` | Required for exchange | IdP HTTPS token endpoint. |
@@ -111,6 +113,53 @@ Both profiles require an IdP JWT access token authenticated by the control plane
 
 Service tokens are LiteLLM virtual API keys sent as bearer credentials. They need `permissions: {impersonate: true}`. Match each operator's local data plane `user_id` to their control plane OIDC `sub` or password-login username. The data plane applies that user's local permissions. This method does not require JWT authentication on the data plane. Calls with the control plane master key use the service token's own identity.
 
+## Runtime configuration
+
+Runtime storage is optional. With neither database nor Redis configured, the service uses startup registry entries and roles as before. Reads remain available, including `GET /api/v1/roles`, but runtime PUT and DELETE routes return `503` after authorization.
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `CONTROL_PLANE_DATABASE_URL` | Unset | Dedicated control-plane PostgreSQL database for runtime data planes and roles. |
+| `CONTROL_PLANE_REDIS_URL` | Unset | Shared Redis connection URL for runtime configuration events. |
+| `CONTROL_PLANE_CONFIG_STREAM` | `litellm:control_plane:config` | Redis stream name shared by replicas of this control plane. |
+| `CONTROL_PLANE_CONFIG_STREAM_MAXLEN` | `10000` | Approximate maximum stream length. Minimum `1`. PostgreSQL remains authoritative when older events are trimmed. |
+| `CONTROL_PLANE_SALT_KEY` | Falls back to `LITELLM_SALT_KEY` | Encryption key for persisted data plane client secrets and service tokens. Required and nonempty when runtime storage is enabled. |
+
+Set both storage URLs or neither. Setting only one is a startup error. Every replica must use the same dedicated database, Redis stream, and stable salt key. Keep the salt key available across restarts and protect it separately from database backups. Changing or losing it without re-encrypting stored secrets prevents those secrets from being loaded.
+
+Use a separate PostgreSQL database owned by the control plane, not a data plane's database. The runtime store uses SQLAlchemy Core with the async psycopg driver and its own Alembic migrations. It does not use Prisma, `DATABASE_URL`, or the data plane's migration files. Both `postgresql://` and `postgresql+psycopg://` URLs are accepted. Runtime connections disable prepared statements with `prepare_threshold=None`.
+
+For example, load these values from your secret manager before starting the replicas:
+
+```bash
+export CONTROL_PLANE_DATABASE_URL='postgresql://control_plane:REPLACE_WITH_PASSWORD@postgres.internal.example.com:5432/control_plane'
+export CONTROL_PLANE_REDIS_URL='redis://redis.internal.example.com:6379/0'
+export CONTROL_PLANE_CONFIG_STREAM='litellm:control_plane:config'
+export CONTROL_PLANE_SALT_KEY='REPLACE_WITH_SHARED_ENCRYPTION_KEY'
+```
+
+Use a TLS-enabled Redis connection with `rediss://` when required by your Redis deployment.
+
+### Migration job
+
+Run this one-shot job before deploying a new control-plane version or starting replicas against a new database:
+
+```bash
+litellm --control-plane --skip_server_startup
+```
+
+The job requires `CONTROL_PLANE_DATABASE_URL`. It applies pending packaged Alembic revisions through `upgrade head`, records the version in `control_plane_alembic_version`, and exits without starting a server or invoking Prisma. Running it again with a current database is a no-op. A missing database URL or migration failure exits nonzero with a clear error.
+
+Use a direct PostgreSQL connection for this job rather than a transaction pooler. The migrator holds an advisory lock on one backend while Alembic runs migrations on a second connection, committing each revision separately. It needs at least two available backend connections. If serving uses a pooled URL, override `CONTROL_PLANE_DATABASE_URL` with the direct URL for the migration job.
+
+Server startup only checks the schema version and loads the snapshot. It does not create or upgrade tables. A missing or outdated schema is logged with the migration command. Reads use config-only state and runtime writes return `503`. If a replica started before migrations completed, restart it after the job succeeds to enable runtime storage.
+
+### Effective state and secrets
+
+Runtime entries merge into the configured registry and role policy. Config-defined entries and included default roles remain authoritative and read-only through the API. Runtime entries extend that base but cannot shadow or replace protected names. Use the [write APIs](./api_reference.md#runtime-data-plane-writes) for runtime entries and startup settings for protected entries.
+
+The service encrypts `oidc_exchange.client_secret` and `service_token.token` before publishing to Redis or writing PostgreSQL. API responses expose credential method names, not secrets. Runtime deletes remove the database row. Replicas load persisted state after restart, so changes do not depend on retaining every stream event. Audit queues and recent audit records remain process-local and are not stored in the runtime configuration database or stream.
+
 ## Requests and usage
 
 | Environment variable | Default | Purpose |
@@ -122,7 +171,7 @@ Service tokens are LiteLLM virtual API keys sent as bearer credentials. They nee
 
 ## Audit logs
 
-Audit events cover password login attempts, authentication and scope failures, and management proxy calls. Enable [tracing](#tracing) for successful fleet and usage queries.
+Audit events cover password login attempts, authentication and scope failures, management proxy calls, and authenticated runtime configuration write attempts. Runtime writes record events under `control-plane`, including allowed, denied, and failed attempts. Enable [tracing](#tracing) for successful fleet and usage queries.
 
 ### Delivery
 
@@ -133,11 +182,13 @@ Audit events cover password login attempts, authentication and scope failures, a
 | `CONTROL_PLANE_AUDIT_QUEUE_SIZE` | `10000` | Queue capacity per destination. Minimum `2`. |
 | `CONTROL_PLANE_AUDIT_BATCH_SIZE` | `100` | Maximum records in a delivery batch. |
 | `CONTROL_PLANE_AUDIT_DRAIN_SECONDS` | `5` | Queue drain time in seconds at shutdown. |
-| `CONTROL_PLANE_AUDIT_STRICT` | `false` | Refuse management writes when audit capacity is unavailable. |
+| `CONTROL_PLANE_AUDIT_STRICT` | `false` | Refuse management proxy and runtime configuration writes when audit capacity is unavailable. |
 
-Sink URLs use HTTPS by default. LiteLLM rejects startup if an enabled sink lacks required settings.
+S3, Splunk, and Sentinel URL settings require HTTPS. Only S3-compatible and Splunk destinations have an insecure HTTP opt-out. OTLP transport follows the exporter settings below. LiteLLM rejects startup if an enabled sink lacks required settings.
 
-Delivery queues and recent records are local to each process. A full queue drops its oldest record by default. Strict mode returns HTTP `503` before management writes when any sink has no capacity or has permanently rejected records. Restarts can lose queued records. Export records to a shared destination for retention across replicas and restarts.
+Delivery queues and recent records are local to each process. A full queue drops its oldest record by default. Strict mode returns HTTP `503` before management proxy or runtime configuration writes when any sink has no capacity or has permanently rejected records. Runtime writes reserve audit capacity before checking write scopes and data plane bindings. Restarts can lose queued records. Export records to a shared destination for retention across replicas and restarts.
+
+Delivery workers retry transient failures. Permanent rejections count as lost records and release the batch instead of blocking later delivery. For OTLP/HTTP, client errors other than `408` and `429` are permanent. For OTLP/gRPC, the retryable error codes are `CANCELLED`, `DEADLINE_EXCEEDED`, `RESOURCE_EXHAUSTED`, `ABORTED`, `OUT_OF_RANGE`, `UNAVAILABLE`, and `DATA_LOSS`. Other non-OK codes, such as `INVALID_ARGUMENT`, are permanent. Collector partial rejections are also counted.
 
 ### Amazon S3
 
@@ -153,6 +204,8 @@ Grant the control plane's IAM role `s3:PutObject` on the audit prefix. Object re
 | `CONTROL_PLANE_AUDIT_S3_RETENTION_DAYS` | `365` | Retention period when a lock mode is set. |
 | `CONTROL_PLANE_AUDIT_S3_TIMEOUT_SECONDS` | `30` | Object upload timeout in seconds. |
 | `CONTROL_PLANE_AUDIT_S3_ALLOW_INSECURE_HTTP` | `false` | Allow HTTP for an in-cluster destination. |
+
+S3 uploads use SigV4 and conditional writes. An existing object response (`412`) is treated as delivered. Redirects and most client errors are permanent rejections. `408`, `429`, server errors, and transport failures remain retryable. Retryable S3 error codes also include `RequestTimeout`, `RequestTimeoutException`, `SlowDown`, `ConditionalRequestConflict`, `OperationAborted`, `ExpiredToken`, `ExpiredTokenException`, `RequestExpired`, and `TokenRefreshRequired`. Retried uploads are signed again so refreshed credentials can deliver pending records.
 
 ### Splunk HEC
 
@@ -202,7 +255,7 @@ The OTLP settings below configure audit-log and trace exporters.
 
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
-| `OTEL_EXPORTER_OTLP_PROTOCOL` | `console` | Exporter protocol. Set `http/protobuf` for OTLP over HTTP. An endpoint selects OTLP/HTTP by default. |
+| `OTEL_EXPORTER_OTLP_PROTOCOL` | `console` | Exporter protocol. Set `http/protobuf` for OTLP/HTTP or `grpc` for OTLP/gRPC. An endpoint selects OTLP/HTTP by default. |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Unset | Base collector endpoint. |
 | `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` | Unset | Complete log endpoint, such as `https://otel.internal.example.com/v1/logs`. Requires the `otlp` audit sink. |
 | `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | Unset | Complete trace endpoint, such as `https://otel.internal.example.com/v1/traces`. |

@@ -23,8 +23,8 @@ Authenticated requests use HTTP Bearer authentication: `Authorization: Bearer <c
 | `proxy:read` | Forward `GET` and `HEAD` requests to supported data plane management routes. | `admin`, `editor`, `viewer` |
 | `proxy:write` | Forward `POST`, `PUT`, `PATCH`, and `DELETE` requests to supported data plane management routes. | `admin`, `editor` |
 | `audit:read` | Read recent control-plane audit events in native or OCSF format. | `admin` |
-| `dataplanes:write` | Defined but unused by the current API. Change the registry through [startup configuration](./configuration.md#data-plane-registry). | `admin` |
-| `roles:write` | Defined but unused by the current API. Change role definitions through [startup configuration](./configuration.md#roles). | `admin` |
+| `dataplanes:write` | Create, replace, and delete runtime data plane registry entries. Requires fleet-wide data plane access. | `admin` |
+| `roles:write` | List roles and create, replace, or delete runtime roles. New role grants cannot exceed the caller's effective scopes. | `admin` |
 
 The control plane combines the scopes granted by the caller's recognized roles. Custom role definitions can change the default grants above. The control plane master key has every scope.
 
@@ -65,15 +65,116 @@ Both fields are required. The username accepts 1 to 256 characters. The password
 | Method | Path | Required scope | Response |
 | --- | --- | --- | --- |
 | `GET` | `/api/v1/dataplanes` | `dataplanes:read` | `items` containing the registered data planes visible to the caller. |
-| `GET` | `/api/v1/dataplanes/{id}` | `dataplanes:read` | One data plane's `id`, `name`, `url`, and configured credential methods. |
+| `GET` | `/api/v1/dataplanes/{id}` | `dataplanes:read` | One data plane's `id`, `name`, `url`, `credentials`, and `source`. |
 | `GET` | `/api/v1/dataplanes/{id}/health` | `dataplanes:read` | `id`, `status`, `http_status`, and `detail`. |
 | `GET` | `/api/v1/dataplanes/{id}/whoami` | `dataplanes:read` | `id`, the selected `credential` method, `user_id`, `user_email`, and `user_role`. |
+| `PUT` | `/api/v1/dataplanes/{id}` | `dataplanes:write` and fleet-wide binding | Create or replace a runtime entry. Returns `200` with the data plane response. |
+| `DELETE` | `/api/v1/dataplanes/{id}` | `dataplanes:write` and fleet-wide binding | Delete a runtime entry. Returns `204` with no body. |
 
-The list uses the same fields as the single-data-plane response. `credentials` lists `oidc_exchange`, `service_token`, or both. It does not contain secrets.
+The list uses the same fields as the single-data-plane response. `credentials` lists `oidc_exchange`, `service_token`, or both. It does not contain secrets. `source` is `config` for a startup-configured entry or `runtime` for an entry created through this API.
 
 The health endpoint calls the data plane's `/health/liveliness` route. It returns HTTP `200` with `status: "ok"`, `"degraded"`, or `"unreachable"`. Inspect `status` to determine health. `http_status` is the upstream status when available.
 
 The identity endpoint calls `/user/info` with the credential selected for the caller. If that route returns `404`, the identity fields are `null`. Credential failures, invalid responses, and connection failures return `502`.
+
+### Runtime data plane writes
+
+Enable the [runtime configuration store](./configuration.md#runtime-configuration) before using PUT or DELETE. The caller needs both `dataplanes:write` and a fleet-wide binding. A token restricted to named data planes receives `403`, even when it names the entry being changed.
+
+PUT accepts a complete registry specification, not a patch. Its fields are `url`, optional `name`, `service_token`, `oidc_exchange`, and `allow_insecure_http`. At least one credential method is required. The [registry field reference](./configuration.md#registry-entries) lists the credential fields and defaults. URLs cannot contain userinfo. Plain HTTP requires `allow_insecure_http: true`. Do not send `id`, `source`, or `credentials` in the body.
+
+```http
+PUT /api/v1/dataplanes/eu-runtime
+Authorization: Bearer REPLACE_WITH_ADMIN_CREDENTIAL
+Content-Type: application/json
+
+{
+  "url": "https://litellm-eu.internal.example.com",
+  "name": "EU production",
+  "service_token": {"token": "REPLACE_WITH_SERVICE_TOKEN"}
+}
+```
+
+Both creation and replacement return `200`:
+
+```json
+{
+  "id": "eu-runtime",
+  "name": "EU production",
+  "url": "https://litellm-eu.internal.example.com",
+  "credentials": ["service_token"],
+  "source": "runtime"
+}
+```
+
+Delete the runtime entry with:
+
+```http
+DELETE /api/v1/dataplanes/eu-runtime
+Authorization: Bearer REPLACE_WITH_ADMIN_CREDENTIAL
+```
+
+A successful deletion returns `204` with no body. Deleting an unknown runtime entry returns `404`. A config-defined entry cannot be replaced or deleted and returns `409` when runtime writes are enabled. These calls only change the control plane's registry. They do not provision or delete a data plane deployment.
+
+## Roles
+
+| Method | Path | Required scope | Response |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/roles` | `roles:write` | `200` with `items` containing all effective roles. Works without runtime storage. |
+| `PUT` | `/api/v1/roles/{name}` | `roles:write` | Create or replace a runtime role. Returns `200` with one role. |
+| `DELETE` | `/api/v1/roles/{name}` | `roles:write` | Delete a runtime role. Returns `204` with no body. |
+
+Each role response contains `name`, resolved `scopes`, direct `inherits`, and `source`. The source is `config` for config-defined and built-in roles, or `runtime`. The list is sorted by name. There is no single-role GET endpoint.
+
+PUT accepts `scopes` and `inherits`, both arrays of strings that default to empty arrays. It replaces the complete definition. Scope names and inherited roles must be known. For example, this role inherits `usage:read` from the built-in `usage_viewer` role:
+
+```http
+PUT /api/v1/roles/finops
+Authorization: Bearer REPLACE_WITH_ADMIN_CREDENTIAL
+Content-Type: application/json
+
+{"scopes": [], "inherits": ["usage_viewer"]}
+```
+
+The `200` response contains resolved scopes:
+
+```json
+{
+  "name": "finops",
+  "scopes": ["usage:read"],
+  "inherits": ["usage_viewer"],
+  "source": "runtime"
+}
+```
+
+With the default roles enabled and no other custom roles, `GET /api/v1/roles` returns:
+
+```json
+{
+  "items": [
+    {"name": "admin", "scopes": ["audit:read", "dataplanes:read", "dataplanes:write", "fleet:read", "proxy:read", "proxy:write", "roles:write", "usage:read"], "inherits": [], "source": "config"},
+    {"name": "editor", "scopes": ["dataplanes:read", "fleet:read", "proxy:read", "proxy:write", "usage:read"], "inherits": [], "source": "config"},
+    {"name": "finops", "scopes": ["usage:read"], "inherits": ["usage_viewer"], "source": "runtime"},
+    {"name": "usage_viewer", "scopes": ["usage:read"], "inherits": [], "source": "config"},
+    {"name": "viewer", "scopes": ["dataplanes:read", "fleet:read", "proxy:read", "usage:read"], "inherits": [], "source": "config"}
+  ]
+}
+```
+
+The role's resolved scopes, including inherited scopes, must be a subset of the caller's effective scopes. Otherwise PUT returns `403`. Deleting a role that another role inherits returns `409`. Config-defined roles and built-in roles are read-only through this API and also return `409` when runtime writes are enabled. Deleting an unknown runtime role returns `404`.
+
+```http
+DELETE /api/v1/roles/finops
+Authorization: Bearer REPLACE_WITH_ADMIN_CREDENTIAL
+```
+
+A successful deletion returns `204` with no body. Each replica resolves JWT role claims against its live policy on later requests. A deleted role no longer grants scopes. A JWT with no remaining recognized role is rejected with `401`.
+
+### Runtime write availability
+
+All runtime PUT and DELETE routes return `503` when storage is not configured or migrated, publication or persistence fails, or strict audit delivery cannot reserve capacity. Authenticated write attempts are audited, including scope and binding denials. Unknown scopes or inherited roles return `400`. Invalid request models, such as a missing data plane URL or extra fields in a role specification, return `422`.
+
+A successful PUT or DELETE confirms persistence, but live reads and permission checks follow the stream consumer and can lag briefly on any replica, including the writer. Poll the read API before depending on the new state. See [Runtime configuration](./configuration.md#runtime-configuration) for deployment and recovery.
 
 ## Fleet
 
@@ -81,7 +182,7 @@ Add `?dataplane=us-prod` to select one data plane. Without this parameter, the A
 
 | Method | Path | Required scope | Response |
 | --- | --- | --- | --- |
-| `GET` | `/api/v1/fleet/models` | `fleet:read` | `items` with each model deployment. `groups` maps each public `model_name` to the data planes that serve it. |
+| `GET` | `/api/v1/fleet/models` | `fleet:read` | `items` with each model deployment. `groups` is an array of objects with `model_name` and a `dataplanes` array. |
 | `GET` | `/api/v1/fleet/teams` | `fleet:read` | `items` with the teams the caller can view on each data plane. |
 
 Each model item includes `dataplane_id`, `model_name`, `litellm_model`, `provider`, `model_id`, and `mode`.
@@ -150,7 +251,7 @@ Use the data plane route as `{path}`. For example, `/api/v1/dataplanes/us-prod/p
 
 Supported route families include keys, users, teams, organizations, end users, budgets, tags, models, credentials, guardrails, MCP servers, vector stores, spend, audit logs, and management settings. The API also allows `/health/readiness`, `/health/liveliness`, `/health/liveness`, and `/health/latest`.
 
-The control plane rejects inference, login, SSO, OAuth, onboarding, session, service-account key generation, guardrail execution, configuration-file, debug, and drain routes with `403`.
+The control plane rejects inference, login, SSO, OAuth, onboarding, session, service-account key generation, guardrail execution, configuration-file, debug, and drain routes with `403`. Deny checks also apply after a numeric version prefix, so `/v2/key/service-account/generate` and `/v2/guardrails/apply_guardrail` remain blocked. MCP server routes reject any case-insensitive OAuth-prefixed path segment, including `oauth2` and `oauth-user-credential`.
 
 The response uses the data plane's status and body and adds `X-LiteLLM-Dataplane: <id>`. Data plane errors retain their upstream response format. Redirects return `502`.
 
@@ -170,7 +271,7 @@ Both endpoints return recent events from the responding control-plane process, n
 | Query parameter | Default | Description |
 | --- | --- | --- |
 | `limit` | `100` | Maximum events to return, from `1` to `1000`. |
-| `dataplane` | All visible events | Filter by data plane ID. Use `control-plane` for login and control-plane authentication events. |
+| `dataplane` | All visible events | Filter by data plane ID. Use `control-plane` for login, control-plane authentication, and runtime configuration write events. |
 | `actor` | All actors | Filter by the control-plane subject. |
 
 Native events include `at`, `actor`, `actor_email`, `dataplane_id`, `method`, `path`, `decision`, `status`, `credential`, and `detail`. `decision` is `allowed`, `denied`, or `unreachable`.
@@ -188,7 +289,7 @@ The OCSF endpoint checks the returned records' integrity. `sequence_gaps` counts
 | `GET` | `/api/v1/docs` | None. No bearer token required. | Interactive Swagger UI. |
 | `GET` | `/api/v1/openapi.json` | None. No bearer token required. | OpenAPI schema for the running service. |
 
-The health paths do not use `CONTROL_PLANE_API_PREFIX`. They do not test data planes or audit delivery. Use `/api/v1/dataplanes/{id}/health` to check a data plane.
+The health paths do not use `CONTROL_PLANE_API_PREFIX`. They do not test data planes, audit delivery, or runtime store availability and migration status. Use `/api/v1/dataplanes/{id}/health` to check a data plane.
 
 ## Errors
 
@@ -205,12 +306,13 @@ Control-plane errors use `application/problem+json` with `type`, `title`, `statu
 
 | Status | Meaning |
 | --- | --- |
-| `400` | Invalid query parameter, usage window, or management request body. |
+| `400` | Invalid query parameter, usage window, management request body, or runtime definition such as an unknown role scope or parent. |
 | `401` | Missing or invalid bearer token, or invalid login credentials. |
-| `403` | Missing scope, denied data plane access, or a blocked management route. |
-| `404` | Unknown data plane ID in a data plane, fleet, or usage request. |
+| `403` | Missing scope, denied data plane access, a non-fleet binding on a data plane write, role escalation, or a blocked management route. |
+| `404` | Unknown data plane ID in a data plane, fleet, or usage request, or an unknown runtime entry on DELETE. |
+| `409` | Runtime write targets a config-defined entry or default role, or role deletion would leave another role inheriting it. |
 | `413` | Request exceeds the 1 MB limit. |
-| `422` | Login body fails validation. |
+| `422` | Request model validation fails, including login and runtime write bodies. |
 | `429` | Password login is throttled. `Retry-After` gives the wait in seconds. |
 | `502` | A forwarded request or identity lookup fails due to credentials, connectivity, response size, or a rejected upstream response. |
-| `503` | All selected data planes fail a fleet or usage query, or strict audit delivery blocks a write. |
+| `503` | All selected data planes fail a fleet or usage query, strict audit delivery blocks a write, or the runtime store is unavailable, not configured, not migrated, or fails publication or persistence. |

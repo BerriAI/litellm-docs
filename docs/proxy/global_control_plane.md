@@ -30,10 +30,12 @@ Applications send inference requests directly to their regional data plane. A co
 
 | Component | Responsibility | State |
 | --- | --- | --- |
-| Control plane | Authentication, access rules, management requests, fleet inventory, usage aggregation, and audit export | Registry and roles from startup configuration. Recent audit records and login throttles in process memory. No PostgreSQL or Redis required. |
+| Control plane | Authentication, access rules, management requests, runtime registry and role writes, fleet inventory, usage aggregation, and audit export | Startup registry and roles, optionally extended by runtime entries in its own dedicated PostgreSQL database and Redis stream. Recent audit records and login throttles remain in process memory. |
 | Data plane | Inference, local resource management, model routing, and enforcement of keys, teams, and budgets | Its own PostgreSQL, Redis, provider credentials, and master key. |
 
-The control plane does not copy keys, synchronize configuration, enforce a shared global budget, or fail over inference between data planes. Use [Multi-Region Deployment](./multi_region.md) when regional gateways must share one database and the same keys.
+PostgreSQL and Redis are not required for configuration-only operation. Enable [runtime configuration](./global_control_plane/configuration.md#runtime-configuration) to manage registry entries and roles through the API and propagate them across control-plane replicas.
+
+The control plane does not copy keys, synchronize data plane configuration, enforce a shared global budget, or fail over inference between data planes. Runtime configuration sharing only covers the control plane's own registry and roles. Use [Multi-Region Deployment](./multi_region.md) when regional gateways must share one database and the same keys.
 
 This implementation exposes REST APIs and interactive API documentation. It does not serve the Admin UI.
 

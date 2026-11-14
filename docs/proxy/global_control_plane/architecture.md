@@ -15,9 +15,23 @@ Run the control plane in a management network and connect it to each data plane 
 
 These reference designs use Kubernetes, one control-plane replica, and two independent data planes. Each cloud example uses one account, subscription, or project. The hybrid example connects AWS to an on-premises data center.
 
+The diagrams show configuration-only control planes, which do not need PostgreSQL or Redis. To enable runtime registry and role writes, add a dedicated control-plane PostgreSQL database and a shared Redis stream, separate from every data plane's stores. Those optional control-plane stores are not drawn below. Multiple control-plane replicas can share them, with one worker per replica.
+
 See [Configuration](./configuration.md) for service settings. Use the [cloud deployment guides](../deploy/cloud/overview.md) for each data plane's replicas, availability zones, and model-provider connections.
 
 For [OIDC token exchange](./configuration.md#data-plane-jwt-authentication), allow outbound HTTPS to the IdP from the control plane and each data plane. The control plane exchanges tokens. Each data plane fetches the IdP's signing keys and validates the exchanged token with its own JWT configuration.
+
+## Runtime configuration flow
+
+Run the [migration job](./configuration.md#migration-job) before deploying the control-plane replicas. Startup checks the dedicated database's schema version and loads its persisted snapshot. It never bootstraps tables. Config-defined entries and included default roles form the read-only base, and runtime entries extend that base without overriding protected names.
+
+For each runtime write, the service reserves audit capacity and checks the caller's scope and any required fleet-wide binding. It opens a PostgreSQL transaction and takes a fixed advisory transaction lock before loading the current snapshot. Validation, including role inheritance and escalation checks, runs under that lock. This serializes concurrent writers and keeps stream revision order aligned with commit order.
+
+The writer encrypts data plane secrets, publishes the desired change with Redis `XADD`, and then persists the row with the stream entry ID as its revision. Deletes remove the row. A publication or persistence failure returns `503`. If persistence fails after publication, the writer attempts to publish a `resync` event so replicas reload PostgreSQL. Redis and PostgreSQL do not form a distributed transaction, so a published event alone does not make a change effective.
+
+Every replica, including the writer, runs a background stream consumer. Consumers verify the committed database state before applying a change. They apply only newer revisions and retain in-memory deletion revisions so old events cannot restore deleted entries. A valid snapshot replaces the live registry and role policy together. Later authentication, data plane lookup, fanout, and audit recognition use that live state without rebuilding the service.
+
+After Redis or database errors, consumers back off and reload the database before continuing. They also reconcile after event batches to recover changes omitted by stream trimming. On restart, each replica loads PostgreSQL again. Successful writes confirm database persistence, but reads and permissions can lag until the consumer applies the committed state. The runtime stream does not make audit queues or login throttles shared or durable.
 
 ## AWS
 
