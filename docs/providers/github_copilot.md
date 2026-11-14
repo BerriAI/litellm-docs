@@ -243,14 +243,14 @@ print(response)
 
 ### Shared sign-in on GitHub Enterprise Cloud (GHE.com)
 
-If your Copilot plan comes from a GitHub Enterprise Cloud tenant with data residency then point the shared sign-in at that tenant. Set both variables prior to the first call and leave them set afterwards as LiteLLM will read the tenant from `GITHUB_COPILOT_ACCESS_TOKEN_URL` on every call.
+If your Copilot plan comes from a GitHub Enterprise Cloud tenant with data residency then point the shared sign-in at that tenant. Set both variables prior to the first call and leave them set afterwards as LiteLLM will read the tenant from `GITHUB_COPILOT_ACCESS_TOKEN_URL` on every call. If that variable is unset or doesn't name github.com or a GHE.com host, LiteLLM reads the tenant from `GITHUB_COPILOT_API_KEY_URL` instead, and with neither it uses github.com.
 
 ```bash
 export GITHUB_COPILOT_DEVICE_CODE_URL="https://SUBDOMAIN.ghe.com/login/device/code"
 export GITHUB_COPILOT_ACCESS_TOKEN_URL="https://SUBDOMAIN.ghe.com/login/oauth/access_token"
 ```
 
-LiteLLM then logs in on `https://SUBDOMAIN.ghe.com`, looks up your Copilot API on `https://api.SUBDOMAIN.ghe.com/copilot_internal/user` and only sends the model requests to `https://copilot-api.SUBDOMAIN.ghe.com`. The older setup which would have set `GITHUB_COPILOT_API_KEY_URL` to `https://api.SUBDOMAIN.ghe.com/copilot_internal/v2/token` would have picked the same tenant, although LiteLLM no longer calls that URL.
+LiteLLM then logs in on `https://SUBDOMAIN.ghe.com`, looks up your Copilot API on `https://api.SUBDOMAIN.ghe.com/copilot_internal/user` and sends the model requests to `https://copilot-api.SUBDOMAIN.ghe.com`. If the lookup fails or names a host outside your tenant, the model requests go to `GITHUB_COPILOT_API_BASE` when it is set and to `https://copilot-api.SUBDOMAIN.ghe.com` otherwise, so they never leave your tenant unless you set that variable. The older setup which would have set `GITHUB_COPILOT_API_KEY_URL` to `https://api.SUBDOMAIN.ghe.com/copilot_internal/v2/token` would have picked the same tenant, although LiteLLM no longer calls that URL.
 
 To use this sign in on the gateway you need to sign in once outside of it with the variables above as the gateway itself can't run the device flow.
 
@@ -282,7 +282,7 @@ LiteLLM just sends the GitHub OAuth token over to the Copilot API as a Bearer to
 | `GITHUB_COPILOT_CLIENT_ID` | `Iv1.b507a08c87ecfe98` | OAuth client ID for gateway and SDK sign-in. Your own GitHub App must have device flow enabled. |
 | `GITHUB_COPILOT_DEVICE_CODE_URL` | `https://github.com/login/device/code` | Device-code endpoint for gateway and SDK sign-in |
 | `GITHUB_COPILOT_ACCESS_TOKEN_URL` | `https://github.com/login/oauth/access_token` | Access-token endpoint for gateway and SDK sign-in |
-| `GITHUB_COPILOT_API_BASE` | `https://api.githubcopilot.com` | Shared sign-in only. Fallback API base for Chat Completions, Responses, and Embeddings |
+| `GITHUB_COPILOT_API_BASE` | `https://api.githubcopilot.com`, or `https://copilot-api.SUBDOMAIN.ghe.com` on a GHE.com sign-in | Shared sign-in only. Fallback API base for Chat Completions, Responses, and Embeddings |
 
 ## Authentication details
 
@@ -304,7 +304,7 @@ The SDK is making direct calls which read the GitHub access token off disk and p
 
 For a **Per-user GitHub OAuth** credential LiteLLM will use `endpoints.api` from the GitHub Copilot user lookup if it's using HTTPS and the host is `githubcopilot.com` or a subdomain, or `copilot-api.SUBDOMAIN.ghe.com` in the case of a GHE.com credential. Otherwise it will use `https://api.githubcopilot.com` or `https://copilot-api.SUBDOMAIN.ghe.com` in the case of a GHE.com credential. Per-user credentials don't use `GITHUB_COPILOT_API_BASE`.
 
-For shared sign-in Chat Completions, Responses and Embeddings, LiteLLM checks these values in order: the credential or deployment's `api_base`, `endpoints.api` from the Copilot user lookup on the sign-in's GitHub host (if that host matches), `GITHUB_COPILOT_API_BASE` and then `https://api.githubcopilot.com`.
+For shared sign-in Chat Completions, Responses and Embeddings, LiteLLM checks these values in order: the credential or deployment's `api_base`, `endpoints.api` from the Copilot user lookup on the sign-in's GitHub host (if it names a `githubcopilot.com` host, or `copilot-api.SUBDOMAIN.ghe.com` for a GHE.com sign-in), `GITHUB_COPILOT_API_BASE` and then `https://api.githubcopilot.com` (`https://copilot-api.SUBDOMAIN.ghe.com` for a GHE.com sign-in).
 
 Anthropic Messages uses the authenticated Copilot endpoint. It will ignore any `api_base` and `GITHUB_COPILOT_API_BASE` that the caller supplies.
 
