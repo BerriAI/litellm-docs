@@ -311,6 +311,8 @@ messages=[{"role": "user", "content": [
 
 - `api_version`: *string (optional)* - (Azure-specific) the api version for the call
 
+- `drop_params`: *bool (optional)* - If `true`, LiteLLM will drop unsupported OpenAI params for the target provider instead of raising an error
+
 - `num_retries`: *int (optional)* - The number of times to retry the API call if an APIError, TimeoutError or ServiceUnavailableError occurs 
 
 - `context_window_fallback_dict`: *dict (optional)* - A mapping of model to use if call fails due to context window error
