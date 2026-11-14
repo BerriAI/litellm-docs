@@ -703,7 +703,15 @@ curl --location 'http://0.0.0.0:4000/key/update' \
 }'
 ```
 
+<SinceVersion v="1.111.0" />
 
+Guardrail names are checked when they are saved. `/key/generate`, `/key/service-account/generate`, `/key/update`, `/key/regenerate`, `/team/new`, `/team/update`, `/user/new`, `/project/new` and `/project/update` return a 400 for a name that is neither loaded from config.yaml nor an active guardrail in the database, whether it is sent as `guardrails` or as `metadata.guardrails`. `/v2/guardrails/list` shows the valid names. Only the names a request adds are checked, so an edit that resends a stored name whose guardrail has since been deleted still succeeds. A `metadata.guardrails` value that is not a list of names is also rejected with a 400. The team setting `{"modify_guardrails": false}`, described in [Disable team from turning on/off guardrails](#disable-team-from-turning-onoff-guardrails), is still accepted.
+
+```json
+{
+  "error": "Unknown guardrail(s): aporia-pre-guardd. Create the guardrail first, or check the name against /v2/guardrails/list."
+}
+```
 
 **Step 2** Test it with new key
 
