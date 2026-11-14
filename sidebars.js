@@ -2003,6 +2003,7 @@ const providersSidebar = {
     "providers/scaledown",
     "providers/scaleway",
     "providers/scx_ai",
+    "providers/sinogate",
     "providers/snowflake",
     "providers/stability",
     "providers/streamlake",
