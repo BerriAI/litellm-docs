@@ -5,7 +5,7 @@ description: Call AbliteratedLLM models through LiteLLM with the Python SDK or G
 
 # AbliteratedLLM
 
-<SinceVersion v="1.110.0" />
+<SinceVersion v="1.111.0" />
 
 Use [AbliteratedLLM](https://abliteratedllm.dev) through LiteLLM with the `abliteratedllm/` model prefix. AbliteratedLLM serves an abliterated open-weight model and stock open-weight models with one OpenAI-compatible API key. LiteLLM reads `ABLITERATEDLLM_API_KEY` and sends requests to `https://api.abliteratedllm.dev/v1`.
 
