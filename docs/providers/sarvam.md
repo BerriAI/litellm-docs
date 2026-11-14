@@ -3,7 +3,27 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-LiteLLM supports all the text models from [Sarvam ai](https://docs.sarvam.ai/api-reference-docs/chat/chat-completions)
+LiteLLM supports Sarvam's OpenAI-compatible `/v2` API, including Sarvam 105B and the open-weight models served on Sarvam infrastructure (GLM, Gemma, and DeepSeek). <SinceVersion v="1.110.0" />
+
+## Supported models
+
+| Model | Context | Max output | Input | USD per 1M in / out |
+| --- | --- | --- | --- | --- |
+| `sarvam/sarvam-105b` | 128K | 128K | Text | $0.16 / $0.64 |
+| `sarvam/sarvam-105b-conversations` | 32K | 32K | Text | $0.16 / $0.64 |
+| `sarvam/glm5.3` | 1M | 1M | Text | $1.34 / $4.15 |
+| `sarvam/glm5.3-flash` | 1M | 1M | Text, image | $0.14 / $0.48 |
+| `sarvam/gemma4` | 256K | 256K | Text, image | $0.37 / $0.96 |
+| `sarvam/deepseekv4.1-flash-1017` | 1M | 1M | Text, image | $0.15 / $0.59 |
+| `sarvam/deepseekv4.1-flash-1017-interactive` | 1M | 1M | Text, image | $0.27 / $1.12 |
+
+USD values are converted from Sarvam's INR rates at ₹94 per USD. See [Sarvam Token Factory pricing](https://www.sarvam.ai/token-factory/pricing) for the current INR rates.
+
+The legacy `sarvam-m` model is not served on `/v2`. If you are upgrading from `sarvam/sarvam-m`, switch to `sarvam/sarvam-105b`.
+
+Output on `sarvam-105b` and `sarvam-105b-conversations` is also capped by plan: Starter 4,096, Pro 16,384, Business 128,000 (and by the 32K context on `sarvam-105b-conversations`).
+
+All models support tool calling, streaming, structured output (`response_format`), system messages, `tool_choice`, and parallel tool calls. Prompt caching is supported on all seven models: `sarvam-105b`, `sarvam-105b-conversations`, `glm5.3`, `glm5.3-flash`, `gemma4`, `deepseekv4.1-flash-1017`, and `deepseekv4.1-flash-1017-interactive`.
 
 ## Usage
 
@@ -12,35 +32,50 @@ import os
 from litellm import completion
 
 # Set your Sarvam API key
-os.environ["SARVAM_API_KEY"] = ""
+os.environ["SARVAM_API_KEY"] = "your-api-key"
 
 messages = [{"role": "user", "content": "Hello"}]
 
 response = completion(
-    model="sarvam/sarvam-m",
+    model="sarvam/sarvam-105b",
     messages=messages,
 )
 print(response)
 ```
 
+## Responses API
+
+```python
+import os
+from litellm import responses
+
+os.environ["SARVAM_API_KEY"] = "your-api-key"
+
+response = responses(
+    model="sarvam/sarvam-105b",
+    input="Hello",
+)
+print(response.output_text)
+```
+
 ## Usage with LiteLLM Proxy Server
 
-Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server
+Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
 
 1. **Modify the `config.yaml`:**
 
     ```yaml
     model_list:
-      - model_name: my-model
+      - model_name: sarvam-105b
         litellm_params:
-          model: sarvam/<your-model-name>  # add sarvam/ prefix to route as Sarvam provider
-          api_key: api-key                 # api key to send your model
+          model: sarvam/sarvam-105b  # add sarvam/ prefix to route as Sarvam provider
+          api_key: os.environ/SARVAM_API_KEY
     ```
 
 2. **Start the proxy:**
 
     ```bash
-    $ litellm --config /path/to/config.yaml
+    litellm --config /path/to/config.yaml
     ```
 
 3. **Send a request to LiteLLM Proxy Server:**
@@ -58,7 +93,7 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server
     )
 
     response = client.chat.completions.create(
-        model="my-model",
+        model="sarvam-105b",
         messages=[
             {
                 "role": "user",
@@ -78,7 +113,7 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server
         --header "Authorization: Bearer $LITELLM_API_KEY" \
         --header 'Content-Type: application/json' \
         --data '{
-        "model": "my-model",
+        "model": "sarvam-105b",
         "messages": [
             {
             "role": "user",
@@ -90,3 +125,23 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server
     </TabItem>
 
     </Tabs>
+
+## Reasoning
+
+Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning. On `gemma4`, reasoning is off by default and only runs when `reasoning_effort` is set.
+
+## Token limits
+
+- On Chat, `max_tokens` defaults to `2048` on `glm5.3` only. Other models have no small default; set it explicitly.
+- On the Responses API, `max_output_tokens` has no default cap. Always set it in production.
+- Reasoning tokens count toward the output budget and are billed as output.
+
+## Limitations
+
+- Images must be sent as base64 data URIs; remote `http(s)` URLs are rejected.
+- Beta models require beta access and are not listed above.
+- The API is OpenAI-compatible; no custom transformation is required.
+
+## Security
+
+Use a current LiteLLM release and keep the proxy off the public internet. See the [LiteLLM security advisories](https://github.com/BerriAI/litellm/security/advisories) for the minimum safe version and the latest guidance.
