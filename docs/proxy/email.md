@@ -16,7 +16,7 @@ Send LiteLLM Proxy users emails for specific events.
 
 | Category | Details |
 |----------|---------|
-| Supported Events | • User added as a user on LiteLLM Proxy<br/>• Proxy API Key created for user<br/>• Proxy API Key rotated for user<br/>• Virtual key approaching or crossing its budget |
+| Supported Events | • User added as a user on LiteLLM Proxy<br/>• Proxy API Key created for user<br/>• Proxy API Key rotated for user<br/>• Virtual key approaching or crossing its budget<br/>• Virtual key about to expire |
 | Supported Email Integrations | • Resend API<br/>• SendGrid API<br/>• SMTP |
 
 ## Usage
@@ -178,6 +178,40 @@ EMAIL_BUDGET_ALERT_MAX_SPEND_ALERT_PERCENTAGE=0.8
 # Time-to-live for alert deduplication in seconds (default: 24 hours)
 EMAIL_BUDGET_ALERT_TTL=86400
 ```
+
+### 4. Configure Key Expiry Alerts (Optional)
+
+<SinceVersion v="1.111.0" />
+
+Key expiry alerts email a key's owner once before the key expires, so they can regenerate it in time. They need an Enterprise license, a database, and one of the email integrations above. The event is off by default. To turn it on, open **Email Settings** in the Admin UI, turn on **Virtual Key Expiring** under **Email events** and save, or send the same change to `PATCH /email/event_settings`.
+
+Then set how many days ahead to warn:
+
+```yaml showLineNumbers title="proxy_config.yaml"
+general_settings:
+  key_expiry_alert_days: 7
+```
+
+`key_expiry_alert_days` applies to every key that has an expiry date and an owner with an email, including keys created before you set it. The owner gets one email when the key has that many days or fewer left. The proxy reads the value on each run, so a change through the Admin UI or `/config/field/update` applies without a restart.
+
+To use a different window for one key, set `key_expiry_alert_days` in its metadata. This also works when the global value is unset, so you can opt in single keys.
+
+```shell showLineNumbers
+curl -X POST 'http://0.0.0.0:4000/key/generate' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "user_id": "owner-user-id",
+    "duration": "30d",
+    "metadata": {"key_expiry_alert_days": 3}
+  }'
+```
+
+Both values must be a whole number from 1 to 365. `/key/generate` and `/key/update` return a 400 for anything else, and an invalid global value is logged and ignored while per-key values keep working.
+
+The email goes only to the `user_email` of the key's `user_id`, so a key with no owner, an owner without an email, or a blocked key gets nothing. It shows the key alias, or a shortened key name when there is no alias, and never the key itself. It also gives the expiry time in UTC, the days left, and a link to the dashboard at `PROXY_BASE_URL`. The subject is `LiteLLM: Virtual Key Expiring`. Changing a key's expiry or its day count arms one new email for the new value.
+
+The check runs every 12 hours by default, so an email can arrive up to one interval after a key enters its window. Set `LITELLM_KEY_EXPIRY_ALERT_CHECK_INTERVAL_SECONDS` to change that. When the proxy uses Redis, one pod runs each check and a shared claim per key stops duplicate emails across pods.
 
 ## Email Templates 
 

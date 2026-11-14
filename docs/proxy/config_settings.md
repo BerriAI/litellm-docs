@@ -154,6 +154,7 @@ general_settings:
   allowed_client_side_s3_buckets: ["my-batch-bucket"]  # buckets a client may pick with s3_bucket_name or s3_output_bucket_name in a request body, e.g. on /v1/batches
   allowed_client_side_s3_endpoint_urls: ["https://s3.us-west-2.amazonaws.com"]  # exact s3_endpoint_url values a client may send in a request body
   key_management_system: google_kms  # either google_kms or azure_kms
+  key_expiry_alert_days: 7  # email a key's owner when the key has this many days (1-365) or fewer left; metadata.key_expiry_alert_days overrides it per key
   master_key: string  # falls back to LITELLM_MASTER_KEY; the proxy will not start when the master key is unset, empty, or has a known unsafe value
   dangerously_permit_weak_or_unset_master_key: boolean  # local development only; lets the proxy start with no master key or a known unsafe value
   maximum_spend_logs_retention_period: 30d # The maximum time to retain spend logs before deletion.
@@ -419,6 +420,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | use_google_kms | boolean | `false` | If true, load keys from google kms |
 | spend_report_frequency | str | `7d` | Specify how often you want a Spend Report to be sent (e.g. "1d", "2d", "30d") [More on this](./alerting.md) |
 | spend_capture_rate_check | object | `null` (off) | Daily check of LiteLLM captured spend against the provider bill, alerting when the rate is under `threshold` (default 0.9). Keys: `providers`, `threshold`, `lookback_days`, `openai_project_ids`. Needs `OPENAI_ADMIN_KEY`. [Doc on spend capture rate](./spend_capture_rate.md) |
+| key_expiry_alert_days | integer | `null` (off) | <SinceVersion v="1.111.0" /> Emails a key's owner once when the key has this many days or fewer left before it expires, from 1 to 365. Applies to every key with an expiry date and an owner email. A key's `metadata.key_expiry_alert_days` overrides it. Needs the `Virtual Key Expiring` email event turned on. [Doc on key expiry alerts](./email.md#4-configure-key-expiry-alerts-optional) |
 | ui_access_mode | Literal["admin_only"] | `all` | If set, restricts access to the UI to admin users only. [Docs](./ui.md#disable-admin-ui) |
 | max_failed_login_attempts_per_source | integer | `10` | Failed Admin UI sign-in attempts allowed from one source address, across all usernames, within `failed_login_window_seconds`; exceeding it blocks the address for `failed_login_block_seconds`. Half this value (rounded down, at least 1) is the allowance for a single username from that address, which blocks only that address and username pair. The per-address limit only applies when `trusted_proxy_ranges` is set (`[]` when clients connect directly); left unset, only the per-username half applies. IPv6 addresses are grouped by /64. [Docs](./ui#limit-failed-sign-in-attempts) |
 | max_failed_login_attempts_per_source_overrides | dict | `null` | Per-address overrides of `max_failed_login_attempts_per_source`, keyed by IP address or CIDR range, e.g. `{"203.0.113.7": 50, "10.0.0.0/8": 100}`. The most specific match wins, the per-username allowance follows as half the override, and `0` exempts the address from both limits |
@@ -1337,6 +1339,7 @@ router_settings:
 | LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_ENABLED | Set to `true` to enable the background cleanup job for expired LiteLLM dashboard session keys. Default is `false`.
 | LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_INTERVAL_SECONDS | Interval in seconds for how often to run the expired LiteLLM dashboard session key cleanup job. Default is 86400 (24 hours).
 | LITELM_ENVIRONMENT | Environment of LiteLLM Instance, used by logging services. Currently only used by DeepEval.
+| LITELLM_KEY_EXPIRY_ALERT_CHECK_INTERVAL_SECONDS | <SinceVersion v="1.111.0" /> Interval in seconds for how often the key expiry alert job checks for keys to email about. Default is 43200 (12 hours). [Doc on key expiry alerts](./email.md#4-configure-key-expiry-alerts-optional)
 | LITELLM_KEY_ROTATION_ENABLED | Enable auto-key rotation for LiteLLM (boolean). Default is false.
 | LITELLM_KEY_ROTATION_CHECK_INTERVAL_SECONDS | Interval in seconds for how often to run job that auto-rotates keys. Default is 86400 (24 hours).
 | LITELLM_KEY_ROTATION_GRACE_PERIOD | Duration to keep old key valid after rotation (e.g. "24h", "2d"). Default is empty (immediate revoke). Used for scheduled rotations and as fallback when not specified in regenerate request.
