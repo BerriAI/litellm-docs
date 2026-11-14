@@ -19,6 +19,7 @@ LiteLLM provides exact token counting by calling provider-specific token countin
 |----------|-------------------|--------|
 | OpenAI | [Responses API `/input_tokens`](https://platform.openai.com/docs/api-reference/responses/input-tokens) | OpenAI Responses |
 | Anthropic | [Messages `/count_tokens`](https://docs.anthropic.com/en/docs/build-with-claude/token-counting) | Anthropic Messages |
+| Mistral | [Responses API `/v1/responses/input_tokens`](https://docs.mistral.ai/api/endpoint/responses#operation-count_input_tokens_v1_responses_input_tokens_post) | OpenAI Responses |
 | Vertex AI (Claude) | Vertex AI Partner Models Token Counter | Anthropic Messages |
 | Bedrock (Claude) | AWS Bedrock CountTokens API, then bedrock-mantle for a Claude model it rejects (see [Bedrock Claude models](#bedrock-claude-models)) | Anthropic Messages |
 | Gemini | Google AI Studio countTokens API | Anthropic Messages |
@@ -50,6 +51,14 @@ async def main():
     )
     print(f"Token count: {result.total_tokens}")
     print(f"Tokenizer: {result.tokenizer_type}")  # "anthropic_api"
+
+    # Mistral
+    result = await litellm.acount_tokens(
+        model="mistral/mistral-large-4",
+        messages=[{"role": "user", "content": "Hello, how are you?"}],
+    )
+    print(f"Token count: {result.total_tokens}")
+    print(f"Tokenizer: {result.tokenizer_type}")  # "mistral_api"
 
 asyncio.run(main())
 ```
@@ -91,7 +100,7 @@ TokenCountResponse(
     total_tokens=15,           # Token count
     request_model="openai/{{openai_large}}",  # Model requested
     model_used="{{openai_large}}",      # Model used for counting
-    tokenizer_type="openai_api",    # "openai_api", "anthropic_api", "bedrock_api", "bedrock_mantle_api", "local_tokenizer"
+    tokenizer_type="openai_api",    # "openai_api", "anthropic_api", "mistral_api", "bedrock_api", "bedrock_mantle_api", "local_tokenizer"
     original_response={"input_tokens": 15},  # Raw API response
     error=False,               # True if counting failed
     error_message=None,        # Error details if failed
@@ -327,4 +336,9 @@ model_list:
     litellm_params:
       model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: mistral-large-4
+    litellm_params:
+      model: mistral/mistral-large-4
+      api_key: os.environ/MISTRAL_API_KEY
 ```
