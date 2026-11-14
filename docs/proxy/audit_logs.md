@@ -59,33 +59,6 @@ On the LiteLLM UI, navigate to Logs -> Audit Logs. You should see the audit log 
 />
 
 
-## Guardrail changes
-
-<SinceVersion v="1.111.0" />
-
-Creating, updating or deleting a guardrail with `/guardrails` or `/guardrails/{guardrail_id}` writes an audit log entry with `table_name` set to `LiteLLM_GuardrailsTable` and `object_id` set to the guardrail ID. Team guardrail submissions are logged as well. `/guardrails/register` writes a `created` entry, and `/guardrails/submissions/{guardrail_id}/approve` and `/guardrails/submissions/{guardrail_id}/reject` write an `updated` entry that shows the new `status`. On the Audit Logs page of the Admin UI, filter by the **Guardrails** table to see only these entries.
-
-Provider settings can hold credentials under any name, so a guardrail entry keeps only `guardrail_id`, `guardrail_name`, `guardrail_info`, `status`, `team_id` and the `guardrail`, `mode` and `default_on` values of `litellm_params`. Other `litellm_params` values such as `api_key` or `api_base` are never stored. When an update changes one of them, `updated_values` lists its name under `changed_litellm_params` without the value.
-
-```json
-{
-  "action": "updated",
-  "table_name": "LiteLLM_GuardrailsTable",
-  "object_id": "3f1c9a52-7d0e-4b6a-9c1e-2a8d5e6f7b90",
-  "before_value": {
-    "guardrail_id": "3f1c9a52-7d0e-4b6a-9c1e-2a8d5e6f7b90",
-    "guardrail_name": "pii-mask",
-    "litellm_params": {"guardrail": "presidio", "mode": "pre_call", "default_on": false}
-  },
-  "updated_values": {
-    "guardrail_id": "3f1c9a52-7d0e-4b6a-9c1e-2a8d5e6f7b90",
-    "guardrail_name": "pii-mask",
-    "litellm_params": {"guardrail": "presidio", "mode": "pre_call", "default_on": true},
-    "changed_litellm_params": ["api_base"]
-  }
-}
-```
-
 ## Export Audit Logs to External Storage
 
 You can export audit logs to an external storage backend (e.g. S3) in addition to storing them in the database. Logs are batched and uploaded asynchronously, so they do not block your proxy requests.
