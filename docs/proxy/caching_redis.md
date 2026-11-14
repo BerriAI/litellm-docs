@@ -12,6 +12,12 @@ Redis is LiteLLM's default cache and the only one shared across workers and repl
 ElastiCache and GCP Memorystore all speak the Redis protocol, so everything on this page applies to
 them too.
 
+[KiviDB](https://github.com/kividbio/kividb), another Redis-compatible server, was tested with LiteLLM
+1.108.0: the Redis cache, the `redis-semantic` cache, the router's usage counters and the proxy's per-key
+rate limiter behave as on Redis 8. The proxy's rate limiters run Lua scripts, so use its
+`kividb/kividb:v1.2.0-lua` image for the proxy. See the
+[test report](https://github.com/kividbio/kividb/blob/master/benchmarks/litellm-compat/REPORT.md).
+
 ## Connect the proxy to Redis
 
 ```yaml
