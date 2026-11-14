@@ -171,6 +171,14 @@ general_settings:
   mcp_disabled_capabilities: ["prompts", "resources"]  # either value alone is fine
 ```
 
+### Read a resource through `/mcp`
+
+<SinceVersion v="1.111.0" />
+
+When a `resources/read` call on the aggregate `/mcp` endpoint can reach more than one MCP server, the gateway calls `resources/list` on each of those servers and sends the read to the one whose listing contains the exact URI. A caller scoped to one server, through `/{server_name}/mcp`, the `x-mcp-servers` header or its key's permissions, skips the lookup and reads from that server directly.
+
+The read returns an error when no server lists the URI, when more than one server lists it, or when one of the listings fails, since the gateway cannot tell which server owns the URI. For a URI that several servers list, the error names them, and the caller picks one with `/{server_name}/mcp` or `x-mcp-servers`. Every server the gateway checks counts one request against its [`mcp_rpm_limit`](./mcp_control.md#rate-limiting-per-mcp-server), and the read is rejected when any of them is over its limit.
+
 ## Related
 
 - [MCP Overview](./mcp.md)

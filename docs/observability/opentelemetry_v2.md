@@ -766,7 +766,7 @@ LITELLM_OTEL_BAGGAGE_METADATA_KEYS=user_api_key_org_id,user_api_key_user_id,user
 
 When `otel` is the only OTel v2 callback in `callbacks` and a setting appears both in `callback_settings.otel` and as an env var, the YAML value wins. The presets, such as `arize` or `langfuse_otel`, read these three settings from the env vars only, and so does an `otel` callback listed next to a preset, so set them as env vars whenever a preset is in `callbacks`.
 
-These are proxy-wide settings that the operator controls. A key or team cannot set its own lists, and destinations added with `/team/{team_id}/callback` or a key's logging settings use the proxy's lists.
+These are proxy-wide settings that the operator controls, and destinations added with `/team/{team_id}/callback` or a key's logging settings use the proxy's lists. A key or team cannot change these lists, but its own destination can export extra request-metadata keys. See [Add request metadata keys for one team or key](#add-request-metadata-keys-for-one-team-or-key).
 
 ### Request metadata
 
@@ -1111,6 +1111,29 @@ curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
 The same `callback_vars` setting is available on key logging callbacks. Invalid or empty values, unknown names such as `"auth"`, and `"none"` combined with another name are rejected when the callback is saved.
 
 `langfuse_span_scope: llm_only` already drops these spans for a Langfuse project, together with the request root, auth and guardrail spans. Use `excluded_services` when the tenant should keep the rest of the request tree
+
+### Add request metadata keys for one team or key
+
+<SinceVersion v="1.111.0" />
+
+Set `baggage_metadata_keys` in a destination's `callback_vars` to send more of the caller's request metadata to that destination. The value is a comma-separated list of `requester_metadata.<key>` paths, written the same way as in [Request metadata](#request-metadata). These keys are added on top of the global `baggage_metadata_keys` list, and only that destination's spans carry them as `litellm.metadata.<key>`. Your own exporters and other tenants' destinations do not receive them.
+
+```shell
+curl -X POST 'http://localhost:4000/team/<team-id>/callback' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{
+    "callback_name": "newrelic",
+    "callback_type": "success",
+    "callback_vars": {
+      "newrelic_api_key": "<team ingest license key>",
+      "baggage_metadata_keys": "requester_metadata.correlation_id,requester_metadata.tenant_id"
+    }
+  }'
+```
+
+A request from one of this team's keys that sends `"metadata": {"correlation_id": "corr-123", "tenant_id": "t-9"}` then puts `litellm.metadata.correlation_id` and `litellm.metadata.tenant_id` on the spans that reach the team's New Relic account.
+
+The callback is rejected when it is saved if an entry does not start with `requester_metadata.`, if it would overwrite a proxy identity field such as `requester_metadata.user_api_key_user_id` or `requester_metadata.requester_ip_address`, if it points at a request header under `requester_metadata.headers`, or if it lists more than 20 distinct keys. Only the proxy-wide `LITELLM_OTEL_BAGGAGE_METADATA_KEYS` can export request headers. Like `excluded_services`, the setting requires `LITELLM_OTEL_V2=true`, a `langfuse_otel`, `arize`, `weave_otel` or `newrelic` callback, and a `success` or `success_and_failure` entry. It works the same way in a key's logging callbacks, and two entries for the same backend must list the same keys, in any order.
 
 ### Good to know
 

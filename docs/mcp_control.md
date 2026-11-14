@@ -954,7 +954,7 @@ A caller with an admin role and no explicit key-level `mcp_servers` list normall
 
 Cap how many requests a key or team can make to a specific MCP server per minute with `mcp_rpm_limit`. This is a `Dict[str, int]` keyed by MCP server name, where the name is the server's alias if one is set, otherwise the configured server name. Each entry sets the requests-per-minute limit for that one server, so a limit on `github` does not affect calls to `slack`. Servers without an entry are uncapped.
 
-Every MCP operation sent to that server counts: `tools/call`, `tools/list`, `prompts/list`, `prompts/get`, `resources/list`, `resources/templates/list` and `resources/read`, plus the REST tool listing at `/mcp-rest/tools/list`. Once the limit is exceeded within the window, further requests to that server are rejected until the window rolls over. On `/mcp` the rejection is an MCP error that names the exhausted limit, and REST routes return `429 Too Many Requests`. The cap has no effect on regular LLM requests.
+Every MCP operation sent to that server counts: `tools/call`, `tools/list`, `prompts/list`, `prompts/get`, `resources/list`, `resources/templates/list` and `resources/read`, plus the REST tool listing at `/mcp-rest/tools/list`. A `resources/read` on `/mcp` that can reach several servers counts once against each of them, because the gateway lists each one to find the server that owns the URI. Once the limit is exceeded within the window, further requests to that server are rejected until the window rolls over. On `/mcp` the rejection is an MCP error that names the exhausted limit, and REST routes return `429 Too Many Requests`. The cap has no effect on regular LLM requests.
 
 <Tabs>
 <TabItem value="key" label="On a Key">
