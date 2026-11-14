@@ -1,0 +1,138 @@
+.figure {
+  --cp-bg: #ffffff;
+  --cp-text: #213346;
+  --cp-muted: #506174;
+  --cp-outline: #72849a;
+  --cp-region: #6e7d8d;
+  --cp-network: #8060a4;
+  --cp-subnet: #337789;
+  --cp-subnet-bg: #f2f8fa;
+  --cp-external-bg: #f7f9fb;
+  --cp-management: #6b49a4;
+  --cp-inference: #177858;
+  --cp-data: #546779;
+  --cp-egress: #a15b15;
+  margin: 1rem 0;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--cp-text);
+  font-size: 0.85rem;
+}
+
+.button {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--cp-outline);
+  border-radius: 4px;
+  background: var(--cp-bg);
+  color: var(--cp-text);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.button:hover { border-color: var(--cp-management); }
+.button:focus-visible,
+.viewport:focus-visible,
+.expandedViewport:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: -2px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--cp-muted);
+  background: var(--cp-bg);
+}
+.legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.legend i { width: 20px; border-top: 2px solid; }
+.managementKey { border-color: var(--cp-management) !important; }
+.inferenceKey { border-color: var(--cp-inference) !important; }
+.dataKey { border-color: var(--cp-data) !important; }
+.egressKey { border-color: var(--cp-egress) !important; border-top-style: dashed !important; }
+
+.viewport,
+.expandedViewport {
+  overflow: auto;
+  background: var(--cp-bg);
+  overscroll-behavior: contain;
+}
+.svg { display: block; width: 100%; min-width: 880px; height: auto; font-family: var(--ifm-font-family-base); }
+.boundary, .region, .network, .subnet, .external { stroke-width: 1.2; fill: var(--cp-bg); }
+.boundary { stroke: var(--cp-outline); }
+.region { stroke: var(--cp-region); stroke-dasharray: 5 4; }
+.network { stroke: var(--cp-network); }
+.subnet { stroke: var(--cp-subnet); fill: var(--cp-subnet-bg); }
+.external { stroke: var(--cp-outline); fill: var(--cp-external-bg); }
+.groupLabel { fill: var(--cp-muted); font-size: 13px; font-weight: 600; }
+.nodeLabel { fill: var(--cp-text); font-size: 13px; font-weight: 600; }
+.clientLabel { fill: var(--cp-text); font-size: 13px; font-weight: 600; }
+.noteLabel { fill: var(--cp-muted); font-size: 12px; }
+.symbol { fill: none; stroke: var(--cp-muted); stroke-width: 1.6; }
+.flow { stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+.management { stroke: var(--cp-management); }
+.inference { stroke: var(--cp-inference); }
+.data { stroke: var(--cp-data); }
+.egress { stroke: var(--cp-egress); stroke-dasharray: 5 4; }
+.managementArrow { fill: var(--cp-management); }
+.inferenceArrow { fill: var(--cp-inference); }
+.dataArrow { fill: var(--cp-data); }
+.egressArrow { fill: var(--cp-egress); }
+.crossingGap { fill: none; stroke: var(--cp-bg); stroke-width: 7; }
+.flowLabel, .peeringLabel, .egressLabel {
+  font-size: 13px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--cp-bg);
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+.flowLabel, .peeringLabel { fill: var(--cp-management); }
+.egressLabel { fill: var(--cp-egress); font-size: 12px; }
+
+.dialog {
+  width: min(96vw, 1440px);
+  max-width: 96vw;
+  max-height: 94vh;
+  padding: 0;
+  border: 1px solid var(--cp-outline);
+  border-radius: 8px;
+  color: var(--cp-text);
+  background: var(--cp-bg);
+}
+.dialog::backdrop { background: rgb(0 0 0 / 65%); }
+.expandedViewport { max-height: calc(94vh - 90px); }
+.expandedViewport .svg { min-width: 0; max-height: calc(94vh - 90px); }
+
+@media (max-width: 800px) {
+  .expandedViewport .svg { min-width: 1000px; max-height: none; }
+}
+
+[data-theme='dark'] .figure {
+  --cp-bg: #121923;
+  --cp-text: #e6edf5;
+  --cp-muted: #bdcbd9;
+  --cp-outline: #8194aa;
+  --cp-region: #94a5b6;
+  --cp-network: #c3a4ea;
+  --cp-subnet: #81c9dc;
+  --cp-subnet-bg: #182a36;
+  --cp-external-bg: #1c2633;
+  --cp-management: #c9adff;
+  --cp-inference: #71d2ae;
+  --cp-data: #bacbdc;
+  --cp-egress: #f7bc76;
+}

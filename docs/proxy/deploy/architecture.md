@@ -51,7 +51,7 @@ For more than one region, see [Multi-Region Deployment](../multi_region.md), [Ro
 
 ### Manage independent deployments
 
-The [Global Control Plane](../global_control_plane.md) manages independent deployments from one UI. Each deployment has its own database, Redis, keys, and budgets. This Enterprise feature does not synchronize state or route inference traffic between deployments.
+The [Global Control Plane](../global_control_plane.md) provides one management API for independent deployments, fleet inventory, usage reports, and audit export. Each data plane has its own database, Redis, keys, and budgets. See the [AWS, Azure, and GCP architectures](../global_control_plane/architecture.md) or the existing [UI Deployment Selector](../global_control_plane/legacy_ui.md).
 
 </TabItem>
 </Tabs>
