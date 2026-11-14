@@ -16,6 +16,12 @@ OpenAI-compatible endpoint, such as [`hosted_vllm`](/docs/providers/vllm) or [`l
 
 :::
 
+:::tip
+If an upstream only supports `/chat/completions` and your client calls `/v1/responses`, use `openai/chat_completions/<model>` or `custom_openai/<model>`.
+For `custom_openai`, set `api_base` to the API root.
+See the [Responses API guide](/docs/response_api).
+:::
+
 To call models hosted behind an openai proxy, make 2 changes:
 
 1. For `/chat/completions`: Put `openai/` in front of your model name, so litellm knows you're trying to call an openai `/chat/completions` endpoint. 
