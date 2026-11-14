@@ -9,13 +9,43 @@ description: Control plane endpoints, authentication, scopes, query parameters, 
 
 {/* keep-version-note */}
 
+## Overview
+
 These paths use the default `/api/v1` prefix. Set [`CONTROL_PLANE_API_PREFIX`](./configuration.md#server) to change it. See [Configuration](./configuration.md) for authentication and service settings.
+
+## Authentication
 
 Authenticated requests use HTTP Bearer authentication: `Authorization: Bearer <credential>`. See the header syntax in [RFC 6750, Section 2.1](https://www.rfc-editor.org/rfc/rfc6750.html#section-2.1). The control plane checks scopes and data plane access. Each data plane also applies its own permissions to forwarded requests.
 
-## Scopes and roles
+| Authentication method | Bearer credential |
+| --- | --- |
+| IdP JWT authentication | A JWT access token from the configured [OpenID Connect (OIDC) provider](https://openid.net/specs/openid-connect-core-1_0.html). |
+| Username and password login | A session JWT issued by `POST /api/v1/auth/login`. |
+| Master key authentication | The static LiteLLM API key configured in `LITELLM_MASTER_KEY`. |
 
-### Scopes {#scopes}
+JWT credentials use the JSON Web Token format defined in [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519.html).
+
+| Method | Path | Required scope | Response |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/auth/login` | None. No bearer token required. | `access_token`, `token_type`, and `expires_in` in seconds. |
+| `GET` | `/api/v1/auth/me` | None. Bearer token required. | `subject`, `email`, `roles`, `scopes`, `dataplanes`, and `token_kind`. |
+
+`POST /api/v1/auth/login` accepts:
+
+```json
+{
+  "username": "operator",
+  "password": "REPLACE_WITH_PASSWORD"
+}
+```
+
+Both fields are required. The username accepts 1 to 256 characters. The password accepts 1 to 1024 characters. Login checks the configured `UI_USERNAME` and `UI_PASSWORD` values. It returns a session JWT in `access_token`, sets `token_type: "bearer"`, and disables caching.
+
+`GET /api/v1/auth/me` returns `token_kind` as `oidc`, `session`, or `master_key`. A `null` value for `dataplanes` means fleet-wide access. Otherwise, it lists the caller's allowed data plane IDs.
+
+### Scopes and roles {#scopes-and-roles}
+
+#### Scopes {#scopes}
 
 | Scope | Grants | Default roles |
 | --- | --- | --- |
@@ -34,7 +64,7 @@ The optional OIDC `scope` claim narrows role grants to the scopes it lists. It c
 
 Data plane access is separate from scopes. The caller's `litellm_dataplanes` claim limits which data planes those scopes apply to. An absent or empty claim, or one containing `"*"`, grants fleet-wide access. Each data plane still checks its own permissions. See [Authentication](./configuration.md#authentication) for role and claim settings.
 
-### Roles {#roles}
+#### Roles {#roles}
 
 | Method | Path | Required scope | Response |
 | --- | --- | --- | --- |
@@ -87,34 +117,6 @@ Authorization: Bearer REPLACE_WITH_ADMIN_CREDENTIAL
 ```
 
 A successful deletion returns `204` with no body. Each replica resolves JWT role claims against its live policy on later requests. A deleted role no longer grants scopes. A JWT with no remaining recognized role is rejected with `401`.
-
-## Authentication
-
-| Authentication method | Bearer credential |
-| --- | --- |
-| IdP JWT authentication | A JWT access token from the configured [OpenID Connect (OIDC) provider](https://openid.net/specs/openid-connect-core-1_0.html). |
-| Username and password login | A session JWT issued by `POST /api/v1/auth/login`. |
-| Master key authentication | The static LiteLLM API key configured in `LITELLM_MASTER_KEY`. |
-
-JWT credentials use the JSON Web Token format defined in [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519.html).
-
-| Method | Path | Required scope | Response |
-| --- | --- | --- | --- |
-| `POST` | `/api/v1/auth/login` | None. No bearer token required. | `access_token`, `token_type`, and `expires_in` in seconds. |
-| `GET` | `/api/v1/auth/me` | None. Bearer token required. | `subject`, `email`, `roles`, `scopes`, `dataplanes`, and `token_kind`. |
-
-`POST /api/v1/auth/login` accepts:
-
-```json
-{
-  "username": "operator",
-  "password": "REPLACE_WITH_PASSWORD"
-}
-```
-
-Both fields are required. The username accepts 1 to 256 characters. The password accepts 1 to 1024 characters. Login checks the configured `UI_USERNAME` and `UI_PASSWORD` values. It returns a session JWT in `access_token`, sets `token_type: "bearer"`, and disables caching.
-
-`GET /api/v1/auth/me` returns `token_kind` as `oidc`, `session`, or `master_key`. A `null` value for `dataplanes` means fleet-wide access. Otherwise, it lists the caller's allowed data plane IDs.
 
 ## Data planes
 
@@ -217,7 +219,7 @@ Both responses include `partial` and `unreachable`. See [Partial results](#parti
 | `group_by` | `/daily`, `/top` | `dataplane` for `/daily`, `model` for `/top` | One of `dataplane`, `model`, `model_group`, `provider`, `endpoint`, `api_key`, or `team`. |
 | `limit` | `/top` | `10` | Number of groups to return, from `1` to `100`. |
 
-The default window covers 30 days, including the end date. The maximum window is 366 days by default. [`CONTROL_PLANE_USAGE_MAX_WINDOW_DAYS`](./configuration.md#requests-and-usage) changes this limit and caps the default window when set below 30. The API returns `400` if the start date follows the end date or the window exceeds the limit.
+The default window covers 30 days, including the end date. The maximum window is 366 days by default. [`CONTROL_PLANE_USAGE_MAX_WINDOW_DAYS`](./configuration.md#fleet) changes this limit and caps the default window when set below 30. The API returns `400` if the start date follows the end date or the window exceeds the limit.
 
 Example request:
 
@@ -263,11 +265,11 @@ The control plane rejects inference, login, SSO, OAuth, onboarding, session, ser
 
 The response uses the data plane's status and body and adds `X-LiteLLM-Dataplane: <id>`. Data plane errors retain their upstream response format. Redirects return `502`.
 
-Reads can retry after connection failures or upstream `502`, `503`, and `504` responses. The default is [three attempts](./configuration.md#requests-and-usage). The control plane sends each write once. Request bodies are limited to 1 MB. Data plane responses are limited to 64 MiB.
+Reads can retry after connection failures or upstream `502`, `503`, and `504` responses. The default is [three attempts](./configuration.md#management-requests). The control plane sends each write once. Request bodies are limited to 1 MB. Data plane responses are limited to 64 MiB.
 
 With [strict audit delivery](./configuration.md#audit-logs), the control plane can reject a write with `503` before forwarding it.
 
-## Audit events
+## Audit logs {#audit-events}
 
 Both endpoints return recent events from the responding control-plane process, newest first.
 

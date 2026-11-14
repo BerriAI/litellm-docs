@@ -9,9 +9,11 @@ description: Environment variables, data plane registry fields, and JWT settings
 
 {/* keep-version-note */}
 
+## Overview
+
 The control plane reads environment variables and its configured data plane registry at startup. Restart it after changing startup settings. With [runtime configuration](#runtime-configuration) enabled, API changes to runtime registry entries and roles propagate without a restart. See [API Reference](./api_reference.md) for endpoints and permissions.
 
-## Server
+### Server
 
 ```bash
 litellm --control-plane --host 0.0.0.0 --port 4000 --num_workers 1
@@ -58,7 +60,11 @@ Allow HTTPS access to the IdP's [OpenID Connect Discovery](https://openid.net/sp
 | `CONTROL_PLANE_OIDC_EMAIL_CLAIM` | `email` | Claim containing the caller's email. |
 | `CONTROL_PLANE_OIDC_LEEWAY_SECONDS` | `30` | Clock tolerance in seconds for IdP JWT validation. |
 
-#### Roles {#roles}
+<span id="roles" />
+
+### Scopes and roles
+
+Use roles to grant API scopes. See the [scope reference](./api_reference.md#scopes) for permissions and default grants.
 
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
@@ -109,9 +115,11 @@ Configure these fields in the data plane's `config.yaml`:
 
 See the [JWT configuration reference](../jwt_auth_reference.md) for additional data plane settings.
 
-## Data plane registry
+<span id="data-plane-registry" />
 
-Use static configuration, runtime configuration, or both to register data planes. Runtime entries cannot replace static entries.
+## Data planes
+
+Register each LiteLLM deployment as a data plane with static configuration, runtime configuration, or both. Runtime entries cannot replace static entries.
 
 ### Static configuration
 
@@ -229,14 +237,21 @@ Both profiles require an IdP JWT access token authenticated by the control plane
 
 Service tokens are LiteLLM virtual API keys sent as bearer credentials. They need `permissions: {impersonate: true}`. Match each operator's local data plane `user_id` to their control plane OIDC `sub` or password-login username. The data plane applies that user's local permissions. This method does not require JWT authentication on the data plane. Calls with the control plane master key use the service token's own identity.
 
-## Requests and usage
+<span id="requests-and-usage" />
+
+## Fleet
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `CONTROL_PLANE_FANOUT_CONCURRENCY` | `16` | Maximum concurrent data plane calls for fleet and usage queries per replica. |
+| `CONTROL_PLANE_USAGE_MAX_WINDOW_DAYS` | `366` | Largest usage query window in days. |
+
+## Management requests
 
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
 | `CONTROL_PLANE_DATAPLANE_TIMEOUT_SECONDS` | `10` | Timeout in seconds for data plane requests and token exchanges. |
 | `CONTROL_PLANE_DATAPLANE_RETRY_ATTEMPTS` | `3` | Maximum attempts for retryable data plane reads. |
-| `CONTROL_PLANE_FANOUT_CONCURRENCY` | `16` | Maximum concurrent data plane calls for fleet and usage queries per replica. |
-| `CONTROL_PLANE_USAGE_MAX_WINDOW_DAYS` | `366` | Largest usage query window in days. |
 
 ## Audit logs
 
