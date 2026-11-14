@@ -182,9 +182,11 @@ A successful PUT or DELETE confirms persistence, but live reads and permission c
 
 ## Fleet
 
-A fleet is the collection of data planes registered with the control plane. Fleet endpoints show their models and teams together.
+A fleet is the collection of data planes registered with the control plane. These endpoints show models, teams, and usage across the fleet.
 
 Add `?dataplane=us-prod` to select one data plane. Without this parameter, the API queries all registered data planes visible to the caller.
+
+### Models and teams
 
 | Method | Path | Required scope | Response |
 | --- | --- | --- | --- |
@@ -197,7 +199,7 @@ Each team item includes `dataplane_id`, `team_id`, `team_alias`, `organization_i
 
 Both responses include `partial` and `unreachable`. See [Partial results](#partial-results).
 
-## Usage
+### Usage {#usage}
 
 | Method | Path | Required scope | Response |
 | --- | --- | --- | --- |
@@ -205,7 +207,7 @@ Both responses include `partial` and `unreachable`. See [Partial results](#parti
 | `GET` | `/api/v1/usage/daily` | `usage:read` | `window`, `group_by`, and `rows` with `date`, `group`, and `metrics`. |
 | `GET` | `/api/v1/usage/top` | `usage:read` | `window`, `group_by`, `limit`, and `items` with `group` and `metrics`, ranked by spend. |
 
-### Query parameters
+#### Query parameters
 
 | Parameter | Endpoints | Default | Description |
 | --- | --- | --- | --- |
@@ -230,7 +232,7 @@ For dimensions other than `dataplane`, the API combines matching group labels ac
 
 ### Partial results
 
-Fleet and usage responses describe missing results with these fields:
+Fleet responses describe missing results with these fields:
 
 | Field | Meaning |
 | --- | --- |
