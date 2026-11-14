@@ -1,7 +1,7 @@
 ---
 title: "LlamaGate API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "LlamaGate"
-description: "Call LlamaGate open-source models through LiteLLM from the Python SDK or AI Gateway. Set LLAMAGATE_API_KEY, stream and send images to vision models."
+description: "Call Llama 3.1, DeepSeek R1, Qwen Coder and vision models like Qwen 3 VL on LlamaGate, with streaming and image input, from the Python SDK or AI Gateway."
 ---
 
 # LlamaGate

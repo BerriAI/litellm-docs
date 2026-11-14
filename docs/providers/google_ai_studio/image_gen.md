@@ -1,7 +1,7 @@
 ---
 title: "Google AI Studio Image Generation with LiteLLM"
 sidebar_label: "Google AI Studio Image Generation"
-description: "Generate images with Imagen and Gemini image models from Google AI Studio via LiteLLM. Set GEMINI_API_KEY, pass imageConfig and use the SDK or AI Gateway."
+description: "Generate images with Imagen 4 and Gemini 3 image preview models from Google AI Studio via the Python SDK or AI Gateway, with Search grounding and imageConfig."
 ---
 
 import Tabs from '@theme/Tabs';

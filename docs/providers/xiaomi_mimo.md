@@ -1,7 +1,7 @@
 ---
 title: "Xiaomi MiMo API with LiteLLM AI Gateway"
 sidebar_label: "Xiaomi MiMo"
-description: "Call Xiaomi MiMo models through LiteLLM with the xiaomi_mimo/ prefix from the Python SDK or AI Gateway. Set XIAOMI_MIMO_API_KEY and stream responses."
+description: "Call Xiaomi MiMo models such as mimo-v2-flash, streaming replies and tuning temperature and top_p, then add them to a LiteLLM AI Gateway config.yaml."
 ---
 
 import Tabs from '@theme/Tabs';

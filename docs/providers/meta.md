@@ -1,7 +1,7 @@
 ---
 title: "Meta Model API (Muse) with LiteLLM: Setup"
 sidebar_label: "Meta Model API"
-description: "Call the Meta Model API via LiteLLM from the Python SDK or AI Gateway. Set META_API_KEY, stream, set reasoning effort, call functions and use Muse Voice."
+description: "Call Meta's Muse Spark 1.1 with reasoning effort up to xhigh, tools and the Messages API, and transcribe live speech with Muse Voice over /v1/realtime."
 ---
 
 import Tabs from '@theme/Tabs';

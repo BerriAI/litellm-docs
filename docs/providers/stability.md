@@ -1,7 +1,7 @@
 ---
 title: "Stability AI Image Generation with LiteLLM"
 sidebar_label: "Stability AI"
-description: "Generate and edit images with Stability AI via LiteLLM from the Python SDK or AI Gateway. Set STABILITY_API_KEY, map size to aspect ratio, or use Bedrock."
+description: "Generate images with SD 3.5 and Stable Image Ultra, then inpaint, upscale, outpaint, erase objects or remove backgrounds with Stability AI or AWS Bedrock."
 ---
 
 # Stability AI

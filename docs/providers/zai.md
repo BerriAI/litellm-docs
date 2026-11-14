@@ -1,7 +1,7 @@
 ---
 title: "Z.AI (Zhipu) GLM API with LiteLLM: Setup"
 sidebar_label: "Z.AI (Zhipu AI)"
-description: "Call Z.AI (Zhipu AI) GLM models through LiteLLM with the zai/ prefix from the Python SDK or AI Gateway. Set ZAI_API_KEY, stream, use -latest aliases."
+description: "Call Z.AI (Zhipu AI) GLM models from glm-4.7 to the free glm-4.5-flash with streaming, per-model pricing and -latest aliases, from the SDK or AI Gateway."
 ---
 
 import Tabs from '@theme/Tabs';

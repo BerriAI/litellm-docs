@@ -1,7 +1,7 @@
 ---
 title: "Azure OpenAI Embeddings with LiteLLM"
 sidebar_label: "Azure OpenAI Embeddings"
-description: "Create embeddings with Azure OpenAI via LiteLLM. Set AZURE_API_KEY and AZURE_API_BASE, call litellm.embedding() from the Python SDK or use the AI Gateway."
+description: "Create text-embedding-ada-002 embeddings on your Azure OpenAI deployment with litellm.embedding() or the /embeddings route on the LiteLLM AI Gateway."
 ---
 
 import Image from '@theme/IdealImage';

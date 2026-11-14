@@ -1,7 +1,7 @@
 ---
 title: "xAI Grok API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "xAI"
-description: "Call xAI Grok models through LiteLLM with the xai/ prefix from the Python SDK or AI Gateway. Set XAI_API_KEY, stream, send images and use reasoning."
+description: "Call xAI Grok 4.5 with low, medium or high reasoning effort, vision input, JSON responses, streaming and the grok-latest alias, and read reasoning tokens."
 ---
 
 import Tabs from '@theme/Tabs';

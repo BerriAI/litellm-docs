@@ -1,7 +1,7 @@
 ---
 title: "OpenRouter API in Python with LiteLLM"
 sidebar_label: "OpenRouter"
-description: "Call OpenRouter models via LiteLLM with the openrouter/ prefix. Set OPENROUTER_API_KEY, pass transforms, models and route, and run embeddings and images."
+description: "Call any OpenRouter model, pass transforms and route, embed text, create or edit images with Gemini image models, and reach Jev decision models via the proxy."
 ---
 
 # OpenRouter

@@ -1,7 +1,7 @@
 ---
 title: "CometAPI in Python with LiteLLM"
 sidebar_label: "CometAPI"
-description: "Call CometAPI models from the LiteLLM Python SDK with the cometapi/ prefix. Set COMETAPI_KEY, pass an explicit API key, and stream sync or async responses."
+description: "Access GPT-5, gpt-oss, Claude Opus 4.1 and more of CometAPI's 500+ models from the LiteLLM Python SDK, with sync and async streaming and error handling."
 ---
 
 # CometAPI

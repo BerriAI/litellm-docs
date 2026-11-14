@@ -1,7 +1,7 @@
 ---
 title: "Helicone AI Gateway with LiteLLM: Setup"
 sidebar_label: "Helicone"
-description: "Call models through Helicone's AI Gateway from the LiteLLM Python SDK with the helicone/ prefix. Set HELICONE_API_KEY, stream, and add custom properties."
+description: "Route OpenAI and Anthropic calls through Helicone's AI Gateway from the LiteLLM Python SDK, with streaming, custom property headers, caching and fallbacks."
 ---
 
 import Tabs from '@theme/Tabs';

@@ -1,7 +1,7 @@
 ---
 title: "Moonshot AI (Kimi) API with LiteLLM: Setup"
 sidebar_label: "Moonshot AI"
-description: "Call Moonshot AI Kimi models via LiteLLM with the moonshot/ prefix from the Python SDK or AI Gateway. Set MOONSHOT_API_KEY, pick the global or China base."
+description: "Call Moonshot AI's moonshot-v1 and Kimi models, including kimi-k2.5 vision, on the global or China endpoint while LiteLLM handles temperature limits."
 ---
 
 import Tabs from '@theme/Tabs';

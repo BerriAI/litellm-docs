@@ -1,7 +1,7 @@
 ---
 title: "Black Forest Labs FLUX Image Editing in LiteLLM"
 sidebar_label: "Black Forest Labs Image Editing"
-description: "Edit images with Black Forest Labs FLUX models via LiteLLM from the Python SDK or AI Gateway. Set BFL_API_KEY and pass the image, prompt and BFL params."
+description: "Edit, inpaint and outpaint images with FLUX Kontext Pro and Max, FLUX Pro Fill and FLUX Pro Expand from the Python SDK or the AI Gateway /images/edits route."
 ---
 
 import Tabs from '@theme/Tabs';

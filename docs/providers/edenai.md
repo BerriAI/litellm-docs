@@ -1,7 +1,7 @@
 ---
 title: "Eden AI API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "Eden AI"
-description: "Call Eden AI models via LiteLLM with the edenai/ prefix from the Python SDK or AI Gateway. Set EDENAI_API_KEY, stream and run embeddings, audio and images."
+description: "Reach 1000+ models through Eden AI from the Python SDK or AI Gateway for chat, embeddings, audio, images and video, with fallbacks and Eden-reported cost."
 ---
 
 import Tabs from '@theme/Tabs';

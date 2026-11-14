@@ -1,7 +1,7 @@
 ---
 title: "Refuseless API with LiteLLM AI Gateway"
 sidebar_label: "Refuseless"
-description: "Call Refuseless models with the refuseless/ prefix from the LiteLLM Python SDK or AI Gateway. Set REFUSELESS_API_KEY, stream, use tools and Responses."
+description: "Use Refuseless abliterated GLM and DeepSeek models with reasoning effort, tools, structured output, prompt caching and the Responses API through LiteLLM."
 ---
 
 # Refuseless

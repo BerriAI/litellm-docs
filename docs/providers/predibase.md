@@ -1,7 +1,7 @@
 ---
 title: "Predibase API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "Predibase"
-description: "Call Predibase models via LiteLLM from the Python SDK or AI Gateway. Set PREDIBASE_API_KEY, apply prompt templates, and pass adapter_id and adapter_source."
+description: "Call Llama 3 and Mistral models on Predibase, register custom prompt templates, and pass Predibase's adapter_id and adapter_source with each request."
 ---
 
 import Tabs from '@theme/Tabs';

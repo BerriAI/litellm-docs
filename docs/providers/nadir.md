@@ -1,7 +1,7 @@
 ---
 title: "Nadir Router API with LiteLLM: Setup"
 sidebar_label: "Nadir"
-description: "Call the Nadir router through LiteLLM with nadir/auto from the Python SDK or AI Gateway. Set NADIR_API_KEY, stream and track the cost Nadir returns."
+description: "Send requests to Nadir's auto router, which picks the cheapest capable model per call, and log the routed model and Nadir's computed cost in LiteLLM."
 ---
 
 # Nadir

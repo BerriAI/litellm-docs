@@ -1,7 +1,7 @@
 ---
 title: "DeepSeek API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "Deepseek"
-description: "Call DeepSeek models through LiteLLM with the deepseek/ prefix from the Python SDK or AI Gateway. Set DEEPSEEK_API_KEY, stream, and turn on thinking mode."
+description: "Call DeepSeek chat, coder, flash, V4 Pro and reasoner models from the Python SDK or AI Gateway, with streaming, thinking mode and off-peak cost tracking."
 ---
 
 import Tabs from '@theme/Tabs';

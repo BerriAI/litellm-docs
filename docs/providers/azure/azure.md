@@ -1,7 +1,7 @@
 ---
 title: "Azure OpenAI API with LiteLLM AI Gateway"
 sidebar_label: "Azure OpenAI"
-description: "Call Azure OpenAI deployments through LiteLLM from the Python SDK or AI Gateway. Set AZURE_API_KEY and AZURE_API_BASE, pick an API version or use Entra ID."
+description: "Route Azure OpenAI deployments, including GPT-5, o-series, vision and audio models, through the Python SDK or AI Gateway with Entra ID auth and Batches."
 ---
 
 

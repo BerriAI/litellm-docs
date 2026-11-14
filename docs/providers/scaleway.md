@@ -1,7 +1,7 @@
 ---
 title: "Scaleway Generative APIs with LiteLLM"
 sidebar_label: "Scaleway"
-description: "Call Scaleway Generative APIs models through LiteLLM with the scaleway/ prefix from the Python SDK or AI Gateway. Set SCW_SECRET_KEY and transcribe audio."
+description: "Run Scaleway Generative APIs chat models such as Qwen3 235B and transcribe audio with Whisper large v3, from the LiteLLM Python SDK or AI Gateway."
 ---
 
 

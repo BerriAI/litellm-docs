@@ -1,7 +1,7 @@
 ---
 title: "Mistral AI API with LiteLLM AI Gateway"
 sidebar_label: "Mistral AI"
-description: "Call Mistral AI models via LiteLLM with the mistral/ prefix from the Python SDK or AI Gateway. Set MISTRAL_API_KEY, stream, call functions and transcribe."
+description: "Call Mistral Large, Codestral and Magistral with tool calling and reasoning effort, transcribe audio with Voxtral, clone voices for speech and embed text."
 ---
 
 import Tabs from '@theme/Tabs';

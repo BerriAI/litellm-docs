@@ -1,7 +1,7 @@
 ---
 title: "Nscale API with LiteLLM: EU Sovereign Inference"
 sidebar_label: "Nscale (EU Sovereign)"
-description: "Call Nscale EU sovereign models via LiteLLM with the nscale/ prefix from the Python SDK or AI Gateway. Set NSCALE_API_KEY for text and image generation."
+description: "Generate text with Llama 4 Scout and Llama 3.3 70B and images with Stable Diffusion XL on Nscale's EU sovereign cloud, from the Python SDK or AI Gateway."
 ---
 
 import Tabs from '@theme/Tabs';

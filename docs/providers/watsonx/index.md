@@ -1,7 +1,7 @@
 ---
 title: "IBM watsonx.ai API with LiteLLM: Setup"
 sidebar_label: "WatsonX"
-description: "Call IBM watsonx.ai foundation models via LiteLLM with the watsonx/ prefix from the Python SDK or AI Gateway. Set WATSONX_URL, stream and embed text."
+description: "Chat with Llama, Granite and Mixtral on IBM watsonx.ai, call tuned models in deployment spaces, embed text with Slate and authenticate with a Zen API key."
 ---
 
 import Tabs from '@theme/Tabs';

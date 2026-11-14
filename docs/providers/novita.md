@@ -1,7 +1,7 @@
 ---
 title: "Novita AI API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "Novita AI"
-description: "Call Novita AI models through LiteLLM with the novita/ prefix from the Python SDK or AI Gateway. Set NOVITA_API_KEY, call tools, use JSON mode, see params."
+description: "Run DeepSeek R1 Turbo, Qwen3, Llama 4 Maverick and other Novita AI models with tool calling, JSON mode and min_p or top_k sampling through LiteLLM."
 ---
 
 import Image from '@theme/IdealImage';

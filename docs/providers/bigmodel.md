@@ -1,7 +1,7 @@
 ---
 title: "BigModel (Zhipu AI) API with LiteLLM"
 sidebar_label: "BigModel (Zhipu AI)"
-description: "Call BigModel (Zhipu AI) GLM models through LiteLLM with the bigmodel/ prefix from the Python SDK or AI Gateway. Set BIGMODEL_API_KEY and stream responses."
+description: "Run GLM-5.3, Flash and FlashX on BigModel (Zhipu AI) from the Python SDK or AI Gateway, with thinking, reasoning effort, and Responses and Messages APIs."
 ---
 
 # BigModel (Zhipu AI)

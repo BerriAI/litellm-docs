@@ -1,7 +1,7 @@
 ---
 title: "ElevenLabs Speech API with LiteLLM: STT and TTS"
 sidebar_label: "ElevenLabs"
-description: "Run ElevenLabs speech to text and text to speech via LiteLLM from the Python SDK or AI Gateway. Set ELEVENLABS_API_KEY and map OpenAI voices to ElevenLabs."
+description: "Transcribe audio with ElevenLabs Scribe and generate speech with Eleven v3 or Multilingual v2 from the Python SDK or AI Gateway, with OpenAI voice mapping."
 ---
 
 import Tabs from '@theme/Tabs';

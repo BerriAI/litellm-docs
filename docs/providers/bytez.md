@@ -1,7 +1,7 @@
 ---
 title: "Bytez API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "Bytez"
-description: "Call Bytez chat and multimodal models through LiteLLM from the Python SDK or AI Gateway. Set BYTEZ_API_KEY, add models to config.yaml, pass Bytez params."
+description: "Send chat, image, audio and video prompts to Bytez models like Gemma 3 from the Python SDK or AI Gateway, with Hugging Face kwargs such as repetition_penalty."
 ---
 
 import Tabs from '@theme/Tabs';

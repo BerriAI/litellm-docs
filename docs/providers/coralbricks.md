@@ -1,7 +1,7 @@
 ---
 title: "CoralBricks API with LiteLLM AI Gateway"
 sidebar_label: "CoralBricks"
-description: "Call CoralBricks models via LiteLLM from the Python SDK or AI Gateway. Set CORALBRICKS_API_KEY, stream, use the Responses API and track spend per model."
+description: "Run GLM-5.3 Fast and DeepSeek V4.1 Flash Fast on CoralBricks from the Python SDK or AI Gateway, on chat, Responses and Messages routes with cost tracking."
 ---
 
 import Tabs from '@theme/Tabs';

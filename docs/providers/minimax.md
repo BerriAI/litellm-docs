@@ -1,7 +1,7 @@
 ---
 title: "MiniMax API with LiteLLM: Chat, Speech, Video"
 sidebar_label: "MiniMax"
-description: "Call MiniMax models through LiteLLM on /v1/messages or /v1/chat/completions from the Python SDK or AI Gateway. Set MINIMAX_API_KEY, run TTS and video."
+description: "Chat with MiniMax-M2.1 in Anthropic or OpenAI format with thinking and tools, convert text to speech with speech-2.6-hd and generate MiniMax-H3 videos."
 ---
 
 import Tabs from '@theme/Tabs';

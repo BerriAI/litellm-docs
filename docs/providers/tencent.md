@@ -1,7 +1,7 @@
 ---
 title: "Tencent TokenHub API with LiteLLM: Setup"
 sidebar_label: "Tencent TokenHub"
-description: "Call Tencent TokenHub models such as DeepSeek, GLM, Kimi and Hunyuan through LiteLLM with the tencent/ prefix. Set TENCENT_API_KEY and use thinking mode."
+description: "Reach DeepSeek V4, GLM-5, Kimi, MiniMax and Hunyuan models on Tencent TokenHub with thinking or reasoning_effort and its Anthropic-compatible Messages API."
 ---
 
 import Tabs from '@theme/Tabs';

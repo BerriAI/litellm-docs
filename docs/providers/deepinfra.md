@@ -1,7 +1,7 @@
 ---
 title: "DeepInfra API with LiteLLM: Chat and Rerank"
 sidebar_label: "DeepInfra"
-description: "Call DeepInfra models via LiteLLM with the deepinfra/ prefix from the Python SDK or AI Gateway. Set DEEPINFRA_API_KEY, stream and use the /rerank endpoint."
+description: "Call Llama 3, Llama 2 and CodeLlama chat models on DeepInfra from the Python SDK or AI Gateway, with streaming and Qwen3 rerankers on the /rerank endpoint."
 ---
 
 import Tabs from '@theme/Tabs';

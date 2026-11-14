@@ -1,7 +1,7 @@
 ---
 title: "FriendliAI API with LiteLLM: Setup and Models"
 sidebar_label: "FriendliAI"
-description: "Call FriendliAI models from the LiteLLM Python SDK with the friendliai/ prefix. Set FRIENDLI_TOKEN, send chat requests, stream responses and see models."
+description: "Call Llama 3.1 8B and 70B Instruct or any other FriendliAI model from the LiteLLM Python SDK, with plain and streaming chat on the friendliai/ route."
 ---
 
 # FriendliAI

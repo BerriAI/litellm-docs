@@ -1,7 +1,7 @@
 ---
 title: "Gemini API with LiteLLM: Google AI Studio Setup"
 sidebar_label: "Google AI Studio"
-description: "Call Gemini models from Google AI Studio via LiteLLM with the gemini/ prefix from the Python SDK or AI Gateway. Set GEMINI_API_KEY, use thinking and TTS."
+description: "Call Gemini on Google AI Studio from the Python SDK or AI Gateway with thinking levels, TTS, transcription, Google Search, code execution and context caching."
 ---
 
 import Image from '@theme/IdealImage';

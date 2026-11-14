@@ -1,7 +1,7 @@
 ---
 title: "OpenInfer API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "OpenInfer"
-description: "Call OpenInfer chat models via LiteLLM with the openinfer/ prefix from the Python SDK or AI Gateway. Set OPENINFER_API_KEY, stream, use the Responses API."
+description: "Call OpenInfer Cloud models such as GLM-5.3-Flash and Qwen3.5 27B with streaming, native Responses and Anthropic Messages endpoints and spend tracking."
 ---
 
 import Tabs from '@theme/Tabs';

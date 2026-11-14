@@ -1,7 +1,7 @@
 ---
 title: "OpenAI API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "OpenAI"
-description: "Call OpenAI models through LiteLLM from the Python SDK or AI Gateway. Set OPENAI_API_KEY, use the Responses API bridge, vision, PDFs and fine-tuned models."
+description: "Call GPT-5, GPT-4.1 and o-series models with reasoning effort, web search, vision, PDF input and the Responses API bridge, and transcribe audio with Whisper."
 ---
 
 import Tabs from '@theme/Tabs';

@@ -1,7 +1,7 @@
 ---
 title: "Cloudflare Workers AI API with LiteLLM"
 sidebar_label: "Cloudflare Workers AI"
-description: "Call Cloudflare Workers AI models from the LiteLLM Python SDK. Set CLOUDFLARE_API_KEY and CLOUDFLARE_ACCOUNT_ID, stream responses and use decision models."
+description: "Call Cloudflare Workers AI chat models such as Llama 2 and CodeLlama from the LiteLLM Python SDK, with streaming, Clef decision models and Clairic extraction."
 ---
 
 # Cloudflare Workers AI

@@ -1,7 +1,7 @@
 ---
 title: "Prism API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "Prism"
-description: "Call Prism models via LiteLLM with the prism/ prefix from the Python SDK or AI Gateway. Set PRISM_API_KEY, stream, call functions, get structured output."
+description: "Run DeepSeek V4.1 Flash on Prism Inference with zero data retention, tool calling, JSON schema, image input and native Responses and Messages endpoints."
 ---
 
 import Tabs from '@theme/Tabs';

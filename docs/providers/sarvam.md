@@ -1,7 +1,7 @@
 ---
 title: "Sarvam AI API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "Sarvam.ai"
-description: "Call Sarvam AI text models through LiteLLM with the sarvam/ prefix from the Python SDK or AI Gateway. Set SARVAM_API_KEY and add models to config.yaml."
+description: "Send chat requests to Sarvam AI text models such as sarvam-m with the sarvam/ prefix, then serve them to OpenAI clients and curl through the AI Gateway."
 ---
 
 # Sarvam.ai

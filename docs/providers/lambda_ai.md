@@ -1,7 +1,7 @@
 ---
 title: "Lambda AI API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "Lambda AI"
-description: "Call Lambda AI models via LiteLLM with the lambda_ai/ prefix from the Python SDK or AI Gateway. Set LAMBDA_API_KEY, stream, send images and call functions."
+description: "Run Llama 3.1 and 4, DeepSeek R1, Hermes 3 and Qwen Coder on Lambda AI with streaming, Llama 3.2 vision input and function calling via LiteLLM."
 ---
 
 import Tabs from '@theme/Tabs';

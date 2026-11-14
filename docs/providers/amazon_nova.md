@@ -1,7 +1,7 @@
 ---
 title: "Amazon Nova API with LiteLLM AI Gateway"
 sidebar_label: "Amazon Nova"
-description: "Call Amazon Nova models through LiteLLM from the Python SDK or AI Gateway. Set AMAZON_NOVA_API_KEY, configure config.yaml, stream responses and call tools."
+description: "Call Amazon Nova Micro, Lite, Pro and Premier from the Python SDK or AI Gateway, with streaming, tool calling and temperature or top_p set per request."
 ---
 
 import Tabs from '@theme/Tabs';

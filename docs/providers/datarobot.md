@@ -1,7 +1,7 @@
 ---
 title: "DataRobot API with LiteLLM: Setup and Models"
 sidebar_label: "DataRobot"
-description: "Call DataRobot LLM gateway models from the LiteLLM Python SDK with the datarobot/ prefix. Set DATAROBOT_API_TOKEN and DATAROBOT_ENDPOINT, then call it."
+description: "Route completions to any model in your DataRobot LLM gateway catalog from the LiteLLM Python SDK, using the datarobot/ prefix and its OpenAI-compatible API."
 ---
 
 import Tabs from '@theme/Tabs';

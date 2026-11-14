@@ -1,7 +1,7 @@
 ---
 title: "Jina AI API with LiteLLM: Embeddings and Rerank"
 sidebar_label: "Jina AI"
-description: "Create embeddings and rerank documents with Jina AI through LiteLLM from the Python SDK or AI Gateway. Set JINA_AI_API_KEY and pass Jina-specific params."
+description: "Embed text with jina-embeddings-v3 and rerank results with jina-reranker-v2-base-multilingual, passing dimensions and other Jina AI params through LiteLLM."
 ---
 
 import Tabs from '@theme/Tabs';

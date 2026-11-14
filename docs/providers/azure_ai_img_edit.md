@@ -1,7 +1,7 @@
 ---
 title: "Azure AI Image Editing with LiteLLM"
 sidebar_label: "Azure AI Image Editing"
-description: "Edit images with FLUX and gpt-image models on Azure AI through LiteLLM. Set AZURE_AI_API_KEY and AZURE_AI_API_BASE, then call the Python SDK or AI Gateway."
+description: "Edit images on Azure AI with FLUX.1 Kontext Pro, FLUX 2 Pro, FLUX 2 Flex or a gpt-image deployment from the Python SDK or AI Gateway, using a text prompt."
 ---
 
 import Tabs from '@theme/Tabs';

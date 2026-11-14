@@ -1,7 +1,7 @@
 ---
 title: "Azure AI Speech Text to Speech with LiteLLM"
 sidebar_label: "Azure AI Speech (Cognitive Services)"
-description: "Run Azure AI Speech (Cognitive Services) text to speech via LiteLLM from the Python SDK or AI Gateway. Set AZURE_TTS_API_KEY, map voices, pass raw SSML."
+description: "Turn text into speech with Azure AI Speech neural voices from the Python SDK or AI Gateway, with OpenAI voice mapping, raw SSML and per-character costs."
 ---
 
 # Azure AI Speech (Cognitive Services)

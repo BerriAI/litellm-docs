@@ -1,7 +1,7 @@
 ---
 title: "Topaz Image Variations API with LiteLLM"
 sidebar_label: "Topaz"
-description: "Call the Topaz Labs enhance API via LiteLLM's image_variation() with the topaz/ prefix. Set TOPAZ_API_KEY and pass response_format and size for each image."
+description: "Send images to the Topaz Labs enhance API via image_variation() with the Standard V2 model, setting size and response_format, from the LiteLLM Python SDK."
 ---
 
 # Topaz

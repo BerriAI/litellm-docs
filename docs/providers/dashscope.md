@@ -1,7 +1,7 @@
 ---
 title: "DashScope API (Qwen) with LiteLLM: Setup"
 sidebar_label: "Dashscope API (Qwen models)"
-description: "Call Alibaba Qwen models through LiteLLM with the dashscope/ prefix. Set DASHSCOPE_API_KEY and DASHSCOPE_API_BASE, stream and use -latest aliases."
+description: "Call Alibaba Qwen Turbo, Plus and Max on DashScope from the LiteLLM Python SDK, with streaming, international or Beijing API bases and -latest model aliases."
 ---
 
 # Dashscope API (Qwen models)

@@ -1,7 +1,7 @@
 ---
 title: "RunwayML Image Generation with LiteLLM"
 sidebar_label: "RunwayML"
-description: "Generate images with RunwayML Gen-4 through LiteLLM from the Python SDK or AI Gateway. Set RUNWAYML_API_KEY, pick a size, run async calls and track cost."
+description: "Turn text prompts into images with RunwayML gen4_image in five sizes, using sync or async calls with automatic task polling and cost tracking in LiteLLM."
 ---
 
 # RunwayML - Image Generation

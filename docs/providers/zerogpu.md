@@ -1,7 +1,7 @@
 ---
 title: "ZeroGPU API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "ZeroGPU"
-description: "Call ZeroGPU models through LiteLLM with the zerogpu/ prefix from the Python SDK or AI Gateway. Set ZEROGPU_API_KEY, stream, call tools and track spend."
+description: "Run gpt-oss-120b, GLM-5.3 Flash, Llama 3.1 and other ZeroGPU models with streaming, tool calling, reasoning effort, Messages support and cost tracking."
 ---
 
 import Tabs from '@theme/Tabs';

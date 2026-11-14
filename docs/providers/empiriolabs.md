@@ -1,7 +1,7 @@
 ---
 title: "EmpirioLabs AI API with LiteLLM: Setup"
 sidebar_label: "EmpirioLabs AI"
-description: "Call EmpirioLabs AI chat models through LiteLLM with the empiriolabs/ prefix from the Python SDK or AI Gateway. Set EMPIRIOLABS_API_KEY and stream."
+description: "Call Qwen3.7, DeepSeek V4, GLM-5.1 and Kimi K2.6 hosted by EmpirioLabs AI from the LiteLLM Python SDK or AI Gateway, with streaming and reasoning_effort."
 ---
 
 import Tabs from '@theme/Tabs';

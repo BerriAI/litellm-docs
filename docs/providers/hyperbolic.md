@@ -1,7 +1,7 @@
 ---
 title: "Hyperbolic API with LiteLLM AI Gateway"
 sidebar_label: "Hyperbolic"
-description: "Call Hyperbolic models through LiteLLM with the hyperbolic/ prefix from the Python SDK or AI Gateway. Set HYPERBOLIC_API_KEY, stream and call functions."
+description: "Query Hyperbolic's DeepSeek V3, DeepSeek R1 and Qwen 2.5 models from the Python SDK or AI Gateway, with streaming, function calling and a custom API base."
 ---
 
 import Tabs from '@theme/Tabs';

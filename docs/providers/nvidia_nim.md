@@ -1,7 +1,7 @@
 ---
 title: "NVIDIA NIM API with LiteLLM AI Gateway"
 sidebar_label: "Nvidia NIM"
-description: "Call NVIDIA NIM models through LiteLLM with the nvidia_nim/ prefix from the Python SDK or AI Gateway. Set NVIDIA_NIM_API_KEY, stream and create embeddings."
+description: "Run Llama 3, Mixtral, Phi-3, Nemotron and other NVIDIA NIM models with streaming, and embed passages with nv-embedqa-e5-v5, through LiteLLM."
 ---
 
 import Tabs from '@theme/Tabs';

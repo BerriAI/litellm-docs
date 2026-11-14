@@ -1,7 +1,7 @@
 ---
 title: "Morph API with LiteLLM: Chat and Fast Apply"
 sidebar_label: "Morph"
-description: "Call Morph open-weight models and Fast Apply code edits via LiteLLM with the morph/ prefix. Set MORPH_API_KEY, use the AI Gateway, stream and call tools."
+description: "Run Morph's open-weight Kimi K3, GLM-5.3 and DeepSeek V4.1 Flash with tools, reasoning effort and prefix caching, or apply code edits with Fast Apply."
 ---
 
 # Morph

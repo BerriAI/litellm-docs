@@ -1,7 +1,7 @@
 ---
 title: "Empower API with LiteLLM: Setup and Models"
 sidebar_label: "Empower"
-description: "Call Empower models from the LiteLLM Python SDK. Set EMPOWER_API_KEY, send streaming and non-streaming requests, and use automatic tool calling models."
+description: "Call Empower's empower-functions and empower-functions-small models from the LiteLLM Python SDK for plain or streaming chat and automatic tool calling."
 ---
 
 # Empower

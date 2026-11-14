@@ -1,7 +1,7 @@
 ---
 title: "Recraft Image Generation with LiteLLM"
 sidebar_label: "Recraft"
-description: "Generate and edit images with Recraft through LiteLLM from the Python SDK or AI Gateway. Set RECRAFT_API_KEY and pass non-OpenAI params such as style_id."
+description: "Generate images with Recraft V3 and V2 or edit reference images with strength control, passing a style or Recraft's own style_id, from the SDK or AI Gateway."
 ---
 
 # Recraft

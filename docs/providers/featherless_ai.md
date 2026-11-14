@@ -1,7 +1,7 @@
 ---
 title: "Featherless AI API with LiteLLM: Setup"
 sidebar_label: "Featherless AI"
-description: "Call Featherless AI models from the LiteLLM Python SDK with the featherless_ai/ prefix. Set FEATHERLESS_AI_API_KEY, send requests and stream responses."
+description: "Run Qwerky, Qwen2.5, OpenHands LM and DeepSeek-V3 models hosted on Featherless AI from the LiteLLM Python SDK, with standard and streaming chat completions."
 ---
 
 # Featherless AI

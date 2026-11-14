@@ -1,7 +1,7 @@
 ---
 title: "Galadriel API with LiteLLM: Setup and Models"
 sidebar_label: "Galadriel"
-description: "Call Galadriel models from the LiteLLM Python SDK with the galadriel/ prefix. Set GALADRIEL_API_KEY, send chat requests, stream responses and see models."
+description: "Send chat requests to Galadriel's serverless Llama 3.1 (8B, 70B, 405B) and Mistral Nemo from the LiteLLM Python SDK, with short names like llama3.1:70b."
 ---
 
 import Tabs from '@theme/Tabs';

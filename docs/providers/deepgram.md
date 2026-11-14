@@ -1,7 +1,7 @@
 ---
 title: "Deepgram Speech to Text with LiteLLM"
 sidebar_label: "Deepgram"
-description: "Transcribe audio with Deepgram via LiteLLM from the Python SDK or AI Gateway. Set DEEPGRAM_API_KEY, add the model to config.yaml and call transcription."
+description: "Transcribe audio with Deepgram Nova-2 using litellm.transcription() or the OpenAI-compatible /audio/transcriptions endpoint on the LiteLLM AI Gateway."
 ---
 
 import Tabs from '@theme/Tabs';

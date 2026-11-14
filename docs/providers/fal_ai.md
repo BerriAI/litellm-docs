@@ -1,7 +1,7 @@
 ---
 title: "Fal AI Image Generation with LiteLLM"
 sidebar_label: "Fal AI"
-description: "Generate images with FLUX, Stable Diffusion and Imagen on Fal AI through LiteLLM from the Python SDK or AI Gateway. Set FAL_AI_API_KEY, pass model params."
+description: "Generate images on Fal AI with FLUX Pro v1.1 Ultra, Imagen 4 preview, Recraft v3 and Stable Diffusion 3.5 from the Python SDK or AI Gateway, sync or async."
 ---
 
 import Tabs from '@theme/Tabs';
