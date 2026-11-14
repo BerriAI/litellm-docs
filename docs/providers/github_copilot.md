@@ -105,6 +105,8 @@ print(response.choices[0].message.content)
 
 ## GitHub App authentication
 
+<SinceVersion v="1.111.0" />
+
 Set `github_copilot_auth_type: github_app` to authenticate a backend service with a GitHub App installation. LiteLLM creates and refreshes installation tokens without a user login. This works with Chat Completions, Responses, Embeddings, and the async Anthropic Messages API, subject to each model's endpoint support.
 
 Create an App with the **Copilot Requests** organization permission set to **Read-only**, and install it in the organization that will pay for usage. The organization must allow Copilot requests from App installations. See [GitHub's server-to-server setup](https://docs.github.com/en/copilot/how-tos/copilot-sdk/auth/server-to-server-tokens#other-services-and-ci-systems) for eligibility and policy requirements.
