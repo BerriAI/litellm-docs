@@ -1,16 +1,9 @@
-import Image from '@theme/IdealImage';
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
 
-# [Beta] Project Management UI
+# Project Management UI
 
 <EnterpriseFeature />
 
 Manage projects directly from the LiteLLM Admin UI. Projects sit between teams and keys in your organizational hierarchy, enabling fine-grained access control and budget management for specific use cases or applications.
-
-:::info
-Project Management is a beta feature. The API and UI are subject to change. For the full API documentation, see [Project Management](./project_management.md).
-:::
 
 ## Overview
 
@@ -32,49 +25,13 @@ For detailed information about the project API and configuration, see [Project M
 - At least one team created (projects belong to teams)
 - The LiteLLM Admin UI running locally or remote
 
-## Enable Projects in UI Settings
-
-Before you can create projects, you need to enable the Projects feature in the Admin UI settings.
-
-### Step 1: Access Admin Settings
-
-Navigate to the Admin UI (e.g., `http://localhost:4000/ui/?login=success`).
-
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/b8de4dbf-a23b-4979-84a3-95fe17427b5a/ascreenshot_84dcb13b57a84fd589dff2d5af58adde_text_export.jpeg)
-
-### Step 2: Open Settings Menu
-
-Click the **"New"** button in the top navigation.
-
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/b8de4dbf-a23b-4979-84a3-95fe17427b5a/ascreenshot_447c8ea124f64d0eb18d3c9621f7cbbc_text_export.jpeg)
-
-### Step 3: Navigate to Admin Settings
-
-Click **"Admin Settings"**.
-
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/cc2ce9d9-d2d2-49f3-9fb8-c546fb8dfdcf/ascreenshot_fd792e9dbda24e7eb5cdb508c4f181f8_text_export.jpeg)
-
-### Step 4: Open UI Settings
-
-Click **"UI Settings New"**.
-
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/d667f4b4-300b-47c6-9d76-12e439519da6/ascreenshot_3f3db4df432843a48b53ae16b311e7df_text_export.jpeg)
-
-### Step 5: Enable Projects Feature
-
-Click the toggle to enable the Projects feature.
-
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/4819f76b-4855-4f5c-8c4b-b4c272399724/ascreenshot_9df0555ae6db425ab839d73485ee9b99_text_export.jpeg)
-
-Once enabled, the Projects section will appear in your Admin UI navigation, and you'll be able to create and manage projects.
-
 ## Create and Manage Projects
 
-After enabling the Projects feature, you can create projects from the Projects page.
+Projects appear in the Admin UI sidebar under Access Control for Proxy Admins, Org Admins, and Team Admins. Create and manage them from the Projects page.
 
 ### Step 1: Navigate to Projects
 
-Click **"Projects New"** in the sidebar.
+Click **"Projects"** in the sidebar.
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/889e2e55-af7a-42f1-90d5-8bba8efaa986/ascreenshot_c42e33e2226c4e8b8e8ea83a7c8955e4_text_export.jpeg)
 
