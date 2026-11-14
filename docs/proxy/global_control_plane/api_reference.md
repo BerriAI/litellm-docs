@@ -13,7 +13,9 @@ These paths use the default `/api/v1` prefix. Set [`CONTROL_PLANE_API_PREFIX`](.
 
 Authenticated requests use HTTP Bearer authentication: `Authorization: Bearer <credential>`. See the header syntax in [RFC 6750, Section 2.1](https://www.rfc-editor.org/rfc/rfc6750.html#section-2.1). The control plane checks scopes and data plane access. Each data plane also applies its own permissions to forwarded requests.
 
-## Scopes
+## Scopes and roles
+
+### Scopes {#scopes}
 
 | Scope | Grants | Default roles |
 | --- | --- | --- |
@@ -31,6 +33,60 @@ The control plane combines the scopes granted by the caller's recognized roles. 
 The optional OIDC `scope` claim narrows role grants to the scopes it lists. It cannot add permissions. An absent or `null` claim keeps the full role grants. An empty claim, or one containing only values such as `openid profile`, grants no control-plane scopes.
 
 Data plane access is separate from scopes. The caller's `litellm_dataplanes` claim limits which data planes those scopes apply to. An absent or empty claim, or one containing `"*"`, grants fleet-wide access. Each data plane still checks its own permissions. See [Authentication](./configuration.md#authentication) for role and claim settings.
+
+### Roles {#roles}
+
+| Method | Path | Required scope | Response |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/roles` | `roles:write` | `200` with `items` containing all effective roles. Works without runtime storage. |
+| `PUT` | `/api/v1/roles/{name}` | `roles:write` | Create or replace a runtime role. Returns `200` with one role. |
+| `DELETE` | `/api/v1/roles/{name}` | `roles:write` | Delete a runtime role. Returns `204` with no body. |
+
+Each role response contains `name`, resolved `scopes`, direct `inherits`, and `source`. The source is `config` for config-defined and built-in roles, or `runtime`. The list is sorted by name. There is no single-role GET endpoint.
+
+PUT accepts `scopes` and `inherits`, both arrays of strings that default to empty arrays. It replaces the complete definition. Scope names and inherited roles must be known. For example, this role inherits `usage:read` from the built-in `usage_viewer` role:
+
+```http
+PUT /api/v1/roles/finops
+Authorization: Bearer REPLACE_WITH_ADMIN_CREDENTIAL
+Content-Type: application/json
+
+{"scopes": [], "inherits": ["usage_viewer"]}
+```
+
+The `200` response contains resolved scopes:
+
+```json
+{
+  "name": "finops",
+  "scopes": ["usage:read"],
+  "inherits": ["usage_viewer"],
+  "source": "runtime"
+}
+```
+
+With the default roles enabled and no other custom roles, `GET /api/v1/roles` returns:
+
+```json
+{
+  "items": [
+    {"name": "admin", "scopes": ["audit:read", "dataplanes:read", "dataplanes:write", "fleet:read", "proxy:read", "proxy:write", "roles:write", "usage:read"], "inherits": [], "source": "config"},
+    {"name": "editor", "scopes": ["dataplanes:read", "fleet:read", "proxy:read", "proxy:write", "usage:read"], "inherits": [], "source": "config"},
+    {"name": "finops", "scopes": ["usage:read"], "inherits": ["usage_viewer"], "source": "runtime"},
+    {"name": "usage_viewer", "scopes": ["usage:read"], "inherits": [], "source": "config"},
+    {"name": "viewer", "scopes": ["dataplanes:read", "fleet:read", "proxy:read", "usage:read"], "inherits": [], "source": "config"}
+  ]
+}
+```
+
+The role's resolved scopes, including inherited scopes, must be a subset of the caller's effective scopes. Otherwise PUT returns `403`. Deleting a role that another role inherits returns `409`. Config-defined roles and built-in roles are read-only through this API and also return `409` when runtime writes are enabled. Deleting an unknown runtime role returns `404`.
+
+```http
+DELETE /api/v1/roles/finops
+Authorization: Bearer REPLACE_WITH_ADMIN_CREDENTIAL
+```
+
+A successful deletion returns `204` with no body. Each replica resolves JWT role claims against its live policy on later requests. A deleted role no longer grants scopes. A JWT with no remaining recognized role is rejected with `401`.
 
 ## Authentication
 
@@ -115,60 +171,6 @@ Authorization: Bearer REPLACE_WITH_ADMIN_CREDENTIAL
 ```
 
 A successful deletion returns `204` with no body. Deleting an unknown runtime entry returns `404`. A config-defined entry cannot be replaced or deleted and returns `409` when runtime writes are enabled. These calls only change the control plane's registry. They do not provision or delete a data plane deployment.
-
-## Roles
-
-| Method | Path | Required scope | Response |
-| --- | --- | --- | --- |
-| `GET` | `/api/v1/roles` | `roles:write` | `200` with `items` containing all effective roles. Works without runtime storage. |
-| `PUT` | `/api/v1/roles/{name}` | `roles:write` | Create or replace a runtime role. Returns `200` with one role. |
-| `DELETE` | `/api/v1/roles/{name}` | `roles:write` | Delete a runtime role. Returns `204` with no body. |
-
-Each role response contains `name`, resolved `scopes`, direct `inherits`, and `source`. The source is `config` for config-defined and built-in roles, or `runtime`. The list is sorted by name. There is no single-role GET endpoint.
-
-PUT accepts `scopes` and `inherits`, both arrays of strings that default to empty arrays. It replaces the complete definition. Scope names and inherited roles must be known. For example, this role inherits `usage:read` from the built-in `usage_viewer` role:
-
-```http
-PUT /api/v1/roles/finops
-Authorization: Bearer REPLACE_WITH_ADMIN_CREDENTIAL
-Content-Type: application/json
-
-{"scopes": [], "inherits": ["usage_viewer"]}
-```
-
-The `200` response contains resolved scopes:
-
-```json
-{
-  "name": "finops",
-  "scopes": ["usage:read"],
-  "inherits": ["usage_viewer"],
-  "source": "runtime"
-}
-```
-
-With the default roles enabled and no other custom roles, `GET /api/v1/roles` returns:
-
-```json
-{
-  "items": [
-    {"name": "admin", "scopes": ["audit:read", "dataplanes:read", "dataplanes:write", "fleet:read", "proxy:read", "proxy:write", "roles:write", "usage:read"], "inherits": [], "source": "config"},
-    {"name": "editor", "scopes": ["dataplanes:read", "fleet:read", "proxy:read", "proxy:write", "usage:read"], "inherits": [], "source": "config"},
-    {"name": "finops", "scopes": ["usage:read"], "inherits": ["usage_viewer"], "source": "runtime"},
-    {"name": "usage_viewer", "scopes": ["usage:read"], "inherits": [], "source": "config"},
-    {"name": "viewer", "scopes": ["dataplanes:read", "fleet:read", "proxy:read", "usage:read"], "inherits": [], "source": "config"}
-  ]
-}
-```
-
-The role's resolved scopes, including inherited scopes, must be a subset of the caller's effective scopes. Otherwise PUT returns `403`. Deleting a role that another role inherits returns `409`. Config-defined roles and built-in roles are read-only through this API and also return `409` when runtime writes are enabled. Deleting an unknown runtime role returns `404`.
-
-```http
-DELETE /api/v1/roles/finops
-Authorization: Bearer REPLACE_WITH_ADMIN_CREDENTIAL
-```
-
-A successful deletion returns `204` with no body. Each replica resolves JWT role claims against its live policy on later requests. A deleted role no longer grants scopes. A JWT with no remaining recognized role is rejected with `401`.
 
 ### Runtime write availability
 

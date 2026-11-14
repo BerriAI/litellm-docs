@@ -167,41 +167,36 @@ export CONTROL_PLANE_SALT_KEY='REPLACE_WITH_SHARED_ENCRYPTION_KEY'
 
 Use a TLS-enabled Redis connection with `rediss://` when required by your Redis deployment.
 
-#### Argo CD PreSync hook {#migration-job}
+#### Database migrations {#migration-job}
 
-Add this Job to the control plane's Argo CD application. Argo CD runs it before the rollout and stops the sync if it fails. The control-plane server does not run migrations at startup.
+The Helm chart includes the migration Job. Set these values for a control plane with runtime configuration:
 
-Create the application's namespace and the `control-plane-migrations` Secret before the first sync. Set the Secret's `database-url` key to a direct PostgreSQL connection URL for the control-plane database. Use the same image as the control-plane replicas.
-
-```yaml title="control-plane-migration.yaml"
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: litellm-control-plane-migrations
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
-spec:
-  backoffLimit: 1
-  activeDeadlineSeconds: 1800
-  template:
-    spec:
-      restartPolicy: Never
-      containers:
-        - name: migrations
-          image: ghcr.io/berriai/litellm:lts
-          imagePullPolicy: Always
-          command: ["litellm"]
-          args: ["--control-plane", "--skip_server_startup"]
-          env:
-            - name: CONTROL_PLANE_DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: control-plane-migrations
-                  key: database-url
+```yaml title="values.yaml"
+migrationJob:
+  enabled: true
+  mode: control-plane
+  controlPlane:
+    databaseSecret:
+      name: control-plane-migrations
+      key: database-url
 ```
 
-Allow at least two database connections for the Job. Run a full application sync because selective syncs skip hooks. See [Argo CD database migration hooks](https://argo-cd.readthedocs.io/en/stable/user-guide/sync-waves/#initialize-or-migrate-a-database).
+Create the Secret before installation. Its `database-url` key must contain a direct PostgreSQL URL for the control-plane database. Allow at least two database connections for the Job.
+
+By default, the chart uses Helm's [`pre-install` and `pre-upgrade` hooks](https://helm.sh/docs/topics/charts_hooks/). Helm waits for the Job before deploying the control plane and stops the release if it fails.
+
+For Argo CD, add these overrides to the same `migrationJob` values:
+
+```yaml title="Argo CD overrides"
+migrationJob:
+  hooks:
+    helm:
+      enabled: false
+    argocd:
+      enabled: true
+```
+
+Argo CD runs the Job as a [PreSync hook](https://argo-cd.readthedocs.io/en/stable/user-guide/sync-waves/#initialize-or-migrate-a-database). Sync the full application because selective syncs skip hooks.
 
 #### Effective state and secrets
 

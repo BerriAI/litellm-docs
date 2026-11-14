@@ -256,7 +256,9 @@ Add [RPS and TPS targets](./autoscaling.md#scale-on-requests-and-tokens-per-pod)
 | `gateway.collector.resources` | Requests `500m` CPU / `1Gi`, limits `1` CPU / `2Gi` | Collector sidecar resources. |
 | `gateway.collector.scaleOnGatewayContainerCpu` | `true` | With the collector and CPU HPA enabled, scales on the main container's CPU only. Requires Kubernetes 1.30 or newer. |
 | `migrationJob.enabled`, `.hooks.helm.enabled`, `.hooks.argocd.enabled` | `true`, `true`, `false` | Migration Job and controller hooks. |
-| `migrationJob.backoffLimit`, `.activeDeadlineSeconds`, `.ttlSecondsAfterFinished` | `4`, `1800`, `120` | Job retries, total deadline, and cleanup delay. |
+| `migrationJob.mode` | `data-plane` | Selects data plane or `control-plane` migrations. |
+| `migrationJob.controlPlane.databaseSecret.name`, `.key` | `""`, `database-url` | Secret with the control plane database URL. Required for control plane migrations. |
+| `migrationJob.backoffLimit`, `.activeDeadlineSeconds`, `.ttlSecondsAfterFinished` | `4`, `1800`, `120` | Job retries, total deadline, and cleanup delay. Argo CD uses hook cleanup instead of the TTL. |
 | `migrationJob.serviceAccountName`, `.automountServiceAccountToken` | `""`, `false` | Job identity. Name an existing account when cloud database authentication needs it. |
 | `billingMetrics.enabled` | `false` | Enterprise request metering. |
 | `liteadmin.enabled` | `false` | Optional admin worker. Requires `liteadmin.existingSecret`, `liteadmin.gatewayUrl`, and `liteadmin.model`. |
