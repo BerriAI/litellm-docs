@@ -682,14 +682,15 @@ How a batch is charged:
 
 - The batch is charged against the model it routes to and against every capped model named in its records' `body.model`. Records without a `body.model` count toward the model the batch routes to.
 - A managed file (uploaded with `target_model_names`) is charged only against the model the batch routes to, because LiteLLM rewrites its records to the deployment model on upload.
-- Names that resolve to the same model group, such as an alias and its model group or a deployment id, share one counter under the tightest limit set among them.
+- Names that resolve to the same model group, such as an alias and its model group or a deployment id, share one counter under the tightest limit set among them. A `-latest` model name is also charged against the limit set for the model it points to.
 - Tokens are refunded the same way as key and team allowances: when LiteLLM serves a response showing the batch in a terminal state, or after 8 days.
+- Upgrade every proxy instance before you rely on project limits. An instance on an older version that serves a batch's terminal state refunds only key and team allowances, so its project tokens stay held until the counter expires 8 days after the last batch reserved against it.
 
 How it combines with other limits:
 
 - When the key or team also has a `batch_enqueued_token_limit`, the batch must fit every allowance and no other batch limit applies, as described above.
-- When only the project limit covers the model the batch routes to, the per-minute batch limits (key, team, user, and end-user TPM and RPM, plus the project's per-model TPM, ITPM, and OTPM) are skipped for that batch. Daily `tpd_limit` caps still apply.
-- Batches for models the project does not cap keep the normal batch limits.
+- When only the project limit applies and it caps both the model the batch routes to and every model named in its records, the per-minute batch limits (key, team, user, and end-user TPM and RPM, plus the project's per-model TPM, ITPM, and OTPM) are skipped for that batch. Daily `tpd_limit` caps still apply.
+- When any of those models has no project cap, the batch keeps the normal batch limits on top of the project reservation.
 
 Only a proxy admin can set or change `model_batch_enqueued_token_limit` on a project. Team admins who try get a `403`. Each value must be a positive integer, otherwise `/project/new` and `/project/update` return `400`.
 
