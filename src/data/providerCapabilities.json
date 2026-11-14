@@ -727,6 +727,12 @@
       "embeddings"
     ]
   },
+  "providers/powerspring": {
+    "prefix": "powerspring",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/predibase": {
     "prefix": "predibase",
     "capabilities": [
