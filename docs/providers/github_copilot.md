@@ -205,7 +205,7 @@ general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
-`github_copilot_app_id` accepts the App's client ID, which GitHub recommends for JWTs, or the numeric App ID as a quoted string. Use the installation ID for the target organization, not an organization ID. Set these values in the environment before starting the proxy.
+`github_copilot_app_id` accepts the App's client ID, which GitHub recommends for JWTs, or the numeric App ID as a number or a string. Use the installation ID for the target organization, not an organization ID. Set these values in the environment before starting the proxy.
 
 `github_copilot_app_private_key_ref` is a secret reference. It accepts `oidc/file/` paths within `LITELLM_OIDC_ALLOWED_CREDENTIAL_DIRS` (standard container secret directories, including `/run/secrets`, are allowed by default), `os.environ/VARIABLE_NAME`, or a secret name in your configured LiteLLM secret manager. The reference stays a reference until authentication runs. This reference field never accepts inline PEM. For this reference-based configuration, provision the secret on each worker and keep private keys out of client applications. Built-in external secret-manager integrations follow their existing Enterprise licensing.
 
