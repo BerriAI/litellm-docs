@@ -1,0 +1,243 @@
+.diagram {
+  margin: 28px 0;
+  padding: 24px 28px 18px;
+  border: 1px solid #373a40;
+  background: #191b1f;
+  color: #ececee;
+  font-family: "Geist", ui-sans-serif, sans-serif;
+}
+
+.figureLabel {
+  margin-bottom: 28px;
+  color: #d0d2d8;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.flow {
+  display: grid;
+  grid-template-columns: minmax(230px, 1fr) 86px minmax(250px, 1fr);
+  align-items: center;
+  min-width: 0;
+}
+
+.afterFlow {
+  align-items: start;
+}
+
+.server,
+.gateway {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #768294;
+}
+
+.server {
+  border-color: #9b818d;
+}
+
+.processLabel {
+  display: block;
+  margin-bottom: 7px;
+  color: #a2aab6;
+  font: 10px/1.5 "Geist Mono", ui-monospace, monospace;
+  letter-spacing: 0.06em;
+}
+
+.nodeTitle {
+  display: block;
+  color: #ececee;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.codeExcerpt {
+  margin-top: 18px;
+}
+
+.diagram .codeExcerpt pre,
+.diagram .codeExcerpt pre code {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  color: #c4cddd !important;
+  box-shadow: none;
+  font: 13px/1.7 "Geist Mono", ui-monospace, monospace !important;
+  white-space: pre;
+  overflow: visible;
+}
+
+.maintenance {
+  display: block;
+  margin-top: 18px;
+  color: #d7b4c4;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.connection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding-inline: 8px;
+  color: #aebcd3;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.connection svg {
+  display: block;
+  width: 100%;
+  height: 24px;
+  stroke: currentColor;
+  stroke-width: 1;
+}
+
+.afterFlow > .connection {
+  padding-top: 70px;
+}
+
+.sdkDefinition {
+  padding-block: 10px;
+}
+
+.savedWorkflow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 20px;
+  color: #bdcbea;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.savedWorkflow span + span {
+  color: #d3d9e4;
+}
+
+.providers {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.provider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: #aeb4bf;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.diagram .provider img {
+  display: block;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
+  box-shadow: none;
+}
+
+.executionSide {
+  min-width: 0;
+}
+
+.workerConnection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-block: 10px;
+  color: #cdb0bf;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.workerConnection svg {
+  display: block;
+  width: 56px;
+  height: 44px;
+  stroke: currentColor;
+  stroke-width: 1;
+}
+
+.worker {
+  padding: 17px 20px;
+  border: 1px dashed #bc94a7;
+}
+
+.worker .processLabel {
+  color: #bda5b0;
+}
+
+.worker .nodeTitle {
+  color: #e0bdce;
+}
+
+.workerDetail {
+  display: block;
+  margin-top: 6px;
+  color: #bbaeb6;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.diagram > figcaption {
+  margin-top: 26px;
+  color: #999faa;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  .diagram {
+    padding-inline: 22px;
+  }
+
+  .flow {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 340px;
+    margin-inline: auto;
+  }
+
+  .connection,
+  .afterFlow > .connection {
+    flex-direction: row;
+    justify-content: center;
+    gap: 6px;
+    padding: 11px 0;
+  }
+
+  .connection svg {
+    width: 44px;
+    height: 36px;
+    transform: rotate(90deg);
+  }
+
+  .sdkDefinition {
+    padding: 0;
+  }
+
+  .processLabel {
+    font-size: 11px;
+  }
+
+  .providers {
+    gap: 10px;
+  }
+
+  .diagram > figcaption {
+    margin-top: 24px;
+  }
+}
