@@ -2022,6 +2022,7 @@ const providersSidebar = {
     ] },
     "providers/xiaomi_mimo",
     "providers/zai",
+    "providers/fortytwo",
     "providers/zerogpu",
     { type: "html", value: "Guides", className: "sidebar-group-label", defaultStyle: true },
     "guides/finetuned_models",
