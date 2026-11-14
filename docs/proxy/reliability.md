@@ -289,6 +289,48 @@ litellm --config /path/to/config.yaml
 </TabItem>
 </Tabs>
 
+## Flex tier fallback
+
+<SinceVersion v="1.111.0" />
+
+Flex tier fallback is on by default. When a request with `service_tier: "flex"` fails with a 429, a timeout, or an unsupported-parameter error that rejects `service_tier`, the router retries the same deployment once with `service_tier` removed. This selects the provider's default tier. Other 400 errors and 401 errors do not trigger a tier downgrade
+
+The initial Flex failure does not count toward router retries or cooldowns. If the default-tier retry also fails, the usual retry, fallback and cooldown rules apply. Stream errors trigger a downgrade only if they surface before the router returns the stream
+
+After a downgrade, the response includes `x-litellm-service-tier: default`, and spend log metadata includes `service_tier_fallback: {"from": "flex", "to": "default"}`. A successful Flex request has no downgrade header or marker
+
+This proxy configuration enables the behavior explicitly. You can omit `service_tier_fallbacks` to keep the same default behavior, or set it to `false` under `router_settings` to opt out
+
+```yaml
+model_list:
+  - model_name: flex-chat
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_key: os.environ/OPENAI_API_KEY
+
+router_settings:
+  service_tier_fallbacks: true
+```
+
+Send a Flex request through the proxy with the OpenAI SDK. The header is present only if the router retries on the default tier
+
+```python
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["LITELLM_API_KEY"],
+    base_url="http://localhost:4000/v1",
+)
+response = client.chat.completions.with_raw_response.create(
+    model="flex-chat",
+    messages=[{"role": "user", "content": "Say hello"}],
+    service_tier="flex",
+)
+print(response.headers.get("x-litellm-service-tier"))
+print(response.parse().choices[0].message.content)
+```
+
 ## Advanced
 ### Fallbacks + Retries + Timeouts + Cooldowns
 
