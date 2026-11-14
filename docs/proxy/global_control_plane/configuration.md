@@ -167,19 +167,41 @@ export CONTROL_PLANE_SALT_KEY='REPLACE_WITH_SHARED_ENCRYPTION_KEY'
 
 Use a TLS-enabled Redis connection with `rediss://` when required by your Redis deployment.
 
-#### Migration job
+#### Argo CD PreSync hook {#migration-job}
 
-Run this one-shot job before deploying a new control-plane version or starting replicas against a new database:
+Add this Job to the control plane's Argo CD application. Argo CD runs it before the rollout and stops the sync if it fails. The control-plane server does not run migrations at startup.
 
-```bash
-litellm --control-plane --skip_server_startup
+Create the application's namespace and the `control-plane-migrations` Secret before the first sync. Set the Secret's `database-url` key to a direct PostgreSQL connection URL for the control-plane database. Use the same image as the control-plane replicas.
+
+```yaml title="control-plane-migration.yaml"
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: litellm-control-plane-migrations
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: 1800
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrations
+          image: ghcr.io/berriai/litellm:lts
+          imagePullPolicy: Always
+          command: ["litellm"]
+          args: ["--control-plane", "--skip_server_startup"]
+          env:
+            - name: CONTROL_PLANE_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: control-plane-migrations
+                  key: database-url
 ```
 
-The job requires `CONTROL_PLANE_DATABASE_URL`. It applies pending packaged Alembic revisions through `upgrade head`, records the version in `control_plane_alembic_version`, and exits without starting a server or invoking Prisma. Running it again with a current database is a no-op. A missing database URL or migration failure exits nonzero with a clear error.
-
-Use a direct PostgreSQL connection for this job rather than a transaction pooler. The migrator holds an advisory lock on one backend while Alembic runs migrations on a second connection, committing each revision separately. It needs at least two available backend connections. If serving uses a pooled URL, override `CONTROL_PLANE_DATABASE_URL` with the direct URL for the migration job.
-
-Server startup only checks the schema version and loads the snapshot. It does not create or upgrade tables. A missing or outdated schema is logged with the migration command. Reads use config-only state and runtime writes return `503`. If a replica started before migrations completed, restart it after the job succeeds to enable runtime storage.
+Allow at least two database connections for the Job. Run a full application sync because selective syncs skip hooks. See [Argo CD database migration hooks](https://argo-cd.readthedocs.io/en/stable/user-guide/sync-waves/#initialize-or-migrate-a-database).
 
 #### Effective state and secrets
 
