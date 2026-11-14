@@ -38,4 +38,4 @@ LiteLLM supports the four most recent stable minor lines. If your version is old
 
 ## Report a security vulnerability
 
-Do not use the support channel to report a vulnerability. File a private report through [GitHub Security Advisories](https://github.com/BerriAI/litellm/security/advisories/new). Refer to [Data privacy and security](../data_security.md#security-vulnerability-reporting-guidelines).
+Do not use the support channel to report a vulnerability. Submit it through the [vulnerability disclosure form](https://security.litellm.ai/vdp), which goes to the LiteLLM program on HackerOne for triage. You do not need a HackerOne account to submit a report. Refer to [Data privacy and security](../data_security.md#security-vulnerability-reporting-guidelines).

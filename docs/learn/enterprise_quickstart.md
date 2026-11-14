@@ -54,7 +54,7 @@ The full list is in [Production best practices](/docs/proxy/prod) and [Security 
 Follow the [Quickstart](/docs/proxy/docker_quick_start). Condensed steps:
 
 ```bash
-curl -O https://raw.githubusercontent.com/BerriAI/litellm/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/deploy/compose/docker-compose.yml
 ```
 
 Create `.env`:
@@ -84,8 +84,20 @@ general_settings:
   store_model_in_db: true
 ```
 
+Create `docker-compose.override.yml` to mount the config file:
+
+```yaml title="docker-compose.override.yml"
+services:
+  litellm:
+    command: ["--config", "/app/config.yaml"]
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+```
+
+Point the downloaded Compose file at the `.env` in this directory, then start it:
+
 ```bash
-docker compose up
+LITELLM_ENV_FILE=.env docker compose up -d
 ```
 
 </TabItem>
@@ -221,77 +233,81 @@ Your LiteLLM Gateway is now running on `http://0.0.0.0:4000`.
 
 <TabItem value="helm" label="Helm">
 
-The chart is published to an OCI registry, so Helm installs it directly; there is no need to clone the repo. It can provision Postgres for you (`db.deployStandalone: true`) or point at an existing database (`db.useExisting`). See the [chart README](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/README.md) and the full [values.yaml](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/values.yaml).
+Follow the [Helm guide](../proxy/deploy/helm.md) to publish the chart and build its image. Create PostgreSQL before installation. The chart does not create a database. This example uses monolith mode for a single service.
 
-#### 1. Create a Secret for your license + provider keys
+#### 1. Create the Secrets
 
-```bash
-kubectl create secret generic litellm-env-secret \
-  --from-literal=LITELLM_LICENSE="eyJ..." \
-  --from-literal=OPENAI_API_KEY="your-api-key"
-```
+Use your secret manager to create these Kubernetes Secrets in the deployment namespace:
+
+| Secret | Keys |
+| --- | --- |
+| `litellm-masterkey` | `masterkey`: a random key starting with `sk-` |
+| `litellm-db` | `username`, `password`: PostgreSQL credentials |
+| `litellm-env` | `LITELLM_LICENSE`, `LITELLM_SALT_KEY`, `OPENAI_API_KEY` |
+
+Keep the same salt across upgrades so LiteLLM can read stored provider credentials.
 
 #### 2. Create `values-enterprise.yaml`
 
-Layer your enterprise settings onto the chart. `environmentSecrets` injects the Secret above as env vars, which `proxy_config` then references with `os.environ/<NAME>`.
+Replace the image reference and PostgreSQL hostname with your values. Keep credentials in the Secrets above.
 
 ```yaml title="values-enterprise.yaml" showLineNumbers
-masterkey: sk-<your-litellm-api-key>
+image:
+  repository: registry.example.com/platform/litellm
+  tag: source-f52f26d
 
-environmentSecrets:
-  - litellm-env-secret
+monolith:
+  enabled: true
 
-db:
-  deployStandalone: true
+masterKey:
+  secretName: litellm-masterkey
+  secretKey: masterkey
 
-proxyConfigMap:
-  create: true
+database:
+  writer:
+    host: my-postgres.default.svc.cluster.local
+    dbname: litellm
+    passwordSecret:
+      name: litellm-db
+      usernameKey: username
+      passwordKey: password
 
-proxy_config:
-  model_list:
-    - model_name: {{openai_large}}
-      litellm_params:
-        model: openai/{{openai_large}}
-        api_key: os.environ/OPENAI_API_KEY
-  litellm_settings:
-    callbacks: ["prometheus"]
-  general_settings:
-    store_model_in_db: true
+gateway:
+  envSecrets: [litellm-env]
+  config:
+    proxy_config:
+      model_list:
+        - model_name: {{openai_large}}
+          litellm_params:
+            model: openai/{{openai_large}}
+            api_key: os.environ/OPENAI_API_KEY
+      litellm_settings:
+        callbacks: ["prometheus"]
+      general_settings:
+        store_model_in_db: true
 ```
 
-`db.deployStandalone: true` provisions a single-node Postgres with the Bitnami chart and a default password. Fine for a trial; for anything longer-lived, override it with `--set postgresql.auth.password=<pw>,postgresql.auth.postgres-password=<pw>` or bring your own database below.
-
-**Bring your own database.** To point at an existing Postgres instead of letting the chart provision one, replace the `db` block. Create a Secret (default name `postgres`) holding `username` and `password` keys; the chart builds the connection URL from `endpoint`, `database`, and those credentials.
-
-```yaml title="values-enterprise.yaml" showLineNumbers
-db:
-  useExisting: true
-  endpoint: my-postgres.default.svc.cluster.local
-  database: litellm
-  secret:
-    name: litellm-db-secret
-    usernameKey: username
-    passwordKey: password
-```
+Add your database provider's TLS settings to [verify the database certificate](../proxy/prod.md#verify-the-database-server-certificate-custom-ca-eg-aws-rds). Use Redis to coordinate replicas in production. See the [Helm guide](../proxy/deploy/helm.md) for Redis settings.
 
 #### 3. Deploy with Helm
 
-Install the chart straight from the OCI registry, passing your enterprise values:
+Use the [OCI chart published to your registry](../proxy/deploy/helm.md#install-the-chart). Replace `YOUR_ORG` with your registry namespace:
 
 ```bash
-helm install \
-  -f values-enterprise.yaml \
-  mydeploy \
-  oci://docker.litellm.ai/berriai/litellm-helm
+helm upgrade --install mydeploy oci://ghcr.io/YOUR_ORG/charts/litellm \
+  --version 1.0.0 \
+  -f values-enterprise.yaml --wait --timeout 30m
 ```
+
+The chart runs database migrations before the application rollout. For Argo CD, use the [Argo CD installation](../proxy/deploy/helm.md#install-the-chart) instead.
 
 #### 4. Expose the service to localhost
 
 ```bash
-kubectl port-forward service/mydeploy-litellm-helm 4000:4000
+kubectl port-forward service/mydeploy-litellm 4000:4000
 ```
 
-Your LiteLLM Gateway is now running on `http://127.0.0.1:4000`.
+Open `http://127.0.0.1:4000`.
 
 </TabItem>
 </Tabs>

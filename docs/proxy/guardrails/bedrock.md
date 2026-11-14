@@ -1,3 +1,8 @@
+---
+title: "Amazon Bedrock Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Bedrock Guardrails"
+description: "Apply Amazon Bedrock Guardrails on the LiteLLM AI Gateway via the ApplyGuardrail API, with PII masking, contextual grounding and streaming checks."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

@@ -11,6 +11,8 @@ An alias such as `openai/gpt-luna-latest` points to a model in that family. Lite
 
 Use the full `provider/model-latest` name from the table below. You do not need to create an alias mapping. Each provider page also lists the aliases for that provider.
 
+If you want to use a new provider model ID directly rather than an alias, see [fallback generalizations](./fallback_generalizations.md). Matching IDs can resolve before they have an exact cost-map entry, without guessed pricing.
+
 ## Python SDK
 
 Install `litellm` with `pip install litellm` and set `OPENAI_API_KEY` to your [OpenAI API key](./providers/openai.md#required-api-keys).

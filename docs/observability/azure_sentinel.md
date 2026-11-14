@@ -1,3 +1,8 @@
+---
+title: "Azure Sentinel Logging for LiteLLM AI Gateway"
+sidebar_label: "Azure Sentinel"
+description: "Send LiteLLM AI Gateway logs to Azure Sentinel through the Azure Monitor Logs Ingestion API, with step-by-step table, DCR and app registration setup."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

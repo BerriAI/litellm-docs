@@ -1,3 +1,8 @@
+---
+title: "OpenTelemetry Tracing for LiteLLM: v1 Setup"
+sidebar_label: "OpenTelemetry v1"
+description: "Send LiteLLM traces to any OpenTelemetry collector such as Jaeger, Zipkin or Datadog with the v1 integration: span hierarchy, traceparent and redaction."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

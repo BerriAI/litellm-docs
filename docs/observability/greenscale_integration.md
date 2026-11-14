@@ -1,3 +1,8 @@
+---
+title: "Greenscale Logging for LiteLLM: GenAI Spend"
+sidebar_label: "Greenscale"
+description: "Log LiteLLM Python SDK calls to Greenscale with the greenscale callback to track GenAI spend, tagged with project, application and customer metadata."
+---
 # Greenscale
 
 

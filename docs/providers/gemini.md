@@ -47,6 +47,53 @@ response = completion(
 )
 ```
 
+## Decisions {#decisions}
+
+Gemini Decision 1 answers yes/no, choice and rubric score questions through LiteLLM's [`/v1/decisions` and `/v1/systemone`](../decisions.md) routes. This provider is on main through [LiteLLM #51220](https://github.com/BerriAI/litellm/pull/51220), not yet in a release
+
+Set `GEMINI_API_KEY` in the proxy environment and add this deployment to `config.yaml`
+
+```yaml showLineNumbers
+model_list:
+  - model_name: gemini/gemini-decision-1
+    litellm_params:
+      model: gemini/gemini-decision-1
+      api_key: os.environ/GEMINI_API_KEY
+```
+
+Call the proxy with an OpenAI Decisions body
+
+```bash showLineNumbers
+curl -X POST 'http://0.0.0.0:4000/v1/decisions' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{
+  "model": "gemini/gemini-decision-1",
+  "input": "The mug arrived cracked.",
+  "questions": [
+    {"type": "predicate", "name": "damaged", "instructions": "Is the mug damaged?"},
+    {
+      "type": "choice",
+      "name": "action",
+      "instructions": "Choose the next action",
+      "choices": [{"value": "replace", "description": "Broken item"}, {"value": "keep", "description": "Undamaged item"}]
+    },
+    {
+      "type": "score",
+      "name": "severity",
+      "instructions": "Rate the damage",
+      "levels": [{"label": "None"}, {"label": "Severe"}]
+    }
+  ]
+}'
+```
+
+LiteLLM sends the request to Google's [Decisions API](https://aistudio.google.com/docs/decisions-api) at `/v1beta/decisions` with `x-goog-api-key` authentication. Both LiteLLM routes use the same deployment, with answers in the format of the route you call. Usage reports input tokens and zero output tokens for cost tracking
+
+Text, images and inline audio/video are supported. Each request accepts up to 16 images and 20 MiB of decoded image data in total, including remote images downloaded by LiteLLM. Message inputs preserve text and image order. Box questions return 400. PDFs and remote audio/video URLs are not mapped by LiteLLM's Decisions input schema
+
+Per-request `api_base` or `base_url` overrides require an explicit `api_key` in the same request or return 400, even when the deployment has a key. Configure custom deployment URLs with their own key to avoid sending shared Google credentials to another host
+
 ## Supported OpenAI Params
 - temperature
 - top_p
@@ -361,6 +408,10 @@ On a model that ends a request with a `continuationToken`, such as Gemini 4 Argo
 A request that sends no output limit is sent once and stops at Google's own per-request limit. From v1.108.0, set the env var `LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS` to an integer to give those requests a budget. It applies to chat completion, text completion and Responses API requests through the proxy or the Python SDK, and never to `/v1/messages`, which requires `max_tokens`. LiteLLM caps the budget at the model's `max_output_tokens` in the cost map, and any output limit the request already carries wins. It is not applied to a model the cost map does not list as a chat model, such as an image model, to a model whose cost map `supported_output_modalities` leaves out text, such as a Lyria music model, to a request whose `modalities` asks for anything besides text, to a request that resumes with a `continuation_token`, or to the native `:generateContent` route. A large value makes a non-streamed request run as long as the answer, so stream long answers or raise the client's timeout. The [env var reference](/docs/proxy/config_settings#environment-variables---reference) lists every case.
 
 `supports_continuation: true` in the cost map marks a model that can end a request with a `continuationToken` <SinceVersion v="1.110.0" />. It is set on `gemini/gemini-4-argon`, `vertex_ai/gemini-4-argon` and `vertex_ai/gemini-4-argon-cyber-permissive`. Read it before sending a request with `litellm.supports_continuation("gemini/gemini-4-argon")` or `litellm.get_model_info("gemini/gemini-4-argon")["supports_continuation"]`, or through the proxy at `GET /model/info` and `GET /v1/model/info`, where each deployment carries it in `model_info`, and at `GET /model_group/info`, where a model group reports `true` when any of its deployments supports it. `get_model_info` and `/model/info` return `None` (`null`) for a model the cost map leaves unflagged, so check for `true` instead of `false`. A deployment's own `model_info` in `config.yaml` or the Admin UI overrides the cost map value for that deployment only, so set `supports_continuation: true` there for a model the cost map does not flag yet. The flag only says what the model can do and does not turn continuation on or off. LiteLLM sends the request again only when it has an output limit, from `max_tokens` or `LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS`, and asks for one choice (`n` of 1), whatever the flag says. Whether a given answer was cut short still comes from the response. On `/chat/completions` that answer ends with `finish_reason: "length"` and carries `provider_specific_fields.continuation_token`, and [Long outputs](/blog/gemini-4-argon#long-outputs) shows how to send it back to continue the answer.
+
+## Interactions API and Deep Research
+
+`gemini` deployments serve Google's Interactions API natively at `/v1beta/interactions`, including agents such as `deep-research-preview-04-2026` and `deep-research-max-preview-04-2026`, background jobs, and GET, cancel and delete by ID. See [/interactions](../interactions.md) and [Managed Agents](../managed_agents.md).
 
 ## Text-to-Speech (TTS) Audio Output
 
@@ -2828,4 +2879,3 @@ LiteLLM automatically calculates costs using `output_cost_per_image_token` from 
 ```
 
 For more details, see [Google's Gemini pricing documentation](https://ai.google.dev/gemini-api/docs/pricing).
-

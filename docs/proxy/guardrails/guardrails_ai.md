@@ -1,3 +1,8 @@
+---
+title: "Guardrails AI Checks on LiteLLM AI Gateway"
+sidebar_label: "Guardrails AI"
+description: "Run Guardrails AI guards on LLM calls through the LiteLLM AI Gateway: point config.yaml at your Guardrails AI server and control guards per key."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

@@ -84,30 +84,18 @@ The dedicated listener does not use LiteLLM virtual-key authentication. `require
 ### Deployment configuration
 
 <Tabs>
-<TabItem value="helm" label="Helm: litellm-helm">
-
-```yaml title="values.yaml"
-metricsServer:
-  enabled: true
-  port: 4001
-
-serviceMonitor:
-  enabled: true
-```
-
-The chart creates a dedicated `<release>-litellm-metrics` `ClusterIP` Service and directs the ServiceMonitor to it. The primary Service is unchanged, including when `service.type` is `LoadBalancer`. `metricsServer.port` must differ from `service.port`.
-
-</TabItem>
-<TabItem value="helm-componentized" label="Helm: componentized">
+<TabItem value="helm" label="Helm">
 
 ```yaml title="values.yaml"
 gateway:
   metricsServer:
     enabled: true
     port: 4001
+  serviceMonitor:
+    enabled: true
 ```
 
-The chart runs the metrics server as a sidecar that shares Prometheus multiprocess data with the gateway. It exposes the listener through a dedicated `<release>-litellm-gateway-metrics` `ClusterIP` Service; configure Prometheus to discover that private Service. The gateway Service remains unchanged.
+The [LiteLLM chart](./deploy/helm.md) uses these values in both componentized and monolith modes. It runs a sidecar from the shared image and exposes a private metrics `ClusterIP` Service. The ServiceMonitor requires Prometheus Operator and targets that Service. Keep the metrics port separate from the gateway's serving port.
 
 </TabItem>
 <TabItem value="aws" label="Terraform: AWS">
@@ -249,6 +237,15 @@ Only emitted when [`end_user` tracking](#tracking-end_user-on-prometheus) is ena
 | `litellm_remaining_api_key_requests_for_model`                | Remaining Requests for a LiteLLM virtual API key, only if a model-specific rate limit (rpm) has been set for that virtual key. Labels: `"hashed_api_key", "api_key_alias", "model", "model_id"`|
 | `litellm_remaining_api_key_tokens_for_model`                | Remaining Tokens for a LiteLLM virtual API key, only if a model-specific token limit (tpm) has been set for that virtual key. Labels: `"hashed_api_key", "api_key_alias", "model", "model_id"`|
 
+### Team - Dynamic Rate Limiter
+
+Published when `dynamic_rate_limiter_v3` runs next to the `prometheus` callback. See [dynamic rate limiting](./dynamic_rate_limit.md#prometheus-metrics-for-team-shares-and-throttling) for how the values are computed.
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_dynamic_limiter_share_tokens` | The team's token share of the model for the current window, as of its last settled request. Labels: `"model_group", "team", "team_alias", "priority"` |
+| `litellm_dynamic_limiter_borrowed_tokens` | Tokens the team has used above its share this window, `0` while under it. Labels: `"model_group", "team", "team_alias", "priority"` |
+| `litellm_dynamic_limiter_throttled_total` | Requests the dynamic rate limiter refused. `reason` is the `rate_limited_by` header of the 429 the caller got: `model_per_team_saturated`, `model_per_team_max_borrow_multiple` or `priority_class_share_saturated`. Labels: `"model_group", "team", "team_alias", "priority", "rate_limit_type", "reason"` |
 
 ### Initialize Budget Metrics on Startup
 
@@ -951,11 +948,11 @@ Use these metrics to monitor the health of the DB Transaction Queue. Eg. Monitor
 
 ## LiteLLM Maintained Grafana Dashboards
 
-LiteLLM maintains two Grafana dashboards for the `litellm_*` metrics on this page, both in the [`cookbook/litellm_proxy_server/grafana_dashboard`](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard) folder. Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source when prompted
+LiteLLM maintains two Grafana dashboards for the `litellm_*` metrics on this page, both in the [`cookbook/litellm_proxy_server/grafana_dashboard`](https://github.com/BerriAI/litellm/tree/main/litellm/integrations/prometheus_helpers/grafana_dashboards) folder. Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source when prompted
 
-The [All Prometheus Metrics dashboard](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_all_metrics) has a panel for every metric in the tables above, grouped by theme: traffic, latency, spend and tokens, cache, deployments, rate limits, budgets, guardrails, MCP, managed files and batches, users and teams, plus the `prometheus_system` service metrics and DB transaction queue sizes. Panels for features you have not enabled stay empty; its [readme](https://github.com/BerriAI/litellm/blob/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_all_metrics/readme.md) lists which setting each row needs
+The [All Prometheus Metrics dashboard](https://github.com/BerriAI/litellm/tree/main/litellm/integrations/prometheus_helpers/grafana_dashboards/dashboard_all_metrics) has a panel for every metric in the tables above, grouped by theme: traffic, latency, spend and tokens, cache, deployments, rate limits, budgets, guardrails, MCP, managed files and batches, users and teams, plus the `prometheus_system` service metrics and DB transaction queue sizes. Panels for features you have not enabled stay empty; its [readme](https://github.com/BerriAI/litellm/blob/main/litellm/integrations/prometheus_helpers/grafana_dashboards/dashboard_all_metrics/readme.md) lists which setting each row needs
 
-The [v2 dashboard](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_v2) is a compact view of request rate, failures, latency and the remaining-request and remaining-token gauges per model group, shown below
+The [v2 dashboard](https://github.com/BerriAI/litellm/tree/main/litellm/integrations/prometheus_helpers/grafana_dashboards/dashboard_v2) is a compact view of request rate, failures, latency and the remaining-request and remaining-token gauges per model group, shown below
 
 
 <Image img={require('../../img/grafana_1.png')} />

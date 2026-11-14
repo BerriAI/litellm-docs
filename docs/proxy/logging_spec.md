@@ -75,15 +75,38 @@ class CostBreakdown(TypedDict, total=False):
 
 ## StandardLoggingUserAPIKeyMetadata
 
+These fields describe the virtual key that authenticated the request and the entities it belongs to. The proxy copies them from the key's auth object, so spend and budget values are the ones the proxy checked before this request ran and do not include its cost. A field is `null` when the key has no such entity or the entity has no value for it.
+
 | Field | Type | Description |
 |-------|------|-------------|
 | `user_api_key_hash` | `Optional[str]` | Hash of the litellm virtual key |
 | `user_api_key_alias` | `Optional[str]` | Alias of the API key |
+| `user_api_key_spend` | `Optional[float]` | Spend of the key in USD |
+| `user_api_key_max_budget` | `Optional[float]` | Max budget of the key in USD |
+| `user_api_key_budget_reset_at` | `Optional[str]` | ISO 8601 time when the key's budget resets next |
+| `user_api_key_user_spend` | `Optional[float]` | Spend of the user who owns the key, in USD |
+| `user_api_key_user_max_budget` | `Optional[float]` | Max budget of the user who owns the key, in USD |
+| `user_api_key_team_spend` | `Optional[float]` | Spend of the key's team in USD |
+| `user_api_key_team_max_budget` | `Optional[float]` | Max budget of the key's team in USD |
 | `user_api_key_org_id` | `Optional[str]` | Organization ID associated with the key |
+| `user_api_key_org_alias` | `Optional[str]` | Organization alias associated with the key |
 | `user_api_key_team_id` | `Optional[str]` | Team ID associated with the key |
+| `user_api_key_project_id` | `Optional[str]` | [Project](./project_management) ID associated with the key |
+| `user_api_key_project_alias` | `Optional[str]` | Project alias associated with the key |
 | `user_api_key_user_id` | `Optional[str]` | User ID associated with the key |
-| `user_api_key_end_user_id` | `Optional[str]` | End-user ID associated with the key |
+| `user_api_key_user_email` | `Optional[str]` | Email of the user who owns the key, copied from that user's row. `null` when the key has no `user_id` or the user has no email. Callbacks already receive it on older releases such as v1.106.6, but SpendLogs (the `/spend/logs` API and the UI request log drawer) only stores it from v1.109.0 |
 | `user_api_key_team_alias` | `Optional[str]` | Team alias associated with the key |
+| `user_api_key_end_user_id` | `Optional[str]` | End-user ID associated with the key |
+| `user_api_key_customer_member_id` | `Optional[str]` | Customer member the request was charged to, when it runs under a [customer hierarchy](./customer_portal/track-customer-spend) |
+| `user_api_key_customer_team_id` | `Optional[str]` | Customer team the request was charged to |
+| `user_api_key_customer_org_id` | `Optional[str]` | Customer organization the request was charged to |
+| `user_api_key_customer_org_alias` | `Optional[str]` | Alias of the customer organization. Can be absent when the request has no customer hierarchy |
+| `user_api_key_customer_team_alias` | `Optional[str]` | Alias of the customer team. Can be absent when the request has no customer hierarchy |
+| `user_api_key_customer_member_alias` | `Optional[str]` | Alias of the customer member. Can be absent when the request has no customer hierarchy |
+| `user_api_key_customer_budget_scopes` | `Optional[str]` | JSON string listing each customer level the request is charged to, with its `key`, `entity_id` and `budget_limits`. Can be absent when the request has no customer hierarchy |
+| `user_api_key_customer_hierarchy` | `Optional[dict]` | Full customer hierarchy the request ran under, including each level's spend and limits. Can be absent when the request has no customer hierarchy |
+| `user_api_key_request_route` | `Optional[str]` | Proxy route the request called, with path IDs replaced by placeholders, for example `/v1/responses/{response_id}` |
+| `user_api_key_auth_metadata` | `Optional[dict]` | The key's `metadata`, without the slots that hold callback credentials |
 
 ## StandardLoggingMetadata
 

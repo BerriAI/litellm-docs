@@ -1,0 +1,247 @@
+.figure {
+  --cols: minmax(0, 1.35fr) 40px minmax(150px, 0.75fr) 40px minmax(0, 1.2fr);
+  --line: var(--ifm-color-emphasis-400);
+  max-width: 860px;
+  margin: 1.5rem auto;
+  padding: 20px;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 14px;
+  background: var(--ifm-background-surface-color);
+  font-family: var(--ifm-font-family-base);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: var(--cols);
+  padding-bottom: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.header span:nth-child(3) {
+  text-align: center;
+}
+
+.row {
+  padding: 16px 0 8px;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.rowHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 12px;
+}
+
+.rowName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ifm-font-color-base);
+}
+
+.rowCaption {
+  font-size: 0.875rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+/* One grid line per example: request, arrow, gateway (spans all lines),
+   arrow, providers. The component sets grid-row on each cell. */
+.flow {
+  display: grid;
+  grid-template-columns: var(--cols);
+  row-gap: 8px;
+  align-items: center;
+}
+
+.request {
+  grid-column: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  min-width: 0;
+}
+
+.chip {
+  padding: 3px 9px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 6px;
+  background: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.note {
+  font-size: 0.75rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.gateway {
+  grid-column: 3;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 12px;
+  border: 1.5px solid var(--ifm-color-primary);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ifm-color-primary) 8%, var(--ifm-background-color));
+  text-align: center;
+}
+
+.gatewayTitle {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.gatewayNote {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ifm-font-color-base);
+}
+
+/* A thin line with an arrowhead, pointing right. */
+.arrowIn,
+.arrowOut {
+  position: relative;
+  height: 2px;
+  margin: 0 6px;
+  background: var(--line);
+}
+
+.arrowIn::after,
+.arrowOut::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-top: 2px solid var(--line);
+  border-right: 2px solid var(--line);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.arrowIn {
+  grid-column: 2;
+}
+
+.arrowOut {
+  grid-column: 4;
+}
+
+.arrowShared {
+  align-self: center;
+}
+
+.providers {
+  grid-column: 5;
+  min-width: 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: var(--ifm-color-emphasis-800);
+}
+
+.shared {
+  align-self: center;
+}
+
+.figure p.outcome {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ifm-color-emphasis-700);
+}
+
+/* Phones: the gateway step comes first, then each example as
+   "request, then providers" on its own lines. No arrows, no sideways scroll. */
+@media (max-width: 699px) {
+  .figure {
+    padding: 16px;
+  }
+
+  .header {
+    display: none;
+  }
+
+  .flow {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 6px;
+  }
+
+  .flow > * {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+
+  .gateway {
+    order: -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 2px 8px;
+    margin-bottom: 4px;
+    padding: 8px 12px;
+    text-align: left;
+  }
+
+  .arrowIn,
+  .arrowOut {
+    display: none;
+  }
+
+  .providers {
+    margin: 0 0 6px 12px;
+  }
+
+  .providers::before {
+    content: '\2192\00a0';
+    color: var(--ifm-color-emphasis-500);
+  }
+
+  .shared {
+    margin-top: 4px;
+  }
+}
+
+/* Docs markdown styles inline <code>; keep the chips small and neutral. */
+.figure code.chip {
+  padding: 2px 8px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  background: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+/* The column header already names the gateway on wide screens. */
+@media (min-width: 700px) {
+  .gatewayTitle {
+    display: none;
+  }
+}

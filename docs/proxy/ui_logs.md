@@ -37,6 +37,8 @@ general_settings:
 
 <Image img={require('../../img/ui_request_logs_content.png')}/>
 
+Known token-shaped secrets are masked in the stored content by default. See [Token Redaction in Spend Logs](./token_redaction_spend_logs.md) for covered patterns and how to opt out. Provider requests and client responses are unchanged.
+
 ### Turn off prompt storage for a key or team
 
 When prompt storage is on for the proxy, you can still keep request and response content out of spend logs for a single key or a whole team. Set `store_prompts_in_spend_logs: false` in the key's or the team's metadata.
@@ -44,13 +46,13 @@ When prompt storage is on for the proxy, you can still keep request and response
 ```bash
 # one key
 curl -X POST 'http://0.0.0.0:4000/key/update' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"key": "sk-...", "metadata": {"store_prompts_in_spend_logs": false}}'
 
 # every key on a team
 curl -X POST 'http://0.0.0.0:4000/team/update' \
-  -H 'Authorization: Bearer sk-1234' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"team_id": "my-team", "metadata": {"store_prompts_in_spend_logs": false}}'
 ```

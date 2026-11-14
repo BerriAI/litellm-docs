@@ -1,3 +1,8 @@
+---
+title: "OpenTelemetry v2 Tracing for LiteLLM AI Gateway"
+sidebar_label: "OpenTelemetry v2"
+description: "Get one trace per request from the LiteLLM AI Gateway with OpenTelemetry v2: HTTP, auth, guardrail and LLM spans, sent to any OTLP collector."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

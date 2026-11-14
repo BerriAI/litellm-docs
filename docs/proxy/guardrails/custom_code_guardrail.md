@@ -1,3 +1,8 @@
+---
+title: "Custom Code Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Custom Code Guardrail"
+description: "Write guardrail logic as sandboxed Python-like code on the LiteLLM AI Gateway, with built-in regex and JSON helpers to block or flag requests."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

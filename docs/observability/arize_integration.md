@@ -1,3 +1,8 @@
+---
+title: "Arize AX Tracing for LiteLLM AI Gateway"
+sidebar_label: "Arize AX"
+description: "Send LiteLLM traces to Arize AX from the Python SDK or AI Gateway, with per-team and per-key credentials, trace sampling and a second backend."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

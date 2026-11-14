@@ -4,9 +4,6 @@ description: "Deploy independent Lens with its own Helm chart and optional LiteL
 slug: "/proxy/lens/deployment/kubernetes"
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Kubernetes
 
 The [Lens Helm chart](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md) deploys the complete Lens UI, Rust API and background processing with ClickHouse and Keeper. This source installation uses the public Lens repository and requires a Kubernetes cluster, Helm, kubectl and a storage class for the persistent volume. Standalone Lens does not require a gateway or PostgreSQL
@@ -41,9 +38,9 @@ For [external ClickHouse](./storage.md#external-clickhouse), provide a stable en
 
 ## Connect an existing LiteLLM deployment {#existing-deployment}
 
-Use **external** mode when Lens already runs in its own release or on a platform such as Render. This connects the gateway to Lens without deploying another Lens or ClickHouse instance.
+Connect the LiteLLM chart to Lens running in its own release or on a platform such as Render. This connects the gateway to Lens without deploying another Lens or ClickHouse instance.
 
-First complete [steps 1–3 of Add Lens to LiteLLM](./litellm.md#1-get-the-lens-address). The gateway must have the adapter and UI described in that guide. Keep your existing gateway chart family, release name, namespace, and model configuration.
+First complete [steps 1–3 of Add Lens to LiteLLM](./litellm.md#1-get-the-lens-address). The gateway must have the adapter and UI described in that guide. Keep your release name, namespace, and model configuration. These values target the current [LiteLLM chart](../../deploy/helm.md). Migrate older chart values before upgrading.
 
 ### 1. Store the connection secrets
 
@@ -70,35 +67,21 @@ If this Secret already exists, reuse it after confirming the values match Lens. 
 Save this as `lens-connection.yaml`, using the address of your existing Lens service:
 
 ```yaml
-lensWorker:
-  mode: external
-  externalUrl: https://lens.example.com
+lens:
+  enabled: true
+  url: https://lens.example.com
   publicUrl: https://lens.example.com
   serviceTokenSecret:
     name: lens-connection
     key: service-token
-  gateway:
-    secretName: lens-connection
-    secretKey: gateway-secret
+  gatewaySecret:
+    name: lens-connection
+    key: gateway-secret
 ```
 
-`externalUrl` must be reachable by the gateway. `publicUrl` must be reachable by agent exporters. Neither address includes `/ui/` or `/v1/traces`.
+The gateway must be able to reach `url`. Agent exporters must be able to reach `publicUrl`. Neither address includes `/ui/` or `/v1/traces`.
 
-Add the tracing store setting in the same file. Use the block for your existing chart:
-
-<Tabs groupId="litellm-chart">
-<TabItem value="combined" label="litellm-helm chart">
-
-```yaml
-proxy_config:
-  general_settings:
-    tracing:
-      store:
-        type: lens
-```
-
-</TabItem>
-<TabItem value="split" label="Componentized litellm chart">
+Add the tracing store setting in the same file:
 
 ```yaml
 gateway:
@@ -110,34 +93,33 @@ gateway:
             type: lens
 ```
 
-</TabItem>
-</Tabs>
-
 If your deployment supplies `config.yaml` from an external ConfigMap instead, add `general_settings.tracing.store.type: lens` to that file through its existing owner.
 
 ### 3. Apply and check
 
-Set `GATEWAY_RELEASE` to your existing Helm release name. Set `GATEWAY_CHART` to the same compatible chart package or local chart directory used by your gateway deployment. Do not switch chart families. You can inspect the installed release with:
+Set `GATEWAY_RELEASE` to your existing Helm release name. Set `GATEWAY_CHART` to your [OCI chart](../../deploy/helm.md#install-the-chart). Replace `YOUR_ORG` with your registry namespace. Set `GATEWAY_CHART_VERSION` to the chart version you use. You can inspect the installed release with:
 
 ```sh
 helm list --namespace "$GATEWAY_NAMESPACE"
 ```
 
-Apply the added values while retaining the release's saved values:
+Merge these settings with your complete values file. Then apply both:
 
 ```sh
 export GATEWAY_RELEASE="YOUR_GATEWAY_RELEASE"
-export GATEWAY_CHART="PATH_TO_YOUR_EXISTING_CHART_PACKAGE"
+export GATEWAY_CHART="oci://ghcr.io/YOUR_ORG/charts/litellm"
+export GATEWAY_CHART_VERSION="1.0.0"
 helm upgrade "$GATEWAY_RELEASE" "$GATEWAY_CHART" \
-  --namespace "$GATEWAY_NAMESPACE" --reuse-values \
-  -f lens-connection.yaml --wait
+  --version "$GATEWAY_CHART_VERSION" \
+  --namespace "$GATEWAY_NAMESPACE" \
+  -f gateway-values.yaml -f lens-connection.yaml --wait
 ```
 
 This rolls the gateway pods to load the connection settings. For GitOps, commit the values and Secret references through your normal review and sync process instead.
 
 Sign in to LiteLLM, select **Lens**, and complete [the connection check](./litellm.md#5-open-lens-in-the-gateway). Then [send your first trace](../first-trace.md).
 
-If Lens is already owned by the gateway's Helm release, do not change it to external mode with this procedure. Use the [ownership-transfer guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#select-versions-independently) to preserve its resources and storage first.
+If an older gateway Helm release owns Lens, transfer ownership before you upgrade. The current chart does not deploy Lens or ClickHouse. Use the [ownership-transfer guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#select-versions-independently) to preserve its resources and storage first.
 
 ## Check the installation
 

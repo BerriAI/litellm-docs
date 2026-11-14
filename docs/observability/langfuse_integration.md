@@ -1,3 +1,8 @@
+---
+title: "Langfuse Tracing for LiteLLM: Setup"
+sidebar_label: "Langfuse"
+description: "Send LiteLLM traces to Langfuse from the Python SDK or AI Gateway, set trace IDs, user IDs, tags and metadata per request, and redact messages."
+---
 import Image from '@theme/IdealImage';
 
 # Langfuse
@@ -48,7 +53,7 @@ uv add "langfuse>=4.7,<5" litellm
 ### Quick Start
 Use just 2 lines of code, to instantly log your responses **across all providers** with Langfuse:
 
-<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/logging_observability/LiteLLM_Langfuse.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/logging_observability/LiteLLM_Langfuse.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 

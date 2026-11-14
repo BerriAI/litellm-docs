@@ -34,7 +34,7 @@ import { RequestFlowDiagram, RouterFlowDiagram, ImageFlowDiagram } from '@site/s
         - Virtual Key Rate Limit
         - User Rate Limit
         - Team Limit
-    - The `_ProxyDBLogger` updates spend / usage in the LiteLLM database. [Here is everything tracked in the DB per request](https://github.com/BerriAI/litellm/blob/main/schema.prisma)
+    - The `_ProxyDBLogger` updates spend / usage in the LiteLLM database. [Here is everything tracked in the DB per request](https://github.com/BerriAI/litellm/blob/main/litellm/proxy-extras/litellm_proxy_extras/schema.prisma)
 
 ## The router: fallbacks and retries
 

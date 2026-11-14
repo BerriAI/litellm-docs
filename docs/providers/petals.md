@@ -1,7 +1,7 @@
 # Petals
 Petals: https://github.com/bigscience-workshop/petals
 
-<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/LiteLLM_Petals.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/LiteLLM_Petals.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
@@ -45,5 +45,4 @@ for chunk in response:
 |------------------|--------------------------------------------|
 | petals-team/StableBeluga | `completion('petals/petals-team/StableBeluga2', messages)` | 
 | huggyllama/llama-65b | `completion('petals/huggyllama/llama-65b', messages)` | 
-
 
