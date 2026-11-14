@@ -1,7 +1,16 @@
+---
+title: "Mistral AI API with LiteLLM AI Gateway"
+sidebar_label: "Mistral AI"
+description: "Call Mistral Large, Codestral and Magistral with tool calling and reasoning effort, transcribe audio with Voxtral, clone voices for speech and embed text."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Mistral AI API
+
+Mistral AI serves its chat, reasoning, embedding and audio models through the Mistral API; LiteLLM calls them with the `mistral/` prefix from the Python SDK or AI Gateway.
+
 https://docs.mistral.ai/api/
 
 ## API Key

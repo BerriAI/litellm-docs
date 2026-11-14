@@ -1,3 +1,9 @@
+---
+title: "Bedrock Realtime Audio (Nova Sonic) with LiteLLM"
+sidebar_label: "Bedrock Realtime API"
+description: "Stream two-way voice conversations with Amazon Nova Sonic through the LiteLLM AI Gateway Realtime API: config.yaml setup, voices, audio formats and tools."
+---
+
 # Bedrock Realtime API
 
 ## Overview

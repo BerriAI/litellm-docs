@@ -1,3 +1,9 @@
+---
+title: "Azure OpenAI Text to Speech with LiteLLM"
+sidebar_label: "Azure Text to Speech (tts)"
+description: "Run Azure OpenAI text to speech via LiteLLM from the Python SDK or AI Gateway. Use your azure/ deployment name, pick a voice like alloy and set the format."
+---
+
 # Azure Text to Speech (tts)
 
 ## Overview

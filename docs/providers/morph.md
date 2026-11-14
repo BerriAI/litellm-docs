@@ -1,3 +1,9 @@
+---
+title: "Morph API with LiteLLM: Chat and Fast Apply"
+sidebar_label: "Morph"
+description: "Run Morph's open-weight Kimi K3, GLM-5.3 and DeepSeek V4.1 Flash with tools, reasoning effort and prefix caching, or apply code edits with Fast Apply."
+---
+
 # Morph
 
 Use [Morph](https://www.morphllm.com/) through LiteLLM for open-weight chat models and Fast Apply code edits. Set `MORPH_API_KEY` and prefix the model ID with `morph/`. LiteLLM uses `https://api.morphllm.com/v1` by default.

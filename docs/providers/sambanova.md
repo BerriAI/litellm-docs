@@ -1,7 +1,16 @@
+---
+title: "SambaNova API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "SambaNova"
+description: "Call Llama 4 Maverick and Llama 3.3 70B on SambaNova Cloud with tool calling, image input and JSON schema output, and embed text with E5-Mistral-7B."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # SambaNova
+
+SambaNova Cloud serves chat, vision and embedding models; LiteLLM calls every SambaNova model with the `sambanova/` prefix from the Python SDK or AI Gateway.
+
 [https://cloud.sambanova.ai/](http://cloud.sambanova.ai?utm_source=litellm&utm_medium=external&utm_campaign=cloud_signup)
 
 :::tip

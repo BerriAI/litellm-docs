@@ -1,5 +1,5 @@
 ---
-title: OpenAI Fast & Ultrafast mode
+title: "OpenAI Fast and Ultrafast Mode in LiteLLM"
 sidebar_label: Fast & Ultrafast mode
 description: Set up OpenAI Fast and Ultrafast modes through the LiteLLM Admin UI or config.yaml, call them through the Responses API, and expose them in Codex.
 ---

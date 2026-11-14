@@ -1,3 +1,9 @@
+---
+title: "Black Forest Labs FLUX Image Editing in LiteLLM"
+sidebar_label: "Black Forest Labs Image Editing"
+description: "Edit, inpaint and outpaint images with FLUX Kontext Pro and Max, FLUX Pro Fill and FLUX Pro Expand from the Python SDK or the AI Gateway /images/edits route."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "LM Studio with LiteLLM: Local Models Setup"
+sidebar_label: "LM Studio"
+description: "Point LiteLLM at models loaded in LM Studio on your machine for chat, streaming, embeddings and JSON Schema output, via the Python SDK or AI Gateway."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

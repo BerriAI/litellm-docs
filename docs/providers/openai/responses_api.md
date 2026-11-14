@@ -1,3 +1,9 @@
+---
+title: "OpenAI Responses API with LiteLLM"
+sidebar_label: "OpenAI - Response API"
+description: "Use the OpenAI Responses API via LiteLLM from the Python SDK or AI Gateway, with reusable prompts, computer use, MCP tools, function calls and tool search."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "Azure AI Image Editing with LiteLLM"
+sidebar_label: "Azure AI Image Editing"
+description: "Edit images on Azure AI with FLUX.1 Kontext Pro, FLUX 2 Pro, FLUX 2 Flex or a gpt-image deployment from the Python SDK or AI Gateway, using a text prompt."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "Azure Model Router with LiteLLM"
+sidebar_label: "Azure Model Router"
+description: "Call Azure Model Router via LiteLLM with the azure_ai/model_router/ prefix from the Python SDK or AI Gateway. Stream responses and track per-model cost."
+---
+
 # Azure Model Router
 
 Azure Model Router is a feature in Azure AI Foundry that automatically routes your requests to the best available model based on your requirements. This allows you to use a single endpoint that intelligently selects the optimal model for each request.

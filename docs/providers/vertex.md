@@ -1,8 +1,16 @@
+---
+title: "Vertex AI Gemini API with LiteLLM"
+sidebar_label: "Gemini Enterprise Agent Platform"
+description: "Call Gemini on Gemini Enterprise Agent Platform (formerly Vertex AI) via LiteLLM with the vertex_ai/ prefix: GCP auth, function calling, thinking, caching."
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # VertexAI [Gemini]
+
+Gemini Enterprise Agent Platform (formerly Vertex AI) is Google Cloud's fully-managed platform for generative AI; LiteLLM calls Gemini on it with the `vertex_ai/` prefix and your GCP credentials from the Python SDK or AI Gateway.
 
 ## Overview
 

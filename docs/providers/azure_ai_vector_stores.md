@@ -1,3 +1,9 @@
+---
+title: "Azure AI Search Vector Store with LiteLLM"
+sidebar_label: "Azure AI Search - Vector Store (Unified API)"
+description: "Search Azure AI Search vector stores through LiteLLM's unified API from the Python SDK or AI Gateway. Set up config.yaml, an embedding model and an index."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "GitHub Copilot with LiteLLM: Gateway Setup"
+sidebar_label: "GitHub Copilot"
+description: "Use GitHub Copilot models via the LiteLLM AI Gateway or Python SDK, with each user on their own Copilot plan, for Chat Completions, Responses, embeddings."
+---
+
 import Image from '@theme/IdealImage';
 import ThemedVideo from '@site/src/components/ThemedVideo';
 import Tabs from '@theme/Tabs';

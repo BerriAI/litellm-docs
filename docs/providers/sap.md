@@ -1,3 +1,9 @@
+---
+title: "SAP Generative AI Hub with LiteLLM: Setup"
+sidebar_label: "SAP Generative AI Hub"
+description: "Call models on SAP Generative AI Hub's Orchestration Service via LiteLLM from the Python SDK or AI Gateway, with AI Core service key auth and streaming."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

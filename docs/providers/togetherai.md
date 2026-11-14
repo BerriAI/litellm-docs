@@ -1,3 +1,9 @@
+---
+title: "Together AI API with LiteLLM AI Gateway"
+sidebar_label: "Together AI"
+description: "Call Llama, CodeLlama, Qwen and GLM models on Together AI, toggle thinking with chat_template_kwargs, use -latest aliases and rerank documents via LiteLLM."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

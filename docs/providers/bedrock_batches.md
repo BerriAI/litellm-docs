@@ -1,3 +1,9 @@
+---
+title: "Bedrock Batch Inference with LiteLLM"
+sidebar_label: "Bedrock Batches"
+description: "Run Amazon Bedrock batch inference through the LiteLLM AI Gateway: set mode: batch in config.yaml, upload a JSONL file, create the batch and fetch results."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

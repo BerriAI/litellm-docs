@@ -1,3 +1,9 @@
+---
+title: "Anthropic Preserved Thinking in LiteLLM"
+sidebar_label: "Preserved Thinking Prefix Stability"
+description: "Keep Claude preserved thinking blocks valid via LiteLLM: the system prompt, tools and earlier messages must stay stable across turns, and what breaks it."
+---
+
 # Preserved Thinking Prefix Stability
 
 Claude models that preserve thinking across turns sign each thinking block and bind it to the request that produced it. When you replay the conversation with the `thinking-binding-controls-2026-08-01` beta, Anthropic checks that the part of the request ahead of the block still matches what the block was created under: the top-level `system` prompt, the `tools` list, and every message before it. A prefix that changed either drops the block (`prefix_mismatch_behavior: drop_block`, reported by Anthropic as a `thinking_dropped` entry in `input_transformations`) or rejects the request with a 400 that names the part that differs (`prefix_mismatch_behavior: error`). `cache_control` markers are left out of the comparison

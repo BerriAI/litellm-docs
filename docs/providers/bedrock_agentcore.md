@@ -1,3 +1,9 @@
+---
+title: "Bedrock AgentCore Agents with LiteLLM"
+sidebar_label: "Bedrock AgentCore"
+description: "Call Bedrock AgentCore agent runtimes in the OpenAI format through LiteLLM from the Python SDK or AI Gateway, and invoke them over the A2A Gateway."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

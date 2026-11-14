@@ -1,3 +1,9 @@
+---
+title: "Bedrock Knowledge Bases with LiteLLM"
+sidebar_label: "Bedrock Knowledge Bases"
+description: "Connect AWS Bedrock Knowledge Bases to LiteLLM as a vector store from the Python SDK or AI Gateway, filter results by metadata and limit results to a user."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
