@@ -496,6 +496,8 @@ Muse requests are stateless. `store: true`, `background`, `previous_response_id`
 
 Muse accepts only `tool_choice: "auto"`. `required`, `none`, and named tool choices get a 400 error. With `drop_params: true`, LiteLLM sends `auto` instead, and for `none` it also removes the tools from the request so the model cannot call one. A downgraded `required` or named choice lets the model answer in text, so check for a missing tool call in your application.
 
+Muse accepts `function` and `namespace` tools only. Vertex AI answers 400 for built-in tools such as `web_search`, `local_shell`, `mcp`, and custom tools. With `drop_params: true`, LiteLLM removes those tools and keeps the rest, so clients like Codex that send `web_search` by default still work.
+
 ## VertexAI Mistral API
 
 [**Supported OpenAI Params**](https://github.com/BerriAI/litellm/blob/e0f3cd580cb85066f7d36241a03c30aa50a8a31d/litellm/llms/openai.py#L137)
