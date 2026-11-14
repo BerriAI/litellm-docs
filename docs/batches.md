@@ -682,7 +682,7 @@ How a batch is charged:
 
 - The batch is charged against the model it routes to and against every capped model named in its records' `body.model`. Records without a `body.model` count toward the model the batch routes to.
 - A managed file (uploaded with `target_model_names`) is charged only against the model the batch routes to, because LiteLLM rewrites its records to the deployment model on upload.
-- Names that resolve to the same model group, such as an alias and its model group or a deployment id, share one counter under the tightest limit set among them. A `-latest` model name is also charged against the limit set for the model it points to.
+- Names that resolve to the same model group, such as an alias and its model group or a deployment id, share one counter under the tightest limit set among them. A `-latest` model name is also charged against the limit set for the model it points to, and a dated snapshot such as `gpt-5.5-2026-04-23` against the limit set for its undated name.
 - Tokens are refunded the same way as key and team allowances: when LiteLLM serves a response showing the batch in a terminal state, or after 8 days.
 - Set project limits only after every proxy instance runs a version that supports them, and keep that in mind before a rollback. An instance on an older version that serves a batch's terminal state refunds only key and team allowances. The project tokens it skips stay held until no batch has reserved against that project and model for 8 days, so a project that keeps sending batches keeps them. If that fills a project's limit, raise the limit to make room.
 
