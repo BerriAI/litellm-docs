@@ -137,7 +137,7 @@ Compare the same request with compaction on and off. For the off version, remove
 
 ## Turn it on for a team
 
-On LiteLLM Enterprise, attach `jev-compaction` to a team. If your users authenticate with OIDC, use the LiteLLM team that their tokens map to. See the [OIDC setup guide](/docs/proxy/token_auth#tracking-end-users--internal-users--team--org) for that mapping.
+On LiteLLM Enterprise, attach `jev-compaction` to a team. If your users authenticate with OIDC, use the LiteLLM team that their tokens map to. See the [OIDC setup guide](/docs/proxy/jwt_auth_reference#tracking-end-users--internal-users--team--org) for that mapping.
 
 ```bash
 curl "$LITELLM_PROXY_URL/team/update" \

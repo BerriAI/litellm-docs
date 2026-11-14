@@ -45,17 +45,17 @@
   --lb-muted: var(--aurora-muted);
   --lb-line: var(--aurora-line-strong);
   --lb-accent: var(--ifm-color-primary);
-  --lb-accent-ring: rgba(37, 194, 160, 0.18);
+  --lb-accent-ring: rgba(138, 152, 240, 0.18);
   --lb-surface: var(--ifm-background-surface-color);
   --lb-dot: #8b949e;
   --lb-dot-opacity: 0.08;
-  --lb-ph-bg: linear-gradient(135deg, #161b22, #121820 55%, #10201e);
+  --lb-ph-bg: linear-gradient(135deg, #131826, #11152a 55%, #121733);
   --lb-ph-ink: #c9d1d9;
   --lb-pill: var(--ifm-color-primary);
-  --lb-pill-line: rgba(37, 194, 160, 0.3);
-  --lb-pill-bg: rgba(37, 194, 160, 0.06);
-  --lb-pill-on-ink: var(--lite-on-primary, #0d1117);
-  --lb-pill-ring: rgba(37, 194, 160, 0.18);
+  --lb-pill-line: rgba(138, 152, 240, 0.3);
+  --lb-pill-bg: rgba(138, 152, 240, 0.06);
+  --lb-pill-on-ink: var(--lite-on-primary, #0b0e17);
+  --lb-pill-ring: rgba(138, 152, 240, 0.18);
 }
 
 .frame {

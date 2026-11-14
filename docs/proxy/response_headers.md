@@ -41,6 +41,7 @@ These headers are useful for clients to understand the current rate limit status
 | `x-litellm-attempted-retries` | int | Number of retry attempts made |
 | `x-litellm-max-retries` | int | Configured `num_retries`, only sent when at least one retry was attempted |
 | `x-litellm-attempted-fallbacks` | int | Number of fallback attempts made |
+| `x-litellm-fallback-reason` | string | Why the proxy left the requested model, only sent when a local rate limit caused the fallback. `rate_limit:<scope>`, where the scope is the limit that rejected the requested model, for example `rate_limit:model_per_key` or `rate_limit:model_per_end_user`, or `rate_limit:model_saturation_fallback` when a key or team with `router_settings.fallback_on_saturation` left a model that reached the dynamic rate limiter's saturation threshold |
 
 `max_fallbacks` is not returned as a response header
 

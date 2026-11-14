@@ -118,6 +118,37 @@ These examples are from LiteLLM's model catalog. GitHub is what controls which m
 
 To serve up Responses or Embeddings, simply add a model for that endpoint using the same `github-copilot` credential (e.g. `github_copilot/gpt-5.3-codex` or `github_copilot/text-embedding-3-small`).
 
+## API version
+
+Set `GITHUB_COPILOT_API_VERSION` in the gateway or SDK process to set the `x-github-api-version` header on every Copilot request. LiteLLM reads this environment variable at request time.
+
+When the variable is unset, empty, or contains only whitespace, LiteLLM uses `2025-04-01` for Chat Completions, Responses, and Embeddings, and `2026-06-01` for `/v1/messages`.
+
+For example, set the version before you start the gateway or your SDK application.
+
+```bash
+export GITHUB_COPILOT_API_VERSION=2026-08-01
+```
+
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`github_copilot/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other GitHub Copilot model name. LiteLLM sends GitHub Copilot the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `github_copilot/gpt-luna-latest` | GPT Luna |
+| `github_copilot/gpt-sol-latest` | GPT Sol |
+| `github_copilot/gpt-terra-latest` | GPT Terra |
+| `github_copilot/gpt-astra-latest` | GPT Astra |
+| `github_copilot/claude-opus-latest` | Claude Opus |
+| `github_copilot/claude-sonnet-latest` | Claude Sonnet |
+| `github_copilot/claude-haiku-latest` | Claude Haiku |
+| `github_copilot/claude-fable-latest` | Claude Fable |
+| `github_copilot/grok-latest` | Grok |
+| `github_copilot/kimi-latest` | Kimi |
+
 ## Usage with the LiteLLM Python SDK
 
 Direct SDK calls run in your own process (outside the gateway) and sign in with a single GitHub account. The first call will initiate GitHub's device flow in your terminal. LiteLLM will store the GitHub access token in `~/.config/litellm/github_copilot/access-token` and then reuse it on subsequent calls. On the gateway side, only a model that has no **Per-user GitHub OAuth** credential will use this shared sign in (the credential is read from the gateway host). Direct SDK calls use the full model name (including the `github_copilot/` prefix).

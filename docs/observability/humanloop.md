@@ -1,3 +1,8 @@
+---
+title: "Humanloop Prompt Management for LiteLLM"
+sidebar_label: "Humanloop"
+description: "Use Humanloop prompts with LiteLLM: call a managed prompt by prompt_id with variables from the Python SDK or AI Gateway, and pick where the model is set."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

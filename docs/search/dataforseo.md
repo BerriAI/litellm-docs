@@ -1,4 +1,11 @@
+---
+title: "DataForSEO SERP API with LiteLLM: Setup"
+sidebar_label: "DataForSEO Search"
+description: "Add DataForSEO results to LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, with country, language, device and depth options."
+---
 # DataForSEO Search
+
+[DataForSEO](https://dataforseo.com/) provides a SERP API that returns search engine results pages as structured data; LiteLLM exposes it through one `search()` call in the Python SDK and the `/v1/search` endpoint on the AI Gateway.
 
 **Get API Access:** [DataForSEO](https://dataforseo.com/)
 

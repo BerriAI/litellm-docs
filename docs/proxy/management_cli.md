@@ -25,7 +25,7 @@ Codex, OpenCode) with their LLM traffic routed through the proxy.
    The `lite` client is a thin laptop install: it points at a LiteLLM proxy and runs your coding agents through it, with none of the proxy server runtime pulled in. The one-line installer needs only `curl`; it bootstraps [uv](https://github.com/astral-sh/uv) when it's missing and lets uv provision a compatible Python for you:
 
    ```shell
-   curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install-cli.sh | sh
+   curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/scripts/install-cli.sh | sh
    ```
 
    Already have uv and prefer to drive it yourself? Install the package directly:
@@ -67,7 +67,7 @@ You can use the CLI to authenticate to the LiteLLM Gateway. This is great if you
 
 :::info
 
-For an indepth guide, see [CLI Authentication](./cli_sso).
+For an indepth guide, see [CLI sign-in](./cli_sso).
 
 :::
 
@@ -75,7 +75,7 @@ For an indepth guide, see [CLI Authentication](./cli_sso).
 
 :::warning[Beta Feature - Required Environment Variable]
 
-CLI SSO Authentication is currently in beta. You must set this environment variable **when starting up your LiteLLM Proxy**:
+CLI sign-in is currently in beta. You must set this environment variable **when starting up your LiteLLM Proxy**:
 
 ```bash
 export EXPERIMENTAL_UI_LOGIN="True"

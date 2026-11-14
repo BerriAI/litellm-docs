@@ -75,11 +75,11 @@ function Author({author, imageURL}) {
   );
 }
 
-export function PostByline({horizontal = false}) {
+export function PostByline({horizontal = false, className}) {
   const {metadata, assets} = useBlogPost();
   const authorImages = assets.authorsImageUrls || [];
   return (
-    <div className={clsx(styles.page, styles.immersiveByline, horizontal && styles.horizontalByline)}>
+    <div className={clsx(styles.page, styles.immersiveByline, horizontal && styles.horizontalByline, className)}>
       <div className={styles.inner}>
         <span className={styles.published}>
           Published: <time dateTime={metadata.date}>{formatDate(metadata.date)}</time>

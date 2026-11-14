@@ -1345,7 +1345,7 @@ The `encrypted_content_affinity` pre-call check routes follow-up requests contai
 
 ### When the originating deployment cannot serve the turn
 
-The pin holds only while the originating deployment is in the healthy pool of the routed model group. When it is not, because it is cooled down after errors, it was removed from the config, or the follow-up was routed to a different model group (an auto-router tier change, or a client switching `model` between turns), LiteLLM first looks for a peer, a deployment whose resolved `api_base` and `api_key` are identical to the origin's, and pins to that instead. Deployments in different regions or with different keys never count as peers, whatever the provider would accept, so a multi-region group has none. An origin that was removed from the config, or an id that matches no deployment, has no credentials left to match and skips the peer search
+The pin holds only while the originating deployment is in the healthy pool of the routed model group. When it is not, because it is cooled down after errors, it was removed from the config, or the follow-up was routed to a different model group (an auto-router tier change, or a client switching `model` between turns), LiteLLM first looks for a peer, a deployment whose resolved `api_base` and `api_key` are identical to the origin's, and pins to that instead. Deployments in different regions or with different keys don't count as peers on their own, whatever the provider would accept, so a multi-region group has none unless you [declare a shared encryption boundary](#declaring-a-shared-encryption-boundary). An origin that was removed from the config, or an id that matches no deployment, has no credentials left to match and skips the peer search
 
 Without a peer the turn is served in degraded form rather than failed. On the Responses API each reasoning item keeps its summary text and loses only its encrypted payload and id (an item with no readable text is dropped whole), and on a `/v1/messages` follow-up the thinking block is dropped whole. The rest of the conversation is untouched, the request goes to the healthy deployments through the normal routing strategy, and the model reasons fresh on that turn. The reasoning items it returns carry the id of the deployment that served it, so later turns pin there. Every degraded turn logs one router warning, so watch for it when reasoning continuity across turns matters to you:
 
@@ -1360,6 +1360,39 @@ The same strip runs on every fallback hop, with or without the check: an [order-
 Turn the check on for an ordered group of two providers all the same. Its marker names the deployment that produced each item, so the turn after a hop keeps the reasoning of the deployment that answers it with no failed call first, a hop logs the warning above as well, and a turn dispatched straight to `order: 2` while `order: 1` is cooled down (no hop, so no hop strip) drops what that deployment cannot decrypt through the pin instead of failing. Releases through v1.105.x replayed the failed deployment's reasoning on the hop, so the target answered 400 (`invalid_encrypted_content` on OpenAI, `invalid encrypted reasoning` on Bedrock), and with the check on, an order-based hop answered 429 `No deployments available` instead
 
 The check can be turned on and off on a running proxy through `POST /config/update`, see [changing affinity settings at runtime](./routing.md#settings)
+
+### Declaring a shared encryption boundary
+
+<SinceVersion v="1.110.0" /> Some deployments can decrypt each other's reasoning even though their `api_base` differs. Regional endpoints of one OpenAI organization are the common case, since OpenAI encrypts reasoning per organization. Give each of them the same `model_info.encrypted_content_boundary` and LiteLLM treats them as peers, so a follow-up whose origin cannot serve the turn keeps its encrypted reasoning on a peer instead of reasoning fresh. This applies to the peer search above, across model groups, and to the strip on order-based and `fallbacks` hops. The origin itself still wins while it is in the healthy pool.
+
+When both deployments set the key, they are peers exactly when the values match, whatever their `api_base` and `api_key`. When either one leaves it unset, the `api_base` and `api_key` match decides, as before. The value is a name you pick and LiteLLM doesn't check it with the provider, so give one value only to deployments that really share an organization. A deployment in the wrong boundary receives reasoning it cannot decrypt, and the turn fails with `invalid_encrypted_content` instead of being served with fresh reasoning.
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: {{openai_large}}
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_base: https://<region-1 endpoint>/v1
+      api_key: os.environ/OPENAI_API_KEY
+      order: 1
+    model_info:
+      id: region-1
+      encrypted_content_boundary: org-1
+
+  - model_name: {{openai_large}}
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_base: https://<region-2 endpoint>/v1
+      api_key: os.environ/OPENAI_API_KEY
+      order: 2
+    model_info:
+      id: region-2
+      encrypted_content_boundary: org-1
+
+router_settings:
+  optional_pre_call_checks:
+    - encrypted_content_affinity
+```
 
 ### Configuration
 

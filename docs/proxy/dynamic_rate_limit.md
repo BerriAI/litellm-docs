@@ -173,6 +173,8 @@ general_settings:
   - Example: When model usage is low, keys can use more than their allocated share. When model usage is high, keys are strictly limited to their allocated share.
 - **saturation_check_cache_ttl (int)**: TTL in seconds for local cache when reading saturation values from Redis (defaults to 60). In multi-node deployments, this controls how quickly nodes converge on the same saturation state. Lower values mean faster convergence but more Redis reads.
   - Example: Set to `5` for faster multi-node consistency, or `0` to always read directly from Redis.
+- **team_model_limit_borrows_idle_capacity_from_other_teams (bool)**: Lets a team run past its `model_tpm_limit` and `model_rpm_limit` on capacity other teams are not using (defaults to `false`). Only models this limiter covers are affected. While the model is below `saturation_threshold` the team may exceed its limits, and once the model saturates the team is held to them, with a 429 whose `rate_limited_by` header reads `model_per_team_saturated`. The model's own `tpm` and `rpm` are always enforced. Limits set on the key itself and customer limits stay hard. See [Team model limits that borrow idle capacity](#team-model-limits-that-borrow-idle-capacity).
+- **priority_class_share_splits_equally_among_active_teams (bool)**: Splits a priority class's share of a model among the teams actually using it (defaults to `false`). A team counts as active on a model once it sends a request there and stops counting after a rate-limit window (60 seconds) without one. The configured weights are renormalized over only the classes with an active team, and each class's share is divided equally among its active teams. Once the model saturates, each team is held to its own share, with a 429 whose `rate_limited_by` header reads `priority_class_share_saturated`. Keys with no team keep the shared class pool. See [Split a priority class share among active teams](#split-a-priority-class-share-among-active-teams).
 
 **Start Proxy**
 
@@ -336,12 +338,143 @@ Model-wide capacity exhausted (any priority):
 }
 ```
 
+### Team model limits that borrow idle capacity
+
+By default a team's `model_tpm_limit` and `model_rpm_limit` are hard ceilings, enforced by the regular rate limiter before this limiter runs. A team that hits one is refused even when other teams are leaving the model idle. Set `team_model_limit_borrows_idle_capacity_from_other_teams: true` to let teams borrow that idle capacity on models the dynamic limiter covers.
+
+```yaml
+litellm_settings:
+  callbacks: ["dynamic_rate_limiter_v3"]
+  priority_reservation_settings:
+    saturation_threshold: 0.5
+    team_model_limit_borrows_idle_capacity_from_other_teams: true   # default: false
+```
+
+With a model at `tpm: 1000`, team A at `model_tpm_limit: {"my-model": 500}` and team B idle, team A can run past 500 tokens a minute while the model is under 50% saturation. Once usage crosses the threshold, team A is held to 500 from that moment on, and a request past that gets a 429 whose `rate_limited_by` header reads `model_per_team_saturated`, while team B still has its own 500 to use. `model_rpm_limit` works the same way with requests. Aggregate traffic never exceeds the model's `tpm` or `rpm`, and borrowing only ever uses capacity on the same model, never a team's limit on another model.
+
+The setting only changes the limits a key inherits from its team. A `model_tpm_limit` or `model_rpm_limit` set on the key itself, team-wide `tpm_limit` and `rpm_limit`, and customer limits are enforced as before. Models that have neither `tpm` nor `rpm` configured, or that the dynamic limiter does not cover, keep the hard team limits. Because saturation is cached for `saturation_check_cache_ttl` seconds, a team may run a little past its limit before the clamp engages.
+
+#### A borrower gets its share back once the model saturates
+
+What a team used while the model was idle is not charged against its share. The per-team counter this limiter holds a team to only counts requests admitted while the model is saturated, so it starts fresh the moment saturation engages. In the example above team A has used 510 tokens when the model crosses 50% saturation. Team A is not refused for the rest of the minute. It keeps its full 500 for the next 60 seconds, team B has its own 500, and a team below its share is always admitted ahead of a team past it. Tokens already consumed are never clawed back, so the model's own `tpm` still bounds what both teams get in that minute. Aggregate admitted traffic stays within it.
+
+Each node learns the model is saturated when it refreshes the saturation value, every `saturation_check_cache_ttl` seconds (60 by default). A node that did not serve the triggering traffic keeps admitting the borrower on idle terms until then, so set the TTL to a few seconds when teams share a model under contention.
+
+```yaml
+litellm_settings:
+  callbacks: ["dynamic_rate_limiter_v3"]
+  priority_reservation_settings:
+    saturation_threshold: 0.5
+    team_model_limit_borrows_idle_capacity_from_other_teams: true
+    saturation_check_cache_ttl: 2
+```
+
+#### Cap how far a team borrows
+
+While the model is idle, a borrowing team may use everything up to the model's own `tpm` and `rpm`, so one team can take most of the idle capacity on its own. To bound that, set `team_model_limit_max_borrow_multiple` in the team's metadata next to `model_tpm_limit` and `model_rpm_limit`. The team's usage on a model is then capped at its share times that multiple, for TPM and RPM alike, even while the model is idle. The cap runs on its own counter that counts everything the team used this window, idle or not, while the share counter still only counts what the team used once the model saturated, so a capped team gets its fresh share at saturation like any other.
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/team/new' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "metadata": {
+      "model_tpm_limit": {"my-model": 500},
+      "team_model_limit_max_borrow_multiple": 2
+    }
+  }'
+```
+
+With this team at `model_tpm_limit: {"my-model": 500}` and a multiple of `2`, it can borrow up to 1000 tokens a minute on `my-model` while the model is below `saturation_threshold`. A request past that gets a 429 whose `rate_limited_by` header reads `model_per_team_max_borrow_multiple`, with a message that names the share, the multiple and the resulting cap. Once the model saturates, the team is held to its original 500 as before, with `rate_limited_by: model_per_team_saturated`. The multiple applies per team and per model, and a team's borrowing never counts against another team's cap.
+
+Leave it unset to keep the default, where the team borrows up to the model's limit. The value must be a number of at least `1`. A smaller or non-numeric value is logged as a warning and ignored, so the team behaves as if it were unset rather than every request failing. The multiple only matters while `team_model_limit_borrows_idle_capacity_from_other_teams` is on. Without it, the team's `model_tpm_limit` and `model_rpm_limit` stay hard ceilings.
+
+### Split a priority class share among active teams
+
+By default every team in a priority class draws from one shared pool, so with `interactive: 0.6` on a `tpm: 1000` model all interactive teams together get 600 tokens a minute. One busy team can empty that pool and the other interactive teams get a 429 with nothing used, while the 400 reserved for an idle `batch` class sits unused. Set `priority_class_share_splits_equally_among_active_teams: true` to split each class share among the teams that are actually using the model.
+
+```yaml
+litellm_settings:
+  callbacks: ["dynamic_rate_limiter_v3"]
+  priority_reservation:
+    interactive: 0.6
+    batch: 0.4
+  priority_reservation_settings:
+    saturation_threshold: 0.5
+    priority_class_share_splits_equally_among_active_teams: true   # default: false
+```
+
+There is nothing to configure per team. A team becomes active on a model when it sends a request there and stops counting 60 seconds (one rate-limit window) after its last one. Active teams are tracked per model in Redis, so every worker sees the same set. Teams get their class from `metadata.priority` on the team or key as before, and teams with no priority form one `default` class weighted by `default_priority`.
+
+The share is computed in two steps on every request. First, the class weights are renormalized over only the classes that have an active team on that model, so with no batch team sending, interactive is worth the whole model, and the moment a batch team sends it drops back to 0.6. Second, each class share is divided equally among that class's active teams. On a model with `tpm: 500000000`, two active interactive teams and four active batch teams get 150M each and 50M each. With only the four batch teams active, each gets 125M. A team that goes quiet for a window stops counting in both steps, so the others grow back.
+
+Below `saturation_threshold` teams still borrow idle capacity as usual. Once the model saturates, each team's share counter starts fresh, so what a team used while the model was idle is not charged against its share. A team that then runs past its own share gets a 429 whose `rate_limited_by` header reads `priority_class_share_saturated` and whose message names the team, its class, how many teams are active in the class and the team's share in tokens or requests. A teammate that stayed within its share keeps going. Requests from keys with no team are held to the shared class pool exactly as when the setting is off, and they still count their class as active, so a class carrying only teamless traffic does not lend its share away. When `team_model_limit_borrows_idle_capacity_from_other_teams` is also on, a team's `model_tpm_limit` share applies as well and the tighter of the two wins.
+
+### Prometheus metrics for team shares and throttling
+
+With the `prometheus` callback enabled next to `dynamic_rate_limiter_v3`, the limiter publishes what each team is entitled to on a model, how far it is running past that, and why it was refused. These series are enough to tell a team that is starved from one that is over its share, without reading proxy logs.
+
+```yaml
+litellm_settings:
+  callbacks: ["dynamic_rate_limiter_v3", "prometheus"]
+  priority_reservation_settings:
+    saturation_threshold: 0.5
+    team_model_limit_borrows_idle_capacity_from_other_teams: true
+```
+
+| Metric | Type | Meaning |
+|--------|------|---------|
+| `litellm_dynamic_limiter_share_tokens` | gauge | The team's token share of the model for the current window, as of the team's last settled request. This is the team's `model_tpm_limit`, or its slice of the priority class share when `priority_class_share_splits_equally_among_active_teams` is on, whichever is smaller. |
+| `litellm_dynamic_limiter_borrowed_tokens` | gauge | Tokens the team has used above that share this window. `0` while the team is under its share. |
+| `litellm_dynamic_limiter_throttled_total` | counter | Requests the limiter refused, by team, model and reason. |
+
+The gauges carry `model_group`, `team`, `team_alias` and `priority`. The counter adds `rate_limit_type` (`tokens` or `requests`) and `reason`. The `reason` label is the value of the `rate_limited_by` header on the 429 the caller received, so a dashboard and a client log always agree. The values are `model_per_team_saturated` (the team is past its `model_tpm_limit` or `model_rpm_limit` and the model is saturated), `model_per_team_max_borrow_multiple` (the team hit its `team_model_limit_max_borrow_multiple` ceiling while borrowing) and `priority_class_share_saturated` (the team is past its slice of the class share and the model is saturated).
+
+Both gauges are refreshed from actual usage when a request settles, successful or failed, so a team that stops sending keeps its last values until its next request settles. With several proxy workers the gauges aggregate with `livemostrecent`, so `/metrics` shows one series per team and model carrying the value the worker that settled the team's latest request wrote, and a new window's first settlement replaces the old window's value whichever worker handles it. A scrape of `/metrics` after team A ran past a 100 token share on a saturated model looks like this.
+
+```
+litellm_dynamic_limiter_share_tokens{model_group="my-model",priority="default",team="team-a",team_alias="analytics"} 100.0
+litellm_dynamic_limiter_borrowed_tokens{model_group="my-model",priority="default",team="team-a",team_alias="analytics"} 260.0
+litellm_dynamic_limiter_throttled_total{model_group="my-model",priority="default",rate_limit_type="tokens",reason="model_per_team_saturated",team="team-a",team_alias="analytics"} 4.0
+```
+
+A failure in the metrics sink is logged and never changes whether a request is admitted or refused.
+
 ### Demo Video
 
 This video walks through setting up dynamic rate limiting with priority reservation and locust tests to validate the behavior.
 
 <iframe width="840" height="500" src="https://www.loom.com/embed/1b54b93139ee415d959402cc0629f3f7
 " frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+## Fall back before the preferred model saturates
+
+Some teams care which model answers them, others only care that something good answers quickly. Router fallbacks normally run after a request is refused, so a flexible team keeps using its preferred model until that model is full and a team that can only use that model shares the 429s. With `dynamic_rate_limiter_v3` enabled, a key or team can set `fallback_on_saturation` in its `router_settings` to walk its fallback list as soon as the requested model reaches `saturation_threshold`, while it still has room:
+
+```bash
+curl -X POST 'http://0.0.0.0:4000/team/new' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "team_alias": "flexible-team",
+    "models": ["luna", "opus"],
+    "router_settings": {
+      "fallbacks": [{"luna": ["opus"]}],
+      "fallback_on_saturation": true
+    }
+  }'
+```
+
+When a key from that team asks for `luna`, the proxy reads the saturation the dynamic rate limiter already tracks for `luna` (the same value that flips priority reservation into strict mode). Below `saturation_threshold` the request goes to `luna` as usual. At or above it, the request takes the same path a request refused by a local rate limit takes: the proxy walks the `fallbacks` entry for `luna` in order and serves the first one that is itself below the threshold and admits the request. The fallback list is resolved Key > Team > Global, so a key or team without its own `fallbacks` walks the router's. Each fallback has to pass the checks every rate-limit fallback passes, so the caller has to be allowed to call it (see [Enforce Key Model Access on Fallbacks](./reliability.md#enforce-key-model-access-on-fallbacks)), its team member budget has to have room and it has to serve the endpoint of the request. When no fallback qualifies, the request goes back to `luna` and is admitted or rate limited there exactly as before, so the setting never turns a request `luna` could have served into a 429.
+
+A request served by a fallback carries the usual fallback headers, with a reason that names saturation rather than a limit that refused the request:
+
+```text
+x-litellm-attempted-fallbacks: 1
+x-litellm-fallback-reason: rate_limit:model_saturation_fallback
+```
+
+The request counts against the model that served it. Spend logs record `opus` with `opus` pricing and the request is charged to the `opus` rate limit, which leaves `luna` capacity for teams that want only `luna`. Keys and teams without `fallback_on_saturation` are untouched, and so are models the dynamic rate limiter does not cover. The threshold is the same `priority_reservation_settings.saturation_threshold` described above, and the saturation value is cached for `saturation_check_cache_ttl` seconds, so the walk can lag a sudden burst by up to that long.
 
 ## PTU share ceilings on Azure provisioned deployments
 

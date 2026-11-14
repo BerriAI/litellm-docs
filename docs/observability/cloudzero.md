@@ -1,3 +1,8 @@
+---
+title: "CloudZero Cost Export for LiteLLM AI Gateway"
+sidebar_label: "CloudZero"
+description: "Export LiteLLM AI Gateway spend to the CloudZero AnyCost API for cost tracking, with hourly automatic export, manual export, dry runs and UI setup."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

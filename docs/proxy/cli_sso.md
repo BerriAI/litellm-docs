@@ -1,6 +1,6 @@
-# CLI Authentication
+# CLI sign-in
 
-Use the litellm cli to authenticate to the LiteLLM Gateway. This is great if you're trying to give a large number of developers self-serve access to the LiteLLM Gateway.
+Sign in from the `lite` CLI to obtain a credential for the LiteLLM Gateway. The CLI opens a browser and uses the gateway's configured sign-in flow, which can use your identity provider or a username and password.
 
 
 ## Demo
@@ -13,7 +13,7 @@ Use the litellm cli to authenticate to the LiteLLM Gateway. This is great if you
 
 :::warning[Beta Feature - Required]
 
-CLI SSO Authentication is currently in beta. You must set this environment variable **when starting up your LiteLLM Proxy**:
+CLI sign-in is currently in beta. You must set this environment variable **when starting up your LiteLLM Proxy**:
 
 ```bash
 export EXPERIMENTAL_UI_LOGIN="True"
@@ -119,7 +119,7 @@ Example poll response (after SSO completes):
    The `lite` client is a thin laptop install: it points at a LiteLLM proxy and runs your coding agents through it, with none of the proxy server runtime pulled in. The one-line installer needs only `curl`; it bootstraps [uv](https://github.com/astral-sh/uv) when it's missing and lets uv provision a compatible Python for you:
 
    ```shell
-   curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install-cli.sh | sh
+   curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/scripts/install-cli.sh | sh
    ```
 
    Already have uv and prefer to drive it yourself? Install the package directly:
@@ -197,16 +197,19 @@ The key expires after `LITELLM_CLI_JWT_EXPIRATION_HOURS` (24 hours by default, s
 
 `lite auth print-token` prints the current key to stdout and nothing else (diagnostics go to stderr). It renews the key first when it is about to expire, so a tool that calls it always gets a key that works
 
-Claude Code can run it as its [`apiKeyHelper`](https://code.claude.com/docs/en/settings). `lite login --pkce --config-claude` sets `env.ANTHROPIC_BASE_URL` to the proxy and `env.ANTHROPIC_AUTH_TOKEN` to this login's key in `~/.claude/settings.json`, leaving your other settings alone. Rerun the command after the key expires. To have Claude Code call `lite auth print-token` on every refresh, set `apiKeyHelper` by hand as shown:
+Claude Code can run it as its [`apiKeyHelper`](https://code.claude.com/docs/en/settings), and `lite login --pkce --config-claude` sets that up <SinceVersion v="1.111.0" /> in `~/.claude/settings.json`, leaving your other settings alone. It points `env.ANTHROPIC_BASE_URL` at the proxy, writes an `apiKeyHelper` that runs `lite auth print-token` by its absolute path, and sets `env.ANTHROPIC_AUTH_TOKEN` to an empty string, which Claude Code reads as unset, so a token exported in your shell cannot take the helper's place:
 
 ```json title="~/.claude/settings.json"
 {
   "env": {
-    "ANTHROPIC_BASE_URL": "https://litellm.example.com"
+    "ANTHROPIC_BASE_URL": "https://litellm.example.com",
+    "ANTHROPIC_AUTH_TOKEN": ""
   },
   "apiKeyHelper": "/absolute/path/to/lite --base-url https://litellm.example.com auth print-token"
 }
 ```
+
+Claude Code runs the helper when it starts and again every five minutes, so its key renews along with the login and you sign in again only after the refresh token goes unused for 14 days. Each run is a full `lite` start, which takes a few seconds, and reads the login from your OS keychain, so while the keychain is locked the helper fails and Claude Code says so until you unlock it. The status line cannot run the helper, so in this mode it shows the model but not the session's cost bars. The token store holds one login at a time, so after a `lite login` to another proxy the helper fails until you run `lite --base-url https://litellm.example.com login --pkce` again. When `lite` cannot be found, or the login could not be saved, the command writes the key itself as `env.ANTHROPIC_AUTH_TOKEN` and says why, and you rerun it after the key expires. Earlier `lite` releases always wrote the key that way.
 
 For OpenCode, or any other OpenAI-compatible client, point the client at `<proxy>/v1` and pass the key through an environment variable:
 

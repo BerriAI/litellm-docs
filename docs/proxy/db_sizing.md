@@ -1,71 +1,118 @@
 ---
 title: Database Sizing
-description: How to size Postgres for LiteLLM Proxy, with instance recommendations for AWS, Azure, and GCP.
+description: Size Postgres for LiteLLM Proxy through 20K RPS, with cloud recommendations, connection budgets, and storage estimates.
 ---
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
 
 # Database Sizing
 
-This page sizes the Postgres instance behind LiteLLM Proxy, which is required as soon as you use virtual keys or usage tracking. For gateway throughput, latency, and test configurations, see the [gateway benchmarks](../benchmarks.md). Redis is sized separately in [Redis Sizing](./redis_sizing.md). For the configuration knobs that go with this sizing, see [Production Best Practices](./prod.md); for what actually lives in the database, see [What is stored in the DB](./db_info.md).
+See [Production Best Practices](./prod.md) for configuration and [What is stored in the DB](./db_info.md) for database contents. Size Redis with [Redis Sizing](./redis_sizing.md). [Gateway benchmarks](../benchmarks.md) cover proxy throughput and latency.
 
-## What the proxy asks of the database
+## Workload {#what-the-proxy-asks-of-the-database}
 
-Postgres is on the authentication path and on the accounting path, and those two shapes are very different. Authentication is a small number of indexed point reads per request against `LiteLLM_VerificationToken`, `LiteLLM_UserTable`, and `LiteLLM_TeamTable`, and it is cached, so at steady state it costs the database almost nothing. Accounting is the expensive half: spend has to be written back to key, user, team, and org rows, and per-request log rows land in `LiteLLM_SpendLogs`. That write path, not the read path, is what determines the instance you need, and it is why [batching spend writes](./prod.md#batch-spend-writes) and (above roughly 1000 RPS) the [Redis transaction buffer](./prod.md#redis-transaction-buffer) matter more to database sizing than raw request volume does.
+Postgres serves authentication reads and accounting writes. Authentication uses indexed reads from `LiteLLM_VerificationToken`, `LiteLLM_UserTable`, and `LiteLLM_TeamTable`. Caching reduces repeat reads.
+
+Accounting updates key, user, team, and organization spend. Per-request logs go into `LiteLLM_SpendLogs`. These writes drive database capacity, so enable [batched spend writes](./prod.md#batch-spend-writes) and use the [Redis transaction buffer](./prod.md#redis-transaction-buffer) above roughly 1K RPS.
 
 ## Sizing by request rate
 
-Sized for the write path above. Storage is dominated by `LiteLLM_SpendLogs`, so it tracks retention rather than throughput; budget roughly 1 to 2 KB per logged request without prompts, and 10x that with `store_prompts_in_spend_logs` enabled.
+These instance sizes are planning estimates. The 10K–20K tier extrapolates the 5K baseline with unchanged logging, batching, and query mix. Validate it with a load test. These instance families jump from 16 to 32 vCPU, so 10K–20K uses one tier.
 
-| Sustained RPS | vCPU | RAM | Storage | Connections needed |
-|---------------|------|-----|---------|--------------------|
-| Up to 1K | 4 | 16GB | 200GB SSD, 3000+ IOPS | 100 to 200 |
-| 1K to 5K | 8 | 32GB | 500GB SSD, 5000+ IOPS | 200 to 500 |
-| 5K+ | 16+ | 64GB | 1TB+ SSD, 10000+ IOPS | 500+, plus a [read replica](./db_read_replica.md) |
+Size storage from retention and connections from the worker pool budget below. A [read replica](./db_read_replica.md) can serve supported read traffic, but it does not remove write contention on the primary.
 
-## Connections break before CPU does
+<span id="cloud-recommendations" />
 
-The failure you are most likely to hit is `FATAL: sorry, too many clients already`, not a saturated database CPU. LiteLLM's pool limit is per worker process, so your total demand is `database_connection_pool_limit × workers_per_instance × instances`, and the instance count that matters is the autoscaler's `maxReplicas` rather than today's replica count. A deployment with `maxReplicas: 100` at the default pool limit of 10 asks for 1000 connections, which is past what most managed Postgres instances accept at their default settings. Size the pool with the [division in the config reference](./configs.md#configure-db-pool-limits--connection-timeouts) and cap `maxReplicas` at something your database can actually serve.
+### AWS RDS for PostgreSQL
 
-Each cloud derives its default `max_connections` from instance memory, so the ceiling moves when you resize:
+| Sustained RPS | Instance type | vCPU | RAM |
+| --- | --- | --- | --- |
+| Up to 1K | `db.m7g.xlarge` | 4 | 16 GiB |
+| 1K to 5K | `db.m7g.2xlarge` | 8 | 32 GiB |
+| 5K to 10K | `db.m7g.4xlarge` | 16 | 64 GiB |
+| 10K to 20K | `db.m7g.8xlarge` | 32 | 128 GiB |
 
-| Cloud | Default `max_connections` | Reference |
-|-------|---------------------------|-----------|
-| AWS RDS and Aurora | `LEAST({DBInstanceClassMemory/9531392}, 5000)`, so about 860 on 8GB and 3600 on 32GB | [RDS parameter defaults](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.MaxConnections) |
-| Azure Database for PostgreSQL flexible server | Fixed per product name, 1,718 on 16GB (D4ds_v5) and 3,437 on 32GB (D8ds_v5), 15 reserved by the service | [Azure limits](https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-limits#maximum-connections) |
-| Google Cloud SQL | Derived from instance memory, adjusts automatically when you resize unless you pin the flag | [Cloud SQL flags](https://cloud.google.com/sql/docs/postgres/flags#postgres-m) |
+See [RDS instance specifications](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.Summary.html). Use [gp3 storage](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage), [Multi-AZ](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.html), and [Database Insights](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DatabaseInsights.html).
 
-Connections also run out when many pods wait on the same row. Every pod rolls its spend into shared daily rows (`LiteLLM_DailyUserSpend`, `LiteLLM_DailyToolSpend`, `LiteLLM_DailyModelUsage`), and a pod that waits for a row another pod is updating holds its pooled connection for as long as it waits. The proxy bounds that wait with `lock_timeout` on every rollup transaction (`SPEND_ROLLUP_LOCK_TIMEOUT_MS`, default 5000): a statement that waits longer is cancelled by Postgres before it applies, its rows are requeued for the next flush, and the connection goes back to the pool. If you suspect this, `SELECT query, count(*) FROM pg_stat_activity WHERE wait_event_type = 'Lock' GROUP BY query` during the incident shows which statement the waiters are queued behind.
+### Google Cloud SQL for PostgreSQL
 
-If you need more application connections than the instance can serve, put a pooler in front of it (RDS Proxy, the PgBouncer built into Azure flexible server, or your own) and set [`database_disable_prepared_statements: true`](./configs.md#disable-server-side-prepared-statements) so Prisma stops reusing server-side prepared statements across pooled sessions.
+| Sustained RPS | Instance type (Enterprise Plus) | vCPU | RAM |
+| --- | --- | --- | --- |
+| Up to 1K | `db-perf-optimized-N-4` | 4 | 32 GB |
+| 1K to 5K | `db-perf-optimized-N-8` | 8 | 64 GB |
+| 5K to 10K | `db-perf-optimized-N-16` | 16 | 128 GB |
+| 10K to 20K | `db-perf-optimized-N-32` | 32 | 256 GB |
 
-## Cloud recommendations
+See [Cloud SQL machine specifications](https://docs.cloud.google.com/sql/docs/postgres/machine-series-overview#n2-machine-types). Enable regional high availability and automatic storage increase. SSD throughput depends on both disk size and vCPU limits. Check the [storage limits](https://cloud.google.com/sql/docs/postgres/storage-options-overview).
 
-<Tabs>
-<TabItem value="aws" label="AWS">
+### Azure Database for PostgreSQL
 
-Use RDS for PostgreSQL on a Graviton general purpose class, `db.m7g.large` up to 1K RPS, `db.m7g.xlarge` for 1K to 5K, and `db.m7g.2xlarge` or larger beyond that; see the [DB instance classes](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html) for the full list. Take gp3 storage, which gives a [baseline of 3000 IOPS and 125 MiB/s](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) at any size and steps up to 12,000 IOPS and 500 MiB/s once a Postgres volume passes 400 GiB, so the 500GB row in the table above buys throughput as well as capacity. Run [Multi-AZ](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.html) for production, and enable [Performance Insights](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PerfInsights.html) so a spend-write hot spot is visible as a wait event rather than as unexplained latency.
+| Sustained RPS | Instance type (General Purpose) | vCore | RAM |
+| --- | --- | --- | --- |
+| Up to 1K | `D4ds_v5` | 4 | 16 GiB |
+| 1K to 5K | `D8ds_v5` | 8 | 32 GiB |
+| 5K to 10K | `D16ds_v5` | 16 | 64 GiB |
+| 10K to 20K | `D32ds_v5` | 32 | 128 GiB |
 
-Choose Aurora PostgreSQL instead when you want the reader endpoint: it pairs directly with LiteLLM's [read replica routing](./db_read_replica.md), which is the cleanest way past the 5K RPS row. Aurora's `max_connections` default uses the same memory formula as RDS.
+See [Azure compute options](https://learn.microsoft.com/en-us/azure/postgresql/compute-storage/concepts-compute). Use [Premium SSD v2](https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-storage) and [zone-redundant high availability](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-high-availability). The built-in [PgBouncer](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-pgbouncer) provides connection pooling on port `6432`.
 
-</TabItem>
-<TabItem value="azure" label="Azure">
+## Capacity planning
 
-Use Azure Database for PostgreSQL flexible server on the General Purpose tier, `D4ds_v5` (4 vCore, 16GB) up to 1K RPS and `D8ds_v5` (8 vCore, 32GB) for 1K to 5K, moving to Memory Optimized `E8ds_v5` or larger if your working set stops fitting in cache; the [compute options](https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-compute) list every product name. Avoid the Burstable tier in production, since a credit-exhausted instance stalls the spend write path. Use [Premium SSD v2 storage](https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-storage) so IOPS are provisioned independently of disk size, and turn on [zone-redundant high availability](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-high-availability). The [built-in PgBouncer](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-pgbouncer) is the easiest answer to the connection ceiling above; enable it, point `DATABASE_URL` at port 6432, and set `database_disable_prepared_statements: true`.
+### Connection budgets {#connections-break-before-cpu-does}
 
-</TabItem>
-<TabItem value="gcp" label="GCP">
+A full connection pool can cause `FATAL: sorry, too many clients already` before CPU reaches its limit. For workers that connect directly to Postgres, include both the autoscaler's maximum and extra instances alive during a rollout:
 
-Use Cloud SQL for PostgreSQL on the Enterprise Plus edition with an N2 machine type, 4 vCPU / 16GB up to 1K RPS and 8 vCPU / 32GB for 1K to 5K; the [instance settings reference](https://cloud.google.com/sql/docs/postgres/instance-settings) covers machine series and the [editions comparison](https://cloud.google.com/sql/docs/postgres/editions-intro) covers what Enterprise Plus adds, including the data cache and sub-second planned failover. Note that SSD IOPS on Cloud SQL scale with both vCPU count and disk size (30 read and 30 write IOPS per GB, capped by the [per-vCPU limits](https://cloud.google.com/sql/docs/postgres/storage-options-overview)), so a small disk on a large machine is a throughput ceiling you cannot raise with a flag. Enable regional high availability and automatic storage increase.
+```text
+direct connections = database_connection_pool_limit × workers_per_instance × (maximum_instances + rollout_overlap)
+```
 
-</TabItem>
-</Tabs>
+At a pool limit of 10, one worker per instance, 100 maximum instances, and 25 extra rollout instances, the gateway can open 1,250 connections. Reserve capacity for backend services, migrations, and operators. Set the pool with the [connection limit configuration](./configs.md#configure-db-pool-limits--connection-timeouts).
 
-## Keep the database small
+When you enable [`database.connectionPool` in Helm](./deploy/helm.md#valuesyaml-reference), gateway workers share one PgBouncer pool per pod. The gateway's Postgres connection budget becomes `maxDbConnections × (maximum_pods + rollout_overlap)`. Count backend and migration connections separately because they connect directly.
 
-Sizing is cheaper when the write path does less. Batch spend writes with `proxy_batch_write_at: 60`, keep [error logs out of the database](./prod.md#keep-error-logs-out-of-the-database), and set a [spend log retention period](./spend_logs_deletion.md) so `LiteLLM_SpendLogs` does not grow without bound; that table is the reason storage rather than CPU is usually what you resize first. If you do not need per-request rows in the UI at all, `disable_spend_logs: True` removes the highest-volume insert while your logging integrations keep the cost data. Enable `store_prompts_in_spend_logs` only deliberately, since it multiplies both row size and the memory floor of the gateway pods.
+| Cloud | Connection limit | Reference |
+| --- | --- | --- |
+| AWS RDS and Aurora | The default formula is `LEAST({DBInstanceClassMemory/9531392}, 5000)`. Check the effective parameter for your instance. | [RDS parameter defaults](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.MaxConnections) |
+| GCP Cloud SQL | The default derives from instance memory. It adjusts after a resize unless you set the flag yourself. | [Cloud SQL flags](https://cloud.google.com/sql/docs/postgres/flags#postgres-m) |
+| Azure flexible server | `D4ds_v5` allows 1,718 total connections and 1,703 application connections. `D8ds_v5` allows 3,437 total and 3,422 application connections. | [Azure limits](https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-limits#maximum-connections) |
+
+If application demand exceeds the database connection budget, use RDS Proxy, Azure's built-in PgBouncer, or another pooler. Set [`database_disable_prepared_statements: true`](./configs.md#disable-server-side-prepared-statements) for pooled sessions.
+
+Connections also stay busy while transactions wait for shared spend rows. LiteLLM applies `SPEND_ROLLUP_LOCK_TIMEOUT_MS`, which defaults to 5,000 ms, to spend rollup transactions. Postgres cancels a statement that exceeds this wait. LiteLLM requeues its rows for the next flush and releases the connection. To inspect lock waits, run:
+
+```sql
+SELECT query, count(*)
+FROM pg_stat_activity
+WHERE wait_event_type = 'Lock'
+GROUP BY query
+```
+
+### Storage and write throughput
+
+Storage follows request log volume and retention. Start with an estimate of 1–2 KB per logged request without prompts, then measure actual row and index sizes. `store_prompts_in_spend_logs` can increase this by roughly 10 times.
+
+```text
+log data bytes = logged requests per second × 86400 × retention days × bytes per request
+```
+
+| Sustained logged RPS | Log data per day at 1–2 KB per request |
+| --- | --- |
+| 10K | 0.864–1.728 TB |
+| 15K | 1.296–2.592 TB |
+| 20K | 1.728–3.456 TB |
+
+These decimal TB estimates exclude indexes, WAL, and free space for maintenance. Multiply by retention days and add those costs.
+
+Use these starting points for write tests, then increase storage to cover retention. Measure write latency and IOPS at 10K, 15K, and 20K because batching changes the write rate.
+
+| Sustained RPS | SSD starting capacity | IOPS starting point |
+| --- | --- | --- |
+| Up to 1K | 200 GB | 3,000 |
+| 1K to 5K | 500 GB | 5,000 |
+| 5K to 20K | 1 TB | 10,000 |
+
+### Keep the database small
+
+Batch spend writes with `proxy_batch_write_at: 60`. Keep [error logs out of the database](./prod.md#keep-error-logs-out-of-the-database) and set a [spend log retention period](./spend_logs_deletion.md). If you do not need per-request rows in the UI, set `disable_spend_logs: True` and keep cost data in your logging integrations. Enable `store_prompts_in_spend_logs` only when you need prompt history because it also increases gateway memory use.
 
 ## What to monitor
 
-Watch connection count against `max_connections`, not just utilization, since that is the limit that produces hard failures. On the LiteLLM side the useful Prometheus signals are `litellm_in_memory_spend_update_queue_size` and `litellm_redis_spend_update_queue_size` for spend updates that are queued rather than written, and `litellm_pod_lock_manager_size` for which pod currently holds the transaction buffer flush lock. A queue depth that grows monotonically means the database is not keeping up with the write path, which is the signal to resize or to turn on the buffer.
+Watch connection count against `max_connections`, write latency, lock waits, and storage growth. Check `litellm_in_memory_spend_update_queue_size` and `litellm_redis_spend_update_queue_size` for queued spend updates. Use `litellm_pod_lock_manager_size` to check the transaction buffer flush lock.

@@ -312,6 +312,31 @@ LiteLLM supports **ALL** azure ai models. Here's a few examples:
 | mistral-large-latest | `completion(model="azure_ai/mistral-large-latest", messages)` | 
 | AI21-Jamba-Instruct | `completion(model="azure_ai/ai21-jamba-instruct", messages)` | 
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`azure_ai/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Azure AI Foundry model name. LiteLLM sends Azure AI Foundry the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `azure_ai/gpt-luna-latest` | GPT Luna |
+| `azure_ai/gpt-sol-latest` | GPT Sol |
+| `azure_ai/gpt-terra-latest` | GPT Terra |
+| `azure_ai/gpt-astra-latest` | GPT Astra |
+| `azure_ai/gpt-mini-latest` | GPT Mini |
+| `azure_ai/claude-opus-latest` | Claude Opus |
+| `azure_ai/claude-sonnet-latest` | Claude Sonnet |
+| `azure_ai/claude-haiku-latest` | Claude Haiku |
+| `azure_ai/claude-fable-latest` | Claude Fable |
+| `azure_ai/grok-latest` | Grok |
+| `azure_ai/kimi-latest` | Kimi |
+| `azure_ai/glm-latest` | GLM |
+| `azure_ai/glm-flash-latest` | GLM Flash |
+| `azure_ai/deepseek-pro-latest` | DeepSeek Pro |
+| `azure_ai/deepseek-flash-latest` | DeepSeek Flash |
+| `azure_ai/minimax-latest` | MiniMax |
+
 ## Usage - Azure Anthropic (Azure Foundry Claude)
 
 LiteLLM funnels Azure Claude deployments through the `azure_ai/` provider so Claude Opus models on Azure Foundry keep working with Tool Search, Effort, streaming, and the rest of the advanced feature set. Point `AZURE_AI_API_BASE` to `https://<resource>.services.ai.azure.com/anthropic` (LiteLLM appends `/v1/messages` automatically) and authenticate with `AZURE_AI_API_KEY` or an Azure AD token.

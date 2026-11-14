@@ -1,3 +1,8 @@
+---
+title: "Migrate LiteLLM from OpenTelemetry v1 to v2"
+sidebar_label: "Migrating to OpenTelemetry v2"
+description: "Move LiteLLM AI Gateway tracing from OpenTelemetry v1 to v2: root, guardrail and inference span changes, old attribute names, rollout and rollback."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -6,6 +11,8 @@ import TabItem from '@theme/TabItem';
 OpenTelemetry v2 is a rewrite of LiteLLM's tracing. The HTTP server span is owned by the standard FastAPI instrumentation rather than by LiteLLM, the span model is typed, and vendor attribute vocabularies compose through a mapper chain. This guide covers what changes when you move from the [v1 OpenTelemetry integration](./opentelemetry_integration) to [v2](./opentelemetry_v2), and how to migrate without breaking your existing dashboards.
 
 ## Turn it on
+
+If you currently use the SDK-based `langfuse` callback, follow the [Langfuse SDK to OpenTelemetry v2 migration guide](./langfuse_to_otel_v2_migration) instead. Replacing that callback changes ingestion volume, content capture and metadata semantics. The instructions here cover existing OTel callbacks.
 
 Set the feature flag and restart the proxy:
 

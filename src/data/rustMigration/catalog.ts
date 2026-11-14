@@ -18,9 +18,9 @@ export const COMPONENTS = [
     id: 'deploy',
     text: 'Deployment',
     work: [
-      {id: 'image', text: 'Gateway binary in the Docker image', size: 2},
-      {id: 'forward', text: 'Forward unserved requests to Python', size: 1},
-      {id: 'dispatch', text: 'Dispatch crate and gap table', size: 3},
+      {id: 'image', text: 'Gateway binary in the Docker image', size: 2, done: 'v1.110.0-rc.1'},
+      {id: 'forward', text: 'Forward unserved requests to Python', size: 1, done: 'v1.110.0-rc.1'},
+      {id: 'dispatch', text: 'Dispatch crate and gap table', size: 3, partial: 'v1.109.0-rc.1'},
       {id: 'plans', text: 'Per model group plans at config load', size: 2},
       {id: 'layers', text: 'Identify, dispatch and admit layers', size: 2},
     ],
@@ -163,7 +163,7 @@ export const COMPONENTS = [
       {id: 'alias-map', text: 'model_alias_map', size: 0.5},
       {id: 'text-format', text: 'text_format parsing', size: 1},
       {id: 'chat-bridge', text: 'Responses through Chat completions', size: 2},
-      {id: 'response-ids', text: 'Deployment and encoded item ids', size: 2},
+      {id: 'response-ids', text: 'Deployment and encoded item ids', size: 2, partial: 'v1.109.0-rc.1'},
       {id: 'input-rewrite', text: 'Responses input rewrites', size: 1},
       {id: 'provider-affinity', text: 'Provider affinity header', size: 1},
       {id: 'managed-ids', text: 'Managed file and vector store ids', size: 2},
@@ -177,10 +177,10 @@ export const COMPONENTS = [
     id: 'db',
     text: 'DB access',
     work: [
-      {id: 'registry', text: 'Query registry and Python codegen', size: 3},
+      {id: 'registry', text: 'Query registry and Python codegen', size: 3, partial: 'v1.109.0-rc.1'},
       {id: 'executor', text: 'Python runtime and PrismaExecutor', size: 2},
       {id: 'ci', text: 'Schema and codegen checks in CI', size: 1},
-      {id: 'gateway-queries', text: 'Key, end user and spend queries', size: 2},
+      {id: 'gateway-queries', text: 'Key, end user and spend queries', size: 2, partial: 'v1.109.0-rc.1'},
     ],
   },
   {
@@ -213,7 +213,7 @@ export const COMPONENTS = [
     id: 'budgets',
     text: 'Budgets and rate limits',
     work: [
-      {id: 'scripts', text: 'Shared rate limit scripts and key naming', size: 3},
+      {id: 'scripts', text: 'Shared rate limit scripts and key naming', size: 3, partial: 'v1.110.0-rc.1'},
       {id: 'budgets', text: 'Budget checks', size: 2},
     ],
   },
@@ -222,16 +222,16 @@ export const COMPONENTS = [
     text: 'Spend tracking',
     work: [
       {id: 'cost', text: 'Cost calculation', size: 1, done: 'v1.104.0-rc.1'},
-      {id: 'buffer', text: 'Spend writes through the shared Redis buffer', size: 2},
+      {id: 'buffer', text: 'Spend writes through the shared Redis buffer', size: 2, partial: 'v1.110.0-rc.1'},
     ],
   },
   {
     id: 'router',
     text: 'Router',
     work: [
-      {id: 'strategies', text: 'Shared routing strategy crate', size: 3},
-      {id: 'health', text: 'Cooldown and health state', size: 2},
-      {id: 'fallbacks', text: 'Retries and fallbacks', size: 2},
+      {id: 'strategies', text: 'Shared routing strategy crate', size: 3, done: 'v1.110.0-rc.1'},
+      {id: 'health', text: 'Cooldown and health state', size: 2, done: 'v1.110.0-rc.1'},
+      {id: 'fallbacks', text: 'Retries and fallbacks', size: 2, done: 'v1.110.0-rc.1'},
       {id: 'db-models', text: 'Models stored in DB', size: 1},
     ],
   },
@@ -335,35 +335,8 @@ export const PLANS: readonly PlanDeclaration[] = [
     // Dates and scope from the Rust Migration Depth First Plan's calibration
     // table. The mapping to catalog items and their percentages is approximate.
     // Source: https://app.notion.com/p/40343b8acdab80faaa76fce7ab5922b4
-    id: 'redis-and-foundations',
-    date: '2026-11-01',
-    label: 'Redis + DB',
-    description: 'Model catalog and Redis access, the database query pattern, and routing APIs and strategies. The Rust router core remains in progress.',
-    done: {core: '*'},
-    partial: {db: ['registry', 'executor'], router: ['strategies']},
-  },
-  {
-    id: 'messages-router-cutover',
-    date: '2026-11-08',
-    label: 'Router + deploy',
-    description: 'Messages testing and cutover, Rust server deployment and CLI support, and the Rust router core and cutover.',
-    done: {
-      deploy: '*',
-      messages: ['anthropic', 'bedrock', 'vertex_ai'],
-      router: '*',
-    },
-  },
-  {
-    id: 'config-db-cache',
-    date: '2026-11-14',
-    label: 'Config + cache',
-    description: 'Config loading, database access for the common Messages path, and caching. Callback migration and testing continue.',
-    done: {db: '*', config: '*', cache: ['backends', 'wiring', 'gaps', 'accounting']},
-    partial: {logging: ['payload', 'exporters']},
-  },
-  {
     id: 'auth-spend-callbacks',
-    date: '2026-11-21',
+    date: '2026-11-14',
     label: 'Auth + spend',
     description: 'Auth and spend logs complete the proxy path, with logging and callbacks ready for the common configuration.',
     done: {
@@ -372,6 +345,14 @@ export const PLANS: readonly PlanDeclaration[] = [
       spend: '*',
       logging: ['logging', 'payload', 'hooks', 'custom-callbacks'],
     },
+  },
+  {
+    id: 'config-db-cache',
+    date: '2026-11-21',
+    label: 'Config + cache',
+    description: 'Config loading, database access for the common Messages path, and caching. Callback migration and testing continue.',
+    done: {db: '*', config: '*', cache: ['backends', 'wiring', 'gaps', 'accounting']},
+    partial: {logging: ['payload', 'exporters']},
   },
   {
     // Keep the public target after the internal work dates. Do not assign

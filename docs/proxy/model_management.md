@@ -8,6 +8,8 @@ This page covers those ongoing operations. If you are adding your very first mod
 
 ## The model list
 
+To follow a model family without changing the name in your application, use a [latest model alias](../model_latest_aliases.md), such as `openai/gpt-luna-latest`.
+
 Go to **Models + Endpoints** and open the **All Models** tab to see every model the gateway currently serves. Each row shows the public model name, the underlying provider and litellm model, and the input and output cost per token that LiteLLM maps automatically from its [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json).
 
 A badge on each model tells you where it came from: models added through the UI or API carry a database badge, while models loaded from `config.yaml` are marked as config. This distinction matters because config models cannot be edited from the UI (see [Database vs config.yaml models](#database-vs-configyaml-models) below). Use the search box and the provider filters to narrow a long list down to the models you care about.
@@ -37,6 +39,48 @@ Open the **LLM Credentials** tab and click **Add Credential**. Pick your provide
 />
 
 Once saved, the credential is available wherever you add or edit a model. In the Add Model form, choose it from the **Existing Credentials** dropdown instead of typing a key. From a model's detail page you can also go the other way with the **Re-use Credentials** button, which turns the credentials of a model you already configured into a named credential for future models. Models attached to a named credential are tagged `Credential: <name>` in the Usage page, so you can filter spend by credential without any extra setup; see [Credential Usage Tracking](./credential_usage_tracking.md).
+
+## Workload identity credentials
+
+Use an OIDC token from the gateway's runtime to authenticate to a model provider without a static provider secret. These credentials belong on the model's `litellm_params`. To authenticate callers to the gateway, see [JWT (OIDC)](./token_auth.md).
+
+Credential fields that support OIDC references include `aws_web_identity_token` for [Amazon Bedrock](../providers/bedrock.md) and `azure_ad_token` for [Azure OpenAI](../providers/azure/azure.md). A reference has the form `oidc/<source>/<audience>`; omit the audience for sources that do not use it.
+
+| Runtime or token source | Reference | Custom audience |
+| --- | --- | --- |
+| Google Cloud Run | `oidc/google/<audience>` | Yes |
+| GitHub Actions | `oidc/github/<audience>` | Yes |
+| CircleCI | `oidc/circleci/` or `oidc/circleci_v2/` | No |
+| Azure Kubernetes Service | `oidc/azure/` | No |
+| Azure AD | `oidc/azure/<audience>` | Yes |
+| Token file | `oidc/file//var/run/secrets/token` | No |
+| Environment variable containing a token | `oidc/env/TOKEN_VARIABLE` | No |
+| Environment variable containing a token file path | `oidc/env_path/TOKEN_PATH_VARIABLE` | No |
+
+Configure the provider's trust relationship and permissions before using the reference. For example, Bedrock needs an IAM role that trusts the token issuer, while Azure OpenAI needs an application with a federated credential and access to the resource. For Bedrock, set `aws_role_name` and `aws_session_name` alongside `aws_web_identity_token`. For Azure OpenAI, set `AZURE_CLIENT_ID` and `AZURE_TENANT_ID` for the application that exchanges the token. Prefer the runtime source, such as `oidc/azure/`, when one is available.
+
+For `oidc/file/`, the resolved absolute path, including symlinks, must be inside `/var/run/secrets` or `/run/secrets`. To use another credential directory, set `LITELLM_OIDC_ALLOWED_CREDENTIAL_DIRS` to a comma-separated list of absolute directories. This replaces the defaults.
+
+### Using OIDC as a model's `api_key`
+
+<SinceVersion v="1.109.0" />
+
+A model's `api_key` accepts `oidc/file/<absolute path>`, `oidc/env/<VARIABLE_NAME>`, and `oidc/google/<audience>`. Other sources return 401 for this field. The proxy resolves the reference on each call, so rotated tokens take effect without a restart.
+
+```yaml
+model_list:
+  - model_name: vllm-model
+    litellm_params:
+      model: hosted_vllm/my-model
+      api_base: https://vllm.example.com/v1
+      api_key: oidc/google/https://vllm.example.com
+```
+
+For `oidc/google/`, LiteLLM gets an ID token from the Google Cloud metadata server for the configured audience and sends it as the bearer token. It caches the token until one minute before expiry, for at most 59 minutes. It also resolves the token when it reads model details at startup.
+
+`GCE_METADATA_HOST` overrides `metadata.google.internal`; use a host or host:port without a scheme. `GCE_METADATA_TIMEOUT` sets the per-read timeout for model `api_key` resolution, defaulting to 3 seconds when unset or nonpositive. A timeout, connection failure, or metadata-server 5xx returns a retryable 503; a refused request or empty token returns 401. No upstream request is sent when resolution fails. Google's client libraries also read these variables, so they can affect Vertex AI and Google Cloud Storage in the same process. `GCE_METADATA_HOST` applies to all `oidc/google/` references, including Bedrock's `aws_web_identity_token`; LiteLLM's `GCE_METADATA_TIMEOUT` handling applies to model `api_key` resolution.
+
+Only references configured by an administrator on a model are resolved. References in client requests or team credentials are rejected, and the resolved token is sent only to the model's configured `api_base` or its provider's default endpoint. Pass-through routes do not support `oidc/google/` credentials.
 
 ## Database vs config.yaml models
 

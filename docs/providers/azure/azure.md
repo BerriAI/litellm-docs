@@ -230,6 +230,20 @@ model_list:
 | gpt-3.5-turbo-16k    | `completion('azure/<your deployment name>', messages)` |
 | gpt-3.5-turbo-16k-0613    | `completion('azure/<your deployment name>', messages)`
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`azure/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Azure OpenAI model name. LiteLLM sends Azure OpenAI the current target model and bills at that model's price. See [Latest model aliases](../../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `azure/gpt-luna-latest` | GPT Luna |
+| `azure/gpt-sol-latest` | GPT Sol |
+| `azure/gpt-terra-latest` | GPT Terra |
+| `azure/gpt-astra-latest` | GPT Astra |
+| `azure/gpt-mini-latest` | GPT Mini |
+
 ## Azure OpenAI Vision Models 
 | Model Name            | Function Call                                                   |
 |-----------------------|-----------------------------------------------------------------|
@@ -517,6 +531,10 @@ curl http://localhost:4000/v1/chat/completions \
 
 </TabItem>
 </Tabs>
+
+## Azure Realtime Translation
+
+For live speech-to-speech translation, add `azure/gpt-realtime-translate` with your `api_base` and `api_key`, then connect to `/v1/realtime/translations` on the proxy. See [Realtime translation](/docs/realtime_translation) for the config, a WebSocket client, WebRTC, and pricing.
 
 ## Azure Instruct Models
 

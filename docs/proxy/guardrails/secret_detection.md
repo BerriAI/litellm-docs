@@ -1,3 +1,8 @@
+---
+title: "Secret Detection Guardrail in LiteLLM (Enterprise)"
+sidebar_label: "Secret Detection/Redaction (Enterprise-only)"
+description: "Redact API keys and secrets from requests on the LiteLLM AI Gateway before they reach an LLM, turned on per key or team, with detector control."
+---
 # Secret Detection/Redaction (Enterprise-only)
 Use this to REDACT API Keys, Secrets sent in requests to an LLM.
 

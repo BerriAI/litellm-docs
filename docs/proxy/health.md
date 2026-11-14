@@ -11,9 +11,9 @@ These endpoints answer "is the gateway process up and able to serve traffic?" wi
 | Endpoint | Auth | Returns | Meaning |
 |----------|------|---------|---------|
 | `GET /health/liveliness` | none | `"I'm alive!"` (200), or `{"status": "shutting_down"}` (503) during graceful shutdown | The process is up. No dependencies are checked. `GET /health/liveness` is an alias with the Kubernetes spelling; both are real routes |
-| `GET /health/readiness` | none | `{"status": "healthy", "db": ...}` (200) when ready; 503 when a configured database is unreachable | The worker is ready to accept traffic. The `db` field is `"connected"`, `"disconnected"`, or `"Not connected"` when no database is configured |
+| `GET /health/readiness` | none | `{"status": "healthy", "db": ...}` (200) when ready; 503 when a configured database is unreachable, except when `allow_requests_on_db_unavailable: true` is configured | The worker is ready to accept traffic. The `db` field is `"connected"`, `"disconnected"`, or `"Not connected"` when no database is configured |
 
-The `db` value lets an orchestrator distinguish a healthy worker from one that booted but cannot reach its database. When the database is configured and unreachable, readiness returns 503 so the pod is pulled from rotation.
+The `db` value lets an orchestrator distinguish a healthy worker from one that booted but cannot reach its database. When the database is configured and unreachable, readiness returns 503 so the pod is pulled from rotation, except when `allow_requests_on_db_unavailable: true` is configured.
 
 The default readiness payload is deliberately low-detail so it is safe to expose to unauthenticated probes. For full diagnostics (callbacks, cache, version), either set `general_settings.allow_public_health_readiness_details: true` to expand `/health/readiness` itself, or call the authenticated `GET /health/readiness/details` endpoint.
 

@@ -4,11 +4,11 @@ Benchmark throughput: **13.5 billion tokens per minute (TPM)**. [View results](.
 
 ## Requirements
 
-- [LiteLLM microservices Helm chart](./deploy.md#deploy-with-helm) `1.104.2` or later.
+- The [LiteLLM Helm chart](./deploy/helm.md) in componentized mode.
 - External PostgreSQL and Redis.
 - Kubernetes 1.30+ and Metrics Server for CPU and memory autoscaling.
 - Prometheus Operator to scrape each pod through a ServiceMonitor.
-- Prometheus Adapter with the [RPS and TPS rules](./deploy.md#scale-on-requests-and-tokens-per-pod) for request and token autoscaling.
+- Prometheus Adapter with the [RPS and TPS rules](./deploy/autoscaling.md#scale-on-requests-and-tokens-per-pod) for request and token autoscaling.
 
 ## Configure the gateway
 
@@ -44,7 +44,7 @@ gateway:
             periodSeconds: 60
 ```
 
-Configure the [Prometheus Adapter rules](./deploy.md#scale-on-requests-and-tokens-per-pod) to expose these metrics to Kubernetes. Token metrics update when responses finish, so use both request and token targets for streaming traffic.
+Configure the [Prometheus Adapter rules](./deploy/autoscaling.md#scale-on-requests-and-tokens-per-pod) to expose these metrics to Kubernetes. Token metrics update when responses finish, so use both request and token targets for streaming traffic.
 
 ### 2. Set workers and resources
 

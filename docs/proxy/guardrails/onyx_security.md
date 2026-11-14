@@ -1,3 +1,8 @@
+---
+title: "Onyx Security Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Onyx Security"
+description: "Add Onyx Security AI Guard policies to the LiteLLM AI Gateway: create a policy, copy its API key and run it before, during or after the call."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

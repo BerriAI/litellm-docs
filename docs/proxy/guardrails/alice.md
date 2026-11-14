@@ -1,3 +1,8 @@
+---
+title: "Alice Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Alice"
+description: "Screen prompts and responses with Alice on the LiteLLM AI Gateway: allow, block or replace flagged text, with policies per named application."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

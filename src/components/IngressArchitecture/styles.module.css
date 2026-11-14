@@ -1,0 +1,200 @@
+.figure {
+  --ingress-bg: #ffffff;
+  --ingress-text: #243345;
+  --ingress-muted: #4b5d70;
+  --ingress-border: #9aabbd;
+  --ingress-accent: #315b86;
+  --ingress-accent-bg: #e9f0f8;
+  margin: 1rem 0;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.expandButton {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--ifm-color-emphasis-400);
+  border-radius: 4px;
+  background: var(--ingress-bg);
+  color: var(--ingress-text);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.expandButton:hover {
+  border-color: var(--ingress-accent);
+}
+
+.expandButton:focus-visible,
+.viewport:focus-visible,
+.expandedViewport:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: -2px;
+}
+
+.viewport,
+.expandedViewport {
+  overflow: auto;
+  background: var(--ingress-bg);
+  overscroll-behavior: contain;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  min-width: 600px;
+  height: auto;
+  color: var(--ingress-text);
+  font-family: var(--ifm-font-family-base);
+}
+
+.actorText,
+.actionText {
+  fill: var(--ingress-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.symbol {
+  color: var(--ingress-accent);
+}
+
+.darkIcon,
+[data-theme='dark'] .lightIcon {
+  display: none;
+}
+
+[data-theme='dark'] .darkIcon {
+  display: block;
+}
+
+.lifeline {
+  stroke: var(--ingress-border);
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+}
+
+.actionBox {
+  fill: var(--ingress-accent-bg);
+  stroke: var(--ingress-border);
+}
+
+.actionText {
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.messageText {
+  fill: var(--ingress-text);
+  stroke: var(--ingress-bg);
+  stroke-width: 5;
+  stroke-linejoin: round;
+  paint-order: stroke;
+  font-size: 13px;
+}
+
+.messageLine,
+.responseLine {
+  stroke: var(--ingress-accent);
+  stroke-width: 1.5;
+}
+
+.responseLine {
+  stroke-dasharray: 5 4;
+}
+
+.arrowhead {
+  fill: var(--ingress-accent);
+}
+
+.identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-top: 1px solid var(--ifm-color-emphasis-300);
+  font-size: 0.75rem;
+}
+
+.identity span {
+  font-weight: 600;
+}
+
+.identity code {
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+.figure .details {
+  /* Override the site's full-width details panels inside this compact figure. */
+  margin: 0 !important;
+  padding: 0 0.75rem 0.5rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.figure .details summary {
+  padding: 0;
+  cursor: pointer;
+  color: var(--ingress-muted);
+}
+
+.details p {
+  margin: 0.6rem 0 0;
+}
+
+.dialog {
+  width: min(96vw, 1100px);
+  max-width: 96vw;
+  max-height: 94vh;
+  padding: 0;
+  border: 1px solid var(--ingress-border);
+  border-radius: 8px;
+  background: var(--ingress-bg);
+  color: var(--ingress-text);
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 65%);
+}
+
+.expandedViewport {
+  max-height: calc(94vh - 65px);
+}
+
+.expandedViewport .svg {
+  max-height: calc(94vh - 65px);
+}
+
+@media (max-width: 600px) {
+  .expandedViewport .svg {
+    max-height: none;
+  }
+}
+
+[data-theme='dark'] .figure {
+  --ingress-bg: #121923;
+  --ingress-text: #e6edf5;
+  --ingress-muted: #b5c4d4;
+  --ingress-border: #60748b;
+  --ingress-accent: #9bc4ff;
+  --ingress-accent-bg: #233b58;
+}

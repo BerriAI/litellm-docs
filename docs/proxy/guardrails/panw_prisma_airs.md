@@ -1,3 +1,8 @@
+---
+title: "Prisma AIRS Guardrails on LiteLLM AI Gateway"
+sidebar_label: "PANW Prisma AIRS"
+description: "Scan prompts and responses with Palo Alto Networks Prisma AIRS on the LiteLLM AI Gateway, with security profiles, content masking and fail-open."
+---
 import Image from '@theme/IdealImage';
 
 # PANW Prisma AIRS

@@ -1,3 +1,8 @@
+---
+title: "Vantage Cost Export for LiteLLM AI Gateway"
+sidebar_label: "Vantage"
+description: "Export LiteLLM AI Gateway spend to Vantage as FOCUS 1.2 cost reports via the API or environment variables, with a dry run and field mapping."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

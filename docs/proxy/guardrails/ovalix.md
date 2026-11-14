@@ -1,3 +1,8 @@
+---
+title: "Ovalix Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Ovalix"
+description: "Send prompts, responses, files and tool calls from the LiteLLM AI Gateway to the Ovalix Tracker, which blocks or anonymizes content by policy."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

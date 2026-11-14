@@ -1,3 +1,8 @@
+---
+title: "Microsoft Purview DLP Guardrails on LiteLLM"
+sidebar_label: "Microsoft Purview Guardrail"
+description: "Enforce Microsoft Purview DLP policies on the LiteLLM AI Gateway through the Microsoft Graph processContent API, with Entra app setup and user IDs."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

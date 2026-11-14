@@ -63,7 +63,7 @@ completion(model="huggingface/meta-llama/Llama-3.3-70B-Instruct", messages=messa
 ```
 
 
-<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/LiteLLM_HuggingFace.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/LiteLLM_HuggingFace.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
@@ -194,7 +194,7 @@ print(response)
 
 <TabItem value="endpoints" label="Inference Endpoints">
 
-<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/LiteLLM_HuggingFace.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/LiteLLM_HuggingFace.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 

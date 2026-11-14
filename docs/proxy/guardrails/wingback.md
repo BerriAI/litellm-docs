@@ -1,3 +1,8 @@
+---
+title: "Wingback Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Wingback"
+description: "Block prompt injection, jailbreaks and PII leaks with Wingback on the LiteLLM AI Gateway, inspecting prompts and responses to monitor or enforce."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

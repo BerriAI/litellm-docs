@@ -1,0 +1,185 @@
+.figure {
+  max-width: 760px;
+  margin: 1.5rem auto;
+  padding: 16px;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 14px;
+  background: var(--ifm-background-surface-color);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tab,
+.tabActive,
+.play {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ifm-color-emphasis-800);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.tabActive {
+  border-color: var(--ifm-color-primary);
+  background: var(--ifm-color-primary);
+  color: #fff;
+}
+
+:global([data-theme='dark']) .tabActive {
+  color: #0b1220;
+}
+
+.play {
+  margin-left: auto;
+}
+
+.tabNumber {
+  font-weight: 700;
+}
+
+.viewport {
+  overflow-x: auto;
+}
+
+.diagram {
+  display: block;
+  width: 100%;
+  min-width: 480px;
+  height: auto;
+  font-family: var(--ifm-font-family-base);
+  --out: var(--ifm-color-primary-dark);
+  --in: #326ce5;
+}
+
+:global([data-theme='dark']) .diagram {
+  --out: var(--ifm-color-primary-light);
+  --in: #79a5ff;
+}
+
+.card {
+  fill: var(--ifm-background-color);
+  stroke: var(--ifm-color-emphasis-300);
+  stroke-width: 1.5;
+}
+
+.proxy {
+  fill: rgba(75, 166, 140, 0.09);
+  stroke: var(--out);
+  stroke-width: 1.8;
+}
+
+.title {
+  fill: var(--ifm-font-color-base);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.subtitle {
+  fill: var(--ifm-color-emphasis-700);
+  font-size: 13px;
+}
+
+.boxIcon {
+  fill: var(--ifm-color-emphasis-600);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.lane {
+  stroke: var(--ifm-color-emphasis-300);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 6;
+  fill: none;
+}
+
+.packetOut {
+  fill: var(--out);
+}
+
+.packetIn {
+  fill: var(--in);
+}
+
+.packetText {
+  fill: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--ifm-font-family-monospace);
+}
+
+:global([data-theme='dark']) .packetText {
+  fill: #0b1220;
+}
+
+.packet {
+  opacity: 0;
+  transform: translateX(var(--start));
+  animation: travel 1.6s ease-in-out forwards;
+}
+
+.loop {
+  animation: travel 3.2s linear infinite;
+}
+
+@keyframes travel {
+  0% {
+    opacity: 0;
+    transform: translateX(var(--start));
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(var(--end));
+  }
+}
+
+.loop {
+  animation-name: travelLoop;
+}
+
+@keyframes travelLoop {
+  0% {
+    opacity: 0;
+    transform: translateX(var(--start));
+  }
+  10%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(var(--end));
+  }
+}
+
+.caption {
+  margin: 10px 0 0;
+  padding-left: 1.2rem;
+  min-height: 4.8em;
+  font-size: 0.95rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .packet,
+  .loop {
+    animation: none;
+    opacity: 1;
+    transform: translateX(var(--end));
+  }
+}

@@ -20,6 +20,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:search
+      - run: npm run test:mcp
       - run: npm run test:workshop
       - run: npm run typecheck
       - run: npm run test:rust-migration
@@ -37,6 +38,11 @@ jobs:
       - run: npm run test:optimize-images
       - run: npm run test:llms
       - run: npm run test:lens
+      # Supported Endpoints page: warn only for now, never fail the job.
+      - name: Check src/data/endpoints.js against the sidebar (warning only)
+        run: npm run test:endpoints || echo "::warning title=Supported Endpoints::src/data/endpoints.js is out of sync with the Supported Endpoints sidebar. See the test output above."
+      - name: Check src/data/endpoints.js against BerriAI/litellm (warning only)
+        run: npm run check:endpoints || echo "::warning title=Supported Endpoints::The upstream endpoints check could not run. See the output above."
       - run: node --test scripts/docs-models.test.cjs
   writing-style:
     runs-on: ubuntu-latest

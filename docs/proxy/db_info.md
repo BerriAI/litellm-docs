@@ -6,7 +6,7 @@ The LiteLLM Proxy uses a PostgreSQL database to store various information. Here'
 
 ## Link to DB Schema
 
-You can see the full DB Schema [here](https://github.com/BerriAI/litellm/blob/main/schema.prisma)
+You can see the full DB Schema [here](https://github.com/BerriAI/litellm/blob/main/litellm/proxy-extras/litellm_proxy_extras/schema.prisma)
 
 ## DB Tables
 

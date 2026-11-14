@@ -1,3 +1,8 @@
+---
+title: "Zscaler AI Guard on LiteLLM AI Gateway"
+sidebar_label: "Zscaler AI Guard"
+description: "Enforce Zscaler AI Guard policies on prompts and responses through the LiteLLM AI Gateway, with custom policy IDs per team or key and user details."
+---
 # Zscaler AI Guard
 
 ## Overview

@@ -119,4 +119,5 @@ For config-based model access with `access_groups` in `model_info`, see [Model A
 - [Virtual Keys](./virtual_keys.md) – Creating and managing API keys
 - [Role-based Access Controls](./access_control.md) – Organizations, teams, and user roles
 - [Model Access Groups](./model_access_groups.md) – Config-based model access groups
+- [Map identities to Access Groups](./jwt_access_group_rules.md) – Grant Access Groups from JWT claims
 - [MCP Control](../mcp_control.md) – MCP server setup and access control

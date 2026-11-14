@@ -56,10 +56,22 @@
     {
       "version": "v1.107.0-rc.2",
       "releasedAt": "2026-10-20T03:22:42Z"
+    },
+    {
+      "version": "v1.108.0-rc.1",
+      "releasedAt": "2026-10-29T03:33:35Z"
+    },
+    {
+      "version": "v1.109.0-rc.1",
+      "releasedAt": "2026-11-04T02:17:12Z"
+    },
+    {
+      "version": "v1.110.0-rc.1",
+      "releasedAt": "2026-11-11T00:06:06Z"
     }
   ],
   "main": {
-    "version": "v1.109.0-rc.1",
-    "plannedFor": "2026-10-24"
+    "version": "v1.110.0-rc.2",
+    "plannedFor": "2026-11-14"
   }
 }

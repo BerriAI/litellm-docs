@@ -41,6 +41,14 @@ Sets up the auto router end to end, from picking models to verifying routing dec
 
 Markdown pages include the full text of every prompt and install command on the rendered page.
 
+## Docs MCP server
+
+Connect your agent to `https://docs.litellm.ai/mcp` and it can search and read these docs, look up gateway API endpoints, and check any model's prices, context window, capabilities, and the exact `model:` string for `config.yaml`. The server is read-only, needs no key, and model data comes from LiteLLM's model price file as of the latest docs deploy.
+
+<Command code="claude mcp add --scope user --transport http litellm-docs https://docs.litellm.ai/mcp" id="docs-mcp-claude" note="Claude Code. For Codex: codex mcp add litellm-docs --url https://docs.litellm.ai/mcp" />
+
+In Cursor, [add it in one click](https://cursor.com/en-US/install-mcp?name=litellm-docs&config=eyJ1cmwiOiJodHRwczovL2RvY3MubGl0ZWxsbS5haS9tY3AifQ==). In VS Code, [install it](https://insiders.vscode.dev/redirect/mcp/install?name=litellm-docs&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fdocs.litellm.ai%2Fmcp%22%7D) or add `{"servers": {"litellm-docs": {"type": "http", "url": "https://docs.litellm.ai/mcp"}}}` to `.vscode/mcp.json`. In Claude.ai or Claude Desktop, add it as a custom connector with the same URL. To make your agent use it without being asked, add this line to `AGENTS.md` or `CLAUDE.md`: "Use the litellm-docs MCP server for any question about LiteLLM."
+
 ## More prompts
 
 <AgentPrompt id="clients" />
@@ -74,7 +82,7 @@ Manage a running gateway from Claude Code with a personal admin key, never the m
 
 Launches Claude Code or Codex through your gateway, with its URL and your key already set.
 
-<Command code="curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install-cli.sh | sh" id="lite-cli" note="Installs the lite client only. The gateway runs elsewhere." />
+<Command code="curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/scripts/install-cli.sh | sh" id="lite-cli" note="Installs the lite client only. The gateway runs elsewhere." />
 
 <Tiles columns={3} items={[
   {icon: 'agent', title: 'Claude Code', text: 'Route Claude Code through the gateway, including non-Anthropic models.', to: '/docs/proxy/client_setup/claude_code'},

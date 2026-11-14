@@ -32,13 +32,13 @@ Before you begin, ensure you have:
 
 ## Option 1: LiteLLM extension for VS Code
 
-The extension lives in the LiteLLM repository under [`vscode-extension/`](https://github.com/BerriAI/litellm/tree/main/vscode-extension). It reads the gateway's `GET /model_group/info` for the key you configure, so the picker shows exactly the chat models that key can use, each with its input and output price per 1M tokens. Models whose gateway entry lists `supported_reasoning_efforts` get a Reasoning Effort option in the model picker, and the effort you pick is sent as `reasoning_effort` on every request to that model. Requests go to `POST /v1/chat/completions` as streaming chat completions with tools and images passed through, so routing, fallbacks, guardrails, and spend tracking all apply as usual.
+The extension lives in the LiteLLM repository under [`vscode-extension/`](https://github.com/BerriAI/litellm/tree/main/litellm/vscode-extension). It reads the gateway's `GET /model_group/info` for the key you configure, so the picker shows exactly the chat models that key can use, each with its input and output price per 1M tokens. Models whose gateway entry lists `supported_reasoning_efforts` get a Reasoning Effort option in the model picker, and the effort you pick is sent as `reasoning_effort` on every request to that model. Requests go to `POST /v1/chat/completions` as streaming chat completions with tools and images passed through, so routing, fallbacks, guardrails, and spend tracking all apply as usual.
 
 ### Step 1: Build and install the extension
 
 ```bash
 git clone https://github.com/BerriAI/litellm.git
-cd litellm/vscode-extension
+cd litellm/litellm/vscode-extension
 npm ci
 npm run package
 code --install-extension litellm-vscode-0.1.0.vsix
@@ -55,7 +55,7 @@ The Language Models editor now lists the chat models that key can reach under th
 
 ### Sign in with SSO instead of a virtual key
 
-If your users sign in to LiteLLM through your identity provider and nobody issues them virtual keys, each developer gets the extension's key from the LiteLLM CLI instead. This needs a proxy with SSO configured and `EXPERIMENTAL_UI_LOGIN=True`, as described in [CLI Authentication](../proxy/cli_sso.md). Option 2 below sets no LiteLLM credential on the client, so use this option on an SSO-only gateway
+If your users sign in to LiteLLM through your identity provider and nobody issues them virtual keys, each developer gets the extension's key from the LiteLLM CLI instead. This needs a proxy with SSO configured and `EXPERIMENTAL_UI_LOGIN=True`, as described in [CLI sign-in](../proxy/cli_sso.md). Option 2 below sets no LiteLLM credential on the client, so use this option on an SSO-only gateway
 
 ```shell
 export LITELLM_PROXY_URL=https://litellm.example.com

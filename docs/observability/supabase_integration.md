@@ -1,3 +1,8 @@
+---
+title: "Supabase Logging for LiteLLM: Track LLM Spend"
+sidebar_label: "Supabase"
+description: "Log LiteLLM Python SDK requests to a Supabase table and see total spend across LLM providers, using success and failure callbacks and a SQL table."
+---
 # Supabase
 
 :::tip
