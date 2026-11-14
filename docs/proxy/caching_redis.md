@@ -74,6 +74,32 @@ Then run the proxy:
 $ litellm --config /path/to/config.yaml
 ```
 
+## Which Redis client serves each subsystem?
+
+`general_settings.coordination_redis` separates proxy coordination from LLM response caching. The table assumes `litellm_settings.cache: true` with a Redis `cache_params` backend. Features use the listed client when enabled.
+
+| Subsystem | With `coordination_redis` | Without `coordination_redis` |
+| --- | --- | --- |
+| LLM response caching | `cache_params` Redis | `cache_params` Redis |
+| Spend and budget counters | Coordination Redis | `cache_params` Redis |
+| Cross-worker rate limits (v3 limiter) | Coordination Redis | `cache_params` Redis |
+| Redis transaction buffer for spend writes | Coordination Redis | `cache_params` Redis |
+| Pod locks for scheduled jobs | Coordination Redis | `cache_params` Redis |
+| CLI SSO login sessions and SAML sign-in cache | Coordination Redis | `cache_params` Redis |
+| Shared config cache (`litellm_config_cache`) | Coordination Redis | `cache_params` Redis |
+| Virtual-key auth cache with `enable_redis_auth_cache: true` | Coordination Redis | `cache_params` Redis |
+| Router state (cooldowns, usage and latency routing) | Router's own Redis if configured, otherwise coordination Redis | Router's own Redis if configured, otherwise `cache_params` Redis |
+| Alerting state | Coordination Redis | `cache_params` Redis |
+| Config sync and auth invalidation pub/sub | Coordination Redis | `cache_params` Redis |
+| Shared health checks | Coordination Redis | `cache_params` Redis |
+| Login throttle counters and PKCE verifier storage | Coordination Redis | `cache_params` Redis |
+
+With a separate coordination client, `cache_params` Redis serves only LLM response caching. Removing `coordination_redis` moves coordination traffic onto the response cache Redis, rather than removing that traffic. Response-cache traffic depends on the cache mode and request options, not just request volume.
+
+Virtual-key auth entries stay in memory per worker unless `litellm_settings.enable_redis_auth_cache: true`. That flag adds a Redis tier on the coordination client, falling back to the response cache client when no coordination block is set. Auth invalidation pub/sub uses coordination Redis even when the auth entries themselves stay in memory.
+
+Response caching is not required for coordination. With no `coordination_redis` block and no Redis response cache, the proxy can build a coordination client from `REDIS_*` environment variables.
+
 ## Namespace
 
 If you want to create some folder for your keys, you can set a namespace, like this:
@@ -274,7 +300,7 @@ litellm_settings:
     max_connections: 100
 ```
 
-`cache_params` only sizes the response cache client. The proxy can hold two more Redis clients, each with its own pool: the coordination Redis from `general_settings.coordination_redis` (spend tracking, cross-pod rate limits, pod locks) and the router Redis from `router_settings.redis_host` / `redis_port` / `redis_password`. Set `max_connections` inside those blocks to size them; `coordination_redis` forwards any extra key to the Redis client, and `router_settings.cache_kwargs` does the same for the router client:
+`cache_params` sizes the response cache client, which also handles coordination when no separate coordination client is configured. The proxy can hold two more Redis clients, each with its own pool: the coordination Redis from `general_settings.coordination_redis` (see the [subsystem table](#which-redis-client-serves-each-subsystem)) and the router Redis from `router_settings.redis_host` / `redis_port` / `redis_password`. Set `max_connections` inside those blocks to size them; `coordination_redis` forwards any extra key to the Redis client, and `router_settings.cache_kwargs` does the same for the router client:
 
 ```yaml
 general_settings:
@@ -326,12 +352,11 @@ The `REDIS_SOCKET_TIMEOUT` environment variable (default `5`) does not change th
 
 When the proxy verifies a **virtual key** (customer API key), results are cached so the database is not queried on every request. By default that cache lives **only in each worker process**, so after a deploy, new pods or extra Uvicorn workers each warm their own cache and can trigger more DB reads until warmed.
 
-Set `litellm_settings.enable_redis_auth_cache: true` to mirror virtual-key auth data into **the same Redis instance** configured under `litellm_settings.cache` / `cache_params`. Workers and replicas then share cached auth entries across the cluster.
+Set `litellm_settings.enable_redis_auth_cache: true` to mirror virtual-key auth data into **coordination Redis**, or the Redis response cache when no separate coordination client is configured. Workers and replicas then share cached auth entries across the cluster.
 
 **Requirements**
 
-- `litellm_settings.cache` must be **`true`** (Redis for the proxy is initialized during cache setup). See [All settings](./config_settings).
-- `cache_params.type` must be **`redis`** (or Redis Cluster, per your cache config); the auth cache attaches to that Redis client. See [supported `cache_params`](./caching_settings.md#supported-cache_params-on-proxy-configyaml).
+- Configure `general_settings.coordination_redis`, a Redis response cache, or the `REDIS_*` environment fallback. Response caching does not need to be enabled when a coordination client is available. See the [subsystem table](#which-redis-client-serves-each-subsystem).
 - Optionally set **`general_settings.user_api_key_cache_ttl`** (seconds): TTL applies to both the in-memory and Redis tiers when Redis auth caching is enabled, so stale keys expire consistently.
 
 Example:
