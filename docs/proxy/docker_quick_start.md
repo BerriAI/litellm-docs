@@ -8,9 +8,11 @@ import ThemedVideo from '@site/src/components/ThemedVideo';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import QuickStartBox from '@site/src/components/QuickStartBox';
-import {OneClickDeploy} from '@site/src/components/Conversion';
+import {OneClickBadges} from '@site/src/components/Conversion/OneClickDeploy';
 
 # Quickstart
+
+<OneClickBadges source="docker-quickstart" />
 
 Run LiteLLM and PostgreSQL locally, then use the Admin UI to add models, create keys, and send your first request.
 
@@ -19,8 +21,6 @@ Run LiteLLM and PostgreSQL locally, then use the Admin UI to add models, create 
 When the command finishes, open the Admin UI. Then you can [add your models](#3-add-your-first-model), [create virtual keys](#5-create-a-virtual-key), and [call the gateway from your apps](#6-call-the-gateway-from-your-app).
 
 </QuickStartBox>
-
-<OneClickDeploy source="docker-quickstart" />
 
 ## 1. Start LiteLLM
 
@@ -33,6 +33,8 @@ docker compose -f docker-compose.quickstart.yml up -d
 The [compose file](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/docker/docker-compose.quickstart.yml) starts the full LiteLLM proxy on port 4000 and PostgreSQL. Pin a tested release tag or digest before production.
 
 For Kubernetes, see the [Helm guide](./deploy/helm.md).
+
+On Render, set **Blueprint Path** to `litellm/deploy/render/render.yaml` before you deploy.
 
 :::warning[What the two keys do]
 The local setup generates both keys in `.env`. The compose file requires both keys. On a 1-click deploy, set them in the provider's environment.
