@@ -13,6 +13,7 @@ import TabItem from '@theme/TabItem';
 | DeepSeek | `vertex_ai/deepseek-ai/{MODEL}` | [Vertex AI - DeepSeek Models](https://cloud.google.com/vertex-ai/generative-ai/docs/maas/deepseek) |
 | ZAI (GLM) | `vertex_ai/zai-org/{MODEL}` | [Vertex AI - GLM Models](https://cloud.google.com/vertex-ai/generative-ai/docs/maas/zaiorg/glm-47) |
 | Meta/Llama | `vertex_ai/meta/{MODEL}` | [Vertex AI - Meta Models](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/llama) |
+| Meta Muse | `vertex_ai/meta/muse-*` | [Vertex AI - Meta Muse Models](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/partner-models/meta) |
 | Mistral | `vertex_ai/mistral-*` | [Vertex AI - Mistral Models](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/mistral) |
 | AI21 (Jamba) | `vertex_ai/jamba-*` | [Vertex AI - AI21 Models](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/ai21) |
 | Qwen | `vertex_ai/qwen/*` | [Vertex AI - Qwen Models](https://cloud.google.com/vertex-ai/generative-ai/docs/maas/qwen) |
@@ -400,6 +401,100 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 </TabItem>
 </Tabs>
+
+## VertexAI Meta Muse API
+
+<SinceVersion v="1.111.0" />
+
+Meta Muse models on Vertex AI use the Meta publisher's Responses API. LiteLLM sends every Muse request to the global endpoint with the bare model ID. Chat Completions (`/chat/completions`) and Anthropic Messages (`/v1/messages`) requests go through LiteLLM's Responses bridge, so all three endpoints work with the same deployment.
+
+Google lists these models in Preview. Enable the model in your Google Cloud project before calling it. See [Google's Meta model guide](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/partner-models/meta).
+
+| Model Name | Usage |
+|------------|-------|
+| `vertex_ai/meta/muse-wonder-1.0` | `responses('vertex_ai/meta/muse-wonder-1.0', input)` |
+| `vertex_ai/meta/muse-ember-1.0` | `responses('vertex_ai/meta/muse-ember-1.0', input)` |
+| `vertex_ai/meta/muse-spark-1.3` | `responses('vertex_ai/meta/muse-spark-1.3', input)` |
+
+#### Usage
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+import litellm
+
+response = litellm.responses(
+    model="vertex_ai/meta/muse-spark-1.3",
+    input="Write a Python binary search function with type annotations.",
+    vertex_project="your-vertex-project",  # or os.environ["VERTEXAI_PROJECT"]
+    vertex_credentials="/path/to/service_account.json",  # optional, defaults to Application Default Credentials
+    max_output_tokens=4096,
+)
+print(response.output_text)
+```
+
+</TabItem>
+<TabItem value="proxy" label="Proxy">
+
+**1. Add to config**
+
+```yaml
+model_list:
+    - model_name: muse-spark
+      litellm_params:
+        model: vertex_ai/meta/muse-spark-1.3
+        vertex_project: "my-test-project"
+        vertex_location: "global"
+        vertex_credentials: /path/to/service_account.json
+```
+
+**2. Start proxy**
+
+```bash
+litellm --config /path/to/config.yaml
+
+# RUNNING at http://0.0.0.0:4000
+```
+
+**3. Test it!**
+
+```bash
+curl --location 'http://0.0.0.0:4000/v1/responses' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
+      --header 'Content-Type: application/json' \
+      --data '{
+            "model": "muse-spark",
+            "input": "what llm are you",
+            "max_output_tokens": 1024
+        }'
+```
+
+The same deployment answers Chat Completions.
+
+```bash
+curl --location 'http://0.0.0.0:4000/chat/completions' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
+      --header 'Content-Type: application/json' \
+      --data '{
+            "model": "muse-spark",
+            "messages": [{"role": "user", "content": "what llm are you"}],
+            "max_tokens": 1024
+        }'
+```
+
+</TabItem>
+</Tabs>
+
+#### Supported parameters
+
+Muse models reason before they answer, and reasoning tokens count against `max_output_tokens` (or `max_tokens`). A small limit can return an empty answer.
+
+Vertex AI serves Muse from the `global` location only. A deployment with any other `vertex_location` gets a 400 error. With `drop_params: true`, LiteLLM ignores the location and calls the global endpoint.
+
+Muse requests are stateless. `store: true`, `background`, `previous_response_id`, and `conversation` get a 400 error. With `drop_params: true`, LiteLLM drops them and sends `store: false`. Send the full conversation in `input` on every request.
+
+Muse accepts only `tool_choice: "auto"`. `required`, `none`, and named tool choices get a 400 error. With `drop_params: true`, LiteLLM sends `auto` instead, and for `none` it also removes the tools from the request so the model cannot call one. A downgraded `required` or named choice lets the model answer in text, so check for a missing tool call in your application.
 
 ## VertexAI Mistral API
 
