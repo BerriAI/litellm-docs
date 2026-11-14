@@ -1033,6 +1033,12 @@ Under `full`, which applies whenever the scope is unset, each proxy request adds
 
 The two are independent. A tenant's `llm_only` narrows only that tenant's project, and the operator setting narrows only the exporter built from `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`, whichever mode `otel_tenant_destination_mode` is in. Neither touches a plain `otel` collector or any other preset, so a Datadog or Grafana view of the same request stays complete. The accepted values are `full` and `llm_only`, and a key or team callback with any other value is rejected when it is saved. The setting applies to the `langfuse_otel` preset only: saving a `langfuse_span_scope` on a legacy `langfuse` callback or on another backend's callback is rejected as well, since nothing there would read it
 
+To give every key and team Langfuse project the same default, set `LITELLM_OTEL_LANGFUSE_DESTINATION_SPAN_SCOPE` on the proxy, or `callback_settings.otel.langfuse_destination_span_scope` in the config file. A `langfuse_otel` callback without its own `langfuse_span_scope` uses that value, and one with an explicit `full` or `llm_only` keeps it. Unset means `full`, so tenant projects keep the whole tree until you opt in. An invalid value logs a warning and falls back to `full`. This setting is separate from `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE`, which still applies only to your own exporter. The value is read once at startup, so restart the proxy after changing it
+
+```shell
+LITELLM_OTEL_LANGFUSE_DESTINATION_SPAN_SCOPE=llm_only   # default for key and team langfuse_otel callbacks
+```
+
 Guardrail and MCP spans are dropped under `llm_only`, so a guardrail block that failed the request before any model was called leaves nothing in that Langfuse project. Keep `full` where you rely on Langfuse to see those
 
 ### Choose prompt capture per tenant
@@ -1138,6 +1144,7 @@ All values are environment variables. Boolean flags accept `true`/`false`.
 | `LITELLM_OTEL_V2` | `false` | **Master switch.** OTel v2 does nothing until this is `true`. |
 | `LITELLM_OTEL_TENANT_DESTINATION_MODE` | `override` | `additive` keeps your own exporter's copy of a request a key or team routed to its own account. |
 | `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE` | `full` | `llm_only` sends just the model-call spans to your own Langfuse exporter and is the recommended setting; `full` can multiply the volume ingested into Langfuse. Tenants set theirs with `langfuse_span_scope` on the key or team. See [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse). |
+| `LITELLM_OTEL_LANGFUSE_DESTINATION_SPAN_SCOPE` | `full` | Default `langfuse_span_scope` for key and team `langfuse_otel` callbacks that do not set one. `callback_settings.otel.langfuse_destination_span_scope` overrides it. See [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse). |
 | `LITELLM_OTEL_EXCLUDED_SERVICES` | none | Comma-separated datastores, `redis` and `postgres`, whose spans are not forwarded to key and team destinations. `callback_settings.otel.excluded_services` overrides it. See [Keep Redis and Postgres spans out of tenant traces](#keep-redis-and-postgres-spans-out-of-tenant-traces). |
 | `OTEL_EXPORTER` (alias `OTEL_EXPORTER_OTLP_PROTOCOL`) | `console` | Exporter kind: `console`, `otlp_http`, `otlp_grpc`. |
 | `OTEL_ENDPOINT` (alias `OTEL_EXPORTER_OTLP_ENDPOINT`) | none | OTLP collector URL. Setting an endpoint implies `otlp_http` unless you override `OTEL_EXPORTER`. For traces, a `callback_settings.otel.exporters` list replaces it; see [Send to more than one collector](#send-to-more-than-one-collector). |
