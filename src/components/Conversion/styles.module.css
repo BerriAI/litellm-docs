@@ -359,15 +359,14 @@
 }
 .oneClickBadges {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  flex: 0 1 auto;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1 0 12rem;
 }
-.oneClickBadges img {
-  display: block;
-  height: 32px;
-  width: auto;
+.oneClickBadges a {
+  justify-content: center;
+  min-height: 48px;
+  font-size: 1rem;
 }
 
 .mobileHint {
