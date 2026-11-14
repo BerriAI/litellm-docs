@@ -197,7 +197,7 @@ The key expires after `LITELLM_CLI_JWT_EXPIRATION_HOURS` (24 hours by default, s
 
 `lite auth print-token` prints the current key to stdout and nothing else (diagnostics go to stderr). It renews the key first when it is about to expire, so a tool that calls it always gets a key that works
 
-Claude Code can run it as its [`apiKeyHelper`](https://code.claude.com/docs/en/settings), and `lite login --pkce --config-claude` sets that up in `~/.claude/settings.json`, leaving your other settings alone. It points `env.ANTHROPIC_BASE_URL` at the proxy, writes an `apiKeyHelper` that runs `lite auth print-token` by its absolute path, and sets `env.ANTHROPIC_AUTH_TOKEN` to an empty string, which Claude Code reads as unset, so a token exported in your shell cannot take the helper's place:
+Claude Code can run it as its [`apiKeyHelper`](https://code.claude.com/docs/en/settings), and `lite login --pkce --config-claude` sets that up <SinceVersion v="1.111.0" /> in `~/.claude/settings.json`, leaving your other settings alone. It points `env.ANTHROPIC_BASE_URL` at the proxy, writes an `apiKeyHelper` that runs `lite auth print-token` by its absolute path, and sets `env.ANTHROPIC_AUTH_TOKEN` to an empty string, which Claude Code reads as unset, so a token exported in your shell cannot take the helper's place:
 
 ```json title="~/.claude/settings.json"
 {
