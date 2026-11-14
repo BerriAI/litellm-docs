@@ -12,6 +12,8 @@ Moyai separates the lifetime of a conversation from the machine executing its cu
 
 This guide describes the Modal quickstart and the Render plus Temporal layout used by the LiteLLM team. Implementation links refer to Moyai commit [`04ea562`](https://github.com/BerriAI/moyai/tree/04ea5627419c1cdcce1532667d95ba1956df8e30). Consult the upstream [deployment guide](https://github.com/BerriAI/moyai/blob/main/docs/deployment.md) before operating another revision or sandbox provider.
 
+For the native Pydantic AI and Temporal deployment on EC2 with Lambda MicroVMs, see [AWS deployment and infrastructure](./aws.md#infrastructure).
+
 ## System design
 
 ![Moyai architecture: users enter through Slack or a browser; the app stores session state and brokers credentials; an agent sandbox runs tools and saves filesystem checkpoints; LiteLLM routes models; Temporal optionally coordinates the worker.](./architecture.svg)

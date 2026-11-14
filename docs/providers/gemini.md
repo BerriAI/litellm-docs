@@ -409,6 +409,10 @@ A request that sends no output limit is sent once and stops at Google's own per-
 
 `supports_continuation: true` in the cost map marks a model that can end a request with a `continuationToken` <SinceVersion v="1.110.0" />. It is set on `gemini/gemini-4-argon`, `vertex_ai/gemini-4-argon` and `vertex_ai/gemini-4-argon-cyber-permissive`. Read it before sending a request with `litellm.supports_continuation("gemini/gemini-4-argon")` or `litellm.get_model_info("gemini/gemini-4-argon")["supports_continuation"]`, or through the proxy at `GET /model/info` and `GET /v1/model/info`, where each deployment carries it in `model_info`, and at `GET /model_group/info`, where a model group reports `true` when any of its deployments supports it. `get_model_info` and `/model/info` return `None` (`null`) for a model the cost map leaves unflagged, so check for `true` instead of `false`. A deployment's own `model_info` in `config.yaml` or the Admin UI overrides the cost map value for that deployment only, so set `supports_continuation: true` there for a model the cost map does not flag yet. The flag only says what the model can do and does not turn continuation on or off. LiteLLM sends the request again only when it has an output limit, from `max_tokens` or `LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS`, and asks for one choice (`n` of 1), whatever the flag says. Whether a given answer was cut short still comes from the response. On `/chat/completions` that answer ends with `finish_reason: "length"` and carries `provider_specific_fields.continuation_token`, and [Long outputs](/blog/gemini-4-argon#long-outputs) shows how to send it back to continue the answer.
 
+## Interactions API and Deep Research
+
+`gemini` deployments serve Google's Interactions API natively at `/v1beta/interactions`, including agents such as `deep-research-preview-04-2026` and `deep-research-max-preview-04-2026`, background jobs, and GET, cancel and delete by ID. See [/interactions](../interactions.md) and [Managed Agents](../managed_agents.md).
+
 ## Text-to-Speech (TTS) Audio Output
 
 :::info

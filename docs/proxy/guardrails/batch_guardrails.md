@@ -1,3 +1,8 @@
+---
+title: "Guardrails for Batch API Files on LiteLLM"
+sidebar_label: "Batch API Guardrails"
+description: "Run guardrails on every record in a Batch API input file on the LiteLLM AI Gateway, so batch jobs cannot skip checks that apply to chat calls."
+---
 # Batch API Guardrails
 
 Guard the records inside a batch input file, so a batch job cannot move content past a guardrail that would have blocked the same content on `/chat/completions`

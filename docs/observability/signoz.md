@@ -1,3 +1,8 @@
+---
+title: "SigNoz Tracing for LiteLLM: Python SDK and Gateway"
+sidebar_label: "SigNoz"
+description: "Send LiteLLM traces to SigNoz Cloud or self-hosted with the signoz callback, route each team or virtual key to its own account, and add metrics."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

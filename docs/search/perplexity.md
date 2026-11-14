@@ -1,4 +1,11 @@
+---
+title: "Perplexity Search API with LiteLLM: Setup"
+sidebar_label: "Perplexity AI Search"
+description: "Add Perplexity web search to LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, with PERPLEXITYAI_API_KEY and max_results."
+---
 # Perplexity AI Search
+
+The [Perplexity Search API](https://docs.perplexity.ai/api-reference/search-post) returns ranked web results from Perplexity's search index; LiteLLM exposes it through one `search()` call in the Python SDK and the `/v1/search` endpoint on the AI Gateway.
 
 **Get API Key:** [https://www.perplexity.ai/settings/api](https://www.perplexity.ai/settings/api)
 

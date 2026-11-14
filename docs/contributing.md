@@ -43,7 +43,7 @@ There are two options for UI development:
 This runs the UI on port 3000 with hot reload. The proxy runs on port 4000.
 
 ```bash
-cd ui/litellm-dashboard
+cd litellm/ui/litellm-dashboard
 npm install
 npm run dev
 ```
@@ -62,11 +62,11 @@ If you experience redirect loops or authentication issues, clear your browser co
 
 This builds the UI and copies it to the proxy. Changes require rebuilding.
 
-1. Make your code changes in `ui/litellm-dashboard/src/`
+1. Make your code changes in `litellm/ui/litellm-dashboard/src/`
 
 2. Build the UI
 ```bash
-cd ui/litellm-dashboard
+cd litellm/ui/litellm-dashboard
 npm install
 npm run build
 ```
@@ -74,14 +74,14 @@ npm run build
 After building, copy the output to the proxy:
 
 ```bash
-cp -r out/* ../../litellm/proxy/_experimental/out/
+cp -r out/* ../../proxy/_experimental/out/
 ```
 
 Then restart the proxy and access the UI at `http://localhost:4000/ui`
 
 ## 4. Pre-PR Checklist
 
-Before submitting your pull request, make sure the following pass locally from `ui/litellm-dashboard/`:
+Before submitting your pull request, make sure the following pass locally from `litellm/ui/litellm-dashboard/`:
 
 **Run tests related to your changes:**
 

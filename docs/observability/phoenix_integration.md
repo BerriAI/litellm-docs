@@ -1,3 +1,8 @@
+---
+title: "Arize Phoenix Tracing for LiteLLM: Setup"
+sidebar_label: "Arize Phoenix"
+description: "Send LiteLLM traces to Arize Phoenix from the Python SDK or AI Gateway, route each team or key to its own project, and also export to Arize AX."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

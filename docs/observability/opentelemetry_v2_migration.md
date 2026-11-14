@@ -1,3 +1,8 @@
+---
+title: "Migrate LiteLLM from OpenTelemetry v1 to v2"
+sidebar_label: "Migrating to OpenTelemetry v2"
+description: "Move LiteLLM AI Gateway tracing from OpenTelemetry v1 to v2: root, guardrail and inference span changes, old attribute names, rollout and rollback."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

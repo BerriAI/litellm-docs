@@ -33,7 +33,7 @@ Models without a prefix default to Vertex AI which requires GCP authentication.
 <br />
 <br />
 
-<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/liteLLM_VertextAI_Example.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/liteLLM_VertextAI_Example.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
@@ -1805,6 +1805,10 @@ LiteLLM automatically tracks spend for Vertex AI Gemini models using the correct
 When you use [Vertex AI PayGo](https://cloud.google.com/vertex-ai/generative-ai/pricing) (on-demand priority) or batch workloads, LiteLLM reads `trafficType` from the response and applies the matching cost per token from the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). No configuration is required; spend tracking works for both standard and PayGo requests.
 
 See [Spend Tracking](../proxy/cost_tracking.md) for general cost tracking setup.
+
+## Interactions API and Deep Research
+
+`vertex_ai` deployments serve Google's Interactions API natively at `/v1beta/interactions`, including the `deep-research-preview-04-2026` agent as a background job. Give the agent its own deployment whose `model` is the agent, then send that deployment's model group as `model` and the agent as `agent`. To poll, cancel or delete a job through the proxy, send the deployment ID from the create response's `x-litellm-model-id` header, or the model group it was created on, as a `model` query parameter or an `x-litellm-model` header. [Interactions on Vertex AI](../interactions.md#vertex-ai) has the config, requests and cost tracking details.
 
 ## Private Service Connect (PSC) Endpoints
 

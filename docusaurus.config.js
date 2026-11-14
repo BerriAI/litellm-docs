@@ -45,6 +45,7 @@ const config = {
     require('./plugins/litellm-stats'),
     require('./plugins/release-feed'),
     require('./plugins/llms'),
+    require('./plugins/mcp-models-snapshot'),
     // vega-canvas tries to load the optional node `canvas` package during SSR.
     // Charts render as SVG, so resolve it to an empty module.
     () => ({
@@ -59,6 +60,7 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          {from: '/docs/proxy/customer_portal/api_reference_guide', to: '/docs/proxy/customer_portal/track-customer-spend'},
           // The decisions page was split into subpages for a few days in October 2026.
           {from: '/docs/decisions/providers', to: '/docs/decisions#supported-providers'},
           {from: '/docs/decisions/openai_format', to: '/docs/decisions#v1decisions'},

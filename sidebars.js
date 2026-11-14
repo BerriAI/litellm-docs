@@ -668,7 +668,16 @@ const sidebars = {
           label: "Spend Tracking",
           items: [
             "proxy/cost_tracking",
+            {
+              type: "category",
+              label: "Customer Portal",
+              items: [
+                "proxy/customer_portal/track-customer-spend",
+                "proxy/customer_portal/api_reference",
+              ],
+            },
             "proxy/model_cost_map",
+            { type: "doc", id: "fallback_generalizations", label: "Fallback generalizations" },
             "proxy/request_tags",
             "proxy/billing",
             "proxy/custom_pricing",
@@ -1380,6 +1389,7 @@ const sidebars = {
           link: {type: "doc", id: "self_hosted_coding_agents/moyai"},
           items: [
             "self_hosted_coding_agents/moyai/setup",
+            "self_hosted_coding_agents/moyai/aws",
             "self_hosted_coding_agents/moyai/architecture",
           ],
         },

@@ -1,3 +1,8 @@
+---
+title: "Built-in Content Filter Guardrail in LiteLLM"
+sidebar_label: "LiteLLM Content Filter (Built-in Guardrails)"
+description: "Mask or block sensitive data on the LiteLLM AI Gateway with the built-in content filter, using regex patterns and keywords, set in the UI or YAML."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';

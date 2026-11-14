@@ -1,5 +1,6 @@
 ---
-title: Hex
+title: "Hex Cost Dashboards for LiteLLM Spend Data"
+sidebar_label: Hex
 description: Connect Hex to LiteLLM’s existing Postgres reporting tables, import the cost dashboard, and act on findings in the LiteLLM UI.
 ---
 

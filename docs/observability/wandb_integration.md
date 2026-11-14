@@ -1,3 +1,8 @@
+---
+title: "Weights & Biases Logging for LiteLLM Python SDK"
+sidebar_label: "Weights & Biases"
+description: "Log LiteLLM Python SDK responses across all providers to Weights & Biases with the wandb callback, after installing wandb and setting a key."
+---
 import Image from '@theme/IdealImage';
 
 # Weights & Biases

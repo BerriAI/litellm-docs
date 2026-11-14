@@ -1,3 +1,8 @@
+---
+title: "Athina Logging for the LiteLLM Python SDK"
+sidebar_label: "Athina"
+description: "Log LiteLLM completions to Athina from the Python SDK with the athina callback, add metadata for evaluations, or use a self-hosted Athina server."
+---
 import Image from '@theme/IdealImage';
 
 # Athina

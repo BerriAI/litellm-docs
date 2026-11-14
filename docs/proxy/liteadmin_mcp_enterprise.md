@@ -49,7 +49,7 @@ Route `/admin/mcp` to the container's existing port, default `4000`. Use the sha
 </TabItem>
 <TabItem value="componentized" label="Componentized (Helm)">
 
-For the [`helm/litellm` chart](https://github.com/BerriAI/litellm/tree/main/helm/litellm), merge these entries into `backend.extraEnv`. Reuse existing license and public-URL entries to avoid duplicates
+For the [`helm/litellm` chart](https://github.com/BerriAI/litellm/tree/main/litellm/deploy/helm/litellm), merge these entries into `backend.extraEnv`. Reuse existing license and public-URL entries to avoid duplicates
 
 ```yaml title="values.yaml (componentized chart fragment)"
 backend:

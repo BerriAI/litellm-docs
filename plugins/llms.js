@@ -21,6 +21,7 @@ const {pathToFileURL} = require('url');
 const {substitute} = require('../src/remark/docs-models');
 const {sinceVersionAsText} = require('../src/remark/since-version');
 const {getStats, formatStats, FALLBACK: STATS_FALLBACK} = require('./litellm-stats');
+const {pageEntry, navTree} = require('./mcp-manifest');
 const {ONE_CLICK, PROMPTS, INSTALLS, QUICKSTART, SALES_URL, TRIAL_URL, GATEWAY_COMPOSE, ENTERPRISE_HERO, TIERS, USE_CASES, PRODUCT_CARDS, CARD_GROUPS} = require('../src/components/Conversion/content');
 
 const SITE = 'https://docs.litellm.ai';
@@ -64,7 +65,7 @@ const NOTES = `- Which one: use the AI Gateway when several apps, teams, users, 
 const fence = (lang, code) => '```' + lang + '\n' + code + '\n```';
 
 // What an agent needs to run the gateway end to end, taken from
-// scripts/quickstart.sh in BerriAI/litellm (the same commands as QuickStartBox).
+// litellm/scripts/quickstart.sh in BerriAI/litellm (the same commands as QuickStartBox).
 const gatewaySection = () => `## Start the AI Gateway
 
 One command installs and starts the gateway, a Postgres database, and the Admin UI with Docker Compose. It needs Docker, Podman, or Rancher Desktop with Compose v2.
@@ -82,7 +83,7 @@ ${fence('powershell', QUICKSTART.gateway.windows)}
 - Admin UI: http://localhost:4000/ui, username \`admin\`, password is the \`LITELLM_MASTER_KEY\` value in \`.env\`. Add a model under Models + Endpoints > Add Model, then create a virtual key under Virtual Keys.
 - Agents and CI: the script asks nothing when there is no terminal, under CI or Claude Code, with \`--yes\` (\`curl -fsSL <url> | sh -s -- --yes\`), or on Windows with \`$env:LITELLM_YES=1\`. \`LITELLM_DIR\` and \`LITELLM_PORT\` override the folder and port.
 - Manage it: \`curl -fsSL <url> | sh -s -- <action>\` or the \`litellm-gateway\` command it installs, with \`status\`, \`start\`, \`stop\`, \`restart\`, \`logs\`, \`open\`, \`update\`, or \`uninstall\`.
-- Read the script first: https://github.com/BerriAI/litellm/blob/main/scripts/quickstart.sh and https://github.com/BerriAI/litellm/blob/main/scripts/quickstart.ps1
+- Read the script first: https://github.com/BerriAI/litellm/blob/main/litellm/scripts/quickstart.sh and https://github.com/BerriAI/litellm/blob/main/litellm/scripts/quickstart.ps1
 
 Other ways to run it:
 
@@ -645,7 +646,11 @@ module.exports = function llmsPlugin(context) {
       }
 
       const updated = lastUpdatedDates(context.siteDir);
-      const writeMd = async (permalink, content) => {
+      // Every page written here is also listed in mcp-pages.json, the page
+      // index the docs MCP server serves from (see mcp-manifest.js).
+      const pages = [];
+      const writeMd = async (permalink, content, page) => {
+        pages.push(pageEntry({url: permalink, markdown: content, ...page}));
         const target = mdPath(outDir, permalink);
         await fs.promises.mkdir(path.dirname(target), {recursive: true});
         await fs.promises.writeFile(target, content);
@@ -678,13 +683,14 @@ module.exports = function llmsPlugin(context) {
         });
         const header = `# ${title}\n\n> Index of all LiteLLM docs: ${SITE}/llms.txt\n\n`;
         let content = body.startsWith('# ') ? body.replace(/^# .*\n/, header) : header + body;
+        const sourceEnd = meta.length + content.length;
         if (related.length) {
           content +=
             '\n## Related pages\n\n' +
             related.map((r) => `- [${clean(r.title)}](${mdUrl(r.permalink)})`).join('\n') +
             '\n';
         }
-        await writeMd(doc.permalink, meta + content);
+        await writeMd(doc.permalink, meta + content, {title, type: kind, titleInSource: body.startsWith('# '), sourceEnd});
         return content;
       };
 
@@ -715,6 +721,7 @@ module.exports = function llmsPlugin(context) {
               link.permalink,
               frontMatter({title, url: link.permalink, canonical_url: `${SITE}${link.permalink}`, type: 'index', summary: link.description}) +
                 `# ${title}\n\n${link.description ? `${clean(link.description)}\n\n` : ''}${list.join('\n')}\n`,
+              {title, type: 'index', titleInSource: false},
             ));
           }
           walkCategories(item.items);
@@ -724,14 +731,16 @@ module.exports = function llmsPlugin(context) {
       await Promise.all(indexWrites);
 
       // The docs home.
-      await fs.promises.writeFile(
-        path.join(outDir, 'index.md'),
+      await writeMd(
+        '/',
         frontMatter({title: 'LiteLLM documentation', url: '/', canonical_url: `${SITE}/`, type: 'home', summary: SUMMARY}) +
           `# LiteLLM documentation\n\n> ${SUMMARY}\n\n${expandComponent('<QuickStartBox />')}\n${expandComponent('<PathFinder />')}\n${useCasesMarkdown()}\n${NOTES}\n\n${facts()}\n\n## Start here\n\n` +
           START_HERE.filter(([id]) => byId.has(id))
             .map(([id, label, note]) => `- [${label}](${mdUrl(byId.get(id).permalink)}): ${note}`)
             .join('\n') +
           `\n\nEvery page: ${SITE}/sitemap.md. Agent prompts, MCP, and skills: ${SITE}/docs/agent_resources.md\n`,
+        // The home page is a React page; its markdown headings have no anchors.
+        {title: 'LiteLLM documentation', type: 'home', titleInSource: false, sourceEnd: 0},
       );
 
       // llms.txt
@@ -812,7 +821,11 @@ module.exports = function llmsPlugin(context) {
             authors: (m.authors || []).map((a) => a.name).filter(Boolean),
             summary: m.description ? oneLine(m.description, 240) : null,
           });
-          await writeMd(m.permalink, meta + (body.startsWith('# ') ? body.replace(/^# .*\n/, header) : header + body));
+          await writeMd(m.permalink, meta + (body.startsWith('# ') ? body.replace(/^# .*\n/, header) : header + body), {
+            title: clean(m.title),
+            type: 'blog',
+            titleInSource: body.startsWith('# '),
+          });
         }),
       );
       if (blogPosts.length) {
@@ -861,6 +874,10 @@ module.exports = function llmsPlugin(context) {
         for (const m of blogPosts) sitemap.push(`- [${clean(m.title)}](${mdUrl(m.permalink)})`);
       }
       await fs.promises.writeFile(path.join(outDir, 'sitemap.md'), sitemap.join('\n') + '\n');
+
+      pages.sort((a, b) => a.url.localeCompare(b.url));
+      await fs.promises.writeFile(path.join(outDir, 'mcp-pages.json'), JSON.stringify({version: 1, site: SITE, pages}));
+      await fs.promises.writeFile(path.join(outDir, 'mcp-nav.json'), JSON.stringify({version: 1, sidebars: navTree(sidebars, byId, clean)}));
     },
   };
 };

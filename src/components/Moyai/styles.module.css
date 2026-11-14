@@ -57,6 +57,7 @@
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
 .guideCard:nth-child(2) { background: #faf5e9; }
+.guideCard:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .guideCard:hover { color: #292337; text-decoration: none; transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #292337; }
 .guideCard > svg { flex-shrink: 0; }
 .guideCard .guideArrow { margin-left: auto; }

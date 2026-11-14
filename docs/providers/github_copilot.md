@@ -118,6 +118,18 @@ These examples match LiteLLM's model catalog. GitHub controls which models each 
 
 To serve Responses or Embeddings, add a model for that endpoint with the same `github-copilot` credential, such as `github_copilot/gpt-5.3-codex` or `github_copilot/text-embedding-3-small`
 
+## API version
+
+Set `GITHUB_COPILOT_API_VERSION` in the gateway or SDK process to set the `x-github-api-version` header on every Copilot request. LiteLLM reads this environment variable at request time.
+
+When the variable is unset, empty, or contains only whitespace, LiteLLM uses `2025-04-01` for Chat Completions, Responses, and Embeddings, and `2026-06-01` for `/v1/messages`.
+
+For example, set the version before you start the gateway or your SDK application.
+
+```bash
+export GITHUB_COPILOT_API_VERSION=2026-08-01
+```
+
 ## Latest model aliases
 
 <SinceVersion v="1.109.0" />
