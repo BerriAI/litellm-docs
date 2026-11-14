@@ -240,7 +240,7 @@ Pass the same authentication fields to `acompletion`, `responses`, `aresponses`,
 
 ### Token lifecycle and rotation
 
-LiteLLM signs short-lived RS256 JWTs and requests only `organization_copilot_requests: read` when creating installation tokens. GitHub's token endpoint and Copilot endpoint come from the validated GitHub host. Authentication requests verify TLS and do not follow redirects. The provider pins the installation bearer token and the Copilot SDK integration ID on outbound model requests.
+LiteLLM signs short-lived RS256 JWTs and requests only `organization_copilot_requests: read` when creating installation tokens. GitHub's token endpoint and Copilot endpoint come from the validated GitHub host. Authentication requests use LiteLLM's `ssl_verify` and CA bundle settings, such as `SSL_VERIFY` and `SSL_CERT_FILE`, and do not follow redirects. The provider pins the installation bearer token and the Copilot SDK integration ID on outbound model requests.
 
 Each worker keeps a bounded in-memory token cache and coordinates concurrent refreshes within that worker. Tokens are refreshed on the next request when less than two minutes remain. Both wall-clock expiry and elapsed time are checked. Refresh failures return sanitized errors and never fall back to stored user credentials or expired tokens. Short failure cooldowns limit repeated mint attempts, and GitHub rate-limit responses produce retryable rate-limit errors.
 
@@ -436,6 +436,8 @@ LiteLLM adds these headers for Chat Completions, Responses, and Embeddings:
 | `x-vscode-user-agent-library-version` | `electron-fetch` |
 
 You can pass `extra_headers` to merge headers with these defaults. On the gateway, `Authorization` always uses the connected user's Copilot token
+
+GitHub App deployments always send the installation token as `Authorization` and `copilot-developer-cli` as `copilot-integration-id`, because GitHub rejects App tokens with any other integration ID. Request headers cannot override either value.
 
 Chat Completions and Responses set `X-Initiator` to `user` or `agent` based on message roles. They also add a vision-request header with value `true` when the request includes images.
 
