@@ -15,6 +15,8 @@ import { GlobalControlPlaneArchitecture } from '@site/src/components/GlobalContr
 
 Run the control plane in a management network and connect it to each data plane over private HTTPS. Corporate operators use the control-plane endpoint. Applications use their regional inference endpoint.
 
+The control plane uses dedicated PostgreSQL and Redis for [runtime configuration](./configuration.md#runtime-configuration). Each data plane keeps its own stores.
+
 See [Configuration](./configuration.md) for service settings. Use the [cloud deployment guides](../deploy/cloud/overview.md) for each data plane's replicas, availability zones, and model-provider connections.
 
 For [OIDC token exchange](./configuration.md#data-plane-jwt-authentication), allow outbound HTTPS to the IdP from the control plane and each data plane. The control plane exchanges tokens. Each data plane fetches the IdP's signing keys and validates the exchanged token with its own JWT configuration.

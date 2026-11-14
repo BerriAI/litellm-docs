@@ -98,13 +98,13 @@ function Client({x, label}: {x: number; label: string}) {
   </g>;
 }
 
-function ExternalService({x, kind, label}: {x: number; kind: 'audit' | 'identity'; label: string}) {
+function ExternalService({x, y, kind, label}: {x: number; y: number; kind: 'audit' | 'identity'; label: string}) {
   return <g>
-    <g transform={`translate(${x - 16} 431)`} className={styles.symbol}>
+    <g transform={`translate(${x - 16} ${y - 16})`} className={styles.symbol}>
       {kind === 'audit' ? <><rect x="3" y="0" width="26" height="32" rx="2" /><path d="M9 8h14M9 15h14M9 22h10" /></>
         : <><path d="M16 0 30 6v12c0 8-14 16-14 16S2 26 2 18V6Z" /><circle cx="16" cy="12" r="4" /><path d="M9 25c0-9 14-9 14 0" /></>}
     </g>
-    <Lines x={x} y={487} lines={[label]} className={styles.nodeLabel} />
+    <Lines x={x} y={y + 28} lines={[label]} className={styles.nodeLabel} />
   </g>;
 }
 
@@ -128,7 +128,7 @@ function ArchitectureSvg({cloud}: {cloud: Cloud}) {
       The control plane sends management requests over {layout.peering} to independent LiteLLM dataplanes in {layout.regions[1]} and {layout.regions[2]}.
       Metadata and usage responses return through the same path. Each dataplane has separate private frontends for inference and management.
       Applications call the inference frontend. Only the control plane can reach the management frontend. The paired ingress icons represent these two frontends.
-      Each dataplane has its own PostgreSQL and Redis. The control plane has no database or Redis.
+      The control plane uses dedicated PostgreSQL for runtime configuration and Redis for its configuration stream. These stores connect privately and are separate from each dataplane’s PostgreSQL and Redis.
       {isHybrid ? 'The control plane and AWS dataplane share one AWS account. The on-premises dataplane runs Kubernetes in the corporate data center. AWS Site-to-Site VPN carries private management HTTPS over an encrypted IPsec tunnel.' : `The control plane and both dataplanes share one ${scopeLabel}.`}
       {isGcp ? 'The project contains separate global VPCs with regional private, frontend, and proxy-only subnets. Data services use private service connections outside the deployment VPC.' : ''}
       {isAzure ? 'Managed PostgreSQL and Redis sit outside the deployment VNet and connect through private endpoints.' : ''}
@@ -146,15 +146,16 @@ function ArchitectureSvg({cloud}: {cloud: Cloud}) {
     <Client x={isGcp ? 1110 : 1080} label={isHybrid ? "Applications: on-premises" : "Applications: region B"} />
 
     <g data-boundary="account">
-      <path d={`M20 100H${isHybrid ? 755 : 1185}V600H350V${isHybrid ? 365 : 355}H20Z`} className={styles.boundary} />
+      <path d={`M20 100H${isHybrid ? 755 : 1185}V600H340V500H20Z`} className={styles.boundary} />
       <text x={32} y={120} className={styles.groupLabel}>{scopeLabel}</text>
     </g>
     {isHybrid && <Group x={800} y={100} width={385} height={500} label="Corporate data center" />}
 
-    <Group x={30} y={132} width={300} height={203} label={isGcp ? `Management ${layout.network}` : layout.regions[0]} kind={isGcp ? 'network' : 'region'} />
-    <Group x={40} y={164} width={280} height={161} label={isGcp ? layout.regions[0] : `Management ${layout.network}`} kind={isGcp ? 'region' : 'network'} />
+    <Group x={30} y={132} width={300} height={isGcp ? 203 : 363} label={isGcp ? `Management ${layout.network}` : layout.regions[0]} kind={isGcp ? 'network' : 'region'} />
+    <Group x={40} y={164} width={280} height={isGcp ? 161 : isAzure ? 196 : 321} label={isGcp ? layout.regions[0] : `Management ${layout.network}`} kind={isGcp ? 'region' : 'network'} />
     <Group x={50} y={196} width={260} height={120} label={isGcp ? 'Private + proxy-only subnets' : 'Private subnets'} kind="subnet" />
-    <Group x={20} y={370} width={320} height={165} label="External services" kind="external" />
+    <Group x={50} y={isGcp ? 345 : isAzure ? 372 : 335} width={260} height={isGcp ? 150 : isAzure ? 113 : 140} label={isGcp ? `CP stores · ${layout.regions[0]}` : isAzure ? 'Control-plane stores' : 'Control-plane data subnets'} kind={isGcp || isAzure ? 'external' : 'subnet'} />
+    <Group x={20} y={505} width={290} height={103} label="Outbound HTTPS" kind="external" />
 
     {[0, 1].map(index => {
       const x = 370 + index * 430;
@@ -179,23 +180,37 @@ function ArchitectureSvg({cloud}: {cloud: Cloud}) {
     {line([[265, 84], [265, 228]], 'management')}
     {line([[243, 250], [152, 250]], 'management')}
     {isHybrid ? <>
-      {line([[152, 240], [190, 240], [190, 340], [360, 340], [360, 515], [740, 515]], 'management', false)}
-      {line([[190, 320], [298, 320]], 'management')}
-      {line([[342, 320], [370, 320], [370, 565], [778, 565]], 'management')}
+      {line([[152, 240], [190, 240], [190, 320], [350, 320], [350, 515], [740, 515]], 'management', false)}
+      {line([[350, 340], [320, 340], [320, 463]], 'management')}
+      {line([[320, 507], [320, 565], [778, 565]], 'management')}
       {line([[822, 565], [1170, 565]], 'management', false)}
-      <circle cx={190} cy={320} r={3} className={styles.managementArrow} />
+      <circle cx={350} cy={340} r={3} className={styles.managementArrow} />
       <text x={550} y={535} textAnchor="middle" className={styles.peeringLabel}>VPC peering · HTTPS 443</text>
       <text x={570} y={555} textAnchor="middle" className={styles.peeringLabel}>AWS Site-to-Site VPN · IPsec</text>
       <text x={1010} y={555} textAnchor="middle" className={styles.peeringLabel}>Management HTTPS 443</text>
     </> : <>
-      {line([[152, 240], [190, 240], [190, 340], [360, 340], [360, 565], [1170, 565]], 'management', false)}
+      {line([[152, 240], [190, 240], [190, 320], [350, 320], [350, 565], [1170, 565]], 'management', false)}
       <text x={600} y={555} textAnchor="middle" className={styles.flowLabel}>Management HTTPS 443</text>
       <text x={600} y={591} textAnchor="middle" className={styles.peeringLabel}>{layout.peering}</text>
     </>}
-    {line([[108, 260], [80, 260], [80, 350], [330, 350], [330, 411], [100, 411]], 'egress', false)}
-    {line([[100, 411], [100, 426]], 'egress')}
-    {line([[260, 411], [260, 426]], 'egress')}
-    <text x={isHybrid ? 50 : 210} y={361} className={styles.egressLabel}>HTTPS egress</text>
+    {isAzure ? <>
+      {line([[152, 260], [180, 260], [180, 324]], 'data')}
+      {line([[196, 340], [315, 340], [315, 400], [105, 400]], 'data', false)}
+      {line([[105, 400], [105, 403]], 'data')}
+      {line([[245, 400], [245, 403]], 'data')}
+      <Icon x={180} y={340} size={26} icon="azure-private-endpoint.svg" />
+      <text x={105} y={345} textAnchor="middle" className={styles.noteLabel}>Private endpoints</text>
+    </> : <>
+      {line([[152, 260], [175, 260], [175, 327], [315, 327], [315, 380], [105, 380]], 'data', false)}
+      {line([[105, 380], [105, 388]], 'data')}
+      {line([[245, 380], [245, 388]], 'data')}
+    </>}
+    <Service x={105} y={isAzure ? 425 : 410} icon={layout.databaseIcon} lines={['PostgreSQL', 'Runtime config']} />
+    <Service x={245} y={isAzure ? 425 : 410} icon={layout.redisIcon} lines={['Redis', 'Config stream']} />
+    {isGcp && <text x={180} y={487} textAnchor="middle" className={styles.noteLabel}>Private Services Access</text>}
+    {line([[108, 260], [25, 260], [25, 532], [245, 532]], 'egress', false)}
+    {line([[80, 532], [80, 533]], 'egress')}
+    {line([[245, 532], [245, 533]], 'egress')}
 
     {[0, 1].map(index => {
       const offset = index * 430;
@@ -242,12 +257,11 @@ function ArchitectureSvg({cloud}: {cloud: Cloud}) {
     })}
 
     {isHybrid && <>
-      <Icon x={320} y={320} icon="aws-vpn-gateway.svg" />
-      <Lines x={320} y={356} lines={['Virtual private gateway']} className={styles.nodeLabel} />
+      <Icon x={320} y={485} icon="aws-vpn-gateway.svg" />
       <Icon x={800} y={565} icon="aws-customer-gateway.svg" />
       <Lines x={800} y={540} lines={['VPN router']} className={styles.nodeLabel} />
     </>}
-    <Service x={130} y={250} icon={layout.computeIcon} lines={['Control plane', `${layout.compute} · 1 replica`]} />
+    <Service x={130} y={250} icon={layout.computeIcon} lines={['Control plane', `${layout.compute} · replicas`]} />
     <Service x={265} y={250} icon={layout.ingressIcon} lines={[layout.ingress, 'HTTPS 443']} />
     <g data-flow="dataplane-jwks" aria-label="Dataplanes fetch IdP signing keys when they use OIDC token exchange">
       {[0, 1].map(index => {
@@ -262,14 +276,13 @@ function ArchitectureSvg({cloud}: {cloud: Cloud}) {
       })}
       {[265, isGcp ? 680 : 650].map(x => <path key={x} d={`M${x + 7} 90Q${x} 100 ${x - 7} 90`} className={styles.crossingGap} />)}
       <path
-        d={`M805 90H${(isGcp ? 680 : 650) + 7}Q${isGcp ? 680 : 650} 100 ${(isGcp ? 680 : 650) - 7} 90H272Q265 100 258 90H10V530H345V447H282`}
+        d={`M805 90H${(isGcp ? 680 : 650) + 7}Q${isGcp ? 680 : 650} 100 ${(isGcp ? 680 : 650) - 7} 90H272Q265 100 258 90H10V589H315V552H267`}
         className={`${styles.flow} ${styles.egress}`} fill="none" markerEnd={`url(#${id}-egress)`}
       />
-      <Lines x={180} y={507} lines={['JWKS · HTTPS 443', 'With OIDC token exchange']} className={styles.egressLabel} />
+      <Lines x={165} y={603} lines={['JWKS · OIDC token exchange']} className={styles.egressLabel} />
     </g>
-    <Lines x={245} y={400} lines={['OIDC discovery / exchange']} className={styles.egressLabel} />
-    <ExternalService x={100} kind="audit" label="Audit sink" />
-    <ExternalService x={260} kind="identity" label="IdP (optional)" />
+    <ExternalService x={80} y={552} kind="audit" label="Audit sink" />
+    <ExternalService x={245} y={552} kind="identity" label="IdP (optional)" />
   </svg>;
 }
 

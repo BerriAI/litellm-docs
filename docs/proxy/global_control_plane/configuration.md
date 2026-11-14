@@ -27,9 +27,11 @@ Run one worker per replica and scale with replicas. The control-plane server rej
 
 ## Authentication
 
+### Control plane authentication
+
 Send API credentials in `Authorization: Bearer <credential>` using the header syntax in [RFC 6750, Section 2.1](https://www.rfc-editor.org/rfc/rfc6750.html#section-2.1).
 
-### Username and password login {#password-sessions}
+#### Username and password login {#password-sessions}
 
 `POST /api/v1/auth/login` checks the configured username and password. It returns a session [JWT (RFC 7519)](https://www.rfc-editor.org/rfc/rfc7519.html) in `access_token`. Send that token as the bearer credential on later requests.
 
@@ -40,7 +42,7 @@ Send API credentials in `Authorization: Bearer <credential>` using the header sy
 | `CONTROL_PLANE_SESSION_ISSUER` | `litellm-control-plane` | Issuer for password-session JWTs. |
 | `CONTROL_PLANE_SESSION_AUDIENCE` | `litellm-control-plane-api` | Audience for password-session JWTs. |
 
-### OIDC provider JWT authentication {#oidc}
+#### OIDC provider JWT authentication {#oidc}
 
 The control plane validates JWT access tokens from an [OpenID Connect (OIDC) provider](https://openid.net/specs/openid-connect-core-1_0.html). It checks the signature, issuer, audience, and expiry.
 
@@ -56,7 +58,7 @@ Allow HTTPS access to the IdP's [OpenID Connect Discovery](https://openid.net/sp
 | `CONTROL_PLANE_OIDC_EMAIL_CLAIM` | `email` | Claim containing the caller's email. |
 | `CONTROL_PLANE_OIDC_LEEWAY_SECONDS` | `30` | Clock tolerance in seconds for IdP JWT validation. |
 
-### Roles
+#### Roles {#roles}
 
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
@@ -64,6 +66,48 @@ Allow HTTPS access to the IdP's [OpenID Connect Discovery](https://openid.net/sp
 | `CONTROL_PLANE_INCLUDE_DEFAULT_ROLES` | `true` | Include the built-in roles. |
 
 Config-defined roles and included default roles cannot be changed through the runtime API. Runtime role changes affect later JWT verification without rebuilding the service. JWT role names still come from the caller's claims, and a scope claim can still narrow the resolved grants.
+
+### Data plane JWT authentication {#data-plane-jwt-authentication}
+
+Set these values on each data plane that accepts an exchanged JWT. Each data plane must reach the IdP's discovery and JWKS endpoints over HTTPS. It fetches signing keys independently of the control plane.
+
+For the `us-prod` registry entry, set these data plane environment variables:
+
+```bash
+export JWT_PUBLIC_KEY_URL=https://idp.example.com/.well-known/openid-configuration
+export JWT_ISSUER=https://idp.example.com
+export JWT_AUDIENCE=litellm-us-production
+```
+
+Match the issuer and audience to the exchanged token's `iss` and `aud`. Merge these fields into the data plane's configuration:
+
+```yaml title="Data plane config.yaml"
+general_settings:
+  enable_jwt_auth: true
+  litellm_jwtauth:
+    user_id_jwt_field: sub
+    user_email_jwt_field: email
+    user_id_upsert: false
+```
+
+Provision each operator through [user management](../users.md). Match the local `user_id` to the exchanged token's `sub` and assign the local role needed for the management APIs. Control plane roles do not grant data plane permissions.
+
+| Data plane environment variable | Default | Purpose |
+| --- | --- | --- |
+| `JWT_PUBLIC_KEY_URL` | Unset | Required JWKS or OIDC discovery URL for the exchanged token's issuer. |
+| `JWT_ISSUER` | Unset | Expected `iss` claim. Issuer validation is disabled when unset. |
+| `JWT_AUDIENCE` | Unset | Expected `aud` claim. Audience validation is disabled when unset. |
+
+Configure these fields in the data plane's `config.yaml`:
+
+| YAML field | Default | Purpose |
+| --- | --- | --- |
+| `general_settings.enable_jwt_auth` | `false` | Enable JWT authentication. |
+| `general_settings.litellm_jwtauth.user_id_jwt_field` | Unset | Claim containing the local LiteLLM user ID. Use `sub` for the token exchange example. |
+| `general_settings.litellm_jwtauth.user_email_jwt_field` | Unset | Claim containing the user's email. |
+| `general_settings.litellm_jwtauth.user_id_upsert` | `false` | Create a user record if it does not exist. |
+
+See the [JWT configuration reference](../jwt_auth_reference.md) for additional data plane settings.
 
 ## Data plane registry
 
@@ -260,45 +304,3 @@ The OTLP settings below configure audit-log and trace exporters.
 | `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` | Unset | Complete log endpoint, such as `https://otel.internal.example.com/v1/logs`. Requires the `otlp` audit sink. |
 | `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | Unset | Complete trace endpoint, such as `https://otel.internal.example.com/v1/traces`. |
 | `OTEL_EXPORTER_OTLP_HEADERS` | Unset | Comma-separated `key=value` headers for collector authentication. |
-
-## Data plane JWT authentication
-
-Set these values on each data plane that accepts an exchanged JWT. Each data plane must reach the IdP's discovery and JWKS endpoints over HTTPS. It fetches signing keys independently of the control plane.
-
-For the `us-prod` registry entry above, set these data plane environment variables:
-
-```bash
-export JWT_PUBLIC_KEY_URL=https://idp.example.com/.well-known/openid-configuration
-export JWT_ISSUER=https://idp.example.com
-export JWT_AUDIENCE=litellm-us-production
-```
-
-Match the issuer and audience to the exchanged token's `iss` and `aud`. Merge these fields into the data plane's configuration:
-
-```yaml title="Data plane config.yaml"
-general_settings:
-  enable_jwt_auth: true
-  litellm_jwtauth:
-    user_id_jwt_field: sub
-    user_email_jwt_field: email
-    user_id_upsert: false
-```
-
-Provision each operator through [user management](../users.md). Match the local `user_id` to the exchanged token's `sub` and assign the local role needed for the management APIs. Control plane roles do not grant data plane permissions.
-
-| Data plane environment variable | Default | Purpose |
-| --- | --- | --- |
-| `JWT_PUBLIC_KEY_URL` | Unset | Required JWKS or OIDC discovery URL for the exchanged token's issuer. |
-| `JWT_ISSUER` | Unset | Expected `iss` claim. Issuer validation is disabled when unset. |
-| `JWT_AUDIENCE` | Unset | Expected `aud` claim. Audience validation is disabled when unset. |
-
-Configure these fields in the data plane's `config.yaml`:
-
-| YAML field | Default | Purpose |
-| --- | --- | --- |
-| `general_settings.enable_jwt_auth` | `false` | Enable JWT authentication. |
-| `general_settings.litellm_jwtauth.user_id_jwt_field` | Unset | Claim containing the local LiteLLM user ID. Use `sub` for the token exchange example. |
-| `general_settings.litellm_jwtauth.user_email_jwt_field` | Unset | Claim containing the user's email. |
-| `general_settings.litellm_jwtauth.user_id_upsert` | `false` | Create a user record if it does not exist. |
-
-See the [JWT configuration reference](../jwt_auth_reference.md) for additional data plane settings.
