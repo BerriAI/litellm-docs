@@ -51,6 +51,12 @@ function pointOnCurve(points, progress) {
 const curvePath = points => `M${points[0].join(',')} C${points[1].join(',')} ${points[2].join(',')} ${points[3].join(',')}`;
 const incomingCurve = lane => [[-70, 315 + lane * 22], [270, 330 + lane * 22], [368, 588 + (lane - 13) * 2.4], [540, 588 + (lane - 13) * 2.4]];
 const outgoingCurve = (scope, lane = 2) => [[846, 588 + (scope - 1) * 14 + (lane - 2) * 3], [1030, 588 + (scope - 1) * 14], [1040, 488 + scope * 155 + lane * 8], [1235, 488 + scope * 155 + lane * 8]];
+const compactIncomingCurve = lane => {
+  const x = 72 + lane * 96;
+  const destination = 336 + lane * 8;
+  return [[x, 255], [x, 290], [destination, 290], [destination, 307]];
+};
+const compactOutgoingCurve = [[360, 425], [360, 442], [360, 458], [360, 475]];
 
 function Packet({curve, progress, color = CYAN, glowId, opacity = 1, trail = 0.13}) {
   const {x, y, angle} = pointOnCurve(curve, progress);
@@ -165,10 +171,10 @@ export default function CustomerPortalScene({elapsed = 0, logoHref = '/img/brand
     <SceneDefinitions prefix={prefix} />
     <rect width="100%" height="100%" fill="#020304" />
     <rect width="100%" height="100%" fill={`url(#${prefix}-pixels)`} mask={`url(#${prefix}-pixel-mask)`} opacity="0.72" />
-    <g stroke="#383e47" strokeWidth="0.7" opacity="0.5">
-      {(compact ? [37, 683] : [72, 520, 1235, 1855]).map(x => <path key={x} d={`M${x},0 V1180`} />)}
-      {(compact ? [160, 450, 1140] : [80, 277, 1015]).map(y => <path key={y} d={`M0,${y} H1920`} strokeDasharray="3 8" />)}
-    </g>
+    {!compact && <g stroke="#383e47" strokeWidth="0.7" opacity="0.5">
+      {[72, 520, 1235, 1855].map(x => <path key={x} d={`M${x},0 V1180`} />)}
+      {[80, 277, 1015].map(y => <path key={y} d={`M0,${y} H1920`} strokeDasharray="3 8" />)}
+    </g>}
     {showTitle && <g fontFamily={SANS} fill={WHITE} textAnchor="middle">
       <text x={compact ? 360 : 960} y={compact ? 55 : 65} fontSize={compact ? 13 : 15} fontFamily={MONO} fill="#a9b1be" letterSpacing="2">LITELLM AI GATEWAY</text>
       <text x={compact ? 360 : 960} y={compact ? 135 : 196} fontSize={compact ? 74 : 132} fontWeight="350" letterSpacing={compact ? '-3' : '-6'}>Customer Portal</text>
@@ -176,19 +182,18 @@ export default function CustomerPortalScene({elapsed = 0, logoHref = '/img/brand
     </g>}
     {compact ? <g>
       <g fill="none" stroke="#cbd0d9" strokeWidth="0.8" opacity="0.65">
-        {Array.from({length: 10}, (_, index) => <path key={index} d={`M${index * 80 - 40},240 C${index * 80 - 40},290 ${280 + index * 4},280 ${280 + index * 4},315`} />)}
-        {[0, 1, 2].map(index => <path key={index} d={`M${340 + index * 20},366 C${340 + index * 20},410 ${260 + index * 100},420 ${260 + index * 100},475`} />)}
+        {Array.from({length: 7}, (_, index) => <path key={index} d={curvePath(compactIncomingCurve(index))} />)}
+        <path d={curvePath(compactOutgoingCurve)} />
       </g>
       <rect x="240" y="307" width="245" height="65" fill="#020304" />
       <ellipse cx="360" cy="340" rx="135" ry="35" fill={BLUE} opacity={state.gatewayPulse * 0.19} filter={`url(#${prefix}-gateway-bloom)`} />
       <image href={logoHref} x="247" y="318" width="225" height="42" preserveAspectRatio="xMidYMid meet" />
       <text x="360" y="401" fontFamily={MONO} fontSize="15" textAnchor="middle" fill="#a6aebc">Meter cost · Apply budgets</text>
-      <text x="553" y="447" fontFamily={MONO} fontSize="15" fill={WHITE}>Usage API</text>
+      <text x="390" y="455" fontFamily={MONO} fontSize="15" fill={WHITE}>Usage API</text>
       {[...ARRIVAL_TIMES, ...ARRIVAL_TIMES.map(arrival => arrival + LOOP_SECONDS)].map((arrival, index) => {
         const age = state.time - (arrival - 3.6);
         if (age < 0 || age > 3.6 || (age >= 1.85 && age < 2.05)) return null;
-        const sourceX = index % 5 * 140 + 60;
-        const curve = age < 1.85 ? [[sourceX, 240], [sourceX, 290], [300, 290], [300, 318]] : [[360, 366], [360, 410], [460, 420], [460, 475]];
+        const curve = age < 1.85 ? compactIncomingCurve(index % 7) : compactOutgoingCurve;
         return <Packet key={arrival} curve={curve} progress={age < 1.85 ? age / 1.85 : (age - 2.05) / 1.55} color={index % 2 ? CYAN : BLUE} glowId={`${prefix}-glow`} />;
       })}
       <Portal state={state} compact />
