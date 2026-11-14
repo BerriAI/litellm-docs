@@ -5,7 +5,7 @@ date: 2026-11-11T17:00:00
 authors:
   - nate
 description: "As of v1.110.0, all routing in LiteLLM flows through a Rust core. Here is why we rebuilt the router and how differential testing let us migrate it without regressions."
-image: ./router-swap-cover.gif
+image: ./router-swap-cover.png
 tags: [rust, rust-migration, routing, engineering]
 hide_table_of_contents: false
 ---
