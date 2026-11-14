@@ -125,6 +125,8 @@ The existing proxy encryption key protects stored credentials. Keep `LITELLM_SAL
 
 Open **Add Model**, select **Github Copilot**, and choose an available model. Set its public model name and select the saved App credential under **Existing Credentials**. Click **Add Model**. Applications call this alias with their LiteLLM virtual keys. No personal GitHub connection is required.
 
+A model added this way stores only the credential name. Delete or reassign the model before deleting its App credential, since a GitHub Copilot model whose credential is missing uses the proxy's shared GitHub Copilot device login.
+
 Create a separate named credential for each App, then attach each application's model deployment to the appropriate credential. To rotate a key, edit the credential and upload its replacement before revoking the old key in GitHub. Leaving the uploaded-key field unchanged preserves the saved key.
 
 For a database credential created through the API, the form shows the GitHub Copilot name and logo. You can edit its settings without uploading another PEM. The saved key or secret reference stays in place. A PEM upload replaces any existing private-key secret reference. The dashboard only offers file upload, not a secret-reference field.
@@ -192,12 +194,14 @@ model_list:
     litellm_params:
       model: github_copilot/claude-sonnet-5.5
       litellm_credential_name: copilot-service-a
+      github_copilot_auth_type: github_app
       rpm: 30
       tpm: 30000
   - model_name: service-b-copilot
     litellm_params:
       model: github_copilot/claude-sonnet-5.5
       litellm_credential_name: copilot-service-b
+      github_copilot_auth_type: github_app
       rpm: 10
       tpm: 10000
 
@@ -206,6 +210,8 @@ general_settings:
 ```
 
 `github_copilot_app_id` accepts the App's client ID, which GitHub recommends for JWTs, or the numeric App ID as a number or a string. Use the installation ID for the target organization, not an organization ID. Set these values in the environment before starting the proxy.
+
+Setting `github_copilot_auth_type: github_app` on each deployment as well as on its credential makes the deployment refuse calls when its named credential is deleted or fails to load. Without it, a GitHub Copilot deployment whose credential is missing uses the proxy's shared GitHub Copilot device login, the same as other GitHub Copilot deployments.
 
 `github_copilot_app_private_key_ref` is a secret reference. It accepts `oidc/file/` paths within `LITELLM_OIDC_ALLOWED_CREDENTIAL_DIRS` (standard container secret directories, including `/run/secrets`, are allowed by default), `os.environ/VARIABLE_NAME`, or a secret name in your configured LiteLLM secret manager. The reference stays a reference until authentication runs. This reference field never accepts inline PEM. For this reference-based configuration, provision the secret on each worker and keep private keys out of client applications. Built-in external secret-manager integrations follow their existing Enterprise licensing.
 
@@ -242,7 +248,7 @@ Pass the same authentication fields to `acompletion`, `responses`, `aresponses`,
 
 LiteLLM signs short-lived RS256 JWTs and requests only `organization_copilot_requests: read` when creating installation tokens. GitHub's token endpoint and Copilot endpoint come from the validated GitHub host. Authentication requests use LiteLLM's `ssl_verify` and CA bundle settings, such as `SSL_VERIFY` and `SSL_CERT_FILE`, and do not follow redirects. The provider pins the installation bearer token and the Copilot SDK integration ID on outbound model requests.
 
-Each worker keeps a bounded in-memory token cache and coordinates concurrent refreshes within that worker. Tokens are refreshed on the next request when less than two minutes remain. Both wall-clock expiry and elapsed time are checked. Refresh failures return sanitized errors and never fall back to stored user credentials or expired tokens. Short failure cooldowns limit repeated mint attempts, and GitHub rate-limit responses produce retryable rate-limit errors.
+Each worker keeps a bounded in-memory token cache and coordinates concurrent refreshes within that worker. Tokens are refreshed on the next request when less than two minutes remain. Both wall-clock expiry and elapsed time are checked. Refresh failures return sanitized errors and never fall back to stored user credentials or expired tokens. Short failure cooldowns limit repeated mint attempts, and GitHub rate-limit responses produce retryable rate-limit errors. When GitHub rejects the installation token request with HTTP 401, 403, or 404, the call returns a 401, the router cools down that deployment, and Prometheus counts it as a deployment failure.
 
 The cache separates hosts, Apps, installations, secret references, and uploaded key contents. Uploading a replacement key changes the cache identity as soon as a worker loads the updated credential. A cached token is served without reading a secret reference again, so a rotated mounted key or secret-manager value is used from the next token refresh, within about an hour, or after a worker restart. Secret-manager caching can add to that delay, so follow your backend's cache settings. Roll out the replacement key before revoking the old key. To terminate existing installation tokens immediately, use GitHub's revocation controls and restart workers, rather than relying on deleting a private key alone.
 
@@ -414,6 +420,8 @@ On the gateway, LiteLLM uses the API host from GitHub's token response if it use
 For direct SDK Chat Completions, Responses, and Embeddings, LiteLLM checks these values in order: the credential or deployment's `api_base`, `endpoints.api` in the token response, `GITHUB_COPILOT_API_BASE`, then `https://api.githubcopilot.com`.
 
 Anthropic Messages uses the authenticated Copilot endpoint. It ignores a caller-supplied `api_base` and `GITHUB_COPILOT_API_BASE`.
+
+GitHub App deployments always call the Copilot endpoint for their GitHub host and ignore a configured `api_base`. Spend logs, response headers, and the Prometheus `api_base` label report that endpoint.
 
 </details>
 
