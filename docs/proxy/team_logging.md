@@ -20,6 +20,29 @@ Team 3 -> Disabled Logging (for GDPR compliance)
 - `gcs_bucket`
 - `langsmith`
 - `arize`
+- `s3_v2`
+
+### S3 v2 configuration
+
+For team/key-scoped S3 logging, configure the bucket and AWS credentials in `litellm_settings.s3_callback_params` in the proxy's `config.yaml`. Every team/key that uses `s3_v2` shares one `S3V2Logger` instance per proxy process and the same bucket and credentials. Use `"callback_vars": {}` in team/key API requests, not per-team or per-key S3 credentials.
+
+```yaml title="config.yaml"
+litellm_settings:
+  s3_callback_params:
+    s3_bucket_name: my-logging-bucket
+    s3_region_name: us-west-2
+    s3_aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
+    s3_aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
+    s3_use_team_prefix: true
+```
+
+Set `s3_use_team_prefix: true` inside `s3_callback_params` to prefix S3 objects with the request's team alias. Give teams distinct aliases to separate their logs within the shared bucket. Requests without a team alias have no team prefix.
+
+:::warning
+
+Do not also add `s3_v2` to global `litellm_settings.success_callback` when you want team/key-scoped logging. A global success callback logs successful requests to S3 regardless of their team/key callback settings, so per-team scoping is lost.
+
+:::
 
 
 ## [BETA] Team Logging
@@ -87,6 +110,9 @@ A proxy admin, an org admin of the team's organization, and an admin of the team
 
 We make a request to `POST /team/{team_id}/callback` to add a callback for
 
+<Tabs>
+<TabItem label="Langfuse" value="langfuse">
+
 ```shell
 curl -X POST 'http:/localhost:4000/team/dbe2f686-a686-4896-864a-4c3924458709/callback' \
 -H 'Content-Type: application/json' \
@@ -103,13 +129,32 @@ curl -X POST 'http:/localhost:4000/team/dbe2f686-a686-4896-864a-4c3924458709/cal
 }'
 ```
 
+</TabItem>
+<TabItem label="S3 v2" value="s3_v2">
+
+Configure the [shared S3 settings](#s3-v2-configuration) first, then enable S3 logging for this team.
+
+```shell
+curl -X POST 'http://localhost:4000/team/dbe2f686-a686-4896-864a-4c3924458709/callback' \
+-H 'Content-Type: application/json' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-d '{
+  "callback_name": "s3_v2",
+  "callback_type": "success",
+  "callback_vars": {}
+}'
+```
+
+</TabItem>
+</Tabs>
+
 ##### Supported Values
 
 | Field | Supported Values | Notes |
 |-------|------------------|-------|
-| `callback_name` | `"langfuse"`, `"gcs_bucket"`| Currently only supports `"langfuse"`, `"gcs_bucket"` |
+| `callback_name` | `"langfuse"`, `"gcs_bucket"`, `"langsmith"`, `"arize"`, `"s3_v2"` | Integrations listed on this page. The API accepts a string, not a fixed enum. |
 | `callback_type` | `"success"`, `"failure"`, `"success_and_failure"` | |
-| `callback_vars` | | dict of callback settings |
+| `callback_vars` | | dict of callback settings. Use `{}` for `s3_v2`, which uses the shared proxy configuration. |
 | &nbsp;&nbsp;&nbsp;&nbsp;`langfuse_public_key` | string | Required for Langfuse |
 | &nbsp;&nbsp;&nbsp;&nbsp;`langfuse_secret_key` | string | Required for Langfuse |
 | &nbsp;&nbsp;&nbsp;&nbsp;`langfuse_host` | string | Optional for Langfuse (defaults to https://cloud.langfuse.com) |
@@ -435,6 +480,28 @@ From v1.84.0, the proxy rejects `os.environ/...` references inside API-supplied 
   ```
 
 </TabItem>
+<TabItem label="S3 v2" value="s3_v2">
+
+Configure the [shared S3 settings](#s3-v2-configuration) first, then enable S3 logging for this key.
+
+```bash
+curl -X POST 'http://localhost:4000/key/generate' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{
+    "metadata": {
+        "logging": [{
+            "callback_name": "s3_v2",
+            "callback_type": "success",
+            "callback_vars": {}
+        }]
+    }
+}'
+```
+
+Successful requests made with the generated key log to the shared S3 bucket. To use the team alias prefix, create the key with a `team_id` and set `s3_use_team_prefix: true` in the proxy configuration.
+
+</TabItem>
 </Tabs>
 
 ---
@@ -567,8 +634,3 @@ curl -i http://localhost:4000/v1/chat/completions \
     ]
   }'
 ```
-
-
-
-
-
