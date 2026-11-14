@@ -331,6 +331,12 @@
       "chat"
     ]
   },
+  "providers/apimodels": {
+    "prefix": "apimodels",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/aws_sagemaker": {
     "prefix": "sagemaker",
     "capabilities": [
