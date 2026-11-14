@@ -44,6 +44,25 @@ response = litellm.completion(
 print(response)
 ```
 
+## QuickSilver Pro
+
+QuickSilver Pro exposes an OpenAI-compatible endpoint at `https://api.quicksilverpro.io/v1`. Get an API key from its [dashboard](https://quicksilverpro.io/dashboard) and set `QUICKSILVERPRO_API_KEY` in your environment.
+
+```python
+import os
+import litellm
+
+response = litellm.completion(
+    model="openai/qwen3.8-27b",
+    api_base="https://api.quicksilverpro.io/v1",
+    api_key=os.environ["QUICKSILVERPRO_API_KEY"],
+    messages=[{"role": "user", "content": "Hello"}],
+)
+print(response.choices[0].message.content)
+```
+
+The `openai/` prefix selects the OpenAI-compatible route. Choose model IDs from the [public catalog](https://quicksilverpro.io/model-catalog.json). Prices and model capabilities are published in the [pricing feed](https://quicksilverpro.io/pricing.json).
+
 ## Usage - embedding
 
 ```python
