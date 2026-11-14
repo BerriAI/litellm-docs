@@ -20,7 +20,6 @@ The Global Control Plane provides one API to manage independent LiteLLM deployme
 | Manage resources through one endpoint | Read and update keys, users, teams, models, budgets, and other supported resources on a selected data plane. |
 | Compare usage across deployments | Aggregate spend, requests, and tokens. Group results by data plane, model, provider, team, or API key. |
 | Give operators limited access | Assign control-plane roles and restrict callers to named data planes. Each data plane also checks the caller's local permissions. |
-| Centralize administrative audit logs | Export control-plane activity to logs, an OTLP collector, S3, Splunk, or Microsoft Sentinel. |
 
 ## How it works
 
