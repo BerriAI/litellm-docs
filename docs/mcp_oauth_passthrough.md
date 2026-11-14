@@ -1,19 +1,24 @@
-# MCP OAuth Passthrough
+---
+title: OAuth token passthrough
+description: Forward client OAuth tokens from LiteLLM to MCP servers, with or without separate LiteLLM authentication.
+---
 
-Some MCP servers run their own OAuth issuer and expect the client (Claude Code, Cursor, ChatGPT, etc.) to authenticate directly against it. For those servers LiteLLM can let the client's own upstream token flow through instead of minting, storing, or refreshing anything itself.
+# OAuth token passthrough {#mcp-oauth-passthrough}
 
-Two `auth_type` values cover this. They differ in one thing: whether LiteLLM still authenticates the caller at its own edge.
+LiteLLM can forward a client's OAuth access token to an MCP server. The client obtains the token from the server's OAuth provider, and LiteLLM forwards it without issuing, storing, or refreshing it.
 
-| Mode | LiteLLM admission | Credential forwarded upstream | Spend / rate limits / audit | Use when |
+Choose whether the client must also authenticate to LiteLLM:
+
+| Mode | Client authentication to LiteLLM | Credential forwarded to the MCP server | Spend / rate limits / audit | Use when |
 |------|-------------------|-------------------------------|-----------------------------|----------|
-| `true_passthrough` | None; anonymous at the LiteLLM layer | The client's `Authorization`, verbatim | Not recorded | LiteLLM should add zero auth and the upstream is the sole gate |
-| `oauth_delegate` | Required (LiteLLM key / SSO / JWT) | A distinct upstream bearer the caller sends alongside admission | Recorded, keyed on the admission identity | You want LiteLLM to keep gating and observing the route while the upstream owns tool authorization |
+| `true_passthrough` | None | The client's `Authorization`, unchanged | Not recorded | The MCP server handles all authentication |
+| `oauth_delegate` | Required (Virtual Key, SSO, or IdP token) | A separate MCP server token supplied by the client | Recorded for the authenticated client | LiteLLM authenticates the client and tracks usage; the MCP server validates its own token |
 
 Both modes return the upstream's protected-resource metadata verbatim during discovery, so the client always authorizes against the real upstream issuer.
 
 Both forward the token exactly as the caller sent it. LiteLLM does not decode it, does not check its audience or scopes, and does not exchange it; the upstream MCP server is the only party that validates it. If the caller's token was minted for a different resource, neither mode can make it work, and you want [`oauth2_token_exchange`](#audience-locked-tokens-passthrough-or-token-exchange) instead.
 
-Both also take an orthogonal `dcr_bridge` flag that changes where an OAuth-only client discovers its authorization server. Turn it on for clients that cannot register with the upstream IdP themselves or cannot send two separate credentials, such as OpenCode, Claude Code, Cursor, and Claude Desktop. See [Gateway-hosted sign-in (DCR bridge)](#gateway-hosted-sign-in-dcr-bridge).
+Both modes support `dcr_bridge`, which lets LiteLLM host OAuth registration and sign-in for the client. Turn it on for clients that cannot register with the upstream IdP themselves or cannot send two separate credentials, such as OpenCode, Claude Code, Cursor, and Claude Desktop. See [Gateway-hosted sign-in (DCR bridge)](#gateway-hosted-sign-in-dcr-bridge).
 
 ## Audience-locked tokens: passthrough or token exchange {#audience-locked-tokens-passthrough-or-token-exchange}
 
@@ -24,14 +29,14 @@ Pick the mode from the token you actually hold:
 | The caller's token was minted for | Use | What LiteLLM does with it |
 |-----------------------------------|-----|---------------------------|
 | The upstream MCP server itself (the client ran OAuth against that server's issuer) | `true_passthrough` or `oauth_delegate` | Forwards it verbatim; the upstream validates audience and scopes |
-| A different resource (your IdP, an internal API, a SaaS API), and your IdP supports RFC 8693 or Entra On-Behalf-Of | `oauth2_token_exchange` | Sends it to the IdP as the `subject_token`, receives a token whose audience is the MCP server (`audience: ...` in the server config), caches it, and forwards only the exchanged token. See [MCP OBO Auth](./mcp_obo_auth.md) |
-| A LiteLLM virtual key, SSO session, or IdP JWT that only proves identity to the gateway | Neither passthrough mode | Admission credentials are never forwarded upstream. Configure a server-side credential (`oauth2` client credentials, a static `authentication_token`, or token exchange) instead |
+| A different resource (your IdP, an internal API, a SaaS API), and your IdP supports RFC 8693 or Entra On-Behalf-Of | `oauth2_token_exchange` | Sends it to the IdP as the `subject_token`, receives a token whose audience is the MCP server (`audience: ...` in the server config), caches it, and forwards only the exchanged token. See [Token exchange (OBO)](./mcp_obo_auth.md) |
+| A LiteLLM Virtual Key, SSO session, or IdP JWT used only to authenticate to LiteLLM | Neither passthrough mode | Credentials used to authenticate to LiteLLM are never forwarded to the MCP server. Configure a server-side credential (`oauth2` client credentials, a static `authentication_token`, or token exchange) instead |
 
 The practical test: if you would have to ask your IdP to widen a token's audience so the upstream accepts it, stop and use token exchange. Widening audiences turns one bearer into a key for several resources, and the passthrough modes exist precisely so that the gateway never does that on the caller's behalf.
 
 ## true_passthrough
 
-LiteLLM acts as a transparent proxy: no admission check, nothing minted or stored, and the client's `Authorization` forwarded unchanged. Reach for it when the upstream is the source of truth for access and you do not want LiteLLM gating the route twice.
+LiteLLM forwards the client's `Authorization` unchanged, without authenticating the client or issuing or storing tokens. Use this mode when the MCP server handles all authentication.
 
 ### Setup
 
@@ -46,7 +51,7 @@ That is the entire configuration. No client credentials or token endpoints, beca
 
 ### How It Works
 
-- The client sends its MCP request with no LiteLLM API key.
+- The client sends its MCP request with no LiteLLM Virtual Key.
 - With no upstream token yet, LiteLLM relays the upstream's own `401` and `WWW-Authenticate`.
 - The client runs OAuth directly against the upstream issuer.
 - The client retries with `Authorization: Bearer <upstream-token>`, and LiteLLM forwards it untouched.
@@ -73,7 +78,7 @@ sequenceDiagram
 
 ### Fail-Closed Behavior
 
-The transparent path fires only when every target resolves to `true_passthrough`. It falls back to normal LiteLLM admission when:
+LiteLLM skips client authentication only when every target uses `true_passthrough`. It requires client authentication when:
 
 - The server's `auth_type` is anything else.
 - The request targets multiple servers (`x-mcp-servers: a,b`) and any one is not `true_passthrough`.
@@ -107,7 +112,7 @@ mcp_servers:
 
 ## oauth_delegate
 
-LiteLLM still admits the caller (LiteLLM API key, SSO, or JWT), then forwards a separate upstream bearer the caller supplies. LiteLLM mints nothing and never forwards the admission credential upstream. Use it when the upstream owns tool-level authorization but you still want LiteLLM gating the route and keeping spend, rate-limit, and audit attribution.
+LiteLLM authenticates the client with a Virtual Key, SSO session, or IdP token, then forwards a separate MCP server token supplied by the client. LiteLLM does not issue tokens or forward its own authentication credential to the server. Use this mode to retain LiteLLM authentication, spend tracking, rate limits, and audit logs while the MCP server validates its own token and controls tool access.
 
 ### Setup
 
@@ -122,9 +127,9 @@ No client credentials, for the same reason as `true_passthrough`. What changes i
 
 ### How It Works
 
-- The caller admits with a LiteLLM credential in `x-litellm-api-key`.
-- The upstream token rides in `Authorization` (or `x-mcp-<alias>-authorization` for aggregate requests).
-- LiteLLM validates admission, then forwards only the upstream bearer, never the admission credential.
+- The client authenticates to LiteLLM with a credential in `x-litellm-api-key`.
+- The MCP server token is sent in `Authorization` (or `x-mcp-<alias>-authorization` for aggregate requests).
+- LiteLLM authenticates the client, then forwards only the MCP server token.
 - With no upstream token yet, LiteLLM returns a `401` pointing at the gateway's `oauth-protected-resource` well-known, which proxies the upstream metadata verbatim.
 
 ```mermaid
@@ -135,7 +140,7 @@ sequenceDiagram
     participant Auth as Upstream OAuth Server
 
     Client->>LiteLLM: MCP request + x-litellm-api-key (no upstream token)
-    Note over LiteLLM: Admit caller (key / SSO / JWT)
+    Note over LiteLLM: Authenticate client (Virtual Key / SSO / IdP token)
     LiteLLM-->>Client: 401 + WWW-Authenticate (gateway, proxies upstream metadata)
 
     Note over Client,Auth: Client runs OAuth directly with upstream
@@ -143,7 +148,7 @@ sequenceDiagram
     Auth-->>Client: access_token
 
     Client->>LiteLLM: MCP request + x-litellm-api-key + Authorization: Bearer access_token
-    Note over LiteLLM: Admit caller, strip admission credential, record spend / rate limit / audit
+    Note over LiteLLM: Authenticate client, remove LiteLLM credential, record spend / rate limit / audit
     LiteLLM->>MCP: Forward request + Bearer access_token (upstream token only)
     MCP-->>LiteLLM: MCP response
     LiteLLM-->>Client: MCP response
@@ -151,14 +156,14 @@ sequenceDiagram
 
 :::warning[Keep the two credentials in separate headers]
 
-If a caller sends a single credential in `Authorization` with no `x-litellm-api-key`, LiteLLM treats it as the admission credential (virtual key, IdP JWT, or SSO session token) and never forwards it upstream. That is the leak defense keeping a LiteLLM or IdP token from reaching a third-party MCP server.
+If a client sends a single credential in `Authorization` with no `x-litellm-api-key`, LiteLLM uses it to authenticate the client (Virtual Key, IdP JWT, or SSO session token) and never forwards it to the MCP server. This prevents credentials intended for LiteLLM from reaching a third-party server.
 
 :::
 
 ### Security Trade-offs
 
-- Admission always runs, so there is no anonymous ingress.
-- Spend, rate limits, and audit resolve against the admission identity.
+- LiteLLM authenticates every request.
+- Spend tracking, rate limits, and audit logs use the authenticated client's identity.
 - LiteLLM forwards the upstream token without inspecting it, so the upstream still owns tool-level authorization and token validation.
 
 ### Config Reference
@@ -168,9 +173,9 @@ If a caller sends a single credential in `Authorization` with no `x-litellm-api-
 | `auth_type` | Yes | Must be `oauth_delegate`. |
 | `url` | Yes | The upstream MCP server URL. |
 
-At request time: admission in `x-litellm-api-key`, upstream token in `Authorization: Bearer <upstream-token>` (or `x-mcp-<alias>-authorization` for a specific server in an aggregate request).
+Send the LiteLLM credential in `x-litellm-api-key` and the MCP server token in `Authorization: Bearer <upstream-token>` (or `x-mcp-<alias>-authorization` for a specific server in an aggregate request).
 
-Because admission runs, the full LiteLLM permission model applies on top of whatever the upstream enforces: [per-key and per-team tool permissions](./mcp_control.md#per-entity-tool-level-permissions), the server-level `allowed_tools` list, per-key rate limits, and spend logging of every tool call under the admitted identity.
+LiteLLM also applies [per-key and per-team tool permissions](./mcp_control.md#per-entity-tool-level-permissions), the server's `allowed_tools` list, and per-key rate limits. It logs the spend for each tool call under the authenticated client's identity.
 
 ## Multi-server aggregate requests {#multi-server-aggregate-requests}
 
@@ -194,7 +199,7 @@ curl -X POST "https://litellm.example.com/mcp" \
 
 Sending the same token value on two per-server headers is your decision, made explicitly per server, and LiteLLM honors it. What it refuses to do is make that decision for you by fanning out an unaddressed `Authorization`.
 
-For `true_passthrough` there is an additional constraint: the transparent admission path fires only when every server in the scope is `true_passthrough`. Mixing a `true_passthrough` server into an aggregate with any other mode falls back to normal LiteLLM admission, so the caller needs a LiteLLM credential for that request.
+LiteLLM skips client authentication only when every server in the request uses `true_passthrough`. If a request includes a server with any other authentication mode, the client must authenticate to LiteLLM.
 
 ## Previewing tools in the Admin UI {#previewing-tools-in-the-admin-ui}
 
@@ -268,7 +273,7 @@ An OAuth-only client cannot present a LiteLLM key inline, so identity comes from
 - With no cookie, it redirects to LiteLLM login (`/sso/key/generate`) first.
 - After sign-in the user re-initiates the connection.
 - LiteLLM seals that identity plus the upstream token into a gateway-bound credential.
-- The client stores that credential and replays it on every later request; admission, spend, and audit resolve against it.
+- The client stores that credential and sends it on later requests. LiteLLM uses it to authenticate the client and record spend and audit logs.
 
 :::warning[Two prerequisites]
 
@@ -303,7 +308,7 @@ sequenceDiagram
     Note over LiteLLM: seal LiteLLM identity + upstream token into one gateway-bound credential
     LiteLLM-->>Client: gateway-bound credential
     Client->>LiteLLM: MCP request + gateway-bound credential
-    Note over LiteLLM: admit, record spend / rate limit / audit / tool calls
+    Note over LiteLLM: authenticate client, record spend / rate limit / audit / tool calls
     LiteLLM->>MCP: forward request + upstream token (identity credential stripped)
     MCP-->>LiteLLM: MCP response
     LiteLLM-->>Client: MCP response
@@ -370,7 +375,7 @@ OpenCode reads them from `opencode.json`:
 
 :::warning[Deprecated]
 
-`delegate_auth_to_upstream` is the original flag-based form of client-forwarded OAuth and is deprecated. It no longer bypasses LiteLLM admission: on current versions LiteLLM still requires its own API key, SSO, or JWT on every request that carries a bearer, and the proxy logs a deprecation warning when a server is loaded with `auth_type: oauth2` and `delegate_auth_to_upstream: true`. New servers should use `auth_type: oauth_delegate` (admission required, upstream token forwarded) or `auth_type: true_passthrough` (no admission). Existing configs should migrate to one of those two. The section below describes what the legacy flag still does.
+`delegate_auth_to_upstream` is the original flag for forwarding client OAuth tokens and is deprecated. It no longer bypasses LiteLLM authentication: LiteLLM requires a Virtual Key, SSO session, or IdP token on every request that carries a bearer token. The proxy logs a deprecation warning when a server is loaded with `auth_type: oauth2` and `delegate_auth_to_upstream: true`. Use `auth_type: oauth_delegate` to require LiteLLM authentication and forward a separate MCP server token, or `auth_type: true_passthrough` to let the MCP server handle all authentication. Migrate existing configurations to one of those modes. The section below describes the legacy flag.
 
 :::
 
@@ -391,17 +396,17 @@ Delegated servers are interactive, so they take `oauth2_flow: authorization_code
 
 :::warning[Internal-only (`available_on_public_internet: false`) and the anonymous discovery step]
 
-`available_on_public_internet: false` does not make the credential-free cold start authenticated. An anonymous caller with no `Authorization` header can still reach the upstream OAuth2 `/authorize` challenge for a matching `auth_type: oauth2` server with `delegate_auth_to_upstream: true` (not `oauth2_flow: client_credentials`). The internal-only flag mainly controls IP-based discovery and related behavior ([see guide](./mcp_public_internet.md)). Tool calls are not affected: any request carrying a bearer goes through LiteLLM admission.
+`available_on_public_internet: false` does not require authentication for the initial OAuth discovery request. An anonymous client with no `Authorization` header can still reach the upstream OAuth2 `/authorize` challenge for a matching `auth_type: oauth2` server with `delegate_auth_to_upstream: true` (not `oauth2_flow: client_credentials`). The internal-only flag mainly controls IP-based discovery and related behavior ([see guide](./mcp_public_internet.md)). Tool calls are not affected: LiteLLM authenticates any request carrying a bearer token.
 
 :::
 
 ### How It Works
 
 1. The client sends an MCP request to LiteLLM with no `Authorization` header and no `x-litellm-api-key`.
-2. Because every target server is `auth_type: oauth2` with `delegate_auth_to_upstream: true`, LiteLLM admits this credential-free request anonymously so the upstream's own `401` + `WWW-Authenticate` flows back to the client.
+2. When every target server is `auth_type: oauth2` with `delegate_auth_to_upstream: true`, LiteLLM allows this request without authentication and returns the upstream's `401` + `WWW-Authenticate` to the client.
 3. The client completes PKCE directly with the upstream OAuth issuer.
-4. The client retries with `Authorization: Bearer <upstream-token>`. LiteLLM runs its own admission on this request. With no LiteLLM credential the request fails with `401`; the client has to send a LiteLLM key in `x-litellm-api-key` alongside the upstream bearer, which is the `oauth_delegate` request shape.
-5. Once admitted, LiteLLM forwards the upstream bearer untouched and never forwards the LiteLLM credential.
+4. The client retries with `Authorization: Bearer <upstream-token>`. LiteLLM requires authentication on this request. With no LiteLLM credential, the request fails with `401`. The client must send a Virtual Key in `x-litellm-api-key` alongside the MCP server token, as with `oauth_delegate`.
+5. After authenticating the client, LiteLLM forwards the MCP server token unchanged and never forwards the LiteLLM credential.
 
 ```mermaid
 sequenceDiagram
@@ -420,10 +425,10 @@ sequenceDiagram
     Auth-->>Client: access_token
 
     Client->>LiteLLM: MCP request + Bearer access_token (no LiteLLM key)
-    LiteLLM-->>Client: 401 (LiteLLM admission required)
+    LiteLLM-->>Client: 401 (LiteLLM authentication required)
 
     Client->>LiteLLM: MCP request + x-litellm-api-key + Bearer access_token
-    Note over LiteLLM: Admit caller, strip admission credential
+    Note over LiteLLM: Authenticate client, remove LiteLLM credential
     LiteLLM->>MCP: Forward request + Bearer access_token
     MCP-->>LiteLLM: MCP response
     LiteLLM-->>Client: MCP response

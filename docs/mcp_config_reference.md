@@ -2,7 +2,7 @@
 
 This is the canonical decision reference for connecting to LiteLLM's MCP Gateway: which endpoint to use, which transport to configure, and how the two layers of authentication fit together. Use the linked guides for setup steps and provider-specific requirements
 
-Endpoint examples use `http://localhost:4000` as the proxy base URL; substitute your own. Set `LITELLM_API_KEY` to a key with access to the selected MCP servers. Selecting a server by URL or header narrows existing access; it does not grant access. See [MCP access grants](./mcp_grant_access) for key and team setup
+Endpoint examples use `http://localhost:4000` as the proxy base URL; substitute your own. Set `LITELLM_API_KEY` to a Virtual Key with access to the selected MCP servers. Selecting a server by URL or header narrows existing access; it does not grant access. See [MCP Access](./proxy/access_management/mcp.md) for key and team setup, and [Upstream Authentication](./mcp_upstream_auth.md) for the credentials LiteLLM sends to MCP servers.
 
 ## Protocol version
 
@@ -147,18 +147,18 @@ mcp_servers:
 | `basic` | `Authorization: Basic <base64(auth_value)>` | `auth_value` as raw `username:password` | Server uses HTTP Basic | |
 | `authorization` | `Authorization: <auth_value>` verbatim | `auth_value` | Server needs a nonstandard scheme | |
 | `token` | `Authorization: token <auth_value>` | `auth_value` | GitHub-style token scheme | |
-| `oauth2` + `oauth2_flow: authorization_code` | `Authorization: Bearer <per-user token>` | Interactive PKCE sign-in per user | Human users must consent individually | [MCP OAuth](./mcp_oauth#interactive-oauth-pkce) |
-| `oauth2` + `oauth2_flow: client_credentials` | `Authorization: Bearer <M2M token>` | LiteLLM fetches, caches, refreshes | Backend services, no human in the loop | [MCP OAuth M2M](./mcp_oauth#machine-to-machine-m2m-auth) |
-| `oauth2_token_exchange` | `Authorization: Bearer <exchanged token>` | Caller token exchanged using RFC 8693 or the Entra OBO profile | On-behalf-of / delegated access | [MCP OBO Auth](./mcp_obo_auth) |
-| `oauth2_id_jag` | `Authorization: Bearer <ID-JAG assertion-derived token>` | Okta ID-JAG two-leg exchange | Okta AI agent token exchange | [MCP ID-JAG](./mcp_id_jag) |
-| `true_passthrough` / `oauth_delegate` | The caller's own token, forwarded | Client request | Upstream must see the end user's token untouched | [MCP OAuth Passthrough](./mcp_oauth_passthrough) |
-| `aws_sigv4` | Per-request SigV4 signature | AWS credentials or boto3 chain | AWS Bedrock AgentCore servers | [MCP AWS SigV4](./mcp_aws_sigv4) |
+| `oauth2` + `oauth2_flow: authorization_code` | `Authorization: Bearer <per-user token>` | Interactive PKCE sign-in per user | Human users must consent individually | [OAuth 2.0](./mcp_oauth#interactive-oauth-pkce) |
+| `oauth2` + `oauth2_flow: client_credentials` | `Authorization: Bearer <M2M token>` | LiteLLM fetches, caches, refreshes | Backend services, no human in the loop | [OAuth client credentials](./mcp_oauth#machine-to-machine-m2m-auth) |
+| `oauth2_token_exchange` | `Authorization: Bearer <exchanged token>` | Caller token exchanged using RFC 8693 or the Entra OBO profile | On-behalf-of / delegated access | [Token exchange (OBO)](./mcp_obo_auth) |
+| `oauth2_id_jag` | `Authorization: Bearer <ID-JAG assertion-derived token>` | Okta ID-JAG two-leg exchange | Okta AI agent token exchange | [ID-JAG](./mcp_id_jag) |
+| `true_passthrough` / `oauth_delegate` | The caller's own token, forwarded | Client request | Upstream must see the end user's token untouched | [OAuth token passthrough](./mcp_oauth_passthrough) |
+| `aws_sigv4` | Per-request SigV4 signature | AWS credentials or boto3 chain | AWS Bedrock AgentCore servers | [AWS SigV4](./mcp_aws_sigv4) |
 
 `auth_type: oauth2` requires an explicit `oauth2_flow`; missing or invalid values prevent YAML startup. Use `authorization_code` for per-user consent or `client_credentials` for a service identity. Omit the interactive client ID/secret only when the upstream supports dynamic client registration; see [interactive setup and redirects](./mcp_oauth#interactive-oauth-pkce)
 
-For a token on a different header, reuse [`upstream_token_header`](./mcp_oauth#sending-the-token-on-a-different-header) alongside `static_headers`. For Microsoft Entra ID, follow the existing [`token_exchange_profile: entra_obo` guide](./mcp_obo_auth#microsoft-entra-id-azure-ad). Gateway admission, upstream token exchange, and server access grants are separate requirements
+For a token on a different header, reuse [`upstream_token_header`](./mcp_oauth#sending-the-token-on-a-different-header) alongside `static_headers`. For Microsoft Entra ID, follow the existing [`token_exchange_profile: entra_obo` guide](./mcp_obo_auth#microsoft-entra-id-azure-ad). Client authentication, token exchange, and permission to use the MCP server are separate requirements.
 
-For complete static credential inputs, see [non-OAuth authentication](./mcp_authentication). The header column describes the managed SSE/HTTP transport path. The OpenAPI-tool path emits `Authorization: ApiKey <value>` instead of `X-API-Key` for `auth_type: api_key`
+For complete static credential inputs, see [API keys and HTTP authentication](./mcp_authentication). The header column describes the managed SSE/HTTP transport path. The OpenAPI-tool path emits `Authorization: ApiKey <value>` instead of `X-API-Key` for `auth_type: api_key`
 
 Two more ways to send upstream credentials that do not involve `auth_type`:
 
@@ -231,5 +231,5 @@ Expect a tool result containing the repository's wiki structure. Omitting `serve
 - [MCP REST API](./mcp_rest_api): `/mcp-rest/*` request/response details and error shapes
 - [MCP Permission Management](./mcp_control): `allowed_tools` / `disallowed_tools`, per-key tool permissions, and pinning a server's tool list, descriptions, and input schemas (`pinned_tools`, `POST` / `DELETE /v1/mcp/server/{server_id}/pin`)
 - [MCP Guardrails](./mcp_guardrail): `pre_mcp_call` guardrails on tool arguments and on upstream tool descriptions at discovery
-- [MCP OAuth](./mcp_oauth), [MCP OBO Auth](./mcp_obo_auth), [MCP OAuth Passthrough](./mcp_oauth_passthrough), [MCP AWS SigV4](./mcp_aws_sigv4)
+- [OAuth 2.0](./mcp_oauth), [Token exchange (OBO)](./mcp_obo_auth), [OAuth token passthrough](./mcp_oauth_passthrough), [AWS SigV4](./mcp_aws_sigv4)
 - [MCP Troubleshooting](./mcp_troubleshoot): debug headers and hop-by-hop isolation

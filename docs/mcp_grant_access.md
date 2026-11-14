@@ -4,7 +4,7 @@ import Image from '@theme/IdealImage';
 
 # Grant MCP Server Access to Keys and Teams
 
-This guide walks through granting an MCP server to a virtual key and to a team, first in the Admin UI and then through the management API, and shows how the resulting access resolves when the key and the team both carry a grant. The rules themselves (six-level intersection, `no-mcp-servers`, `require_key_mcp_access_defined`, access groups, per-entity tool permissions) live in [MCP Permission Management](./mcp_control); this page is the procedure that applies them.
+Start with [MCP Access](./proxy/access_management/mcp.md) to give a team or application access. This page provides detailed Admin UI, API, and SCIM instructions. For how permissions combine, see [Access inheritance](./proxy/access_management/inheritance.md). For configuration settings, see [MCP Permission Management](./mcp_control.md).
 
 ## Before you start
 

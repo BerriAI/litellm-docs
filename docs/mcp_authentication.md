@@ -1,13 +1,13 @@
-# MCP Non-OAuth Authentication
+---
+title: API keys and HTTP authentication
+description: Configure API keys, bearer tokens, Basic authentication, or custom headers for LiteLLM connections to MCP servers.
+---
 
-This page covers upstream MCP authentication that does not use an OAuth flow, including no authentication, fixed credentials, and AWS SigV4. For OAuth setup, see [MCP OAuth](./mcp_oauth.md), [MCP OAuth Passthrough](./mcp_oauth_passthrough.md), or [MCP On-Behalf-Of Auth](./mcp_obo_auth.md).
+# API keys and HTTP authentication {#mcp-non-oauth-authentication}
 
-LiteLLM handles two separate authentication hops for an MCP request:
+LiteLLM can authenticate to an MCP server with an API key, a fixed token, or a username and password. Set `auth_type` to the method the server requires. This page also covers servers that require no authentication and AWS SigV4. For other methods, see [Upstream Authentication](./mcp_upstream_auth.md).
 
-- **Client to LiteLLM:** the MCP client proves that it can use the LiteLLM gateway, usually with a LiteLLM API key.
-- **LiteLLM to the upstream MCP server:** LiteLLM authenticates to the selected upstream according to that server's `auth_type`.
-
-The `auth_type` on an MCP server controls the second hop. A LiteLLM API key used for gateway admission is not copied to the upstream server. To let individual users or service-account keys use their own upstream credential for a shared server instead of the one stored on it, see [Per-User and Per-Key Upstream Credentials](./mcp_per_user_auth.md).
+Clients authenticate to LiteLLM separately, usually with a [Virtual Key](./proxy/api_key_auth.md). LiteLLM does not forward that key to the MCP server. To let users and service accounts supply their own credentials for a shared MCP server, see [Per-user credentials](./mcp_per_user_auth.md).
 
 :::note[Transport scope]
 
@@ -46,7 +46,7 @@ Content-Type: application/json
 
 LiteLLM authenticates the client, selects the `inventory` MCP server, and builds the upstream request from that server's `auth_type`. The following sections show the resulting upstream credential.
 
-The client does supply the upstream token for `true_passthrough` and `oauth_delegate`. See [MCP OAuth Passthrough](./mcp_oauth_passthrough.md).
+The client does supply the upstream token for `true_passthrough` and `oauth_delegate`. See [OAuth token passthrough](./mcp_oauth_passthrough.md).
 
 ## Non-OAuth auth types
 
@@ -134,7 +134,7 @@ If the upstream expects a different header name, use [`static_headers`](#custom-
 
 - **Authentication value:** enter only the token. Do not add the `Bearer` prefix.
 - **Behavior:** LiteLLM sends `Authorization: Bearer <token>` on each upstream request.
-- **Use when:** the upstream accepts a fixed bearer token, such as a service token or personal access token. For tokens that must be minted, refreshed, exchanged, or supplied by the caller, see [MCP OAuth](./mcp_oauth.md).
+- **Use when:** the upstream accepts a fixed bearer token, such as a service token or personal access token. For tokens that must be minted, refreshed, exchanged, or supplied by the caller, see [OAuth 2.0](./mcp_oauth.md).
 
 ```yaml title="config.yaml"
 mcp_servers:
@@ -210,7 +210,7 @@ mcp_servers:
     aws_service_name: "bedrock-agentcore"
 ```
 
-See [MCP AWS SigV4 Auth](./mcp_aws_sigv4.md) for setup and troubleshooting.
+See [AWS SigV4](./mcp_aws_sigv4.md) for setup and troubleshooting.
 
 ## Custom and forwarded headers
 

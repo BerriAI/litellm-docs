@@ -154,10 +154,10 @@ By default all authenticated callers can call all MCP tools. Use these to restri
 
 | Control | Where |
 |---------|-------|
-| Per-key tool access | [Key-level MCP permissions](./mcp_control.md) |
-| Per-team tool access | [Team-level MCP permissions](./mcp_control.md) |
+| Per-key tool access | [Give an application MCP access](./proxy/access_management/mcp.md#give-an-application-access) |
+| Per-team tool access | [Give a team MCP access](./proxy/access_management/mcp.md#give-a-team-access) |
 | Hide internal servers from external callers | [available_on_public_internet](./mcp_public_internet.md) |
-| Verify requests came through LiteLLM | [MCP Zero Trust (JWT)](./mcp_zero_trust.md) |
+| Verify requests came through LiteLLM | [JWT signing](./mcp_zero_trust.md) |
 | Block sensitive data in responses | [MCP Guardrails](./mcp_guardrail.md) |
 
 ---
@@ -175,6 +175,6 @@ general_settings:
 
 - [MCP Overview](./mcp.md)
 - [Public Internet Filter](./mcp_public_internet.md)
-- [MCP Access Control](./mcp_control.md)
-- [MCP Zero Trust](./mcp_zero_trust.md)
+- [MCP Access](./proxy/access_management/mcp.md)
+- [JWT signing](./mcp_zero_trust.md)
 - [MCP Guardrails](./mcp_guardrail.md)

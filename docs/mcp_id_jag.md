@@ -1,4 +1,9 @@
-# MCP ID-JAG Auth (Okta)
+---
+title: ID-JAG
+description: Use ID-JAG to obtain an MCP server access token from a different authorization server on behalf of a user.
+---
+
+# ID-JAG {#mcp-id-jag-auth-okta}
 
 :::tip Full guide
 See the [ID-JAG overview](./proxy/id_jag/overview.md) and the [requesting app setup guide](./proxy/id_jag/requesting_app.md) for configuration, SSO options, and troubleshooting.
@@ -177,7 +182,7 @@ Authorization: Bearer access-token-for-mcp-server
 
 ## Calling an ID-JAG MCP Server
 
-Leg 1 needs an identity token to assert. LiteLLM takes it from one of two places. If the request carries the user's `id_token` in `Authorization`, that token is the subject. Otherwise LiteLLM uses the identity assertion it captured for the authenticated user when they signed in through LiteLLM SSO, which is what lets an agent holding only a LiteLLM virtual key reach the MCP server as the user that key belongs to. The user is always the one the virtual key resolves to; no request field can select whose identity is asserted upstream.
+Leg 1 needs an identity token to assert. LiteLLM takes it from one of two places. If the request carries the user's `id_token` in `Authorization`, that token is the subject. Otherwise LiteLLM uses the identity assertion it captured for the authenticated user when they signed in through LiteLLM SSO, which is what lets an agent holding only a LiteLLM Virtual Key reach the MCP server as the user that key belongs to. The user is always the one the Virtual Key resolves to; no request field can select whose identity is asserted upstream.
 
 When sending the `id_token` yourself, keep the LiteLLM key in `x-litellm-api-key` and reserve `Authorization` for the user token:
 
@@ -193,7 +198,7 @@ curl -X POST "https://litellm.example.com/internal_tools/mcp" \
 If the MCP client can only send one `Authorization` header, use `x-litellm-api-key` for the LiteLLM key and reserve `Authorization` for the user's `id_token`. LiteLLM needs the `id_token` as the leg-1 `subject_token`.
 :::
 
-### Store-sourced subject with a virtual key only
+### Stored identity token with a Virtual Key {#store-sourced-subject-with-a-virtual-key-only}
 
 With no `Authorization` header, the same call works for any user who has signed in through LiteLLM SSO at least once and whose assertion has not expired:
 

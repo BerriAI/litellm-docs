@@ -12,6 +12,8 @@ Authentication identifies the user or application calling LiteLLM or signing in 
 
 Configure what that identity can use and manage in [Access Management](./access_management/overview.md).
 
+For LiteLLM connecting to MCP servers, see [MCP upstream authentication](../mcp_upstream_auth.md).
+
 ## Choose a flow
 
 | Flow | When to use it | Guides |

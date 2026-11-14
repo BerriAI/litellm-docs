@@ -1,11 +1,16 @@
-# MCP OBO Auth
+---
+title: Token exchange (OBO)
+description: Exchange a user token for an MCP server access token with OAuth token exchange or Microsoft Entra On-Behalf-Of.
+---
 
-OAuth 2.0 On-Behalf-Of (OBO) auth lets LiteLLM exchange a user's incoming bearer token for a scoped token that is valid for a specific MCP server.
+# Token exchange (OBO) {#mcp-obo-auth}
+
+LiteLLM can exchange a user's bearer token for an access token issued for an MCP server, then use that token to call the server. It supports OAuth 2.0 Token Exchange (RFC 8693) and Microsoft Entra ID's On-Behalf-Of (OBO) flow.
 
 Use OBO when:
 
 - Your MCP server should receive a token minted specifically for that MCP server.
-- Your identity provider supports [RFC 8693 OAuth 2.0 Token Exchange](https://datatracker.ietf.org/doc/html/rfc8693), or is Microsoft Entra ID, which LiteLLM speaks natively (see [Microsoft Entra ID](#microsoft-entra-id-azure-ad) below).
+- Your identity provider supports [RFC 8693 OAuth 2.0 Token Exchange](https://datatracker.ietf.org/doc/html/rfc8693) or [Microsoft Entra ID's OBO flow](#microsoft-entra-id-azure-ad).
 - You want LiteLLM to keep the user's raw token from being forwarded directly to the MCP server.
 
 ## How It Works
