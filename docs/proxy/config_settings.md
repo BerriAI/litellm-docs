@@ -1339,7 +1339,7 @@ router_settings:
 | LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_ENABLED | Set to `true` to enable the background cleanup job for expired LiteLLM dashboard session keys. Default is `false`.
 | LITELLM_EXPIRED_UI_SESSION_KEY_CLEANUP_INTERVAL_SECONDS | Interval in seconds for how often to run the expired LiteLLM dashboard session key cleanup job. Default is 86400 (24 hours).
 | LITELM_ENVIRONMENT | Environment of LiteLLM Instance, used by logging services. Currently only used by DeepEval.
-| LITELLM_KEY_EXPIRY_ALERT_CHECK_INTERVAL_SECONDS | Interval in seconds for how often the key expiry alert job checks for keys to email about. Default is 43200 (12 hours). [Doc on key expiry alerts](./email.md#4-configure-key-expiry-alerts-optional)
+| LITELLM_KEY_EXPIRY_ALERT_CHECK_INTERVAL_SECONDS | <SinceVersion v="1.111.0" /> Interval in seconds for how often the key expiry alert job checks for keys to email about. Default is 43200 (12 hours). [Doc on key expiry alerts](./email.md#4-configure-key-expiry-alerts-optional)
 | LITELLM_KEY_ROTATION_ENABLED | Enable auto-key rotation for LiteLLM (boolean). Default is false.
 | LITELLM_KEY_ROTATION_CHECK_INTERVAL_SECONDS | Interval in seconds for how often to run job that auto-rotates keys. Default is 86400 (24 hours).
 | LITELLM_KEY_ROTATION_GRACE_PERIOD | Duration to keep old key valid after rotation (e.g. "24h", "2d"). Default is empty (immediate revoke). Used for scheduled rotations and as fallback when not specified in regenerate request.
