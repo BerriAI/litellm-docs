@@ -1,66 +1,78 @@
 ---
-title: Global Control Plane Configuration
+title: Configuration
 sidebar_label: Configuration
 toc_max_heading_level: 2
-description: Configure data planes, authentication, permissions, and a private Kubernetes deployment for the LiteLLM Global Control Plane.
+description: Environment variables, data plane registry fields, and JWT settings for the LiteLLM Global Control Plane.
 ---
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
 
 # Configuration
 
 {/* keep-version-note */}
 
-## Prerequisites
+The control plane reads environment variables and its data plane registry at startup. Restart it after changing these settings. See [API Reference](./api_reference.md) for endpoints and permissions.
 
-Use a LiteLLM image that includes the [new control plane](../global_control_plane.md) and a valid Enterprise license. Deploy each data plane with its own PostgreSQL, Redis, and master key. The control plane needs private HTTPS access to each data plane's management API.
-
-## Data plane credentials
-
-Choose how the control plane authenticates to each data plane.
-
-<Tabs>
-<TabItem value="service-token" label="Service token" default>
-
-Create a virtual key on each data plane with the `impersonate` permission. Call the data plane directly with its master key:
+## Server
 
 ```bash
-curl --request POST "$DATAPLANE_URL/key/generate" \
-  --header "Authorization: Bearer $DATAPLANE_MASTER_KEY" \
-  --header 'Content-Type: application/json' \
-  --data '{"key_alias":"global-control-plane","permissions":{"impersonate":true}}'
+litellm --control-plane --host 0.0.0.0 --port 4000 --num_workers 1
 ```
 
-Store the returned key in that data plane's `service_token.token` entry:
+Run one worker per replica.
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `LITELLM_LICENSE` | Required | Enterprise license. |
+| `LITELLM_MASTER_KEY` | Required | Static administrator API key sent as a bearer credential. Also signs session JWTs. Minimum 32 bytes. |
+| `CONTROL_PLANE_API_PREFIX` | `/api/v1` | Prefix for management API routes and OpenAPI docs. |
+
+## Authentication
+
+Send API credentials in `Authorization: Bearer <credential>` using the header syntax in [RFC 6750, Section 2.1](https://www.rfc-editor.org/rfc/rfc6750.html#section-2.1).
+
+### Username and password login {#password-sessions}
+
+`POST /api/v1/auth/login` checks the configured username and password. It returns a session [JWT (RFC 7519)](https://www.rfc-editor.org/rfc/rfc7519.html) in `access_token`. Send that token as the bearer credential on later requests.
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `UI_USERNAME`, `UI_PASSWORD` | Unset | Enable password login when both are set. |
+| `CONTROL_PLANE_SESSION_TTL_SECONDS` | `43200` | Password-session lifetime in seconds. |
+| `CONTROL_PLANE_SESSION_ISSUER` | `litellm-control-plane` | Issuer for password-session JWTs. |
+| `CONTROL_PLANE_SESSION_AUDIENCE` | `litellm-control-plane-api` | Audience for password-session JWTs. |
+
+### OIDC provider JWT authentication {#oidc}
+
+The control plane validates JWT access tokens from an [OpenID Connect (OIDC) provider](https://openid.net/specs/openid-connect-core-1_0.html). It checks the signature, issuer, audience, and expiry.
+
+Allow HTTPS access to the IdP's [OpenID Connect Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html) and JWKS endpoints. An explicit `CONTROL_PLANE_OIDC_JWKS_URL` skips discovery. Token exchange also requires HTTPS access to the IdP's token endpoint.
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `CONTROL_PLANE_OIDC_ISSUER`, `CONTROL_PLANE_OIDC_AUDIENCE` | Unset | Enable IdP JWT verification when both are set. |
+| `CONTROL_PLANE_OIDC_JWKS_URL` | Discovered | IdP signing-key endpoint. |
+| `CONTROL_PLANE_OIDC_ROLES_CLAIM` | `roles` | Claim containing control plane roles. |
+| `CONTROL_PLANE_OIDC_SCOPE_CLAIM` | `scope` | Claim that limits the role's scopes. |
+| `CONTROL_PLANE_OIDC_DATAPLANES_CLAIM` | `litellm_dataplanes` | Claim containing allowed data plane IDs. |
+| `CONTROL_PLANE_OIDC_EMAIL_CLAIM` | `email` | Claim containing the caller's email. |
+| `CONTROL_PLANE_OIDC_LEEWAY_SECONDS` | `30` | Clock tolerance in seconds for IdP JWT validation. |
+
+### Roles
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `CONTROL_PLANE_ROLES` | `{}` | JSON map of role names to `scopes` and optional `inherits`. Custom roles replace built-in roles with the same name. |
+| `CONTROL_PLANE_INCLUDE_DEFAULT_ROLES` | `true` | Include the built-in roles. |
+
+## Data plane registry
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `CONTROL_PLANE_DATAPLANES_FILE` | Unset | Path to the YAML registry. |
+| `CONTROL_PLANE_DATAPLANES` | `{}` | JSON registry map. Cannot be combined with `CONTROL_PLANE_DATAPLANES_FILE`. |
 
 ```yaml title="dataplanes.yaml"
 dataplanes:
   us-prod:
-    name: US production
-    url: https://litellm-us.internal.example.com
-    service_token:
-      token: REPLACE_WITH_US_SERVICE_TOKEN
-  eu-prod:
-    name: EU production
-    url: https://litellm-eu.internal.example.com
-    service_token:
-      token: REPLACE_WITH_EU_SERVICE_TOKEN
-```
-
-Provision each operator on the data planes they can manage through [user management](../users.md). Set the local `user_id` to the operator's OIDC `sub` or password-login username. Assign the local LiteLLM role and permissions. If both identities have an email, the addresses must match.
-
-The control plane forwards the caller's identity with the service key. Each data plane loads that user's local permissions. A missing or SCIM-deactivated user cannot access the data plane. Requests authenticated with the control plane's master key use the service key's own identity instead.
-
-</TabItem>
-<TabItem value="token-exchange" label="OIDC token exchange">
-
-Configure your IdP to exchange the caller's access token for a token that the target data plane accepts. Configure [JWT authentication](../token_auth.md) on that data plane with the matching issuer, audience, and user mappings.
-
-```yaml title="dataplanes.yaml"
-dataplanes:
-  us-prod:
-    name: US production
     url: https://litellm-us.internal.example.com
     oidc_exchange:
       token_endpoint: https://idp.example.com/oauth2/token
@@ -68,228 +80,15 @@ dataplanes:
       client_secret: REPLACE_WITH_CLIENT_SECRET
       profile: rfc8693
       audience: litellm-us-production
+  eu-prod:
+    url: https://litellm-eu.internal.example.com
+    service_token:
+      token: REPLACE_WITH_SERVICE_TOKEN
 ```
 
-For Microsoft Entra on-behalf-of exchange, use `profile: jwt_bearer_obo` and set `scope` to the data plane API's delegated scope. This profile requires `scope` and does not use `audience`.
+### Registry entries
 
-Token exchange requires an OIDC caller token. Password sessions and the control plane master key cannot use it. You can add `service_token` to the same entry as a fallback if the exchange cannot produce a token.
-
-</TabItem>
-</Tabs>
-
-Mount `dataplanes.yaml` as a Secret. Replace the placeholders with actual credentials through your secret manager. The registry reads literal YAML values and does not expand `os.environ/` references. Restart the control plane after a registry change.
-
-## Authentication and permissions
-
-### OIDC
-
-Set these environment variables on the control plane:
-
-```bash
-export CONTROL_PLANE_OIDC_ISSUER=https://idp.example.com
-export CONTROL_PLANE_OIDC_AUDIENCE=litellm-control-plane
-```
-
-LiteLLM discovers the JWKS URL from the issuer. Set `CONTROL_PLANE_OIDC_JWKS_URL` if your provider needs an explicit URL. Clients send the access token in `Authorization: Bearer`.
-
-Configure your IdP to issue claims such as:
-
-```json title="Example access-token claims"
-{
-  "iss": "https://idp.example.com",
-  "aud": "litellm-control-plane",
-  "sub": "operator-123",
-  "email": "operator@example.com",
-  "roles": ["editor"],
-  "litellm_dataplanes": ["us-prod", "eu-prod"]
-}
-```
-
-The signed token must also include a valid `exp`. Use explicit data plane IDs to limit access. An absent or empty `litellm_dataplanes` claim, or `"*"`, grants access across the fleet.
-
-| Role | Permissions |
-| --- | --- |
-| `admin` | All control plane scopes |
-| `editor` | Read data planes, fleet, and usage. Read and change supported management resources. |
-| `viewer` | Read data planes, fleet, usage, and supported management resources. |
-| `usage_viewer` | Read usage only. |
-
-Define custom roles with `CONTROL_PLANE_ROLES`. This example lets FinOps read usage and audit records:
-
-```bash
-export CONTROL_PLANE_ROLES='{"finops":{"scopes":["usage:read","audit:read"]}}'
-```
-
-An IdP role must match a built-in or custom role. If the token includes `scope`, LiteLLM intersects it with the role's grants. A scope claim containing only `openid profile` grants no control plane scopes. Omit that claim or include the control plane scopes the caller needs.
-
-### Password login
-
-Set `UI_USERNAME` and `UI_PASSWORD` to enable one local administrator. The username must match a user on each data plane when you use service-token impersonation.
-
-```bash
-curl --request POST https://control-plane.internal.example.com/api/v1/auth/login \
-  --header 'Content-Type: application/json' \
-  --data '{"username":"platform-admin","password":"REPLACE_WITH_PASSWORD"}'
-```
-
-Use the returned `access_token` as a bearer token. Sessions expire after 12 hours by default.
-
-## Kubernetes deployment
-
-Create these Secrets in the `litellm` namespace through your secret manager:
-
-| Secret | Keys |
-| --- | --- |
-| `control-plane-env` | `LITELLM_LICENSE`, `LITELLM_MASTER_KEY`, and optional `UI_USERNAME` and `UI_PASSWORD` |
-| `control-plane-registry` | `dataplanes.yaml` from the credential example |
-
-Use a control plane master key of at least 32 bytes. Keep it separate from each data plane's master key.
-
-Replace `CONTROL_PLANE_TAG` with an image tag that includes the new control plane. Add your OIDC settings to `env` if you use OIDC.
-
-```yaml title="control-plane.yaml"
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: litellm-control-plane
-  namespace: litellm
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: litellm-control-plane
-  template:
-    metadata:
-      labels:
-        app: litellm-control-plane
-    spec:
-      terminationGracePeriodSeconds: 30
-      containers:
-        - name: control-plane
-          image: ghcr.io/berriai/litellm:CONTROL_PLANE_TAG
-          command: ["litellm"]
-          args: ["--control-plane", "--host", "0.0.0.0", "--port", "4000", "--num_workers", "1"]
-          ports:
-            - name: http
-              containerPort: 4000
-          envFrom:
-            - secretRef:
-                name: control-plane-env
-          env:
-            - name: CONTROL_PLANE_DATAPLANES_FILE
-              value: /etc/litellm-control-plane/dataplanes.yaml
-          volumeMounts:
-            - name: registry
-              mountPath: /etc/litellm-control-plane
-              readOnly: true
-          readinessProbe:
-            httpGet:
-              path: /readyz
-              port: http
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: http
-      volumes:
-        - name: registry
-          secret:
-            secretName: control-plane-registry
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: litellm-control-plane
-  namespace: litellm
-spec:
-  type: ClusterIP
-  selector:
-    app: litellm-control-plane
-  ports:
-    - name: http
-      port: 4000
-      targetPort: http
-```
-
-Route a private HTTPS ingress to this Service. Restrict ingress to the corporate network. Set container resources from your management request load. See the [cloud architectures](./architecture.md) for network boundaries.
-
-For private CA certificates, mount a CA bundle and set `SSL_CERT_FILE` to its path. Include the roots needed for your data planes, IdP, and audit destinations.
-
-The equivalent process command is:
-
-```bash
-litellm --control-plane --host 0.0.0.0 --port 4000 --num_workers 1
-```
-
-This mode reads environment variables and the registry file. It does not use the proxy's `--config` YAML. For TLS on the process itself, pass both `--ssl_certfile_path` and `--ssl_keyfile_path`.
-
-## Use the API
-
-Set `CONTROL_PLANE_TOKEN` to your IdP access token or password-session token. Inspect the control plane identity and the identity used on a data plane:
-
-```bash
-curl https://control-plane.internal.example.com/api/v1/auth/me \
-  --header "Authorization: Bearer $CONTROL_PLANE_TOKEN"
-
-curl https://control-plane.internal.example.com/api/v1/dataplanes/us-prod/whoami \
-  --header "Authorization: Bearer $CONTROL_PLANE_TOKEN"
-```
-
-Read a data plane's model configuration through the management API:
-
-```bash
-curl https://control-plane.internal.example.com/api/v1/dataplanes/us-prod/proxy/model/info \
-  --header "Authorization: Bearer $CONTROL_PLANE_TOKEN"
-```
-
-Read combined usage for the caller's allowed data planes:
-
-```bash
-curl https://control-plane.internal.example.com/api/v1/usage/summary \
-  --header "Authorization: Bearer $CONTROL_PLANE_TOKEN"
-```
-
-Open `/api/v1/docs` for the API reference. Data plane permissions still apply to forwarded requests.
-
-## Replicas and health
-
-Run one worker process per replica. The control plane rejects `--num_workers` above `1`. To add replicas, use the same registry, role configuration, and master key on each replica.
-
-Login throttling, recent audit records, and audit delivery queues are local to each replica. Use your ingress to enforce a shared login rate limit, and export [audit records](./audit.md) to a shared destination. A restart clears the local state.
-
-`/healthz` and `/readyz` report control plane process health. They do not test data planes or audit delivery. Use `/api/v1/dataplanes/{id}/health` for a data plane's status.
-
-## Configuration reference
-
-### Environment variables
-
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `LITELLM_LICENSE` | Required | Enterprise license. |
-| `LITELLM_MASTER_KEY` | Required | Control plane administrator credential and session signing key. Minimum 32 bytes. |
-| `UI_USERNAME`, `UI_PASSWORD` | Unset | Enable password login when both are set. |
-| `CONTROL_PLANE_DATAPLANES_FILE` | Unset | Path to the YAML registry. |
-| `CONTROL_PLANE_DATAPLANES` | `{}` | JSON registry map. Cannot be combined with `CONTROL_PLANE_DATAPLANES_FILE`. |
-| `CONTROL_PLANE_API_PREFIX` | `/api/v1` | Prefix for management API routes and OpenAPI docs. |
-| `CONTROL_PLANE_SESSION_TTL_SECONDS` | `43200` | Password-session lifetime. |
-| `CONTROL_PLANE_SESSION_ISSUER` | `litellm-control-plane` | Issuer for password-session JWTs. |
-| `CONTROL_PLANE_SESSION_AUDIENCE` | `litellm-control-plane-api` | Audience for password-session JWTs. |
-| `CONTROL_PLANE_OIDC_ISSUER`, `CONTROL_PLANE_OIDC_AUDIENCE` | Unset | Enable IdP JWT verification when both are set. |
-| `CONTROL_PLANE_OIDC_JWKS_URL` | Discovered | IdP signing-key endpoint. |
-| `CONTROL_PLANE_OIDC_ROLES_CLAIM` | `roles` | Claim containing control plane roles. |
-| `CONTROL_PLANE_OIDC_SCOPE_CLAIM` | `scope` | Claim that limits the role's scopes. |
-| `CONTROL_PLANE_OIDC_DATAPLANES_CLAIM` | `litellm_dataplanes` | Claim containing allowed data plane IDs. |
-| `CONTROL_PLANE_OIDC_EMAIL_CLAIM` | `email` | Claim containing the caller's email. |
-| `CONTROL_PLANE_OIDC_LEEWAY_SECONDS` | `30` | Clock tolerance for IdP JWT validation. |
-| `CONTROL_PLANE_ROLES` | `{}` | JSON role definitions with `scopes` and optional `inherits`. Custom roles replace built-in roles with the same name. |
-| `CONTROL_PLANE_INCLUDE_DEFAULT_ROLES` | `true` | Include the built-in roles. |
-| `CONTROL_PLANE_DATAPLANE_TIMEOUT_SECONDS` | `10` | Timeout for data plane requests and token exchanges. |
-| `CONTROL_PLANE_DATAPLANE_RETRY_ATTEMPTS` | `3` | Maximum attempts for retryable data plane reads. |
-| `CONTROL_PLANE_FANOUT_CONCURRENCY` | `16` | Maximum concurrent data plane calls for fleet and usage queries per replica. |
-| `CONTROL_PLANE_USAGE_MAX_WINDOW_DAYS` | `366` | Largest usage query window. |
-
-See [audit and telemetry settings](./audit.md#configuration-reference) for audit destinations and tracing.
-
-### Data plane entries
+Each entry needs `service_token`, `oidc_exchange`, or both. Store the YAML registry in a Secret and set `CONTROL_PLANE_DATAPLANES_FILE` to its mounted path. Registry values are literal and do not expand `os.environ/` references.
 
 | Field | Default | Purpose |
 | --- | --- | --- |
@@ -304,4 +103,149 @@ See [audit and telemetry settings](./audit.md#configuration-reference) for audit
 | `oidc_exchange.scope` | Unset | Requested scopes. Required for `jwt_bearer_obo`. |
 | `allow_insecure_http` | `false` | Permit plain HTTP for a local or in-cluster data plane. |
 
-Each entry needs `service_token`, `oidc_exchange`, or both.
+With `profile: rfc8693`, the control plane uses [OAuth 2.0 Token Exchange (RFC 8693)](https://www.rfc-editor.org/rfc/rfc8693.html). It submits the caller's access token as `subject_token` with type `urn:ietf:params:oauth:token-type:access_token`. It includes `audience` and `scope` when configured.
+
+With `profile: jwt_bearer_obo`, it uses the [Microsoft Entra on-behalf-of flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow). Set `scope` to the data plane API's delegated scope. This profile does not send `audience`.
+
+Both profiles require an IdP JWT access token authenticated by the control plane. The IdP must return a signed JWT for the data plane. If both credential methods are configured, the control plane falls back to the service token when exchange cannot produce a token.
+
+Service tokens are LiteLLM virtual API keys sent as bearer credentials. They need `permissions: {impersonate: true}`. Match each operator's local data plane `user_id` to their control plane OIDC `sub` or password-login username. The data plane applies that user's local permissions. This method does not require JWT authentication on the data plane. Calls with the control plane master key use the service token's own identity.
+
+## Requests and usage
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `CONTROL_PLANE_DATAPLANE_TIMEOUT_SECONDS` | `10` | Timeout in seconds for data plane requests and token exchanges. |
+| `CONTROL_PLANE_DATAPLANE_RETRY_ATTEMPTS` | `3` | Maximum attempts for retryable data plane reads. |
+| `CONTROL_PLANE_FANOUT_CONCURRENCY` | `16` | Maximum concurrent data plane calls for fleet and usage queries per replica. |
+| `CONTROL_PLANE_USAGE_MAX_WINDOW_DAYS` | `366` | Largest usage query window in days. |
+
+## Audit logs
+
+Audit events cover password login attempts, authentication and scope failures, and management proxy calls. Enable [tracing](#tracing) for successful fleet and usage queries.
+
+### Delivery
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `CONTROL_PLANE_AUDIT_SINKS` | `["log"]` | JSON array of enabled destinations. Accepts `log`, `otlp`, `s3`, `splunk_hec`, and `sentinel`. |
+| `CONTROL_PLANE_AUDIT_CAPACITY` | `10000` | Capacity of each recent-event buffer. |
+| `CONTROL_PLANE_AUDIT_QUEUE_SIZE` | `10000` | Queue capacity per destination. Minimum `2`. |
+| `CONTROL_PLANE_AUDIT_BATCH_SIZE` | `100` | Maximum records in a delivery batch. |
+| `CONTROL_PLANE_AUDIT_DRAIN_SECONDS` | `5` | Queue drain time in seconds at shutdown. |
+| `CONTROL_PLANE_AUDIT_STRICT` | `false` | Refuse management writes when audit capacity is unavailable. |
+
+Sink URLs use HTTPS by default. LiteLLM rejects startup if an enabled sink lacks required settings.
+
+Delivery queues and recent records are local to each process. A full queue drops its oldest record by default. Strict mode returns HTTP `503` before management writes when any sink has no capacity or has permanently rejected records. Restarts can lose queued records. Export records to a shared destination for retention across replicas and restarts.
+
+### Amazon S3
+
+Grant the control plane's IAM role `s3:PutObject` on the audit prefix. Object retention also requires `s3:PutObjectRetention`, bucket versioning, and [S3 Object Lock](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html).
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `CONTROL_PLANE_AUDIT_S3_BUCKET` | Unset | Required destination bucket. |
+| `CONTROL_PLANE_AUDIT_S3_PREFIX` | `control-plane-audit` | Object key prefix. |
+| `CONTROL_PLANE_AUDIT_S3_REGION` | AWS region configuration | Bucket region. |
+| `CONTROL_PLANE_AUDIT_S3_ENDPOINT_URL` | AWS S3 endpoint | Override for an S3-compatible service. |
+| `CONTROL_PLANE_AUDIT_S3_OBJECT_LOCK_MODE` | Unset | `COMPLIANCE` or `GOVERNANCE` retention. |
+| `CONTROL_PLANE_AUDIT_S3_RETENTION_DAYS` | `365` | Retention period when a lock mode is set. |
+| `CONTROL_PLANE_AUDIT_S3_TIMEOUT_SECONDS` | `30` | Object upload timeout in seconds. |
+| `CONTROL_PLANE_AUDIT_S3_ALLOW_INSECURE_HTTP` | `false` | Allow HTTP for an in-cluster destination. |
+
+### Splunk HEC
+
+Use the base HEC URL. LiteLLM appends `/services/collector/event`. The [HEC token](https://help.splunk.com/en/splunk-enterprise/get-data-in/collect-http-event-data/http-event-collector-rest-api-endpoints) must allow writes to the audit index.
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `CONTROL_PLANE_AUDIT_SPLUNK_URL`, `CONTROL_PLANE_AUDIT_SPLUNK_TOKEN` | Unset | Required base HEC URL and token. |
+| `CONTROL_PLANE_AUDIT_SPLUNK_INDEX` | Token default | Destination index. |
+| `CONTROL_PLANE_AUDIT_SPLUNK_SOURCE` | `litellm-control-plane` | HEC source. |
+| `CONTROL_PLANE_AUDIT_SPLUNK_TIMEOUT_SECONDS` | `30` | HEC request timeout in seconds. |
+| `CONTROL_PLANE_AUDIT_SPLUNK_ALLOW_INSECURE_HTTP` | `false` | Allow HTTP for an in-cluster destination. |
+
+### Microsoft Sentinel
+
+Create a Log Analytics custom table and a data collection rule (DCR). Grant the Entra application **Monitoring Metrics Publisher** on the DCR. Use its immutable ID and input stream name. Follow the [Azure Monitor setup guide](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/tutorial-logs-ingestion-portal/).
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `CONTROL_PLANE_AUDIT_SENTINEL_ENDPOINT` | Unset | Required Logs Ingestion base endpoint. |
+| `CONTROL_PLANE_AUDIT_SENTINEL_DCR_IMMUTABLE_ID` | Unset | Required DCR immutable ID. |
+| `CONTROL_PLANE_AUDIT_SENTINEL_STREAM_NAME` | `Custom-LiteLLMControlPlaneAudit_CL` | DCR input stream. |
+| `CONTROL_PLANE_AUDIT_SENTINEL_TENANT_ID`, `CONTROL_PLANE_AUDIT_SENTINEL_CLIENT_ID`, `CONTROL_PLANE_AUDIT_SENTINEL_CLIENT_SECRET` | Unset | Required Entra application credentials. |
+| `CONTROL_PLANE_AUDIT_SENTINEL_AUTHORITY_HOST` | `https://login.microsoftonline.com` | Entra token authority. |
+| `CONTROL_PLANE_AUDIT_SENTINEL_TOKEN_SCOPE` | Derived from authority | Azure Monitor scope. Public Azure uses `https://monitor.azure.com/.default`. |
+| `CONTROL_PLANE_AUDIT_SENTINEL_TIMEOUT_SECONDS` | `30` | Token and ingestion request timeout in seconds. |
+
+Use this schema for the DCR input stream and destination table. Set the DCR transformation to `source`.
+
+| Type | Columns |
+| --- | --- |
+| `datetime` | `TimeGenerated` |
+| `int` | `ClassUid`, `ActivityId`, `StatusId`, `SeverityId`, `ResponseCode` |
+| `long` | `Sequence` |
+| `string` | `ClassName`, `ActivityName`, `ActorUid`, `ActorEmail`, `DataplaneId`, `HttpMethod`, `UrlPath`, `Decision`, `Detail`, `TraceId`, `Hash`, `PrevHash`, `Ocsf` |
+| `boolean` | `Truncated` |
+
+## Tracing
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `CONTROL_PLANE_OTEL_ENABLED` | Automatic | Enable traces. Automatically enabled when an OTLP base or trace endpoint is set. |
+| `CONTROL_PLANE_OTEL_SERVICE_NAME` | `litellm-control-plane` | OpenTelemetry service name. |
+| `CONTROL_PLANE_OTEL_IDENTITY_ATTRIBUTES` | `true` | Include caller ID and roles in trace attributes. |
+
+The OTLP settings below configure audit-log and trace exporters.
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `OTEL_EXPORTER_OTLP_PROTOCOL` | `console` | Exporter protocol. Set `http/protobuf` for OTLP over HTTP. An endpoint selects OTLP/HTTP by default. |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Unset | Base collector endpoint. |
+| `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` | Unset | Complete log endpoint, such as `https://otel.internal.example.com/v1/logs`. Requires the `otlp` audit sink. |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | Unset | Complete trace endpoint, such as `https://otel.internal.example.com/v1/traces`. |
+| `OTEL_EXPORTER_OTLP_HEADERS` | Unset | Comma-separated `key=value` headers for collector authentication. |
+
+## Data plane JWT authentication
+
+Set these values on each data plane that accepts an exchanged JWT. Each data plane must reach the IdP's discovery and JWKS endpoints over HTTPS. It fetches signing keys independently of the control plane.
+
+For the `us-prod` registry entry above, set these data plane environment variables:
+
+```bash
+export JWT_PUBLIC_KEY_URL=https://idp.example.com/.well-known/openid-configuration
+export JWT_ISSUER=https://idp.example.com
+export JWT_AUDIENCE=litellm-us-production
+```
+
+Match the issuer and audience to the exchanged token's `iss` and `aud`. Merge these fields into the data plane's configuration:
+
+```yaml title="Data plane config.yaml"
+general_settings:
+  enable_jwt_auth: true
+  litellm_jwtauth:
+    user_id_jwt_field: sub
+    user_email_jwt_field: email
+    user_id_upsert: false
+```
+
+Provision each operator through [user management](../users.md). Match the local `user_id` to the exchanged token's `sub` and assign the local role needed for the management APIs. Control plane roles do not grant data plane permissions.
+
+| Data plane environment variable | Default | Purpose |
+| --- | --- | --- |
+| `JWT_PUBLIC_KEY_URL` | Unset | Required JWKS or OIDC discovery URL for the exchanged token's issuer. |
+| `JWT_ISSUER` | Unset | Expected `iss` claim. Issuer validation is disabled when unset. |
+| `JWT_AUDIENCE` | Unset | Expected `aud` claim. Audience validation is disabled when unset. |
+
+Configure these fields in the data plane's `config.yaml`:
+
+| YAML field | Default | Purpose |
+| --- | --- | --- |
+| `general_settings.enable_jwt_auth` | `false` | Enable JWT authentication. |
+| `general_settings.litellm_jwtauth.user_id_jwt_field` | Unset | Claim containing the local LiteLLM user ID. Use `sub` for the token exchange example. |
+| `general_settings.litellm_jwtauth.user_email_jwt_field` | Unset | Claim containing the user's email. |
+| `general_settings.litellm_jwtauth.user_id_upsert` | `false` | Create a user record if it does not exist. |
+
+See the [JWT configuration reference](../jwt_auth_reference.md) for additional data plane settings.

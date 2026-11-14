@@ -91,6 +91,7 @@
 .inferenceArrow { fill: var(--cp-inference); }
 .dataArrow { fill: var(--cp-data); }
 .egressArrow { fill: var(--cp-egress); }
+.crossingGap { fill: none; stroke: var(--cp-bg); stroke-width: 7; }
 .flowLabel, .peeringLabel, .egressLabel {
   font-size: 13px;
   font-weight: 600;

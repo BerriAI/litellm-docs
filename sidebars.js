@@ -462,7 +462,7 @@ const sidebars = {
                     { type: "doc", id: "proxy/global_control_plane", label: "Overview" },
                     "proxy/global_control_plane/architecture",
                     "proxy/global_control_plane/configuration",
-                    "proxy/global_control_plane/audit",
+                    "proxy/global_control_plane/api_reference",
                     "proxy/global_control_plane/legacy_ui",
                   ],
                 },

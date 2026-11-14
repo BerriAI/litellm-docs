@@ -126,12 +126,15 @@ function ArchitectureSvg({cloud}: {cloud: Cloud}) {
     <desc id={`${id}-desc`}>
       Corporate administrators reach one control plane through private ingress in {layout.regions[0]}.
       The control plane sends management requests over {layout.peering} to independent LiteLLM dataplanes in {layout.regions[1]} and {layout.regions[2]}.
-      Metadata and usage responses return through the same path. Corporate applications send inference requests directly to each regional dataplane.
+      Metadata and usage responses return through the same path. Each dataplane has separate private frontends for inference and management.
+      Applications call the inference frontend. Only the control plane can reach the management frontend. The paired ingress icons represent these two frontends.
       Each dataplane has its own PostgreSQL and Redis. The control plane has no database or Redis.
       {isHybrid ? 'The control plane and AWS dataplane share one AWS account. The on-premises dataplane runs Kubernetes in the corporate data center. AWS Site-to-Site VPN carries private management HTTPS over an encrypted IPsec tunnel.' : `The control plane and both dataplanes share one ${scopeLabel}.`}
       {isGcp ? 'The project contains separate global VPCs with regional private, frontend, and proxy-only subnets. Data services use private service connections outside the deployment VPC.' : ''}
       {isAzure ? 'Managed PostgreSQL and Redis sit outside the deployment VNet and connect through private endpoints.' : ''}
-      Outbound HTTPS reaches configured audit sinks and the optional identity provider.
+      The control plane uses outbound HTTPS for audit export and optional OIDC discovery and token exchange.
+      When a dataplane uses OIDC token exchange authentication, it fetches signing keys from the identity provider over HTTPS.
+      Dataplanes initiate the JWKS requests. Control-plane OIDC login can also use service tokens to authenticate to dataplanes, without this JWKS path.
     </desc>
     <defs>{(['management', 'inference', 'data', 'egress'] as Flow[]).map(kind => <marker key={kind} id={`${id}-${kind}`} markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
       <path d="M0 0 7 3.5 0 7Z" className={styles[`${kind}Arrow`]} />
@@ -222,7 +225,11 @@ function ArchitectureSvg({cloud}: {cloud: Cloud}) {
           {!isGcp && line([[560 + offset, 375], [645 + offset, 375]], 'data', false)}
         </>}
         <Service x={(isGcp ? 470 : 485) + offset} y={250} icon={onPremises ? 'kubernetes.svg' : layout.computeIcon} lines={['LiteLLM dataplane', onPremises ? 'Kubernetes' : layout.compute]} />
-        <Service x={ingressX} y={250} icon={onPremises ? 'private-ingress' : layout.ingressIcon} lines={[onPremises ? 'Private ingress' : layout.ingress, 'HTTPS 443']} />
+        <g data-service="Separate private inference and management frontends">
+          <Icon x={ingressX - 9} y={245} size={28} icon={onPremises ? 'private-ingress' : layout.ingressIcon} />
+          <Icon x={ingressX + 9} y={255} size={28} icon={onPremises ? 'private-ingress' : layout.ingressIcon} />
+          <Lines x={ingressX} y={286} lines={[onPremises ? 'Private ingresses' : isAzure ? 'App Gateways' : 'Internal ALBs', 'LLM / mgmt']} className={styles.nodeLabel} />
+        </g>
         {isAzure && <Service x={560 + offset} y={368} icon="azure-private-endpoint.svg" lines={['Private endpoints']} />}
         {isGcp && <>
           <Icon x={585 + offset} y={250} size={26} icon="gcp-networking.svg" />
@@ -242,6 +249,25 @@ function ArchitectureSvg({cloud}: {cloud: Cloud}) {
     </>}
     <Service x={130} y={250} icon={layout.computeIcon} lines={['Control plane', `${layout.compute} · 1 replica`]} />
     <Service x={265} y={250} icon={layout.ingressIcon} lines={[layout.ingress, 'HTTPS 443']} />
+    <g data-flow="dataplane-jwks" aria-label="Dataplanes fetch IdP signing keys when they use OIDC token exchange">
+      {[0, 1].map(index => {
+        const offset = index * 430;
+        const sourceX = (isGcp ? 470 : 485) + offset;
+        const laneX = 375 + offset;
+        return <g key={index}>
+          {line([[sourceX - 22, 260], [laneX, 260], [laneX, 90]], 'egress', false)}
+          <path d={`M${sourceX - 45} 256l-7 4 7 4Z`} className={styles.egressArrow} />
+          <circle cx={laneX} cy={90} r={3} className={styles.egressArrow} />
+        </g>;
+      })}
+      {[265, isGcp ? 680 : 650].map(x => <path key={x} d={`M${x + 7} 90Q${x} 100 ${x - 7} 90`} className={styles.crossingGap} />)}
+      <path
+        d={`M805 90H${(isGcp ? 680 : 650) + 7}Q${isGcp ? 680 : 650} 100 ${(isGcp ? 680 : 650) - 7} 90H272Q265 100 258 90H10V530H345V447H282`}
+        className={`${styles.flow} ${styles.egress}`} fill="none" markerEnd={`url(#${id}-egress)`}
+      />
+      <Lines x={180} y={507} lines={['JWKS · HTTPS 443', 'With OIDC token exchange']} className={styles.egressLabel} />
+    </g>
+    <Lines x={245} y={400} lines={['OIDC discovery / exchange']} className={styles.egressLabel} />
     <ExternalService x={100} kind="audit" label="Audit sink" />
     <ExternalService x={260} kind="identity" label="IdP (optional)" />
   </svg>;
