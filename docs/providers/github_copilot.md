@@ -306,7 +306,7 @@ For a **Per-user GitHub OAuth** credential LiteLLM will use `endpoints.api` from
 
 For shared sign-in Chat Completions, Responses and Embeddings, LiteLLM checks these values in order: the credential or deployment's `api_base`, `endpoints.api` from the Copilot user lookup on the sign-in's GitHub host (if it names a `githubcopilot.com` host, or `copilot-api.SUBDOMAIN.ghe.com` for a GHE.com sign-in), `GITHUB_COPILOT_API_BASE` and then `https://api.githubcopilot.com` (`https://copilot-api.SUBDOMAIN.ghe.com` for a GHE.com sign-in).
 
-Anthropic Messages uses the authenticated Copilot endpoint. It will ignore any `api_base` and `GITHUB_COPILOT_API_BASE` that the caller supplies.
+Anthropic Messages uses the authenticated Copilot endpoint. It will ignore any `api_base` and `GITHUB_COPILOT_API_BASE` that the caller supplies, except that a GHE.com sign-in whose lookup fails falls back to `GITHUB_COPILOT_API_BASE` like the other endpoints.
 
 </details>
 
