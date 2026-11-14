@@ -118,6 +118,8 @@ Both fields are required. The username accepts 1 to 256 characters. The password
 
 ## Data planes
 
+A data plane is an independent LiteLLM deployment that serves inference requests. It manages its own keys, teams, budgets, and data stores.
+
 | Method | Path | Required scope | Response |
 | --- | --- | --- | --- |
 | `GET` | `/api/v1/dataplanes` | `dataplanes:read` | `items` containing the registered data planes visible to the caller. |
@@ -179,6 +181,8 @@ All runtime PUT and DELETE routes return `503` when storage is not configured or
 A successful PUT or DELETE confirms persistence, but live reads and permission checks follow the stream consumer and can lag briefly on any replica, including the writer. Poll the read API before depending on the new state. See [Runtime configuration](./configuration.md#runtime-configuration) for deployment and recovery.
 
 ## Fleet
+
+A fleet is the collection of data planes registered with the control plane. Fleet endpoints show their models and teams together.
 
 Add `?dataplane=us-prod` to select one data plane. Without this parameter, the API queries all registered data planes visible to the caller.
 
