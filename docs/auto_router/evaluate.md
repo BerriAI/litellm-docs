@@ -43,6 +43,20 @@ The [JEV benchmark](/blog/jev-auto-router-benchmark) measured classifier latency
 
 JEV logs a separate `typesafe/<model>` classifier call attributed through the parent request's metadata. Its `classifier_cost` is also carried on a successful JEV routing decision and deducted in reported router savings. That metadata describes the classifier charge already logged separately: do not count it again when summing spend rows. Missing usage or a missing registry entry leaves classifier cost unknown, and cancellation does not prove the provider billed zero
 
+## Measure cost per successful task
+
+Choose tiers using held-out examples of each application task, with acceptance criteria fixed before comparing configurations. For extraction, check required fields, numeric values and supporting evidence. Compare the router with always-efficient and always-capable baselines on the same inputs. Report task success, critical errors and end-to-end p95 latency by task type alongside spend. A tier label or a successful HTTP response does not establish that the task passed.
+
+In your application or evaluation harness, associate all calls for one business task with a task ID, retaining request IDs for individual attempts. Validate the returned answer before accepting it. If validation fails, the application can make a bounded retry with a more capable model or send the task for human review. This application policy is separate from classifier fallback. Auto Router does not supply your business acceptance checks.
+
+```text
+cost per successful task = total measured spend for all evaluated tasks / automatically completed tasks passing acceptance checks
+```
+
+Keep failed tasks in the numerator, including their retries and escalations. Include classifier, embedding and runtime validation calls once, following the accounting guidance above. For a serving-cost comparison, report shadow and evaluation-judge spend separately. Missing costs leave this metric unavailable until reconciled; report cost coverage instead of treating missing values as zero. With no successful tasks, the ratio is undefined.
+
+For example, if 100 tasks cost $12 in total and 80 pass automatically, the cost is $0.15 per successful task, including spend on the other 20 tasks. Human referrals do not count as automatic successes. Compare configurations on the same task set and acceptance criteria, reporting human-review rate separately. Include human handling costs separately when assessing business savings.
+
 ## Savings after you switch
 
 ![Auto-Router Usage tab in Cost Optimization](../../blog/autorouter_spend_visibility/auto-router-usage-tab.png)
