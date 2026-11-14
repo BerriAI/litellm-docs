@@ -943,5 +943,12 @@
     "capabilities": [
       "chat"
     ]
+  },
+  "providers/butler": {
+    "prefix": "butler",
+    "capabilities": [
+      "chat",
+      "rerank"
+    ]
   }
 }
