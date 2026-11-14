@@ -876,7 +876,7 @@ router_settings:
 | MODELSCOPE_API_BASE | Base URL for ModelScope
 | MODELSCOPE_API_KEY | API key for ModelScope
 | MORPH_API_BASE | Base URL for Morph. Default is https://api.morphllm.com/v1
-| NEBIUS_API_BASE | Base URL for Nebius. Default is https://api.studio.nebius.ai/v1
+| NEBIUS_API_BASE | Base URL for Nebius Token Factory. Set it to https://api.tokenfactory.nebius.com/v1. The built-in default is still the older AI Studio host
 | NIMBLE_API_BASE | Base URL for the Nimble search provider. Default is https://sdk.nimbleway.com/v2
 | NLP_CLOUD_API_BASE | Base URL for NLP Cloud. Default is https://api.nlpcloud.io/v1/gpu/
 | NOVITA_API_BASE | Base URL for Novita. Default is https://api.novita.ai/v3/openai
