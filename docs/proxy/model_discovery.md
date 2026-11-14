@@ -171,6 +171,39 @@ A custom prefix keeps the vendor in each id, so `model_name: or-team/*` over `mo
 
 The listing uses the deployment's `api_key` and `api_base`, then `OPENROUTER_API_KEY` or `OR_API_KEY` and `OPENROUTER_API_BASE`, in the same order as a chat request. When the catalog call fails or takes longer than 10 seconds, the deployment adds nothing to `/v1/models`, and after a timeout the next 30 seconds of listings skip the call.
 
+## OpenAI-compatible servers
+
+With `check_provider_endpoint: true` an `openai/*` deployment where the `api_base` is pointing at an OpenAI compatible server (e.g. vLLM, Baseten) will show each id that the server returns under the wildcard prefix. If the server's own id starts with `openai/` (e.g. `openai/gpt-oss-120b`) then the name that appears in the list will have that segment repeated (i.e. `openai/openai/gpt-oss-120b`). The proxy strips off the first `openai/` and passes `openai/gpt-oss-120b` on to the server.
+
+```yaml
+model_list:
+  - model_name: openai/*
+    litellm_params:
+      model: openai/*
+      api_base: https://my-vllm.example.com/v1
+      api_key: os.environ/VLLM_API_KEY
+
+litellm_settings:
+  check_provider_endpoint: true
+```
+
+```bash
+curl -s http://localhost:4000/v1/models -H "Authorization: Bearer $LITELLM_KEY" | jq '.data[].id'
+# "openai/openai/gpt-oss-120b"
+# "openai/zai-org/GLM-5.3-Flash"
+
+curl -s http://localhost:4000/v1/chat/completions -H "Authorization: Bearer $LITELLM_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"model": "openai/openai/gpt-oss-120b", "messages": [{"role": "user", "content": "Say ok"}]}' | jq -r '.choices[0].message.content'
+# ok
+```
+
+Ids that don't start with `openai/` (e.g. `zai-org/GLM-5.3-Flash`) get the prefix once. A custom prefix works in exactly the same way so `model_name: my-vllm/*` over `model: openai/*` will list `my-vllm/openai/gpt-oss-120b` and a catch all `model_name: "*"` over `openai/*` will list `openai/gpt-oss-120b`.
+
+A `hosted_vllm/*` deployment lists the same way, so a `model_name: openai/*` over `model: hosted_vllm/*` deployment will list `openai/openai/gpt-oss-120b`. A deployment that sets `custom_llm_provider: hosted_vllm` on `model: openai/*` will send the `openai/` segment to the server as-is, so it will only list the server ids that start with `openai/` (e.g. `model_name: my-vllm/*` lists `my-vllm/gpt-oss-120b`) and will not list ids such as `zai-org/GLM-5.3-Flash` that it can't reach.
+
+A key or team restricted to named models must have the named model in its `models`. Grant `openai/openai/gpt-oss-120b` not `openai/gpt-oss-120b`.
+
 ## Hide a model from `/v1/models`
 
 Set `model_info.discoverable: false` on a `model_list` entry to leave it out of the listing endpoints while keeping it callable by anyone whose key allows it. This is for models a chat client's model picker should not offer, such as embedding, classifier, or evaluator models that only your own services call. Clients like Claude Code (`CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`) and Open WebUI fill their pickers from `GET /v1/models`, and most do not filter by capability
