@@ -336,6 +336,26 @@ curl 'http://0.0.0.0:4000/user/new' \
 }'
 ```
 
+#### **Add a soft budget to users**
+
+<SinceVersion v="1.109.0" /> `soft_budget` is a spend threshold that fires a budget alert for the user without blocking requests. When the user's spend reaches it, the proxy sends a `soft_budget` alert through the configured [alerting](./alerting.md) channels (Slack, webhook, or the user's own email when email alerting is set up). Requests keep going through until `max_budget` is reached. Set it with `/user/new` or `/user/update`; `/user/info` returns it under `user_info.soft_budget`.
+
+```shell
+curl --location 'http://localhost:4000/user/new' \
+--header 'Authorization: Bearer <your-master-key>' \
+--header 'Content-Type: application/json' \
+--data-raw '{"user_id": "krrish3@berri.ai", "max_budget": 100, "soft_budget": 80}'
+```
+
+```shell
+curl --location 'http://localhost:4000/user/update' \
+--header 'Authorization: Bearer <your-master-key>' \
+--header 'Content-Type: application/json' \
+--data-raw '{"user_id": "krrish3@berri.ai", "soft_budget": 90}'
+```
+
+`soft_budget` must be a non-negative number and, when `max_budget` is also set on the user, strictly lower than it; otherwise the request fails with a 400. Pass `"soft_budget": null` to `/user/update` to remove it. The same rule as `max_budget` applies to team keys: the user's soft budget is only checked for keys with a `team_id` when `general_settings.apply_user_budget_to_team_keys` is `true`. You can also set it from the Admin UI on the user's Settings tab under **Soft Budget (USD)**.
+
 #### Create new keys for existing user
 
 Now you can just call `/key/generate` with that user_id (i.e. krrish3@berri.ai) and:
