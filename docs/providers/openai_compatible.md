@@ -138,6 +138,21 @@ Here's how to call an OpenAI-Compatible Endpoint with the LiteLLM Proxy Server
   </Tabs>
 
 
+### Example: SandBase upstream
+
+Use the SandBase API base URL and a model ID from the [SandBase model catalog](https://www.sandbase.ai/models). Set `SANDBASE_API_KEY` in the proxy environment before starting LiteLLM.
+
+```yaml
+model_list:
+  - model_name: sandbase-chat
+    litellm_params:
+      model: openai/<sandbase-model-id>
+      api_base: https://api.sandbase.ai/v1
+      api_key: os.environ/SANDBASE_API_KEY
+```
+
+Replace `<sandbase-model-id>` with the full model ID, including its vendor prefix if present. Send chat requests to the proxy with `model: sandbase-chat`.
+
 ### Advanced - Disable System Messages
 
 Some VLLM models (e.g. gemma) don't support system messages. To map those requests to 'user' messages, use the `supports_system_message` flag. 
