@@ -29,6 +29,8 @@ The service icons listed below are unmodified SVGs from the providers' official 
 | `aws-s3.svg` | `Architecture-Service-Icons_07312026/Arch_Storage/48/Arch_Amazon-Simple-Storage-Service_48.svg` |
 | `aws-bedrock.svg` | `Architecture-Service-Icons_07312026/Arch_Artificial-Intelligence/48/Arch_Amazon-Bedrock_48.svg` |
 | `aws-cloudwatch.svg` | `Architecture-Service-Icons_07312026/Arch_Management-Tools/48/Arch_Amazon-CloudWatch_48.svg` |
+| `aws-vpn-gateway.svg` | `Resource-Icons_07312026/Res_Networking-Content-Delivery/Res_Amazon-VPC_VPN-Gateway_48.svg` |
+| `aws-customer-gateway.svg` | `Resource-Icons_07312026/Res_Networking-Content-Delivery/Res_Amazon-VPC_Customer-Gateway_48.svg` |
 
 ## Google Cloud
 
