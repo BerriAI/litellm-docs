@@ -69,10 +69,10 @@ Organizations and teams accept `budget`. Members inherit a template through `bud
 | `budget_duration` | String or `null`; default `null` | Reset interval, for example `"1h"`, `"24h"`, `"7d"`, or `"30d"`. Must resolve to a positive duration. |
 | `model_rpm_limit` | Object or `null`; default `null` | Model name to non-negative requests-per-minute limit. |
 | `model_tpm_limit` | Object or `null`; default `null` | Model name to non-negative tokens-per-minute limit. |
-| `budget_limits` | Array or `null`; default `null` | Extra spend caps, each with `budget_duration` set to `"1mo"` or `"12mo"` and a `max_budget`. Each window resets on its own and blocks requests when reached. |
+| `budget_limits` | Array or `null`; default `null` | Extra spend caps, each with `budget_duration` set to `"1mo"` (monthly) or `"12mo"` (annual) and a `max_budget`, at most one entry per duration. Other values, including `"1y"`, return `422`. Each window resets on its own and blocks requests when reached. A patch replaces the whole array. |
 | `cap_policy` | `"pause_until_reset"`, `"pause_allow_increase"`, or `null`; default `null` | What a member can do at its cap. `null` and `"pause_until_reset"` wait for the reset. `"pause_allow_increase"` lets the member [request a temporary increase](#budget-increase-requests). |
 
-With customer identity headers, LiteLLM checks the organization, team, and member budgets before inference. A scope at or above `max_budget` causes a budget error; the organization takes precedence over the team and member. LiteLLM also checks each scope's model access and rate limits. Requests without these headers do not enter this hierarchy enforcement path.
+With customer identity headers, LiteLLM checks the organization, team, and member budgets before inference. A request must pass every applicable limit, and each limit has its own spend counter: a team budget counts the whole team's spend, while members assigned to one template each count their own. A scope at or above `max_budget` or a `budget_limits` window causes a [budget error](./track-customer-spend.md#handle-a-budget-refusal-in-your-client); the organization takes precedence over the team and member. See [Shared team budget or per-member allowance](./track-customer-spend.md#shared-team-budget-or-per-member-allowance) for worked examples. LiteLLM also checks each scope's model access and rate limits. Requests without these headers do not enter this hierarchy enforcement path.
 
 Builds preceding the [shared customer spend counter fix](https://github.com/BerriAI/litellm/pull/51568) can use cached hierarchy spend until refresh. Use a build containing that change. Allow for requests already in flight and background accounting when you display balances.
 
@@ -240,7 +240,7 @@ curl --request POST \
 
 Use `budget_id` for the selected member template. The current API rejects the old `budget_template_id` field. The response's `budget_override_id` identifies the separate override record; it is read-only.
 
-A member needs a selected template or `budget_override`. LiteLLM merges non-null override fields with the template. A non-empty `allowed_models` override replaces inherited models. Read `effective_budget` to display the settings that apply now, including override expiry.
+A member needs a selected template or `budget_override`. LiteLLM merges non-null override fields with the template. A non-empty `allowed_models` override replaces inherited models. An override `budget_limits` entry replaces the template window with the same `budget_duration` and leaves the template's other windows in place, unless the override sets its own `max_budget`, which drops the template's windows. After `budget_override_expires_at`, the member uses the template again. Read `effective_budget` to display the settings that apply now, including override expiry.
 
 ```bash title="Create a member using the organization's default template"
 curl --request POST \
@@ -273,7 +273,7 @@ Main uses `customer_member_id` for member identity. Sending an email string as t
 
 ## Member budget templates
 
-Templates belong to a customer organization. Updating a template changes the settings its members inherit. Changing the default template affects new members; it does not reassign existing members.
+Templates belong to a customer organization. Updating a template changes the settings its members inherit; each member keeps its own spend counter, so a template does not pool spend the way a [team budget](./track-customer-spend.md#shared-team-budget-or-per-member-allowance) does. Changing the default template affects new members; it does not reassign existing members.
 
 | Method | Path | Result |
 | --- | --- | --- |
@@ -500,8 +500,8 @@ Management errors use problem details with `type`, `title`, `status`, and `detai
 | `403` | Free-tier create limit. Type `urn:litellm:error:customer-hierarchy-free-tier-limit`, title `Customer Management free tier limit reached`, detail `Customer Management free tier limit reached: up to 5 customer organizations, 5 teams per organization and 5 members per team without a LiteLLM Enterprise license. Upgrade to Enterprise to remove the limits: https://www.litellm.ai/enterprise`. Upgrade to Enterprise or free capacity before retrying. |
 | `404` | Resource or parent does not exist. Retrieve or create the parent first. |
 | `409` | Duplicate ID, parent still has children, or template remains default or referenced. |
-| `422` | Invalid body, budget value, template selection, or missing member budget. Inference budget rejection also uses `422` with an inference error body. |
-| `429` | Inference request exceeds a configured rate limit. |
+| `422` | Invalid body, budget value, template selection, or missing member budget. Inference budget rejection also uses `422` by default, with an inference error body whose type is `budget_exceeded`. See [Handle a budget refusal in your client](./track-customer-spend.md#handle-a-budget-refusal-in-your-client). |
+| `429` | Inference request exceeds a configured rate limit. Budget rejection also uses `429` when the deployment sets `budget_exceeded_status_code: 429`; the error body distinguishes the two. |
 | `503` | Management database is unavailable. |
 
 ```json title="Duplicate customer ID"
