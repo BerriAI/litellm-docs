@@ -1,6 +1,6 @@
 ---
-slug: customer-portal
-title: "Introducing LiteLLM Customer Portal"
+slug: customer-management
+title: "Introducing LiteLLM Customer Management"
 date: 2026-11-13T09:00:00
 authors:
   - ishaan
@@ -34,7 +34,7 @@ import styles from './customer-portal-hero.module.css';
   <a className={`button ${styles.setupCtaButton}`} href="https://docs.google.com/forms/d/e/1FAIpQLSfqKoWifvdeFtN-CSMQr2aEIYfpoc7D9t8Fjxb_fAOKPJbVNg/viewform">Work with us</a>
 </aside>
 
-Today we're launching **LiteLLM Customer Portal** for AI-native companies using the gateway. If you're building an agent on LiteLLM and need to track spend and set budget limits for your customers by their organizations, teams, and individual members, this is for you.
+Today we're launching **LiteLLM Customer Management** for AI-native companies using the gateway. If you're building an agent on LiteLLM and need to track spend and set budget limits for your customers by their organizations, teams, and individual members, this is for you.
 
 {/* truncate */}
 
@@ -125,7 +125,7 @@ Install with `pip install deepagents langchain-openai`. Configure the model for 
 
 That's it for attributing the call. LiteLLM resolves the member's customer team and organization and records the spend. The same headers work with Responses, Chat Completions, and Anthropic Messages.
 
-Use your application key and a gateway model alias. `LITELLM_BASE_URL` is the gateway root URL; [register the customer first](/docs/proxy/customer_portal/track-customer-spend#2-import-a-customer), and select their identity from your authenticated session.
+Use your application key and a gateway model alias. `LITELLM_BASE_URL` is the gateway root URL; [register the customer first](/docs/proxy/customer_management/track-customer-spend#2-import-a-customer), and select their identity from your authenticated session.
 
 <figure data-full-width className={`${styles.productShot} ${styles.requestShot}`}>
   <a className={styles.screenshotLink} href="/img/customer_portal/launch-spend-log-dark.webp" target="_blank" rel="noopener noreferrer" aria-label="Open the request customer attribution screenshot at full resolution">
@@ -169,12 +169,12 @@ curl --fail-with-body --request POST \
   }'
 ```
 
-Use a server-side proxy admin credential as `LITELLM_ADMIN_KEY`. [Add the customer's teams and members](/docs/proxy/customer_portal/track-customer-spend#2-import-a-customer); new members inherit the default profile.
+Use a server-side proxy admin credential as `LITELLM_ADMIN_KEY`. [Add the customer's teams and members](/docs/proxy/customer_management/track-customer-spend#2-import-a-customer); new members inherit the default profile.
 
 </TabItem>
 <TabItem value="ui" label="LiteLLM UI">
 
-Open **Customer Portal → Customers → your customer → Settings**. Use **Set budget** or **Edit budget** to set **Spend limit (USD)** and **Reset period**. Select a member's **Budget template** for its default allowance.
+Open **Customer Management → Customers → your customer → Settings**. Use **Set budget** or **Edit budget** to set **Spend limit (USD)** and **Reset period**. Select a member's **Budget template** for its default allowance.
 
 </TabItem>
 </Tabs>
@@ -209,7 +209,7 @@ curl --fail-with-body --request POST \
 
 <CustomerBudgetAlert />
 
-When a member reaches their $60 cap, use the budget webhook to alert your team or open an approval request. Your receiver formats the notification from LiteLLM's JSON event. [Configure and test delivery](/docs/proxy/customer_portal/track-customer-spend#1-set-up-budget-webhooks); reconcile missed alerts with usage reads because delivery is best effort.
+When a member reaches their $60 cap, use the budget webhook to alert your team or open an approval request. Your receiver formats the notification from LiteLLM's JSON event. [Configure and test delivery](/docs/proxy/customer_management/track-customer-spend#1-set-up-budget-webhooks); reconcile missed alerts with usage reads because delivery is best effort.
 
 ### Approve a temporary increase when your customer upgrades
 
@@ -228,7 +228,7 @@ curl --fail-with-body --request PATCH \
   }"
 ```
 
-Your product manages credit purchases and balances. LiteLLM applies the spend allowance until it expires; the organization and team caps still apply. Use the [approval APIs](/docs/proxy/customer_portal/api_reference#budget-increase-requests) if your workflow needs a review queue.
+Your product manages credit purchases and balances. LiteLLM applies the spend allowance until it expires; the organization and team caps still apply. Use the [approval APIs](/docs/proxy/customer_management/api_reference#budget-increase-requests) if your workflow needs a review queue.
 
 ### Put the usage and budget controls in your own product
 
@@ -264,12 +264,12 @@ Set `model_max_budget` and `budget_fallbacks` on the key with your configured mo
 
 ## OSS and Enterprise
 
-| Customer Portal | LiteLLM OSS | LiteLLM Enterprise |
+| Customer Management | LiteLLM OSS | LiteLLM Enterprise |
 | --- | --- | --- |
 | Customer organizations | Up to 5 | More than 5 |
 | Customer teams per organization | Up to 5 | More than 5 |
 | Customer members per team | Up to 5 | More than 5 |
 
-Start with the [walkthrough](/docs/proxy/customer_portal/track-customer-spend) and [API reference](/docs/proxy/customer_portal/api_reference). For larger customer hierarchies, [talk to us about Enterprise](https://www.litellm.ai/enterprise).
+Start with the [walkthrough](/docs/proxy/customer_management/track-customer-spend) and [API reference](/docs/proxy/customer_management/api_reference). For larger customer hierarchies, [talk to us about Enterprise](https://www.litellm.ai/enterprise).
 
-This draft targets `main`; a published release containing the complete flow has not been verified. Check [availability](/docs/proxy/customer_portal/api_reference#availability) before deploying.
+This draft targets `main`; a published release containing the complete flow has not been verified. Check [availability](/docs/proxy/customer_management/api_reference#availability) before deploying.
