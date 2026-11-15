@@ -187,6 +187,20 @@ In the browser, the proxy sign-in page opens first if you have no session (SSO i
 
 The classic `lite login` flow and virtual API keys keep working unchanged. `--pkce` needs a proxy that serves `/.well-known/litellm-cli-auth`; on an older proxy the command stops with a message that says so
 
+### Choose the team up front
+
+If you belong to more than one team, name the team when you sign in so you don't pick it every time. `--team` takes a team id or a team alias, and the `LITELLM_PROXY_TEAM` environment variable sets the same value from your shell profile. `LITELLM_PROXY_LOGIN_PKCE=true` makes a plain `lite login` use the browser PKCE flow
+
+```shell
+export LITELLM_PROXY_TEAM=my-team-alias
+export LITELLM_PROXY_LOGIN_PKCE=true
+lite login
+```
+
+With `--pkce`, the consent page opens with that team already selected, and you still click Approve. In the classic flow, the terminal skips the team prompt and prints the team the key was issued for. An exact team id wins, and an alias counts only when exactly one of your teams has it. When the value names none of your teams, you pick the team the usual way. The proxy still checks that you belong to the team you approve
+
+`--team` beats `LITELLM_PROXY_TEAM`, and `--pkce` or `--no-pkce` beats `LITELLM_PROXY_LOGIN_PKCE`, which beats `lite config set pkce`. `lite up` and `lite claude` read both variables too when they have to sign you in, and there a set `LITELLM_PROXY_LOGIN_PKCE` also beats the flow your previous login used
+
 ### The stored credential
 
 The key and the refresh token both go to your OS keychain, the same place `lite login` puts the key, and the rest of the record goes to `~/.litellm/token.json` (mode `0600`). Next to the `base_url`, `user_id`, and `user_role` fields that `lite login` writes, a `--pkce` record also holds `expires_at`, `client_id`, `token_endpoint`, `revocation_endpoint`, `resource`, and `team_id`, none of which gets anyone a key on its own. On a machine with no usable keychain the key and the refresh token fall back into that same file and `lite login` says so; treat `~/.litellm/token.json` as sensitive whenever it does, because anyone who can read it can exchange the refresh token for a working key. A `--pkce` login made with an earlier `lite` leaves its refresh token in the file until the next `lite` command reads it and moves it into the keychain
