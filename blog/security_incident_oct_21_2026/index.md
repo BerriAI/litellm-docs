@@ -28,6 +28,8 @@ All previous versions are safe, and the impacted releases have been pulled.
 
 **Update (October 30):** The commit that rotated our cosign image signing key on October 23 now shows as verified on GitHub, and we added the new key's fingerprint to this post. See [Image signing key rotation](/blog/security-incident-oct-21-2026#image-signing-key-rotation).
 
+**Update (November 15):** Releases are now signed with keyless cosign instead of a stored key, starting with `v1.111.0-dev.3`. See [Keyless signing](/blog/security-incident-oct-21-2026#keyless-signing).
+
 {/* truncate */}
 
 ---
@@ -176,7 +178,7 @@ We have already taken the following steps:
 
 ### Image signing key rotation
 
-We believe the private half of our previous cosign key was exposed when the attacker [exfiltrated additional tokens](/blog/security-incident-oct-21-2026-attack-chain#exfiltrating-additional-tokens), so on October 23 we replaced it with a new key in [commit `e82a3c6`](https://github.com/BerriAI/litellm/commit/e82a3c646908ba0a6ee0beddc4310d7a6cac4065), merged in [PR #48103](https://github.com/BerriAI/litellm/pull/48103). The first releases signed with the new key, `v1.103.8`, `v1.104.6`, `v1.105.4` and `v1.106.3`, went out on October 24, and every later release uses it too.
+We believe the private half of our previous cosign key was exposed when the attacker [exfiltrated additional tokens](/blog/security-incident-oct-21-2026-attack-chain#exfiltrating-additional-tokens), so on October 23 we replaced it with a new key in [commit `e82a3c6`](https://github.com/BerriAI/litellm/commit/e82a3c646908ba0a6ee0beddc4310d7a6cac4065), merged in [PR #48103](https://github.com/BerriAI/litellm/pull/48103). The first releases signed with the new key, `v1.103.8`, `v1.104.6`, `v1.105.4` and `v1.106.3`, went out on October 24. Every later release used it until we moved to [keyless signing](#keyless-signing) on November 15.
 
 The SHA-256 fingerprint of the new public key file, `cosign.pub`, is:
 
@@ -191,6 +193,21 @@ curl -sL https://raw.githubusercontent.com/BerriAI/litellm/e82a3c646908ba0a6ee0b
 ```
 
 Earlier images are signed with the previous key from [commit `0112e53`](https://github.com/BerriAI/litellm/commit/0112e53046018d726492c814b3644b7d376029d0). Trust a signature from the previous key only on an image published before the `v1.107.0` release on October 21. The compromised `v1.107.0` images also carry a valid signature from the previous key, so check their digests against the [affected versions](#confirmed-affected-versions) above. See the [Docker image security guide](/docs/proxy/docker_image_security) for the full verify commands.
+
+### Keyless signing
+
+Starting with `v1.111.0-dev.3` on November 15, 2026, release images and the Helm chart are signed with keyless cosign. There is no stored signing key any more. Each release run gets a short-lived certificate from Sigstore that is bound to the identity of our release workflow, and the signature is recorded in the public Rekor transparency log.
+
+Verify a release signed this way with:
+
+```bash
+cosign verify \
+  --certificate-identity https://github.com/BerriAI/project-releaser/.github/workflows/release.yml@refs/heads/main \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  ghcr.io/berriai/litellm:<release-tag>
+```
+
+`cosign verify --key` fails on these releases. Releases published before `v1.111.0-dev.3` keep their key signatures and verify with the keys above. The last one signed with a key is `v1.110.0-rc.3`.
 
 
 ---
