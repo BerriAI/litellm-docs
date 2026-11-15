@@ -555,7 +555,7 @@ curl "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
 
 Read `budget.max_budget` for an organization and `effective_budget.max_budget` for a team or member. The same objects contain `rpm_limit`, `tpm_limit`, model limits, and allowed models. A team or member's effective budget combines its template with active overrides; an expired override no longer applies.
 
-`spend` is the running budget counter. `budget_reset_at` records the next reset. Use date-range usage for historical costs because a reset changes the counter without erasing historical usage. To resolve a member's parents in your product, read its `parent_org_id` and `parent_team_ids`. The first team is its default team.
+`spend` is the current budget counter, `budget_usage` lists the current counter and `reset_at` of each budget window, and `budget_reset_at` records the next reset. Usage reads report historical spend by UTC day for the dates you select. A reset sets the counters back without erasing that history. Budgets reset on the separately configured [budget reset timezone](../budget_reset_and_tz.md), so a window boundary need not line up with a UTC day. To resolve a member's parents in your product, read its `parent_org_id` and `parent_team_ids`. The first team is its default team.
 
 Open **Customer Management → Customers**, select **Acme**, and choose **Select Time Range** to include your requests. The usage page shows spend, requests, tokens, and the member caps. Choose **Teams** in **Break down by** to inspect Support.
 
