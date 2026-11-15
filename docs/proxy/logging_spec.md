@@ -97,7 +97,7 @@ These fields describe the virtual key that authenticated the request and the ent
 | `user_api_key_user_email` | `Optional[str]` | Email of the user who owns the key, copied from that user's row. `null` when the key has no `user_id` or the user has no email. Callbacks already receive it on older releases such as v1.106.6, but SpendLogs (the `/spend/logs` API and the UI request log drawer) only stores it from v1.109.0 |
 | `user_api_key_team_alias` | `Optional[str]` | Team alias associated with the key |
 | `user_api_key_end_user_id` | `Optional[str]` | End-user ID associated with the key |
-| `user_api_key_customer_member_id` | `Optional[str]` | Customer member the request was charged to, when it runs under a [customer hierarchy](./customer_portal/track-customer-spend) |
+| `user_api_key_customer_member_id` | `Optional[str]` | Customer member the request was charged to, when it runs under a [customer hierarchy](./customer_management/track-customer-spend) |
 | `user_api_key_customer_team_id` | `Optional[str]` | Customer team the request was charged to |
 | `user_api_key_customer_org_id` | `Optional[str]` | Customer organization the request was charged to |
 | `user_api_key_customer_org_alias` | `Optional[str]` | Alias of the customer organization. Can be absent when the request has no customer hierarchy |

@@ -8,7 +8,7 @@ description: Import customers, pass their identity with LLM requests, and fetch 
 
 :::info
 
-Without a LiteLLM Enterprise license, the customer portal is free for up to 5 customer organizations, 5 customer teams per organization, and 5 customer members per team. The auto-created `default` team counts toward the team limit. [LiteLLM Enterprise](https://www.litellm.ai/enterprise) removes these limits.
+Without a LiteLLM Enterprise license, Customer Management is free for up to 5 customer organizations, 5 customer teams per organization, and 5 customer members per team. The auto-created `default` team counts toward the team limit. [LiteLLM Enterprise](https://www.litellm.ai/enterprise) removes these limits.
 
 :::
 
@@ -16,9 +16,9 @@ Use one application API key for your customers. Pass the customer's organization
 
 Set up budget notifications, then import Acme, its Support team, and two members. Send a request for Alice and fetch usage and budgets to display in your product.
 
-![Customer Portal usage for Acme, with $0.14 spend, one request, and 120 tokens](../../../static/img/customer_portal/usage-overview.jpg)
+![Customer Management usage for Acme, with $0.14 spend, one request, and 120 tokens](../../../static/img/customer_portal/usage-overview.jpg)
 
-*Local Customer Portal after one controlled-provider request, with usage read from the accounting ledger.*
+*Local Customer Management after one controlled-provider request, with usage read from the accounting ledger.*
 
 {/* keep-version-note: This guide distinguishes the verified main-branch API from pending changes. A published release containing the complete integration has not been verified. */}
 
@@ -30,7 +30,7 @@ Management creates that would exceed a free-tier limit return `403`. A member co
 
 Requests with a valid virtual key keep working, subject to the usual authentication, model access, budget, and rate-limit checks. If a limit prevents auto-registration, new organization aliases or member IDs are not auto-registered or tracked at that customer level. The proxy logs a `CUSTOMER TRACKING OFF` warning. Existing customer levels on the request remain tracked.
 
-The Customers dashboard shows a banner when any free-tier limit is reached. If an Enterprise license lapses, existing rows keep being tracked, even when their counts exceed the free-tier limits. The limits restrict new creates, not existing tracking. Proxy admins can check current capacity with [the limits API](./api_reference.md#customer-portal-limits).
+The Customers dashboard shows a banner when any free-tier limit is reached. If an Enterprise license lapses, existing rows keep being tracked, even when their counts exceed the free-tier limits. The limits restrict new creates, not existing tracking. Proxy admins can check current capacity with [the limits API](./api_reference.md#customer-management-limits).
 
 ## Before you start
 
@@ -43,7 +43,7 @@ Make these values available in your application's environment and the terminal w
 | `LITELLM_BASE_URL` | Gateway URL without `/v1`, for example `http://localhost:4000`. |
 | `LITELLM_MODEL` | An existing gateway model alias your application key can use. |
 | `LITELLM_API_KEY` | Your existing application API key. The same key serves every customer. |
-| `LITELLM_ADMIN_KEY` | Proxy admin key for customer management, usage, and log reads. |
+| `LITELLM_ADMIN_KEY` | Proxy admin key for Customer Management, usage, and log reads. |
 | `START_DATE`, `END_DATE` | Inclusive UTC dates in `YYYY-MM-DD` format. Use the current UTC date for both on your first run. |
 
 Keep keys on your server. Your backend authenticates the customer and selects the identity headers from that customer's session before it calls LiteLLM. It also authorizes customer access before it returns usage to your product.
@@ -318,7 +318,7 @@ except APIStatusError as error:
     print(error.status_code)
 ```
 
-Expect `422` and a budget error naming `customer_org=org-budget-check`, before a provider request. A deployment can customize the budget error status.
+Expect `422` and a budget error naming `customer_org=org-budget-check`, before a provider request. A deployment can change this status to `429`; see [Handle a budget refusal in your client](#handle-a-budget-refusal-in-your-client).
 
 Use a positive-cost model to test the webhook. Set the test cap to $1 and the soft threshold to $0, then rerun the same SDK call. The request succeeds and incurs the model's normal cost. Zero-cost requests do not produce a spend event.
 
@@ -364,6 +364,119 @@ curl --request PATCH "$LITELLM_BASE_URL/management/v1/customer_organizations/org
 ```
 
 The first exhausted scope rejects a request: organization, then team, then member. Fresh customer spend counters across workers are on `main` through [#51568](https://github.com/BerriAI/litellm/pull/51568). Use a build containing that change; older builds can admit requests against cached spend until refresh. Allow for requests already in flight and background accounting when you show balances.
+
+### Handle a budget refusal in your client
+
+A budget refusal returns `422` by default. A deployment that sets `budget_exceeded_status_code: 429` under `litellm_settings` returns `429`, so identify the refusal from the parsed error body and not from the status or the message text.
+
+```yaml title="config.yaml, optional: return 429 for budget refusals"
+litellm_settings:
+  budget_exceeded_status_code: 429
+```
+
+OpenAI-compatible routes such as `/v1/chat/completions` set `error.type` to `budget_exceeded`:
+
+```json title="Chat Completions, default 422"
+{
+  "error": {
+    "message": "ExceededBudget: customer_org=org-budget-check over budget. Spend=0.0, Budget=0.0. Spend resumes when the budget window resets.",
+    "type": "budget_exceeded",
+    "param": null,
+    "code": "422"
+  }
+}
+```
+
+`/v1/messages` keeps an Anthropic error type and adds `error.litellm_error_type`:
+
+```json title="Anthropic Messages, default 422"
+{
+  "type": "error",
+  "error": {
+    "type": "invalid_request_error",
+    "message": "ExceededBudget: customer_org=org-budget-check over budget. Spend=0.0, Budget=0.0. Spend resumes when the budget window resets.",
+    "litellm_error_type": "budget_exceeded"
+  }
+}
+```
+
+| Route | Status | `error.type` | `error.litellm_error_type` |
+| --- | --- | --- | --- |
+| `/v1/chat/completions` | `422`, default | `budget_exceeded` | Absent |
+| `/v1/messages` | `422`, default | `invalid_request_error` | `budget_exceeded` |
+| `/v1/chat/completions` | `429`, configured | `budget_exceeded` | Absent |
+| `/v1/messages` | `429`, configured | `rate_limit_error` | `budget_exceeded` |
+
+An ordinary rate limit, such as a scope's `rpm_limit`, is also a `429` but has a different body: `error.type` is `throttling_error` on OpenAI-compatible routes, and on `/v1/messages` it is `rate_limit_error` with no `litellm_error_type`.
+
+The OpenAI SDK exposes the inner `error` object as `error.body`:
+
+```python title="Detect a budget refusal with the OpenAI SDK"
+import os
+
+from openai import APIStatusError, OpenAI
+
+client = OpenAI(
+    api_key=os.environ["LITELLM_API_KEY"],
+    base_url=f"{os.environ['LITELLM_BASE_URL'].rstrip('/')}/v1",
+)
+
+
+def is_budget_refusal(error: APIStatusError) -> bool:
+    body = error.body
+    return isinstance(body, dict) and body.get("type") == "budget_exceeded"
+
+
+try:
+    client.chat.completions.create(
+        model=os.environ["LITELLM_MODEL"],
+        messages=[{"role": "user", "content": "Budget check"}],
+        max_tokens=16,
+        extra_headers={"x-litellm-customer-org-alias": "Budget check"},
+    )
+except APIStatusError as error:
+    if is_budget_refusal(error):
+        print("Budget exhausted, do not retry:", error.status_code)
+    else:
+        raise
+```
+
+The Anthropic SDK exposes the whole response body, so read the nested `error` object. Run `pip install anthropic` first.
+
+```python title="Detect a budget refusal with the Anthropic SDK"
+import os
+
+from anthropic import Anthropic, APIStatusError
+
+client = Anthropic(
+    api_key=os.environ["LITELLM_API_KEY"],
+    base_url=os.environ["LITELLM_BASE_URL"].rstrip("/"),
+)
+
+
+def is_budget_refusal(error: APIStatusError) -> bool:
+    body = error.body
+    detail = body.get("error") if isinstance(body, dict) else None
+    return isinstance(detail, dict) and detail.get("litellm_error_type") == "budget_exceeded"
+
+
+try:
+    client.messages.create(
+        model=os.environ["LITELLM_MODEL"],
+        messages=[{"role": "user", "content": "Budget check"}],
+        max_tokens=16,
+        extra_headers={"x-litellm-customer-org-alias": "Budget check"},
+    )
+except APIStatusError as error:
+    if is_budget_refusal(error):
+        print("Budget exhausted, do not retry:", error.status_code)
+    else:
+        raise
+```
+
+Retrying straight away does not help: the request is refused before it reaches a provider, and the response carries no `Retry-After` header. The same request can succeed after the exhausted budget or window resets, after an approved [budget increase request](./api_reference.md#budget-increase-requests), or after an administrator raises the limit. A budget without `budget_duration` or a window has no automatic reset, whatever the message text says, so read `budget_reset_at` and `budget_limits[].reset_at` from the management API before you tell a customer when to try again.
+
+Both SDKs retry `429` twice by default, with backoff, before your code sees the exception. With the default `422` the refusal reaches your `except` block after one request. With a configured `429` the check above still identifies the refusal, but only after the SDK has sent the request three times. To avoid those extra requests, keep the default `422`, or pass `max_retries=0` to the client, or use `client.with_options(max_retries=0)` for one call, and retry in your own code only when the error is not a budget refusal.
 
 ## 5. Fetch usage for your product
 
@@ -444,11 +557,11 @@ Read `budget.max_budget` for an organization and `effective_budget.max_budget` f
 
 `spend` is the running budget counter. `budget_reset_at` records the next reset. Use date-range usage for historical costs because a reset changes the counter without erasing historical usage. To resolve a member's parents in your product, read its `parent_org_id` and `parent_team_ids`. The first team is its default team.
 
-Open **Customer Portal → Customers**, select **Acme**, and choose **Select Time Range** to include your requests. The usage page shows spend, requests, tokens, and the member caps. Choose **Teams** in **Break down by** to inspect Support.
+Open **Customer Management → Customers**, select **Acme**, and choose **Select Time Range** to include your requests. The usage page shows spend, requests, tokens, and the member caps. Choose **Teams** in **Break down by** to inspect Support.
 
 ![Acme member usage showing Alice and Bob and their configured budgets](../../../static/img/customer_portal/member-caps.jpg)
 
-*Actual customer records and accounting data in the local Customer Portal. Alice's controlled-provider request records $0.14 and 120 tokens.*
+*Actual customer records and accounting data in the local Customer Management. Alice's controlled-provider request records $0.14 and 120 tokens.*
 
 ## 7. Debug a request in spend logs
 
@@ -487,6 +600,181 @@ Open `/ui/logs/?log_id=<x-litellm-call-id>`. In the request details, check **Cus
 
 The log API has no customer organization, team, or member filter. `user_id`, `team_id`, and `end_user` refer to separate LiteLLM entities. Find an individual request by its call ID and use the customer usage APIs for customer totals.
 
+## Shared team budget or per-member allowance
+
+A team budget is one counter for the whole team: every member's spend draws down the same amount. A member template is a set of limits that each assigned member inherits with its own counter, so three members on a $10 template can spend $10 each. Use a team budget to cap a group's total and a template to give each person an allowance. You can combine both.
+
+The examples below continue from [step 2](#2-import-a-customer) and use `org-acme`. They need `jq` to read an ID from a response. The `effective_budget` values shown were returned by a build of `main`; the spend figures in the prose are illustrations.
+
+### One shared team budget
+
+Create a Research team with a $100 budget and add three members. They inherit Acme's `standard` template, so each also has a $50 member cap.
+
+```bash title="Create a team with a $100 shared budget"
+curl --request POST "$LITELLM_BASE_URL/management/v1/customer_teams" \
+  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "customer_team_id": "acme-research",
+    "parent_org_id": "org-acme",
+    "alias": "Research",
+    "budget": {
+      "max_budget": 100,
+      "budget_duration": "30d"
+    }
+  }'
+```
+
+```bash title="Add three members to the team"
+for member in acme-carol acme-dan acme-erin; do
+  curl --request POST "$LITELLM_BASE_URL/management/v1/customer_members" \
+    --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+    --header "Content-Type: application/json" \
+    --data "{
+      \"customer_member_id\": \"$member\",
+      \"parent_team_ids\": [\"acme-research\"]
+    }"
+done
+```
+
+The team's `spend` is the sum of its members' requests. If Carol spends $45, Dan $40, and Erin $15, the team counter reaches $100 and LiteLLM refuses the next request from any of the three, even though each is under the $50 member cap.
+
+### A separate allowance for each member
+
+Add a template with a $10 monthly window and a $100 annual window. The response is the organization, so read the new template's ID from its `default_budgets` array by name.
+
+```bash title="Add a template with monthly and annual windows"
+export TEMPLATE_ID="$(curl --silent --request POST \
+  "$LITELLM_BASE_URL/management/v1/customer_organizations/org-acme/default_budgets" \
+  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "name": "monthly-allowance",
+    "budget_limits": [
+      {"budget_duration": "1mo", "max_budget": 10},
+      {"budget_duration": "12mo", "max_budget": 100}
+    ]
+  }' | jq -r '.default_budgets[] | select(.name == "monthly-allowance") | .budget_id')"
+echo "$TEMPLATE_ID"
+```
+
+Create a Sales team without a team budget and assign the template to three members through `budget_id`.
+
+```bash title="Create a team and assign the template to three members"
+curl --request POST "$LITELLM_BASE_URL/management/v1/customer_teams" \
+  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "customer_team_id": "acme-sales",
+    "parent_org_id": "org-acme",
+    "alias": "Sales"
+  }'
+
+for member in acme-frank acme-grace acme-heidi; do
+  curl --request POST "$LITELLM_BASE_URL/management/v1/customer_members" \
+    --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+    --header "Content-Type: application/json" \
+    --data "{
+      \"customer_member_id\": \"$member\",
+      \"parent_team_ids\": [\"acme-sales\"],
+      \"budget_id\": \"$TEMPLATE_ID\"
+    }"
+done
+```
+
+Each response has the same inherited limits:
+
+```json title="effective_budget excerpt for each member"
+{
+  "budget_limits": [
+    {"budget_duration": "1mo", "max_budget": 10, "reset_at": "2026-12-01T00:00:00Z"},
+    {"budget_duration": "12mo", "max_budget": 100, "reset_at": "2027-01-01T00:00:00Z"}
+  ]
+}
+```
+
+All three inherit the same limits from the template, but each has a separate spend counter. If Frank spends $10 this month, LiteLLM refuses Frank's next request until the monthly window resets, while Grace and Heidi can still spend $10 each. Sales has no team budget, so the three can spend $30 in a month between them.
+
+### Change the allowance for every assigned member
+
+Patch the template to raise the monthly window to $20. A `budget_limits` patch replaces the whole array, so send the annual window again to keep it.
+
+```bash title="Raise the monthly allowance to $20"
+curl --request PATCH \
+  "$LITELLM_BASE_URL/management/v1/customer_organizations/org-acme/default_budgets/$TEMPLATE_ID" \
+  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "budget_limits": [
+      {"budget_duration": "1mo", "max_budget": 20},
+      {"budget_duration": "12mo", "max_budget": 100}
+    ]
+  }'
+```
+
+Retrieve two of the members:
+
+```bash title="Read the effective limits for Frank and Grace"
+for member in acme-frank acme-grace; do
+  curl --silent "$LITELLM_BASE_URL/management/v1/customer_members/$member" \
+    --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+    | jq '{customer_member_id, spend, limits: .effective_budget.budget_limits}'
+done
+```
+
+Both now report the $20 monthly window, and each keeps its own `spend`:
+
+```text title="Output after the template edit"
+{
+  "customer_member_id": "acme-frank",
+  "spend": 0,
+  "limits": [
+    {"budget_duration": "1mo", "max_budget": 20, "reset_at": "2026-12-01T00:00:00Z"},
+    {"budget_duration": "12mo", "max_budget": 100, "reset_at": "2027-01-01T00:00:00Z"}
+  ]
+}
+{
+  "customer_member_id": "acme-grace",
+  "spend": 0,
+  "limits": [
+    {"budget_duration": "1mo", "max_budget": 20, "reset_at": "2026-12-01T00:00:00Z"},
+    {"budget_duration": "12mo", "max_budget": 100, "reset_at": "2027-01-01T00:00:00Z"}
+  ]
+}
+```
+
+A template edit reaches every member still assigned to it. Changing the organization's `default_budget_template_id` is different: it selects the template for members created afterward and does not reassign existing members. Carol, Dan, and Erin stay on `standard` if `monthly-allowance` becomes the default.
+
+### Override one member
+
+Give Frank a $50 monthly window until the end of the year. Use a future timestamp with a timezone.
+
+```bash title="Override Frank's monthly window"
+curl --request PATCH "$LITELLM_BASE_URL/management/v1/customer_members/acme-frank" \
+  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "budget_override": {
+      "budget_limits": [
+        {"budget_duration": "1mo", "max_budget": 50}
+      ]
+    },
+    "budget_override_expires_at": "2027-01-01T00:00:00Z"
+  }'
+```
+
+Frank's `effective_budget` now has a $50 monthly window and the template's $100 annual window. An override window replaces the template window with the same `budget_duration`, and the other template windows still apply. Other non-null override fields replace the matching template fields. Two cases differ: an override that sets its own `max_budget` drops every template window and keeps only the windows in the override, and a non-empty `allowed_models` override replaces the inherited list.
+
+After `budget_override_expires_at` passes, Frank's `effective_budget` returns to the template's $20 and $100 windows. The response still includes the stored `budget_override`, so read `effective_budget` for the limits that apply now.
+
+### Monthly and annual windows
+
+Each `budget_limits` entry accepts `"1mo"` for a monthly window or `"12mo"` for an annual window, at most one of each. Other values, including `"1y"`, return `422` with `Input should be '1mo' or '12mo'`. This rule covers window entries only. The scalar `budget_duration` field beside `max_budget` has its own format, such as `"30d"`.
+
+### How the limits combine
+
+A request must pass every limit that applies to it: the organization's budget, the budget of the team the request resolves to, and the member's effective budget, including each of its windows. Each limit is compared with its own counter, so the smallest number does not decide the outcome alone. Erin can be refused at $15 of personal spend because Research has reached $100, and Frank can be refused at his $20 monthly window while Acme and Sales have room. LiteLLM checks the organization first, then the team, then the member, and the error names the first exhausted scope.
+
 ## Fail-open handling (pending)
 
 Fail-open identity handling remains under review in [#51604](https://github.com/BerriAI/litellm/pull/51604). Main rejects identities it cannot resolve or register, and identities that conflict. A validated configuration that preserves asserted customer IDs in logs is required before this guide can provide a setup.
@@ -499,6 +787,6 @@ Fail-open identity handling remains under review in [#51604](https://github.com/
 | `422` during member creation | Use `parent_team_ids` and `budget_id`. Supply a template or override if the organization has no default template. |
 | `401` on inference | Check the organization alias and member ID. A new member needs an existing organization alias and default template for registration. |
 | `403` on inference | Confirm that the organization alias matches the member's organization. |
-| Budget `422` | Read organization, team, and member spend and caps to find the first exhausted scope. |
-| `429` | Check the scope's RPM, TPM, and model limits. |
+| Budget `422`, or `429` when configured | Confirm it is a [budget refusal](#handle-a-budget-refusal-in-your-client), then read organization, team, and member spend and caps to find the first exhausted scope. |
+| `429` without a budget error type | Check the scope's RPM, TPM, and model limits. |
 | Missing customer IDs in logs | Check whether your build includes #51596. |
