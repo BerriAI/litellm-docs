@@ -42,7 +42,7 @@ V2 defaults to `no_content` so your Langfuse input/output will be blank unless y
 
 ### Names and metadata are not drop-in compatible
 
-The V2 Langfuse mapper has no equivalent to the legacy `generation_name`, custom generation IDs, `existing_trace_id`, trace mutation and prompt linking, and it has one version field where the SDK callback had a trace version and a generation version. Any dashboards or integrations you've saved that are relying on any of those fields will need to be updated. See [How legacy fields map](#how-legacy-fields-map).
+The V2 Langfuse mapper has no equivalent to the legacy `generation_name`, custom generation IDs, `existing_trace_id`, trace mutation and prompt linking. Any dashboards or integrations you've saved that are relying on any of those fields will need to be updated. See [How legacy fields map](#how-legacy-fields-map).
 
 ### Key and team destinations
 
@@ -144,11 +144,13 @@ Legacy `generation_name` has no custom name equivalent. The V2 model span uses `
 
 ### Release, version and environment
 
-<SinceVersion v="1.111.0" /> `metadata.trace_release` maps to `langfuse.release`. `metadata.trace_version` maps to `langfuse.version`, and `metadata.version` fills it when `trace_version` is unset. The `langfuse_trace_release`, `langfuse_trace_version` and `langfuse_version` proxy headers take precedence over the body. Langfuse gets one version for the trace and its generations, so a legacy request that set a different `version` and `trace_version` now shows the `trace_version` on both. V2 doesn't read `LANGFUSE_RELEASE` or the CI commit variables the SDK callback fell back to, so a trace has a release only when the request sets one. Like the trace name, user, session and tags, the release and version on the request root also reach a plain `otel` collector or Arize exporter running next to Langfuse.
+<SinceVersion v="1.111.0" />
 
-`LANGFUSE_TRACING_ENVIRONMENT` sets the environment of your own Langfuse exporter. A key or team sets the environment of its own destination with `langfuse_environment` in its `langfuse_otel` callback, and a destination without one uses `LANGFUSE_TRACING_ENVIRONMENT`. A `langfuse.environment` you already set in `OTEL_RESOURCE_ATTRIBUTES` keeps winning on your own exporter. The environment goes to Langfuse only; a plain `otel` collector, the OTel metrics and the other presets never receive it. A request can't set the environment, and a failure-only key entry, which sends model calls signed with the key's credentials but has no destination, carries none.
+`metadata.trace_release` maps to `langfuse.release`, and `metadata.trace_version` (or `metadata.version`) maps to `langfuse.version`. The `langfuse_trace_release`, `langfuse_trace_version` and `langfuse_version` headers win over the body. V2 has one version field, so if you set both `version` and `trace_version`, the trace and its generations all show `trace_version`. `LANGFUSE_RELEASE` isn't read.
 
-On a proxy without `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` of its own, a key's or team's destination receives the release and version on the generation only. Langfuse copies them to the trace from a generation only when that generation also updates the trace, with a trace name, user, session or tags for instance, so a request that sends only a release or version can show the version on the generation and not on the trace.
+`LANGFUSE_TRACING_ENVIRONMENT` sets the environment on your Langfuse exporter. A key or team can set its own with `langfuse_environment` in its `langfuse_otel` callback; otherwise it uses yours. The environment only goes to Langfuse, never to other exporters.
+
+If the proxy has no Langfuse keys of its own, a key's or team's destination can show the version on the generation but not on the trace.
 
 ### Trace IDs and parent observations
 
