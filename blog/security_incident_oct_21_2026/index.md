@@ -213,7 +213,7 @@ cosign verify \
 
 `cosign verify --key` cannot be used with these releases. Use the keyless command above instead.
 
-Releases published before `v1.111.0-dev.3` keep their key signatures and verify with the keys in [Image signing key rotation](#image-signing-key-rotation). The last release signed with a key is `v1.110.0-rc.3`.
+Releases published before `v1.111.0-dev.3` keep their key signatures and verify with the keys in [Image signing key rotation](#image-signing-key-rotation). The [image signing announcement](https://github.com/BerriAI/litellm/discussions/48242) has the full list of which releases are signed with which key.
 
 
 ---
