@@ -230,13 +230,31 @@ curl --request POST \
 | Request field | Create | Update | Meaning |
 | --- | --- | --- | --- |
 | `customer_member_id` | Optional, generated when omitted | Not accepted | Stable member ID. |
-| `parent_team_ids` | Required, non-empty array | Not accepted | Existing customer team IDs from one customer organization. The first team is the member's default team. |
+| `parent_team_ids` | Required, non-empty array | Optional; replaces every team; preview #51913 | Existing customer team IDs from one customer organization. The first team is the member's default team. |
 | `parent_org_id` | Optional | Not accepted | Customer organization ID. When set, it must match the teams' organization. |
 | `email` | Optional, default `null`; preview #51617 | Optional; `null` clears it; preview #51617 | String of 1–254 characters after trimming and lowercasing. Unique within the customer organization. |
 | `alias` | Optional, default `null` | Optional; `null` clears it | Display name. |
 | `budget_id` | Optional; omitted or `null` uses the organization's default template | Optional; `null` detaches the template | Member template ID from the same customer organization. |
 | `budget_override` | Optional, default `null` | Optional; `null` removes it | Member [budget fields](#budget-object) that override the template. |
 | `budget_override_expires_at` | Optional, default `null` | Optional; `null` removes expiry | Timestamp with a timezone. After expiry, the member uses its template's settings. |
+
+### Move a member to other teams (preview)
+
+Moving a member requires [#51913](https://github.com/BerriAI/litellm/pull/51913). Send the member's complete new team list in `parent_team_ids`. The list replaces the current teams, so include every team the member keeps, default team first. Omit the field to leave teams unchanged.
+
+```bash title="Move Alice to the Billing team"
+curl --request PATCH \
+  "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{"parent_team_ids": ["acme-billing"]}'
+```
+
+Every team must already exist in the member's current organization. An empty list, `null`, a blank or repeated ID returns `422`, an unknown team returns `404`, and a team from another organization returns `409`. Only teams the member was not already in count toward the members-per-team limit.
+
+The member keeps its ID, template, override, `spend`, budget windows, and `budget_reset_at`. Usage recorded before the move stays with the old team. Later requests without a team header charge the new default team once background accounting completes, and a request whose `x-litellm-customer-team-id` names a removed team returns `403`.
+
+In the dashboard, open the member's actions menu on the **Members** tab, choose **Move teams**, pick the teams and the default team, then save.
 
 Use `budget_id` for the selected member template. The current API rejects the old `budget_template_id` field. The response's `budget_override_id` identifies the separate override record; it is read-only.
 
