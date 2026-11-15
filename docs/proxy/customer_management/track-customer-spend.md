@@ -8,7 +8,7 @@ description: Import customers, pass their identity with LLM requests, and fetch 
 
 :::info
 
-Without a LiteLLM Enterprise license, the customer portal is free for up to 5 customer organizations, 5 customer teams per organization, and 5 customer members per team. The auto-created `default` team counts toward the team limit. [LiteLLM Enterprise](https://www.litellm.ai/enterprise) removes these limits.
+Without a LiteLLM Enterprise license, Customer Management is free for up to 5 customer organizations, 5 customer teams per organization, and 5 customer members per team. The auto-created `default` team counts toward the team limit. [LiteLLM Enterprise](https://www.litellm.ai/enterprise) removes these limits.
 
 :::
 
@@ -16,9 +16,9 @@ Use one application API key for your customers. Pass the customer's organization
 
 Set up budget notifications, then import Acme, its Support team, and two members. Send a request for Alice and fetch usage and budgets to display in your product.
 
-![Customer Portal usage for Acme, with $0.14 spend, one request, and 120 tokens](../../../static/img/customer_portal/usage-overview.jpg)
+![Customer Management usage for Acme, with $0.14 spend, one request, and 120 tokens](../../../static/img/customer_portal/usage-overview.jpg)
 
-*Local Customer Portal after one controlled-provider request, with usage read from the accounting ledger.*
+*Local Customer Management after one controlled-provider request, with usage read from the accounting ledger.*
 
 {/* keep-version-note: This guide distinguishes the verified main-branch API from pending changes. A published release containing the complete integration has not been verified. */}
 
@@ -30,7 +30,7 @@ Management creates that would exceed a free-tier limit return `403`. A member co
 
 Requests with a valid virtual key keep working, subject to the usual authentication, model access, budget, and rate-limit checks. If a limit prevents auto-registration, new organization aliases or member IDs are not auto-registered or tracked at that customer level. The proxy logs a `CUSTOMER TRACKING OFF` warning. Existing customer levels on the request remain tracked.
 
-The Customers dashboard shows a banner when any free-tier limit is reached. If an Enterprise license lapses, existing rows keep being tracked, even when their counts exceed the free-tier limits. The limits restrict new creates, not existing tracking. Proxy admins can check current capacity with [the limits API](./api_reference.md#customer-portal-limits).
+The Customers dashboard shows a banner when any free-tier limit is reached. If an Enterprise license lapses, existing rows keep being tracked, even when their counts exceed the free-tier limits. The limits restrict new creates, not existing tracking. Proxy admins can check current capacity with [the limits API](./api_reference.md#customer-management-limits).
 
 ## Before you start
 
@@ -43,7 +43,7 @@ Make these values available in your application's environment and the terminal w
 | `LITELLM_BASE_URL` | Gateway URL without `/v1`, for example `http://localhost:4000`. |
 | `LITELLM_MODEL` | An existing gateway model alias your application key can use. |
 | `LITELLM_API_KEY` | Your existing application API key. The same key serves every customer. |
-| `LITELLM_ADMIN_KEY` | Proxy admin key for customer management, usage, and log reads. |
+| `LITELLM_ADMIN_KEY` | Proxy admin key for Customer Management, usage, and log reads. |
 | `START_DATE`, `END_DATE` | Inclusive UTC dates in `YYYY-MM-DD` format. Use the current UTC date for both on your first run. |
 
 Keep keys on your server. Your backend authenticates the customer and selects the identity headers from that customer's session before it calls LiteLLM. It also authorizes customer access before it returns usage to your product.
@@ -557,11 +557,11 @@ Read `budget.max_budget` for an organization and `effective_budget.max_budget` f
 
 `spend` is the running budget counter. `budget_reset_at` records the next reset. Use date-range usage for historical costs because a reset changes the counter without erasing historical usage. To resolve a member's parents in your product, read its `parent_org_id` and `parent_team_ids`. The first team is its default team.
 
-Open **Customer Portal → Customers**, select **Acme**, and choose **Select Time Range** to include your requests. The usage page shows spend, requests, tokens, and the member caps. Choose **Teams** in **Break down by** to inspect Support.
+Open **Customer Management → Customers**, select **Acme**, and choose **Select Time Range** to include your requests. The usage page shows spend, requests, tokens, and the member caps. Choose **Teams** in **Break down by** to inspect Support.
 
 ![Acme member usage showing Alice and Bob and their configured budgets](../../../static/img/customer_portal/member-caps.jpg)
 
-*Actual customer records and accounting data in the local Customer Portal. Alice's controlled-provider request records $0.14 and 120 tokens.*
+*Actual customer records and accounting data in the local Customer Management. Alice's controlled-provider request records $0.14 and 120 tokens.*
 
 ## 7. Debug a request in spend logs
 

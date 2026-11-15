@@ -59,7 +59,7 @@ export default function CustomerPortalHero() {
     <div className={styles.canvas}>
       <header className={styles.heading}>
         <p className={styles.eyebrow}>LiteLLM AI Gateway</p>
-        <h1 id="customer-portal-title">Customer Portal</h1>
+        <h1 id="customer-portal-title">Customer Management</h1>
         <p className={styles.subtitle}>Budget and charge your agent's customers.</p>
       </header>
       <CustomerPortalScene
@@ -71,6 +71,6 @@ export default function CustomerPortalHero() {
         style={{display: 'block', width: '100%', height: 'auto'}}
       />
     </div>
-    <p className={styles.screenReaderOnly}>Illustrative customer traffic flows through LiteLLM into your customer portal. Organization, team, and member budgets use three views of the same request cost.</p>
+    <p className={styles.screenReaderOnly}>Illustrative customer traffic flows through LiteLLM into Customer Management. Organization, team, and member budgets use three views of the same request cost.</p>
   </section>;
 }

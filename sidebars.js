@@ -670,10 +670,10 @@ const sidebars = {
             "proxy/cost_tracking",
             {
               type: "category",
-              label: "Customer Portal",
+              label: "Customer Management",
               items: [
-                "proxy/customer_portal/track-customer-spend",
-                "proxy/customer_portal/api_reference",
+                "proxy/customer_management/track-customer-spend",
+                "proxy/customer_management/api_reference",
               ],
             },
             "proxy/model_cost_map",
