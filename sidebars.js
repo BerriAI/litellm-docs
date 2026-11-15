@@ -1915,6 +1915,7 @@ const providersSidebar = {
     { type: "html", value: "More Providers A-Z", className: "sidebar-group-label", defaultStyle: true },
     "providers/abliteration",
     "providers/ai21",
+    "providers/aigrow",
     "providers/aiml",
     "providers/aleph_alpha",
     "providers/amazon_nova",

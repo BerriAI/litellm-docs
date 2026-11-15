@@ -300,6 +300,12 @@
       "chat"
     ]
   },
+  "providers/aigrow": {
+    "prefix": "aigrow",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/aiml": {
     "prefix": "aiml",
     "capabilities": [
