@@ -184,6 +184,8 @@ The router is the only source of this label and this tag. A client's request met
 
 ## Compare responses in Langfuse
 
+**Quick Start.** Run the example below, then open the printed trace ID in Langfuse and compare the primary and shadow generations. Pass a new JSON file path to save both responses for offline comparison.
+
 This Router SDK example sends one non-streaming chat request and mirrors it to one silent model. It creates a trace for the comparison and can save the primary and shadow results to a JSON file of your choice.
 
 The example was tested with Python 3.12, LiteLLM 1.109.1, and OpenTelemetry 1.45.1. {/* keep-python-version */}
@@ -337,6 +339,14 @@ The script prints the primary answer before waiting for the callbacks. Pass a pa
 Use the printed trace ID to find the `primary` and `shadow` generations in Langfuse. The JSON uses the callback's mirror marker to assign each role. For OTLP inspection, each recorded `litellm_call_id` matches that generation's `langfuse.observation.id` attribute.
 
 Run this example as a standalone process. When the comparison finishes, `asyncio.run()` cancels tasks still pending on its event loop. On normal process exit, the preset's OpenTelemetry SDK shuts down its exporter and attempts to send the completed spans. The exporter uses the configured HTTP timeout. The JSON file is written before shutdown, so it is available even if export fails.
+
+### Verify with a coding agent
+
+```text
+Run this guide's compare_shadow.py example with the Python version, pinned dependencies, and OpenTelemetry settings listed above. Start a local OpenAI-compatible mock if needed. Have its POST /v1/chat/completions return a distinct fixed answer for each model ID. Point OPENAI_BASE_URL at the mock's /v1 URL and use a dummy OPENAI_API_KEY and use the environment credentials for a self-hosted Langfuse v4 test project. Keep the prompt synthetic and do not print credentials.
+
+Run python compare_shadow.py comparison.json with a new output path. Check the mock logs for one request per model. Use the printed trace ID to query Langfuse's GET /api/public/v2/observations with traceId and fields=core,basic,io,model. Authenticate with HTTP Basic using the Langfuse public and secret keys. Retry briefly while ingestion catches up. Verify that chat primary and chat shadow are both GENERATION records on that trace, both JSON statuses are success, and each response matches its generation output. Report the trace ID and any failed or unverified checks.
+```
 
 ### Example: compare two different answers
 
