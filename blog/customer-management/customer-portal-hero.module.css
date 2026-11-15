@@ -127,6 +127,68 @@
   aspect-ratio: 16 / 9;
 }
 
+.setupCta {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  margin: 32px 0;
+  padding: 22px 24px;
+  border: 1px solid var(--ifm-color-emphasis-300, #2b2f35);
+  border-radius: 12px;
+  background: var(--ifm-background-surface-color, #0d0f12);
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.setupCta > div > p {
+  margin: 0;
+  color: var(--ifm-heading-color, #f4f5f7);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.setupCta .setupCtaFollowup {
+  margin-top: 8px;
+  color: var(--ifm-color-emphasis-700, #aeb7c6);
+  font-size: 14px;
+}
+
+.setupCtaButton {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  border: 1px solid #739bff;
+  border-radius: 8px;
+  background: #174bff;
+  color: #fff !important;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: none !important;
+}
+
+.setupCtaButton:hover {
+  background: #3260ff;
+}
+
+.setupCtaButton:focus-visible {
+  outline: 2px solid #adc2ff;
+  outline-offset: 4px;
+}
+
+@media (max-width: 760px) {
+  .setupCta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .setupCtaButton {
+    text-align: center;
+  }
+}
+
 .scene {
   width: 100%;
   height: auto;
