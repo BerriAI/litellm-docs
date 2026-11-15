@@ -405,6 +405,8 @@ With this team at `model_tpm_limit: {"my-model": 500}` and a multiple of `2`, it
 
 Leave both unset to keep the default, where a borrower may use everything up to the model's limit. Each value must be a number of at least `1`. A smaller or non-numeric value in metadata is logged as a warning and ignored, so the team or key uses the configured value rather than every request failing, and the proxy rejects an invalid `max_borrow_multiple` in the config at startup. The multiple only matters for an entity type listed in `borrow_idle_capacity`. Without it, the `model_tpm_limit` and `model_rpm_limit` stay hard ceilings.
 
+When a router fallback serves a request, its tokens count against the borrower's share on the fallback model. A borrower with no `model_tpm_limit` or `model_rpm_limit` on that fallback model is not charged for them on the model that failed.
+
 ### Split a priority class share among active callers
 
 By default every team in a priority class draws from one shared pool, so with `interactive: 0.6` on a `tpm: 1000` model all interactive teams together get 600 tokens a minute. One busy team can empty that pool and the other interactive teams get a 429 with nothing used, while the 400 reserved for an idle `batch` class sits unused. List `team` under `priority_class_share_config.split_equally_among_active` to split each class share among the teams that are actually using the model.
