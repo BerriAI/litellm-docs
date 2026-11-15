@@ -178,7 +178,11 @@ We have already taken the following steps:
 
 ### Image signing key rotation
 
-We believe the private half of our previous cosign key was exposed when the attacker [exfiltrated additional tokens](/blog/security-incident-oct-21-2026-attack-chain#exfiltrating-additional-tokens), so on October 23 we replaced it with a new key in [commit `e82a3c6`](https://github.com/BerriAI/litellm/commit/e82a3c646908ba0a6ee0beddc4310d7a6cac4065), merged in [PR #48103](https://github.com/BerriAI/litellm/pull/48103). The first releases signed with the new key, `v1.103.8`, `v1.104.6`, `v1.105.4` and `v1.106.3`, went out on October 24. Every later release used it until we moved to [keyless signing](#keyless-signing) on November 15.
+:::info Update (November 15)
+We no longer sign releases with a key. Starting with `v1.111.0-dev.3`, releases are signed with keyless cosign, see [Keyless signing](#keyless-signing). The keys in this section only verify releases published before that.
+:::
+
+We believe the private half of our previous cosign key was exposed when the attacker [exfiltrated additional tokens](/blog/security-incident-oct-21-2026-attack-chain#exfiltrating-additional-tokens), so on October 23 we replaced it with a new key in [commit `e82a3c6`](https://github.com/BerriAI/litellm/commit/e82a3c646908ba0a6ee0beddc4310d7a6cac4065), merged in [PR #48103](https://github.com/BerriAI/litellm/pull/48103). The first releases signed with the new key, `v1.103.8`, `v1.104.6`, `v1.105.4` and `v1.106.3`, went out on October 24.
 
 The SHA-256 fingerprint of the new public key file, `cosign.pub`, is:
 
@@ -207,7 +211,9 @@ cosign verify \
   ghcr.io/berriai/litellm:<release-tag>
 ```
 
-`cosign verify --key` fails on these releases. Releases published before `v1.111.0-dev.3` keep their key signatures and verify with the keys above. The last one signed with a key is `v1.110.0-rc.3`.
+`cosign verify --key` cannot be used with these releases. Use the keyless command above instead.
+
+Releases published before `v1.111.0-dev.3` keep their key signatures and verify with the keys in [Image signing key rotation](#image-signing-key-rotation). The last release signed with a key is `v1.110.0-rc.3`.
 
 
 ---
