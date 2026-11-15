@@ -237,15 +237,15 @@ Only emitted when [`end_user` tracking](#tracking-end_user-on-prometheus) is ena
 | `litellm_remaining_api_key_requests_for_model`                | Remaining Requests for a LiteLLM virtual API key, only if a model-specific rate limit (rpm) has been set for that virtual key. Labels: `"hashed_api_key", "api_key_alias", "model", "model_id"`|
 | `litellm_remaining_api_key_tokens_for_model`                | Remaining Tokens for a LiteLLM virtual API key, only if a model-specific token limit (tpm) has been set for that virtual key. Labels: `"hashed_api_key", "api_key_alias", "model", "model_id"`|
 
-### Team - Dynamic Rate Limiter
+### Dynamic Rate Limiter
 
-Published when `dynamic_rate_limiter_v3` runs next to the `prometheus` callback. See [dynamic rate limiting](./dynamic_rate_limit.md#prometheus-metrics-for-team-shares-and-throttling) for how the values are computed.
+Published when `dynamic_rate_limiter_v3` runs next to the `prometheus` callback. See [dynamic rate limiting](./dynamic_rate_limit.md#prometheus-metrics-for-shares-and-throttling) for how the values are computed. The share holder is a team, a key or a customer organization, and a series fills only its holder's labels.
 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
-| `litellm_dynamic_limiter_share_tokens` | The team's token share of the model for the current window, as of its last settled request. Labels: `"model_group", "team", "team_alias", "priority"` |
-| `litellm_dynamic_limiter_borrowed_tokens` | Tokens the team has used above its share this window, `0` while under it. Labels: `"model_group", "team", "team_alias", "priority"` |
-| `litellm_dynamic_limiter_throttled_total` | Requests the dynamic rate limiter refused. `reason` is the `rate_limited_by` header of the 429 the caller got: `model_per_team_saturated`, `model_per_team_max_borrow_multiple` or `priority_class_share_saturated`. Labels: `"model_group", "team", "team_alias", "priority", "rate_limit_type", "reason"` |
+| `litellm_dynamic_limiter_share_tokens` | The share holder's token share of the model for the current window, as of its last settled request. Labels: `"model_group", "team", "team_alias", "hashed_api_key", "api_key_alias", "customer_org_id", "customer_org_alias", "priority"` |
+| `litellm_dynamic_limiter_borrowed_tokens` | Tokens the share holder has used above its share this window, `0` while under it. Labels: `"model_group", "team", "team_alias", "hashed_api_key", "api_key_alias", "customer_org_id", "customer_org_alias", "priority"` |
+| `litellm_dynamic_limiter_throttled_total` | Requests the dynamic rate limiter refused. `reason` is the `rate_limited_by` header of the 429 the caller got: `model_per_team_saturated`, `model_per_team_max_borrow_multiple`, their `model_per_key_*` and `model_per_customer_org_*` counterparts, or `priority_class_share_saturated`. Labels: `"model_group", "team", "team_alias", "hashed_api_key", "api_key_alias", "customer_org_id", "customer_org_alias", "priority", "rate_limit_type", "reason"` |
 
 ### Initialize Budget Metrics on Startup
 
