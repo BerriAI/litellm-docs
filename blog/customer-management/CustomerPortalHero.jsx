@@ -71,6 +71,6 @@ export default function CustomerPortalHero() {
         style={{display: 'block', width: '100%', height: 'auto'}}
       />
     </div>
-    <p className={styles.screenReaderOnly}>Illustrative customer traffic flows through LiteLLM into your customer management. Organization, team, and member budgets use three views of the same request cost.</p>
+    <p className={styles.screenReaderOnly}>Illustrative customer traffic flows through LiteLLM into Customer Management. Organization, team, and member budgets use three views of the same request cost.</p>
   </section>;
 }

@@ -8,7 +8,7 @@ description: Import customers, pass their identity with LLM requests, and fetch 
 
 :::info
 
-Without a LiteLLM Enterprise license, the customer management is free for up to 5 customer organizations, 5 customer teams per organization, and 5 customer members per team. The auto-created `default` team counts toward the team limit. [LiteLLM Enterprise](https://www.litellm.ai/enterprise) removes these limits.
+Without a LiteLLM Enterprise license, Customer Management is free for up to 5 customer organizations, 5 customer teams per organization, and 5 customer members per team. The auto-created `default` team counts toward the team limit. [LiteLLM Enterprise](https://www.litellm.ai/enterprise) removes these limits.
 
 :::
 
@@ -43,7 +43,7 @@ Make these values available in your application's environment and the terminal w
 | `LITELLM_BASE_URL` | Gateway URL without `/v1`, for example `http://localhost:4000`. |
 | `LITELLM_MODEL` | An existing gateway model alias your application key can use. |
 | `LITELLM_API_KEY` | Your existing application API key. The same key serves every customer. |
-| `LITELLM_ADMIN_KEY` | Proxy admin key for customer management, usage, and log reads. |
+| `LITELLM_ADMIN_KEY` | Proxy admin key for Customer Management, usage, and log reads. |
 | `START_DATE`, `END_DATE` | Inclusive UTC dates in `YYYY-MM-DD` format. Use the current UTC date for both on your first run. |
 
 Keep keys on your server. Your backend authenticates the customer and selects the identity headers from that customer's session before it calls LiteLLM. It also authorizes customer access before it returns usage to your product.
