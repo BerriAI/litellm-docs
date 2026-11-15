@@ -2005,6 +2005,7 @@ const providersSidebar = {
     "providers/refuseless",
     "providers/reka",
     "providers/replicate",
+    "providers/requesty",
     { type: "category", label: "RunwayML", className: "sidebar-provider", link: { type: "doc", id: "providers/runwayml/images" }, items: [
       "providers/runwayml/videos",
     ] },
