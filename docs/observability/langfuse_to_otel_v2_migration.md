@@ -42,7 +42,7 @@ V2 defaults to `no_content` so your Langfuse input/output will be blank unless y
 
 ### Names and metadata are not drop-in compatible
 
-The V2 Langfuse mapper has no equivalent to the legacy `generation_name`, custom generation IDs, `existing_trace_id`, trace mutation, version/release fields and prompt linking. Any dashboards or integrations you've saved that are relying on any of those fields will need to be updated. See [How legacy fields map](#how-legacy-fields-map).
+The V2 Langfuse mapper has no equivalent to the legacy `generation_name`, custom generation IDs, `existing_trace_id`, trace mutation and prompt linking, and it has one version field where the SDK callback had a trace version and a generation version. Any dashboards or integrations you've saved that are relying on any of those fields will need to be updated. See [How legacy fields map](#how-legacy-fields-map).
 
 ### Key and team destinations
 
@@ -142,6 +142,14 @@ Legacy `generation_name` has no custom name equivalent. The V2 model span uses `
 
 `metadata.tags` maps to `langfuse.trace.tags` and preserves non-empty strings. The tags are taken from the request metadata (which also contains the key and team tags and the `x-litellm-tags` header) rather than a `langfuse_tags` header.
 
+### Release, version and environment
+
+<SinceVersion v="1.111.0" /> `metadata.trace_release` maps to `langfuse.release`. `metadata.trace_version` maps to `langfuse.version`, and `metadata.version` fills it when `trace_version` is unset. The `langfuse_trace_release`, `langfuse_trace_version` and `langfuse_version` proxy headers take precedence over the body. Langfuse gets one version for the trace and its generations, so a legacy request that set a different `version` and `trace_version` now shows the `trace_version` on both. V2 doesn't read `LANGFUSE_RELEASE` or the CI commit variables the SDK callback fell back to, so a trace has a release only when the request sets one. Like the trace name, user, session and tags, the release and version on the request root also reach a plain `otel` collector or Arize exporter running next to Langfuse.
+
+`LANGFUSE_TRACING_ENVIRONMENT` sets the environment of your own Langfuse exporter. A key or team sets the environment of its own destination with `langfuse_environment` in its `langfuse_otel` callback, and a destination without one uses `LANGFUSE_TRACING_ENVIRONMENT`. A `langfuse.environment` you already set in `OTEL_RESOURCE_ATTRIBUTES` keeps winning on your own exporter. The environment goes to Langfuse only; a plain `otel` collector, the OTel metrics and the other presets never receive it. A request can't set the environment, and a failure-only key entry, which sends model calls signed with the key's credentials but has no destination, carries none.
+
+On a proxy without `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` of its own, a key's or team's destination receives the release and version on the generation only. Langfuse copies them to the trace from a generation only when that generation also updates the trace, with a trace name, user, session or tags for instance, so a request that sends only a release or version can show the version on the generation and not on the trace.
+
 ### Trace IDs and parent observations
 
 Use standard OTel trace context propagation to link up the distributed traces rather than the `trace_id`/`existing_trace_id` metadata. V2 doesn't implement the SDK's arbitrary-ID normalisation or the existing trace mutation semantics.
@@ -174,9 +182,9 @@ Per-key and per-team credentials use `langfuse_public_key`, `langfuse_secret_key
 
 ### Fields with no equivalent
 
-`update_trace_keys` has no equivalent SDK style update of a pre-existing Langfuse trace. The V2 Langfuse mapper has no equivalent control for `version`, `trace_version`, `trace_release` or `debug_langfuse` either. Don't rely on those SDK specific fields once you've cut over.
+`update_trace_keys` has no equivalent SDK style update of a pre-existing Langfuse trace. The V2 Langfuse mapper has no equivalent control for `debug_langfuse` either. Don't rely on those SDK specific fields once you've cut over.
 
-Per request the `mask_input`, `mask_output` and `langfuse_masking_function` have no V2 equivalent. V2 only reads the `langfuse_trace_name`, `langfuse_trace_user_id` and `langfuse_session_id` headers, it doesn't read every `langfuse_*` header.
+Per request the `mask_input`, `mask_output` and `langfuse_masking_function` have no V2 equivalent. V2 only reads the `langfuse_trace_name`, `langfuse_trace_user_id`, `langfuse_session_id`, `langfuse_trace_release`, `langfuse_trace_version` and `langfuse_version` headers, it doesn't read every `langfuse_*` header.
 
 Langfuse prompt association via generation parameters has no prompt link mapping in V2. You'll need to check the prompt related workflows individually prior to migration.
 
