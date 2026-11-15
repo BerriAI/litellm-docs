@@ -71,7 +71,7 @@ guardrails:
       fail_on_error: true
 ```
 
-When Model Armor flags the result, the tool call fails with an HTTP 400 "Response blocked by Model Armor" error and the raw result is not returned. With `mask_response_content: true`, a result that only matches a de-identify template comes back with Model Armor's sanitized text in place of the sensitive values. If the Model Armor API errors, `fail_on_error: true` (the default) blocks the result and `fail_on_error: false` returns it unscanned. With `default_on: false`, the scan runs only on requests that name the guardrail.
+When Model Armor flags the result, the raw result is not returned. An MCP client on `/mcp` gets a tool result with `isError: true` and the text "Response blocked by Model Armor", `/mcp-rest/tools/call` answers with HTTP 400, and on `/v1/responses` or `/v1/chat/completions` with a `litellm_proxy` MCP tool the model receives a tool failure in place of the result. With `mask_response_content: true`, a result that only matches a de-identify template comes back with Model Armor's sanitized text in place of the sensitive values. If the Model Armor API errors, `fail_on_error: true` (the default) withholds the result, which shows up as an `isError: true` tool result on `/mcp` and as HTTP 500 on `/mcp-rest/tools/call`, and `fail_on_error: false` returns the result unscanned. With `default_on: false`, the scan runs only for requests that name the guardrail in the request body or carry it on their key or team. Only text is scanned, so images, audio and embedded resources in a tool result pass through as they are. Masking sends one extra Model Armor request per text block when the first scan finds something to mask.
 
 #### Observe without blocking
 
