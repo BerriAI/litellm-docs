@@ -42,7 +42,7 @@ V2 defaults to `no_content` so your Langfuse input/output will be blank unless y
 
 ### Names and metadata are not drop-in compatible
 
-The V2 Langfuse mapper has no equivalent to the legacy `generation_name`, custom generation IDs, `existing_trace_id`, trace mutation, version/release fields and prompt linking. Any dashboards or integrations you've saved that are relying on any of those fields will need to be updated. See [How legacy fields map](#how-legacy-fields-map).
+The V2 Langfuse mapper has no equivalent to the legacy `generation_name`, custom generation IDs, `existing_trace_id`, trace mutation and prompt linking. Any dashboards or integrations you've saved that are relying on any of those fields will need to be updated. See [How legacy fields map](#how-legacy-fields-map).
 
 ### Key and team destinations
 
@@ -142,6 +142,16 @@ Legacy `generation_name` has no custom name equivalent. The V2 model span uses `
 
 `metadata.tags` maps to `langfuse.trace.tags` and preserves non-empty strings. The tags are taken from the request metadata (which also contains the key and team tags and the `x-litellm-tags` header) rather than a `langfuse_tags` header.
 
+### Release, version and environment
+
+<SinceVersion v="1.111.0" />
+
+`metadata.trace_release` maps to `langfuse.release`, and `metadata.trace_version` (or `metadata.version`) maps to `langfuse.version`. The `langfuse_trace_release`, `langfuse_trace_version` and `langfuse_version` headers win over the body. V2 has one version field, so if you set both `version` and `trace_version`, the trace and its generations all show `trace_version`. `LANGFUSE_RELEASE` isn't read.
+
+`LANGFUSE_TRACING_ENVIRONMENT` sets the environment on your Langfuse exporter. A key or team can set its own with `langfuse_environment` in its `langfuse_otel` callback; otherwise it uses yours. The environment only goes to Langfuse, never to other exporters.
+
+If the proxy has no Langfuse keys of its own, a key's or team's destination can show the version on the generation but not on the trace.
+
 ### Trace IDs and parent observations
 
 Use standard OTel trace context propagation to link up the distributed traces rather than the `trace_id`/`existing_trace_id` metadata. V2 doesn't implement the SDK's arbitrary-ID normalisation or the existing trace mutation semantics.
@@ -174,9 +184,9 @@ Per-key and per-team credentials use `langfuse_public_key`, `langfuse_secret_key
 
 ### Fields with no equivalent
 
-`update_trace_keys` has no equivalent SDK style update of a pre-existing Langfuse trace. The V2 Langfuse mapper has no equivalent control for `version`, `trace_version`, `trace_release` or `debug_langfuse` either. Don't rely on those SDK specific fields once you've cut over.
+`update_trace_keys` has no equivalent SDK style update of a pre-existing Langfuse trace. The V2 Langfuse mapper has no equivalent control for `debug_langfuse` either. Don't rely on those SDK specific fields once you've cut over.
 
-Per request the `mask_input`, `mask_output` and `langfuse_masking_function` have no V2 equivalent. V2 only reads the `langfuse_trace_name`, `langfuse_trace_user_id` and `langfuse_session_id` headers, it doesn't read every `langfuse_*` header.
+Per request the `mask_input`, `mask_output` and `langfuse_masking_function` have no V2 equivalent. V2 only reads the `langfuse_trace_name`, `langfuse_trace_user_id`, `langfuse_session_id`, `langfuse_trace_release`, `langfuse_trace_version` and `langfuse_version` headers, it doesn't read every `langfuse_*` header.
 
 Langfuse prompt association via generation parameters has no prompt link mapping in V2. You'll need to check the prompt related workflows individually prior to migration.
 

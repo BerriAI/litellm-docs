@@ -398,6 +398,7 @@ Open the Langfuse traces view; the LLM-call span appears as a Langfuse **generat
 | `langfuse.observation.input` / `output` | Prompt and response bodies (content capture on) |
 | `langfuse.observation.usage_details` | Input/output/total token counts |
 | `langfuse.observation.cost_details` | Total cost |
+| `langfuse.release` / `langfuse.version` | From the request's `metadata.trace_release` and `metadata.trace_version` |
 | `langfuse.trace.metadata.team_id`, `team_alias` | Filterable team identity |
 | `langfuse.observation.metadata` | JSON of the caller identity, shown as the generation's own Metadata fields: `user_api_key_alias`, `user_api_key_user_id`, `user_api_key_end_user_id`, `user_api_key_team_id`, `user_api_key_team_alias` and `user_api_key_org_id` |
 | `langfuse.trace.metadata.user_api_key_*` | The same identity fields as trace metadata, so you can filter traces by key, user, end user, team or org |
@@ -410,6 +411,7 @@ The key alias, user, team and org come from the virtual key the proxy authentica
 
 - Auth is HTTP Basic, `Authorization: Basic <base64(public_key:secret_key)>`; the preset builds this from `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` so you never set the header directly.
 - If your client already sends a W3C `traceparent` and Langfuse is picking up the wrong parent, set `OTEL_IGNORE_CONTEXT_PROPAGATION=true` in the proxy environment to drop inbound context.
+- `LANGFUSE_TRACING_ENVIRONMENT` sets the Langfuse environment. A key or team can set its own with `langfuse_environment` in its `langfuse_otel` callback.
 - Set `LITELLM_OTEL_LANGFUSE_SPAN_SCOPE=llm_only` to keep just the generations. Without it your Langfuse project receives the whole request tree, which can multiply the volume ingested into Langfuse; see [Send only the model calls to Langfuse](#send-only-the-model-calls-to-langfuse).
 - This is a Langfuse-flavored path; for a general-purpose OTel backend, use the [generic OTLP setup](#1-send-traces-to-any-otlp-collector) instead.
 
