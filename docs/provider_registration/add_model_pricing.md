@@ -25,6 +25,7 @@ Here's the full specification with all available fields:
         "input_cost_per_audio_token": 0.0,
         "input_cost_per_token": 0.0,
         "litellm_provider": "one of https://docs.litellm.ai/docs/providers",
+        "max_context_tokens": "max tokens for input and output combined, if the provider counts both against one shared window",
         "max_input_tokens": "max input tokens, if the provider specifies it. if not default to max_tokens",
         "max_output_tokens": "max output tokens, if the provider specifies it. if not default to max_tokens",
         "max_tokens": "LEGACY parameter. set to max_output_tokens if provider specifies it. IF not set to max_input_tokens, if provider specifies it.",
@@ -139,6 +140,35 @@ The `above_272k` keys apply to a batch line whose prompt exceeds 272K tokens, th
         "supports_vision": true
     }
 }
+```
+
+### Shared input and output window
+
+Some models count the prompt and the reply against one window. Set `max_context_tokens` on those rows to the combined limit, and keep `max_input_tokens` and `max_output_tokens` as the largest prompt and the largest reply the provider allows on their own. Gemini 4 Argon has a 1,048,576 token window that holds both the prompt and the reply:
+
+```json
+{
+    "gemini/gemini-4-argon": {
+        "litellm_provider": "gemini",
+        "max_context_tokens": 1048576,
+        "max_input_tokens": 1048576,
+        "max_output_tokens": 1048576,
+        "mode": "chat",
+        "supports_continuation": true
+    }
+}
+```
+
+`litellm.get_model_info("gemini/gemini-4-argon")`, `/model/info` and `/v1/model/info` return `max_context_tokens`, so a client can keep the prompt plus `max_tokens` within it. LiteLLM only reports the field. It does not reject or trim requests that go over it. A proxy deployment can override it under `model_info`:
+
+```yaml
+model_list:
+  - model_name: gemini-4-argon
+    litellm_params:
+      model: gemini/gemini-4-argon
+      api_key: os.environ/GEMINI_API_KEY
+    model_info:
+      max_context_tokens: 524288
 ```
 
 ### Using Aliases
