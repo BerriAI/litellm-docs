@@ -1,7 +1,7 @@
 ---
 title: API reference
 sidebar_label: API reference
-description: Manage customer organizations, teams, members, budget templates, and usage through the Customer Portal API.
+description: Manage customer organizations, teams, members, budget templates, and usage through the Customer Management API.
 ---
 
 # API reference
@@ -29,7 +29,7 @@ The management and usage routes below are on `main`. Check your gateway's `/open
 
 Preview features require a build containing the linked change while it remains unmerged.
 
-Free-tier support limits the customer portal to 5 organizations, 5 teams per organization, and 5 members per team without Enterprise. Check `/openapi.json` for `/management/v1/customer_portal/limits` to confirm your build includes it.
+Free-tier support limits the customer management to 5 organizations, 5 teams per organization, and 5 members per team without Enterprise. Check `/openapi.json` for `/management/v1/customer_portal/limits` to confirm your build includes it.
 
 ## Authentication and conventions
 
@@ -90,9 +90,9 @@ Each organization, team, and member includes these fields in addition to its res
 | `created_at`, `updated_at` | Datetime | Creation and last-update timestamps. |
 | `created_by`, `updated_by` | String | Actor recorded for each write. |
 
-## Customer portal limits
+## Customer management limits
 
-`GET /management/v1/customer_portal/limits` requires a proxy admin key and returns `200` with current customer portal capacity. It accepts no query parameters or request body.
+`GET /management/v1/customer_portal/limits` requires a proxy admin key and returns `200` with current customer management capacity. It accepts no query parameters or request body.
 
 ```bash
 curl "$LITELLM_BASE_URL/management/v1/customer_portal/limits" \
@@ -497,7 +497,7 @@ Management errors use problem details with `type`, `title`, `status`, and `detai
 | `400` | Unknown or repeated query parameter, invalid date range, or invalid pagination. Check the route's parameter table. |
 | `401` | Missing or invalid authentication. On inference, also check an unknown member or organization alias. |
 | `403` | Caller lacks `proxy_admin`, or the member does not belong to the supplied customer organization. |
-| `403` | Free-tier create limit. Type `urn:litellm:error:customer-hierarchy-free-tier-limit`, title `Free customer portal limit reached`, detail `Free customer portal limit reached: up to 5 customer organizations, 5 teams per organization and 5 members per team without a LiteLLM Enterprise license. Upgrade to Enterprise to remove the limits: https://www.litellm.ai/enterprise`. Upgrade to Enterprise or free capacity before retrying. |
+| `403` | Free-tier create limit. Type `urn:litellm:error:customer-hierarchy-free-tier-limit`, title `Free customer management limit reached`, detail `Free customer management limit reached: up to 5 customer organizations, 5 teams per organization and 5 members per team without a LiteLLM Enterprise license. Upgrade to Enterprise to remove the limits: https://www.litellm.ai/enterprise`. Upgrade to Enterprise or free capacity before retrying. |
 | `404` | Resource or parent does not exist. Retrieve or create the parent first. |
 | `409` | Duplicate ID, parent still has children, or template remains default or referenced. |
 | `422` | Invalid body, budget value, template selection, or missing member budget. Inference budget rejection also uses `422` with an inference error body. |
