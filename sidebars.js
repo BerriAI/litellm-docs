@@ -454,7 +454,18 @@ const sidebars = {
                     },
                   ],
                 },
-                { type: "doc", id: "proxy/global_control_plane", className: "sidebar-enterprise" },
+                {
+                  type: "category",
+                  label: "Global Control Plane",
+                  className: "sidebar-enterprise",
+                  items: [
+                    { type: "doc", id: "proxy/global_control_plane", label: "Overview" },
+                    "proxy/global_control_plane/architecture",
+                    "proxy/global_control_plane/configuration",
+                    "proxy/global_control_plane/api_reference",
+                    "proxy/global_control_plane/legacy_ui",
+                  ],
+                },
               ],
             },
             "proxy/prod",
@@ -659,10 +670,10 @@ const sidebars = {
             "proxy/cost_tracking",
             {
               type: "category",
-              label: "Customer Portal",
+              label: "Customer Management",
               items: [
-                "proxy/customer_portal/track-customer-spend",
-                "proxy/customer_portal/api_reference",
+                "proxy/customer_management/track-customer-spend",
+                "proxy/customer_management/api_reference",
               ],
             },
             "proxy/model_cost_map",

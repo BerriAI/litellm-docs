@@ -1,8 +1,16 @@
+---
+title: "Gemini API with LiteLLM: Google AI Studio Setup"
+sidebar_label: "Google AI Studio"
+description: "Call Gemini on Google AI Studio from the Python SDK or AI Gateway with thinking levels, TTS, transcription, Google Search, code execution and context caching."
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Gemini - Google AI Studio
+
+Google AI Studio is Google's managed platform for building with Gemini models; LiteLLM calls them with the `gemini/` prefix and a `GEMINI_API_KEY` from the Python SDK or AI Gateway, with no GCP project needed.
 
 | Property | Details |
 |-------|-------|

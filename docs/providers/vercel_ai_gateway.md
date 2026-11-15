@@ -1,3 +1,9 @@
+---
+title: "Vercel AI Gateway with LiteLLM: Setup"
+sidebar_label: "Vercel AI Gateway"
+description: "Route OpenAI and Anthropic Claude models through Vercel AI Gateway with streaming, and create text-embedding-3-small embeddings with custom dimensions."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

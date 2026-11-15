@@ -1,3 +1,9 @@
+---
+title: "Xinference with LiteLLM: Embeddings and Images"
+sidebar_label: "Xinference [Xorbits Inference]"
+description: "Generate embeddings with bge, e5 and gte models and create Stable Diffusion images on a Xinference (Xorbits Inference) server, from the SDK or AI Gateway."
+---
+
 # Xinference [Xorbits Inference]
 https://inference.readthedocs.io/en/latest/index.html
 

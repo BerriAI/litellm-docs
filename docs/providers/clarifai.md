@@ -1,3 +1,9 @@
+---
+title: "Clarifai API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Clarifai"
+description: "Reach gpt-oss, GPT-5, Claude, Grok, Gemini and Qwen models hosted on Clarifai from the LiteLLM Python SDK or AI Gateway, with streaming and tool calling."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

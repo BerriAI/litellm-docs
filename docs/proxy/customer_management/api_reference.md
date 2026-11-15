@@ -1,7 +1,7 @@
 ---
 title: API reference
 sidebar_label: API reference
-description: Manage customer organizations, teams, members, budget templates, and usage through the Customer Portal API.
+description: Manage customer organizations, teams, members, budget templates, and usage through the Customer Management API.
 ---
 
 # API reference
@@ -29,7 +29,7 @@ The management and usage routes below are on `main`. Check your gateway's `/open
 
 Preview features require a build containing the linked change while it remains unmerged.
 
-Free-tier support limits the customer portal to 5 organizations, 5 teams per organization, and 5 members per team without Enterprise. Check `/openapi.json` for `/management/v1/customer_portal/limits` to confirm your build includes it.
+Free-tier support limits Customer Management to 5 organizations, 5 teams per organization, and 5 members per team without Enterprise. Check `/openapi.json` for `/management/v1/customer_portal/limits` to confirm your build includes it.
 
 ## Authentication and conventions
 
@@ -69,10 +69,10 @@ Organizations and teams accept `budget`. Members inherit a template through `bud
 | `budget_duration` | String or `null`; default `null` | Reset interval, for example `"1h"`, `"24h"`, `"7d"`, or `"30d"`. Must resolve to a positive duration. |
 | `model_rpm_limit` | Object or `null`; default `null` | Model name to non-negative requests-per-minute limit. |
 | `model_tpm_limit` | Object or `null`; default `null` | Model name to non-negative tokens-per-minute limit. |
-| `budget_limits` | Array or `null`; default `null` | Extra spend caps, each with `budget_duration` set to `"1mo"` or `"12mo"` and a `max_budget`. Each window resets on its own and blocks requests when reached. |
+| `budget_limits` | Array or `null`; default `null` | Extra spend caps, each with `budget_duration` set to `"1mo"` (monthly) or `"12mo"` (annual) and a `max_budget`, at most one entry per duration. Other values, including `"1y"`, return `422`. Each window resets on its own and blocks requests when reached. A patch replaces the whole array. |
 | `cap_policy` | `"pause_until_reset"`, `"pause_allow_increase"`, or `null`; default `null` | What a member can do at its cap. `null` and `"pause_until_reset"` wait for the reset. `"pause_allow_increase"` lets the member [request a temporary increase](#budget-increase-requests). |
 
-With customer identity headers, LiteLLM checks the organization, team, and member budgets before inference. A scope at or above `max_budget` causes a budget error; the organization takes precedence over the team and member. LiteLLM also checks each scope's model access and rate limits. Requests without these headers do not enter this hierarchy enforcement path.
+With customer identity headers, LiteLLM checks the organization, team, and member budgets before inference. A request must pass every applicable limit, and each limit has its own spend counter: a team budget counts the whole team's spend, while members assigned to one template each count their own. A scope at or above `max_budget` or a `budget_limits` window causes a [budget error](./track-customer-spend.md#handle-a-budget-refusal-in-your-client); the organization takes precedence over the team and member. See [Shared team budget or per-member allowance](./track-customer-spend.md#shared-team-budget-or-per-member-allowance) for worked examples. LiteLLM also checks each scope's model access and rate limits. Requests without these headers do not enter this hierarchy enforcement path.
 
 Builds preceding the [shared customer spend counter fix](https://github.com/BerriAI/litellm/pull/51568) can use cached hierarchy spend until refresh. Use a build containing that change. Allow for requests already in flight and background accounting when you display balances.
 
@@ -90,9 +90,9 @@ Each organization, team, and member includes these fields in addition to its res
 | `created_at`, `updated_at` | Datetime | Creation and last-update timestamps. |
 | `created_by`, `updated_by` | String | Actor recorded for each write. |
 
-## Customer portal limits
+## Customer Management limits
 
-`GET /management/v1/customer_portal/limits` requires a proxy admin key and returns `200` with current customer portal capacity. It accepts no query parameters or request body.
+`GET /management/v1/customer_portal/limits` requires a proxy admin key and returns `200` with current Customer Management capacity. It accepts no query parameters or request body.
 
 ```bash
 curl "$LITELLM_BASE_URL/management/v1/customer_portal/limits" \
@@ -230,7 +230,7 @@ curl --request POST \
 | Request field | Create | Update | Meaning |
 | --- | --- | --- | --- |
 | `customer_member_id` | Optional, generated when omitted | Not accepted | Stable member ID. |
-| `parent_team_ids` | Required, non-empty array | Not accepted | Existing customer team IDs from one customer organization. The first team is the member's default team. |
+| `parent_team_ids` | Required, non-empty array | Optional; replaces every team; preview #51913 | Existing customer team IDs from one customer organization. The first team is the member's default team. |
 | `parent_org_id` | Optional | Not accepted | Customer organization ID. When set, it must match the teams' organization. |
 | `email` | Optional, default `null`; preview #51617 | Optional; `null` clears it; preview #51617 | String of 1–254 characters after trimming and lowercasing. Unique within the customer organization. |
 | `alias` | Optional, default `null` | Optional; `null` clears it | Display name. |
@@ -238,9 +238,27 @@ curl --request POST \
 | `budget_override` | Optional, default `null` | Optional; `null` removes it | Member [budget fields](#budget-object) that override the template. |
 | `budget_override_expires_at` | Optional, default `null` | Optional; `null` removes expiry | Timestamp with a timezone. After expiry, the member uses its template's settings. |
 
+### Move a member to other teams (preview)
+
+Moving a member requires [#51913](https://github.com/BerriAI/litellm/pull/51913). Send the member's complete new team list in `parent_team_ids`. The list replaces the current teams, so include every team the member keeps, default team first. Omit the field to leave teams unchanged.
+
+```bash title="Move Alice to the Billing team"
+curl --request PATCH \
+  "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{"parent_team_ids": ["acme-billing"]}'
+```
+
+Every team must already exist in the member's current organization. An empty list, `null`, a blank or repeated ID returns `422`, an unknown team returns `404`, and a team from another organization returns `409`. Only teams the member was not already in count toward the members-per-team limit.
+
+The member keeps its ID, template, override, `spend`, budget windows, and `budget_reset_at`. Usage recorded before the move stays with the old team. Later requests without a team header charge the new default team once background accounting completes, and a request whose `x-litellm-customer-team-id` names a removed team returns `403`.
+
+In the dashboard, open the member's actions menu on the **Members** tab, choose **Move teams**, pick the teams and the default team, then save.
+
 Use `budget_id` for the selected member template. The current API rejects the old `budget_template_id` field. The response's `budget_override_id` identifies the separate override record; it is read-only.
 
-A member needs a selected template or `budget_override`. LiteLLM merges non-null override fields with the template. A non-empty `allowed_models` override replaces inherited models. Read `effective_budget` to display the settings that apply now, including override expiry.
+A member needs a selected template or `budget_override`. LiteLLM merges non-null override fields with the template. A non-empty `allowed_models` override replaces inherited models. An override `budget_limits` entry replaces the template window with the same `budget_duration` and leaves the template's other windows in place, unless the override sets its own `max_budget`, which drops the template's windows. After `budget_override_expires_at`, the member uses the template again. Read `effective_budget` to display the settings that apply now, including override expiry.
 
 ```bash title="Create a member using the organization's default template"
 curl --request POST \
@@ -273,7 +291,7 @@ Main uses `customer_member_id` for member identity. Sending an email string as t
 
 ## Member budget templates
 
-Templates belong to a customer organization. Updating a template changes the settings its members inherit. Changing the default template affects new members; it does not reassign existing members.
+Templates belong to a customer organization. Updating a template changes the settings its members inherit; each member keeps its own spend counter, so a template does not pool spend the way a [team budget](./track-customer-spend.md#shared-team-budget-or-per-member-allowance) does. Changing the default template affects new members; it does not reassign existing members.
 
 | Method | Path | Result |
 | --- | --- | --- |
@@ -497,11 +515,11 @@ Management errors use problem details with `type`, `title`, `status`, and `detai
 | `400` | Unknown or repeated query parameter, invalid date range, or invalid pagination. Check the route's parameter table. |
 | `401` | Missing or invalid authentication. On inference, also check an unknown member or organization alias. |
 | `403` | Caller lacks `proxy_admin`, or the member does not belong to the supplied customer organization. |
-| `403` | Free-tier create limit. Type `urn:litellm:error:customer-hierarchy-free-tier-limit`, title `Free customer portal limit reached`, detail `Free customer portal limit reached: up to 5 customer organizations, 5 teams per organization and 5 members per team without a LiteLLM Enterprise license. Upgrade to Enterprise to remove the limits: https://www.litellm.ai/enterprise`. Upgrade to Enterprise or free capacity before retrying. |
+| `403` | Free-tier create limit. Type `urn:litellm:error:customer-hierarchy-free-tier-limit`, title `Customer Management free tier limit reached`, detail `Customer Management free tier limit reached: up to 5 customer organizations, 5 teams per organization and 5 members per team without a LiteLLM Enterprise license. Upgrade to Enterprise to remove the limits: https://www.litellm.ai/enterprise`. Upgrade to Enterprise or free capacity before retrying. |
 | `404` | Resource or parent does not exist. Retrieve or create the parent first. |
 | `409` | Duplicate ID, parent still has children, or template remains default or referenced. |
-| `422` | Invalid body, budget value, template selection, or missing member budget. Inference budget rejection also uses `422` with an inference error body. |
-| `429` | Inference request exceeds a configured rate limit. |
+| `422` | Invalid body, budget value, template selection, or missing member budget. Inference budget rejection also uses `422` by default, with an inference error body whose type is `budget_exceeded`. See [Handle a budget refusal in your client](./track-customer-spend.md#handle-a-budget-refusal-in-your-client). |
+| `429` | Inference request exceeds a configured rate limit. Budget rejection also uses `429` when the deployment sets `budget_exceeded_status_code: 429`; the error body distinguishes the two. |
 | `503` | Management database is unavailable. |
 
 ```json title="Duplicate customer ID"

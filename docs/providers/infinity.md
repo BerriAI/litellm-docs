@@ -1,3 +1,9 @@
+---
+title: "Infinity Embeddings and Rerank with LiteLLM"
+sidebar_label: "Infinity"
+description: "Call rerank and embedding models on your Infinity server from the Python SDK or AI Gateway, with Cohere-compatible /rerank and OpenAI-compatible /embeddings."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

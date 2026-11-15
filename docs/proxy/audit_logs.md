@@ -11,11 +11,11 @@ import Image from '@theme/IdealImage';
 />
 
 
-As a Proxy Admin, you can check if and when a entity (key, team, user, model) was created, updated, deleted, or regenerated, along with who performed the action. This is useful for auditing and compliance.
+As a Proxy Admin, you can check if and when a entity (key, team, user, model, guardrail) was created, updated, deleted, or regenerated, along with who performed the action. This is useful for auditing and compliance.
 
 LiteLLM tracks changes to the following entities and actions:
 
-- **Entities:** Keys, Teams, Users, Models
+- **Entities:** Keys, Teams, Users, Models, Guardrails
 - **Actions:** Create, Update, Delete, Regenerate
 
 <EnterpriseFeature />
@@ -211,7 +211,7 @@ curl -X POST 'http://0.0.0.0:4000/team/update' \
 
 ### `table_name`
 - **Type:** `String`
-- **Description:** This field stores the name of the table that was affected by the audited action. It can be one of the following values: `LiteLLM_TeamTable`, `LiteLLM_UserTable`, `LiteLLM_VerificationToken`
+- **Description:** This field stores the name of the table that was affected by the audited action. It can be one of the following values: `LiteLLM_TeamTable`, `LiteLLM_UserTable`, `LiteLLM_VerificationToken`, `LiteLLM_GuardrailsTable`
 
 
 ### `object_id`

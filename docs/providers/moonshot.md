@@ -1,7 +1,15 @@
+---
+title: "Moonshot AI (Kimi) API with LiteLLM: Setup"
+sidebar_label: "Moonshot AI"
+description: "Call Moonshot AI's moonshot-v1 and Kimi models, including kimi-k2.5 vision, on the global or China endpoint while LiteLLM handles temperature limits."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Moonshot AI
+
+Moonshot AI makes the moonshot-v1 and Kimi models; LiteLLM calls them with the `moonshot/` prefix from the Python SDK or AI Gateway and works around Moonshot's parameter limits for you.
 
 ## Overview
 

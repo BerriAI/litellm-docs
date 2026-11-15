@@ -197,16 +197,19 @@ The key expires after `LITELLM_CLI_JWT_EXPIRATION_HOURS` (24 hours by default, s
 
 `lite auth print-token` prints the current key to stdout and nothing else (diagnostics go to stderr). It renews the key first when it is about to expire, so a tool that calls it always gets a key that works
 
-Claude Code can run it as its [`apiKeyHelper`](https://code.claude.com/docs/en/settings). `lite login --pkce --config-claude` sets `env.ANTHROPIC_BASE_URL` to the proxy and `env.ANTHROPIC_AUTH_TOKEN` to this login's key in `~/.claude/settings.json`, leaving your other settings alone. Rerun the command after the key expires. To have Claude Code call `lite auth print-token` on every refresh, set `apiKeyHelper` by hand as shown:
+Claude Code can run it as its [`apiKeyHelper`](https://code.claude.com/docs/en/settings), and `lite login --pkce --config-claude` sets that up <SinceVersion v="1.111.0" /> in `~/.claude/settings.json`, leaving your other settings alone. It points `env.ANTHROPIC_BASE_URL` at the proxy, writes an `apiKeyHelper` that runs `lite auth print-token` by its absolute path, and sets `env.ANTHROPIC_AUTH_TOKEN` to an empty string, which Claude Code reads as unset, so a token exported in your shell cannot take the helper's place:
 
 ```json title="~/.claude/settings.json"
 {
   "env": {
-    "ANTHROPIC_BASE_URL": "https://litellm.example.com"
+    "ANTHROPIC_BASE_URL": "https://litellm.example.com",
+    "ANTHROPIC_AUTH_TOKEN": ""
   },
   "apiKeyHelper": "/absolute/path/to/lite --base-url https://litellm.example.com auth print-token"
 }
 ```
+
+Claude Code runs the helper when it starts and again every five minutes, so its key renews along with the login and you sign in again only after the refresh token goes unused for 14 days. Each run is a full `lite` start, which takes a few seconds, and reads the login from your OS keychain, so while the keychain is locked the helper fails and Claude Code says so until you unlock it. The status line cannot run the helper, so in this mode it shows the model but not the session's cost bars. The token store holds one login at a time, so after a `lite login` to another proxy the helper fails until you run `lite --base-url https://litellm.example.com login --pkce` again. When `lite` cannot be found, or the login could not be saved, the command writes the key itself as `env.ANTHROPIC_AUTH_TOKEN` and says why, and you rerun it after the key expires. Earlier `lite` releases always wrote the key that way.
 
 For OpenCode, or any other OpenAI-compatible client, point the client at `<proxy>/v1` and pass the key through an environment variable:
 

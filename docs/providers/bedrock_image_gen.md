@@ -1,3 +1,9 @@
+---
+title: "Bedrock Image Generation with LiteLLM"
+sidebar_label: "AWS Bedrock - Image Generation"
+description: "Generate images on AWS Bedrock with Stable Diffusion, Titan Image Generator and Nova Canvas through LiteLLM from the Python SDK or AI Gateway, plus edits."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

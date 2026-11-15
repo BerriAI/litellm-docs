@@ -1,3 +1,9 @@
+---
+title: "Inception Mercury API with LiteLLM: Setup"
+sidebar_label: "Inception"
+description: "Call Inception's Mercury 2 diffusion LLM and Mercury Edit 2 FIM autocomplete from the Python SDK or AI Gateway, with streaming, tools and reasoning_effort."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

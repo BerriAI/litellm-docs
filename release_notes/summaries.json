@@ -1,6 +1,26 @@
 [
   {
     "folders": [
+      "v1.107.0rc4"
+    ],
+    "title": "LiteLLM v1.107.0rc4 adds a CLI command to link GitHub Copilot accounts",
+    "points": [
+      "`lite credentials connect` links a per-user GitHub Copilot credential from the terminal, so developers without Admin UI access can use Copilot.",
+      "The Docker images ship newer `aiohttp`, `ddtrace`, `pypdf` and other locked dependencies."
+    ]
+  },
+  {
+    "folders": [
+      "v1.107.0rc3"
+    ],
+    "title": "LiteLLM v1.107.0rc3 fixes GitHub Copilot per-user connect and adds GHE.com",
+    "points": [
+      "GitHub Copilot per-user credentials work on GHE.com tenants with the optional `github_copilot_host` field.",
+      "Per-user Copilot connect no longer fails with `no Copilot access found` when `GITHUB_COPILOT_CLIENT_ID` is set."
+    ]
+  },
+  {
+    "folders": [
       "v1.110.0rc1"
     ],
     "title": "LiteLLM v1.110.0rc1 adds the Agent Skills Hub and a Rust-only router",
@@ -194,17 +214,6 @@
   },
   {
     "folders": [
-      "v1.104.4"
-    ],
-    "title": "LiteLLM v1.104.4 fixes count_tokens, team batch access and guardrail settings",
-    "points": [
-      "Anthropic-format count requests for OpenAI and Gemini models are converted the same way `/v1/messages` inference converts them.",
-      "Team keys can read and cancel their own team's batches and download the finished results.",
-      "The Add Guardrail wizard in the Admin UI lists its providers again."
-    ]
-  },
-  {
-    "folders": [
       "v1.106.1"
     ],
     "title": "LiteLLM v1.106.1 fixes count_tokens, MCP tool calls and thinking blocks",
@@ -212,17 +221,6 @@
       "Bare MCP tool names on a single-server scope now go to that server, so a cold replica no longer returns `Tool not found`.",
       "Vector stores created through the proxy send only the caller's `metadata` to the provider, so later metadata updates no longer fail with 400.",
       "Token count responses carry `litellm_count_source`, and Anthropic-format count requests for OpenAI and Gemini models match how `/v1/messages` converts them."
-    ]
-  },
-  {
-    "folders": [
-      "v1.105.2"
-    ],
-    "title": "LiteLLM v1.105.2 fixes count_tokens, bridged tool calls and thinking blocks",
-    "points": [
-      "Chat completions bridged to `/responses` return text and tool calls in one `choices[0]`, so agents that read only `choices[0]` run the tool.",
-      "Signed thinking blocks with empty text stay on `/v1/messages` and chat completion requests, so replayed turns keep their reasoning.",
-      "The `v1.104.4` token count fixes are included, and count responses carry `litellm_count_source`."
     ]
   }
 ]

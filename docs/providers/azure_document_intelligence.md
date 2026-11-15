@@ -1,3 +1,9 @@
+---
+title: "Azure Document Intelligence OCR with LiteLLM"
+sidebar_label: "Azure Document Intelligence OCR"
+description: "Extract text from PDFs and images with Azure Document Intelligence via LiteLLM. Call litellm.ocr() in the SDK or /ocr on the AI Gateway, and track cost."
+---
+
 # Azure Document Intelligence OCR
 
 ## Overview

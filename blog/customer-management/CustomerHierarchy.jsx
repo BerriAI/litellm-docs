@@ -96,7 +96,7 @@ const MARGIN_STAGES = {
     title: 'Before customer budgets',
     charge: 100,
     cost: 140,
-    note: 'AI model cost rises above your price.',
+    note: 'Actual spend exceeds the credits your customer bought.',
   },
   budget: {
     title: 'With LiteLLM customer budgets',
@@ -108,7 +108,7 @@ const MARGIN_STAGES = {
     title: 'After an approved increase',
     charge: 150,
     cost: 90,
-    note: 'Your app charges $150; you approve a temporary $90 cap.',
+    note: 'Customer credits reach $150; you approve a temporary $90 cap.',
   },
   workflow: {
     title: 'Budget alert → temporary increase',
@@ -175,7 +175,7 @@ export function getCustomerMarginState(stage, elapsed) {
     eventTriggered: false,
     approved: false,
     opacity: time < 0.4 ? time / 0.4 : time > 9.5 ? (10 - time) / 0.5 : 1,
-    status: paused ? 'Budget reached · Requests paused' : cost > example.charge ? 'Model cost exceeds your price' : 'Model requests arriving',
+    status: paused ? 'Budget reached · Requests paused' : cost > example.charge ? 'Actual spend exceeds customer credits' : 'Model requests arriving',
   };
 }
 
@@ -241,9 +241,9 @@ export function CustomerMargin({stage = 'uncontrolled'}) {
   const workflow = stage === 'workflow';
   const state = getCustomerMarginState(stage, elapsed);
   const format = value => Number.isInteger(value) ? value : value.toFixed(1);
-  return <figure ref={figureRef} className={styles.figure} data-margin-stage={stage} data-spend={state.cost} data-price={state.price} data-cap={state.cap ?? undefined} data-profit-margin={state.profitMargin} data-contribution={state.contribution} data-phase={state.phase} data-webhook-event={state.eventTriggered ? 'budget_crossed' : undefined} data-approved={state.approved} data-status={state.paused ? 'paused' : state.contribution < 0 ? 'loss' : 'running'} aria-label={workflow ? 'Illustrative budget workflow. At $60 spend, requests pause and LiteLLM sends a budget_crossed event. Your receiver formats the alert. Your app approves a $150 member plan and a temporary $90 cap. Requests resume until $90 spend, leaving 40% profit margin after AI costs, before other expenses.' : `${example.title}. Illustrative monthly price per member: $${example.charge}; final model cost${controlled ? ' cap' : ''}: $${example.cost}; profit margin after AI costs, before other expenses: ${(example.charge - example.cost) / example.charge * 100}%.`}>
+  return <figure ref={figureRef} className={styles.figure} data-margin-stage={stage} data-spend={state.cost} data-price={state.price} data-cap={state.cap ?? undefined} data-profit-margin={state.profitMargin} data-contribution={state.contribution} data-phase={state.phase} data-webhook-event={state.eventTriggered ? 'budget_crossed' : undefined} data-approved={state.approved} data-status={state.paused ? 'paused' : state.contribution < 0 ? 'loss' : 'running'} aria-label={workflow ? 'Illustrative budget workflow. At $60 actual spend, requests pause and LiteLLM sends a budget_crossed event. Your receiver formats the alert. The customer buys $50 more in credits, bringing their total to $150. Your app approves a temporary $90 cap. Requests resume until $90 actual spend, leaving 40% profit margin before other expenses.' : `${example.title}. Illustrative purchased credits per member, expressed in dollars: $${example.charge}; final actual spend${controlled ? ' cap' : ''}: $${example.cost}; profit margin before other expenses: ${(example.charge - example.cost) / example.charge * 100}%.`}>
     <div className={styles.window} data-playing={playing} data-paused={state.paused} data-workflow={workflow}>
-      <WindowHeader label="Per member / month" branded={controlled} />
+      <WindowHeader label="Customer credits and spend" branded={controlled} />
       <FlowLine />
       <div className={styles.marginBody}>
         <div className={styles.marginTitle}>{example.title}</div>
@@ -261,20 +261,20 @@ export function CustomerMargin({stage = 'uncontrolled'}) {
                 <SegmentedBar value={state.cost} charge={state.price} controlled={controlled} cost />
               </div>
             </div>
-            <div className={styles.chartLabels}><span>Your price</span><span>{controlled ? 'AI spend' : 'AI model cost'}</span></div>
+            <div className={styles.chartLabels}><span>Customer Credits</span><span>Actual spend</span></div>
           </div>
           <div className={styles.marginSummary}>
             {controlled && <div className={styles.fixedCap}>Budget cap: ${state.cap}</div>}
             <div className={`${styles.contribution} ${state.profitMargin < 0 ? styles.negative : styles.positive}`} style={{opacity: state.opacity}} aria-hidden="true">
               <span>Profit margin</span>
               <strong>{state.profitMargin < 0 ? '−' : ''}{format(Math.abs(state.profitMargin))}%</strong>
-              <small>after AI costs</small>
+              <small>after actual spend</small>
             </div>
             <div className={`${styles.requestStatus} ${state.paused ? styles.pausedStatus : ''}`} aria-hidden="true"><i />{state.status}</div>
             {workflow ? <div className={styles.workflowNotice} style={{visibility: state.eventTriggered ? 'visible' : 'hidden'}} aria-hidden="true">
               <strong>budget_crossed</strong>
               <small>Your receiver → Slack</small>
-              <span>{state.approved ? '$150 plan · $90 cap' : 'Member hit the $60 cap.'}</span>
+              <span>{state.approved ? '$150 credits · $90 cap' : 'Member hit the $60 cap.'}</span>
             </div> : <p className={styles.marginNote}>{example.note}</p>}
           </div>
         </div>
@@ -283,12 +283,67 @@ export function CustomerMargin({stage = 'uncontrolled'}) {
         </div>}
       </div>
     </div>
-    <figcaption>Illustrative profit margin after AI costs, before other expenses.{workflow && ' Your receiver formats Slack alerts; your app approves increases.'}</figcaption>
+    <figcaption>Credits shown at their purchase value. Illustrative profit margin excludes other expenses.{workflow && ' Your receiver formats Slack alerts; your app approves increases.'}</figcaption>
   </figure>;
 }
 
 export function CustomerBudgetAlert() {
   return <CustomerMargin stage="workflow" />;
+}
+
+export function getCustomerFallbackState(elapsed) {
+  const time = ((elapsed % 12) + 12) % 12;
+  const primarySpend = Math.min(40, 20 + Math.floor(20 * Math.max(0, Math.min(1, (time - 0.6) / 2.4))));
+  const rerouted = time >= 3;
+  const fallbackSpend = rerouted ? Math.floor(10 * Math.max(0, Math.min(1, (time - 3) / 4.5))) : 0;
+  return {primarySpend, fallbackSpend, rerouted, spend: primarySpend + fallbackSpend};
+}
+
+function FallbackSpendBar({primary, fallback}) {
+  return <div className={styles.fallbackSpendBar} aria-hidden="true">
+    {Array.from({length: 20}, (_, index) => {
+      const primaryFill = Math.max(0, Math.min(5, primary - index * 5));
+      const fallbackFill = Math.max(0, Math.min(5, primary + fallback - index * 5) - primaryFill);
+      return <i key={index}><b style={{height: `${primaryFill * 20}%`}} /><em style={{height: `${fallbackFill * 20}%`, bottom: `${primaryFill * 20}%`}} /></i>;
+    })}
+  </div>;
+}
+
+export function CustomerBudgetFallback() {
+  const figureRef = useRef(null);
+  const {elapsed, playing} = useMarginAnimation(figureRef);
+  const state = getCustomerFallbackState(elapsed);
+  return <figure ref={figureRef} className={styles.figure} data-customer-graphic="fallback" data-primary-spend={state.primarySpend} data-fallback-spend={state.fallbackSpend} data-spend={state.spend} data-active-model={state.rerouted ? 'economy' : 'opus'} aria-label="Illustrative model budget fallback on a dedicated virtual key. Opus actual spend reaches its $40 model allowance. Subsequent requests use a lower-cost model and add $10, for $50 total actual spend against $100 in purchased customer credits. The customer still has room under their $60 hard cap. Fallback does not bypass that cap.">
+    <div className={styles.window} data-playing={playing} data-rerouted={state.rerouted}>
+      <WindowHeader label="Model budget fallback" />
+      <FlowLine />
+      <div className={styles.fallbackBody}>
+        <div className={styles.modelRoutes}>
+          <svg className={styles.routeLines} viewBox="0 0 600 60" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M300,30 H105" className={styles.premiumRoute} />
+            <path d="M300,30 H495" className={styles.economyRoute} />
+            <path d={state.rerouted ? 'M300,30 H495' : 'M300,30 H105'} className={`${styles.routePacket} ${state.rerouted ? styles.economyPacket : styles.premiumPacket}`} pathLength="1" />
+          </svg>
+          <div className={styles.modelNode}><img src="/img/providers/anthropic.svg" width="28" height="28" alt="Anthropic" /><strong>Opus 5.5</strong><small>{state.rerouted ? 'Allowance reached' : 'Primary model'}</small></div>
+          <div className={styles.gatewayNode}><img src="/img/brand/litellm-logo-white.png" width="80" height="15" alt="LiteLLM Gateway" /><small>Routes the next request</small></div>
+          <div className={styles.modelNode}><img src="/img/providers/openai_small.svg" width="28" height="28" alt="OpenAI" /><strong>GPT-6 Luna</strong><small>{state.rerouted ? 'Serving requests' : 'Lower-cost fallback'}</small></div>
+        </div>
+        <div className={styles.fallbackComparison}>
+          <div className={styles.fallbackCharts}>
+            <div><strong>$100</strong><div className={styles.fallbackCredits}><EntityBudgetBar spend={100} cap={100} /></div><span>Customer Credits</span></div>
+            <div><strong>${state.spend}</strong><div className={styles.fallbackActualPlot}><FallbackSpendBar primary={state.primarySpend} fallback={state.fallbackSpend} /></div><span>Actual spend</span></div>
+          </div>
+          <div className={styles.fallbackSummary}>
+            <p className={styles.premiumLabel}>Opus: ${state.primarySpend} / $40 allowance</p>
+            <p className={styles.economyLabel}>Fallback: ${state.fallbackSpend} spend</p>
+            <strong>{100 - state.spend}% <small>profit margin</small></strong>
+            <span>${60 - state.spend} left in customer budget</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <figcaption>Illustrative recorded spend and purchased credit value, before other expenses. Per-model key allowances trigger the switch; customer hard caps still apply.</figcaption>
+  </figure>;
 }
 
 const CUSTOMER_ENTITY_BUDGETS = [
@@ -307,12 +362,12 @@ export function CustomerEntityBudgets() {
   const figureRef = useRef(null);
   const {elapsed, playing} = useMarginAnimation(figureRef);
   const state = getCustomerMarginState('budget', elapsed);
-  return <figure ref={figureRef} className={styles.figure} data-customer-graphic="entity-budgets" data-member-spend={state.cost} data-price="100" data-profit-margin={state.profitMargin} data-status={state.paused ? 'paused' : 'running'} data-limiting-scope={state.paused ? 'customer_member' : undefined} aria-label="Illustrative customer budget checks. A member's spend rises from $20 to $60. Organization spend rises from $320 to $360 against a $1,000 cap; team spend rises from $120 to $160 against a $250 cap. The $60 member cap pauses requests while the parents retain headroom. At a $100 monthly member plan price, profit margin after AI costs is 40%, before other expenses. These scopes overlap; do not add their spend together.">
+  return <figure ref={figureRef} className={styles.figure} data-customer-graphic="entity-budgets" data-member-spend={state.cost} data-price="100" data-profit-margin={state.profitMargin} data-status={state.paused ? 'paused' : 'running'} data-limiting-scope={state.paused ? 'customer_member' : undefined} aria-label="Illustrative customer budget checks. A member's actual spend rises from $20 to $60. Organization spend rises from $320 to $360 against a $1,000 cap; team spend rises from $120 to $160 against a $250 cap. The $60 member cap pauses requests while the parents retain headroom. Against $100 in purchased member credits, profit margin is 40% before other expenses. These scopes overlap; do not add their spend together.">
     <div className={styles.window} data-playing={playing} data-paused={state.paused}>
       <WindowHeader label="Customer budget checks" branded />
       <FlowLine />
       <div className={styles.entityBudgetsBody}>
-        <div className={styles.entityLegend}><span>% of each entity budget</span><span>$100/member/month plan</span></div>
+        <div className={styles.entityLegend}><span>% of each entity budget</span><span>$100 in member credits</span></div>
         <div className={styles.entityBudgetColumns}>
           {CUSTOMER_ENTITY_BUDGETS.map(entity => {
             const spend = entity.baseline + state.cost;
@@ -333,8 +388,8 @@ export function CustomerEntityBudgets() {
           })}
         </div>
         <div className={styles.entityBudgetSummary}>
-          <span>{state.paused ? 'Member cap reached · Requests paused' : 'Same member cost → Team → Organization'}</span>
-          <span>Profit margin <strong>{state.profitMargin}%</strong> <small>after AI costs</small></span>
+          <span>{state.paused ? 'Member cap reached · Requests paused' : 'Member spend → Team → Organization'}</span>
+          <span>Profit margin <strong>{state.profitMargin}%</strong> <small>after actual spend</small></span>
         </div>
       </div>
     </div>

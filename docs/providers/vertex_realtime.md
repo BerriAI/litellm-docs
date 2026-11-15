@@ -1,3 +1,9 @@
+---
+title: "Vertex AI Gemini Live Realtime with LiteLLM"
+sidebar_label: "Vertex AI Gemini Live - Realtime API"
+description: "Use Gemini Live on Gemini Enterprise Agent Platform (formerly Vertex AI) through LiteLLM's /realtime endpoint, with voice in, voice out and tools."
+---
+
 # Vertex AI Gemini Live - Realtime API
 
 Use Vertex AI's Gemini Live API (BidiGenerateContent) through LiteLLM's unified `/realtime` endpoint, which speaks the OpenAI Realtime protocol.
