@@ -28,7 +28,7 @@ import styles from './customer-portal-hero.module.css';
 
 <aside className={styles.setupCta} aria-label="Work with LiteLLM" data-customer-portal-cta>
   <div>
-    <p>If you're building AI agents for your customers, we'll help you set up Customer Portal to track their spend and set budgets.</p>
+    <p>If you're building AI agents for your customers, we'll help you set up Customer Management to track their spend and set budgets.</p>
     <p className={styles.setupCtaFollowup}>Fill out the form and we'll reach out within 24 hours.</p>
   </div>
   <a className={`button ${styles.setupCtaButton}`} href="https://docs.google.com/forms/d/e/1FAIpQLSfqKoWifvdeFtN-CSMQr2aEIYfpoc7D9t8Fjxb_fAOKPJbVNg/viewform">Work with us</a>
