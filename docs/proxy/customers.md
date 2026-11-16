@@ -1,6 +1,6 @@
 ---
 title: Customer Management and end-user tracking
-sidebar_label: Customer Management
+sidebar_label: Quickstart
 description: Track customer and end-user spend, set budgets, and view usage by organization, team, and member. Available from LiteLLM v1.111.
 keywords: [customer management, customer tracking, end user tracking, end-user tracking, end_user, enduser, customer usage, customer spend, customer budgets, per-user budgets]
 ---
