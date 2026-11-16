@@ -1978,6 +1978,7 @@ const providersSidebar = {
     "providers/lambda_ai",
     "providers/llamagate",
     "providers/manus",
+    "providers/meragpt",
     "providers/meta",
     "providers/meta_llama",
     "providers/microsoft_365_copilot",
