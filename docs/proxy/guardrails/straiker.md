@@ -1,3 +1,8 @@
+---
+title: "Straiker Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Straiker"
+description: "Block prompt injection, including payloads hidden in tool output, with Straiker on the LiteLLM AI Gateway, inspecting prompts and tool calls."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

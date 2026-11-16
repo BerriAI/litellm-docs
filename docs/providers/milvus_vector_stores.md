@@ -1,3 +1,9 @@
+---
+title: "Milvus Vector Store with LiteLLM"
+sidebar_label: "Milvus - Vector Store"
+description: "Search Milvus as a vector store for RAG via LiteLLM from the Python SDK or AI Gateway, with config.yaml setup and a passthrough API in native Milvus form."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

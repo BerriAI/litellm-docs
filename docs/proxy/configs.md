@@ -1,10 +1,19 @@
+---
+title: YAML configuration
+sidebar_label: YAML
+description: Configure LiteLLM models, routing, logging, and server settings in config.yaml.
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import SinceVersion from '@site/src/components/SinceVersion';
 
-# Config.yaml
-Set model list, `api_base`, `api_key`, `temperature` & proxy server settings (`master-key`) on the config.yaml. 
+# YAML configuration {#configyaml}
+
+Use `config.yaml` to define models, provider credentials, routing, logging, and server settings. Keep the file with your deployment configuration. Use environment variables for secrets.
+
+This guide covers the main sections and examples. The [settings reference](./config_settings.md) lists all options. Use [file management](./config_management.md) to split the configuration into files. See the [CLI reference](./cli.md) for startup flags. The [Configuration overview](./configuration/overview.md) helps you choose YAML, the Admin UI, the Management API, or Terraform.
 
 | Param Name           | Description                                                   |
 |----------------------|---------------------------------------------------------------|

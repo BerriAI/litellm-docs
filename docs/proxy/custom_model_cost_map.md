@@ -45,9 +45,11 @@ Point the proxy at your own copy of the map with:
 export LITELLM_MODEL_COST_MAP_URL="https://your-host.example.com/model_prices.json"
 # or read it straight from a private S3 bucket
 export LITELLM_MODEL_COST_MAP_URL="s3://my-bucket/prices/model_prices.json"
+# or from a private Google Cloud Storage bucket
+export LITELLM_MODEL_COST_MAP_URL="gs://my-bucket/prices/model_prices.json"
 ```
 
-The map is fetched at startup with a 5 second timeout, so the variable must be set in the proxy's environment before it starts (a `.env` file, `docker run -e`, or the Kubernetes `env:` block); setting it under `environment_variables` in `config.yaml` is too late. The URL can be HTTP(S) or `s3://`; `file://` paths are not supported. To run fully offline instead, set `LITELLM_LOCAL_MODEL_COST_MAP=True`, which skips the fetch and uses the backup map bundled with the package (`litellm/model_prices_and_context_window_backup.json`), a file you can overwrite in your own image.
+The map is fetched at startup with a 5 second timeout, so the variable must be set in the proxy's environment before it starts (a `.env` file, `docker run -e`, or the Kubernetes `env:` block); setting it under `environment_variables` in `config.yaml` is too late. The URL can be HTTP(S), `s3://` or `gs://`; `file://` paths are not supported. To run fully offline instead, set `LITELLM_LOCAL_MODEL_COST_MAP=True`, which skips the fetch and uses the backup map bundled with the package (`litellm/model_prices_and_context_window_backup.json`), a file you can overwrite in your own image.
 
 ### Reading the map from S3
 
@@ -68,6 +70,16 @@ The identity needs `s3:GetObject` on the object:
 If the bucket is in another AWS account, the bucket's policy must also allow the proxy's role as a principal. If the object is encrypted with a customer managed KMS key, the role also needs `kms:Decrypt` on that key. S3 compatible endpoints such as MinIO are not supported.
 
 S3 errors are not retried. At startup a missing credential, `AccessDenied`, or `NoSuchKey` falls back to the bundled map with the error in `fallback_reason` (for example `Remote fetch failed: S3 NoCredentialsError fetching s3://my-bucket/prices/model_prices.json: Unable to locate credentials`), and a reload keeps the current map, so check `/model/cost_map/source` after the first deploy as described below.
+
+### Reading the map from Google Cloud Storage
+
+With a `gs://bucket/object` URL the proxy reads the object through the Cloud Storage JSON API at startup, on `POST /reload/model_cost_map`, and on the scheduled reload. This needs a LiteLLM version that includes [PR #51108](https://github.com/BerriAI/litellm/pull/51108).
+
+The proxy authenticates with Google application default credentials, looked up in the proxy's process in this order: the service account key file named by `GOOGLE_APPLICATION_CREDENTIALS`, the gcloud application default credentials file, then the metadata server of the GKE pod or GCE instance (GKE Workload Identity, or the instance's attached service account). Like the S3 path, it does not read Vertex or GCS logging credentials from `config.yaml`, and it does not read `GCS_PATH_SERVICE_ACCOUNT`. The identity needs `storage.objects.get` on the object, for example the Storage Object Viewer role (`roles/storage.objectViewer`) granted on the bucket.
+
+HTTP 429 and 5xx responses are retried, and so is a failure to get an access token, because a new GKE pod's metadata server can refuse requests for its first few seconds. At startup the proxy serves the bundled map while that retry runs in the background, then installs the bucket's map. A 401, 403 or 404 is not retried; startup falls back to the bundled map with the status in `fallback_reason` (for example `Remote fetch failed: HTTP 403 from gs://my-bucket/prices/model_prices.json`), and a reload keeps the current map.
+
+When `STORAGE_EMULATOR_HOST` is set, the fetch goes to that emulator instead of `storage.googleapis.com` and sends no credentials, the same as Google's own storage clients. A value without a scheme, such as `localhost:4443`, is read as `http://localhost:4443`. The object name ends at the first `?` or `#`, so object names containing either character, and gsutil's `#generation` suffix, are not supported.
 
 ### Start from the full upstream file
 

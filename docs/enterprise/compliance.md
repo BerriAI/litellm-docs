@@ -23,7 +23,7 @@ LiteLLM signs each Docker image on GHCR with cosign <SinceVersion v="1.83.0" />.
 
 ## Vulnerability management
 
-LiteLLM runs `grype` scans on all the Docker images that it builds. To report a vulnerability, use [GitHub Security Advisories](https://github.com/BerriAI/litellm/security/advisories/new). The full policy is in [`security.md`](https://github.com/BerriAI/litellm/blob/main/security.md) in the LiteLLM repository.
+LiteLLM runs `grype` scans on all the Docker images that it builds. To report a vulnerability, use the [vulnerability disclosure form](https://security.litellm.ai/vdp), which goes to the LiteLLM program on HackerOne for triage. The full policy is in [`security.md`](https://github.com/BerriAI/litellm/blob/main/security.md) in the LiteLLM repository.
 
 For large or major security updates, LiteLLM sends an email to Enterprise customers 7 days before public disclosure. Refer to [Security best practices](../proxy/security_best_practices.md#1-monitor-security-emails-and-upgrade-promptly). The response time for security patches is in [Support and SLA](./support.md).
 

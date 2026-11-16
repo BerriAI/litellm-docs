@@ -1,3 +1,9 @@
+---
+title: "OVHcloud AI Endpoints with LiteLLM: Setup"
+sidebar_label: "OVHCloud AI Endpoints"
+description: "Call OVHcloud AI Endpoints models via LiteLLM with the ovhcloud/ prefix from the Python SDK or AI Gateway. Stream, call tools, embed and transcribe audio."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

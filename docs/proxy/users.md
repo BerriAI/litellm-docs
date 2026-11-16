@@ -1132,7 +1132,7 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 
 #### Per-model rate limits and fallbacks
 
-By default, when a request goes over a key or team `model_rpm_limit` / `model_tpm_limit` and `router_settings.fallbacks` has an entry for that model, LiteLLM retries the request on the fallback model. The per-model limit does not apply to the fallback model, so the client gets a 200 from the fallback.
+By default, when a request goes over a key, team, organization, project or customer `model_rpm_limit` / `model_tpm_limit` and `router_settings.fallbacks` has an entry for that model, LiteLLM retries the request on the fallback model. The fallback model is admitted against the caller's own per-model limits for it, and the client gets a 200 from the fallback with `x-litellm-attempted-fallbacks: 1` and `x-litellm-fallback-reason: rate_limit:<scope>`, for example `rate_limit:model_per_end_user` when a customer's per-model limit caused the hop. Limits that are not model-specific, such as a customer's or key's overall `tpm_limit`, still return 429 on every model.
 
 To make per-model key, team, organization and project limits a hard cap that returns 429, set:
 

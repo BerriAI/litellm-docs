@@ -1,4 +1,11 @@
+---
+title: "Brave Search API with LiteLLM: Python and Gateway"
+sidebar_label: "Brave Search"
+description: "Add Brave web search to LiteLLM: set BRAVE_API_KEY, call search() in the Python SDK or /v1/search on the AI Gateway, and register it in config.yaml."
+---
 # Brave Search
+
+The [Brave Search API](https://brave.com/search/api/) returns web results from Brave's own independent search index; LiteLLM exposes it through one `search()` call in the Python SDK and the `/v1/search` endpoint on the AI Gateway.
 
 Get started by creating a free API key via https://brave.com/search/api/.
 

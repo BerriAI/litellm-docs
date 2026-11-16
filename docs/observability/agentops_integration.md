@@ -1,3 +1,8 @@
+---
+title: "AgentOps Tracing for LiteLLM AI Gateway"
+sidebar_label: "AgentOps"
+description: "Send LiteLLM traces to AgentOps from the Python SDK or AI Gateway over OpenTelemetry v2, with a config.yaml callback and the gen_ai spans AgentOps receives."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

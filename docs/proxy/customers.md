@@ -515,9 +515,9 @@ curl -X POST 'http://0.0.0.0:4000/customer/new'
     }'
 ```
 
-`/customer/new` accepts budget fields inline: `max_budget`, `soft_budget`, `budget_duration`, `tpm_limit`, `rpm_limit`, `max_parallel_requests` and `model_max_budget`. Set either `max_budget` or `budget_id`, not both; passing both is rejected. Customer `tpm_limit` and `rpm_limit` are stored on a budget object, so they only apply when the customer is linked to one, either inline as above or through `budget_id`.
+`/customer/new` accepts budget fields inline: `max_budget`, `soft_budget`, `budget_duration`, `tpm_limit`, `rpm_limit`, `max_parallel_requests` and `model_max_budget`. Set either `max_budget` or `budget_id`, not both; passing both is rejected. A field the endpoint does not know, such as a misspelled `tpm_limti`, is rejected with a 422 that names it, and no customer is created. Customer `tpm_limit` and `rpm_limit` are stored on a budget object, so they only apply when the customer is linked to one, either inline as above or through `budget_id`.
 
-`/customer/update` accepts a narrower set of fields: `user_id`, `alias`, `blocked`, `max_budget`, `budget_id`, `allowed_model_region`, `default_model` and `object_permission`. Anything else, including `tpm_limit`, `rpm_limit` and `budget_duration`, is silently dropped; to change those, update the budget object with `/budget/update` instead.
+`/customer/update` accepts a narrower set of fields: `user_id`, `alias`, `blocked`, `max_budget`, `budget_id`, `allowed_model_region`, `default_model` and `object_permission`. Anything else is rejected with a 422 that names each unknown field and leaves the customer unchanged. For budget fields such as `tpm_limit`, `rpm_limit`, `budget_duration`, `model_tpm_limit` and `model_rpm_limit` the error says to update the budget object with `/budget/update` instead.
 
 Customer budgets are global per deployment. Spend is tracked against the customer id alone, so the same customer shares one budget across every virtual key and team, and a customer budget can't be scoped to a single key or team.
 

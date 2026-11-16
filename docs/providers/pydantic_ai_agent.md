@@ -1,3 +1,9 @@
+---
+title: "Pydantic AI Agents on LiteLLM A2A Gateway"
+sidebar_label: "Pydantic AI Agents"
+description: "Call Pydantic AI agents through the LiteLLM A2A Gateway: expose the agent with to_a2a(), add it under Agents, test it in the Playground and send messages."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

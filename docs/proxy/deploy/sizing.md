@@ -1,0 +1,38 @@
+---
+title: Sizing & Scaling
+sidebar_label: Overview
+description: Plan gateway, PostgreSQL, and Redis capacity for LiteLLM, then configure autoscaling for your traffic.
+---
+
+# Sizing & Scaling
+
+{/* keep-version-note */}
+
+Size the gateway, PostgreSQL, and Redis for the same peak load.
+
+Start with your expected request rate, token volume, and number of concurrent streams. Test with the models and response lengths your applications use. A long stream keeps a connection open even when gateway CPU use is low.
+
+On Kubernetes, add requests per second (RPS) and tokens per second (TPS) to your HPA's CPU and memory targets. See [HPA metrics](./autoscaling.md#scale-on-requests-and-tokens-per-pod).
+
+## Choose a guide
+
+| What you need to decide | Guide |
+| --- | --- |
+| Gateway CPU, memory, and worker count | [Sizing and workers](../prod.md#sizing-and-workers) |
+| Database compute, storage, and connection limits | [Database Sizing](../db_sizing.md) |
+| Which features need shared state | [What Needs Redis](../redis_requirements.md) |
+| Redis memory and connection capacity | [Redis Sizing](../redis_sizing.md) |
+| Scale gateway replicas with RPS and TPS | [Autoscaling](./autoscaling.md) |
+| How to reduce database pressure at high traffic | [High-Throughput Deployment](../high_throughput.md) |
+| How to send database reads to a replica | [Database Read Replica](../db_read_replica.md) |
+| How to tune workers, shutdown, and the server | [Server Tuning](../server_tuning.md) |
+
+## Bound the database connections
+
+Each worker has its own connection pool. Plan for the maximum number of replicas your autoscaler can start:
+
+```text
+pool limit × workers per replica × maximum replicas
+```
+
+Leave room for management services, migrations, and other database clients. Use [database sizing](../db_sizing.md#connections-break-before-cpu-does) to set pool and replica limits before you enable autoscaling.

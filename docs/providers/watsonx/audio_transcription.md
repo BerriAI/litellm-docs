@@ -1,3 +1,9 @@
+---
+title: "IBM watsonx.ai Audio Transcription with LiteLLM"
+sidebar_label: "WatsonX Audio Transcription"
+description: "Transcribe audio with Whisper models on IBM watsonx through LiteLLM's /v1/audio/transcriptions, from the Python SDK or the AI Gateway with config.yaml."
+---
+
 # WatsonX Audio Transcription
 
 ## Overview

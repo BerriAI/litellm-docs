@@ -1,8 +1,16 @@
+---
+title: "Cohere API with LiteLLM: Chat, Embed, Rerank"
+sidebar_label: "Cohere"
+description: "Use Cohere Command A and Command R chat, Embed v3 with input_type, rerank and Parse OCR from the Python SDK or AI Gateway, on the v1 or v2 chat API."
+---
+
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Cohere
+
+Cohere provides Command chat models plus embedding and rerank models; LiteLLM calls chat with the `cohere_chat/` prefix and rerank with `cohere/` from the Python SDK or AI Gateway.
 
 ## API KEYS
 

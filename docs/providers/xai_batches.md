@@ -1,3 +1,9 @@
+---
+title: "xAI Batch API with LiteLLM"
+sidebar_label: "xAI Batch API"
+description: "Run xAI batch jobs through LiteLLM's /v1/files and /v1/batches endpoints: add xAI to config.yaml, upload input, create and poll the batch, and track cost."
+---
+
 # xAI Batch API
 
 LiteLLM routes the OpenAI-compatible `/v1/files` and `/v1/batches` endpoints to xAI's [Files](https://docs.x.ai/developers/files/managing-files) and [Batch](https://docs.x.ai/developers/advanced-api-usage/batch-api) APIs. xAI bills batch requests at a reduced rate, they do not count towards rate limits, and most batches finish within 24 hours on a best-effort basis. Not every xAI model accepts batch requests, so check xAI's model list before picking one

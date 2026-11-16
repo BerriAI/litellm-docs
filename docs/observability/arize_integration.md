@@ -1,3 +1,8 @@
+---
+title: "Arize AX Tracing for LiteLLM AI Gateway"
+sidebar_label: "Arize AX"
+description: "Send LiteLLM traces to Arize AX from the Python SDK or AI Gateway, with per-team and per-key credentials, trace sampling and a second backend."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -7,7 +12,7 @@ Use Arize AX when you want the full-featured [Arize AI](https://arize.com/?utm_s
 
 Arize AX is separate from [Arize Phoenix](https://arize.com/phoenix/), the open-source tracing and evaluation project for local development, experimentation, and self-hosted workflows. LiteLLM supports both backends, but they use different callbacks, credentials, and endpoints. If you are sending traces to Phoenix, use the [Arize Phoenix setup guide](./phoenix_integration) instead.
 
-For production evaluation workflows, see Arize's [agent evaluation guide](https://arize.com/guides/ai-agent-handbook/agent-evaluation/) and [LLM evaluation guide](https://arize.com/resources/llm-evaluation/) for examples of using traces to debug failures, compare model behavior, and improve agent reliability.
+For production evaluation workflows, see Arize's [agent evaluation guide](https://arize.com/ai-agents/agent-evaluation/) and [LLM evaluation guide](https://arize.com/resources/llm-evaluation/) for examples of using traces to debug failures, compare model behavior, and improve agent reliability.
 
 :::info
 We want to learn how we can make the callbacks better! Meet the LiteLLM [founders](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version) or

@@ -1,10 +1,16 @@
+---
+title: "Ollama with LiteLLM: OpenAI-Compatible API"
+sidebar_label: "Ollama"
+description: "Call local Ollama models through LiteLLM with the ollama_chat/ prefix from the Python SDK or AI Gateway. Stream, use JSON mode, call tools and send images."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Ollama 
 LiteLLM supports all models from [Ollama](https://github.com/ollama/ollama)
 
-<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/liteLLM_Ollama.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/liteLLM_Ollama.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 

@@ -1,3 +1,8 @@
+---
+title: "Conduct Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Conduct Guard"
+description: "Send each prompt to your Conduct workspace from the LiteLLM AI Gateway, blocking on block or approval verdicts and passing warnings through."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,8 @@
+---
+title: "LLM-as-a-Judge Guardrails on LiteLLM AI Gateway"
+sidebar_label: "LLM-as-a-Judge"
+description: "Score each request or response 0-100 against weighted criteria with a judge model on the LiteLLM AI Gateway, and block or log calls below a threshold."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

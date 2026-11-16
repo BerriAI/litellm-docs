@@ -1,3 +1,8 @@
+---
+title: "FOCUS Cost Export for LiteLLM: S3 and GCS"
+sidebar_label: "Focus Export (Experimental)"
+description: "Export LiteLLM AI Gateway usage in the FinOps FOCUS format to an S3 or GCS bucket, set up with environment variables and config.yaml (experimental)."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

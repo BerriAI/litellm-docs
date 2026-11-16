@@ -15,6 +15,7 @@ Supported Providers:
 - Bedrock
 - Meta Muse Voice, transcription only ([see full docs](/docs/providers/meta#muse-voice-realtime-transcription))
 - OpenAI Live models such as `gpt-live-1`, on their own `/v1/live/sessions` route ([see below](#openai-live-sessions-gpt-live-1))
+- Live speech translation with `gpt-realtime-translate` on OpenAI and Azure, on its own `/v1/realtime/translations` route ([see full docs](/docs/realtime_translation))
 
 ## Proxy Usage
 

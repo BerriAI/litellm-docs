@@ -1,3 +1,8 @@
+---
+title: "Slack Logging for the LiteLLM Python SDK"
+sidebar_label: "Slack"
+description: "Post LiteLLM Python SDK call results to a Slack channel with a custom callback that sends each response to a Slack incoming webhook URL you create."
+---
 import Image from '@theme/IdealImage';
 
 # Slack

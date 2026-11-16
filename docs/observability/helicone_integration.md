@@ -1,3 +1,8 @@
+---
+title: "Helicone Logging for LiteLLM AI Gateway"
+sidebar_label: "Helicone"
+description: "Log LiteLLM requests to Helicone from the Python SDK or AI Gateway, as a provider or a callback, with session tracking and retry and fallback options."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

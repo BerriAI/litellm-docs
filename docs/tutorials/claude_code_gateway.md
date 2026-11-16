@@ -81,7 +81,7 @@ Complete your organization's SSO in the browser. `lite claude` launches Claude C
 
 Use your own Claude subscription for inference while routing requests through LiteLLM. Your claude.ai login stays active.
 
-**Prerequisites:** A [Lite CLI build with saved sign-in settings](https://github.com/BerriAI/litellm/pull/47385) and a gateway configured for [CLI SSO](../proxy/cli_sso.md#prerequisites---start-litellm-proxy-with-beta-flag) and [Claude subscription routing](./claude_code_max_subscription.md#step-1-configure-litellm-proxy).
+**Prerequisites:** A [Lite CLI build with saved sign-in settings](https://github.com/BerriAI/litellm/pull/47385) and a gateway configured for [CLI sign-in](../proxy/cli_sso.md#prerequisites---start-litellm-proxy-with-beta-flag) and [Claude subscription routing](./claude_code_max_subscription.md#step-1-configure-litellm-proxy).
 
 ### Configure once
 

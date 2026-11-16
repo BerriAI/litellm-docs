@@ -1,3 +1,9 @@
+---
+title: "Gemini Lyria Music Generation in LiteLLM"
+sidebar_label: "Gemini Lyria (music generation)"
+description: "Learn how LiteLLM lists Google Lyria 3 Clip and Pro preview music models under the gemini/ provider, with per-song pricing in the cost map for spend tracking."
+---
+
 # Gemini Lyria (music generation)
 
 Google Lyria 3 preview models are listed in LiteLLM’s [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json) under the `gemini/` provider for metadata and spend tracking.

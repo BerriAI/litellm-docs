@@ -1,3 +1,9 @@
+---
+title: "Black Forest Labs FLUX Image Generation in LiteLLM"
+sidebar_label: "Black Forest Labs Image Generation"
+description: "Generate images with FLUX Pro 1.1, FLUX Pro 1.1 Ultra and FLUX Dev from the Python SDK or AI Gateway, setting aspect_ratio, seed and safety_tolerance."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

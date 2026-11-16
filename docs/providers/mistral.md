@@ -1,7 +1,16 @@
+---
+title: "Mistral AI API with LiteLLM AI Gateway"
+sidebar_label: "Mistral AI"
+description: "Call Mistral Large, Codestral and Magistral with tool calling and reasoning effort, transcribe audio with Voxtral, clone voices for speech and embed text."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Mistral AI API
+
+Mistral AI serves its chat, reasoning, embedding and audio models through the Mistral API; LiteLLM calls them with the `mistral/` prefix from the Python SDK or AI Gateway.
+
 https://docs.mistral.ai/api/
 
 ## API Key
@@ -479,6 +488,29 @@ curl --location 'http://0.0.0.0:4000/v1/audio/speech' \
 ### Cost Tracking
 
 Voxtral TTS is priced per input character, at the `input_cost_per_character` rate in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). LiteLLM counts the non-whitespace characters of `input`, so a 19 character sentence holding 2 spaces is tracked as 17 characters. Mistral's own character meter, reported in the `x-ratelimit-input-characters-query-cost` response header, counts the spaces too, so whenever `input` contains whitespace, the spend LiteLLM tracks is lower than what Mistral meters.
+
+## Token Counting
+
+<SinceVersion v="1.111.0" />
+
+LiteLLM supports native upstream token counting for Mistral models via Mistral's `/v1/responses/input_tokens` endpoint. See [Token Counting](../count_tokens.md) for usage and details.
+
+A Mistral deployment on Azure (an Azure `api_base`, `MISTRAL_AZURE_API_BASE`, or only `MISTRAL_AZURE_API_KEY` set) is counted with LiteLLM's local tokenizer instead, so the prompt and the Azure key never go to `api.mistral.ai`.
+
+```python
+import asyncio
+import litellm
+
+async def main():
+    result = await litellm.acount_tokens(
+        model="mistral/mistral-large-4",
+        messages=[{"role": "user", "content": "Hello, how are you?"}],
+    )
+    print(f"Token count: {result.total_tokens}")
+    print(f"Tokenizer: {result.tokenizer_type}")  # "mistral_api"
+
+asyncio.run(main())
+```
 
 ## Files and Batches API
 

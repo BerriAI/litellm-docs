@@ -1,3 +1,9 @@
+---
+title: "NanoGPT API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "NanoGPT"
+description: "Use NanoGPT's pay-per-prompt catalog of 200+ models with streaming, tool calling and standard OpenAI parameters from the LiteLLM Python SDK or AI Gateway."
+---
+
 # NanoGPT
 
 ## Overview

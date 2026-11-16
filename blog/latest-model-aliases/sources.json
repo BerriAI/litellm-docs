@@ -1,0 +1,9 @@
+{
+  "implementation": "https://github.com/BerriAI/litellm/pull/50315",
+  "verified_commit": "1d8f093b5ca221f0bc4a468f4474f47be7de7d57",
+  "aliases": "https://github.com/BerriAI/litellm/blob/1d8f093b5ca221f0bc4a468f4474f47be7de7d57/litellm/model_latest_aliases.json",
+  "resolution": "https://github.com/BerriAI/litellm/blob/1d8f093b5ca221f0bc4a468f4474f47be7de7d57/litellm/litellm_core_utils/model_latest_aliases.py",
+  "docs": "https://github.com/BerriAI/litellm-docs/pull/2853",
+  "publication": "Wait for the implementation to merge and ship, then publish the docs before this announcement.",
+  "artwork": "Editable cover HTML/CSS in hero.html, using the repository Geist fonts and official LiteLLM mark. Render #canvas at 1200 by 630. Listing and social previews retain the approved PNG. The article uses responsive chrome typography in LatestAliasesPost.js with a shared palette and layout throughout the post."
+}

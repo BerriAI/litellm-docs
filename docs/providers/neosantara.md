@@ -1,3 +1,9 @@
+---
+title: "Neosantara API with LiteLLM AI Gateway"
+sidebar_label: "Neosantara"
+description: "Call Gemini 3.1 Flash Lite and GLM-4.7 Flash on Neosantara with tool calling via completion() or responses(), reasoning effort and custom token pricing."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "Azure AI Foundry (AI Studio) API with LiteLLM"
+sidebar_label: "Azure AI"
+description: "Call Command R, Mistral Large, Jamba and Claude on Azure AI Foundry (formerly AI Studio) from the Python SDK or AI Gateway, with tool calling and rerank."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -311,6 +317,31 @@ LiteLLM supports **ALL** azure ai models. Here's a few examples:
 | Cohere command-r | `completion(model="azure_ai/command-r", messages)` | 
 | mistral-large-latest | `completion(model="azure_ai/mistral-large-latest", messages)` | 
 | AI21-Jamba-Instruct | `completion(model="azure_ai/ai21-jamba-instruct", messages)` | 
+
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`azure_ai/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Azure AI Foundry model name. LiteLLM sends Azure AI Foundry the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `azure_ai/gpt-luna-latest` | GPT Luna |
+| `azure_ai/gpt-sol-latest` | GPT Sol |
+| `azure_ai/gpt-terra-latest` | GPT Terra |
+| `azure_ai/gpt-astra-latest` | GPT Astra |
+| `azure_ai/gpt-mini-latest` | GPT Mini |
+| `azure_ai/claude-opus-latest` | Claude Opus |
+| `azure_ai/claude-sonnet-latest` | Claude Sonnet |
+| `azure_ai/claude-haiku-latest` | Claude Haiku |
+| `azure_ai/claude-fable-latest` | Claude Fable |
+| `azure_ai/grok-latest` | Grok |
+| `azure_ai/kimi-latest` | Kimi |
+| `azure_ai/glm-latest` | GLM |
+| `azure_ai/glm-flash-latest` | GLM Flash |
+| `azure_ai/deepseek-pro-latest` | DeepSeek Pro |
+| `azure_ai/deepseek-flash-latest` | DeepSeek Flash |
+| `azure_ai/minimax-latest` | MiniMax |
 
 ## Usage - Azure Anthropic (Azure Foundry Claude)
 

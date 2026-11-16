@@ -1,3 +1,9 @@
+---
+title: "vLLM with LiteLLM: Self-Hosted Model Setup"
+sidebar_label: "vLLM"
+description: "Call a hosted vLLM server via LiteLLM with the hosted_vllm/ prefix and your api_base, from the Python SDK or AI Gateway, for chat, embeddings and rerank."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,4 +1,11 @@
+---
+title: "Tavily Search API with LiteLLM: Python and Gateway"
+sidebar_label: "Tavily Search"
+description: "Add Tavily web search to LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, with topic, search_depth and raw page content."
+---
 # Tavily Search
+
+[Tavily](https://tavily.com) is a web search API built for AI agents and LLM apps; LiteLLM exposes it through one `search()` call in the Python SDK and the `/v1/search` endpoint on the AI Gateway.
 
 **Get API Key:** [https://tavily.com](https://tavily.com)
 

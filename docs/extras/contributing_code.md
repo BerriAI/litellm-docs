@@ -150,7 +150,7 @@ git clone https://github.com/BerriAI/litellm.git
 Step 2: Navigate to the UI dashboard directory
 
 ```shell
-cd ui/litellm-dashboard
+cd litellm/litellm/ui/litellm-dashboard
 ```
 
 Step 3: Install dependencies

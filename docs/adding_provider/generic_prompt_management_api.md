@@ -244,7 +244,7 @@ response = client.chat.completions.create(
 
 ## Implementation Example
 
-See [mock_prompt_management_server.py](https://github.com/BerriAI/litellm/blob/main/cookbook/mock_prompt_management_server/mock_prompt_management_server.py) for a complete reference implementation with multiple example prompts, authentication, and convenience endpoints.
+See [mock_prompt_management_server.py](https://github.com/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/mock_prompt_management_server/mock_prompt_management_server.py) for a complete reference implementation with multiple example prompts, authentication, and convenience endpoints.
 
 **Minimal FastAPI example:**
 
@@ -573,4 +573,3 @@ This is a **beta API**. We're actively improving it based on feedback. Open an i
 - [Prompt Management Overview](../proxy/prompt_management.md)
 - [Generic Guardrail API](./generic_guardrail_api.md)
 - [LiteLLM Proxy Setup](../proxy/quick_start.md)
-

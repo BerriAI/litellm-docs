@@ -78,7 +78,7 @@ Each instance multiplies your total connections: 3 instances × 4 workers × 10 
 
 :::
 
-Once an autoscaler owns the replica count, the instance count in that formula is `maxReplicas`, not the number of pods you are running today. The `litellm-helm` chart defaults `autoscaling.maxReplicas` and `keda.maxReplicas` to 100, so a deployment that scales out fully asks for roughly 1000 connections at the default pool limit of 10, which is far past what a stock Postgres accepts. Set `maxReplicas` from what your database can serve, and see [how to calculate the right value](./configs.md#configure-db-pool-limits--connection-timeouts) for the full division.
+Size the connection budget for the autoscaler's maximum replica count. The [LiteLLM chart](./deploy/helm.md) defaults `gateway.hpa.maxReplicas` and `gateway.keda.maxReplicaCount` to 10. Ten pods with one worker and a pool limit of 10 can use 100 connections, before backend pods, migrations, and rollout overlap. See [how to calculate the right value](./configs.md#configure-db-pool-limits--connection-timeouts).
 
 ### Keep error logs out of the database
 
@@ -130,7 +130,7 @@ export LITELLM_SALT_KEY="sk-<paste-a-long-random-key>"
 
 ### Machine specifications
 
-Give each pod 1 vCPU and 4Gi of memory, as both requests and limits, and scale both with the worker count if you run more than one worker per container.
+Set each pod's requests and limits to 1 vCPU and 4Gi of memory. Increase both in proportion to the worker count if you run multiple workers per container. For Helm, place these container settings under `gateway.resources`.
 
 ```yaml
 resources:
@@ -150,17 +150,13 @@ The largest statements come from spend logging with `store_prompts_in_spend_logs
 
 ### Autoscaling
 
-Scale on CPU, and leave the memory target unset. Memory is not a usable scaling signal for the proxy: the query engine's resident memory reflects the largest write a pod has ever done rather than what it is doing now, so a memory target ratchets replicas up after one large write and never scales them back in. Provision memory as the floor above and let CPU drive the replica count.
+Use requests per second (RPS) and tokens per second (TPS) alongside CPU and memory targets in your HPA. CPU use can stay low while requests wait on model providers. Follow the [HPA metrics guide](./deploy/autoscaling.md#scale-on-requests-and-tokens-per-pod) to expose per-pod metrics and set targets from load tests.
 
-```yaml
-targetCPUUtilizationPercentage: 60
-```
-
-60 rather than a higher threshold because a replica is not useful the moment it is created. The `litellm-helm` startup probe allows up to 300 seconds for a pod to pass its first readiness check, so a replica added at 80 percent CPU arrives minutes after the saturation that triggered it. Both charts ship higher defaults, 80 on `litellm-helm` and 70 on the componentized chart's gateway, chosen so the charts install cleanly anywhere; lower them for production.
+Request and token counters update when requests finish, so keep spare replicas for long streams and traffic spikes. Measure pod startup time and set `gateway.startupProbe` if needed.
 
 ### Workers and scaling
 
-On Kubernetes, or anywhere else a pod-level autoscaler is reading CPU, run one Uvicorn worker per pod and scale horizontally (more pods) rather than vertically (more workers per pod). This is the default, so you only need `--num_workers 1`; one process per pod keeps latency predictable, lets the Horizontal Pod Autoscaler read the [CPU threshold above](#autoscaling) against a single process, and makes rolling restarts hitless because Kubernetes drains one pod at a time.
+On Kubernetes, use the default of one Uvicorn worker per pod (`--num_workers 1`) and scale by adding pods.
 
 ```shell
 CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1"]
@@ -284,7 +280,7 @@ Point your Service and Ingress at `app: litellm-serving` only, so the worker tak
 
 ## Redis
 
-Run Redis (7.0 or newer) as soon as you run more than one proxy instance. It shares rate limit counters, router state, and the response cache across instances; without it, each instance enforces limits independently and cache hits stay local to the instance that served the request. For the full list of what degrades or stops working without it, see [What Needs Redis](./redis_requirements.md).
+Run Redis (7.0 or newer) as soon as you run more than one proxy instance. The image uses `REDIS_HOST`, `REDIS_PORT`, and `REDIS_PASSWORD` to coordinate pods. The chart's `redis` values set these variables. `general_settings.coordination_redis` settings override these variables. Enable response caching separately as shown below. See [What Needs Redis](./redis_requirements.md) for the features that depend on it.
 
 ```yaml
 router_settings:
@@ -366,26 +362,36 @@ docker run \
   ghcr.io/berriai/litellm:main-stable --config /app/config.yaml
 ```
 
-Helm: put the bundle in a ConfigMap or Secret and mount it with `volumes` / `volumeMounts`. Both the Deployment and the migrations Job get these mounts, so migrations verify the certificate too.
+Helm: put the bundle in a ConfigMap or Secret. Mount it separately on the gateway, backend, and migrations Job. In monolith mode, the proxy uses the gateway mounts.
 
 ```bash
 kubectl create configmap rds-ca --from-file=global-bundle.pem
 ```
 
 ```yaml title="values.yaml"
-db:
-  useExisting: true
-  endpoint: mydb.abc123.us-east-1.rds.amazonaws.com
-  database: litellm
-  url: postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@$(DATABASE_HOST)/$(DATABASE_NAME)?sslmode=verify-full&sslrootcert=/certs/global-bundle.pem
-volumes:
-  - name: rds-ca
-    configMap:
-      name: rds-ca
-volumeMounts:
-  - name: rds-ca
-    mountPath: /certs
-    readOnly: true
+database:
+  writer:
+    host: mydb.abc123.us-east-1.rds.amazonaws.com
+    dbname: litellm
+    passwordSecret:
+      name: litellm-writer-secret # contains username and password
+    sslMode: verify-full
+    sslRootCert: /certs/global-bundle.pem
+gateway:
+  volumes: &caVolumes
+    - name: rds-ca
+      configMap:
+        name: rds-ca
+  volumeMounts: &caMounts
+    - name: rds-ca
+      mountPath: /certs
+      readOnly: true
+backend:
+  volumes: *caVolumes
+  volumeMounts: *caMounts
+migrationJob:
+  volumes: *caVolumes
+  volumeMounts: *caMounts
 ```
 
 Download the RDS bundle from [AWS](https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem); other providers publish theirs the same way. This is separate from `SSL_CERT_FILE`, which only affects LiteLLM's outbound HTTPS calls to LLM providers and callbacks; the DB driver does not read it. If you need both, mount one bundle and point both settings at it.
@@ -418,39 +424,27 @@ general_settings:
 
 Replicas are placed in the window using `POD_NAME`, falling back to `HOSTNAME` and then the system hostname, plus the worker process id. If your replicas share a hostname, give each one a distinct `identity` so they do not land on the same offset. Set `enabled: false` to turn the whole thing off and restore the previous behavior.
 
-### Run migrations from the Helm PreSync hook
+### Run migrations from the deployment hook {#run-migrations-from-the-helm-presync-hook}
 
-:::info
-The Helm PreSync hook flow is in beta.
-:::
+The [LiteLLM chart](./deploy/helm.md) runs a separate migrations Job through Helm `pre-install` and `pre-upgrade` hooks by default, in both deployment modes. Configure the writer database under `database.writer` and let the Job finish before traffic reaches the new version.
 
-To ensure only one service manages database migrations, use our [Helm PreSync hook for Database Migrations](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/templates/migrations-job.yaml). This ensures migrations are handled during `helm upgrade` or `helm install`, while LiteLLM pods explicitly disable migrations.
+For Argo CD, select its PreSync hook instead:
 
-1. **Helm PreSync Hook**:
-   - The Helm PreSync hook is configured in the chart to run database migrations during deployments.
-   - The hook always sets `DISABLE_SCHEMA_UPDATE=false`, ensuring migrations are executed reliably.
+```yaml title="values.yaml"
+migrationJob:
+  enabled: true
+  hooks:
+    helm:
+      enabled: false
+    argocd:
+      enabled: true
+```
 
-  Reference Settings to set on ArgoCD for `values.yaml`
-
-  ```yaml
-  db:
-    useExisting: true # use existing Postgres DB
-    url: postgresql://ishaanjaffer0324:... # url of existing Postgres DB
-  ```
-
-2. **LiteLLM Pods**:
-   - Set `DISABLE_SCHEMA_UPDATE=true` in LiteLLM pod configurations to prevent them from running migrations.
-
-   Example configuration for LiteLLM pod:
-   ```yaml
-   env:
-     - name: DISABLE_SCHEMA_UPDATE
-       value: "true"
-   ```
+The chart sets `DISABLE_SCHEMA_UPDATE=true` on serving pods even when `migrationJob.enabled` is false. If you disable the Job, run migrations through your own release process. See [Upgrade the gateway](./upgrade_guide.md).
 
 ### Use prisma migrate deploy
 
-LiteLLM runs `prisma migrate deploy` on startup by default, so db migrations are handled across versions in production with no configuration. To stop a pod from running migrations at all, set `DISABLE_SCHEMA_UPDATE=true` as described in [Run migrations from the Helm PreSync hook](#run-migrations-from-the-helm-presync-hook).
+The proxy runs `prisma migrate deploy` on startup unless `DISABLE_SCHEMA_UPDATE=true`. The Helm chart sets this flag on serving pods and uses its [deployment hook](#run-migrations-from-the-helm-presync-hook) for migrations.
 
 :::info
 
@@ -467,7 +461,7 @@ The migrate deploy command:
 
 How LiteLLM ships migrations:
 
-1. A new migration file is written to our `litellm-proxy-extras` package. [See all](https://github.com/BerriAI/litellm/tree/main/litellm-proxy-extras/litellm_proxy_extras/migrations)
+1. A new migration file is written to our `litellm-proxy-extras` package. [See all](https://github.com/BerriAI/litellm/tree/main/litellm/proxy-extras/litellm_proxy_extras/migrations)
 
 2. The core litellm pip package is bumped to point to the new `litellm-proxy-extras` package. This ensures, older versions of LiteLLM will continue to use the old migrations. [See code](https://github.com/BerriAI/litellm/blob/52b35cd8093b9ad833987b24f494586a1e923209/pyproject.toml#L58)
 

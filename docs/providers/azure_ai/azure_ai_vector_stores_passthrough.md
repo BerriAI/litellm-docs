@@ -1,3 +1,9 @@
+---
+title: "Azure AI Search Passthrough on LiteLLM Gateway"
+sidebar_label: "Azure AI Search - Vector Store (Passthrough API)"
+description: "Let developers create and search Azure AI Search vector stores in the native API format through the LiteLLM AI Gateway, without sharing Azure credentials."
+---
+
 # Azure AI Search - Vector Store (Passthrough API)
 
 Use this to allow developers to **create** and **search** vector stores using the Azure AI Search API in the **native** Azure AI Search API format, without giving them the Azure AI credentials.

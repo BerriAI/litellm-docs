@@ -77,7 +77,12 @@ async function generateSnapshot() {
     throw new Error(`Expected at least ${RELEASE_COUNT} published RC releases, found ${releases.length}`);
   }
 
-  const published = releases.filter(release => semver.gte(release.version, FIRST_RELEASE));
+  // Skip an RC cut on an older line after a newer RC was already out, like
+  // v1.107.0-rc.3 after v1.108.0-rc.1, since the timeline only moves forward.
+  const published = releases
+    .filter(release => semver.gte(release.version, FIRST_RELEASE))
+    .filter((release, _, all) => !all.some(newer =>
+      semver.gt(newer.version, release.version) && newer.releasedAt < release.releasedAt));
   const main = {
     version: nextMainRc(projectVersion, releases),
     plannedFor: nextSaturday(published.at(-1).releasedAt),
