@@ -1568,6 +1568,7 @@ const sidebars = {
             "search/nimble",
             "search/bing_grounding",
             "search/deepseek",
+            "search/autom",
           ]
         },
         "skills",
