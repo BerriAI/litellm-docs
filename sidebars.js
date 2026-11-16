@@ -470,6 +470,7 @@ const sidebars = {
             },
             "proxy/prod",
             "proxy/upgrade_guide",
+            "proxy/database_migrations",
             "proxy/health",
           ],
         },
