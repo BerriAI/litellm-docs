@@ -9,7 +9,7 @@ description: Call Adaption models through LiteLLM with the Python SDK or Gateway
 
 <SinceVersion v="1.111.0" />
 
-Provider support was added in [PR #TODO](https://github.com/BerriAI/litellm/pulls). Use this version or a later build that includes the provider.
+Provider support was added in [PR #51730](https://github.com/BerriAI/litellm/pull/51730). Use this version or a later build that includes the provider.
 
 ## Overview
 
