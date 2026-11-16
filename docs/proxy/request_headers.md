@@ -71,9 +71,9 @@ All requests sharing that value can be found by querying spend logs by session i
     - For `/v1/messages` endpoint, this will always be forward the header to the underlying model.
     - For `/chat/completions` endpoint, this will only be forwarded if the model is configured in `forward_client_headers_to_llm_api`. [Learn more](./forward_client_headers.md)
 
-`anthropic-user-profile-id` Optional[str]: The Anthropic user profile ID of the end user behind a Claude request. Anthropic can use this ID to apply a safety action to that user instead of the whole organization. LiteLLM forwards it as a header to Claude on Anthropic, Azure AI Foundry, and Vertex AI. On Bedrock Mantle, LiteLLM sends the top-level body field `user_profile_id` instead. No `forward_client_headers_to_llm_api` entry is needed.
+`anthropic-user-profile-id` Optional[str]: The Anthropic user profile ID of the end user behind a Claude request. Anthropic can use this ID to apply a safety action to that user instead of the whole organization. LiteLLM forwards it as a header to Claude on Anthropic, Azure AI Foundry, and Vertex AI. On Bedrock Mantle, LiteLLM sends only the top-level body field `user_profile_id`, not the profile header. No `forward_client_headers_to_llm_api` entry is needed.
 
-Bedrock Runtime's Converse and InvokeModel APIs do not support user profiles, so LiteLLM does not add `user_profile_id` to those requests. Mantle only checks the ID's format; forwarding an ID there does not provide user-scoped safety enforcement. See [Anthropic's user profile documentation](https://platform.claude.com/docs/en/manage-claude/user-profiles.md).
+Bedrock Runtime's Converse and InvokeModel APIs do not support user profiles. LiteLLM sends neither the `anthropic-user-profile-id` header nor the `user_profile_id` body field to those APIs. Mantle only checks the ID's format; forwarding an ID there does not provide user-scoped safety enforcement. See [Anthropic's user profile documentation](https://platform.claude.com/docs/en/manage-claude/user-profiles.md).
 
 ### Pin an Anthropic user profile ID to a key or team
 
