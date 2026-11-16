@@ -1,4 +1,4 @@
-# Global Control Plane illustration
+# Global Control Plane API illustration
 
 Run `node blog/global_control_plane/illustration/render.mjs` from the repository root after installing the site's dependencies. This writes the editable 1440 × 760 SVG and a transparent PNG using the site's existing `sharp` dependency.
 

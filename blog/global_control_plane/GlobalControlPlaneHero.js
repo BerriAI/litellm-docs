@@ -7,7 +7,7 @@ export default function GlobalControlPlaneHero() {
     <div className={styles.hero}>
       <ControlPlaneIllustration
         role="img"
-        aria-label="A central LiteLLM control plane manages three independent regional deployments, each with its own gateway and storage."
+        aria-label="The LiteLLM Global Control Plane API manages three independent regional deployments, each with its own gateway and storage."
       />
     </div>
   );

@@ -58,7 +58,7 @@ function region(x,y) {
     +database(x+73,y-18);
 }
 function scene() {
-  let s=`<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}"><title>LiteLLM Global Control Plane</title><desc>A central LiteLLM control plane with a globe manages three separate regional deployments. Each regional deployment has its own gateway and storage. The connections represent management traffic.</desc>`;
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}"><title>LiteLLM Global Control Plane API</title><desc>A central LiteLLM control plane with a globe manages three separate regional deployments. Each regional deployment has its own gateway and storage. The connections represent management traffic.</desc>`;
   s+=cross(83,155,11)+cross(1363,635,11);
   for(let r=0;r<3;r++)for(let q=0;q<4;q++)s+=`<circle cx="${84+q*22}" cy="${668+r*20}" r="1.5" fill="#ACC9FF"/>`;
   // The three management connections are separate; regions have no cross-links.
