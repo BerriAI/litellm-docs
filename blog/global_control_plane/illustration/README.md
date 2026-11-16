@@ -1,7 +1,7 @@
 # Global Control Plane illustration
 
-Run `node blog/global_control_plane/illustration/render.mjs` from the repository root after installing the site's dependencies. This writes the editable desktop and mobile SVGs and transparent light/dark PNG exports. The source uses the site's existing `sharp` dependency. The live hero uses a narrower composition on small screens so its labels remain readable.
+Run `node blog/global_control_plane/illustration/render.mjs` from the repository root after installing the site's dependencies. This writes the editable 1440 × 760 SVG and a transparent PNG using the site's existing `sharp` dependency.
 
-The diagram shows management connections only. Applications send inference directly to their regional gateway. The regional boundaries represent independent deployments, each with its own configuration and dependencies.
+The text-free isometric illustration shows a central control plane with a globe and three independent regional gateways. Each regional island has its own storage. The dashed connections represent management traffic; applications send inference directly to their regional gateway.
 
-The LiteLLM logo is reused unchanged from `blog/litellm_private_registry_access/illustration/assets/litellm.svg`. The globe, connectors, and region boundaries are original SVG geometry. No external fonts or runtime animation dependencies are required.
+The LiteLLM logo is reused unchanged from `blog/litellm_private_registry_access/illustration/assets/litellm.svg`. The isometric geometry and palette follow the existing cache-aware routing cover. The scene uses opaque blue and pale-blue fills on a transparent canvas so the same asset works in light and dark themes. No fonts or animation dependencies are required.
