@@ -668,6 +668,7 @@ const sidebars = {
           label: "Spend Tracking",
           items: [
             "proxy/cost_tracking",
+            "proxy/clickhouse_spend_logs",
             {
               type: "category",
               label: "Customer Management",
