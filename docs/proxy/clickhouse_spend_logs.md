@@ -33,11 +33,15 @@ For a container deployment, run schema initialization inside a container using t
 
 Supply these environment variables to the proxy and the schema-initialization process through your secret manager or deployment settings.
 
-| Variable | Value |
-| --- | --- |
-| `CLICKHOUSE_URL` | Required. Authenticated HTTP(S) connection URL, such as `https://spend_writer:URL_ENCODED_PASSWORD@clickhouse.example.com:8443`. URL-encode special characters in the username and password. |
-| `CLICKHOUSE_DATABASE` | Database for the spend table. This guide uses `litellm_spend`; the default is `litellm`. |
-| `AGENT_TRACING_RETENTION_DAYS` | Positive integer. This guide uses `30`; the default is `14`, including for this standalone callback. |
+`CLICKHOUSE_URL` is required. Set it to an authenticated HTTP(S) connection URL. URL-encode special characters in the username and password:
+
+```text
+https://spend_writer:URL_ENCODED_PASSWORD@clickhouse.example.com:8443
+```
+
+`CLICKHOUSE_DATABASE` selects the database for the spend table. This guide uses `litellm_spend`; the default is `litellm`.
+
+`AGENT_TRACING_RETENTION_DAYS` sets retention to a positive number of days. This guide uses `30`; the default is `14`, including for this standalone callback.
 
 Keep the authenticated URL out of `config.yaml` and source control. These non-secret settings can be exported in the shell that runs the next step:
 
@@ -154,15 +158,19 @@ Set `general_settings.disable_spend_logs` back to `false` and restart to resume 
 
 Writes are asynchronous, with a default flush interval of one second and batch size of 10,000 rows. `CLICKHOUSE_FLUSH_INTERVAL_SECONDS` and `CLICKHOUSE_BATCH_SIZE` override these values. There is no durable delivery queue: process exits and failed inserts can lose records. The default retry limit is three failed insert attempts, controlled by `CLICKHOUSE_MAX_RETRIES`. Treat this as an analytics export, and validate its delivery guarantees against your accounting requirements.
 
-| Symptom | Check and recovery |
-| --- | --- |
-| `CLICKHOUSE_URL is required` | Supply the variable to the running proxy as well as the initialization process. |
-| `ClickHouse spend logging requires the Rust extension` | Use a published package or image with the native extension for your platform. Run the schema-initialization command in that same runtime before rollout. |
-| Database or `spend_logs` table does not exist | Run schema initialization against the same endpoint and database as the writer, then repeat the verification request. |
-| ClickHouse rejects an insert | Check the proxy's `ClickHouse: insert into spend_logs failed` log, database permissions, endpoint protocol, and schema version. A successful model response does not prove log delivery. |
-| `ClickHouse: dropped ... rows` | Delivery exhausted its retries. Restore connectivity or permissions and verify a new request. Dropped rows are not replayed automatically. |
-| Costs are zero or `NULL` | Check the response's usage and [model pricing](./model_cost_map.md). A missing price is not proof that a request was free. |
-| Logs disappear after a retention change | Inspect the table's TTL and the records' `start_time`. Reverting the TTL cannot recover deleted records. |
+**CLICKHOUSE_URL is required.** Supply the variable to the running proxy as well as the initialization process.
+
+**ClickHouse spend logging requires the Rust extension.** Use a published package or image with the native extension for your platform. Run the schema-initialization command in that same runtime before rollout.
+
+**Database or `spend_logs` table does not exist.** Run schema initialization against the same endpoint and database as the writer, then repeat the verification request.
+
+**ClickHouse rejects an insert.** Check the proxy's `ClickHouse: insert into spend_logs failed` log, database permissions, endpoint protocol, and schema version. A successful model response does not prove log delivery.
+
+**ClickHouse: dropped ... rows.** Delivery exhausted its retries. Restore connectivity or permissions and verify a new request. Dropped rows are not replayed automatically.
+
+**Costs are zero or `NULL`.** Check the response's usage and [model pricing](./model_cost_map.md). A missing price is not proof that a request was free.
+
+**Logs disappear after a retention change.** Inspect the table's TTL and the records' `start_time`. Reverting the TTL cannot recover deleted records.
 
 ClickHouse queries use your database's permissions. LiteLLM's key, user, and team visibility rules are not automatically applied to users querying ClickHouse directly. Give reporting users only the database access their role requires.
 
