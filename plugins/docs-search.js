@@ -3,7 +3,7 @@ const path = require('node:path');
 const cheerio = require('cheerio');
 const {createIndex, loadIndex} = require('../search/engine');
 const {serializeRuntimeIndex} = require('../search/runtime-index');
-const {contentType, contentPage, versionsIn, isContentUrl} = require('../search/content');
+const {contentType, contentPage, categoryFor, versionsIn, isContentUrl} = require('../search/content');
 const {extractStructure} = require('../search/page-structure');
 const {extractOpenAPI} = require('../search/openapi');
 
@@ -20,7 +20,9 @@ function extractSections(html, url, metadata = {}) {
   const title = metadata.title || article.find('h1').first().text().trim() || $('title').text().replace(/\s*\|.*$/, '').trim();
   const description = metadata.description || $('meta[name="description"]').attr('content') || '';
   const keywords = [metadata.keywords, $('meta[name="keywords"]').attr('content')].filter(Boolean).join(' ');
-  const breadcrumb = $('.breadcrumbs__item').map((_, item) => $(item).text().trim()).get().filter(Boolean).join(' / ');
+  const breadcrumbs = $('.breadcrumbs__item').map((_, item) => $(item).text().trim()).get().filter(Boolean);
+  const breadcrumb = breadcrumbs.join(' / ');
+  const category = metadata.category || (type === 'docs' ? categoryFor(url, breadcrumbs) : undefined);
   const sections = [];
   let heading = '', anchor = '', parts = [], links = new Map();
   function flush() {
@@ -30,7 +32,7 @@ function extractSections(html, url, metadata = {}) {
       for (let offset = 0; offset < text.length; offset += 2600) {
         const chunk = text.slice(offset, offset + 3000);
         sections.push({id: `${url}#${anchor}:${sections.length}`, title, heading, description, keywords, breadcrumb,
-          type, date: metadata.date || '', version: metadata.version || '', category: metadata.category,
+          type, date: metadata.date || '', version: metadata.version || '', category,
           url: anchor ? `${url}#${encodeURIComponent(anchor)}` : url,
           text: chunk, snippet: chunk.replace(/\s+/g, ' ').slice(0, 240),
           ...(links.size ? {links: [...links.values()]} : {})});
