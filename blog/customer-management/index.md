@@ -270,6 +270,6 @@ Set `model_max_budget` and `budget_fallbacks` on the key with your configured mo
 | Customer teams per organization | Up to 5 | More than 5 |
 | Customer members per team | Up to 5 | More than 5 |
 
-Start with the [walkthrough](/docs/proxy/customer_management/track-customer-spend) and [API reference](/docs/proxy/customer_management/api_reference). For larger customer hierarchies, [talk to us about Enterprise](https://www.litellm.ai/enterprise).
+Start with the [quickstart](/docs/proxy/customers) and [API reference](/docs/proxy/customer_management/api_reference). For larger customer hierarchies, [talk to us about Enterprise](https://www.litellm.ai/enterprise).
 
-This draft targets `main`; a published release containing the complete flow has not been verified. Check [availability](/docs/proxy/customer_management/api_reference#availability) before deploying.
+<SinceVersion v="1.111.0" />
