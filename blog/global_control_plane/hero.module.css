@@ -14,3 +14,7 @@ div:has(> .hero) {
   width: 100%;
   height: auto;
 }
+
+[data-theme='dark'] .hero :global(.cp-mark) {
+  fill: #fff;
+}
