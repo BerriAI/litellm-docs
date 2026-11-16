@@ -825,100 +825,141 @@ function SectionHeading({id, kicker, title}) {
   );
 }
 
-// AIGatewayBench results for the early Rust beta. Every figure is from
-// blog/rust_ai_gateway_benchmarks; do not edit one here without editing it
-// there. Rows are ascending in both panels, so the order is the same in each.
+// Full-features results at 50 rps. Every figure is from blog/better_benchmarks
+// (data/headline.csv); do not edit one here without editing it there. Rows are
+// ascending in every panel except memory, where Portkey runs with no features.
 const BENCHMARK = [
   {
-    id: 'overhead',
+    id: 'p50',
+    label: 'Median added latency',
+    unit: 'ms',
+    rows: [
+      {name: 'LiteLLM Rust', value: 0.9, lead: true},
+      {name: 'Bifrost', value: 1.2},
+      {name: 'Portkey', value: 2.1},
+      {name: 'LiteLLM Python', offScale: true, value: 79.3},
+    ],
+  },
+  {
+    id: 'p99',
     label: 'Added latency at p99',
     unit: 'ms',
-    // 0.7ms against 257.7ms is a 368x spread, so a linear bar would render the
-    // Rust result as a hairline. Widths are log scaled and the axis says so.
-    log: true,
     rows: [
-      {name: 'LiteLLM Rust', value: 0.7, lead: true},
-      {name: 'Portkey', value: 2.3},
-      {name: 'Bifrost', value: 4.5},
-      {name: 'LiteLLM Python v1', value: 257.7},
+      {name: 'LiteLLM Rust', value: 1.8, lead: true},
+      {name: 'Bifrost', value: 4.2},
+      {name: 'Portkey', value: 5.3},
+      {name: 'LiteLLM Python', offScale: true, value: 1587.8},
+    ],
+  },
+  {
+    id: 'cpu',
+    label: 'CPU used',
+    unit: 'cores',
+    rows: [
+      {name: 'LiteLLM Rust', value: 0.15, lead: true},
+      {name: 'Bifrost', value: 0.41},
+      {name: 'Portkey', value: 0.49},
+      {name: 'LiteLLM Python', offScale: true, value: 2.92},
     ],
   },
   {
     id: 'memory',
-    label: 'Maximum memory use',
-    unit: 'MB',
+    label: 'Peak memory',
+    unit: 'MiB',
     rows: [
-      {name: 'LiteLLM Rust', value: 21.8, lead: true},
-      {name: 'Portkey', value: 90.4},
-      {name: 'Bifrost', value: 199.1},
-      {name: 'LiteLLM Python v1', value: 329.5},
+      {name: 'LiteLLM Rust', value: 357, lead: true},
+      {name: 'Portkey', value: 609},
+      {name: 'Bifrost', value: 2809},
+      {name: 'LiteLLM Python', offScale: true, value: 9553},
     ],
   },
 ];
 
-// Log widths run from a tenth of a millisecond so the smallest bar still reads
-// as a bar rather than a sliver.
-const LOG_FLOOR = 0.1;
+// The other gateways fill at most this share of the axis, so the room left
+// above them shows how far off the scale Python is.
+const ON_SCALE_SHARE = 2 / 3;
+const NICE_STEPS = [1, 2, 2.5, 5, 10];
+const TICK_COUNT = 4;
 
-function barWidth(panel, value) {
-  const max = Math.max(...panel.rows.map(row => row.value));
-  if (!panel.log) {
-    return (value / max) * 100;
-  }
-  const floor = Math.log10(LOG_FLOOR);
-  return ((Math.log10(value) - floor) / (Math.log10(max) - floor)) * 100;
+// A linear axis from zero whose top is a round number at least 1.5 times the
+// largest on-scale value. Rows marked `offScale` run past it and are cut.
+function benchScale(panel) {
+  const largest = Math.max(...panel.rows.filter(row => !row.offScale).map(row => row.value));
+  const raw = largest / ON_SCALE_SHARE / TICK_COUNT;
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  const step = NICE_STEPS.find(nice => nice * magnitude >= raw) * magnitude;
+  const max = Math.ceil(largest / ON_SCALE_SHARE / step - 1e-9) * step;
+  // Rounded to the step's precision, so 0.6000000000000001 prints as 0.6.
+  const digits = Math.max(0, -Math.floor(Math.log10(step)) + 1);
+  const ticks = Array.from({length: Math.round(max / step) + 1}, (_, i) => Number((i * step).toFixed(digits)));
+  return {max, ticks};
 }
+
+const formatBench = value => value.toLocaleString('en-US');
 
 function GatewayBenchmark() {
   return (
     <section className={styles.section} aria-labelledby="benchmark-title">
-      <SectionHeading id="benchmark-title" kicker="Earlier benchmark" title="Forwarding-only Rust beta results" />
+      <SectionHeading id="benchmark-title" kicker="Benchmarks" title="Rust with common proxy features" />
       <p className={styles.sectionLead}>
-        The July 2026 AIGatewayBench report measured four gateways against the same mock server with no
-        logging callbacks, spend tracking, or persistence enabled. These results isolate forwarding overhead;
-        they do not measure the December 1 fast path with common proxy features.
+        The November 2026 <Link to="/blog/better-benchmarks">Better Benchmarks</Link> run tested each gateway
+        at 50 requests per second with the features production gateways use: 1,000 virtual keys with budgets
+        and rate limits on keys, users, teams, and team members, per-deployment limits, the dynamic rate limiter,
+        spend logs, Prometheus metrics, S3 request logs, header hooks, and retries over 80 deployments in 20
+        model groups. Portkey&apos;s open-source gateway has none of
+        these features, so it ran without them.
       </p>
       {/* One card per panel. The two use different scales, so they are two
           measurements rather than one chart cut in half. */}
       <div className={styles.benchPanels}>
-        {BENCHMARK.map(panel => (
-          <div className={`${styles.chartCard} ${styles.benchPanel}`} key={panel.id}>
-            <p className={styles.benchPanelLabel}>{panel.label}</p>
-            <ul className={styles.benchRows}>
-              {panel.rows.map(row => {
-                // The column height and the label sitting on top of it are the
-                // same percentage, so the reading always rides its own bar.
-                const height = `${barWidth(panel, row.value)}%`;
-                return (
-                  <li className={styles.benchRow} key={row.name}>
-                    <span className={styles.benchTrack}>
+        {BENCHMARK.map(panel => {
+          const scale = benchScale(panel);
+          const percent = value => `${Math.min(value / scale.max, 1) * 100}%`;
+          return (
+            <div className={`${styles.chartCard} ${styles.benchPanel}`} key={panel.id}>
+              <p className={styles.benchPanelLabel}>{panel.label}</p>
+              <div className={styles.benchChart}>
+                <div className={styles.benchTicks} aria-hidden="true">
+                  {scale.ticks.map(tick => (
+                    <span className={styles.benchTick} key={tick} style={{bottom: percent(tick)}}>
+                      {formatBench(tick)}
+                    </span>
+                  ))}
+                </div>
+                <div className={styles.benchPlot}>
+                  {scale.ticks.map(tick => (
+                    <span className={styles.benchGridline} key={tick} style={{bottom: percent(tick)}} aria-hidden="true" />
+                  ))}
+                  {panel.rows.map(row => (
+                    // The bar and the reading on top of it share one percentage,
+                    // so the reading always rides its own bar.
+                    <span className={styles.benchTrack} key={row.name}>
                       <span
                         className={`${styles.benchValue} ${row.lead ? styles.benchValueLead : ''}`}
-                        style={{bottom: height}}>
-                        {row.value} {panel.unit}
+                        style={{bottom: percent(row.value)}}>
+                        {row.offScale && <span className={styles.benchOffScale}>Off scale</span>}
+                        {formatBench(row.value)} {panel.unit}
                       </span>
                       <span
-                        className={`${styles.benchBar} ${row.lead ? styles.benchBarLead : ''}`}
-                        style={{height}}
+                        className={`${styles.benchBar} ${row.lead ? styles.benchBarLead : ''} ${row.offScale ? styles.benchBarBroken : ''}`}
+                        style={{height: percent(row.value)}}
                       />
                     </span>
-                    <span className={styles.benchName}>{row.name}</span>
-                  </li>
-                );
-              })}
-            </ul>
-            <p className={styles.benchAxis}>
-              {panel.log ? 'Logarithmic scale. A low value is better.' : 'A low value is better.'}
-            </p>
-          </div>
-        ))}
+                  ))}
+                </div>
+                <ul className={styles.benchNames}>
+                  {panel.rows.map(row => (
+                    <li className={styles.benchName} key={row.name}>{row.name}</li>
+                  ))}
+                </ul>
+              </div>
+              <p className={styles.benchAxis}>
+                Linear scale in {panel.unit}. A low value is better. LiteLLM Python runs past the top; its bar is cut.
+              </p>
+            </div>
+          );
+        })}
       </div>
-      <p className={styles.benchNote}>
-        These numbers are the delay the gateway itself adds. Each gateway handled 5000 requests for each endpoint,
-        and p99 is the slowest request in every 100. The{' '}
-        <Link to="/blog/rust-ai-gateway-benchmarks">AIGatewayBench report</Link> gives the full method, the raw data,
-        and the limits of the test.
-      </p>
     </section>
   );
 }
@@ -931,7 +972,8 @@ function MessagesFastPath() {
         <Link to="/blog/rust-migration-rerouted">Nate's October 26 update</Link> shifts the migration from
         porting translation, then routing, then the web server to moving a common request path to Rust
         end to end. The target is about 20 times less proxy latency, around 1.5 milliseconds, for these
-        requests. Updated benchmarks with common proxy features are still to come.
+        requests. <Link to="/blog/better-benchmarks">Benchmarks with common proxy features</Link> measured
+        0.9 ms at the median and 1.8 ms at p99 at 50 requests per second.
       </p>
       <p className={styles.sectionLead}>
         The initial scope is <code>/v1/messages</code> with simple-shuffle routing, Anthropic models on
@@ -946,8 +988,8 @@ function MessagesFastPath() {
       </p>
       <p className={styles.sectionLead}>
         December 1 is the target for this common configuration. Coverage will expand to more configurations
-        and request types after this path. The latency target is an expected result; updated benchmarks
-        will confirm performance.
+        and request types after this path. The benchmarked build is a feature branch; we expect
+        comparable performance from the fast path.
       </p>
     </>
   );
