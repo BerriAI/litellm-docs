@@ -3,8 +3,67 @@ const assert = require('node:assert/strict');
 const {createIndex, loadIndex, search} = require('./engine');
 const {collectPages, extractSections} = require('../plugins/docs-search');
 const {sourceLabel, sourceDetail} = require('./content');
+const {serializeRuntimeIndex, loadRuntimeIndex} = require('./runtime-index');
 
 const passage = (url, title, extra = {}) => ({id: url, url, title, heading: '', text: 'Configure request routing.', ...extra});
+
+test('search results use the rendered parent product instead of the URL folder', () => {
+  const cases = [
+    ['/docs/proxy/lens/deployment/storage', 'LiteLLM Lens', 'Set up Lens', 'Storage and secrets', 'Lens'],
+    ['/docs/benchmarks', 'AI Gateway', 'Performance', 'Benchmarks', 'AI Gateway'],
+    ['/docs/proxy/tool_policies', 'MCP Gateway', 'Access Control', 'Tool policies', 'MCP Gateway'],
+    ['/docs/response_api', 'Python SDK', 'SDK Functions', 'responses()', 'Python SDK'],
+    ['/docs/skills_gateway', 'Agent Gateway', 'Skills', 'Skills gateway', 'Agent Gateway'],
+    ['/docs/proxy/auto_routing', 'Auto Router', 'Configuration', 'Routing', 'Auto Router'],
+    ['/docs/future_product/setup', 'Future product', 'Deployment', 'Setup', 'Future product'],
+  ];
+  const documents = cases.flatMap(([url, parent, section, title]) => extractSections(
+    `<nav><ol><li class="breadcrumbs__item"><a aria-label="Home page" href="/docs/"></a></li>
+      <li class="breadcrumbs__item">${parent}</li><li class="breadcrumbs__item">${section}</li>
+      <li class="breadcrumbs__item breadcrumbs__item--active">${title}</li></ol></nav>
+      <article class="theme-doc-markdown"><h1>${title}</h1><h2 id="configuration">Configuration</h2><p>Configure request routing.</p></article>`, url));
+  const portable = loadIndex(JSON.stringify(createIndex(documents)));
+  for (const index of [portable, loadRuntimeIndex(serializeRuntimeIndex(portable))]) {
+    for (const groupPages of [true, false]) {
+      const results = search(index, 'request routing', {groupPages, limit: 20});
+      assert.equal(results.length, cases.length);
+      for (const [url, , , , category] of cases) {
+        const result = results.find(hit => hit.url.split('#')[0] === url);
+        assert.equal(sourceLabel(result), 'Docs');
+        assert.equal(sourceDetail(result), category, url);
+      }
+    }
+  }
+});
+
+test('product landing pages without parent breadcrumbs keep specific product labels', () => {
+  const cases = [
+    ['/docs/proxy/lens', 'Lens'], ['/docs/proxy/lens/deployment/storage', 'Lens'],
+    ['/docs/simple_proxy', 'AI Gateway'], ['/docs/proxy/config_settings', 'AI Gateway'],
+    ['/docs/mcp', 'MCP Gateway'], ['/docs/mcp_authentication', 'MCP Gateway'],
+    ['/docs/a2a', 'Agent Gateway'], ['/docs/auto_router/', 'Auto Router'],
+    ['/docs/python_sdk', 'Python SDK'], ['/docs/completion/input', 'Python SDK'],
+    ['/docs/proxy/lens_other', 'AI Gateway'], ['/docs/mcpherson', 'Docs'],
+  ];
+  for (const [url, category] of cases) {
+    const [result] = search(createIndex([passage(url, 'Configuration')]), 'request routing');
+    assert.equal(result.category, category, url);
+  }
+});
+
+test('explicit integration and API categories and provider ranking categories are preserved', () => {
+  const html = '<li class="breadcrumbs__item">OpenAI</li><li class="breadcrumbs__item">Setup</li><article class="theme-doc-markdown"><h1>Setup</h1><p>Configure request routing.</p></article>';
+  const cases = [
+    ['/docs/tutorials/openai_agents_sdk', {category: 'Integrations'}, 'Integration guide', ''],
+    ['/docs/reference', {category: 'API reference'}, 'Docs', 'API reference'],
+    ['/docs/providers/openai/responses_api', {}, 'Docs', 'Providers'],
+  ];
+  for (const [url, metadata, label, detail] of cases) {
+    const [result] = search(createIndex(extractSections(html, url, metadata)), 'request routing');
+    assert.equal(sourceLabel(result), label);
+    assert.equal(sourceDetail(result), detail);
+  }
+});
 
 test('article metadata excludes listings, drafts, unlisted content, and external pages', () => {
   const metadata = (permalink, extra = {}) => ({permalink, title: 'Request routing', ...extra});

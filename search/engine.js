@@ -1,6 +1,6 @@
 const MiniSearch = require('minisearch');
 const pluralize = require('pluralize');
-const {contentTypes, contentType, contentPage, versionsIn, normalizeVersion} = require('./content');
+const {contentTypes, contentType, contentPage, categoryFor, versionsIn, normalizeVersion} = require('./content');
 
 const stopWords = new Set('a an and are as at be by can do does for from how i in is it me my of on or our per please the this to use using what when where which with you your was did'.split(' '));
 const forms = {
@@ -62,14 +62,6 @@ const passageOptions = {
   fields: ['title', 'heading', 'text'],
   storeFields: ['title', 'heading', 'url', 'text', 'type', 'date', 'version', 'category'], tokenize, processTerm: indexTerm,
 };
-
-function categoryFor(url) {
-  if (/\/providers\//.test(url)) return 'Providers';
-  if (/\/proxy\//.test(url) || /\/docs\/(mcp|a2a)/.test(url)) return 'Gateway';
-  if (/\/docs\/(completion|caching|embedding|routing|set_keys)/.test(url)) return 'SDK';
-  if (/\/docs\/(observability|integrations|pass_through)\//.test(url)) return 'Integrations';
-  return 'Docs';
-}
 
 function createCollection(documents) {
   const grouped = new Map();
