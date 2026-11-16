@@ -282,6 +282,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/microsoft_agent_365", customProps: { icon: "/img/integrations/microsoft.png" } },
           { type: "doc", id: "proxy/guardrails/microsoft_purview", customProps: { icon: "/img/integrations/microsoft.png" } },
           { type: "doc", id: "proxy/guardrails/model_armor", customProps: { icon: "/img/integrations/google.png" } },
+          "proxy/guardrails/newmean_pii",
           { type: "doc", id: "proxy/guardrails/noma_security", customProps: { icon: "/img/integrations/noma.png" } },
           { type: "doc", id: "proxy/guardrails/dynamoai", customProps: { icon: "/img/integrations/dynamoai.png" } },
           { type: "doc", id: "proxy/guardrails/openai_moderation", customProps: { icon: "/img/integrations/openai.png" } },
