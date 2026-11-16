@@ -83,7 +83,7 @@ The mapping applies to Claude requests on `/v1/messages`, `/v1/chat/completions`
 
 For `/utils/token_counter`, use the `call_endpoint=true` query parameter to call the provider's token count API. Local tokenizer counts do not send a provider request or a profile ID.
 
-Only a proxy administrator can create, change, or remove a mapping. Unauthorized changes return `403`. Non-null profile values must be strings; invalid values return `400`. An empty string does not pin a profile, so a non-empty team mapping can still apply.
+Only a proxy administrator can create, change, or remove a mapping. Unauthorized changes return `403`. Non-null profile values must be strings containing only printable ASCII characters without whitespace; invalid values return `400`. An empty string does not pin a profile, so a non-empty team mapping can still apply.
 
 Add a Claude model to the proxy config:
 
@@ -134,6 +134,5 @@ Use profiles that belong to the organization associated with each upstream crede
 ## Custom Headers
 
 Custom headers starting with `x-` can be forwarded to LLM provider APIs when the model is configured in `forward_client_headers_to_llm_api`. [Learn more about header forwarding configuration](./forward_client_headers.md).
-
 
 
