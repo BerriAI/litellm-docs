@@ -1,0 +1,38 @@
+div:has(> .hero) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.hero {
+  width: 100%;
+  background: transparent;
+}
+
+.hero svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hero .mobile {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .hero .desktop {
+    display: none;
+  }
+
+  .hero .mobile {
+    display: block;
+  }
+}
+
+[data-theme='dark'] .hero :global(.control-plane-logo) {
+  fill: #fff;
+}
+
+[data-theme='dark'] .hero :global(.control-plane-label) {
+  fill: #e4e9f4;
+}
