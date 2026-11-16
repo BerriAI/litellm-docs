@@ -157,6 +157,13 @@ test('version badges reach the index once, standalone or inside prose', () => {
   const [section] = extractSections(html, '/docs/reasoning_content');
   assert.equal(section.text, 'Available in LiteLLM v1.63.0 and later\n\nSet it to keep IDs out. Since v1.87.0\n\nAvailable in LiteLLM v1.70.1 and later');
 });
+test('a badge with backports reaches the index once, with every release line', () => {
+  const title = 'Available in LiteLLM v1.111.0 and later, and in v1.108.10 and later 1.108.x patches';
+  const group = `<span class="group_x" data-since-version="1.111.0" title="${title}"><span class="badge_x" title="Available in LiteLLM v1.111.0 and later">Since v1.111.0</span> <span class="badge_x" title="Included in v1.108.10 and later 1.108.x patches">Backported to v1.108.10</span></span>`;
+  const html = `<div class="theme-doc-markdown"><h1>Sign-in</h1>${group}<p>Set it to keep IDs out. ${group}</p></div>`;
+  const [section] = extractSections(html, '/docs/sign_in');
+  assert.equal(section.text, `${title}\n\nSet it to keep IDs out. Since v1.111.0 Backported to v1.108.10`);
+});
 test('rendered Prism line breaks preserve runnable code in retrieved passages', () => {
   const html = '<div class="theme-doc-markdown"><h1>Setup</h1><pre><code><span>general_settings:<br></span><span>  tracing:<br></span><span>    store: clickhouse<br></span></code></pre></div>';
   assert.equal(extractSections(html, '/docs/setup')[0].text, 'general_settings:\n  tracing:\n    store: clickhouse');
