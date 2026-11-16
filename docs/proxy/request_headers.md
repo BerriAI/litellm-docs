@@ -71,6 +71,62 @@ All requests sharing that value can be found by querying spend logs by session i
     - For `/v1/messages` endpoint, this will always be forward the header to the underlying model.
     - For `/chat/completions` endpoint, this will only be forwarded if the model is configured in `forward_client_headers_to_llm_api`. [Learn more](./forward_client_headers.md)
 
+`anthropic-user-profile-id` Optional[str]: The Anthropic user profile ID of the end user behind a Claude request. Anthropic can use this ID to apply a safety action to that user instead of the whole organization. LiteLLM forwards it as a header to Claude on Anthropic, Azure AI Foundry, and Vertex AI. On Bedrock Mantle, LiteLLM sends the top-level body field `user_profile_id` instead. No `forward_client_headers_to_llm_api` entry is needed.
+
+Bedrock Runtime's Converse and InvokeModel APIs do not support user profiles, so LiteLLM does not add `user_profile_id` to those requests. Mantle only checks the ID's format; forwarding an ID there does not provide user-scoped safety enforcement. See [Anthropic's user profile documentation](https://platform.claude.com/docs/en/manage-claude/user-profiles.md).
+
+### Pin an Anthropic user profile ID to a key or team
+
+A proxy administrator can set `anthropic_user_profile_id` in a key's or team's `metadata`. With proxy-owned credentials, the key's non-empty ID wins over the team's ID, and either mapping replaces the caller's profile. Caller headers, including mixed-case and empty values, cannot remove the pin. Client body fields and `x-pass-` headers cannot replace it either. Use a separate key for each end user whose profile you want to pin.
+
+The mapping applies to Claude requests on `/v1/messages`, `/v1/chat/completions`, and `/v1/responses`, the supported token count routes (`/v1/messages/count_tokens`, `/utils/token_counter`, `/v1/responses/input_tokens`, and Google `countTokens`), and the `/anthropic` and `/vertex_ai` pass-through routes. Token count forwarding uses the Claude count-token APIs on Anthropic, Azure AI Foundry, and Vertex AI. Bedrock Runtime remains unsupported, and Mantle's format-only behavior still applies.
+
+For `/utils/token_counter`, use the `call_endpoint=true` query parameter to call the provider's token count API. Local tokenizer counts do not send a provider request or a profile ID.
+
+Only a proxy administrator can create, change, or remove a mapping. Unauthorized changes return `403`. Non-null profile values must be strings; invalid values return `400`. An empty string does not pin a profile, so a non-empty team mapping can still apply.
+
+Add a Claude model to the proxy config:
+
+```yaml
+model_list:
+  - model_name: {{anthropic}}
+    litellm_params:
+      model: anthropic/{{anthropic}}
+      api_key: os.environ/ANTHROPIC_API_KEY
+```
+
+Create a key pinned to the end user's profile ID, using a proxy administrator's credential. Replace `uprof_...` with a real profile ID from the Anthropic organization that owns the upstream credential:
+
+```bash
+curl -X POST http://0.0.0.0:4000/key/generate \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"metadata": {"anthropic_user_profile_id": "uprof_..."}}'
+```
+
+Use the returned key as `LITELLM_API_KEY` when you call the model:
+
+```bash
+curl http://0.0.0.0:4000/v1/messages \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "{{anthropic}}",
+    "max_tokens": 64,
+    "messages": [{"role": "user", "content": "Hello"}]
+  }'
+```
+
+Anthropic receives the pinned `anthropic-user-profile-id` with this request, even if the client sends a different ID.
+
+### Caller-owned Anthropic credentials
+
+When a route actually forwards a caller's own Claude OAuth bearer token or request-body `api_key` to Anthropic, LiteLLM preserves the caller's profile instead of applying the proxy's organization-specific pin. The caller can supply the profile in the HTTP `anthropic-user-profile-id` header or, on model requests, in the request body's `headers` or `extra_headers` object. The HTTP header takes precedence over those body headers. An absent or empty caller profile does not restore the administrator's pin on this credential path.
+
+This exception is limited to forwarded Anthropic credentials. Supplying an OAuth-looking header that the route does not consume, or supplying an Anthropic API key to a different provider, does not remove a pin used with proxy-owned credentials. Count routes that use the server's credential keep the administrator's pin.
+
+Use profiles that belong to the organization associated with each upstream credential. An organization mismatch can return `400`. The configured router error and fallback policies still apply; do not rely on a profile mismatch to disable all fallbacks. If a key or team routes across organizations, use separate keys or teams with the matching profile for each organization.
+
 ## OpenAI Headers
 
 `openai-organization` Optional[str]: The organization to use for the OpenAI API. (currently needs to be enabled via `general_settings::forward_openai_org_id: true`)
