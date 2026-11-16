@@ -5,7 +5,7 @@ description: Call Agentgates models through LiteLLM with the Python SDK or Gatew
 
 # Agentgates
 
-[Agentgates](https://agentgates.ai) sells open models by the request to AI agents, paid from a wallet's prepaid USDC balance, through an OpenAI-compatible chat completions API. Use the `agentgates/` prefix with a model id from [its models list](https://api.agentgates.ai/api/inference/v1/models).
+[Agentgates](https://agentgates.ai) has infrastructure and services for AI swarms: CVMs, VMs, AI inference, phone numbers, email inboxes and more, all payable via x402. Its AI inference API is an OpenAI-compatible chat completions API, paid by the request from a wallet's prepaid USDC balance. Use the `agentgates/` prefix with a model id from [its models list](https://api.agentgates.ai/api/inference/v1/models).
 
 Provider support was added in [PR #50256](https://github.com/BerriAI/litellm/pull/50256). Use a build that includes the provider.
 
