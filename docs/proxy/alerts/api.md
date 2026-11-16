@@ -1,7 +1,7 @@
 ---
-title: Performance alerts API
+title: Alerts API
 sidebar_label: API
-description: List and review saved performance alerts, inspect their evidence, and enable or disable monitoring.
+description: List and manage saved performance alerts and prompt cache advisories, inspect their evidence, and control performance monitoring.
 ---
 
 <SinceVersion v="1.110.0" />
@@ -33,7 +33,7 @@ curl --get "$LITELLM_BASE_URL/alerts" \
 | Query | Default | Values |
 | --- | --- | --- |
 | `status` | `open` | `open`, `resolved`, `dismissed` |
-| `type` | No type filter | `performance`, `spend`, `traffic`, `latency`, `reliability`, `model_deprecation` |
+| `type` | No type filter | `performance`, `spend`, `traffic`, `latency`, `reliability`, `model_deprecation`, `prompt_cache` |
 | `limit` | `25` | Integer from 1 to 100 |
 | `cursor` | First page | `next_cursor` from the preceding response |
 
@@ -80,6 +80,21 @@ Example response with synthetic data. Spend is in USD, and this team rose from a
 
 Results arrive newest first. If `next_cursor` is non-null, repeat the same request with `--data-urlencode "cursor=$NEXT_CURSOR"`, setting `NEXT_CURSOR` to that returned value. Keep the status and type filters unchanged. Stop when `next_cursor` is `null`.
 
+## Prompt cache advisories
+
+Use `type=prompt_cache` to list [prompt cache advisories](./index.md#prompt-cache-advisories).
+
+```bash
+curl --get "$LITELLM_BASE_URL/alerts" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  --data-urlencode 'status=open' \
+  --data-urlencode 'type=prompt_cache'
+```
+
+These alerts have `resource_type: "deployment"` and a deployment ID in `resource_id`. Their evidence includes `provider`, `provider_model`, `proven_write_tokens`, `ttl_seconds`, and keyed configuration and prefix fingerprints. The compatibility field `consecutive_misses` contains the observed miss count; it does not guarantee consecutive requests. Their window covers the observed misses, and `history` is `null` because they do not use a daily performance chart.
+
+Use the same detail and status endpoints below to inspect, resolve, dismiss, or reopen an advisory. Later observations do not automatically reopen a dismissed or resolved advisory for the same deployment and configuration. `/alerts/monitoring` controls performance alerts only; enable prompt cache detection through `general_settings.prompt_cache_alerts`.
+
 ## Read an alert
 
 Set `ALERT_ID` to an `id` returned by the list. Treat IDs as strings.
@@ -89,7 +104,7 @@ curl "$LITELLM_BASE_URL/alerts/$ALERT_ID" \
   -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
-The response contains one alert object, with the same fields as an item in `data`.
+The response contains one alert object, with the same fields as an item in `data`. The table below describes performance alerts; prompt cache evidence is described above.
 
 | Field | Meaning |
 | --- | --- |
@@ -118,7 +133,7 @@ curl -X PATCH "$LITELLM_BASE_URL/alerts/$ALERT_ID" \
 
 Use `dismissed` to dismiss or `open` to reopen. The response returns the saved alert with its new `status`, `updated_at`, and `updated_by`. It omits `resource_name` and `history`; fetch the detail again if you need them.
 
-Status changes do not reset the free allowance or suppress findings for later days. There is no public create or delete endpoint.
+For performance alerts, status changes do not reset the free allowance or suppress findings for later days. There is no public create or delete endpoint.
 
 ## Monitoring
 
