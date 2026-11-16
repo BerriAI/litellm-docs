@@ -3,6 +3,8 @@ import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
 
 # Virtual Keys
+
+For customer and end-user spend tracking from v1.111, start with [Customer Management](./customers.md). You can use one application key across customers and pass customer identity headers with each request.
 Track Spend, and control model access via virtual keys for the proxy
 
 :::info

@@ -4,6 +4,8 @@ import Image from '@theme/IdealImage';
 
 # Spend Tracking
 
+For customer and end-user spend tracking from v1.111, start with [Customer Management](./customers.md). Its customer usage APIs report organization, team, and member totals. The `end_user` field and `/customer/*` examples below refer to [legacy tracking](./legacy_end_users.md).
+
 Track spend for keys, users, and teams across 100+ LLMs.
 
 LiteLLM automatically tracks spend for all known models. See how the [model cost map](./model_cost_map) prices each request

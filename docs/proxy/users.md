@@ -4,6 +4,8 @@ import TabItem from '@theme/TabItem';
 
 # Budgets, Rate Limits
 
+For customer and end-user spend tracking from v1.111, start with [Customer Management](./customers.md). The end-user budget examples below cover the supported [legacy APIs](./legacy_end_users.md).
+
 :::info[**Budget Setup Options**]
 **Personal budgets**: Create virtual keys without team_id for individual spending limits
 
