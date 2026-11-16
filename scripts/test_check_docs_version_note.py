@@ -101,6 +101,35 @@ class VersionNoteTests(unittest.TestCase):
                 self.assertEqual(len(errors), 1)
                 self.assertIn("without a release version", errors[0][3])
 
+    def test_badges_with_backports_pass(self):
+        for badge in (
+            '<SinceVersion v="1.111.0" backports={["1.108.10"]} />',
+            "<SinceVersion v={'1.111.0'} backports={['v1.108.10']} />",
+            '<SinceVersion v="1.4.0" backports={["1.2.3", "1.3.4"]} />',
+            '| `LITELLM_X` | <SinceVersion v="1.111.0" backports={["1.108.10"]} /> Turns X on. |',
+        ):
+            with self.subTest(badge=badge):
+                self.assertEqual(self.version_notes(f"# Page\n\n{badge}\n"), [])
+
+    def test_malformed_backports_are_rejected(self):
+        for backports, message in (
+            ('"1.108.10"', "is not a list"),
+            ("{'1.108.10'}", "is not a list"),
+            ('{["1.108.10, 1.107.4"]}', "`1.108.10, 1.107.4`, which is not one release version"),
+            ('{[""]}', "which is not one release version"),
+            ("{[]}", "which is not one release version"),
+            ('{["1.108.10", 1.107]}', "something other than quoted versions"),
+            ("{patches}", "is not a list"),
+            ('{["1.108.10", "1.108.11"]}', "names one release line twice"),
+            ('{["1.111.2"]}', "`1.111.2`, which is not on a release line older than `v`"),
+            ('{["1.108.10", "1.112.0"]}', "`1.112.0`, which is not on a release line older than `v`"),
+        ):
+            with self.subTest(backports=backports):
+                errors = self.version_notes(f'# Page\n\n<SinceVersion v="1.111.0" backports={backports} />\n')
+                self.assertEqual([e[2] for e in errors], [3])
+                self.assertIn(message, errors[0][3])
+                self.assertIn('backports={["1.108.10"]}', errors[0][3])
+
     def test_a_badge_named_in_inline_code_is_not_a_badge(self):
         self.assertEqual(self.version_notes("# Page\n\nWrite `<SinceVersion />` with a version.\n"), [])
 

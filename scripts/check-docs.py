@@ -541,6 +541,9 @@ def check_page(page, site, page_cache):
         for match in SINCE_VERSION_TAG_RE.finditer(strip_inline_code(raw)):
             if not SINCE_VERSION_PROP_RE.search(match.group(1)):
                 err("version-note", line_no, "<SinceVersion> without a release version in its `v` prop shows no real version; write `<SinceVersion v=\"X.Y.Z\" />` with X.Y.Z set to the first release that carries the feature")
+            backports_error = backports_problem(match.group(1))
+            if backports_error:
+                err("version-note", line_no, backports_error)
         if "keep-version-note" not in raw and not plain_markdown:
             header = SINCE_VERSION_TAG_RE.sub(" ", table_header(page.lines, line_no))
             literal = version_note_literal(SINCE_VERSION_TAG_RE.sub(" ", raw), header)
@@ -703,6 +706,16 @@ SINCE_VERSION_PROP_RE = re.compile(
     rf"\bv\s*=\s*(?:[\"']{RELEASE_VERSION}[\"']|\{{\s*[\"'`]{RELEASE_VERSION}[\"'`]\s*\}})"
 )
 VERSION_NOTE_SENTENCE_END_RE = re.compile(r"[.;!?](?=\s)")
+SINCE_VERSION_VALUE_RE = re.compile(
+    rf"\bv\s*=\s*(?:[\"']({RELEASE_VERSION})[\"']|\{{\s*[\"'`]({RELEASE_VERSION})[\"'`]\s*\}})"
+)
+BACKPORTS_PROP_RE = re.compile(r"\bbackports\s*=")
+BACKPORTS_LIST_RE = re.compile(r"\bbackports\s*=\s*\{\s*\[([^\]]*)\]\s*\}")
+QUOTED_RE = re.compile(r"[\"'`]([^\"'`]*)[\"'`]")
+BACKPORTS_USAGE = (
+    "write a list such as `backports={[\"1.108.10\"]}`, with one entry per older release line naming the first "
+    "patch on that line that carries the feature"
+)
 
 
 def version_note_literal(raw, header=""):
@@ -796,6 +809,37 @@ def new_config_rows_without_badge(base_text, head_text):
 
 def starts_table(lines, index):
     return index + 1 < len(lines) and bool(TABLE_SEPARATOR_RE.match(lines[index + 1]))
+
+
+def release_line(version):
+    major, minor = re.match(r"v?(\d+)\.(\d+)", version).groups()
+    return int(major), int(minor)
+
+
+def backports_problem(props):
+    if not BACKPORTS_PROP_RE.search(props):
+        return None
+    value = BACKPORTS_LIST_RE.search(props)
+    if not value:
+        return f"<SinceVersion> `backports` is not a list; {BACKPORTS_USAGE}"
+    if QUOTED_RE.sub("", value.group(1)).replace(",", "").strip():
+        return f"<SinceVersion> `backports` list holds something other than quoted versions; {BACKPORTS_USAGE}"
+    versions = [v.strip() for v in QUOTED_RE.findall(value.group(1))]
+    not_versions = [v for v in versions if not re.fullmatch(RELEASE_VERSION, v)]
+    if not versions or not_versions:
+        return f"<SinceVersion> `backports` has `{', '.join(not_versions)}`, which is not one release version; {BACKPORTS_USAGE}"
+    lines = [release_line(v) for v in versions]
+    if len(set(lines)) != len(lines):
+        return f"<SinceVersion> `backports` names one release line twice; {BACKPORTS_USAGE}"
+    since = SINCE_VERSION_VALUE_RE.search(props)
+    if since:
+        newer = [v for v, line in zip(versions, lines) if line >= release_line(since.group(1) or since.group(2))]
+        if newer:
+            return (
+                f"<SinceVersion> `backports` has `{', '.join(newer)}`, which is not on a release line older than `v`; "
+                f"`v` is the first release on the newest line, {BACKPORTS_USAGE}"
+            )
+    return None
 
 
 def has_release_badge(line):
