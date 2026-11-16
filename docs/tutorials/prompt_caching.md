@@ -121,6 +121,8 @@ Configured points are added beside any `cache_control` the request already carri
 
 ### OpenAI GPT-5.6 and newer
 
+`supports_openai_prompt_cache_breakpoint` is the OpenAI-format capability field in the fix for [#52140](https://github.com/BerriAI/litellm/issues/52140). The earlier `supports_prompt_cache_breakpoint` name remains a deprecated OpenAI-only alias. Neither field disables Bedrock Converse caching after that fix. Use `supports_bedrock_converse_cache_point` for that purpose. See [capability flags and upgrade compatibility](../completion/prompt_caching.md#separate-openai-and-bedrock-capability-flags) before changing existing Bedrock deployments.
+
 The same `cache_control_injection_points` work when the deployment resolves to an OpenAI model that supports [explicit prompt cache breakpoints](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-breakpoints), which the cost map marks with `supports_prompt_cache_breakpoint` (GPT-5.6 and newer on `openai/`). LiteLLM looks at the resolved deployment, not at the shape of the incoming request, so one config pattern covers a mixed Anthropic and OpenAI fleet and Anthropic-shaped clients on `/v1/messages` get the OpenAI markers too
 
 | Anthropic target | OpenAI GPT-5.6+ target |
@@ -462,6 +464,5 @@ With the deployment pointing at `openai/gpt-5.6` instead, the same configuration
 ## Related Documentation
 
 - [Manual Prompt Caching](../completion/prompt_caching.md) - Learn how to manually add `cache_control` directives to your messages
-
 
 

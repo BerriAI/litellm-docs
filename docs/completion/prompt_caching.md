@@ -561,6 +561,30 @@ See [Anthropic's prompt caching docs](https://docs.anthropic.com/en/docs/build-w
 
 LiteLLM automatically translates OpenAI-format `cache_control` markers to Bedrock's native `cachePoint` format, so no changes are needed to your existing code if you're already using `cache_control`.
 
+#### Separate OpenAI and Bedrock capability flags
+
+The fix for [#52140](https://github.com/BerriAI/litellm/issues/52140) separates the two wire formats. `supports_openai_prompt_cache_breakpoint` controls OpenAI's `prompt_cache_breakpoint` format. `supports_prompt_cache_breakpoint` remains a deprecated alias for that OpenAI setting. The new OpenAI setting takes precedence when both are set, including an explicit `false`.
+
+`supports_bedrock_converse_cache_point` controls Bedrock Converse `cachePoint` blocks. Set it under a deployment's `model_info` or on its model-map entry. A deployment's explicit value takes precedence over the catalog. `true` allows cache points, including for an unmapped application inference profile ARN. `false` drops them. When the field is absent, LiteLLM uses `supports_prompt_caching`. OpenAI-family Bedrock models never receive Converse cache points, even with an explicit opt-in. Enabling the field does not give a model provider-side cache support. Bedrock returns an error if the model rejects cache points.
+
+```yaml
+model_list:
+  - model_name: cached-bedrock-claude
+    litellm_params:
+      model: bedrock/us.anthropic.claude-fable-5-2
+      aws_region_name: us-west-2
+    model_info:
+      supports_prompt_caching: true
+      supports_openai_prompt_cache_breakpoint: false
+      supports_bedrock_converse_cache_point: true
+```
+
+:::warning[Upgrade compatibility]
+In v1.106.0, [#44292](https://github.com/BerriAI/litellm/pull/44292) made `supports_prompt_cache_breakpoint` control Bedrock Converse as well as the documented OpenAI format. An explicit `false` on a cache-capable Bedrock model silently suppressed cache points. Before the fix for #52140 is released, remove that legacy field from affected Bedrock deployments and custom model registrations, then restart the proxy. Verify cache writes and reads in response usage with a prompt above the model's minimum size.
+
+The fix ignores the legacy field for Bedrock and warns when it is set without the Bedrock-specific field. If you intentionally used the legacy field to disable Converse cache points, migrate to `supports_bedrock_converse_cache_point: false` in a release containing the fix. Existing OpenAI configurations keep their meaning. Kimi K3 and K3.1 retain their catalog opt-out. Changing a capability field's meaning requires a breaking-change release-note callout.
+:::
+
 :::tip[Minimum tokens (Bedrock)]
 Prompts below the minimum are processed without caching, and no error is returned. Check `cache_creation_input_tokens` in the response.
 

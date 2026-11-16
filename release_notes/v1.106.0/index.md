@@ -56,6 +56,8 @@ Customer-facing changes come first. Test, CI and internal changes are listed at 
 
 These callouts cover user-facing behavior that differs from `v1.105.0`, the previous stable release
 
+**`supports_prompt_cache_breakpoint: false` also disables Bedrock Converse cache points in this release.** The field previously described only OpenAI's breakpoint format. [PR #44292](https://github.com/BerriAI/litellm/pull/44292) made the same field override `supports_prompt_caching` on Bedrock. Remove the field from cache-capable Bedrock deployments and custom model registrations, then restart, to restore caching. Check cache reads and writes in response usage. [Issue #52140](https://github.com/BerriAI/litellm/issues/52140) tracks the separate capability controls
+
 **The response cache skips requests with more than 4 messages by default.** The new `cache_params.max_messages` defaults to 4, so longer conversations and Responses inputs are neither looked up nor stored, exact or semantic. Raise it, or set it to `null` to remove the limit. See [PR #43878](https://github.com/BerriAI/litellm/pull/43878)
 
 **Responses WebSocket sessions are capped at 60 minutes by default.** Sessions on `/v1/responses` close with code 1000 after `general_settings.responses_websocket_session_limit_seconds` (default 3600, maximum 7200), idle or not. The old 30 second first-message timeout is gone. See [PR #44433](https://github.com/BerriAI/litellm/pull/44433)
@@ -192,7 +194,7 @@ Counts represent new catalog identifiers compared with `v1.105.0`, including ali
 - Send the project id to Bedrock Mantle as the documented `anthropic-workspace-id` header, so `aws_bedrock_project_id` takes effect - [PR #44173](https://github.com/BerriAI/litellm/pull/44173)
 - Honor the per-request `timeout` on Converse and Invoke streaming calls - [PR #44134](https://github.com/BerriAI/litellm/pull/44134)
 - Drop lookaround regex patterns from tool schemas for Converse models that reject them (Kimi K3, Grok 4.6 and 4.7), controlled by the new `supports_regex_lookaround` cost-map and `model_info` flag - [PR #44138](https://github.com/BerriAI/litellm/pull/44138)
-- Stop sending Converse `cachePoint` blocks to Kimi K3, gated by a new `supports_prompt_cache_breakpoint` flag - [PR #44292](https://github.com/BerriAI/litellm/pull/44292)
+- Stop sending Converse `cachePoint` blocks to Kimi K3 by reusing `supports_prompt_cache_breakpoint`. See the breaking-change warning above for the impact on existing Bedrock configurations - [PR #44292](https://github.com/BerriAI/litellm/pull/44292)
 - Drop or reject reasoning effort levels a Bedrock GPT model does not support, following `drop_params`, instead of forwarding them for a Bedrock 400 - [PR #44183](https://github.com/BerriAI/litellm/pull/44183)
 - Split a leading `<reasoning>` tag out of the answer only for gpt-oss on native Chat Completions, so GPT 5.6 and Grok answers keep it - [PR #44432](https://github.com/BerriAI/litellm/pull/44432)
 - Forward each Nova Sonic assistant sentence once over the realtime API instead of twice - [PR #44987](https://github.com/BerriAI/litellm/pull/44987)
