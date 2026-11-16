@@ -608,6 +608,34 @@ router_settings:
 | plugins | Optional[List[RoutingPlugin]] | `null` | [SDK-only arg] Pipeline of routing plugins that run before the routing decision is made. Each plugin implements `async def run(context: RoutingContext) -> RoutingContext`, reading/narrowing `candidate_models` and attaching `signals` for the next plugin (or the final routing decision) to read. A plugin narrowing candidates to zero raises rather than falling back to the unfiltered pool. |
 
 
+#### Congestion priority queues
+
+`dynamic_queue` is opt-in for asynchronous chat and text completions, including streams. Workers share one Redis queue per configured deployment ID. Deployments from the same provider do not automatically share a queue.
+
+```yaml
+router_settings:
+  redis_host: os.environ/REDIS_HOST
+  redis_port: os.environ/REDIS_PORT
+  default_priority: 5
+  dynamic_queue:
+    enabled: true
+    max_waiting: 8
+    trigger_status_codes: [429, 529]
+    queue_timeout: 30
+```
+
+`max_waiting: 8` is an example, not a default or a capacity recommendation. When enabled, `max_waiting` must be an integer from 1 to 64. The same operator-set limit applies separately to every deployment queue. API callers cannot override it. A full queue does not evict an existing waiter when a higher-priority request arrives.
+
+Applications set the existing request `priority`. Lower values run first, with FIFO ordering for ties. For example, `priority: 0` runs before the default of `5` in this configuration. Enabling `dynamic_queue` also requires `default_priority`, which applies to requests without an explicit priority. Existing deployment eligibility and healthy-alternative routing still apply.
+
+Queue overflow returns 503. Exhausting `queue_timeout`, the cumulative time spent waiting across queue admissions for the request, returns 408. These queue rejections end the request without another retry or fallback. Provider retry delays and the request's total deadline still apply. For example, an 8-second queue timeout can expire before a provider's 20-second retry delay ends. If ordinary retry backoff cannot fit the remaining total deadline, the router returns the last provider error immediately.
+
+When Redis coordination fails or a queue operation times out, requests resume ordinary routing and retries with their remaining budgets and backoff. Priority ordering is best-effort during that period. Ordinary cooldown and rate-limit behavior still apply. A restored Redis connection does not guarantee immediate queue recovery because the existing Redis circuit breaker can remain open. Debug logging records the coordination failure reason and elapsed queue wait without request contents.
+
+Size for the total number of waiting requests across deployments and workers. Ten full queues with `max_waiting: 64` mean 640 waiting requests, not 64. The per-deployment cap does not bound total proxy CPU use. Start with a small explicitly chosen limit and test it against the intended workload while monitoring proxy worker CPU, healthy-request latency and Redis command latency. Queue metadata uses relatively little memory, but polling and waiter management consume CPU. Published benchmark results describe the tested environment and are not universal capacity guarantees.
+
+While the next permitted probe is still in the future, the queue uses a bounded wait of up to one second between checks, subject to waiter liveness and the request deadline. It retains the existing short checks for probe readiness and priority release. This interval is internal and is not controlled by `router_settings.polling_interval`, which belongs to the separate scheduler.
+
 ### environment variables - Reference
 
 | Name | Description |
