@@ -163,8 +163,6 @@ asyncio.run(main())
 
 ## Voice in / Voice out
 
-For a complete voice example see [`voice_realtime_test.py`](https://github.com/BerriAI/litellm/blob/main/voice_realtime_test.py).
-
 Key settings for audio:
 - Microphone input: **16 kHz** PCM16 (`audio/pcm;rate=16000`)
 - Speaker output: **24 kHz** PCM16 (Vertex AI returns audio at 24 kHz)
