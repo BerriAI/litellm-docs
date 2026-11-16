@@ -1,6 +1,6 @@
 ---
 title: "LiteLLM v1.106.10 fixes repeated sign-in on Google MCP servers"
-description: "Google MCP servers keep users signed in after the access token expires, because the proxy requests offline access and gets a refresh token."
+description: "Google MCP servers no longer ask users to sign in again when the access token expires, so users stay connected to their Google MCP tools."
 slug: "v1-106-10"
 date: 2026-11-14T00:34:35
 authors:
@@ -52,9 +52,9 @@ This release is published as [`ghcr.io/berriai/litellm:v1.106.10`](https://githu
 
 ### What's Changed
 
-- **MCP:** Fixed Google MCP servers asking users to sign in again when the access token expires. LiteLLM now requests offline access from Google upstream OAuth providers, so connections get refresh tokens - [PR #41197](https://github.com/BerriAI/litellm/pull/41197)
+- **MCP:** Fixed Google MCP servers asking users to sign in again when the access token expires - [PR #41197](https://github.com/BerriAI/litellm/pull/41197)
 
-The changes are backported in [PR #51731](https://github.com/BerriAI/litellm/pull/51731).
+The change is backported in [PR #51731](https://github.com/BerriAI/litellm/pull/51731).
 
 ## Full Changelog
 

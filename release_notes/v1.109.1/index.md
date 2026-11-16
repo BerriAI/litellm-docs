@@ -1,6 +1,6 @@
 ---
-title: "LiteLLM v1.109.1 and v1.110.0rc2 reject Azure login fields in the body"
-description: "Model and pass-through routes reject tenant_id, client_id, client_secret and Azure login fields in the request body unless they are in metadata."
+title: "LiteLLM v1.109.1 and v1.110.0rc2 refuse Azure login fields in the body"
+description: "Model and pass-through routes refuse client_id, client_secret, tenant_id and Azure login fields in the request body, so move those tags into metadata."
 slug: "v1-109-1"
 date: 2026-11-12T02:07:01
 authors:
@@ -52,15 +52,15 @@ This release is published as [`ghcr.io/berriai/litellm:v1.109.1`](https://github
 
 :::danger Breaking Changes
 
-**Model and pass-through routes reject Azure login fields in the request body.** A request body with `tenant_id`, `client_id`, `client_secret`, `azure_username`, `azure_password` or `azure_scope` is rejected. Send these fields in `metadata`, or restore the old behavior with `general_settings.allow_client_side_credentials: true` or `configurable_clientside_auth_params` on the deployment. See [PR #51254](https://github.com/BerriAI/litellm/pull/51254). [`v1.106.9`](/release_notes/v1.106.9/v1-106-9) and [`v1.108.6`](/release_notes/v1.108.6/v1-108-6) have the same change.
+- **Keys, teams and auth:** Move `tenant_id`, `client_id`, `client_secret`, `azure_username`, `azure_password` and `azure_scope` request tags into `metadata` - [PR #51254](https://github.com/BerriAI/litellm/pull/51254), also in [`v1.106.9`](/release_notes/v1.106.9/v1-106-9) and [`v1.108.6`](/release_notes/v1.108.6/v1-108-6)
 
 :::
 
 ### What's Changed
 
-- **Keys, teams and auth:** Changed model and pass-through routes to refuse body `client_id`, `client_secret`, `tenant_id` and Azure login fields, unless they are sent in `metadata` or an admin opted in - [PR #51254](https://github.com/BerriAI/litellm/pull/51254)
+- **Keys, teams and auth:** Changed model and pass-through routes to refuse body `client_id`, `client_secret`, `tenant_id` and Azure login fields - [PR #51254](https://github.com/BerriAI/litellm/pull/51254), also in [`v1.106.9`](/release_notes/v1.106.9/v1-106-9) and [`v1.108.6`](/release_notes/v1.108.6/v1-108-6)
 
-The changes are backported in [PR #51264](https://github.com/BerriAI/litellm/pull/51264).
+The change is backported in [PR #51264](https://github.com/BerriAI/litellm/pull/51264).
 
 ## Full Changelog
 

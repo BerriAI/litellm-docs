@@ -5,9 +5,9 @@
     ],
     "title": "LiteLLM v1.110.0rc3 fixes fallback overrides and WebSocket model aliases",
     "points": [
-      "A string fallback override such as `\"fallbacks\": \"default\"` no longer returns 500, and other invalid override values return 400.",
-      "Responses WebSocket requests keep the team's model alias, as HTTP `/v1/responses` does.",
-      "Hugging Face chat honors `HUGGINGFACE_API_BASE`, and unmapped Fireworks AI models sized like `1p5b` bill at the up-to-4B rate."
+      "A string fallback override such as `\"fallbacks\": \"default\"` no longer returns 500.",
+      "Responses WebSocket requests keep the team's model alias and no longer land on another deployment.",
+      "Hugging Face chat honors `HUGGINGFACE_API_BASE`, and unmapped Fireworks AI models sized like `1p5b` no longer bill at double the up-to-4B rate."
     ]
   },
   {
@@ -16,9 +16,9 @@
     ],
     "title": "LiteLLM v1.108.9 (LTS) adds Vertex labels and fixes Foundry /openai/v1",
     "points": [
-      "Set `litellm_settings.vertex_request_label_fields` to label Vertex calls with the caller's key, team, org and project, so Cloud Billing splits Vertex spend.",
-      "Azure deployments on Foundry project and resource `/openai/v1` URLs serve Responses and chat calls, and `api_version: none` sends no `api-version`.",
-      "Bedrock Converse reads `s3://` images, PDFs and videos as S3 sources, and OpenAI-style filters work on Bedrock knowledge base search."
+      "`vertex_request_label_fields` labels Vertex calls with the caller's key, team, org and project.",
+      "Foundry project `/openai/v1` bases no longer return 400, and resource-level `/openai/v1` Responses bases no longer return 404.",
+      "`s3://` image, PDF and video URLs on Bedrock Converse models go to Bedrock as S3 sources instead of returning 500."
     ]
   },
   {
@@ -27,8 +27,7 @@
     ],
     "title": "LiteLLM v1.106.10 fixes repeated sign-in on Google MCP servers",
     "points": [
-      "Google MCP servers keep users signed in after the access token expires.",
-      "The proxy requests offline access from Google upstream OAuth providers, so each Google MCP connection gets a refresh token."
+      "Google MCP servers no longer ask users to sign in again when the access token expires."
     ]
   },
   {
@@ -57,10 +56,10 @@
       "v1.109.1",
       "v1.110.0rc2"
     ],
-    "title": "LiteLLM v1.109.1 and v1.110.0rc2 reject Azure login fields in the body",
+    "title": "LiteLLM v1.109.1 and v1.110.0rc2 refuse Azure login fields in the body",
     "points": [
-      "Model and pass-through routes reject `tenant_id`, `client_id`, `client_secret`, `azure_username`, `azure_password` and `azure_scope` in the request body.",
-      "Send these fields in `metadata`, or set `general_settings.allow_client_side_credentials: true` or `configurable_clientside_auth_params` to restore the old behavior."
+      "Model and pass-through routes refuse `client_id`, `client_secret`, `tenant_id` and Azure login fields in the request body.",
+      "Move `tenant_id`, `client_id`, `client_secret`, `azure_username`, `azure_password` and `azure_scope` request tags into `metadata` before you upgrade."
     ]
   },
   {
@@ -71,17 +70,17 @@
     "points": [
       "Key, user and team spend no longer goes negative after a scheduled budget reset on multi-pod deployments.",
       "Gemini image edits bill by tokens instead of a flat per-image price, and Zscaler AI Guard scans only the latest user message.",
-      "Model routes reject `tenant_id`, `client_id`, `client_secret` and Azure login fields in the body, so move them to `metadata` or set `allow_client_side_credentials`."
+      "Model and pass-through routes refuse Azure login fields in the request body, so move those request tags into `metadata`."
     ]
   },
   {
     "folders": [
       "v1.106.9"
     ],
-    "title": "LiteLLM v1.106.9 forwards ChatGPT logins and rejects Azure body fields",
+    "title": "LiteLLM v1.106.9 forwards ChatGPT logins and refuses Azure body fields",
     "points": [
-      "Codex and Pi keep their own ChatGPT login through the gateway, and a client ChatGPT login takes precedence over a saved gateway login.",
-      "Model routes reject `tenant_id`, `client_id`, `client_secret` and Azure login fields in the body, so move them to `metadata` or set `allow_client_side_credentials`."
+      "Codex and Pi forward their own ChatGPT login through the gateway with a separate key.",
+      "Model and pass-through routes refuse Azure login fields in the request body, so move those request tags into `metadata`."
     ]
   },
   {

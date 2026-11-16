@@ -58,17 +58,18 @@ This release is published as [`ghcr.io/berriai/litellm:v1.108.9`](https://github
 
 ### What's Changed
 
-- **Azure:** Fixed Azure deployments on a Foundry project `/openai/v1` URL failing every Responses and chat call, and resource-level `/openai/v1` Responses bases answering 404 from a doubled path. A deployment behind a gateway URL can set `api_version: none`, and `azure/model-router` calls bill the model the router picked - [PR #51767](https://github.com/BerriAI/litellm/pull/51767)
-- **Azure:** Fixed Kimi K3 on Azure AI Foundry forgetting its earlier reasoning after each tool call, and `reasoning_effort` being refused or dropped for it - [PR #51747](https://github.com/BerriAI/litellm/pull/51747)
-- **AWS Bedrock:** Fixed `s3://` image, PDF and video URLs on Bedrock Converse answering 500. They now reach Bedrock as S3 sources, and a non-admin key can only name buckets listed in `general_settings.allowed_client_side_s3_buckets` - [PR #50577](https://github.com/BerriAI/litellm/pull/50577)
-- **AWS Bedrock:** Fixed Bedrock knowledge base search through the OpenAI vector store API answering an AWS 400 for OpenAI-style filters. A malformed filter now gets a clear 400, or is dropped under `drop_params` - [PR #51291](https://github.com/BerriAI/litellm/pull/51291)
-- **Vertex AI and Gemini:** Added `litellm_settings.vertex_request_label_fields`, which labels Vertex calls with the caller's key, team, org and project so Cloud Billing can split Vertex spend. The proxy sets these labels itself and drops any a caller sends - [PR #50732](https://github.com/BerriAI/litellm/pull/50732)
-- **Vertex AI and Gemini:** Changed Vertex AI Claude to send `labels` in the `X-Vertex-AI-Labels` header instead of the request body, so calls with `labels` no longer fail with a 400 - [PR #48753](https://github.com/BerriAI/litellm/pull/48753)
-- **Responses API:** Fixed chat completions with function tools on GPT models served through the Responses API, such as gpt-6 on Azure AI Foundry and gpt-6.1 on OpenAI, dropping the client's `cache_control` marks, so prompt caching never applied - [PR #51783](https://github.com/BerriAI/litellm/pull/51783)
-- **Responses API:** Fixed streamed `/v1/responses` dropping the first answer fragment when a provider sent it together with reasoning - [PR #51356](https://github.com/BerriAI/litellm/pull/51356)
-- **Routing and fallbacks:** Added Vercel AI Gateway models on `/v1/decisions`, billed at the cost Vercel reports, cache hits included - [PR #50642](https://github.com/BerriAI/litellm/pull/50642)
+- **Azure:** Fixed Kimi K3 on Azure AI Foundry losing its earlier reasoning after tool calls and refusing `reasoning_effort` - [PR #51747](https://github.com/BerriAI/litellm/pull/51747)
+- **Azure:** Fixed 400 on Foundry project `/openai/v1` bases and 404 on resource-level `/openai/v1` Responses bases - [PR #51767](https://github.com/BerriAI/litellm/pull/51767)
+- **AWS Bedrock:** Fixed 500 on `s3://` image, PDF and video URLs on Converse models, which now go to Bedrock as S3 sources - [PR #50577](https://github.com/BerriAI/litellm/pull/50577)
+- **AWS Bedrock:** Fixed AWS 400 on Bedrock vector store search with OpenAI-style filters - [PR #51291](https://github.com/BerriAI/litellm/pull/51291)
+- **Vertex AI and Gemini:** Added `vertex_request_label_fields` to label Vertex calls with the caller's key, team, org and project - [PR #50732](https://github.com/BerriAI/litellm/pull/50732)
+- **Vertex AI and Gemini:** Fixed 400 `Extra inputs are not permitted` when sending `labels` to Claude on Vertex AI - [PR #48753](https://github.com/BerriAI/litellm/pull/48753)
+- **Other providers:** Added Vercel AI Gateway models on `/v1/decisions`, billed at the cost Vercel reports - [PR #50642](https://github.com/BerriAI/litellm/pull/50642)
+- **Responses API:** Fixed streamed `/v1/responses` dropping the first answer fragment when it arrives together with reasoning - [PR #51356](https://github.com/BerriAI/litellm/pull/51356)
+- **Responses API:** Fixed `cache_control` marks being dropped on chat requests with function tools bridged to the Responses API - [PR #51783](https://github.com/BerriAI/litellm/pull/51783)
+- **Deployment:** Changed the Docker images to a newer Wolfi base and updated opentelemetry, dnspython, tornado and soupsieve - [PR #51853](https://github.com/BerriAI/litellm/pull/51853)
 
-The changes are backported in [PR #51356](https://github.com/BerriAI/litellm/pull/51356), [PR #50401](https://github.com/BerriAI/litellm/pull/50401), [PR #51748](https://github.com/BerriAI/litellm/pull/51748), [PR #51786](https://github.com/BerriAI/litellm/pull/51786), [PR #51796](https://github.com/BerriAI/litellm/pull/51796), [PR #51769](https://github.com/BerriAI/litellm/pull/51769), [PR #51250](https://github.com/BerriAI/litellm/pull/51250) and [PR #51292](https://github.com/BerriAI/litellm/pull/51292).
+The changes are backported in [PR #50401](https://github.com/BerriAI/litellm/pull/50401), [PR #51250](https://github.com/BerriAI/litellm/pull/51250), [PR #51292](https://github.com/BerriAI/litellm/pull/51292), [PR #51748](https://github.com/BerriAI/litellm/pull/51748), [PR #51769](https://github.com/BerriAI/litellm/pull/51769), [PR #51786](https://github.com/BerriAI/litellm/pull/51786) and [PR #51796](https://github.com/BerriAI/litellm/pull/51796).
 
 ## Full Changelog
 

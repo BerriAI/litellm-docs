@@ -1,6 +1,6 @@
 ---
-title: "LiteLLM v1.106.9 forwards ChatGPT logins and rejects Azure body fields"
-description: "Codex and Pi keep their own ChatGPT login through the gateway, and model routes reject Azure login fields in the request body unless they are in metadata."
+title: "LiteLLM v1.106.9 forwards ChatGPT logins and refuses Azure body fields"
+description: "Codex and Pi forward their own ChatGPT login through the gateway with a separate key, and model routes refuse Azure login fields in the request body."
 slug: "v1-106-9"
 date: 2026-11-12T01:06:15
 authors:
@@ -52,14 +52,14 @@ This release is published as [`ghcr.io/berriai/litellm:v1.106.9`](https://github
 
 :::danger Breaking Changes
 
-**Model and pass-through routes reject Azure login fields in the request body.** A request body with `tenant_id`, `client_id`, `client_secret`, `azure_username`, `azure_password` or `azure_scope` is rejected. Send these fields in `metadata`, or restore the old behavior with `general_settings.allow_client_side_credentials: true` or `configurable_clientside_auth_params` on the deployment. See [PR #51254](https://github.com/BerriAI/litellm/pull/51254). [`v1.108.6`](/release_notes/v1.108.6/v1-108-6) and [`v1.109.1`](/release_notes/v1.109.1/v1-109-1) have the same change.
+- **Keys, teams and auth:** Move `tenant_id`, `client_id`, `client_secret`, `azure_username`, `azure_password` and `azure_scope` request tags into `metadata` - [PR #51254](https://github.com/BerriAI/litellm/pull/51254), also in [`v1.108.6`](/release_notes/v1.108.6/v1-108-6) and [`v1.109.1`](/release_notes/v1.109.1/v1-109-1)
 
 :::
 
 ### What's Changed
 
-- **OpenAI:** Added forwarding of a client's own ChatGPT subscription through the gateway, so Codex and Pi keep their ChatGPT login while using a separate gateway key. A recognized client ChatGPT login now takes precedence over a saved gateway login - [PR #41522](https://github.com/BerriAI/litellm/pull/41522)
-- **Keys, teams and auth:** Changed model and pass-through routes to refuse body `client_id`, `client_secret`, `tenant_id` and Azure login fields, unless they are sent in `metadata` or an admin opted in - [PR #51254](https://github.com/BerriAI/litellm/pull/51254)
+- **OpenAI:** Added forwarding of a client's own ChatGPT login from Codex or Pi through the gateway with a separate key - [PR #41522](https://github.com/BerriAI/litellm/pull/41522)
+- **Keys, teams and auth:** Changed model and pass-through routes to refuse body `client_id`, `client_secret`, `tenant_id` and Azure login fields - [PR #51254](https://github.com/BerriAI/litellm/pull/51254), also in [`v1.108.6`](/release_notes/v1.108.6/v1-108-6) and [`v1.109.1`](/release_notes/v1.109.1/v1-109-1)
 
 The changes are backported in [PR #49888](https://github.com/BerriAI/litellm/pull/49888) and [PR #51261](https://github.com/BerriAI/litellm/pull/51261).
 

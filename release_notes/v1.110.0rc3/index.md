@@ -52,13 +52,13 @@ This release is published as [`ghcr.io/berriai/litellm:v1.110.0-rc.3`](https://g
 
 ### What's Changed
 
-- **Routing and fallbacks:** Fixed requests that send a string fallback override, such as `"fallbacks": "default"` or `"max_fallbacks": "2"`, answering 500. A standalone fallback string is now ignored so the configured fallbacks apply, `max_fallbacks` accepts integer strings, and other invalid override values answer 400 - [PR #51502](https://github.com/BerriAI/litellm/pull/51502)
-- **Routing and fallbacks:** Fixed follow-up requests that carry Anthropic server tool history, such as web search results, skipping the context-window check - [PR #51334](https://github.com/BerriAI/litellm/pull/51334)
-- **Responses API:** Fixed Responses WebSocket requests dropping the team's model alias, so a call could land on a deployment outside the team's model group. Aliases now resolve the way they do on HTTP `/v1/responses`, and an alias that points at a model group with no deployment fails the turn with `Invalid model name` - [PR #51380](https://github.com/BerriAI/litellm/pull/51380)
-- **Other providers:** Fixed Hugging Face chat failing when the endpoint comes from `HUGGINGFACE_API_BASE` - [PR #51449](https://github.com/BerriAI/litellm/pull/51449)
-- **Other providers:** Fixed OpenCode Go models on the Messages protocol answering 500 when streamed through chat completions - [PR #51715](https://github.com/BerriAI/litellm/pull/51715)
-- **Cost tracking and pricing:** Fixed unmapped Fireworks AI models sized like `1p5b` being billed at double the rate. They now bill at the up-to-4B rate - [PR #51451](https://github.com/BerriAI/litellm/pull/51451)
-- **Dependencies:** Updated opentelemetry, dnspython, tornado and soupsieve to the versions on main - [PR #51854](https://github.com/BerriAI/litellm/pull/51854)
+- **Other providers:** Fixed Hugging Face chat sending requests to `None` or crashing when the endpoint comes from `HUGGINGFACE_API_BASE` - [PR #51449](https://github.com/BerriAI/litellm/pull/51449)
+- **Other providers:** Fixed unmapped Fireworks AI models sized like `1p5b` or `0p6b` billing at double the up-to-4B rate - [PR #51451](https://github.com/BerriAI/litellm/pull/51451)
+- **Other providers:** Fixed 500 when streaming OpenCode Go Messages-protocol models through chat completions - [PR #51715](https://github.com/BerriAI/litellm/pull/51715)
+- **Responses API:** Fixed Responses WebSocket requests dropping the team's model alias and landing on another deployment - [PR #51380](https://github.com/BerriAI/litellm/pull/51380)
+- **Token counting:** Fixed follow-up requests with Anthropic server tool history, such as web search, skipping the context-window check - [PR #51334](https://github.com/BerriAI/litellm/pull/51334)
+- **Routing and fallbacks:** Fixed 500 when a request sends a string fallback override such as `"fallbacks": "default"`, broken since v1.110.0-dev.1 - [PR #51502](https://github.com/BerriAI/litellm/pull/51502)
+- **Deployment:** Changed opentelemetry, dnspython, tornado and soupsieve to the newer versions that main already ships - [PR #51854](https://github.com/BerriAI/litellm/pull/51854)
 
 The changes are backported in [PR #51514](https://github.com/BerriAI/litellm/pull/51514), [PR #51854](https://github.com/BerriAI/litellm/pull/51854) and [PR #51858](https://github.com/BerriAI/litellm/pull/51858).
 

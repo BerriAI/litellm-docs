@@ -58,7 +58,7 @@ This release is published as [`ghcr.io/berriai/litellm:v1.108.7`](https://github
 
 :::danger Breaking Changes
 
-**Responses-only fields return 400 on providers bridged through chat completions.** A request that sends a field such as `max_tool_calls` to a bridged provider fails with a 400. Set `drop_params: true` to drop these fields instead. See [PR #48655](https://github.com/BerriAI/litellm/pull/48655). [`v1.109.0`](/release_notes/v1.109.0/v1-109-0) has the same change.
+- **Responses API:** Set `drop_params: true` or stop sending Responses-only fields such as `max_tool_calls` to providers bridged through chat completions - [PR #48655](https://github.com/BerriAI/litellm/pull/48655), also in [`v1.109.0`](/release_notes/v1.109.0/v1-109-0)
 
 :::
 
@@ -68,14 +68,14 @@ This release is published as [`ghcr.io/berriai/litellm:v1.108.7`](https://github
 - **AWS Bedrock:** Added image search on Bedrock knowledge bases with `query_image`, including image hits in the results - [PR #51062](https://github.com/BerriAI/litellm/pull/51062)
 - **Vertex AI and Gemini:** Fixed Gemini image calls billing text, thinking and Vertex Priority tokens at the wrong rates - [PR #51017](https://github.com/BerriAI/litellm/pull/51017)
 - **Vertex AI and Gemini:** Fixed `/gemini` `batchGenerateContent` batches logging $0 with model `unknown` instead of billing the calling key - [PR #51279](https://github.com/BerriAI/litellm/pull/51279)
-- **Other providers:** Fixed `reasoning_effort` being dropped or rejected for Baseten models - [PR #40152](https://github.com/BerriAI/litellm/pull/40152)
-- **Other providers:** Fixed `baseten/*` listing retired deployment IDs instead of the current Baseten Model APIs - [PR #46945](https://github.com/BerriAI/litellm/pull/46945)
+- **Other providers:** Fixed `reasoning_effort` being dropped or rejected for Baseten models - [PR #40152](https://github.com/BerriAI/litellm/pull/40152), also in [`v1.109.0`](/release_notes/v1.109.0/v1-109-0)
+- **Other providers:** Fixed `baseten/*` listing retired deployment IDs instead of the current Baseten Model APIs - [PR #46945](https://github.com/BerriAI/litellm/pull/46945), also in [`v1.109.0`](/release_notes/v1.109.0/v1-109-0)
 - **Responses API:** Fixed missing or repeated `sequence_number` on bridged `/v1/responses` streaming events - [PR #44944](https://github.com/BerriAI/litellm/pull/44944)
-- **Responses API:** Fixed streamed MCP follow-ups keeping only the latest tool round, so models repeated tool calls - [PR #47698](https://github.com/BerriAI/litellm/pull/47698)
-- **Responses API:** Fixed 400 on Bedrock when a `previous_response_id` chain contains a failed turn - [PR #48647](https://github.com/BerriAI/litellm/pull/48647)
-- **Responses API:** Changed Responses-only fields such as `max_tool_calls` to answer 400 on bridged providers unless `drop_params` is on - [PR #48655](https://github.com/BerriAI/litellm/pull/48655)
+- **Responses API:** Fixed streamed MCP follow-ups keeping only the latest tool round, so models repeated tool calls - [PR #47698](https://github.com/BerriAI/litellm/pull/47698), also in [`v1.109.0`](/release_notes/v1.109.0/v1-109-0)
+- **Responses API:** Fixed 400 on Bedrock when a `previous_response_id` chain contains a failed turn - [PR #48647](https://github.com/BerriAI/litellm/pull/48647), also in [`v1.109.0`](/release_notes/v1.109.0/v1-109-0)
+- **Responses API:** Changed Responses-only fields such as `max_tool_calls` to answer 400 on bridged providers unless `drop_params` is on - [PR #48655](https://github.com/BerriAI/litellm/pull/48655), also in [`v1.109.0`](/release_notes/v1.109.0/v1-109-0)
 - **Batches and files:** Added Gemini batches on `/v1/batches`, with output download through `/v1/files` and spend tracking - [PR #51032](https://github.com/BerriAI/litellm/pull/51032)
-- **Routing and fallbacks:** Fixed Decisions calls on a mixed model group hitting a Bedrock deployment and answering 400 - [PR #48175](https://github.com/BerriAI/litellm/pull/48175)
+- **Routing and fallbacks:** Fixed Decisions calls on a mixed model group hitting a Bedrock deployment and answering 400 - [PR #48175](https://github.com/BerriAI/litellm/pull/48175), also in [`v1.109.0`](/release_notes/v1.109.0/v1-109-0)
 
 The changes are backported in [PR #51262](https://github.com/BerriAI/litellm/pull/51262), [PR #51266](https://github.com/BerriAI/litellm/pull/51266), [PR #51271](https://github.com/BerriAI/litellm/pull/51271) and [PR #51340](https://github.com/BerriAI/litellm/pull/51340).
 

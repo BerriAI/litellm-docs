@@ -62,7 +62,7 @@ This release is published as [`ghcr.io/berriai/litellm:v1.108.8`](https://github
 - **Batches and files:** Fixed file ownership checks missing other spellings of a Gemini file id, such as `files/<id>` or its URL - [PR #51503](https://github.com/BerriAI/litellm/pull/51503)
 - **MCP:** Fixed sign-in loop ending in `Authentication incomplete` on servers that answer `mcp_all` with detailed scopes, broken since v1.107.0 - [PR #51578](https://github.com/BerriAI/litellm/pull/51578)
 
-The changes are backported in [PR #51640](https://github.com/BerriAI/litellm/pull/51640).
+The change is backported in [PR #51640](https://github.com/BerriAI/litellm/pull/51640).
 
 ## Full Changelog
 

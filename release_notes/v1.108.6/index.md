@@ -1,6 +1,6 @@
 ---
 title: "LiteLLM v1.108.6 (LTS) fixes negative spend and Gemini image edit cost"
-description: "Spend stays correct after scheduled budget resets on multi-pod deployments, Gemini image edits bill by tokens, and model routes reject Azure body fields."
+description: "Spend stays correct after scheduled budget resets on multi-pod deployments, Gemini image edits bill by tokens, and model routes refuse Azure body fields."
 slug: "v1-108-6"
 date: 2026-11-12T01:12:23
 authors:
@@ -58,7 +58,7 @@ This release is published as [`ghcr.io/berriai/litellm:v1.108.6`](https://github
 
 :::danger Breaking Changes
 
-**Model and pass-through routes reject Azure login fields in the request body.** A request body with `tenant_id`, `client_id`, `client_secret`, `azure_username`, `azure_password` or `azure_scope` is rejected. Send these fields in `metadata`, or restore the old behavior with `general_settings.allow_client_side_credentials: true` or `configurable_clientside_auth_params` on the deployment. See [PR #51254](https://github.com/BerriAI/litellm/pull/51254). [`v1.106.9`](/release_notes/v1.106.9/v1-106-9) and [`v1.109.1`](/release_notes/v1.109.1/v1-109-1) have the same change.
+- **Keys, teams and auth:** Move `tenant_id`, `client_id`, `client_secret`, `azure_username`, `azure_password` and `azure_scope` request tags into `metadata` - [PR #51254](https://github.com/BerriAI/litellm/pull/51254), also in [`v1.106.9`](/release_notes/v1.106.9/v1-106-9)
 
 :::
 
@@ -71,7 +71,7 @@ This release is published as [`ghcr.io/berriai/litellm:v1.108.6`](https://github
 - **Guardrails:** Changed Zscaler AI Guard to scan only the latest user message on requests, not the whole conversation - [PR #50139](https://github.com/BerriAI/litellm/pull/50139)
 - **Cost tracking and pricing:** Fixed 500 on usage routes when the database drops during key, user or team detail lookups - [PR #50253](https://github.com/BerriAI/litellm/pull/50253)
 - **Keys, teams and auth:** Fixed key, user and team spend going negative after a scheduled budget reset on multi-pod deployments, broken since v1.103.0 - [PR #51120](https://github.com/BerriAI/litellm/pull/51120)
-- **Keys, teams and auth:** Changed model and pass-through routes to refuse body `client_id`, `client_secret`, `tenant_id` and Azure login fields, unless they are sent in `metadata` or an admin opted in - [PR #51254](https://github.com/BerriAI/litellm/pull/51254)
+- **Keys, teams and auth:** Changed model and pass-through routes to refuse body `client_id`, `client_secret`, `tenant_id` and Azure login fields - [PR #51254](https://github.com/BerriAI/litellm/pull/51254), also in [`v1.106.9`](/release_notes/v1.106.9/v1-106-9)
 - **Admin UI:** Fixed the empty Spend Per User card and missing per-user data on `/user/daily/activity/aggregated` - [PR #51043](https://github.com/BerriAI/litellm/pull/51043)
 
 The changes are backported in [PR #50435](https://github.com/BerriAI/litellm/pull/50435), [PR #51064](https://github.com/BerriAI/litellm/pull/51064), [PR #51122](https://github.com/BerriAI/litellm/pull/51122), [PR #51229](https://github.com/BerriAI/litellm/pull/51229), [PR #51240](https://github.com/BerriAI/litellm/pull/51240) and [PR #51260](https://github.com/BerriAI/litellm/pull/51260).
