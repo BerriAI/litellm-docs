@@ -398,6 +398,70 @@ Every question has a `type` and an optional `instructions` field. Extra fields o
 
 On both routes, requests that break these rules, such as no questions at all, duplicate choice values or a `score` question with 11 levels, are rejected by LiteLLM with a 400 before any provider is called
 
+### Ask every question in one request
+
+TypeSafe Jev answers all the questions in a request in parallel, so extra questions usually add little to the response time. That makes it faster to send every question your code might need in one call, including ones that only matter for some outcomes, than to ask a follow-up after you read the first answer. TypeSafe calls this pattern [speculative fan-out](https://docs.typesafe.ai/patterns/fan-out)
+
+The example below triages a support ticket. `bug_severity` and `has_reproducible_steps` only matter when the ticket is a bug report, and `refund_requested` only matters for billing. The code reads `category` first and ignores the answers that do not apply
+
+```python showLineNumbers title="Triage a ticket with one request"
+import os
+import litellm
+
+os.environ["TYPESAFE_API_KEY"] = ""
+
+response = litellm.systemone(
+    model="typesafe/jev-latest",
+    state=(
+        "The export button crashes the app every time I click it on the invoices page. "
+        "Steps: open Invoices, click Export CSV, app freezes. "
+        "This is the third time this week and I'm losing patience."
+    ),
+    questions={
+        "category": {
+            "type": "choice",
+            "instructions": "What kind of support ticket is this?",
+            "criteria": {"bug_report": None, "billing": None, "feature_request": None},
+        },
+        "bug_severity": {
+            "type": "score",
+            "instructions": "How severe is the bug?",
+            "criteria": ["cosmetic", "degraded but usable", "feature unusable"],
+        },
+        "has_reproducible_steps": {
+            "type": "noul",
+            "instructions": "Does the ticket give steps to reproduce the problem?",
+        },
+        "refund_requested": {"type": "noul", "instructions": "Is the customer asking for a refund?"},
+        "frustration": {
+            "type": "score",
+            "instructions": "How frustrated is the customer?",
+            "criteria": ["calm", "annoyed", "angry"],
+        },
+    },
+)
+
+answers = response.answers
+
+if answers["category"].choice == "bug_report":
+    if answers["bug_severity"].score > 1.5 and answers["has_reproducible_steps"].noul > 0.6:
+        print("escalate to engineering")
+    else:
+        print("add to the bug backlog")
+elif answers["category"].choice == "billing":
+    if answers["refund_requested"].noul > 0.7:
+        print("send to billing, refund likely")
+    else:
+        print("send to billing")
+elif answers["category"].choice == "feature_request":
+    print("log the feature request")
+
+if answers["frustration"].score > 1.5:
+    print("flag for a priority response")
+```
+
+For this ticket the model picks `bug_report` with a severity score of 2.0 and a 0.98 probability of reproducible steps, so the code prints `escalate to engineering` and `flag for a priority response`, and never looks at `refund_requested`. The same `questions` map works as the JSON body of `POST /v1/systemone` on the proxy. A request takes up to 128 questions, and you pay for the tokens of every question you send, used or not
+
 ## Audio and video input
 
 Gemini Decision 1 and Cloudflare Clef-omni read audio and video clips along with the text. Send them in the top-level `audio` and `videos` fields, next to `state` on `/v1/systemone` or next to `input` on `/v1/decisions`. A request takes up to 4 audio clips and up to 2 video clips. Each clip is a base64 data URL such as `data:audio/wav;base64,...` or `data:video/mp4;base64,...`, with no media type parameters such as `;codecs=` before `;base64`, or an object such as `{"content_type": "audio/wav", "base64": "..."}`. `null` or an empty list means no clips of that kind. A clip in another form, or a request with more clips, gets a 400 before the provider is called. LiteLLM checks the number of clips, their form, and that an audio clip's media type starts with `audio/` and a video clip's with `video/`. Limits on clip length, size and exact format are the provider's.
