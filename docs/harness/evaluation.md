@@ -173,6 +173,8 @@ A valid negative verdict produces `fail`. A failed judge request or invalid verd
 
 For a task that needs starting files, pass a project directory as `workspace`. Each attempt gets a copy. The agent edits that copy, and the runner excludes `.git` metadata to keep Git state separate from the source.
 
+The runner rejects a symlink workspace root or symlinks in the copied project before creating a sandbox, including links within the project and broken links.
+
 Create `calculator/calc.py` with a bug:
 
 ```python title="calculator/calc.py"
@@ -255,6 +257,7 @@ The runner closes its sandboxes and removes temporary workspaces after each atte
 |---|---|
 | Importing `agent_eval` fails | Use the SDK checkout containing this unreleased feature. |
 | A CLI runtime is missing | Install that harness in the local environment or container image. |
+| A workspace error mentions symbolic links | Use a real directory for `workspace` and replace links with the files or directories the task needs. |
 | The gateway rejects a target | Check its model group name and the virtual key's allowed models. |
 | A run times out | Inspect its stop reason and check detail, then adjust the corresponding execution or grading timeout. |
 | The agent finishes but the run fails | Inspect the grading result. A completed agent turn alone does not mean the task succeeded. |
