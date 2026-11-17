@@ -4,7 +4,7 @@
 
 Use [Oathbreaker AI](https://oathbreaker.ai) through LiteLLM with the `oathbreaker/` model prefix. LiteLLM reads `OATHBREAKER_API_KEY` and sends Chat Completions requests to `https://oathbreaker.ai/v1`.
 
-Oathbreaker serves abliterated GLM-5.3 and GLM-5.3 Flash variants, based on Z.ai GLM. It provides the gateway and account experience. See the [GLM-5.3 details](https://oathbreaker.ai/models/glm-5-3-abliterated) and [Flash details](https://oathbreaker.ai/models/glm-5-3-flash-abliterated) for model provenance.
+Oathbreaker serves abliterated variants of Z.ai GLM-5.3, GLM-5.3 Flash and DeepSeek V4.1 Flash 1017. It provides the gateway and account experience. See the [GLM-5.3](https://oathbreaker.ai/models/glm-5-3-abliterated), [Flash](https://oathbreaker.ai/models/glm-5-3-flash-abliterated) and [DeepSeek](https://oathbreaker.ai/models/deepseek-v4-1-flash-abliterated) details for model provenance.
 
 ## Get started
 
@@ -33,14 +33,18 @@ A successful request returns an assistant reply and token usage. You do not need
 
 ## Models and pricing
 
-The [provider documentation](https://oathbreaker.ai/docs) and [pricing](https://oathbreaker.ai/pricing) publish these limits and USD prices per million tokens, checked November 13, 2026.
+The [provider documentation](https://oathbreaker.ai/docs) and [pricing](https://oathbreaker.ai/pricing) publish these limits and USD prices per million tokens, checked November 17, 2026.
 
 | Model ID | Shared context budget | Max output | Input | Cached input | Output |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| `oathbreaker-glm-5.3` | 131,072 | 32,768 | $3.00 | $0.30 | $5.00 |
-| `oathbreaker-glm-5.3-flash` | 131,072 | 32,768 | $0.50 | $0.05 | $1.50 |
+| `oathbreaker-glm-5.3` | 131,072 | 32,768 | $3.00 | $0.30 | $4.00 |
+| `oathbreaker-glm-5.3-flash` | 131,072 | 32,768 | $0.40 | $0.05 | $1.20 |
+| `oathbreaker-deepseek-v4.1-flash` | 131,072 units | 32,768 | $0.40 | $0.05 | $1.20 |
+| `oathbreaker-deepseek-v4.1-flash-fast` | 131,072 units | 32,768 | $0.50 | $0.05 | $1.50 |
 
-Use `oathbreaker/oathbreaker-glm-5.3-flash` in the SDK or gateway configuration to select Flash. Both models use the same API key and base URL.
+Use the model ID with the `oathbreaker/` prefix, such as `oathbreaker/oathbreaker-glm-5.3-flash`, in the SDK or gateway configuration. All four models use the same API key and base URL. DeepSeek V4.1 Flash Fast is a faster serving route for the same model.
+
+The DeepSeek budget counts UTF-8 input bytes, framing and requested output tokens, and a request body can be at most 262,144 bytes. LiteLLM records a conservative 32,768-token input limit for both DeepSeek models.
 
 Input, safety headroom, and requested output share the context budget. Reasoning tokens count toward output. The provider supports text input and output. Image input, audio, and embeddings are not supported.
 
