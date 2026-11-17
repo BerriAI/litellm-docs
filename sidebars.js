@@ -395,6 +395,7 @@ const sidebars = {
       className: "sidebar-rail",
       items: [
         { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
+        { type: "doc", id: "proxy/new_model_day_0", label: "Pulling a New Model on Day-0" },
         { type: "doc", id: "proxy/quick_start", label: "CLI Quickstart" },
         { type: "doc", id: "benchmarks", label: "Benchmarks" },
         { type: "html", value: "Set up", className: "sidebar-group-label", defaultStyle: true },
