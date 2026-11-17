@@ -1,14 +1,12 @@
 # Microsoft Web IQ search
 
-:::note Availability
-
-This integration is proposed in [LiteLLM PR #50883](https://github.com/BerriAI/litellm/pull/50883). Use a build containing that change; it is not available in released versions yet
-
-:::
+<SinceVersion v="1.111.0" />
 
 Use `search_provider="webiq"` with a Microsoft Web IQ API key. This integration calls the [Web Search v3 REST API](https://learn.microsoft.com/en-us/web-iq/reference/web-search), which is separate from Grounding with Bing
 
 Set `WEBIQ_API_KEY` in the process environment or pass `api_key` explicitly. The provider sends it in the `x-apikey` header. This initial integration uses API-key authentication; it does not acquire or refresh Entra ID tokens
+
+## Python SDK
 
 ```python
 import asyncio
@@ -43,7 +41,7 @@ search_tools:
       api_key: os.environ/WEBIQ_API_KEY
 ```
 
-Set `LITELLM_PROXY_URL` to your existing LiteLLM deployment URL, without a trailing slash. This is the gateway URL your application calls; the provider itself calls `https://api.microsoft.ai/v3/search/web`
+Set `LITELLM_PROXY_URL` to your existing LiteLLM deployment URL, without a trailing slash, and `LITELLM_API_KEY` to your LiteLLM gateway key. The gateway key authenticates your application to LiteLLM; `WEBIQ_API_KEY` authenticates the gateway to `https://api.microsoft.ai/v3/search/web`
 
 ```bash
 curl "$LITELLM_PROXY_URL/v1/search/webiq-search" \
@@ -52,7 +50,60 @@ curl "$LITELLM_PROXY_URL/v1/search/webiq-search" \
   -d '{"query":"retrieval augmented generation research","max_results":5}'
 ```
 
-To select Web IQ for existing web-search interception, merge these settings into the proxy configuration. Set `enabled_providers` to the model providers used by your application; this example selects Bedrock
+You can also send `POST /v1/search` or `POST /search` with `search_tool_name` in the request body:
+
+```json
+{
+  "search_tool_name": "webiq-search",
+  "query": "retrieval augmented generation research",
+  "max_results": 5
+}
+```
+
+Search calls follow the gateway's [search tool access rules](./index.md#restrict-search-tool-access). If your deployment restricts search tools, grant the caller access to `webiq-search`; the same rules apply to web-search interception
+
+## Dashboard
+
+With a database configured for the proxy, sign in as a proxy administrator and open **Search Tools**. Click **Add New Search Tool**, enter `webiq-search` as the **Search Tool Name**, select **Microsoft Web IQ** as the **Search Provider**, and enter your Web IQ key in **API Key**. Leave **Cost per Query (USD, Optional)** empty to use LiteLLM's catalog price, or set your negotiated rate
+
+Click **Test Connection**, close the test results, and click **Add Search Tool** to save. Open the saved tool, enter a query, and click **Search** to inspect the returned titles, URLs, and passages. Use the saved tool's name in the gateway requests above; a dashboard-created tool does not also need an entry in `config.yaml`
+
+## Router
+
+For SDK applications that manage named search tools, configure Web IQ on a `Router` and call `router.asearch` with the tool name:
+
+```python
+import asyncio
+import os
+from litellm import Router
+
+router = Router(
+    model_list=[],
+    search_tools=[
+        {
+            "search_tool_name": "webiq-search",
+            "litellm_params": {
+                "search_provider": "webiq",
+                "api_key": os.environ["WEBIQ_API_KEY"],
+            },
+        }
+    ],
+)
+
+async def main():
+    result = await router.asearch(
+        search_tool_name="webiq-search",
+        query="retrieval augmented generation research",
+        max_results=5,
+    )
+    print(result.model_dump())
+
+asyncio.run(main())
+```
+
+## Web-search interception
+
+To select Web IQ for [web-search interception](../integrations/websearch_interception.md), merge these settings into the proxy configuration alongside the `webiq-search` tool. Set `enabled_providers` to the model providers used by your application; this example selects Bedrock
 
 ```yaml
 litellm_settings:
@@ -63,7 +114,7 @@ litellm_settings:
     enabled_providers: ["bedrock"]
 ```
 
-The existing interception implementation controls supported client endpoints, tool conversion, streaming, and model continuation. Selecting Web IQ does not add a separate agentic loop
+Send a model request with a supported web-search tool, as shown in the [interception usage examples](../integrations/websearch_interception.md#usage-examples). Enabling the callback alone does not add web search to every model request. LiteLLM routes intercepted searches to `webiq-search` and uses its existing tool conversion, streaming, and model continuation behavior
 
 ## Parameters
 
