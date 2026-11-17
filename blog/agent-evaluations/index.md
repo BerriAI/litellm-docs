@@ -8,7 +8,6 @@ tags: [agents, python-sdk, ai-gateway, evaluations]
 hide_table_of_contents: true
 custom_hero: true
 image: ./cover.jpg
-draft: true
 ---
 
 import EvaluationPage from './EvaluationPage';
@@ -17,8 +16,8 @@ import EvaluationPage from './EvaluationPage';
 
 Choose an agent setup by running it on the work you need done. With `litellm.agent_eval()`, you define typed tasks and success checks, choose harness and model targets, and compare pass rate, cost and duration in one scorecard.
 
-:::info Release draft
-The evaluation API has not shipped in a PyPI release. The code below previews the interface. This post needs a verified release version and installation command before publication.
+:::info Preview
+LiteLLM's main branch includes the evaluation implementation. Published PyPI releases do not include this API yet. The examples below show the upcoming SDK interface.
 :::
 
 ## Connect to your AI Gateway {#connect}
