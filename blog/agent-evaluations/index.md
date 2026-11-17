@@ -8,17 +8,16 @@ tags: [agents, python-sdk, ai-gateway, evaluations]
 hide_table_of_contents: true
 custom_hero: true
 image: ./cover.jpg
-draft: true
 ---
 
 import EvaluationPage from './EvaluationPage';
 
 <EvaluationPage>
 
-Choose an agent setup by running it on the work you need done. With `litellm.agent_eval()`, you define typed tasks and success checks, choose harness and model targets, and compare pass rate, cost and duration in one scorecard.
+Run an agent on a support ticket, then evaluate the same setup across repeated attempts. With `litellm.agent_eval()`, you define typed tasks and success checks, compare harness and model targets, and read pass rate, cost and duration in one scorecard.
 
-:::info Release draft
-The evaluation API has not shipped in a PyPI release. The code below previews the interface. This post needs a verified release version and installation command before publication.
+:::info Preview
+LiteLLM's main branch includes the evaluation implementation. Published PyPI releases do not include this API yet. The examples below show the upcoming SDK interface.
 :::
 
 ## Connect to your AI Gateway {#connect}
@@ -37,32 +36,46 @@ Skip `read` if your secret manager has set the key. The first comparison uses To
 
 Choose an execution backend for each attempt. The script below passes `sandbox.local`, which runs with your user's permissions. Use local execution for trusted tasks. The [sandbox guide](/docs/harness/sandboxes) covers container factories and host-side Python tools.
 
-## Define a task and its success check {#define}
+## Run an agent, then evaluate the same task {#define}
 
-Start with a support ticket. Ask the agent to choose a category and check its final answer. Save this complete script as `evaluate_agents.py`:
+Start with a support ticket. Run Tool Loop once to inspect its answer, then define a success check and compare two model targets. Save this complete script as `evaluate_agents.py`:
 
 ```python title="evaluate_agents.py"
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import litellm
 from litellm import EvalTarget, EvalTask, Harness, PredicateCheck, sandbox
 
 
+harness = Harness.TOOL_LOOP
+model = "litellm_proxy/model-a"
+prompt = (
+    "Classify this ticket as billing, technical, or sales. "
+    "Reply with only the category.\n"
+    "Ticket: I was charged twice for my subscription."
+)
+
+with TemporaryDirectory() as workspace:
+    result = litellm.agent(
+        harness,
+        prompt,
+        sandbox=sandbox.local(workspace),
+        model=model,
+    )
+    print(result.text)
+
 task = EvalTask(
     id="billing-ticket",
-    prompt=(
-        "Classify this ticket as billing, technical, or sales. "
-        "Reply with only the category.\n"
-        "Ticket: I was charged twice for my subscription."
-    ),
+    prompt=prompt,
     check=PredicateCheck(
         lambda result: result.text.strip().lower() == "billing"
     ),
 )
 
 targets = [
-    EvalTarget(Harness.TOOL_LOOP, "litellm_proxy/model-a", label="model-a"),
-    EvalTarget(Harness.TOOL_LOOP, "litellm_proxy/model-b", label="model-b"),
+    EvalTarget(harness, model, label="model-a"),
+    EvalTarget(harness, "litellm_proxy/model-b", label="model-b"),
 ]
 
 report = litellm.agent_eval(
@@ -77,7 +90,9 @@ print(report.to_markdown())
 Path("scorecard.json").write_text(report.to_json(), encoding="utf-8")
 ```
 
-An `EvalTask` holds the prompt and the rule for success. An `EvalTarget` selects the harness and model. You can keep the task fixed while changing either part of the target.
+`litellm.agent()` runs the agent and returns a `Result`. `TemporaryDirectory` creates its local workspace. The task reuses the prompt, and the first evaluation target reuses the same harness and model. An `EvalTask` holds the prompt and the rule for success; an `EvalTarget` selects the harness and model.
+
+`agent_eval()` runs each target again in a fresh workspace. It takes tasks and targets; you do not pass the earlier `Result` to it.
 
 Run the script from the directory where you saved it:
 
@@ -85,7 +100,7 @@ Run the script from the directory where you saved it:
 python evaluate_agents.py
 ```
 
-One task, two targets and three trials produce six runs. In the scorecard, each target has three attempts. The script also writes `scorecard.json` for your own analysis. Add representative tickets and their expected outcomes before choosing a production target.
+One task, two targets and three trials produce six evaluation runs. The initial agent call is separate from those six runs and their scorecard. Each target has three attempts. The script also writes `scorecard.json` for your own analysis. Add representative tickets and their expected outcomes before choosing a production target.
 
 ## Read the failures before comparing cost {#results}
 
@@ -111,7 +126,7 @@ Compare cost alongside pass rate, token usage, model calls and tool calls. Check
 
 ## Compare harnesses with the same task {#harnesses}
 
-To compare Claude Code and Codex, [install their runtimes](/docs/harness/quickstart#1-install) and replace `targets` in the script:
+To compare Claude Code and Codex in the evaluation, [install their runtimes](/docs/harness/quickstart#1-install) and replace `targets` in the script:
 
 ```python
 targets = [
@@ -120,7 +135,7 @@ targets = [
 ]
 ```
 
-Use model groups supported by each harness. This compares two complete setups, changing both the harness and model. To measure one change, keep the other fixed where the harnesses support the same model.
+The initial agent call still uses Tool Loop. The evaluation compares the two new targets. Use model groups supported by each harness. This changes both the harness and model; to measure one change, keep the other fixed where the harnesses support the same model.
 
 The SDK runs each task against each target and repeats the pair `trials` times. Give each task a unique ID and each target a unique label.
 
@@ -175,7 +190,7 @@ The evaluation runner returns its scorecard in memory and can export it as JSON.
 
 ### Can I run evaluations in an async application?
 
-Use `await litellm.aagent_eval(...)` inside your async function or notebook with the same tasks, targets and options. Replace the synchronous call in the example.
+Use `await litellm.aagent(...)` for the initial run and `await litellm.aagent_eval(...)` for the evaluation inside your async function or notebook. Keep the same tasks, targets and options.
 
 ### Can I use this with LiteLLM OSS?
 
