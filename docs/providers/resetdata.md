@@ -7,7 +7,7 @@ description: Call ResetData models through LiteLLM with the Python SDK or Gatewa
 
 [ResetData](https://docs.resetdata.ai) is an Australian sovereign AI-inference platform with an OpenAI-compatible chat completions API. ResetData model ids are `provider/model` slugs, so full LiteLLM model ids have three segments, for example `resetdata/zai/glm-5.3`. LiteLLM removes only the `resetdata/` prefix before it sends the model value to ResetData.
 
-<SinceVersion v="1.110.0" />
+<SinceVersion v="1.112.0" />
 
 Provider support was added in [PR #50819](https://github.com/BerriAI/litellm/pull/50819). Use this version or a later build that includes the provider.
 
@@ -110,9 +110,11 @@ The proxy returns an OpenAI-format chat completion. The usage block reports reas
 
 If your proxy requires authentication, also send `Authorization: Bearer <your-litellm-key>`. This is your LiteLLM key, not your ResetData API key.
 
+LiteLLM also accepts [Anthropic Messages](/docs/anthropic_unified) and [Responses API](/docs/response_api) requests for ResetData models through its translation layer. These requests use ResetData's chat completions endpoint, not native ResetData Messages or Responses endpoints.
+
 ## Supported Models
 
-These ResetData models are in the LiteLLM catalog with their context windows and output caps. Pricing entries will be added in a follow-up change.
+These ResetData models are in the LiteLLM catalog with their context windows and output caps. ResetData bills in Australian dollars, so the catalog entries carry no prices and LiteLLM records $0 spend for ResetData requests by default.
 
 | Model | Context window | Max output tokens | Reasoning | Vision |
 |-------|----------------|-------------------|-----------|--------|
@@ -121,3 +123,16 @@ These ResetData models are in the LiteLLM catalog with their context windows and
 | `resetdata/qwen/qwen3-coder-30b-a3b-instruct` | 262,144 | 65,536 | No | No |
 | `resetdata/google/gemma-4-26b-a4b-it` | 262,144 | 8,192 | No | Yes |
 | `resetdata/deepseek/deepseek-v4-flash` | 1,048,576 | 65,536 | Yes | No |
+| `resetdata/deepseek/deepseek-v4.1-flash` | 1,048,576 | 65,536 | Yes | Yes |
+
+To track spend, set your own per-token costs in USD on each deployment:
+
+```yaml
+model_list:
+  - model_name: resetdata-glm-5.3
+    litellm_params:
+      model: resetdata/zai/glm-5.3
+      api_key: os.environ/RESETDATA_API_KEY
+      input_cost_per_token: 0.0000006
+      output_cost_per_token: 0.0000022
+```
