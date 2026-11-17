@@ -5,6 +5,8 @@ description: Reload missing model prices in LiteLLM without a new image or Helm 
 
 # Pulling a New Model on Day-0
 
+{/* keep-version-note */}
+
 If a new model comes out or model pricing is missing, use **Reload Price Data** before upgrading LiteLLM. You do not need a new container image or a Helm chart version bump just to update model prices that are already in the [pricing map on GitHub main](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). LiteLLM can fetch that map while the proxy runs.
 
 The normal startup path fetches the remote map and falls back to the bundled copy if the fetch fails or the file fails validation. Local-only and offline modes use the bundled copy instead. The `lite` and `litellm-proxy` CLI entry points also start with the bundled copy, so use a runtime reload to fetch current prices. Reload updates pricing and model metadata. It does not add a deployment, configure provider credentials, or add provider API support that your installed version lacks.
