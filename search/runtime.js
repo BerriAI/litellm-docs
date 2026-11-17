@@ -5,10 +5,16 @@ const {BASE_URL} = require('./gateway');
 const {isContentUrl} = require('./content');
 
 function readConfig(env, defaults = {}) {
+  // Select the endpoint and key together; a partial cutover must not reuse an old key.
+  const proxyConfigured = env.LITELLM_PROXY_API_BASE !== undefined || env.LITELLM_PROXY_API_KEY !== undefined;
+  const cloudflareConfigured = env.CF_ACCESS_CLIENT_ID !== undefined || env.CF_ACCESS_CLIENT_SECRET !== undefined;
   return {
     ...defaults,
-    baseUrl: env.DOCS_AI_BASE_URL || BASE_URL,
-    apiKey: env.DOCS_AI_API_KEY,
+    baseUrl: proxyConfigured ? env.LITELLM_PROXY_API_BASE
+      : env.DOCS_AI_BASE_URL || (cloudflareConfigured ? undefined : BASE_URL),
+    apiKey: proxyConfigured ? env.LITELLM_PROXY_API_KEY : env.DOCS_AI_API_KEY,
+    cfAccessClientId: env.CF_ACCESS_CLIENT_ID,
+    cfAccessClientSecret: env.CF_ACCESS_CLIENT_SECRET,
     botApiKey: env.DOCS_BOT_AI_API_KEY,
     botServiceToken: env.DOCS_BOT_SERVICE_TOKEN,
     botTracingKey: env.DOCS_BOT_TRACING_KEY,

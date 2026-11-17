@@ -11,12 +11,25 @@ function gatewayError(name, message) {
 }
 
 function createModelCaller({config, signal, fetchImpl = fetch}) {
-  const endpoint = new URL(`${(config.baseUrl || BASE_URL).replace(/\/$/, '')}/chat/completions`);
-  if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) {
-    throw new Error('Invalid gateway configuration');
+  const cloudflareConfigured = config.cfAccessClientId !== undefined || config.cfAccessClientSecret !== undefined;
+  const validCredential = value => typeof value === 'string' && /^[\x21-\x7e]+$/.test(value);
+  let endpoint;
+  try {
+    endpoint = new URL(`${config.baseUrl.replace(/\/$/, '')}/chat/completions`);
+    if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || endpoint.search || endpoint.hash ||
+        !validCredential(config.apiKey) || (cloudflareConfigured &&
+        (!validCredential(config.cfAccessClientId) || !validCredential(config.cfAccessClientSecret)))) throw new Error();
+  } catch {
+    throw gatewayError('GatewayConfigurationError', 'Invalid gateway configuration');
   }
+  const headers = {'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}`,
+    ...(cloudflareConfigured ? {
+      'CF-Access-Client-Id': config.cfAccessClientId,
+      'CF-Access-Client-Secret': config.cfAccessClientSecret,
+    } : {}),
+  };
   const tracing = getTracing(config);
-  const secrets = [config.apiKey, config.tracing?.key].filter(Boolean);
+  const secrets = [config.apiKey, config.cfAccessClientId, config.cfAccessClientSecret, config.tracing?.key].filter(Boolean);
   const assertSafe = text => {
     if (secrets.some(secret => text.includes(secret))) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
   };
@@ -32,7 +45,7 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
       requestSignal.throwIfAborted();
       const response = await fetchImpl(endpoint.href, {
         method: 'POST', redirect: 'error', signal: requestSignal,
-        headers: {'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}`},
+        headers,
         body: JSON.stringify({model: MODEL, fallbacks: [
           {model: FALLBACKS[0], reasoning_effort: 'none'},
           {model: FALLBACKS[1], reasoning_effort: 'none'},

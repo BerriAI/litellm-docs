@@ -411,3 +411,44 @@ test('bot tracing uses its dedicated key and keeps website tracing and agent nam
   }
   assert.equal(traced.tracing.key, 'website-tracing-key');
 });
+
+
+test('gateway cutover selects endpoint and key together and keeps Access credentials server-side', () => {
+  const legacy = {DOCS_AI_BASE_URL: 'https://old-gateway.example.com/v1', DOCS_AI_API_KEY: 'old-example-key'};
+  const env = {...legacy, LITELLM_PROXY_API_BASE: 'https://gateway.example.com/v1', LITELLM_PROXY_API_KEY: 'new-example-key',
+    CF_ACCESS_CLIENT_ID: 'example-client-id', CF_ACCESS_CLIENT_SECRET: 'example-client-secret'};
+  const current = readConfig(env);
+  assert.equal(current.baseUrl, env.LITELLM_PROXY_API_BASE);
+  assert.equal(current.apiKey, env.LITELLM_PROXY_API_KEY);
+  assert.equal(current.cfAccessClientId, env.CF_ACCESS_CLIENT_ID);
+  assert.equal(current.cfAccessClientSecret, env.CF_ACCESS_CLIENT_SECRET);
+  assert.equal(current.publicAIEnabled, false);
+  assert.equal(readConfig({...legacy, LITELLM_PROXY_API_BASE: env.LITELLM_PROXY_API_BASE}).apiKey, undefined);
+  assert.equal(readConfig({...legacy, LITELLM_PROXY_API_KEY: env.LITELLM_PROXY_API_KEY}).baseUrl, undefined);
+  assert.equal(readConfig({DOCS_AI_API_KEY: 'old-example-key', CF_ACCESS_CLIENT_ID: 'example-client-id'}).baseUrl, undefined);
+  assert.equal(readConfig(legacy).baseUrl, legacy.DOCS_AI_BASE_URL);
+  assert.equal(readConfig(legacy).apiKey, legacy.DOCS_AI_API_KEY);
+});
+
+test('the real Ask AI route forwards only configured Access headers, including for the bot', async () => {
+  const cf = {cfAccessClientId: 'example-client-id', cfAccessClientSecret: 'example-client-secret'};
+  for (const service of [false, true]) {
+    const upstream = modelSteps([accepted, readLens, ready, citedAnswer], (body, request) => {
+      assert.equal(request.headers['CF-Access-Client-Id'], cf.cfAccessClientId);
+      assert.equal(request.headers['CF-Access-Client-Secret'], cf.cfAccessClientSecret);
+      assert.equal(request.headers.Authorization, `Bearer ${service ? 'dedicated-bot-key' : config.apiKey}`);
+      for (const secret of Object.values(cf)) assert.ok(!JSON.stringify(body).includes(secret));
+    });
+    await withServer(async origin => {
+      const response = await fetch(origin + (service ? '/api/docs/bot-ask' : '/api/docs/ask'), post('How do I set up Lens?', {
+        headers: {'Content-Type': 'application/json', 'CF-Access-Client-Id': 'attacker-id', 'CF-Access-Client-Secret': 'attacker-secret',
+          ...(service ? {Authorization: 'Bearer example-bot-service-token'} : {})},
+      }));
+      assert.equal(response.status, 200);
+      const result = await response.text();
+      assert.ok(result.includes('ClickHouse'));
+      for (const secret of Object.values(cf)) assert.ok(!result.includes(secret));
+    }, {config: {...config, ...cf, botApiKey: 'dedicated-bot-key', botServiceToken: 'example-bot-service-token'}, fetchImpl: upstream.fetch});
+    assert.equal(upstream.calls, 4);
+  }
+});

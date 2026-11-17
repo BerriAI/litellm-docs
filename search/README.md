@@ -37,7 +37,7 @@ npm run build
 cp .env.example .env.local
 ```
 
-Document search works without a model credential. To try Ask AI, set `DOCS_AI_API_KEY` in `.env.local` to a LiteLLM virtual key that can call these gateway aliases:
+Document search works without a model credential. To try Ask AI, set `LITELLM_PROXY_API_BASE` to your gateway HTTPS base URL and `LITELLM_PROXY_API_KEY` to a dedicated LiteLLM virtual key in `.env.local`. Use the existing gateway aliases:
 
 ```text
 anthropic/claude-haiku-5-5
@@ -45,7 +45,7 @@ openai/gpt-6-luna
 openai/gpt-6.1-sol
 ```
 
-The default gateway is `https://gateway.litellm-sandbox.ai`. Set `DOCS_AI_BASE_URL` only when using another HTTPS gateway. Start the local server:
+For a gateway protected by Cloudflare Access, also set `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET`. These credentials authorize the server's network access; the virtual key still controls its model access and spending. Start the local server:
 
 ```bash
 npm run search:serve
@@ -61,7 +61,22 @@ The server reads `.env.local`; the build and browser do not read the AI credenti
 
 The same-origin `/api/docs/search` function bundles only `build/search-index.json` and loads it once per function instance. `/api/docs/ask` bundles `build/search-*.json` for its research tools. Vercel uses `npm run build` and the `build` output directory. No separate API service or retrieval database is needed.
 
-In the docs project's **Settings > Environment Variables**, add `DOCS_AI_API_KEY` as a server secret and set `DOCS_AI_PUBLIC_ENABLED=true` for the intended environment, then redeploy. The production origin defaults to `https://docs.litellm.ai`. For a preview or another domain, set `DOCS_ORIGIN` to that exact origin too. Without the public enable flag, Ask AI returns 503 while document search still works
+In the docs project's **Settings > Environment Variables**, configure these server-only variables for the intended environment. Use the existing models and a dedicated virtual key restricted to the aliases above, with gateway budget and rate limits. Do not use a master key or provider credential.
+
+| Variable | Value |
+| --- | --- |
+| `LITELLM_PROXY_API_BASE` | The actual HTTPS inference base URL, such as `https://gateway.example.com/v1`. The server appends `/chat/completions`. |
+| `LITELLM_PROXY_API_KEY` | The dedicated Docs AI virtual key. Store it as a sensitive variable. |
+| `CF_ACCESS_CLIENT_ID` | The Cloudflare Access service-token client ID. Store it as a sensitive variable. |
+| `CF_ACCESS_CLIENT_SECRET` | The matching service-token secret. Store it as a sensitive variable. |
+| `DOCS_AI_PUBLIC_ENABLED` | `true` to enable Ask AI for this deployment. |
+| `DOCS_ORIGIN` | The exact site origin. Production defaults to `https://docs.litellm.ai`; set it for a preview or another domain. |
+
+The gateway's Cloudflare Access policy must accept the service token with **Service Auth**. Configure the models and key through the gateway's private management access if needed; Cloudflare service credentials do not grant management access. Keep the real endpoint and credentials in deployment configuration, outside source control, build settings, browser code, and PR text.
+
+The endpoint and key switch together when either `LITELLM_PROXY_*` variable is set. Configure both: a partial switch does not reuse the previous endpoint or key. Existing `DOCS_AI_BASE_URL` and `DOCS_AI_API_KEY` settings remain supported when neither new variable is set. Cloudflare credentials require both token fields and an explicit base URL; incomplete credentials fail before a request. Gateways without Cloudflare can omit both token fields. The authenticated bot keeps its separate `DOCS_BOT_AI_API_KEY` and shares the configured gateway endpoint and Cloudflare headers. If the bot is in use, its dedicated key must also belong to the target gateway before the switch.
+
+Redeploy after setting the variables. Without the public enable flag, Ask AI returns 503 while document search still works. Before production activation, use a branch-specific preview and restricted preview credentials, set its exact `DOCS_ORIGIN`, and run the checks below. Do not expose production secrets to every preview branch.
 
 Keyword search is available without model credentials or an enable flag. `POST /api/docs/search` accepts `{query, type}`, with a query of 1 to 500 characters and an optional `all`, `docs`, `blog`, or `release` filter. It returns up to 100 results, uses `Cache-Control: no-store`, and makes no model calls. The existing engine preserves ranking, snippets, filters, typo handling, and chronological browsing. The endpoint limits request bodies to 16 KB and four concurrent requests per instance. The old Jev request-rate allowance does not apply to keyword searches. The Jev comparison remains available only through `npm run search:lab`.
 
@@ -69,7 +84,9 @@ Verify that typing produces a 200 response from `/api/docs/search` and no browse
 
 Before enabling public Ask AI access, use a dedicated virtual key restricted to the needed aliases above, with a budget and RPM/TPM limits enforced by the gateway. Set shared per-client limits on `/api/docs/ask` in the Vercel Firewall as well. The service limits 10 questions per socket IP per minute, 60 total per minute, and four concurrent questions per instance. These process-local limits reset on restart and do not cap spending across serverless instances. It deliberately ignores caller-provided forwarded IP headers. Origin checks are browser protections, not authentication; direct HTTP clients can call a public endpoint
 
-After deploying, repeat the two local example questions through the public UI. If Ask AI returns 503, check the secret, enable flag, and bundled index. A 403 indicates an origin mismatch. A 502 indicates a gateway failure or an invalid model response; check gateway logs without exposing those details in browser errors. A 429 means a request or concurrency limit was reached
+After deploying, repeat the two local example questions through the public UI and try a follow-up. Check that answers stream to completion with working citations. Browser network requests must go to `/api/docs/ask` on the docs origin and contain no gateway or Cloudflare credentials. Confirm the requests and model usage in the gateway's private logs. Check that an unauthenticated request to the inference host is rejected by Cloudflare, and that management routes remain unavailable through its public route.
+
+A 503 means the enable flag, key, or bundled index is missing. A 403 from the docs API indicates an origin mismatch. A 502 means the gateway configuration, Cloudflare authentication, model access, or model response failed; inspect private logs without copying secrets into diagnostics. A 429 means a request or concurrency limit was reached. To disable Ask AI during recovery, set `DOCS_AI_PUBLIC_ENABLED=false` and redeploy; keyword search remains available.
 
 For another host, run `npm run search:serve` with `HOST=0.0.0.0`, `PORT`, `DOCS_ORIGIN`, and the same server secrets and enable flags behind HTTPS. Route `/api/docs/ask` and `/api/docs/search` to it on the docs origin, and deploy the site and index together.
 
