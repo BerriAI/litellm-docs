@@ -64,7 +64,7 @@ function NetworkSvg({ diagram }: { diagram: NetworkDiagram }) {
             fill={groupColors[group.kind].fill}
             stroke={groupColors[group.kind].stroke}
             strokeWidth="1.5"
-            strokeDasharray={group.kind === 'optional' || group.kind === 'az' ? '7 5' : undefined}
+            strokeDasharray={group.dotted ? '2 4' : group.kind === 'optional' || group.kind === 'az' ? '7 5' : undefined}
           />
           {group.icon && <g><rect className={styles.iconTile} x={group.x + 8} y={group.y + 7} width="26" height="26" rx="3" /><image href={`${iconRoot}${group.icon}`} x={group.x + 10} y={group.y + 9} width="22" height="22" preserveAspectRatio="xMidYMid meet" /></g>}
           <text x={group.x + (group.icon ? 40 : 12)} y={group.y + 25} className={styles.groupLabel} fill={groupColors[group.kind].stroke}>
@@ -111,23 +111,30 @@ function NetworkSvg({ diagram }: { diagram: NetworkDiagram }) {
   );
 }
 
-function Legend() {
+function Legend({items}: {items?: {kind: keyof typeof PATH_COLORS; label: string}[]}) {
+  const entries: {kind: keyof typeof PATH_COLORS; label: string}[] = items ?? [
+    {kind: 'request', label: 'Requests'},
+    {kind: 'data', label: 'Private traffic'},
+    {kind: 'egress', label: 'Egress'},
+    {kind: 'optional', label: 'Optional'},
+  ];
   return (
     <div className={styles.legend} aria-label="Diagram legend">
-      <span><i style={{ borderColor: PATH_COLORS.request }} />Requests</span>
-      <span><i style={{ borderColor: PATH_COLORS.data }} />Private traffic</span>
-      <span><i style={{ borderColor: PATH_COLORS.egress }} />Egress</span>
-      <span><i className={styles.optionalLine} style={{ borderColor: PATH_COLORS.optional }} />Optional</span>
+      {entries.map(item => <span key={item.kind}><i className={item.kind === 'optional' ? styles.optionalLine : undefined} style={{borderColor: PATH_COLORS[item.kind]}} />{item.label}</span>)}
       <span>Dots join paths. Bridges cross them.</span>
     </div>
   );
 }
 
 export function NetworkArchitecture({ cloud }: { cloud: CloudKey }) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const expandedViewport = useRef<HTMLDivElement>(null);
   const diagram = cloud.startsWith('aws') ? makeAwsNetworkDiagram(cloud)
     : cloud.startsWith('gcp') ? makeGcpNetworkDiagram(cloud) : makeAzureNetworkDiagram(cloud);
+  return <NetworkDiagramViewer diagram={diagram} />;
+}
+
+export function NetworkDiagramViewer({diagram, caption}: {diagram: NetworkDiagram; caption?: React.ReactNode}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const expandedViewport = useRef<HTMLDivElement>(null);
 
   return (
     <section className={styles.viewer} aria-label={diagram.title}>
@@ -135,10 +142,11 @@ export function NetworkArchitecture({ cloud }: { cloud: CloudKey }) {
         <strong>{diagram.title}</strong>
         <button type="button" className={styles.expandButton} onClick={() => { dialog.current?.showModal(); expandedViewport.current?.scrollTo(0, 0); }}>Expand diagram</button>
       </div>
-      <Legend />
+      <Legend items={diagram.legend} />
       <div className={styles.viewport} tabIndex={0} role="region" aria-label={`${diagram.title}, diagram preview`}>
         <NetworkSvg diagram={diagram} />
       </div>
+      {caption ? <p className={styles.description}>{caption}</p> : <>
       <p className={styles.description}>{diagram.description}</p>
       <details className={styles.details}>
         <summary>Architecture details and references</summary>
@@ -149,12 +157,13 @@ export function NetworkArchitecture({ cloud }: { cloud: CloudKey }) {
           Design references: {diagram.sources.map((source, index) => <React.Fragment key={source.url}>{index > 0 && ' · '}<a href={source.url}>{source.label}</a></React.Fragment>)}
         </p>
       </details>
+      </>}
       <dialog ref={dialog} className={styles.dialog} aria-label={diagram.title} onClick={event => { if (event.target === event.currentTarget) dialog.current?.close(); }}>
         <div className={styles.dialogHeader}>
           <strong>{diagram.title}</strong>
           <button type="button" className={styles.expandButton} onClick={() => dialog.current?.close()} autoFocus>Close diagram</button>
         </div>
-        <Legend />
+        <Legend items={diagram.legend} />
         <div ref={expandedViewport} className={styles.expandedViewport} tabIndex={0} role="region" aria-label="Expanded network diagram">
           <NetworkSvg diagram={diagram} />
         </div>
