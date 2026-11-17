@@ -65,7 +65,7 @@ for chunk in response:
 
 Several ResetData models support reasoning, and reasoning tokens count toward `max_tokens`. Leave enough room for both, or the response can end before any visible text.
 
-The reasoning models in the table below accept `reasoning_effort`. For a model without reasoning, LiteLLM rejects `reasoning_effort` with `UnsupportedParamsError` before it calls ResetData. Set `drop_params=True` on the call, or `drop_params: true` under `litellm_settings` on the Gateway, to drop the parameter and send the rest of the request.
+LiteLLM accepts `reasoning_effort` only for the reasoning models in the table below. For any other ResetData model, including one ResetData lists with reasoning that isn't in the table, LiteLLM rejects `reasoning_effort` with `UnsupportedParamsError` before it calls ResetData. Set `drop_params=True` on the call, or `drop_params: true` under `litellm_settings` on the Gateway, to drop the parameter and send the rest of the request.
 
 ## LiteLLM Gateway
 
@@ -126,7 +126,7 @@ LiteLLM also accepts [Anthropic Messages](/docs/anthropic_unified) and [Response
 
 ## Supported Models
 
-These ResetData models are in the LiteLLM catalog with their context windows, output caps and prices, so LiteLLM tracks spend for them in USD. ResetData bills in Australian dollars, and the catalog prices are converted at one dated exchange rate, so they drift from your ResetData invoice as the AUD moves.
+These ResetData models are in the LiteLLM catalog with their context windows, output caps and prices, so LiteLLM tracks spend for them in USD. ResetData bills in Australian dollars, excluding GST. The catalog prices are ResetData's AUD prices converted at 1 AUD = 0.67566 USD, the European Central Bank reference rate for November 16, 2026. So tracked spend drifts from your ResetData invoice as the AUD moves, and it leaves out the GST your invoice adds.
 
 | Model | Context window | Max output tokens | Reasoning | Vision |
 |-------|----------------|-------------------|-----------|--------|
@@ -135,6 +135,8 @@ These ResetData models are in the LiteLLM catalog with their context windows, ou
 | `resetdata/qwen/qwen3-coder-30b-a3b-instruct` | 262,144 | 65,536 | No | No |
 | `resetdata/google/gemma-4-26b-a4b-it` | 262,144 | 8,192 | No | Yes |
 | `resetdata/deepseek/deepseek-v4-flash` | 1,048,576 | 65,536 | Yes | No |
+
+`resetdata/qwen/qwen3.8-27b` takes images as base64 data URLs. ResetData answers an image URL on that model with a 500 error, while `resetdata/google/gemma-4-26b-a4b-it` takes both.
 
 To bill at your own ResetData rates instead, set per-token costs in USD on the deployment. The values below are an example, not ResetData's prices:
 
