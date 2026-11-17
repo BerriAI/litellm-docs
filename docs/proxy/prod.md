@@ -38,6 +38,8 @@ Get notified about LLM exceptions, slow or hanging requests, budget crossings, d
 
 To bake it into config instead, set `alerting: ["slack"]` under `general_settings` and export `SLACK_WEBHOOK_URL` in the environment.
 
+Route database and sustained provider outages to gateway operators, budgets to cost owners, and individual slow calls to diagnostics. Use digests for repeated low-priority events. Monitor unavailable gateways and missing metrics externally, since a stopped gateway cannot alert on itself. See [actionable alert routing](./alerting.md#route-actionable-alerts) for the configuration and delivery limits.
+
 ### Batch spend writes
 
 Write spend updates to the database every 60 seconds instead of on every request; at production traffic, per-request writes become a database hot spot.
@@ -112,6 +114,14 @@ litellm_settings:
 export LITELLM_LOG="ERROR"
 ```
 
+### Limit stored and exported content
+
+For sensitive workloads, keep message logging and prompt storage off, send operational metadata only to approved destinations, and check exception logs, callbacks, caches, and backups separately. Set retention for each store and test exports with synthetic markers. See [callback redaction](./logging.md#redact-messages-response-content), [spend-log storage](./ui_logs.md), and [Security Best Practices](./security_best_practices.md).
+
+### Pin and verify releases
+
+Verify the image signature, approve the artifact, and deploy an immutable digest through your release pipeline. Keep provider egress and deployment permissions under your control. See [image verification](./docker_image_security.md) and [Security Best Practices](./security_best_practices.md). Follow the [Upgrade Guide](./upgrade_guide.md) to test compatibility, preserve serving capacity, drain requests, and prepare rollback.
+
 ### Disable load_dotenv
 
 Set `export LITELLM_MODE="PRODUCTION"`. This disables `load_dotenv()`, which would otherwise automatically load credentials from a local `.env`.
@@ -130,7 +140,7 @@ export LITELLM_SALT_KEY="sk-<paste-a-long-random-key>"
 
 ### Machine specifications
 
-Set each pod's requests and limits to 1 vCPU and 4Gi of memory. Increase both in proportion to the worker count if you run multiple workers per container. For Helm, place these container settings under `gateway.resources`.
+Start load testing with 1 vCPU and 4Gi of memory per worker. Increase both in proportion to the worker count if you run multiple workers per container, then adjust from measurements. For Helm, place these container settings under `gateway.resources`.
 
 ```yaml
 resources:
@@ -142,13 +152,13 @@ resources:
     memory: "4Gi"
 ```
 
-Both figures are per worker, so that multiplication is real rather than notional: a container running 8 workers wants 8 vCPU and 32Gi, not 1 vCPU and 4Gi. Sizing a multi-worker container from the single-worker numbers is a common way to end up under-provisioned, and it is the main reason to keep one worker per pod on Kubernetes and let replicas rather than workers carry the concurrency.
+For example, eight workers start at 8 vCPU and 32Gi before workload-specific tuning. Prefer one worker per pod on Kubernetes so replicas can scale independently.
 
-4Gi is a floor rather than a target. The proxy's steady-state footprint is not a function of how many requests it is serving concurrently: Prisma runs the query engine as a separate process whose resident memory behaves as a high-water mark, growing to fit the largest single statement that engine has ever executed, and glibc does not hand that memory back to the operating system afterwards. A pod's floor therefore ratchets up to its worst-ever write and stays there for the life of the worker. Provision below 4Gi and a single large write is enough to push the pod past its limit and have the kernel OOM-kill it, which surfaces as a crash loop under traffic that looks unremarkable on every other metric.
-
-The largest statements come from spend logging with `store_prompts_in_spend_logs` enabled, because each row then carries a full prompt and response rather than counters. If you store prompts, treat 4Gi as the minimum and give the pod headroom above it.
+Memory requirements depend on admitted and queued requests, payload sizes, stream duration, logging, and database work. Measure peak resident memory during bursts and after large writes, and leave headroom below the container limit. Enabling `store_prompts_in_spend_logs` adds prompt and response bodies to database writes, so repeat the test when that setting changes. Use [L7 proxy with LiteLLM](./deploy/ha/haproxy.md) to set admission limits and validate capacity.
 
 ### Autoscaling
+
+For sudden bursts and long streams, bound waiting requests, reject excess load, and scale on outstanding work as well as request rates. Keep warm capacity while new pods start. Use [L7 proxy with LiteLLM](./deploy/ha/haproxy.md) for upstream buffering, worker admission control, and KEDA settings.
 
 Use requests per second (RPS) and tokens per second (TPS) alongside CPU and memory targets in your HPA. CPU use can stay low while requests wait on model providers. Follow the [HPA metrics guide](./deploy/autoscaling.md#scale-on-requests-and-tokens-per-pod) to expose per-pod metrics and set targets from load tests.
 
@@ -162,7 +172,7 @@ On Kubernetes, use the default of one Uvicorn worker per pod (`--num_workers 1`)
 CMD ["--port", "4000", "--config", "./proxy_server_config.yaml", "--num_workers", "1"]
 ```
 
-On a single VM or a bare container with nothing scaling it for you, the opposite applies: set `NUM_WORKERS` to the machine's vCPU count, since nothing else will put those cores to work. Sizing and connection limits are both per worker, so a machine running eight workers wants eight times the memory floor above and an eighth of the connection pool.
+On a single VM or a bare container with nothing scaling it for you, the opposite applies: set `NUM_WORKERS` to the machine's vCPU count, since nothing else will put those cores to work. Sizing and connection limits are both per worker, so a machine running eight workers starts with eight times the memory budget above and an eighth of the connection pool per worker.
 
 Do not combine `--num_workers 1` with `--max_requests_before_restart`. With a single worker the flag does not recycle anything; once the limit is hit the whole pod stops serving. Under Uvicorn the process exits with code 0 and Kubernetes restarts the container, and under Gunicorn nothing accepts connections until the old worker has drained and a replacement has booted, which is long enough for liveness probes to fail. Health probes count toward the limit too, so two probes every 15 seconds use up 11,520 requests a day before any real traffic. If you see gradual memory growth under sustained load, rely on Kubernetes replacing pods, or run two or more workers with jitter as described in [Recycle workers](./server_tuning.md#recycle-workers).
 
