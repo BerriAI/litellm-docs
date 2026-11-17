@@ -5,17 +5,30 @@ import {PostByline} from '@theme/BlogPostPage';
 import styles from './launch.module.css';
 
 const evaluationSource = (asynchronous) => `from pathlib import Path
+from tempfile import TemporaryDirectory
 import litellm
 from litellm import EvalTask, EvalTarget, Harness, PredicateCheck, sandbox
 
+harness = Harness.TOOL_LOOP
+model = "litellm_proxy/model-a"
+prompt = "Classify: I was charged twice. Reply only with billing, technical, or sales."
+
+# Run the agent.
+with TemporaryDirectory() as workspace:
+    result = ${asynchronous ? 'await litellm.aagent' : 'litellm.agent'}(
+        harness, prompt, model=model, sandbox=sandbox.local(workspace),
+    )
+print(result.text)
+
+# Evaluate the same setup and a second model.
 task = EvalTask(
     id="billing-ticket",
-    prompt="Classify: I was charged twice. Reply only with billing, technical, or sales.",
+    prompt=prompt,
     check=PredicateCheck(lambda result: result.text.strip().lower() == "billing"),
 )
 targets = [
-    EvalTarget(Harness.TOOL_LOOP, "litellm_proxy/model-a", label="model-a"),
-    EvalTarget(Harness.TOOL_LOOP, "litellm_proxy/model-b", label="model-b"),
+    EvalTarget(harness, model, label="model-a"),
+    EvalTarget(harness, "litellm_proxy/model-b", label="model-b"),
 ]
 
 report = ${asynchronous ? 'await litellm.aagent_eval' : 'litellm.agent_eval'}(
@@ -53,14 +66,14 @@ function EvaluationDemo() {
       <div className={styles.output}>
         <div className={styles.outputBar}><span>{asynchronous ? 'Notebook output' : 'Terminal'}</span><span>selected columns</span></div>
         <div className={styles.outputBody}>
-          <p className={styles.command}>{asynchronous ? 'In [1]: await litellm.aagent_eval(...)' : '$ python evaluate.py'}</p>
+          <p className={styles.command}>{asynchronous ? 'Notebook cell output' : '$ python evaluate.py'}</p>
           <pre aria-label="Sample evaluation scorecard">{sampleScorecard}</pre>
           <div className={styles.export}><span>JSON export</span><code>scorecard.json</code></div>
         </div>
         <p className={styles.outputCaption}>Recorded SDK example with mocked answers. No live model calls.</p>
       </div>
       <figcaption className={styles.demoCaption}>
-        <span>{asynchronous ? 'Use top-level await in a notebook, or place the call inside an async function.' : 'Define your task once. Run it against both model targets and export the report.'}</span>
+        <span>{asynchronous ? 'Run both calls with top-level await in a notebook, or inside an async function.' : 'Run your agent, then evaluate the same setup and compare a second model.'}</span>
         <a href="#connect">Set up the example</a>
       </figcaption>
     </figure>
