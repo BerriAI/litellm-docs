@@ -1380,7 +1380,7 @@ router_settings:
 | LITELLM_MODE | Operating mode for LiteLLM (e.g., production, development)
 | LITELLM_NON_ROOT | Flag to run LiteLLM in non-root mode for enhanced security in Docker containers
 | LITELLM_OFFLINE_MODE | Set to `true` to stop every request LiteLLM makes on its own, such as fetching the model cost map, Anthropic beta headers, auto router presets, policy templates, blog posts and the latest release, the breached password check and Hugging Face tokenizer downloads. Bundled copies are used instead. Requests to providers and other destinations you configure are unaffected. Default is `false`. See [Outbound requests and offline mode](./outbound_requests).
-| LITELLM_PREFIX_BLOCK_HASHES_SECRET | <SinceVersion v="1.111.0" /> Dedicated HMAC secret for prompt-prefix block hash IDs when the `prefix_block_hashes` callback is enabled, with hashing skipped when unset and no fallback to the salt or master key
+| LITELLM_PREFIX_BLOCK_HASHES_SECRET | <SinceVersion v="1.111.0" /> Dedicated HMAC secret for prompt-prefix block hash IDs when the `prefix_block_hashes` callback is enabled, with hashing skipped when unset and no fallback to the salt or master key. See [Prefix Block Hash IDs](./prefix_block_hashes.md).
 | LITELLM_RATE_LIMIT_WINDOW_SIZE | Rate limit window size for LiteLLM. Default is 60
 | LITELLM_REASONING_AUTO_SUMMARY | If set to "true", automatically enables detailed reasoning summaries (`summary: "detailed"`) for reasoning models across all translation paths (Anthropic adapter, Responses API, etc.). Default is "false"
 | LITELLM_SALT_KEY | Salt key for encryption in LiteLLM
