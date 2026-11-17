@@ -1,21 +1,21 @@
 ---
 title: Evaluate agents
-description: Compare agent harnesses and models on your own tasks with typed evaluations, repeatable runs, and a scorecard of success, cost and time.
+description: Evaluate a reusable agent on typed tasks, repeat each attempt and compare candidate definitions by success, cost and time.
 ---
 
 # Evaluate agents
 
 {/* keep-version-note */}
 
-:::info Unreleased API preview
-`agent_eval()` and `aagent_eval()` are not available in a published LiteLLM release yet. The examples below preview the API. This guide needs a verified release version and installation instructions before publication.
+:::info Preview
+The examples below preview the reusable `Agent` and evaluation APIs. Published PyPI releases do not include these APIs yet.
 :::
 
-Compare agent harnesses and models on your own tasks with `litellm.agent_eval()`. Define the work and its success check in an `EvalTask`, then choose a harness and model with an `EvalTarget`. Compare pass rate, cost and duration in the scorecard.
+Define an `Agent` once, then pass it to `litellm.agent_eval()` with typed tasks. Keep the harness, model and instructions in the agent definition; put each request and its success check in an `EvalTask`. Read pass rate, cost and duration in the scorecard.
 
 ## 1. Configure your AI Gateway
 
-Use a [LiteLLM AI Gateway](./gateway.md) virtual key that can call two model groups. This example names them `model-a` and `model-b`. Replace those names with your groups. Both targets use Tool Loop, which needs no CLI runtime.
+Use a [LiteLLM AI Gateway](./gateway.md) virtual key that can call a model group. This example names it `model-a`; replace that name with your group. The agent uses Tool Loop, which needs no CLI runtime. The later comparison also uses `model-b`.
 
 In Bash or Zsh, set your gateway's root URL, without `/v1`, and enter your virtual key after running `read`. The terminal hides the input:
 
@@ -27,7 +27,7 @@ read -rs LITELLM_PROXY_API_KEY
 
 Skip the `read` command if your secret manager has set `LITELLM_PROXY_API_KEY`. To compare CLI harnesses such as Claude Code or Codex, install their dependencies from the [quickstart](./quickstart.md#1-install).
 
-## 2. Define tasks and targets
+## 2. Define your agent and tasks {#2-define-tasks-and-targets}
 
 Save this complete example as `evaluate_agents.py`.
 
@@ -37,43 +37,40 @@ Choose a sandbox factory for each evaluation call. This example uses `sandbox.lo
 from pathlib import Path
 
 import litellm
-from litellm import EvalTarget, EvalTask, Harness, PredicateCheck, sandbox
+from litellm import Agent, EvalTask, Harness, PredicateCheck, sandbox
 
+
+support = Agent(
+    harness=Harness.TOOL_LOOP,
+    model="litellm_proxy/model-a",
+    instructions=(
+        "Classify tickets as billing, technical, or sales. "
+        "Reply with only the category."
+    ),
+)
 
 tasks = [
     EvalTask(
         id="billing-ticket",
-        prompt=(
-            "Classify this ticket as billing, technical, or sales. "
-            "Reply with only the category.\n"
-            "Ticket: I was charged twice for my subscription."
-        ),
+        prompt="I was charged twice for my subscription.",
         check=PredicateCheck(
             lambda result: result.text.strip().lower() == "billing"
         ),
     ),
     EvalTask(
         id="technical-ticket",
-        prompt=(
-            "Classify this ticket as billing, technical, or sales. "
-            "Reply with only the category.\n"
-            "Ticket: The app crashes whenever I upload a PDF."
-        ),
+        prompt="The app crashes whenever I upload a PDF.",
         check=PredicateCheck(
             lambda result: result.text.strip().lower() == "technical"
         ),
     ),
 ]
 
-targets = [
-    EvalTarget(Harness.TOOL_LOOP, "litellm_proxy/model-a", label="model-a"),
-    EvalTarget(Harness.TOOL_LOOP, "litellm_proxy/model-b", label="model-b"),
-]
-
 report = litellm.agent_eval(
+    agent=support,
     tasks=tasks,
-    targets=targets,
     sandbox=sandbox.local,
+    trials=3,
     max_concurrency=2,
 )
 
@@ -83,9 +80,9 @@ Path("scorecard.json").write_text(report.to_json(), encoding="utf-8")
 
 `PredicateCheck` receives the agent's `Result` and returns a boolean. Check the final answer, tool calls or another part of the result. Predicates can be sync or async.
 
-Each target can use a different harness, model and harness-specific `options`. Use a label to identify each setup in the scorecard. Task IDs and resolved target labels must be unique.
+`Agent` holds a reusable definition. Creating it does not run a request. Evaluation uses that same definition for each task and trial, with a fresh workspace for every attempt. Give each task a unique ID.
 
-## 3. Run the comparison
+## 3. Run the evaluation
 
 From the directory containing `evaluate_agents.py`, run:
 
@@ -93,9 +90,7 @@ From the directory containing `evaluate_agents.py`, run:
 python evaluate_agents.py
 ```
 
-Two tasks and two targets produce four runs. In the `model-a` and `model-b` summaries, confirm that each target has two attempts. A target that returns both expected categories and stops with `done` has `2/2` passed runs. Use `scorecard.json` for your own analysis.
-
-Set `trials=3` to repeat each task and target three times. This example then produces twelve runs.
+Two tasks, one agent and three trials produce six runs. Confirm that the summary has six attempts. An agent that returns the expected category on each attempt and stops with `done` has `6/6` passed runs. Use `scorecard.json` for your own analysis.
 
 A run passes only when the agent stops with `stop_reason="done"` and its check passes. A failed check or turn limit produces `fail`. Setup failures, runtime errors, timeouts and cancelled agent runs produce `error` rows while the remaining runs continue. The runner skips grading when the agent does not finish with `done`. Cancelling the suite stops execution and triggers cleanup.
 
@@ -124,15 +119,61 @@ Compare agent and judge costs in separate columns. JSON exports include result d
 
 The runner attaches `agent_eval_suite`, `agent_eval_run`, `agent_eval_task`, `agent_eval_target` and `agent_eval_trial` metadata to model requests. Pass `metadata={"experiment": "support-routing"}` to add your own label. Use these identifiers to correlate requests in existing gateway logs. Persisted spend logs require the gateway's existing database setup.
 
+## Run the same agent on one request
+
+Pass the `support` object to `litellm.agent()` when you need one answer. `TemporaryDirectory` creates an existing local directory for that run:
+
+```python
+from tempfile import TemporaryDirectory
+
+with TemporaryDirectory() as workspace:
+    result = litellm.agent(
+        support,
+        "I was charged twice for my subscription.",
+        sandbox=sandbox.local(workspace),
+    )
+    print(result.text)
+```
+
+This returns a `Result`. Evaluation takes the `Agent` definition and typed tasks, then runs new attempts. The individual request stays separate from the evaluation scorecard.
+
+## Compare a candidate
+
+Use `dataclasses.replace` to change one setting while keeping the rest of the definition. Label the original and candidate with `EvalTarget`:
+
+```python
+from dataclasses import replace
+
+from litellm import EvalTarget
+
+candidate = replace(support, model="litellm_proxy/model-b")
+
+comparison = litellm.agent_eval(
+    tasks=tasks,
+    targets=[
+        EvalTarget(agent=support, label="production"),
+        EvalTarget(agent=candidate, label="candidate"),
+    ],
+    sandbox=sandbox.local,
+    trials=3,
+    max_concurrency=2,
+)
+
+print(comparison.to_markdown())
+```
+
+Two tasks, two targets and three trials produce twelve runs. Give each target a unique label. Pass either `agent` for one definition or `targets` for a comparison. Each target can carry its own harness, model, instructions and harness-specific options through its `Agent`.
+
 ## Async execution
 
-In an async function or notebook, use `aagent_eval()` with the same tasks and targets:
+In an async function or notebook, use `aagent_eval()` with the same agent and tasks:
 
 ```python
 report = await litellm.aagent_eval(
+    agent=support,
     tasks=tasks,
-    targets=targets,
     sandbox=sandbox.local,
+    trials=3,
     max_concurrency=2,
 )
 
@@ -144,7 +185,14 @@ print(report.to_markdown())
 Use `JudgeCheck` to grade against a rubric. Choose a judge model that supports JSON output. The judge receives the task prompt, answer and reported file changes, together with your rubric. It can grade file diffs but cannot read other workspace files.
 
 ```python
+from dataclasses import replace
+
 from litellm import EvalTask, JudgeCheck
+
+writer = replace(
+    support,
+    instructions="Write clear customer support replies. Do not guarantee refunds.",
+)
 
 writing_task = EvalTask(
     id="support-reply",
@@ -161,9 +209,17 @@ writing_task = EvalTask(
         timeout=30,
     ),
 )
+
+writing_report = litellm.agent_eval(
+    agent=writer,
+    tasks=[writing_task],
+    sandbox=sandbox.local,
+)
+
+print(writing_report.to_markdown())
 ```
 
-Add `writing_task` to `tasks` and allow your virtual key to call the `judge` model group. Budget for these calls in addition to the agent runs.
+The writing variant keeps the original model and changes the instructions. Allow your virtual key to call the `judge` model group, and budget for those calls in addition to the agent runs.
 
 A valid negative verdict produces `fail`. A failed judge request or invalid verdict produces `error`.
 
@@ -180,12 +236,18 @@ def add(a, b):
     return a - b
 ```
 
-Replace the tasks and targets in `evaluate_agents.py` with this example. Install the CLI runtimes first using the [quickstart](./quickstart.md#1-install), and use model groups available to your key.
+Replace the `support` definition and `tasks` in `evaluate_agents.py` with this example. Install the CLI runtime first using the [quickstart](./quickstart.md#1-install), and use a model group available to your key.
 
 ```python
 from pathlib import Path
 
-from litellm import CommandCheck, EvalTarget, EvalTask, Harness
+from litellm import Agent, CommandCheck, EvalTask, Harness
+
+support = Agent(
+    harness=Harness.CODEX,
+    model="litellm_proxy/coder",
+    instructions="Complete the requested file change and verify it.",
+)
 
 tasks = [
     EvalTask(
@@ -204,11 +266,6 @@ tasks = [
         ),
     ),
 ]
-
-targets = [
-    EvalTarget(Harness.CLAUDE_CODE, "litellm_proxy/claude"),
-    EvalTarget(Harness.CODEX, "litellm_proxy/gpt"),
-]
 ```
 
 Use `CommandCheck` to run a grading command in the same sandbox after the agent finishes. Exit code zero passes. This example keeps assertions in the evaluation script, outside the copied project. Use a task's `setup` commands to install dependencies before the agent starts.
@@ -225,8 +282,8 @@ For container execution, pass a factory that receives each attempt's fresh works
 from litellm import sandbox
 
 report = litellm.agent_eval(
+    agent=support,
     tasks=tasks,
-    targets=targets,
     sandbox=lambda workspace: sandbox.docker(
         "my-eval-runtime:latest",
         mounts={str(workspace): "/workspace"},
@@ -242,11 +299,11 @@ Replace `my-eval-runtime:latest` with an image you built containing the required
 | `sandbox` | Required | Factory that receives each attempt's fresh workspace and returns a sandbox |
 | `trials` | `1` | Independent attempts per task and target |
 | `max_concurrency` | `1` | Concurrent attempts, including setup and grading |
-| `timeout` | `300` | Seconds allowed for each agent execution |
+| `timeout` | Agent setting, else `300` | Seconds allowed for each agent execution |
 | `setup_timeout` | `120` | Seconds allowed for the setup stage of each attempt |
 | `CommandCheck.timeout` | `30` | Seconds allowed for the grading command |
 | `JudgeCheck.timeout` | `30` | Seconds allowed for the judge request |
-| `max_turns` | `None` | Existing agent turn limit, which counts tool-call events rather than model calls |
+| `max_turns` | Agent setting, else `None` | Turn limit, which counts tool-call events rather than model calls; explicit `None` clears the limit |
 
 The runner closes its sandboxes and removes temporary workspaces after each attempt. Inspect file changes and check details in the scorecard, or export them to JSON.
 
