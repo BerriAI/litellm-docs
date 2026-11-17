@@ -272,7 +272,7 @@ print(response.usage)
 
 ### OpenAI explicit breakpoints (GPT-5.6 and newer)
 
-GPT-5.6 and newer also accept [explicit cache breakpoints](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-breakpoints): a `prompt_cache_breakpoint` marker on a content block plus a request-level `prompt_cache_options` that picks the mode (`implicit` keeps OpenAI's automatic breakpoint on the latest message alongside yours, `explicit` uses only yours) and the cache `ttl` (`30m`, or `12h` on `/responses`). LiteLLM passes both through on `/chat/completions`, `/responses` and, for Anthropic-shaped clients, `/v1/messages`. A `12h` write bills at 2.5x the input rate instead of 1.25x for `30m`, and OpenAI reports the split in `usage.input_tokens_details.cache_write_tokens_details` as `ttl_30m_tokens` and `ttl_12h_tokens`. LiteLLM prices the `12h` share from the model's `cache_creation_input_token_cost_above_12hr` and the rest from `cache_creation_input_token_cost`; a model without the 12-hour rate bills every write at the 30-minute rate. Models that accept the marker carry `supports_prompt_cache_breakpoint: true` in the cost map, and a GPT-5.6 or newer OpenAI model name the map has not flagged yet is treated the same way. To have LiteLLM place the marker for you from the deployment config, see the [auto-inject tutorial](../tutorials/prompt_caching.md#openai-gpt-56-and-newer)
+GPT-5.6 and newer also accept [explicit cache breakpoints](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-breakpoints): a `prompt_cache_breakpoint` marker on a content block plus a request-level `prompt_cache_options` that picks the mode (`implicit` keeps OpenAI's automatic breakpoint on the latest message alongside yours, `explicit` uses only yours) and the cache `ttl` (`30m`, or `12h` on `/responses`). LiteLLM passes both through on `/chat/completions`, `/responses` and, for Anthropic-shaped clients, `/v1/messages`. A `12h` write bills at 2.5x the input rate instead of 1.25x for `30m`, and OpenAI reports the split in `usage.input_tokens_details.cache_write_tokens_details` as `ttl_30m_tokens` and `ttl_12h_tokens`. LiteLLM prices the `12h` share from the model's `cache_creation_input_token_cost_above_12hr` and the rest from `cache_creation_input_token_cost`; a model without the 12-hour rate bills every write at the 30-minute rate. Models that accept the marker carry `supports_prompt_cache_breakpoint: true` in the cost map, and a GPT-5.6 or newer OpenAI model name the map has not flagged yet is treated the same way. On a deployment, `supports_openai_prompt_cache_breakpoint` sets the same thing and wins when both are set. `supports_prompt_cache_breakpoint` stays accepted as its deprecated name and only controls this OpenAI marker, never Bedrock `cachePoint` blocks ([Bedrock cache points](#control-bedrock-converse-cache-points)). The `supports_openai_prompt_cache_breakpoint` name needs a LiteLLM version that includes [PR #52180](https://github.com/BerriAI/litellm/pull/52180). To have LiteLLM place the marker for you from the deployment config, see the [auto-inject tutorial](../tutorials/prompt_caching.md#openai-gpt-56-and-newer)
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -663,6 +663,21 @@ curl -X POST http://localhost:4000/chat/completions \
 | Claude Opus 4.5, 4.6, 4.7 | `us.anthropic.claude-opus-4-5-*`, `us.anthropic.claude-opus-4-6-*`, `us.anthropic.claude-opus-4-7-*` | 4,096 | 5 min, 1 hour |
 
 Cross-region inference profiles are also supported for the models above.
+
+#### Control Bedrock Converse cache points
+
+LiteLLM decides whether a Converse request carries `cachePoint` blocks in this order. OpenAI-family models on Bedrock never get them. Then `supports_bedrock_converse_cache_point` decides when the deployment's `model_info` or the cost map sets it to `true` or `false`, with the deployment's value first. Otherwise the model's `supports_prompt_caching` decides, and a model the cost map does not list, such as an application inference profile ARN, keeps getting them. Set the flag to `false` for a model that caches on its own but rejects the `cachePoint` field (the cost map already does this for Kimi K3), or to `true` for an inference profile ARN or a model newer than the cost map. Setting it to `true` on a model without prompt caching makes Bedrock answer 400.
+
+```yaml
+model_list:
+  - model_name: claude-profile
+    litellm_params:
+      model: bedrock/arn:aws:bedrock:us-east-1:<account-id>:application-inference-profile/<profile-id>
+    model_info:
+      supports_bedrock_converse_cache_point: true
+```
+
+`supports_bedrock_converse_cache_point` needs a LiteLLM version that includes [PR #52180](https://github.com/BerriAI/litellm/pull/52180). From v1.106.0 until that version, Bedrock read `supports_prompt_cache_breakpoint` for this decision, so `false` there turned off caching for the model. With the fix Bedrock ignores `supports_prompt_cache_breakpoint`, and a Bedrock deployment that still sets it without `supports_bedrock_converse_cache_point` logs a warning once per model. Move a Bedrock opt-out or opt-in to `supports_bedrock_converse_cache_point` to keep it.
 
 See the [AWS Bedrock prompt caching docs](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html) for the full list of supported models and regions.
 
