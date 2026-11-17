@@ -1,3 +1,9 @@
+---
+title: "Reka API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Reka"
+description: "Call Reka Flash 3, Reka Edge and hosted GLM, DeepSeek and Qwen models with streaming, image and video input, and Responses or Messages API calls via LiteLLM."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

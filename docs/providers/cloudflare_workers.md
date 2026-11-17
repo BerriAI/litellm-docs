@@ -1,4 +1,13 @@
+---
+title: "Cloudflare Workers AI API with LiteLLM"
+sidebar_label: "Cloudflare Workers AI"
+description: "Call Cloudflare Workers AI chat models such as Llama 2 and CodeLlama from the LiteLLM Python SDK, with streaming, Clef decision models and Clairic extraction."
+---
+
 # Cloudflare Workers AI
+
+LiteLLM calls Cloudflare Workers AI chat and decision models with the `cloudflare/` prefix, your `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID` from the Python SDK, with streaming.
+
 https://developers.cloudflare.com/workers-ai/models/text-generation/
 
 ## Chat and decision model endpoints
@@ -8,7 +17,7 @@ Cloudflare Workers AI uses different endpoints for chat completions and decision
 | Model type | Workers AI endpoint | Request shape |
 | --- | --- | --- |
 | Chat completions | `/ai/v1/chat/completions` | OpenAI-compatible `model` and `messages` |
-| Decisions (Clef) | `/ai/run/{model}` | Native Workers AI `state`, typed `questions`, and optional `images` for supported models |
+| Decisions (Clef) | `/ai/run/{model}` | Native Workers AI `state`, typed `questions`, optional `images` for supported models, and optional [audio and video clips](../decisions.md#audio-and-video-input) for `@cf/cloudflare/clef-omni` |
 
 Both paths follow `https://api.cloudflare.com/client/v4/accounts/{account_id}`.
 
@@ -82,4 +91,4 @@ All models listed here https://developers.cloudflare.com/workers-ai/models/text-
 
 ## Clairic extraction
 
-[Clairic](https://developers.cloudflare.com/workers-ai/models/clairic/) is Cloudflare's typed extraction model. Call it as `cloudflare/@cf/cloudflare/clairic` or `cloudflare/clairic` with the same `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, on the proxy's `/v1/extraction` route or with `litellm.extraction`. See [/v1/extraction](../extraction.md) for the request and response format, errors and pricing. Available from v1.108.0.
+[Clairic](https://developers.cloudflare.com/workers-ai/models/clairic/) is Cloudflare's typed extraction model. Call it as `cloudflare/@cf/cloudflare/clairic` or `cloudflare/clairic` with the same `CLOUDFLARE_API_KEY` and `CLOUDFLARE_ACCOUNT_ID`, on the proxy's `/v1/extraction` route or with `litellm.extraction`. See [/v1/extraction](../extraction.md) for the request and response format, errors and pricing. <SinceVersion v="1.108.0" />

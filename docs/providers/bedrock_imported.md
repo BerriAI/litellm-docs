@@ -1,3 +1,9 @@
+---
+title: "Bedrock Imported Models with LiteLLM"
+sidebar_label: "Bedrock Imported Models"
+description: "Call Bedrock imported models such as DeepSeek R1, Qwen3, Qwen2 and Kimi K2 Thinking through LiteLLM, with config.yaml setup and AI Gateway test requests."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

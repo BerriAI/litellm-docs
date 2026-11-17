@@ -1,0 +1,68 @@
+/* Kinds of request: a swatch per kind and the legend that filters by kind. The colours are set on
+   the simulator panel (Simulator.module.css). */
+
+.swatch {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.4rem;
+  margin: 0.25rem 0 0.6rem;
+  font-size: 0.76rem;
+}
+
+.cap {
+  margin-right: 0.25rem;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.legend .kind,
+.legend .clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 24px;
+  padding: 0 0.55rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ifm-font-color-base);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+
+.legend .kind:hover,
+.legend .clear:hover {
+  border-color: var(--ifm-color-emphasis-600);
+}
+
+.legend .kind[aria-pressed='true'] {
+  border-color: var(--ifm-font-color-base);
+  background: var(--ifm-color-emphasis-100);
+}
+
+.legend .kindDim {
+  opacity: 0.45;
+}
+
+.legend .clear {
+  font-family: inherit;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.hint {
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.72rem;
+}

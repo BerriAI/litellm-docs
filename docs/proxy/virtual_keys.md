@@ -3,13 +3,14 @@ import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
 
 # Virtual Keys
+
+For customer and end-user spend tracking from v1.111, start with [Customer Management](./customers.md). You can use one application key across customers and pass customer identity headers with each request.
 Track Spend, and control model access via virtual keys for the proxy
 
 :::info
 
 - [UI to Generate, Edit, Delete Keys (with SSO)](https://docs.litellm.ai/docs/proxy/ui)
-- [Deploy LiteLLM Proxy with Key Management](https://docs.litellm.ai/docs/proxy/deploy#provision-the-data-stores)
-- [Dockerfile.database for LiteLLM Proxy + Key Management](https://github.com/BerriAI/litellm/blob/main/docker/Dockerfile.database)
+- [Deploy LiteLLM Proxy with Key Management](https://docs.litellm.ai/docs/proxy/deploy/helm#valuesyaml)
 
 
 :::
@@ -371,11 +372,7 @@ client = openai.OpenAI(
 
 ### Overwrite outgoing `user` with the key hash
 
-:::info
-
-Available in `v1.95.0` and later.
-
-:::
+<SinceVersion v="1.95.0" />
 
 Many providers use the request's end-user identifier (the `user` field) to monitor and detect abuse and to trace activity back to an individual end user, so that one user's misuse is less likely to disrupt access for your whole organization. Because that field is set by the caller, a client can change it to dissociate its activity from a given identity. Turn on `overwrite_user_with_key_hash` when you want the `user` the provider sees to be a stable, tamper-proof identifier tied to the LiteLLM key that made the call, so any provider-side handling keyed on `user` maps back to exactly one key no matter what the client sent.
 

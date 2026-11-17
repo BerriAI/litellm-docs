@@ -1,3 +1,8 @@
+---
+title: "Built-in Content Filter Guardrail in LiteLLM"
+sidebar_label: "LiteLLM Content Filter (Built-in Guardrails)"
+description: "Mask or block sensitive data on the LiteLLM AI Gateway with the built-in content filter, using regex patterns and keywords, set in the UI or YAML."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
@@ -655,24 +660,39 @@ exceptions:
 
 #### Where to put the file
 
-Put your YAML in one of these two locations:
+Put your YAML in one of these two locations.
 
-**Option A: inside the built-in `categories/` directory (recommended)**
+**Option A: inside a `categories/` directory the loader scans (recommended)**
 
-Mount the file at `<site-packages>/litellm/proxy/guardrails/guardrail_hooks/litellm_content_filter/categories/<your-category-name>.yaml` and drop the `category_file:` field. The loader picks it up by category name
+Mount the file into the imported package's `categories/` directory and omit `category_file:`. The shared LiteLLM image uses `/app/.venv/lib/python{{python_version}}/site-packages/litellm/proxy/guardrails/content_filter_data/categories/` in both deployment modes. Update the Python minor version in the path when your image changes.
+
+Mount each file with `subPath`. A mount over the whole directory hides the built-in categories. For the [LiteLLM chart](../deploy/helm.md):
 
 ```yaml title="values.yaml (Helm)"
-extraVolumeMounts:
-  - name: content-filter-categories
-    mountPath: /usr/local/lib/python{{python_version}}/site-packages/litellm/proxy/guardrails/guardrail_hooks/litellm_content_filter/categories/<your-category-name>.yaml
-    subPath: <your-category-name>.yaml
-    readOnly: true
+gateway:
+  volumeMounts:
+    - name: content-filter-categories
+      mountPath: /app/.venv/lib/python{{python_version}}/site-packages/litellm/proxy/guardrails/content_filter_data/categories/<your-category-name>.yaml
+      subPath: <your-category-name>.yaml
+      readOnly: true
+  volumes:
+    - name: content-filter-categories
+      configMap:
+        name: <your-configmap-name>
 
-extraVolumes:
-  - name: content-filter-categories
-    configMap:
-      name: <your-configmap-name>
+backend:
+  volumeMounts:
+    - name: content-filter-categories
+      mountPath: /app/.venv/lib/python{{python_version}}/site-packages/litellm/proxy/guardrails/content_filter_data/categories/<your-category-name>.yaml
+      subPath: <your-category-name>.yaml
+      readOnly: true
+  volumes:
+    - name: content-filter-categories
+      configMap:
+        name: <your-configmap-name>
 ```
+
+For separate services, mount the file on both the gateway and backend. The gateway runs the guardrail. The backend serves the UI category list and editor. In monolith mode, use the `gateway` mounts. This mode ignores the `backend` block.
 
 ```yaml title="config.yaml"
 guardrails:
@@ -688,8 +708,6 @@ guardrails:
           severity_threshold: "high"
 ```
 
-Update `mountPath` if you upgrade to a litellm image built on a different Python minor version
-
 **Option B: any other path, with the env var opt-in**
 
 Set
@@ -698,7 +716,7 @@ Set
 LITELLM_CONTENT_FILTER_ALLOW_EXTERNAL_PATHS=true
 ```
 
-on the proxy pod, then reference the file by absolute path
+on the proxy pod (on both the gateway and backend pods for the `litellm` chart), then reference the file by absolute path
 
 ```yaml title="config.yaml"
 categories:
@@ -708,6 +726,8 @@ categories:
     severity_threshold: "high"
     category_file: "/absolute/path/to/<your-category-name>.yaml"
 ```
+
+A category loaded this way is enforced on requests but does not appear in the UI category list, which only reads the `categories/` directories inside the package.
 
 Only use this when everyone who can write `category_file` (proxy config, DB, Admin UI, team-scoped configs) is trusted; with the flag on, `category_file` can point at any YAML-parseable file on the pod
 
@@ -726,6 +746,8 @@ content_filter.py: Category <name>: invalid category_file path, skipping. ...
 ```
 
 The second line means the file was rejected and the category is running with zero rules; use one of the two options above to fix it
+
+With Option A, `Category file not found: <path>, skipping` means the file is not in a directory this image reads, so check the mount path against the table above
 
 ## Use Cases
 

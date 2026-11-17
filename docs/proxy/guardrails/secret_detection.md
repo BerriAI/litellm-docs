@@ -1,3 +1,8 @@
+---
+title: "Secret Detection Guardrail in LiteLLM (Enterprise)"
+sidebar_label: "Secret Detection/Redaction (Enterprise-only)"
+description: "Redact API keys and secrets from requests on the LiteLLM AI Gateway before they reach an LLM, turned on per key or team, with detector control."
+---
 # Secret Detection/Redaction (Enterprise-only)
 Use this to REDACT API Keys, Secrets sent in requests to an LLM.
 
@@ -96,6 +101,21 @@ https://api.groq.com/openai/v1/ \
 ## Turn on/off per project (API KEY/Team)
 
 [**See Here**](./quick_start.md#-control-guardrails-per-api-key)
+
+## Skip tool results
+
+hide-secrets masks secrets in tool calls and tool results as well as in user text. To send tool results to the model as returned, set `skip_tool_message_in_guardrail: true` on the guardrail, or in `litellm_settings` to apply it to every guardrail. A per-guardrail value wins over the global one, so `false` on hide-secrets keeps tool results masked while other guardrails skip them. See [Skip tool messages in guardrail evaluation](./quick_start.md#skip-tool-messages-in-guardrail-evaluation).
+
+```yaml
+guardrails:
+  - guardrail_name: "hide-secrets"
+    litellm_params:
+      guardrail: "hide-secrets"
+      mode: "pre_call"
+      skip_tool_message_in_guardrail: true
+```
+
+This leaves `role: tool` messages on `/v1/chat/completions` and `tool_result` blocks on `/v1/messages` as sent. Tool call arguments are still masked, and tool output on `/v1/responses` is always masked, matching the other guardrails.
 
 ## Control secret detectors
 

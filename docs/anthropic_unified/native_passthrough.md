@@ -4,7 +4,7 @@ This page covers the `/v1/messages` half of the `model_info.supported_endpoints`
 
 When a deployment's provider has no native Anthropic Messages support, LiteLLM translates each `/v1/messages` request into the provider's own API: `openai/` deployments go through the OpenAI Responses API (see [the parameter mapping](./messages_to_responses_mapping.md)) and everything else goes through `/v1/chat/completions`. That translation only keeps what the target API can express: `cache_control` blocks are dropped, `thinking` is mapped to the provider's own reasoning parameter, and other Anthropic-only request details are approximated or lost
 
-Many OpenAI-compatible servers (self-hosted vLLM, inference hubs, model vendors with an Anthropic-compatible endpoint) also expose the Anthropic Messages API natively. For those, you can opt a deployment into forwarding the Anthropic payload untranslated. Available from v1.92.0
+Many OpenAI-compatible servers (self-hosted vLLM, inference hubs, model vendors with an Anthropic-compatible endpoint) also expose the Anthropic Messages API natively. For those, you can opt a deployment into forwarding the Anthropic payload untranslated. <SinceVersion v="1.92.0" />
 
 ## Opt in with `supported_endpoints`
 

@@ -1,7 +1,15 @@
+---
+title: "Moonshot AI (Kimi) API with LiteLLM: Setup"
+sidebar_label: "Moonshot AI"
+description: "Call Moonshot AI's moonshot-v1 and Kimi models, including kimi-k2.5 vision, on the global or China endpoint while LiteLLM handles temperature limits."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Moonshot AI
+
+Moonshot AI makes the moonshot-v1 and Kimi models; LiteLLM calls them with the `moonshot/` prefix from the Python SDK or AI Gateway and works around Moonshot's parameter limits for you.
 
 ## Overview
 
@@ -218,6 +226,16 @@ curl http://localhost:4000/v1/chat/completions \
 </Tabs>
 
 For more detailed information on using the LiteLLM Proxy, see the [LiteLLM Proxy documentation](../providers/litellm_proxy).
+
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`moonshot/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Moonshot model name. LiteLLM sends Moonshot the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `moonshot/kimi-latest` | Kimi |
 
 ## Image / Vision Support
 

@@ -19,7 +19,9 @@ Headroom runs as a sidecar service alongside LiteLLM. Client traffic continues t
 
 ## Requirements
 
-LiteLLM v1.92.x or later, and a reachable Headroom proxy. See [Deploy Headroom](#deploy-headroom) below for a one-file Dockerfile.
+<SinceVersion v="1.92.0" />
+
+You need a reachable Headroom proxy. See [Deploy Headroom](#deploy-headroom) below for a one-file Dockerfile.
 
 For testing ahead of the stable cut, use the [v1.92.0-dev.1](https://github.com/BerriAI/litellm/releases/tag/v1.92.0-dev.1) dev release.
 
@@ -248,3 +250,11 @@ Headroom protects two message types by default, set on the Headroom container it
 | -------------------- | -------------------------------------------------------------------- |
 | `HEADROOM_API_BASE`  | Fallback for `api_base` when not set in the guardrail config.        |
 | `HEADROOM_API_KEY`   | Fallback for `api_key` when not set in the guardrail config.         |
+
+## How compression savings are calculated
+
+The Cost Optimization page in the Admin UI shows a **Compression savings** tile with a dollar amount and the number of tokens compressed. Both come from the per-request stats Headroom returns.
+
+Each time compression succeeds, the `/v1/compress` response reports `tokens_before` and `tokens_after`, counted by Headroom's own tokenizer over the messages it was sent. LiteLLM stores those stats in the request's `guardrail_information` on the spend log, together with `tokens_saved`, which is `tokens_before - tokens_after` when the Headroom service does not send it. When the spend log is rolled into the daily spend tables, `tokens_saved` is written as the request's `compression_saved_tokens`, and `compression_savings_spend` is `tokens_saved` multiplied by the `input_cost_per_token` of the model the request was sent to. That rate is the deployment's configured input price when `model_list` sets one, otherwise LiteLLM's built-in price for the model. The tile sums both columns over the selected date range.
+
+The dollar figure is an estimate of what the removed tokens would have cost at the plain input rate, so prompt caching discounts and service tiers are not applied. Requests where compression failed or was skipped contribute nothing, and a model with no known price contributes its tokens but zero dollars.

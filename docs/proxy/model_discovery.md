@@ -15,6 +15,7 @@ Use this to give users an accurate list of models available behind provider endp
 - Vertex AI
 - Eden AI
 - Bedrock
+- OpenRouter
 
 ### Usage
 
@@ -148,6 +149,27 @@ litellm_settings:
 ```
 
 The listing signs with the deployment's AWS credentials (keys, `aws_role_name`, `aws_profile_name`, web identity, or the default chain), or with a Bedrock API key (`api_key` or `AWS_BEARER_TOKEN_BEDROCK`), and needs two IAM permissions the invoke path does not: `bedrock:ListInferenceProfiles` and `bedrock:ListFoundationModels`. It calls the Bedrock control plane (`bedrock.<region>.amazonaws.com`), not the runtime endpoint, so a VPC that only exposes `bedrock-runtime` needs a `bedrock` interface endpoint too. When the permissions are missing or the control plane does not answer, the deployment adds nothing to `/v1/models` and the proxy logs `Error getting valid models` on each listing call
+
+## OpenRouter
+
+<SinceVersion v="1.110.0" />
+
+An `openrouter/*` deployment lists the chat models that OpenRouter's [list models for user](https://openrouter.ai/docs/api/api-reference/models/list-models-filtered-by-user-provider-preferences-privacy-settings-and-guardrails) endpoint returns for the deployment's key, as `openrouter/<vendor>/<model>` ids that route back through the same deployment. That endpoint leaves out the models the account's provider preferences, privacy settings, or guardrails block, so the list holds only models the key can call.
+
+```yaml
+model_list:
+  - model_name: openrouter/*
+    litellm_params:
+      model: openrouter/*
+      api_key: os.environ/OPENROUTER_API_KEY
+
+litellm_settings:
+  check_provider_endpoint: true
+```
+
+A custom prefix keeps the vendor in each id, so `model_name: or-team/*` over `model: openrouter/*` lists `or-team/openai/gpt-5.4-mini`, and a catch-all `model_name: "*"` over `openrouter/*` lists bare ids like `openai/gpt-5.4-mini`. Embedding models and ids ending in `:batch` are not listed, and embedding models still answer on `/v1/embeddings` through the wildcard. A key or team granted `openrouter/*` lists no OpenRouter models unless an `openrouter/*` deployment exists, since the catalog depends on the key that asks for it.
+
+The listing uses the deployment's `api_key` and `api_base`, then `OPENROUTER_API_KEY` or `OR_API_KEY` and `OPENROUTER_API_BASE`, in the same order as a chat request. When the catalog call fails or takes longer than 10 seconds, the deployment adds nothing to `/v1/models`, and after a timeout the next 30 seconds of listings skip the call.
 
 ## Hide a model from `/v1/models`
 

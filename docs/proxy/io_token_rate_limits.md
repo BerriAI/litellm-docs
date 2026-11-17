@@ -41,21 +41,23 @@ LiteLLM follows the same reservation model as the [Bedrock Mantle endpoint](http
 Before the request is sent to the provider:
 
 1. **Estimate input tokens** from the request body (`messages`, `prompt`, or Responses `input`).
-2. **Resolve an effective output cap** — the stand-in for `max_tokens` when checking quotas:
+2. **Resolve the output reservation**, the number of output tokens held against `otpm` until the response comes back:
 
-| Priority | Source | Example (`openai.gpt-oss-120b`) |
+| Priority | Source | Example (`openai.gpt-oss-120b`, `otpm: 100000`) |
 | --- | --- | --- |
-| 1 | Request `max_tokens` or `max_completion_tokens` | Client sends `max_tokens: 1024` → use `1024` |
-| 2 | Model map `max_output_tokens` (fallback `max_tokens`) | No client cap → use `32768` from the model card |
-| 3 | Hard default | Unknown model → `4096` |
+| 1 | Request `max_tokens`, `max_completion_tokens`, or `max_output_tokens` | The client sends `max_tokens: 1024`, so `1024` is reserved |
+| 2 | Deployment `litellm_params.max_tokens` or `max_completion_tokens`, or `max_output_tokens` for a Responses request, when it is below the default | The deployment sets `max_tokens: 2000`, so `2000` is reserved |
+| 3 | The default, the smaller of the model's `max_output_tokens` (`4096` for an unmapped model) and a quarter of `otpm` | No cap is set, so `25000` is reserved, since a quarter of `otpm` is below the model card's `32768` |
 
-3. **ITPM check:** reserve `estimated_input + effective_output_cap` against the deployment ITPM limit. Block with `429` if admission would exceed the limit.
-4. **OTPM check:** ensure `current_otpm + effective_output_cap` fits the OTPM limit. If OTPM would be exceeded, roll back the ITPM reservation and return `429`.
+3. **ITPM check:** reserve `estimated_input` against the deployment ITPM limit. Block with `429` if the reservation would exceed the limit.
+4. **OTPM check:** reserve the output reservation against the deployment OTPM limit. If OTPM would be exceeded, roll back the ITPM reservation and return `429`.
 
-This mirrors Mantle: when the client omits `max_tokens`, LiteLLM assumes the model's **maximum output capacity**, not its input context window. That is why a missing `max_tokens` on a large model can reserve a lot of ITPM/OTPM headroom.
+A request cap is reserved in full, even when it is above the default. A deployment cap only lowers the reservation, since the router sends it on every call that has no cap of its own. <SinceVersion v="1.109.0" />
+
+The default lets four requests without an output cap run at once on a deployment whose model max is above a quarter of `otpm`. Long answers from those requests can push a minute's real output above `otpm`, because the counters are corrected only when each response comes back. Set `NO_MAX_TOKENS_TPM_RESERVATION_FRACTION` to change the quarter, from `0.01` to `1`. A value of `1` reserves up to the whole `otpm`, which admits about one such request a minute when the model max is above `otpm`. <SinceVersion v="1.109.0" />
 
 :::tip
-Set `max_tokens` (or `max_output_tokens` on Responses) close to your expected completion size. Mantle and LiteLLM both reconcile down after the response, but a high default cap still blocks concurrent requests until the call finishes.
+Set `max_tokens` (or `max_output_tokens` on Responses) close to your expected completion size. LiteLLM corrects the counters after the response, but a large cap still holds OTPM capacity from concurrent requests until the call finishes.
 :::
 
 ### Post-call (reconciliation)
@@ -64,32 +66,34 @@ After a successful response:
 
 | Counter | What gets recorded |
 | --- | --- |
-| **ITPM** | Replace the pre-call reservation with `billable_input + completion_tokens`, where `billable_input = prompt_tokens - cached_tokens` |
-| **OTPM** | Add actual `completion_tokens` |
+| **ITPM** | Replace the pre-call reservation with the billable input, `prompt_tokens - cached_tokens`. Anthropic `/v1/messages` usage counts `input_tokens` plus cache writes, and leaves out cache reads |
+| **OTPM** | Replace the pre-call reservation with the actual `completion_tokens` |
 
-If the request **fails** before completion, the ITPM reservation is refunded; OTPM is not charged.
+A refund goes back to the minute that held the reservation. Usage above the reservation is charged to the minute the response finished in, so a call that starts at 12:00:59 and finishes at 12:01:20 counts its extra tokens against 12:01. <SinceVersion v="1.109.0" />
+
+If a request **fails**, both reservations are refunded, once for each retry or fallback attempt that failed. A response that reports no usage keeps its reservation until the minute ends.
 
 ### Worked example
 
-Request with no `max_tokens` against `bedrock_mantle/openai.gpt-oss-120b` (`max_output_tokens: 32768`), `itpm: 500000`:
+Request with no `max_tokens` against `bedrock_mantle/openai.gpt-oss-120b` (`max_output_tokens: 32768`), `itpm: 500000`, `otpm: 100000`:
 
-| Step | Calculation | ITPM usage |
+| Step | ITPM usage | OTPM usage |
 | --- | --- | --- |
-| Pre-call reserve | `12` input est. + `32768` output cap | `32780` reserved |
-| Response | `prompt_tokens=10`, `completion_tokens=150`, no cache | — |
-| Post-call reconcile | `10 + 150` | `160` final |
+| Pre-call reserve | `12` input estimate | `25000`, a quarter of `otpm` |
+| Response | `prompt_tokens=10`, no cache | `completion_tokens=150` |
+| Post-call reconcile | `10` final | `150` final |
 
-Without an explicit `max_tokens`, the pre-call hold is much larger than the final charge, the same behavior Mantle documents for quota reservation.
+Without an explicit `max_tokens`, the pre-call hold is much larger than the final charge. Up to four such requests fit in `otpm` at once, and each one that finishes frees the rest of its reservation for the next request in the same minute.
 
 ## How It Works
 
 | Phase | ITPM | OTPM |
 | --- | --- | --- |
-| **Pre-call** | Reserves `estimated_input + effective_output_cap` | Checks `current_otpm + effective_output_cap` |
-| **Post-call** | Reconciles to `billable_input + completion_tokens` | Adds actual `completion_tokens` |
-| **Failure** | Refunds the ITPM reservation | No OTPM charge |
+| **Pre-call** | Reserves `estimated_input` | Reserves the output reservation |
+| **Post-call** | Reconciles to the billable input | Reconciles to actual `completion_tokens` |
+| **Failure** | Refunds the ITPM reservation | Refunds the OTPM reservation |
 
-**Cached prompt tokens** (`prompt_tokens_details.cached_tokens`) are excluded from ITPM billing after the response.
+**Cached prompt tokens** (`prompt_tokens_details.cached_tokens`, or `cache_read_input_tokens` on Anthropic usage) are excluded from ITPM billing after the response.
 
 ## Response Headers
 
@@ -118,7 +122,7 @@ When a limit is exceeded before the upstream call:
 }
 ```
 
-The response includes a `retry-after` header (seconds until the current minute window resets).
+The `current usage` in the message includes the reservation of the request that was rejected. The response includes a `retry-after` header (seconds until the current minute window resets).
 
 ## Project-Level Limits
 

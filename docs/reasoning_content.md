@@ -7,11 +7,7 @@ import TabItem from '@theme/TabItem';
 
 # 'Thinking' / 'Reasoning Content'
 
-:::info
-
-Requires LiteLLM v1.63.0+
-
-:::
+<SinceVersion v="1.63.0" />
 
 Supported Providers:
 - Deepseek (`deepseek/`)
@@ -579,7 +575,7 @@ curl http://0.0.0.0:4000/v1/responses \
 
 :::info
 
-Claude 4.6+ reject the legacy shape with `400 "thinking.type.enabled" is not supported for this model. Use "thinking.type.adaptive" and "output_config.effort" to control thinking behavior.` LiteLLM only emits the adaptive shape for models its model map knows support it, so hitting this error usually means the model is newer than your LiteLLM install. Opus 4.8 routed through Bedrock, Vertex AI, or Azure AI needs v1.89.0+ ([PR #29702](https://github.com/BerriAI/litellm/pull/29702))
+Claude 4.6+ reject the legacy shape with `400 "thinking.type.enabled" is not supported for this model. Use "thinking.type.adaptive" and "output_config.effort" to control thinking behavior.` LiteLLM only emits the adaptive shape for models its model map knows support it, so hitting this error usually means the model is newer than your LiteLLM install. Opus 4.8 routed through Bedrock, Vertex AI, or Azure AI works <SinceVersion v="1.89.0" /> ([PR #29702](https://github.com/BerriAI/litellm/pull/29702))
 
 :::
 
@@ -697,7 +693,7 @@ model_list:
 
 ## Round `reasoning_effort` to the levels a deployment accepts {#reasoning-effort-levels}
 
-Available from v1.108.0.
+<SinceVersion v="1.108.0" />
 
 Some deployments accept only a few reasoning effort levels and answer 400 for the rest. List the levels a deployment accepts in `reasoning_effort_levels` under its `model_info`, and the proxy sends a declared level in place of any level the deployment does not accept. This applies on `/v1/chat/completions` (streaming included), `/v1/responses`, and `/v1/messages`, for every provider. Only the deployment's own declaration turns this on. Mistral and Together AI keep mapping levels from the model cost map on their own, as they did before.
 

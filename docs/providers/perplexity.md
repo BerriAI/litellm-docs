@@ -1,7 +1,16 @@
+---
+title: "Perplexity API with LiteLLM: Sonar and Agent API"
+sidebar_label: "Perplexity AI"
+description: "Call Perplexity Sonar models and the Agent API via LiteLLM with the perplexity/ prefix from the Python SDK or AI Gateway, with web search and reasoning."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Perplexity AI (pplx-api)
+
+Perplexity offers the Sonar models and an Agent API with a web search tool; LiteLLM calls both with the `perplexity/` prefix from the Python SDK or AI Gateway.
+
 https://www.perplexity.ai
 
 ## API Key
@@ -41,7 +50,7 @@ for chunk in response:
 
 ## Reasoning Effort
 
-Requires v1.72.6+
+<SinceVersion v="1.72.6" />
 
 :::info
 
@@ -122,7 +131,7 @@ All models listed here https://docs.perplexity.ai/docs/model-cards are supported
 
 ## Agent API (Responses API)
 
-Requires v1.72.6+
+<SinceVersion v="1.72.6" />
 
 
 ### Using Presets

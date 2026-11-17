@@ -1,3 +1,8 @@
+---
+title: "Comet Opik Tracing for LiteLLM AI Gateway"
+sidebar_label: "Comet Opik"
+description: "Send LiteLLM traces to Comet Opik from the Python SDK or AI Gateway, with Opik-specific parameters per request and metadata added from API keys."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
@@ -92,7 +97,7 @@ chunks = list(response)
 
 ```yaml
 model_list:
-  - model_name: gpt-3.5-turbo-testing
+  - model_name: {{openai_small}}-testing
     litellm_params:
       model: {{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
@@ -118,7 +123,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Content-Type: application/json' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \
 -d '{
-  "model": "gpt-3.5-turbo-testing",
+  "model": "{{openai_small}}-testing",
   "messages": [
     {
       "role": "user",

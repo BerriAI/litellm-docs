@@ -1,3 +1,8 @@
+---
+title: "Custom Callbacks in LiteLLM: Log Any LLM Event"
+sidebar_label: "Custom Callbacks"
+description: "Write a LiteLLM custom callback class or function to log success, failure and pre-call events from the Python SDK and track API costs per call."
+---
 # Custom Callbacks
 
 :::info

@@ -1,8 +1,16 @@
+---
+title: "Vertex AI Gemini API with LiteLLM"
+sidebar_label: "Gemini Enterprise Agent Platform"
+description: "Call Gemini on Gemini Enterprise Agent Platform (formerly Vertex AI) via LiteLLM with the vertex_ai/ prefix: GCP auth, function calling, thinking, caching."
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # VertexAI [Gemini]
+
+Gemini Enterprise Agent Platform (formerly Vertex AI) is Google Cloud's fully-managed platform for generative AI; LiteLLM calls Gemini on it with the `vertex_ai/` prefix and your GCP credentials from the Python SDK or AI Gateway.
 
 ## Overview
 
@@ -33,7 +41,7 @@ Models without a prefix default to Vertex AI which requires GCP authentication.
 <br />
 <br />
 
-<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/liteLLM_VertextAI_Example.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/liteLLM_VertextAI_Example.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
@@ -155,7 +163,7 @@ print(completion(**data))
 
 ### **JSON Schema**
 
-From v`1.40.1+` LiteLLM supports sending `response_schema` as a param for Gemini models on Vertex AI (e.g. `{{gemini_pro}}`). For models that don't support it natively, LiteLLM adds the schema to the message list with a user-controlled prompt.
+LiteLLM supports sending `response_schema` as a param for Gemini models on Vertex AI (e.g. `{{gemini_pro}}`) <SinceVersion v="1.40.1" />. For models that don't support it natively, LiteLLM adds the schema to the message list with a user-controlled prompt.
 
 **Response Schema**
 <Tabs>
@@ -994,11 +1002,29 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 </Tabs>
 
 
+#### Thought signatures and tool call ids
+
+Gemini on Vertex AI returns a thought signature with its tool calls, and LiteLLM handles it as it does for the Gemini API. By default, the id of a tool call that carries a signature holds the whole signature, as `call_123__thought__<thought-signature>`, which is often hundreds of characters long. For a client that limits the id length, set `thought_signature_in_tool_call_id: false` <SinceVersion v="1.109.0" /> on the deployment or per request. Ids are then short, such as `call_467312`, and the signature is only in `provider_specific_fields.thought_signature` of that tool call.
+
+```yaml
+model_list:
+  - model_name: {{gemini_flash}}
+    litellm_params:
+      model: vertex_ai/{{gemini_flash}}
+      vertex_project: "project-id"
+      vertex_location: "global"
+      thought_signature_in_tool_call_id: false
+```
+
+[Keep tool call ids short](/docs/providers/gemini#keep-tool-call-ids-short) covers the per-request setting, what a bad value does, and how the signature goes back to the model on the next turn.
+
 ### **Long outputs**
 
 On a model that ends a request with a `continuationToken`, such as Gemini 4 Argon, LiteLLM sends the request again with that token until the answer finishes or `max_tokens` is spent, so `max_tokens` can go above Google's per-request cap. [Long outputs](/blog/gemini-4-argon#long-outputs) covers how it works, the usage it reports and the timeouts it needs.
 
 A request that sends no output limit is sent once and stops at Google's own per-request limit. From v1.108.0, set the env var `LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS` to an integer to give those requests a budget. It applies to chat completion, text completion and Responses API requests through the proxy or the Python SDK, and never to `/v1/messages`, which requires `max_tokens`. LiteLLM caps the budget at the model's `max_output_tokens` in the cost map, and any output limit the request already carries wins. It is not applied to a model the cost map does not list as a chat model, such as an image model, to a model whose cost map `supported_output_modalities` leaves out text, to a request whose `modalities` asks for anything besides text, to a request that resumes with a `continuation_token`, or to the native `:generateContent` route on a `vertex_ai/` model. A large value makes a non-streamed request run as long as the answer, so stream long answers or raise the client's timeout. The [env var reference](/docs/proxy/config_settings#environment-variables---reference) lists every case.
+
+`supports_continuation: true` in the cost map marks a model that can end a request with a `continuationToken` <SinceVersion v="1.110.0" />. It is set on `gemini/gemini-4-argon`, `vertex_ai/gemini-4-argon` and `vertex_ai/gemini-4-argon-cyber-permissive`. Read it before sending a request with `litellm.supports_continuation("vertex_ai/gemini-4-argon")` or `litellm.get_model_info("vertex_ai/gemini-4-argon")["supports_continuation"]`, or through the proxy at `GET /model/info` and `GET /v1/model/info`, where each deployment carries it in `model_info`, and at `GET /model_group/info`, where a model group reports `true` when any of its deployments supports it. `get_model_info` and `/model/info` return `None` (`null`) for a model the cost map leaves unflagged, so check for `true` instead of `false`. A deployment's own `model_info` in `config.yaml` or the Admin UI overrides the cost map value for that deployment only, so set `supports_continuation: true` there for a model the cost map does not flag yet. The flag only says what the model can do and does not turn continuation on or off. LiteLLM sends the request again only when it has an output limit, from `max_tokens` or `LITELLM_GEMINI_DEFAULT_MAX_OUTPUT_TOKENS`, and asks for one choice (`n` of 1), whatever the flag says. Whether a given answer was cut short still comes from the response. On `/chat/completions` that answer ends with `finish_reason: "length"` and carries `provider_specific_fields.continuation_token`, and [Long outputs](/blog/gemini-4-argon#long-outputs) shows how to send it back to continue the answer.
 
 
 ### **Context Caching**
@@ -1788,6 +1814,10 @@ When you use [Vertex AI PayGo](https://cloud.google.com/vertex-ai/generative-ai/
 
 See [Spend Tracking](../proxy/cost_tracking.md) for general cost tracking setup.
 
+## Interactions API and Deep Research
+
+`vertex_ai` deployments serve Google's Interactions API natively at `/v1beta/interactions`, including the `deep-research-preview-04-2026` agent as a background job. Give the agent its own deployment whose `model` is the agent, then send that deployment's model group as `model` and the agent as `agent`. To poll, cancel or delete a job through the proxy, send the deployment ID from the create response's `x-litellm-model-id` header, or the model group it was created on, as a `model` query parameter or an `x-litellm-model` header. [Interactions on Vertex AI](../interactions.md#vertex-ai) has the config, requests and cost tracking details.
+
 ## Private Service Connect (PSC) Endpoints
 
 LiteLLM supports Vertex AI models deployed to Private Service Connect (PSC) endpoints, allowing you to use custom `api_base` URLs for private deployments.
@@ -2309,7 +2339,7 @@ Pass any file supported by Vertex AI, through LiteLLM.
 
 LiteLLM Supports the following file types passed in url. 
 
-Using `file` message type for VertexAI is live from v1.65.1+ 
+You can use the `file` message type for VertexAI <SinceVersion v="1.65.1" />
 
 ```
 Files with Cloud Storage URIs - gs://cloud-samples-data/generative-ai/image/boats.jpeg
@@ -3131,6 +3161,52 @@ Here is an example JSON request demonstrating the labels usage:
 }
 ```
 
+### Label requests with key, team, org, and project identity
+
+The proxy can add labels for you from the virtual key that made the call, so Cloud Billing splits Vertex AI costs by key, team, org, and project on the routes listed at the end of this section, without any change to your clients <SinceVersion v="1.111.0" />. It is off by default. List the fields to send under `litellm_settings`:
+
+```yaml
+litellm_settings:
+  vertex_request_label_fields:
+    - user_api_key_alias
+    - user_api_key_team_alias
+    - user_api_key_org_alias
+    - user_api_key_project_alias
+    - spend_logs_metadata
+```
+
+With that config, a request made with key `chargeback` on team `AI Platform`, org `ml-org`, and project `support-bot`, whose key metadata sets `spend_logs_metadata` to `{"cost-center": "cc-1234"}`, reaches Vertex AI with these labels:
+
+```json
+{
+    "user_api_key_alias": "chargeback",
+    "user_api_key_team_alias": "ai_platform",
+    "user_api_key_org_alias": "ml-org",
+    "user_api_key_project_alias": "support-bot",
+    "cost-center": "cc-1234"
+}
+```
+
+| Field | Label value |
+|-------|-------------|
+| `user_api_key_alias` | Alias of the virtual key |
+| `user_api_key_team_id`, `user_api_key_team_alias` | Team the key belongs to |
+| `user_api_key_org_id`, `user_api_key_org_alias` | Organization the key belongs to |
+| `user_api_key_project_id`, `user_api_key_project_alias` | Project the key belongs to |
+| `spend_logs_metadata` | Every text pair in the request's [`spend_logs_metadata`](../proxy/cost_tracking.md#custom-spend-log-metadata) |
+
+A field with no value on a given request, such as `user_api_key_team_alias` for a key without a team, is left out, and a field set to an empty string is sent with an empty value. Other text `user_api_key_*` fields from the [Bedrock identity list](./bedrock.md#forward-key-team-and-org-identity-from-the-proxy) work too, but they make poor labels. `user_api_key_hash` is cut to 63 characters, so it no longer matches spend logs, emails and routes come out with `_` in place of `@`, `.`, and `/`, and per-user ids like `user_api_key_end_user_id` run into Google's value limit below. The caller also sets `user_api_key_end_user_id` itself through the `user` field, so it is not identity the proxy vouches for. `spend_logs_metadata` is the way to add your own dimensions like cost center. Set it once in the key or team `metadata` and LiteLLM merges it into every request made with that key, with values sent on the request winning over the key and team defaults.
+
+Vertex AI gets the identity labels first, in the order you list them, then the caller's labels from [Labels](#labels) above, then the `spend_logs_metadata` pairs. When two of them use the same key, the earlier one wins. LiteLLM sends at most 64 labels, the most Vertex AI accepts on a Google model, and at most 32 on Claude and Mistral, where they go in the `X-Vertex-AI-Labels` header. Identity labels always get a slot. On Claude and Mistral the caller's labels come only from the `labels` field on `/chat/completions` or from an `X-Vertex-AI-Labels` header the caller sends, never from `metadata`, and only from that header on `/v1/messages`. A caller can send that header in the request body's `extra_headers`, or as an HTTP header when the proxy forwards client headers, with `forward_client_headers_to_llm_api: true` under `general_settings` or with the model group listed under `litellm_settings.model_group_settings.forward_client_headers_to_llm_api`. When the header and the `labels` field both arrive, the header replaces the `labels` field.
+
+While the setting is on, keys starting with `user_api_key_` in any letter case are reserved for the proxy, so a caller label or `spend_logs_metadata` pair with such a key is dropped and a caller cannot forge identity through labels. Only identity labels are protected this way. A caller can still replace a `spend_logs_metadata` label like `cost-center` by sending its own `spend_logs_metadata` or a label with the same key, so use team or project identity labels for chargeback that callers must not change. On Claude and Mistral, LiteLLM reads the caller's `X-Vertex-AI-Labels` header as its labels and sends its own header in place of it. A header that is not base64-encoded JSON is dropped, and LiteLLM uses the caller's `labels` field instead. Everywhere else LiteLLM adds labels, it puts them in the request body and drops a caller's `X-Vertex-AI-Labels` header, so that header can't carry a forged identity label to Vertex AI.
+
+Identity and `spend_logs_metadata` text is lowercased, every character other than a letter, a number, `_`, or `-` becomes `_`, accent and vowel marks written as separate characters and modifier letters like `ʰ` included, and it is cut to 63 characters, so a team alias like `AI Platform` becomes the valid label value `ai_platform`. A `spend_logs_metadata` key that does not start with a letter after that is dropped. Two aliases that differ only in letter case or in those characters, like `AI Platform` and `ai.platform`, share one label value, so list `user_api_key_team_id` when exact team names matter. The caller's own labels are sent as they are, like with the setting off.
+
+Google keeps at most 1,000 unique values per label key over the life of the billing account and may drop a key that goes past that without notice, so keep per-request ids out of `spend_logs_metadata` and caller labels. A proxy with more than 1,000 virtual keys reaches that limit on `user_api_key_alias` too, so list team, org, or project fields instead. Labels reach Cloud Billing only on pay-as-you-go requests. Google bills by labels on `generateContent`, `streamGenerateContent`, and `interactions.create` for Gemini, on `rawPredict` and `streamRawPredict` for partner models like Claude and Mistral, on `predict` only for Imagen, and on `predictLongRunning` for Veo, so Vertex AI ignores the labels LiteLLM sends with text and multimodal embeddings and they do not show up in Cloud Billing. Google does not say whether rerank labels, which go to the Discovery Engine ranking API, or batch job labels show up there.
+
+The setting covers `/chat/completions`, `/v1/messages`, `/v1/responses`, and `/v1/completions` on Gemini, Claude, and Mistral (Codestral included), the Google GenAI `generateContent` and `streamGenerateContent` routes, the Interactions API, text and multimodal embeddings, image generation and image edits, Veo video generation, Gemini audio transcription, rerank, batches, and the `/vertex_ai` pass-through routes, and no other route. On the pass-through, LiteLLM labels only POST requests. It adds labels to the request body on `generateContent`, `streamGenerateContent`, `predict`, `predictLongRunning`, and batch job creation, and to the `X-Vertex-AI-Labels` header on Claude and Mistral `rawPredict` and `streamRawPredict`, where `labels` the caller sends in the body move into that header too. It also rewrites the labels on any other pass-through POST body that already has them, so a caller can't forge identity there. `rawPredict` and `streamRawPredict` on other partner models and on custom endpoints, and `PATCH` and `PUT` requests, go out as the caller sent them. A batch job gets its labels only from the proxy, never from the `metadata` sent with the batch request. Requests on every other Vertex AI route get no identity labels, including AI21, Llama, and the other partner models, Gemma and Model Garden chat models, Agent Engine, RAG Engine and vector stores, fine-tuning, Chirp audio transcription, speech, and realtime, and `gemini-embedding-2`.
+
 
 
 ## Extra
@@ -3181,7 +3257,7 @@ def load_vertex_ai_credentials():
 
 :::info
 
-Trying to deploy LiteLLM on Google Cloud Run? Tutorial [here](https://docs.litellm.ai/docs/proxy/deploy#deploy-with-terraform-aws-and-gcp)
+[Deploy LiteLLM on Google Cloud Run with Terraform](../proxy/deploy/terraform.md#gcp).
 
 :::
 

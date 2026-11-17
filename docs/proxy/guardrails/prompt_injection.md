@@ -1,3 +1,8 @@
+---
+title: "Prompt Injection Detection on LiteLLM Gateway"
+sidebar_label: "In-memory Prompt Injection Detection"
+description: "Detect prompt injection on the LiteLLM AI Gateway with in-memory similarity checks or an LLM API check, across chat, messages and responses."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "Stability AI Image Generation with LiteLLM"
+sidebar_label: "Stability AI"
+description: "Generate images with SD 3.5 and Stable Image Ultra, then inpaint, upscale, outpaint, erase objects or remove backgrounds with Stability AI or AWS Bedrock."
+---
+
 # Stability AI
 https://stability.ai/
 

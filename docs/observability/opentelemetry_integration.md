@@ -1,3 +1,8 @@
+---
+title: "OpenTelemetry Tracing for LiteLLM: v1 Setup"
+sidebar_label: "OpenTelemetry v1"
+description: "Send LiteLLM traces to any OpenTelemetry collector such as Jaeger, Zipkin or Datadog with the v1 integration: span hierarchy, traceparent and redaction."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -558,7 +563,7 @@ Attributes set on the LLM-call span. Names follow [OTEL GenAI semconv](https://o
 
 | Attribute | Default mode | Semconv mode |
 |---|---|---|
-| `gen_ai.operation.name` | the litellm `call_type` (e.g. `acompletion`) | the semconv operation (`chat`, `embeddings`, `text_completion`) |
+| `gen_ai.operation.name` | the litellm `call_type` (e.g. `acompletion`) | the semconv operation (`chat`, `embeddings`, `text_completion`); a route under `pass_through_endpoints` reads `litellm.passthrough`, and any pass-through target can name its own with [`x-litellm-operation-name`](../proxy/pass_through_cost_tracking#naming-the-operation) |
 | `gen_ai.system` | provider name (e.g. `openai`) | unchanged |
 | `gen_ai.provider.name` | not set | provider name (the renamed Required attribute per spec) |
 | `gen_ai.framework` | `litellm` | `litellm` |

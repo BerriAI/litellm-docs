@@ -18,9 +18,9 @@ export const COMPONENTS = [
     id: 'deploy',
     text: 'Deployment',
     work: [
-      {id: 'image', text: 'Gateway binary in the Docker image', size: 2},
-      {id: 'forward', text: 'Forward unserved requests to Python', size: 1},
-      {id: 'dispatch', text: 'Dispatch crate and gap table', size: 3},
+      {id: 'image', text: 'Gateway binary in the Docker image', size: 2, done: 'v1.110.0-rc.1'},
+      {id: 'forward', text: 'Forward unserved requests to Python', size: 1, done: 'v1.110.0-rc.1'},
+      {id: 'dispatch', text: 'Dispatch crate and gap table', size: 3, partial: 'v1.109.0-rc.1'},
       {id: 'plans', text: 'Per model group plans at config load', size: 2},
       {id: 'layers', text: 'Identify, dispatch and admit layers', size: 2},
     ],
@@ -163,7 +163,7 @@ export const COMPONENTS = [
       {id: 'alias-map', text: 'model_alias_map', size: 0.5},
       {id: 'text-format', text: 'text_format parsing', size: 1},
       {id: 'chat-bridge', text: 'Responses through Chat completions', size: 2},
-      {id: 'response-ids', text: 'Deployment and encoded item ids', size: 2},
+      {id: 'response-ids', text: 'Deployment and encoded item ids', size: 2, partial: 'v1.109.0-rc.1'},
       {id: 'input-rewrite', text: 'Responses input rewrites', size: 1},
       {id: 'provider-affinity', text: 'Provider affinity header', size: 1},
       {id: 'managed-ids', text: 'Managed file and vector store ids', size: 2},
@@ -177,10 +177,10 @@ export const COMPONENTS = [
     id: 'db',
     text: 'DB access',
     work: [
-      {id: 'registry', text: 'Query registry and Python codegen', size: 3},
+      {id: 'registry', text: 'Query registry and Python codegen', size: 3, partial: 'v1.109.0-rc.1'},
       {id: 'executor', text: 'Python runtime and PrismaExecutor', size: 2},
       {id: 'ci', text: 'Schema and codegen checks in CI', size: 1},
-      {id: 'gateway-queries', text: 'Key, end user and spend queries', size: 2},
+      {id: 'gateway-queries', text: 'Key, end user and spend queries', size: 2, partial: 'v1.109.0-rc.1'},
     ],
   },
   {
@@ -213,7 +213,7 @@ export const COMPONENTS = [
     id: 'budgets',
     text: 'Budgets and rate limits',
     work: [
-      {id: 'scripts', text: 'Shared rate limit scripts and key naming', size: 3},
+      {id: 'scripts', text: 'Shared rate limit scripts and key naming', size: 3, partial: 'v1.110.0-rc.1'},
       {id: 'budgets', text: 'Budget checks', size: 2},
     ],
   },
@@ -222,16 +222,16 @@ export const COMPONENTS = [
     text: 'Spend tracking',
     work: [
       {id: 'cost', text: 'Cost calculation', size: 1, done: 'v1.104.0-rc.1'},
-      {id: 'buffer', text: 'Spend writes through the shared Redis buffer', size: 2},
+      {id: 'buffer', text: 'Spend writes through the shared Redis buffer', size: 2, partial: 'v1.110.0-rc.1'},
     ],
   },
   {
     id: 'router',
     text: 'Router',
     work: [
-      {id: 'strategies', text: 'Shared routing strategy crate', size: 3},
-      {id: 'health', text: 'Cooldown and health state', size: 2},
-      {id: 'fallbacks', text: 'Retries and fallbacks', size: 2},
+      {id: 'strategies', text: 'Shared routing strategy crate', size: 3, done: 'v1.110.0-rc.1'},
+      {id: 'health', text: 'Cooldown and health state', size: 2, done: 'v1.110.0-rc.1'},
+      {id: 'fallbacks', text: 'Retries and fallbacks', size: 2, done: 'v1.110.0-rc.1'},
       {id: 'db-models', text: 'Models stored in DB', size: 1},
     ],
   },
@@ -282,7 +282,7 @@ export type WorkSet = {[C in ComponentId]?: readonly WorkId<C>[] | '*'};
 export interface GoalDeclaration {
   id: string;
   text: string;
-  endsOn: IsoDay;
+  endsOn?: IsoDay;
   // The components the goal covers, in the order the page lists them.
   components: readonly ComponentId[];
   // Describes the scope in the goal picker instead of listing it.
@@ -296,8 +296,8 @@ export interface GoalDeclaration {
 export interface PlanDeclaration {
   id: string;
   date: IsoDay;
-  // Terms from TERMS, shown joined under `route`, like `/messages` over `e2e, simple`.
-  label: readonly TermId[];
+  // A weekly goal's short name, or terms shown under a route like `e2e, simple`.
+  label: string | readonly TermId[];
   route?: RouteId;
   description?: string;
   partial?: WorkSet;
@@ -313,7 +313,6 @@ export const GOALS: readonly GoalDeclaration[] = [
     // and in the SDK.
     id: 'major-apis',
     text: 'Major APIs',
-    endsOn: '2026-12-31',
     summary: 'Messages, Chat completions and Responses on the Rust gateway and SDK',
     components: MAJOR_API_COMPONENTS,
   },
@@ -322,7 +321,6 @@ export const GOALS: readonly GoalDeclaration[] = [
     // Major APIs plus moving Python off Prisma.
     id: 'all-apis',
     text: 'All APIs',
-    endsOn: '2027-06-30',
     components: ALL_COMPONENTS,
     summary: 'Every route on Rust and almost all Python replaced',
     disabled: true,
@@ -334,58 +332,36 @@ export const GOALS: readonly GoalDeclaration[] = [
 // or revise the plan.
 export const PLANS: readonly PlanDeclaration[] = [
   {
-    // The first route on Rust end to end, for the simplest requests: Anthropic
-    // Messages for a virtual key with nothing else on it. The deploy, key
-    // checks and spend it needs are real; budgets, callbacks, fallbacks, cache
-    // and other providers are gap rows that forward to Python. Authorization
-    // only checks model access, so it lands partial. Budgets, routing, the
-    // logging payload and cache wiring that the next plan finishes ship opt-in
-    // in the RCs before it, so they land partial here too.
-    id: 'messages-simple',
-    date: '2026-11-07',
-    route: 'messages',
-    label: ['e2e', 'simple'],
-    description: 'Anthropic Messages on Rust end to end for virtual keys with no budgets, callbacks or cache. Every other request forwards to Python.',
-    partial: {
-      auth: ['authorization'],
-      budgets: '*',
-      router: ['strategies', 'health'],
-      logging: ['payload', 'hooks'],
-      cache: ['wiring', 'gaps'],
-    },
+    // Dates and scope from the Rust Migration Depth First Plan's calibration
+    // table. The mapping to catalog items and their percentages is approximate.
+    // Source: https://app.notion.com/p/40343b8acdab80faaa76fce7ab5922b4
+    id: 'auth-spend-callbacks',
+    date: '2026-11-14',
+    label: 'Auth + spend',
+    description: 'Auth and spend logs complete the proxy path, with logging and callbacks ready for the common configuration.',
     done: {
-      deploy: '*',
-      db: '*',
-      auth: ['key-lookup', 'invalidation'],
-      spend: ['buffer'],
-      messages: ['anthropic'],
+      auth: ['key-lookup', 'invalidation', 'authorization'],
+      budgets: '*',
+      spend: '*',
+      logging: ['logging', 'payload', 'hooks', 'custom-callbacks'],
     },
   },
   {
-    // Every Messages request on Rust: each gap row the first plan forwarded is
-    // now served. The shared pieces built for it are new, so they land partial
-    // and reach done by the goal, once Chat completions and Responses run on
-    // them too. Authorization, JWT and the providers only Messages uses are done.
-    id: 'messages-all',
+    id: 'config-db-cache',
     date: '2026-11-21',
+    label: 'Config + cache',
+    description: 'Config loading, database access for the common Messages path, and caching. Callback migration and testing continue.',
+    done: {db: '*', config: '*', cache: ['backends', 'wiring', 'gaps', 'accounting']},
+    partial: {logging: ['payload', 'exporters']},
+  },
+  {
+    // Keep the public target after the internal work dates. Do not assign
+    // additional catalog work to weeks the Notion plan does not scope.
+    id: 'messages-e2e',
+    date: '2026-12-01',
     route: 'messages',
-    label: ['e2e', 'all'],
-    description: 'Every Messages request on Rust end to end, with budgets, routing, callbacks and cache. Chat completions and Responses reuse all of it.',
-    partial: {
-      budgets: '*',
-      router: '*',
-      logging: '*',
-      cache: ['compat', 'wiring', 'gaps', 'accounting', 'backends', 'other-backends'],
-      config: '*',
-      features: [
-        'mock', 'mcp-tools', 'caller-client', 'timeouts', 'agentic-loop', 'tls', 'modify-params', 'cache-control-injection',
-        'workload-identity', 'thinking-retry', 'stream-cost', 'websearch', 'interceptors', 'safeguards',
-      ],
-    },
-    done: {
-      auth: ['authorization', 'jwt'],
-      messages: ['deepseek', 'vertex_ai', 'bedrock', 'bedrock_mantle', 'azure_ai', 'minimax', 'github_copilot', 'tencent', 'edenai', 'openai_like'],
-    },
+    label: ['e2e', 'simple'],
+    description: 'Common Messages requests end to end in Rust. The projected percentage is a rough estimate of the broader migration, based on the shared infrastructure needed for this path.',
   },
 ];
 

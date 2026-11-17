@@ -1,3 +1,8 @@
+---
+title: "Grafana Cloud Tracing for LiteLLM: OTLP Setup"
+sidebar_label: "Grafana Cloud"
+description: "Send LiteLLM AI Gateway traces and GenAI metrics to Grafana Cloud over OTLP, with Basic auth token setup, a ready dashboard and Prometheus metrics."
+---
 # Grafana Cloud
 
 Send LiteLLM traces and GenAI metrics to [Grafana Cloud](https://grafana.com/products/cloud/) over OTLP
@@ -81,7 +86,7 @@ Metrics arrive as OTLP histograms, queryable in Explore under their Prometheus-n
 
 ## Dashboard
 
-LiteLLM ships a dashboard for these metrics at [cookbook/litellm_proxy_server/grafana_dashboard/dashboard_genai_otel](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_genai_otel). Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source
+LiteLLM ships a dashboard for these metrics at [cookbook/litellm_proxy_server/grafana_dashboard/dashboard_genai_otel](https://github.com/BerriAI/litellm/tree/main/litellm/integrations/prometheus_helpers/grafana_dashboards/dashboard_genai_otel). Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source
 
 Spend, tokens, request count and p95 duration as stats, then request rate, spend per hour, token throughput split by input and output, and p95 duration, time to first token, and provider generation time, all by model
 

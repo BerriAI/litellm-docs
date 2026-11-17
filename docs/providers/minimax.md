@@ -1,3 +1,9 @@
+---
+title: "MiniMax API with LiteLLM: Chat, Speech, Video"
+sidebar_label: "MiniMax"
+description: "Chat with MiniMax-M2.1 in Anthropic or OpenAI format with thinking and tools, convert text to speech with speech-2.6-hd and generate MiniMax-H3 videos."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -382,6 +388,16 @@ response = litellm.completion(
 print(f"Cost: ${response._hidden_params.get('response_cost', 0)}")
 ```
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`minimax/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other MiniMax model name. LiteLLM sends MiniMax the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `minimax/minimax-latest` | MiniMax |
+
 ## MiniMax - Text-to-Speech
 
 ### Quick Start
@@ -640,9 +656,11 @@ Pass these via `extra_body`:
 
 ## MiniMax - Video Generation
 
+<SinceVersion v="1.107.0" />
+
 MiniMax-H3 and MiniMax-H3-Max run as async tasks on MiniMax's V2 video task API. `video_generation` returns a job id right away; poll `video_status` until it reports `completed`, then download the mp4 with `video_content`. Calling `video_content` before then returns a 400 that says the video is still processing.
 
-MiniMax video is available from v1.107.0. Earlier releases return a 500 that says video generation is not supported for minimax.
+Earlier releases return a 500 that says video generation is not supported for minimax.
 
 ```python showLineNumbers title="MiniMax Video Generation"
 import os

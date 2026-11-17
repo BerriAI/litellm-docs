@@ -40,11 +40,12 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
-  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js')],
+  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js'), require.resolve('./src/clientModules/deployLegacyRedirect.js')],
   plugins: [
     require('./plugins/litellm-stats'),
     require('./plugins/release-feed'),
     require('./plugins/llms'),
+    require('./plugins/mcp-models-snapshot'),
     // vega-canvas tries to load the optional node `canvas` package during SSR.
     // Charts render as SVG, so resolve it to an empty module.
     () => ({
@@ -59,6 +60,10 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          {from: '/docs/proxy/customer_portal/api_reference_guide', to: '/docs/proxy/customer_management/track-customer-spend'},
+          {from: '/docs/proxy/customer_portal/track-customer-spend', to: '/docs/proxy/customer_management/track-customer-spend'},
+          {from: '/docs/proxy/customer_portal/api_reference', to: '/docs/proxy/customer_management/api_reference'},
+          {from: '/blog/customer-portal', to: '/blog/customer-management'},
           // The decisions page was split into subpages for a few days in October 2026.
           {from: '/docs/decisions/providers', to: '/docs/decisions#supported-providers'},
           {from: '/docs/decisions/openai_format', to: '/docs/decisions#v1decisions'},
@@ -67,6 +72,7 @@ const config = {
           {from: '/docs/decisions/sdk', to: '/docs/decisions#sdk-usage'},
           {from: '/docs/decisions/admin_ui', to: '/docs/decisions#try-it-in-the-admin-ui'},
           {from: '/docs/learn', to: '/docs/tutorials'},
+          {from: '/docs/learn/gateway_quickstart', to: '/docs/proxy/quick_start'},
           {from: '/docs/learn/python_sdk_quickstart', to: '/docs/learn/sdk_quickstart'},
           {from: '/docs/learn/enterprise_quickstart_learn', to: '/docs/learn/enterprise_quickstart'},
           {from: '/docs/tutorials/python_sdk', to: '/docs/learn/call-any-model'},
@@ -81,7 +87,15 @@ const config = {
           {from: '/docs/guides/reliability_testing_spend', to: '/docs/completion/reliable_completions'},
           {from: '/docs/proxy/liteadmin_slack_native', to: '/docs/proxy/liteadmin_slack'},
           {from: '/docs/proxy/multiple_admins', to: '/docs/proxy/audit_logs'},
+          {from: '/docs/proxy/jwt_auth_arch', to: '/docs/proxy/access_management/jwt_permissions#beta-control-access-with-oidc-roles'},
+          {from: ['/docs/oidc', '/docs/oidcz'], to: '/docs/proxy/model_management#workload-identity-credentials'},
           {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
+          {from: '/docs/proxy/rust_gateway', to: '/rust-migration'},
+          {from: '/docs/proxy/deploy/iap/cloudflare', to: '/docs/proxy/deploy/iap/overview#cloudflare'},
+          {from: '/docs/proxy/deploy/iap/aws', to: '/docs/proxy/deploy/iap/overview#aws'},
+          {from: '/docs/proxy/deploy/iap/azure', to: '/docs/proxy/deploy/iap/overview#azure'},
+          {from: '/docs/proxy/deploy/iap/gcp', to: '/docs/proxy/deploy/iap/overview#gcp'},
+
           {
             from: '/docs/proxy/control_plane_and_data_plane',
             to: '/docs/proxy/multi_region',
@@ -100,7 +114,23 @@ const config = {
           },
           {
             from: '/docs/proxy/microservices_helm',
-            to: '/docs/proxy/deploy#deploy-with-helm',
+            to: '/docs/proxy/deploy/helm',
+          },
+          {
+            from: ['/docs/proxy/deploy/kubernetes', '/docs/proxy/manifests_to_microservices'],
+            to: '/docs/proxy/deploy/helm',
+          },
+          {
+            from: '/docs/proxy/deploy/terraform/provider',
+            to: '/docs/proxy/configuration/terraform',
+          },
+          {
+            from: '/docs/proxy/deploy/terraform/aws',
+            to: '/docs/proxy/deploy/terraform#aws',
+          },
+          {
+            from: '/docs/proxy/deploy/terraform/gcp',
+            to: '/docs/proxy/deploy/terraform#gcp',
           },
           {
             from: '/docs/proxy/db_deadlocks',
@@ -353,7 +383,9 @@ const config = {
           remarkPlugins: [require('./src/remark/raw-markdown')],
         },
         blog: false, // Disable the default blog plugin from preset-classic
-        pages: {},
+        pages: {
+          beforeDefaultRemarkPlugins: [require('./src/remark/docs-models')],
+        },
         theme: {
           customCss: [require.resolve('./src/css/custom.css'), require.resolve('./src/css/logo-shape.css')],
         },
@@ -365,7 +397,8 @@ const config = {
     experimental_faster: {
       swcJsLoader: true,
       swcJsMinimizer: true,
-      swcHtmlMinimizer: true,
+      // Keep explicit <head> tags and quoted metadata for social previews.
+      swcHtmlMinimizer: false,
       lightningCssMinimizer: true,
       mdxCrossCompilerCache: true,
     },
@@ -388,6 +421,10 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      // Google Search Console ownership token. Public by design; keep it so the property stays verified.
+      // It lives here, not in headTags, so it renders near <title>. headTags land after inline
+      // scripts whose strings contain "<div>", and Google's verifier then decides <head> has ended.
+      metadata: [{name: 'google-site-verification', content: '2ECVUxrDhV_G5feehdJNQuTA4dEJbE9R918TbGTwJI8'}],
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.png',
       // The whole bar links to the page; the close button still works.
@@ -397,9 +434,9 @@ const config = {
       // rendered; it holds the evergreen entry so the config still reads true.
       // Bump `id` to resurface the bar for readers who dismissed the last one.
       announcementBar: {
-        id: 'townhall_oct_23_2026_decisions_api',
+        id: 'decisions_api_gemini_2026_11',
         content:
-          '<a class="announcement-link" href="/docs/decisions"><strong>Decisions API is here.</strong> Call Jev, Clef or any decision model through one /v1/decisions endpoint. &rarr;</a>',
+          '<a class="announcement-link" href="/docs/decisions"><strong>Decisions API is here.</strong> Call Gemini Decision 1, Jev, Clef or any decision model through one /v1/decisions endpoint. &rarr;</a>',
         isCloseable: true,
       },
       docs: {
@@ -460,6 +497,12 @@ const config = {
             className: 'header-github-link',
             'aria-label': 'GitHub repository',
           },
+          {
+            href: 'https://discord.com/invite/wuPM9dRgDw',
+            position: 'right',
+            className: 'header-discord-link',
+            'aria-label': 'Discord community',
+          },
         ],
       },
       footer: {
@@ -473,7 +516,7 @@ const config = {
               {label: 'Production deployment', to: '/docs/proxy/deploy'},
               {label: 'MCP Gateway', to: '/docs/mcp'},
               {label: 'Agent Gateway', to: '/docs/a2a'},
-              {label: 'Rust AI Gateway (beta)', to: '/docs/proxy/rust_gateway'},
+              {label: 'Rust migration', to: '/rust-migration'},
               {label: 'Enterprise', to: '/docs/enterprise'},
             ],
           },

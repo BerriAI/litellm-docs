@@ -34,7 +34,7 @@ export const announcements = [
     id: 'decisions_api_2026_10',
     html:
       '<a class="announcement-link" href="/docs/decisions">' +
-      '<strong>Decisions API is here.</strong> Call Jev, Clef or any decision model ' +
+      '<strong>Decisions API is here.</strong> Call Gemini Decision 1, Jev, Clef or any decision model ' +
       'through one /v1/decisions endpoint. &rarr;</a>',
   },
 ];

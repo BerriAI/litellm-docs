@@ -3,7 +3,7 @@ import {translate} from '@docusaurus/Translate';
 import SidebarToggleIcon from '@site/src/components/SidebarToggleIcon';
 import styles from './styles.module.css';
 
-// The whole narrow strip stays clickable. The chevron at the bottom sits
+// The whole narrow strip stays clickable. Keep the chevron at the top,
 // where the hide button was.
 export default function DocRootLayoutSidebarExpandButton({toggleSidebar}) {
   const label = translate({

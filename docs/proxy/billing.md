@@ -4,6 +4,8 @@ import TabItem from '@theme/TabItem';
 
 # Billing
 
+For customer and end-user spend tracking from v1.111, start with [Customer Management](./customers.md). The Lago examples below use legacy end-user, internal user, and team IDs. For the new customer hierarchy, read its usage APIs from your billing backend.
+
 Bill internal teams, external customers for their usage
 
 ** Requirements**

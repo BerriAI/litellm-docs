@@ -4,6 +4,8 @@ import Image from '@theme/IdealImage';
 
 # Spend Tracking
 
+For customer and end-user spend tracking from v1.111, start with [Customer Management](./customers.md). Its customer usage APIs report organization, team, and member totals. The `end_user` field and `/customer/*` examples below refer to [legacy tracking](./legacy_end_users.md).
+
 Track spend for keys, users, and teams across 100+ LLMs.
 
 LiteLLM automatically tracks spend for all known models. See how the [model cost map](./model_cost_map) prices each request
@@ -18,7 +20,33 @@ Provider-specific cost tracking (e.g., [Vertex AI PayGo / priority pricing](../p
 Use the step-by-step workflow in [Debugging a cost discrepancy](../troubleshoot/cost_discrepancy): align time ranges, compare token categories (including cache), then decide whether the gap is ingestion, formula, or model-map pricing.
 :::
 
-### How to Track Spend with LiteLLM
+## Track a public model alias
+
+Set the public name in `model_list[].model_name` and the provider model in `litellm_params.model`. Clients send the public name, such as `product-chat`, as the request's `model`:
+
+```yaml
+model_list:
+  - model_name: product-chat
+    litellm_params:
+      model: openai/{{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+```
+
+| Logging field | Use |
+| --- | --- |
+| `model_group` | The routed group for this attempt. Group spend by this field to report which configured route served the call. |
+| `model` | The resolved underlying model or deployment used for the call. Use it for provider-level cost investigation. |
+| `original_model_group` in metadata | The model group before fallbacks. Use it with the routed group to attribute fallback traffic to its original route. |
+
+A fallback can change `model_group`, so grouping only by that field splits a workload across its primary and fallback routes. For original-route reports, use `metadata.original_model_group` when present and fall back to `model_group` otherwise. Team-scoped deployments can use internal group names, so verify the mapping to the team's public name before combining reports. Test one direct request and one forced fallback and inspect the [fallback metadata](./reliability.md#track-fallbacks-in-spend-logs) before building reports.
+
+### Share one budget across routes
+
+Use one virtual key, or keys assigned to the same team, and set the entity's overall `max_budget` and `budget_duration`. For example, `max_budget: 100` with `budget_duration: "30d"` pools that entity's spend across models into a $100 budget per 30-day period. See [key budgets](./users.md#add-budgets-to-keys) and [team budgets](./team_budgets.md).
+
+Use `model_max_budget` when you need separate model budgets. Entries use the public model-group name and the [per-model budget schema](./users.md#genericbudgetinfo). This does not create a single budget spanning every fallback route: admission checks the requested model, while post-call accounting uses the routed group, or a team deployment's public name. `original_model_group` is reporting metadata, not a shared budget key. Review [fallback budget scope and concurrency limits](./reliability.md#enforce-budget-on-fallbacks), and test both direct and fallback requests near the budget before relying on enforcement.
+
+## How to Track Spend with LiteLLM
 
 **Step 1**
 
@@ -335,7 +363,7 @@ Example Request:
 
 ```shell title="Daily Spend Breakdown API" showLineNumbers
 curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&end_date=2025-03-27' \
--H 'Authorization: Bearer sk-...'
+-H "Authorization: Bearer $LITELLM_MASTER_KEY"
 ```
 
 ```json title="Daily Spend Breakdown API Response" showLineNumbers
@@ -353,26 +381,123 @@ curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&
             "breakdown": {
                 "models": {
                     "{{openai_small}}": {
-                        "spend": 1.82e-05,
-                        "prompt_tokens": 37,
-                        "completion_tokens": 9,
-                        "total_tokens": 46,
-                        "api_requests": 1
+                        "metrics": {
+                            "spend": 0.0177072,
+                            "prompt_tokens": 111,
+                            "completion_tokens": 1711,
+                            "total_tokens": 1822,
+                            "api_requests": 11
+                        },
+                        "metadata": {},
+                        "api_key_breakdown": {}
                     }
                 },
-                "providers": { "openai": { ... }, "azure_ai": { ... } },
-                "api_keys": { "3126b6eaf1...": { ... } }
+                "providers": {
+                    "openai": {
+                        "metrics": { "spend": 0.0177072 },
+                        "metadata": {},
+                        "api_key_breakdown": {}
+                    }
+                },
+                "api_keys": {
+                    "3126b6eaf1...": {
+                        "metrics": { "spend": 0.0177072 },
+                        "metadata": { "key_alias": "my-key", "key_exists": true }
+                    }
+                }
             }
         }
     ],
     "metadata": {
-        "total_spend": 0.7274667,
-        "total_prompt_tokens": 280990,
-        "total_completion_tokens": 376674,
-        "total_api_requests": 14
+        "total_spend": 0.0177072,
+        "total_prompt_tokens": 111,
+        "total_completion_tokens": 1711,
+        "total_api_requests": 11
     }
 }
 ```
+
+The example shows selected response fields. Each breakdown entry nests its values under `metrics` and its descriptive fields under `metadata`.
+
+### Missing identities and API key filters
+
+Daily reports, drilldowns and exports keep usage with missing model or key values in fallback buckets. Zero-spend requests and negative adjustments remain part of the totals.
+
+| Stored value | Reporting identity |
+| --- | --- |
+| Empty or null model | `unknown-model` |
+| Empty or null model group, with a known model | Model name |
+| Empty or null model group and model | `unknown-model-group` |
+| Empty or null API key | `unattributed` |
+| Literal API key `unattributed` | `raw:unattributed` |
+| API key starting with `raw:` | The key with one additional `raw:` prefix |
+| Other nonempty values, including whitespace | Unchanged |
+
+Literal model names that equal fallback labels share those model buckets. The `unattributed` key bucket has no clickable key details.
+
+Pass the reporting identity to the `api_key` query parameter. For example, to filter the literal stored key `unattributed`, use `raw:unattributed`. For the literal stored key `raw:example`, use `raw:raw:example`. To select missing keys instead, use `unattributed`.
+
+```bash title="Filter an escaped API key identity"
+curl --get 'http://localhost:4000/user/daily/activity/aggregated' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  --data-urlencode 'start_date=2025-03-20' \
+  --data-urlencode 'end_date=2025-03-27' \
+  --data-urlencode 'api_key=raw:unattributed'
+```
+
+:::warning Export compatibility
+
+Daily activity exports, such as `/user/daily/activity/export?export_type=daily_with_keys&format=json`, replace missing model and key values with the bucket labels above and escape reserved API key IDs. Consumers that expect null values or unescaped reserved key IDs must adapt. Use the exported reporting identity unchanged when filtering daily reports.
+
+:::
+
+### Guardrail spend breakdown
+
+`GET /user/daily/activity/aggregated`, `GET /team/daily/activity/aggregated` and `GET /organization/daily/activity/aggregated` return each day's guardrail costs in `breakdown.guardrails`, keyed by guardrail ID. The breakdown follows the response's date, entity and API key filters.
+
+```bash title="Get daily guardrail spend"
+curl --get 'http://localhost:4000/user/daily/activity/aggregated' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  --data-urlencode 'start_date=2025-03-20' \
+  --data-urlencode 'end_date=2025-03-27'
+```
+
+Use `/team/daily/activity/aggregated` or `/organization/daily/activity/aggregated` in the same request for those scopes. The following excerpt shows one day's guardrail breakdown.
+
+```json title="Guardrail spend response excerpt"
+{
+  "results": [
+    {
+      "date": "2025-03-27",
+      "metrics": { "spend": 0.05 },
+      "breakdown": {
+        "api_keys": {
+          "3126b6eaf1...": {
+            "metrics": { "spend": 0.05 },
+            "metadata": { "key_alias": "my-key", "key_exists": true }
+          }
+        },
+        "guardrails": {
+          "guardrail-id": {
+            "metrics": { "spend": 0.01, "untracked_units": 2 },
+            "metadata": { "guardrail_name": "content-safety" },
+            "api_key_breakdown": {
+              "3126b6eaf1...": {
+                "metrics": { "spend": 0.01, "untracked_units": 2 },
+                "metadata": { "key_alias": "my-key", "key_exists": true }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+Guardrail spend is already included in key and model spend. Do not add it on top of those totals. `untracked_units` counts guardrail units with no known price, so nonzero units mean the reported spend is a lower bound, not the full guardrail cost.
+
+Each guardrail's `api_key_breakdown` includes only keys in that day's `breakdown.api_keys`. The guardrail's total still covers all matching keys, even when the per-key list is truncated. A nonempty `model` filter leaves `guardrails` empty because guardrail costs are not attributed per model. If the guardrail query fails with a database error, the daily response still succeeds with an empty guardrail breakdown.
 
 ### API Reference
 
@@ -385,7 +510,7 @@ Request counts on this endpoint are derived from spend logs, so they only cover 
 ## Custom Tags
 
 :::tip[See Full Request Tags Documentation]
-For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page.
+For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page. To tag requests from the W3C `baggage` header that OpenTelemetry clients already send, see [Map Baggage Values to Tags](./tag_budgets.md#map-baggage-values-to-tags).
 :::
 
 Requirements:

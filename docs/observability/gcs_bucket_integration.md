@@ -1,3 +1,8 @@
+---
+title: "Google Cloud Storage (GCS) Logging for LiteLLM"
+sidebar_label: "Google Cloud Storage"
+description: "Log LiteLLM AI Gateway requests to Google Cloud Storage (GCS) buckets with the gcs_bucket callback, an Enterprise feature that writes the standard log payload."
+---
 import Image from '@theme/IdealImage';
 
 # Google Cloud Storage

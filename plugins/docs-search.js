@@ -3,7 +3,7 @@ const path = require('node:path');
 const cheerio = require('cheerio');
 const {createIndex, loadIndex} = require('../search/engine');
 const {serializeRuntimeIndex} = require('../search/runtime-index');
-const {contentType, contentPage, versionsIn, isContentUrl} = require('../search/content');
+const {contentType, contentPage, categoryFor, versionsIn, isContentUrl} = require('../search/content');
 const {extractStructure} = require('../search/page-structure');
 const {extractOpenAPI} = require('../search/openapi');
 
@@ -20,7 +20,9 @@ function extractSections(html, url, metadata = {}) {
   const title = metadata.title || article.find('h1').first().text().trim() || $('title').text().replace(/\s*\|.*$/, '').trim();
   const description = metadata.description || $('meta[name="description"]').attr('content') || '';
   const keywords = [metadata.keywords, $('meta[name="keywords"]').attr('content')].filter(Boolean).join(' ');
-  const breadcrumb = $('.breadcrumbs__item').map((_, item) => $(item).text().trim()).get().filter(Boolean).join(' / ');
+  const breadcrumbs = $('.breadcrumbs__item').map((_, item) => $(item).text().trim()).get().filter(Boolean);
+  const breadcrumb = breadcrumbs.join(' / ');
+  const category = metadata.category || (type === 'docs' ? categoryFor(url, breadcrumbs) : undefined);
   const sections = [];
   let heading = '', anchor = '', parts = [], links = new Map();
   function flush() {
@@ -30,7 +32,7 @@ function extractSections(html, url, metadata = {}) {
       for (let offset = 0; offset < text.length; offset += 2600) {
         const chunk = text.slice(offset, offset + 3000);
         sections.push({id: `${url}#${anchor}:${sections.length}`, title, heading, description, keywords, breadcrumb,
-          type, date: metadata.date || '', version: metadata.version || '', category: metadata.category,
+          type, date: metadata.date || '', version: metadata.version || '', category,
           url: anchor ? `${url}#${encodeURIComponent(anchor)}` : url,
           text: chunk, snippet: chunk.replace(/\s+/g, ' ').slice(0, 240),
           ...(links.size ? {links: [...links.values()]} : {})});
@@ -39,13 +41,16 @@ function extractSections(html, url, metadata = {}) {
     }
     parts = []; links = new Map();
   }
-  article.find('h1,h2,h3,h4,h5,h6,p,pre,table,li').each((_, element) => {
+  article.find('h1,h2,h3,h4,h5,h6,p,pre,table,li,[data-since-version]').each((_, element) => {
     const node = $(element);
-    if (node.parents('pre,table,li').length) return;
+    const badge = node.is('[data-since-version]');
+    if (node.parents(badge ? 'p,pre,table,li,h1,h2,h3,h4,h5,h6' : 'pre,table,li').length) return;
     if (/^h[1-6]$/.test(element.tagName)) {
       flush();
       heading = element.tagName === 'h1' ? '' : node.text().trim();
       anchor = element.tagName === 'h1' ? '' : node.attr('id') || '';
+    } else if (badge) {
+      parts.push(node.attr('title'));
     } else {
       const text = element.tagName === 'table'
         ? node.find('tr').map((_, row) => $(row).find('th,td').map((_, cell) => $(cell).text().trim()).get().join(' | ')).get().join('\n')

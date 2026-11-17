@@ -1,3 +1,8 @@
+---
+title: "Tool Permission Guardrail on LiteLLM AI Gateway"
+sidebar_label: "LiteLLM Tool Permission Guardrail"
+description: "Control which tool calls a model may make on the LiteLLM AI Gateway with allow and deny rules for OpenAI tool_calls, Anthropic tool_use and MCP."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

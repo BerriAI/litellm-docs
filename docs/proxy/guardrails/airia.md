@@ -1,3 +1,8 @@
+---
+title: "Airia Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Airia"
+description: "Block prompt injection, jailbreaks and sensitive data with Airia on the LiteLLM AI Gateway, allowing, blocking or redacting prompts and responses."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -27,9 +32,9 @@ One entry covers both directions. `pre_call` checks the prompt; `post_call` chec
 
 ```yaml title="config.yaml"
 model_list:
-  - model_name: gpt-4o-mini
+  - model_name: {{openai_small}}
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -65,7 +70,7 @@ curl -sSL http://0.0.0.0:4000/v1/chat/completions \
   -H 'Authorization: Bearer sk-master-key' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "my aws key is AKIAIOSFODNN7EXAMPLE"}]
   }'
 ```
@@ -91,7 +96,7 @@ curl -sSL http://0.0.0.0:4000/v1/chat/completions \
   -H 'Authorization: Bearer sk-master-key' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Contact me at ada@example.com"}]
   }'
 ```
@@ -106,7 +111,7 @@ curl -sSL http://0.0.0.0:4000/v1/chat/completions \
   -H 'Authorization: Bearer sk-master-key' \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "{{openai_small}}",
     "messages": [{"role": "user", "content": "Summarize Hamlet in one sentence."}]
   }'
 ```

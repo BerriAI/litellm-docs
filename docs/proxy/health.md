@@ -11,9 +11,9 @@ These endpoints answer "is the gateway process up and able to serve traffic?" wi
 | Endpoint | Auth | Returns | Meaning |
 |----------|------|---------|---------|
 | `GET /health/liveliness` | none | `"I'm alive!"` (200), or `{"status": "shutting_down"}` (503) during graceful shutdown | The process is up. No dependencies are checked. `GET /health/liveness` is an alias with the Kubernetes spelling; both are real routes |
-| `GET /health/readiness` | none | `{"status": "healthy", "db": ...}` (200) when ready; 503 when a configured database is unreachable | The worker is ready to accept traffic. The `db` field is `"connected"`, `"disconnected"`, or `"Not connected"` when no database is configured |
+| `GET /health/readiness` | none | `{"status": "healthy", "db": ...}` (200) when ready; 503 when a configured database is unreachable, except when `allow_requests_on_db_unavailable: true` is configured | The worker is ready to accept traffic. The `db` field is `"connected"`, `"disconnected"`, or `"Not connected"` when no database is configured |
 
-The `db` value lets an orchestrator distinguish a healthy worker from one that booted but cannot reach its database. When the database is configured and unreachable, readiness returns 503 so the pod is pulled from rotation.
+The `db` value lets an orchestrator distinguish a healthy worker from one that booted but cannot reach its database. When the database is configured and unreachable, readiness returns 503 so the pod is pulled from rotation, except when `allow_requests_on_db_unavailable: true` is configured.
 
 The default readiness payload is deliberately low-detail so it is safe to expose to unauthenticated probes. For full diagnostics (callbacks, cache, version), either set `general_settings.allow_public_health_readiness_details: true` to expand `/health/readiness` itself, or call the authenticated `GET /health/readiness/details` endpoint.
 
@@ -38,24 +38,77 @@ The primary way to check whether your models are serving is the Admin UI. Go to 
 
 <Image img={require('../../img/ui_health_status.png')} alt="Model Health Status tab showing a healthy model after Run All Checks" />
 
-The API equivalent is `GET /health`, which accepts any valid key. It runs a real test request against every configured model, so it costs a few tokens per model.
+The API equivalent is [`GET /health`](#model-health-from-the-api).
+
+## Model health from the API
+
+`GET /health` reports each deployment the calling key may see as healthy or unhealthy. Unless [background health checks](#background-health-checks) are on, every call sends a real test request to each of those deployments, so it costs a few tokens per deployment. A targeted check of an [auto router](./auto_routing.md) deployment also sends a test request to each model it routes to.
 
 ```shell
-curl --location 'http://0.0.0.0:4000/health' -H "Authorization: Bearer $LITELLM_API_KEY"
+curl 'http://0.0.0.0:4000/health' -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ```json
 {
     "healthy_endpoints": [
-        {"model": "azure/{{openai_small}}", "api_base": "https://my-endpoint-canada-berri992.openai.azure.com/"}
+        {"model": "openai/{{openai_small}}", "model_id": "openai-small-1", "x-ratelimit-remaining-requests": "29999"}
     ],
     "unhealthy_endpoints": [
-        {"model": "azure/{{openai_small}}", "api_base": "https://openai-france-1234.openai.azure.com/"}
-    ]
+        {"model": "anthropic/{{anthropic}}", "model_id": "anthropic-1", "error": "litellm.AuthenticationError: ...", "exception_status": 401}
+    ],
+    "healthy_count": 1,
+    "unhealthy_count": 1
 }
 ```
 
-To check a single model, pass `?model=<model_name>` or `?model_id=<id>`; you can find a model's id from `GET /v1/model/info`.
+The endpoint scopes its result to the calling key, answers a targeted check with a status code a monitor can act on, and returns only a fixed set of diagnostic fields. The sections below describe that contract as of v1.102.0, and which deployments a key sees as of v1.109.0.
+
+Releases from v1.84.0 up to v1.102.0 already scope the result to the key's `models` list and answer 503 for a targeted call with no healthy deployment, but they differ in a few ways. Access groups in the key's list are not expanded, so a key that lists only a group gets empty lists, and a non-admin key also sees other teams' deployments. A `?model_id=` outside the key's scope is ignored, and the call answers with the key's own deployments instead of 403. Entries also carry other `litellm_params` values, such as `max_tokens` and `cache`, instead of only the fields listed below. Only `api_base` and `api_version` are removed for a non-admin key, so `aws_bedrock_runtime_endpoint` still shows, and the header reads `api_base and api_version are admin-only on this endpoint`. On v1.84.0 a `?model=` the key cannot call answers 401 instead of 403.
+
+### Which deployments a key sees
+
+<SinceVersion v="1.109.0" />
+
+A proxy admin, meaning the master key or a key whose user has the `proxy_admin` or `proxy_admin_viewer` role, sees every deployment, unless the admin's key has its own `models` list, which then decides what it sees. Every other key sees only deployments that no other team owns, and within those only the deployments a chat request with that key could reach. The proxy runs the same model access checks as a chat request, so a `models` limit on the key, its team, its project, or its user (for a key with no team) narrows the result, and the call never sends a test request to a deployment the key cannot call. A key with none of those limits, or with `all-proxy-models` in its list, sees every deployment that no other team owns. The same scope applies with background health checks on.
+
+A name in those limits counts the way a chat request reads it. Access group names and `all-team-models` expand to their models, and when only some deployments of a model name are in an access group the key holds, the key sees only those deployments. A wildcard entry such as `openai/*` covers every deployment the key can call through it, which includes the `openai/*` deployment itself, a deployment named `openai/{{openai_small}}`, and a deployment with any other `model_name` whose `litellm_params.model` matches `openai/*`. An alias counts as the model group it routes to, so a key whose list holds only a `model_group_alias` name sees the deployments behind that alias. A `models` list on the key's organization does not narrow the result, since a chat request does not check it either.
+
+Releases before v1.109.0 narrow the result by the key's own `models` list alone. A `models` limit on the key's team, user, organization, or project does not narrow the untargeted result or a `model_id` check there, so without background health checks such a key's untargeted call sends a test request to deployments it cannot call. A wildcard entry on those releases matches only a deployment whose `model_name` is literally `openai/*`, and a key whose access group holds one of two deployments that share a model name sees both. To scope what a key sees on those releases, give it its own `models` list, or `all-team-models` for a team key.
+
+### Check one model
+
+Pass `?model=<model_name>` to check every deployment behind that public model name. When no deployment carries that name, the proxy matches it against each deployment's `litellm_params.model` instead, so an admin can pass `?model=openai/{{openai_small}}`. Pass `?model_id=<id>` to check the single deployment with that `model_info.id`, which `GET /v1/model/info` lists. When a request has both, `model_id` picks the deployment, though `model` must still pass the key's model access check. An alias in `model`, such as a `model_group_alias` name, checks the deployments of the model group it routes to whenever a chat request from the key through that alias would succeed, even when the key's list holds only the target name. A name that only a wildcard route serves, such as `anthropic/{{anthropic}}` behind an `anthropic/*` deployment, checks that wildcard deployment for any key other than an admin key with no `models` list. Such an admin key matches no deployment for the name and gets 503 with empty lists, so it checks the route with `?model_id=` or with the wildcard name itself, `?model=anthropic/*`. Releases before v1.109.0 answer 403 to a non-admin key for an alias whose target alone is in its list and for a name only a wildcard route serves, so on those releases check the target name, the `model_id`, or the wildcard name instead.
+
+### Status codes
+
+| Status | When |
+|--------|------|
+| 200 | Any untargeted call, even with every deployment unhealthy |
+| 200 | A targeted call with at least one healthy deployment |
+| 503 | A targeted call with no healthy deployment |
+| 403 | The target is outside the key's scope |
+| 404 | No deployment has the `model_id` |
+| 401 | The key is not valid |
+
+A 503 carries the normal response body, so a monitor can alert on the status code and still read each unhealthy entry.
+
+The 403 and 404 bodies come in two shapes. A `model` the key cannot call is refused by the same model access check as a chat request, so the body is the standard error object, `{"error": {"type": "key_model_access_denied", ...}}`, or the matching type for the limit that refused it, such as `team_model_access_denied`, `user_model_access_denied`, or `project_model_access_denied`. A `model_id` outside the key's scope answers `{"detail": {"error": "key not allowed to health-check model_id <id>"}}`, and a `model` that passes the access check but matches no deployment in scope answers `{"detail": {"error": "key not allowed to health-check model <name>"}}`. An unknown `model_id` answers 404 with `{"detail": {"error": "Model with ID <id> not found"}}` before any scope check. An admin key with no `models` list that passes a `model` no deployment serves gets 503 with empty lists.
+
+### Response fields
+
+Every entry carries `model_id`, the deployment's `model_info.id`, and `model`, the model the probe called. `model` is usually the deployment's `litellm_params.model`, but a `health_check_model` or a provider route, such as a Bedrock region in the model string, can change it, so match entries to deployments on `model_id`. Any other field in an entry comes from this list, and only when the deployment or its probe sets it: `custom_llm_provider`, `mode`, `base_model`, `aws_region_name`, `region_name`, `watsonx_region_name`, `vertex_project`, `vertex_location`, `tpm`, `rpm`, `error`, `raw_request_typed_dict`, `x-ratelimit-remaining-requests`, `x-ratelimit-remaining-tokens`, and `x-ms-region`. An unhealthy entry usually also carries `exception_status`, the HTTP status of the failed probe, which is 500 when the error has none. An entry never has an `api_key` field or any other credential field from `litellm_params`, and the only other `litellm_params` values it can carry are the admin-only fields below. Later releases can add fields to this list, so a client should ignore fields it does not know.
+
+`api_base`, `api_version`, and `aws_bedrock_runtime_endpoint` are removed from each entry for a non-admin key. Later releases add server-side auth settings to that list, such as `anthropic_identity_source` from v1.106.0 and `token_exchange_endpoint` and `github_copilot_host` from v1.107.0. Every 200 or 503 response to a non-admin key has a `Litellm-Health-Field-Notice` header that lists every admin-only field, whether or not an entry in that response had one:
+
+```text
+Litellm-Health-Field-Notice: api_base, api_version, aws_bedrock_runtime_endpoint, ... are admin-only on this endpoint
+```
+
+Read that header instead of a hardcoded list, because the set of admin-only fields can grow.
+
+On an unhealthy entry, `error` holds the failed probe's full error text and `raw_request_typed_dict` describes the request the probe sent, including the URL it called, which starts with the deployment's `api_base` or Bedrock runtime endpoint. Both go to every key that can see the deployment, so removing the admin-only fields does not hide a deployment's address from a non-admin key. Set `health_check_details: false` when non-admin keys should see only each deployment's status.
+
+With `general_settings.health_check_details: false`, each entry carries only `model`, `model_id`, and `exception_status` on an unhealthy entry, with no `error`. The one exception is an [auto router](./auto_routing.md) deployment that cannot reach one of the models it routes to, which keeps an `error` that names that model. The admin-only fields are left out for proxy admins too.
 
 ## Background health checks
 
@@ -65,12 +118,14 @@ By default `/health` probes every model on each call. To avoid querying models t
 general_settings:
   background_health_checks: true      # run checks in the background
   health_check_interval: 300          # seconds between runs (default 300)
-  health_check_details: true          # include endpoint URLs and errors in the response (default true)
+  health_check_details: true          # false trims each entry to model, model_id, and status fields (default true)
 ```
 
-Set `health_check_details: false` to strip endpoint URLs, error messages, and other params from the response when the proxy is exposed to a broad audience.
+Set `health_check_details: false` to return only [the minimal entry](#response-fields) when the proxy is exposed to a broad audience.
 
-To exclude a model from the background loop, set `disable_background_health_check: true` in its `model_info`. That only skips the background loop; an on-demand `GET /health` still probes it unless you also set `general_settings.health_check_skip_disabled_background_models: true`, which omits those deployments from on-demand and shared health checks as well.
+The cached result follows the same rules as a live check. Each key sees only its own deployments, a targeted call answers 503 when no targeted deployment is healthy in the cache, and non-admin keys get the admin-only fields removed. Until the first background run finishes the cache is empty, so an untargeted call answers 200 with empty lists, or `{}` for an admin key with no `models` list, and every targeted call answers 503 with empty lists. Each proxy worker, and each pod, runs its own background loop and keeps its own cache. Right after the proxy starts, or after a worker restarts, a worker whose first run has not finished answers from an empty cache while another worker already has results, so the same call can answer 503 and then 200 a moment later. A deployment the background loop skips, through `disable_background_health_check` or `background_health_check_model_groups` below, is never in the cache, so it never shows up and a targeted check of it always answers 503 with empty lists.
+
+To exclude a model from the background loop, set `disable_background_health_check: true` in its `model_info`. While background checks are on, `/health` only reads the cache, so that deployment drops out of its result as described above. Set `general_settings.health_check_skip_disabled_background_models: true` to also leave those deployments out of on-demand checks, which run when background checks are off, and out of shared health checks.
 
 ```yaml
 model_list:
@@ -128,6 +183,25 @@ model_list:
       mode: embedding
 ```
 
+### Audio output chat models
+
+<SinceVersion v="1.109.0" />
+
+OpenAI and Azure chat models that output audio, such as `gpt-audio-1.5` and `gpt-audio-mini`, reject a request with no audio in its input or output. The chat probe asks these models for text plus audio output, a `wav` clip in the [`health_check_voice`](#health-check-tuning-reference) voice, so they pass the default probe with no `model_info.health_check_params` override. Values you set in `health_check_params` still win, and a `modalities` list there without `"audio"` keeps the probe text only.
+
+LiteLLM picks these models by `base_model`, read from `model_info` and then `litellm_params`, or else by the deployment's model name. So a custom-named Azure deployment gets the audio probe only when `base_model` names its model, as for [cost tracking](./custom_pricing.md#set-base_model-for-cost-tracking-eg-azure-deployments).
+
+```yaml
+model_list:
+  - model_name: gpt-audio
+    litellm_params:
+      model: azure/my-gpt-audio-deployment
+      api_base: os.environ/AZURE_API_BASE
+      api_key: os.environ/AZURE_API_KEY
+    model_info:
+      base_model: azure/gpt-audio-1.5
+```
+
 ## Health check tuning reference
 
 Set these under a model's `model_info` unless noted otherwise. They control how the probe request is shaped.
@@ -139,7 +213,7 @@ Set these under a model's `model_info` unless noted otherwise. They control how 
 | `health_check_max_tokens_reasoning` | unset | `max_tokens` for reasoning models when `health_check_max_tokens` is not set |
 | `health_check_max_tokens_non_reasoning` | unset | `max_tokens` for non-reasoning models when `health_check_max_tokens` is not set |
 | `health_check_reasoning_effort` | unset | `reasoning_effort` on the probe (chat, completion, batch, responses modes only) |
-| `health_check_voice` | `alloy` | Voice for `audio_speech` probes. Gemini TTS deployments map `alloy` and the other OpenAI voice names to a Gemini prebuilt voice (`alloy` becomes `Kore`, see [the mapping](../providers/gemini#voice-names)) from v1.107.0, so the default passes. Set a Gemini name like `Kore` to pick one directly, which earlier releases need |
+| `health_check_voice` | `alloy` | Voice for `audio_speech` probes, and for chat probes of [OpenAI and Azure models that output audio](#audio-output-chat-models) <SinceVersion v="1.109.0" />. Gemini TTS deployments map `alloy` and the other OpenAI voice names to a Gemini prebuilt voice (`alloy` becomes `Kore`, see [the mapping](../providers/gemini#voice-names)) from v1.107.0, so the default passes. Set a Gemini name like `Kore` to pick one directly, which earlier releases need |
 | `health_check_model` | unset | Concrete model a wildcard route probes |
 | `disable_background_health_check` | false | Skip this model in the background loop |
 

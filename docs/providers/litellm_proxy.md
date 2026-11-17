@@ -1,3 +1,9 @@
+---
+title: "LiteLLM Proxy (LLM Gateway) from the Python SDK"
+sidebar_label: "LiteLLM Proxy (LLM Gateway)"
+description: "Send Python SDK requests to a LiteLLM AI Gateway with the litellm_proxy/ prefix: chat, streaming, embeddings, images, audio and rerank, once or per call."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -180,11 +186,7 @@ LiteLLM Proxy works with Langchain, LlamaIndex, OpenAI JS, Anthropic SDK, Instru
 
 ## Send all SDK requests to LiteLLM Proxy
 
-:::info
-
-Requires v1.72.1 or higher.
-
-:::
+<SinceVersion v="1.72.1" />
 
 Use this when calling LiteLLM Proxy from any library / codebase already using the LiteLLM SDK.
 

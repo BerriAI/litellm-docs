@@ -81,6 +81,21 @@ async with streamablehttp_client(
 
 Keys without the flag get the existing behavior unchanged: `tools/list` returns the full catalog, and the two virtual tool names are rejected with a `forbidden` error.
 
+:::note[SSO users without a key]
+
+The flag is read from whoever signs in, so it is not limited to keys. A client that connects to `/mcp/` without a key header and signs in through SSO is admitted as its LiteLLM user, so it sees the virtual tools only when that user's `object_permission` has `mcp_tool_search_enabled: true`. The Admin UI has no toggle for this yet, so set it with `/user/update`:
+
+```bash
+curl -X POST http://localhost:4000/user/update \
+  -H "Authorization: Bearer $ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "<user id>", "object_permission": {"mcp_tool_search_enabled": true}}'
+```
+
+[`/mcp/proxy`](#schema-discovery-endpoint-mcpproxy) does not depend on the flag and works with the same SSO sign-in.
+
+:::
+
 ## Enable as a default for every new key
 
 If you want every new key to opt into tool search without every caller having to remember the flag, put it under `litellm_settings.default_key_generate_params.object_permission` in `config.yaml`. Any `/key/generate` request that omits the field will have the default merged in; a request that sets a partial `object_permission` (say, only `mcp_servers`) keeps its explicit fields and only picks up the ones it left unset.
@@ -178,7 +193,7 @@ async with streamablehttp_client(
 
 ## Prerequisites
 
-Requires LiteLLM v1.92.x or later. Semantic ranking, `similarity_threshold`, and `core_tools` require v1.102.0 or later plus an embedding model in `model_list`, and `/mcp/proxy` requires v1.102.0 or later. Neither needs an extra Python dependency.
+Tool search works <SinceVersion v="1.92.0" />. Semantic ranking, `similarity_threshold`, `core_tools`, and `/mcp/proxy` work <SinceVersion v="1.102.0" />. Semantic ranking, `similarity_threshold` and `core_tools` also need an embedding model in `model_list`. None of it needs an extra Python dependency.
 
 ## Access control
 

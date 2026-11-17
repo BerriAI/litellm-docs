@@ -17,10 +17,10 @@ export default function DocSidebar({onCollapse, ...props}) {
     <>
       <div className={styles.sidebarDesktop}>
         <div className={clsx(styles.sidebarContainer, props.isHidden && styles.sidebarContainerHidden)}>
+          {hideable && <CollapseButton onClick={onCollapse} />}
           <div className={styles.sidebarScroll}>
             <DocSidebarDesktop {...props} />
           </div>
-          {hideable && <CollapseButton onClick={onCollapse} />}
         </div>
       </div>
       <div className={styles.sidebarMobile}>

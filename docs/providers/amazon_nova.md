@@ -1,3 +1,9 @@
+---
+title: "Amazon Nova API with LiteLLM AI Gateway"
+sidebar_label: "Amazon Nova"
+description: "Call Amazon Nova Micro, Lite, Pro and Premier from the Python SDK or AI Gateway, with streaming, tool calling and temperature or top_p set per request."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

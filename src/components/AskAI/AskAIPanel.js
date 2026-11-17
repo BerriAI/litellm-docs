@@ -1,13 +1,13 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef} from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import {Sparkles, SquarePen, Copy, Check, X, Send, Square} from 'lucide-react';
+import {SquarePen, Copy, Check, Send, Square} from 'lucide-react';
 import {useAskAI, commonQuestions} from './AskAIContext';
 import {useSalesForm} from '@site/src/components/SalesForm';
 import {mapCitations} from '../../../search/citations.mjs';
 import {sourceLabel, sourceDetail} from '../../../search/content';
+import DockedPanel from './DockedPanel';
 import styles from './styles.module.css';
-import './layout.css';
 
 function Answer({answer, sources}) {
   const byId = new Map(sources.map(source => [source.id, source]));
@@ -32,108 +32,11 @@ function Sources({sources}) {
   </div>;
 }
 
-// Keeps the panel's top edge under the sticky navbar, including while an announcement bar
-// still sits above it at the top of the page.
-function useNavbarOffset(active) {
-  useEffect(() => {
-    if (!active) return undefined;
-    const root = document.documentElement;
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const bottom = document.querySelector('.navbar')?.getBoundingClientRect().bottom;
-      if (bottom > 0) root.style.setProperty('--ask-ai-top', `${Math.round(bottom)}px`);
-      else root.style.removeProperty('--ask-ai-top');
-    };
-    const schedule = () => {if (!frame) frame = requestAnimationFrame(update);};
-    update();
-    window.addEventListener('scroll', schedule, {passive: true});
-    window.addEventListener('resize', schedule);
-    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(schedule) : null;
-    observer?.observe(document.body);
-    return () => {
-      window.removeEventListener('scroll', schedule);
-      window.removeEventListener('resize', schedule);
-      observer?.disconnect();
-      cancelAnimationFrame(frame);
-      root.style.removeProperty('--ask-ai-top');
-    };
-  }, [active]);
-}
-
-const MIN_WIDTH = 380, MIN_CONTENT_WIDTH = 640;
-
-// Same bound as layout.css: the docs sidebar and a readable content column always stay visible.
-function clampWidth(value) {
-  const sidebar = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--doc-sidebar-width')) || 300;
-  const max = Math.max(MIN_WIDTH, window.innerWidth - sidebar - MIN_CONTENT_WIDTH);
-  return Math.round(Math.min(Math.max(value, MIN_WIDTH), max));
-}
-
 export default function AskAIPanel() {
   const {open, closePanel, ask, stop, newChat, retry, copyConversation, turns, asking, pendingQuestion, streamedAnswer,
     streamedSources, progress, error, draft, setDraft, copied, focusRequest} = useAskAI();
   const salesForm = useSalesForm();
   const composer = useRef(null), body = useRef(null), latestTurn = useRef(null), handledFocus = useRef(0), wasAsking = useRef(false);
-
-  const [width, setWidth] = useState(null);
-
-  useNavbarOffset(open);
-
-  useEffect(() => {
-    try {
-      const saved = parseInt(localStorage.getItem('ask-ai-width'), 10);
-      if (saved) setWidth(clampWidth(saved));
-    } catch {}
-  }, []);
-
-  function saveWidth(next) {
-    setWidth(next);
-    try {localStorage.setItem('ask-ai-width', String(next));} catch {}
-  }
-
-  // Page layout reads this attribute. It is an attribute, not a class, because the head manager
-  // rewrites the html class list on every navigation.
-  useEffect(() => {
-    if (!open) return undefined;
-    const root = document.documentElement;
-    root.setAttribute('data-ask-ai', 'open');
-    if (width) root.style.setProperty('--ask-ai-width', `${width}px`);
-    return () => {
-      root.removeAttribute('data-ask-ai');
-      root.style.removeProperty('--ask-ai-width');
-    };
-  }, [open, width]);
-
-  function startResize(event) {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    const handle = event.currentTarget, root = document.documentElement;
-    handle.setPointerCapture(event.pointerId);
-    root.setAttribute('data-ask-ai-resizing', '');
-    let latest = null;
-    const move = moveEvent => {
-      latest = clampWidth(window.innerWidth - moveEvent.clientX);
-      root.style.setProperty('--ask-ai-width', `${latest}px`);
-    };
-    const end = () => {
-      handle.removeEventListener('pointermove', move);
-      handle.removeEventListener('pointerup', end);
-      handle.removeEventListener('pointercancel', end);
-      root.removeAttribute('data-ask-ai-resizing');
-      if (latest) saveWidth(latest);
-    };
-    handle.addEventListener('pointermove', move);
-    handle.addEventListener('pointerup', end);
-    handle.addEventListener('pointercancel', end);
-  }
-
-  function resizeWithKeys(event) {
-    const step = {ArrowLeft: 40, ArrowRight: -40}[event.key];
-    if (!step) return;
-    event.preventDefault();
-    saveWidth(clampWidth((width ?? MIN_WIDTH) + step));
-  }
 
   useEffect(() => {
     if (open && focusRequest !== handledFocus.current) {
@@ -158,29 +61,17 @@ export default function AskAIPanel() {
 
   if (!open) return null;
 
-  function onKeyDown(event) {
-    if (event.key === 'Escape' && !event.defaultPrevented) {
-      event.preventDefault(); closePanel();
-      document.querySelector('[data-ask-ai-trigger]')?.focus();
-    }
-  }
   function submit() {
     if (draft.trim() && !asking) ask(draft);
   }
 
   const empty = !turns.length && !asking && !error;
-  return <aside className={styles.panel} aria-label="Ask LiteLLM AI" onKeyDown={onKeyDown}>
-    <div className={styles.resizeHandle} role="separator" aria-orientation="vertical" aria-label="Resize Ask AI" tabIndex={0}
-      aria-valuenow={width ?? MIN_WIDTH} aria-valuemin={MIN_WIDTH} title="Drag to resize, double-click to reset"
-      onPointerDown={startResize} onKeyDown={resizeWithKeys} onDoubleClick={() => saveWidth(MIN_WIDTH)}/>
-    <header className={styles.header}>
-      <h2><Sparkles size={15} aria-hidden="true"/>Ask LiteLLM AI</h2>
-      {turns.length > 0 && <button type="button" className={styles.iconButton} onClick={copyConversation} aria-label={copied ? 'Conversation copied' : 'Copy conversation'} title="Copy conversation">
-        {copied ? <Check size={16}/> : <Copy size={16}/>}
-      </button>}
-      <button type="button" className={styles.iconButton} onClick={newChat} aria-label="New chat" title="New chat"><SquarePen size={16}/></button>
-      <button type="button" className={styles.iconButton} onClick={closePanel} aria-label="Close Ask AI" title="Close"><X size={18}/></button>
-    </header>
+  return <DockedPanel open onClose={closePanel} actions={<>
+    {turns.length > 0 && <button type="button" className={styles.iconButton} onClick={copyConversation} aria-label={copied ? 'Conversation copied' : 'Copy conversation'} title="Copy conversation">
+      {copied ? <Check size={16}/> : <Copy size={16}/>}
+    </button>}
+    <button type="button" className={styles.iconButton} onClick={newChat} aria-label="New chat" title="New chat"><SquarePen size={16}/></button>
+  </>}>
     <div className={styles.body} ref={body} role="log" aria-label="Conversation">
       <div className={styles.intro}>
         <p>Ask about proxy setup, model routing, caching, spend tracking, and more. Answers cite the docs.</p>
@@ -216,5 +107,5 @@ export default function AskAIPanel() {
       </form>
       <p className={styles.note}>AI can make mistakes. Check the sources.</p>
     </footer>
-  </aside>;
+  </DockedPanel>;
 }

@@ -2,32 +2,34 @@
 title: Auto Router [Add-on]
 sidebar_label: Overview
 keywords: [autorouter, auto router]
-description: Route every request to the cheapest model that can answer it well. Benchmarks, setup, recommended configurations, prompt caching, and how to evaluate the router on your own traffic.
+description: Choose a model for each request using prompt complexity or your own rules. Start in Python or set up Auto Router in the LiteLLM gateway.
 ---
 
 import NavigationCards from '@site/src/components/NavigationCards';
 import AutoRouterDiagram from '@site/src/components/AutoRouterDiagram';
 
-:::info[Help shape the Auto-Router]
+Auto Router chooses which model handles each request to your LiteLLM gateway. Your application calls one model name; the router selects from the models you configure based on the prompt or your routing rules. For example, you can send simple questions to a cheaper model and harder tasks to a stronger one.
 
-Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
-
-<a className="button button--primary button--lg" href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
-
-<br /><br />
-
-Already testing it? Share your results in [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
-
-:::
+Building routing into a Python application or agent? Use the [Autorouter SDK](/docs/autorouter_sdk).
 
 <AutoRouterDiagram />
 
-- **One-click setup.** Configure automatically checks the models your proxy already serves and fills all four tiers for you; no template to pick.
-- **One model name in your clients.** The gateway classifies each request and picks the model.
-- **Any model, any provider, per tier.** A single model, a random pool, or a Thompson-sampled pool.
-- **Classifier choices.** Heuristics, an LLM, JEV through TypeSafe System One Choice, keyword rules, or a custom plugin
-- **Savings reported per request.** Against an all-frontier baseline, in the logs and in Cost Optimization.
-- **Agent-safe.** Prompt caching, context-window escalation, modality routing, mid-task stall escalation, and optional session pinning.
+You choose the models for each tier. For each request, the router picks a tier and a model from it.
+
+## Set up in the dashboard
+
+You need a LiteLLM gateway with models already configured and permission to add models. If you do not have a gateway yet, start with the [gateway quickstart](/docs/proxy/quick_start).
+
+1. Open **Models + Endpoints**, then the **Auto Router** tab, and add a router.
+2. Give it a name, such as `smart-router`. Click **Configure automatically** to fill the tiers from your deployed models, then review the selections.
+3. Use **Test Routing** with a prompt from your application. Check which tier and model it selects. This tests the routing decision without calling the selected model; an LLM classifier can still incur a charge.
+4. Click **Add Auto Router** to save it. In your application's requests to the gateway, use `smart-router` as the `model`.
+
+The selected model generates the answer. Try a few of your application's tasks and compare the answers and cost with your current model before switching traffic.
+
+For YAML, the API, or CLI setup, see [Admin Setup](/docs/auto_router/setup). To use the router from Claude Code or Codex, follow [User Setup](/docs/auto_router/user_setup).
+
+To change how the router chooses models, see [Customize your classifier](/docs/auto_router/optimize_classifier). You can also [connect a decision model](/docs/auto_router/decision_classifiers), including Jev, Nimble, Laya, or Databricks `ai_decide`.
 
 ## Results
 
@@ -41,49 +43,7 @@ Already testing it? Share your results in [discussion #32168](https://github.com
 | 37% to 69% cheaper than caching alone | Five datasets including live gateway traffic | [Prompt caching](/blog/auto-router-prompt-caching-benchmark) |
 | Matched or beat the current model on 88.1% of responses | Shadow evaluation on live traffic, 143 judged turns | [Shadow evaluations](/blog/auto-router-shadow-evaluations) |
 
-## Quick start
-
-- **Dashboard:** Models + Endpoints, Add Model, Auto Router tab, enter a name, then click **Configure automatically** or pick a template. Review the tiers, Test Routing, and save.
-- **Agent:** tell it `run curl -fsSL https://docs.litellm.ai/skills/auto-router and follow the instructions`.
-- **config.yaml:** one router entry whose tiers name other models in the same file.
-
-```yaml title="config.yaml" keep-model-ids
-model_list:
-  - model_name: claude-haiku-4-5
-    litellm_params:
-      model: anthropic/claude-haiku-4-5
-      api_key: os.environ/ANTHROPIC_API_KEY
-  - model_name: claude-sonnet-5
-    litellm_params:
-      model: anthropic/claude-sonnet-5
-      api_key: os.environ/ANTHROPIC_API_KEY
-  - model_name: claude-opus-5
-    litellm_params:
-      model: anthropic/claude-opus-5
-      api_key: os.environ/ANTHROPIC_API_KEY
-
-  - model_name: smart-router
-    litellm_params:
-      model: auto_router/complexity_router
-      complexity_router_config:
-        tiers:
-          SIMPLE:    claude-haiku-4-5
-          MEDIUM:    claude-sonnet-5
-          COMPLEX:   claude-opus-5
-          REASONING: claude-opus-5
-        classifier_type: heuristic
-      complexity_router_default_model: claude-sonnet-5
-```
-
-```shell
-curl -X POST http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -d '{"model": "smart-router", "messages": [{"role": "user", "content": "What is 2+2?"}]}'
-```
-
-## Explore
-
-Use the **OSS Classifier** with hosted Jev, self-hosted Nimble and Laya, or the Databricks `ai_decide` AI Function. The [OSS classifier guide](/docs/auto_router/decision_classifiers) covers setup, required gateway and dashboard builds, and migration from the existing Jev configuration. See the [classifier reference](/docs/proxy/auto_routing#jev-classifier) for context, fallback and accounting.
+## Configure and evaluate
 
 <NavigationCards
 columns={3}
@@ -110,7 +70,7 @@ items={[
   },
   {
     title: "Prompt Caching",
-    description: "Switching models keeps the cache warm. Measured on five datasets.",
+    description: "Configure prompt caching and compare costs when requests switch models.",
     to: "/docs/auto_router/prompt_caching",
   },
   {

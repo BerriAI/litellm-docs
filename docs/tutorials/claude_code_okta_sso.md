@@ -70,7 +70,7 @@ litellm --config /path/to/config.yaml
 
 :::tip
 
-To restrict access to your corporate domain, add `user_allowed_email_domain: "yourcompany.com"` under `litellm_jwtauth`. See [JWT-based Auth](../proxy/token_auth) for all available claim mappings and access controls.
+To restrict access to your corporate domain, add `user_allowed_email_domain: "yourcompany.com"` under `litellm_jwtauth`. See [JWT identity mapping](../proxy/jwt_user_team_auth) for claim lookup and [JWT permissions](../proxy/access_management/jwt_permissions) for access controls.
 
 :::
 
@@ -183,7 +183,8 @@ Two extensions are common once the basic flow works. To attribute spend to teams
 
 ## Related docs
 
-- [JWT-based Auth](../proxy/token_auth): all `litellm_jwtauth` options
+- [JWT configuration reference](../proxy/jwt_auth_reference): token validation and identity claims
+- [JWT permissions](../proxy/access_management/jwt_permissions): roles, scopes, and routes
 - [JWT to Virtual Key Mapping](../proxy/jwt_key_mapping): per-user keys, budgets, and model access
 - [Provisioning identities and issuing keys](../proxy/identity_provisioning): how JWT auth, SCIM, and key auto-registration fit together
 - [Claude Code Gateway (SSO sign-in)](./claude_code_gateway): developers sign in with `/login` through the proxy's SSO, with no helper script

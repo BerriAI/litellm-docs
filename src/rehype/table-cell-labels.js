@@ -1,5 +1,9 @@
 // Copies each table header's text onto the cells below it as data-label, so
-// narrow screens can stack rows into labeled cards (see custom.css).
+// narrow screens can stack rows into labeled cards (see custom.css). Cells
+// with short values also get data-inline, so their label and value share a
+// line instead of leaving a lone "1" or "Complete" under its label.
+const INLINE_MAX_CHARS = 24;
+
 function textOf(node) {
   if (node.type === 'text') return node.value;
   return (node.children ?? []).map(textOf).join('');
@@ -20,7 +24,12 @@ function labelTable(table) {
     for (const row of childElements(tbody, 'tr')) {
       childElements(row, 'td').forEach((td, index) => {
         if (!labels[index]) return;
-        td.properties = {...td.properties, dataLabel: labels[index]};
+        const inline = textOf(td).trim().length <= INLINE_MAX_CHARS;
+        td.properties = {
+          ...td.properties,
+          dataLabel: labels[index],
+          ...(inline ? {dataInline: ''} : {}),
+        };
       });
     }
   }

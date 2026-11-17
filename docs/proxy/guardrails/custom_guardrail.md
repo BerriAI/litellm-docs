@@ -1,3 +1,8 @@
+---
+title: "Build a Custom Guardrail for LiteLLM AI Gateway"
+sidebar_label: "Custom Guardrail"
+description: "Write a CustomGuardrail class for the LiteLLM AI Gateway: implement apply_guardrail to block or modify content and register it in config.yaml."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

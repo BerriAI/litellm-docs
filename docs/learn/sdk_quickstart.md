@@ -166,4 +166,4 @@ to: "/docs/providers",
 
 Use LiteLLM Gateway if you need centralized auth, virtual keys, spend tracking, shared logging, or one OpenAI-compatible endpoint for multiple apps.
 
-[Go to Gateway Quickstart →](/docs/learn/gateway_quickstart)
+[Go to Gateway Quickstart →](/docs/proxy/docker_quick_start)

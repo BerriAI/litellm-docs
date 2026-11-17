@@ -1,3 +1,7 @@
+---
+displayed_sidebar: tutorialSidebar
+---
+
 # CLI Arguments
 
 This page documents all command-line interface (CLI) arguments available for the LiteLLM proxy server.
@@ -64,7 +68,8 @@ This page documents all command-line interface (CLI) arguments available for the
 ### --keepalive_timeout
    - **Default:** `None`
    - **Type:** `int`
-   - Set the uvicorn keepalive timeout in seconds (uvicorn timeout_keep_alive parameter).
+   - Set the uvicorn keepalive timeout in seconds (uvicorn timeout_keep_alive parameter). Uvicorn's default is 5 seconds. Behind a load balancer that reuses connections, set it above the load balancer's idle timeout, see [Keepalive timeout](./server_tuning.md#keepalive-timeout).
+   - `--run_gunicorn` ignores it, and its workers keep Gunicorn's 2-second keep-alive.
    - **Usage:** 
      ```shell
      litellm --keepalive_timeout 30
@@ -74,6 +79,22 @@ This page documents all command-line interface (CLI) arguments available for the
     export KEEPALIVE_TIMEOUT=30
     litellm
     ```
+
+### --max_request_header_size
+
+Defaults to `16384` bytes (16 KiB). Accepts a positive integer, set through `--max_request_header_size` or the `MAX_REQUEST_HEADER_SIZE` environment variable. An explicit CLI value takes precedence over the environment variable.
+
+```shell
+litellm --config config.yaml --max_request_header_size 131072
+```
+
+```shell
+MAX_REQUEST_HEADER_SIZE=131072 litellm --config config.yaml --run_gunicorn
+```
+
+Applies when the default Uvicorn server or the Uvicorn workers under `--run_gunicorn` use h11. Setting the CLI flag or environment variable preserves Uvicorn's automatic parser selection. When httptools is installed, Uvicorn normally selects it and ignores this setting. When h11 is selected, its default buffer is 16 KiB and this setting changes that buffer. Ignored under `--run_hypercorn` and `--run_granian`.
+
+This sets Uvicorn's `h11_max_incomplete_event_size`, the number of bytes buffered for an incomplete HTTP event. [Uvicorn documents its default as 16384 bytes](https://uvicorn.dev/settings/#implementation). It is not a strict limit on the total size of every complete header block. A large header block can pass when it arrives in one read but return `400 Invalid HTTP request received.` when it arrives in segments or TLS records. Raise this value if an upstream gateway adds large identity headers. It does not change limits enforced by that gateway.
 
 ### --timeout_worker_healthcheck
    - **Default:** `None` (uvicorn's own default of 5 seconds applies)
@@ -96,6 +117,7 @@ This page documents all command-line interface (CLI) arguments available for the
    - **Type:** `int`
    - Recycle each worker after it has served this many HTTP requests, health probes included. This is useful for mitigating memory growth over time.
    - Only safe with `--num_workers` 2 or more. With a single worker the whole proxy stops serving when the limit is hit: Uvicorn exits the process and Gunicorn accepts no connections until the replacement worker has booted. The proxy prints a warning at startup in that case.
+   - Each recycle drops requests behind a keep-alive reverse proxy, and from v1.108.0 cancels requests still running after `GRACEFUL_SHUTDOWN_TIMEOUT`. Use it only as a last resort for memory growth, see [Recycle workers](./server_tuning.md#recycle-workers).
    - For uvicorn: maps to `limit_max_requests`
    - For gunicorn: maps to `max_requests`
    - **Usage:** 
@@ -446,7 +468,7 @@ A read replica takes the same key under `database.reader`, and it requires the w
 ### --check_migrations_against_existing_data
    - **Default:** `False`
    - **Type:** `bool` (Flag)
-   - Check, read-only, that the rows in `DATABASE_URL` can take this version's pending migrations and request-log indexes, print what would block them, then exit without applying anything. Exit code 0 when nothing blocks, 2 when something does. Requires `DATABASE_URL`. See the [Upgrade Guide](./upgrade_guide.md#check-the-rows-before-the-schema).
+   - Dry-run this version's pending migrations on `DATABASE_URL`: the real SQL runs inside one transaction that is rolled back, so PostgreSQL reports the row or schema that would make the upgrade fail, then exit. Exit code 0 lists each migration with its duration, 2 prints PostgreSQL's error. Holds the same locks the upgrade will, so run it off-peak. Requires `DATABASE_URL`. See the [Database Migrations](./database_migrations.md#dry-run-the-migrations-before-the-upgrade).
    - **Usage:**
      ```shell
      litellm --check_migrations_against_existing_data

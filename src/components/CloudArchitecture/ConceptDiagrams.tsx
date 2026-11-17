@@ -1,6 +1,7 @@
 import React from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
+import docsModels from '../../../docs-models.json';
 
 /* Shared primitives, mirrored from CloudArchitecture.tsx */
 
@@ -221,7 +222,7 @@ export function RouterFlowDiagram() {
         <StepNode n={3} title="litellm.completion" subtitle="makes the provider API call" />
         <ConnectorDown />
         <PillsNode
-          title="model group: gpt-4o"
+          title={`model group: ${docsModels.openai_large}`}
           subtitle="deployments sharing one model_name, load balanced"
           pills={['deployment 1', 'deployment 2', 'deployment 3']}
         />

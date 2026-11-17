@@ -1,3 +1,8 @@
+---
+title: "LiteLLM Callbacks for Logging and Observability"
+sidebar_label: "Callbacks"
+description: "Use LiteLLM input, success and failure callbacks to send Python SDK call data to tools such as Langfuse, LangSmith, Helicone, PostHog and Sentry."
+---
 # Callbacks
 
 ## Use Callbacks to send Output Data to Posthog, Sentry etc
@@ -31,11 +36,11 @@ This is **not** an extensive list. Please check the dropdown for all logging int
 ### Related Cookbooks
 Try out our cookbooks for code snippets and interactive demos:
 
-- [Langfuse Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/logging_observability/LiteLLM_Langfuse.ipynb)
-- [Lunary Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/logging_observability/LiteLLM_Lunary.ipynb)
-- [Arize Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/logging_observability/LiteLLM_Arize.ipynb)
-- [Proxy + Langfuse Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/logging_observability/LiteLLM_Proxy_Langfuse.ipynb)
-- [PromptLayer Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/LiteLLM_PromptLayer.ipynb)
+- [Langfuse Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/logging_observability/LiteLLM_Langfuse.ipynb)
+- [Lunary Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/logging_observability/LiteLLM_Lunary.ipynb)
+- [Arize Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/logging_observability/LiteLLM_Arize.ipynb)
+- [Proxy + Langfuse Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/logging_observability/LiteLLM_Proxy_Langfuse.ipynb)
+- [PromptLayer Callback Example (Colab)](https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/LiteLLM_PromptLayer.ipynb)
 
 ### Quick Start
 

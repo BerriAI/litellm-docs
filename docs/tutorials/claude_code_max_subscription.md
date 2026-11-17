@@ -11,7 +11,7 @@ Send Claude Code requests through LiteLLM using your own Claude Pro, Max, Team, 
 ## Prerequisites
 
 - [Claude Code](https://code.claude.com/docs/en/overview) installed and a Claude subscription. Team and Enterprise members use the account their administrator invited.
-- A running [LiteLLM proxy](../proxy/docker_quick_start.md), **v1.81.14 or later**, with PostgreSQL for virtual keys and logs.
+- A running [LiteLLM proxy](../proxy/docker_quick_start.md) <SinceVersion v="1.81.14" /> with PostgreSQL for virtual keys and logs.
 
 ## Step 1: Configure the proxy {#step-1-configure-litellm-proxy}
 
@@ -60,7 +60,7 @@ You should receive a greeting. In the dashboard, open **Logs** and find the succ
 
 ### Confirm subscription usage {#seeing-which-requests-were-billed-to-a-seat}
 
-On **LiteLLM v1.105.0 or later**, filter **Logs** with **Credential: Client OAuth token**; Request Details shows the same value. Spend-log metadata records `used_client_oauth_token=true` for subscription requests and `false` for configured credentials. For API access, query `/spend/logs/ui` with that filter and UTC `start_date` / `end_date` values in `YYYY-MM-DD HH:MM:SS` format.
+Filter **Logs** with **Credential: Client OAuth token** <SinceVersion v="1.105.0" />; Request Details shows the same value. Spend-log metadata records `used_client_oauth_token=true` for subscription requests and `false` for configured credentials. For API access, query `/spend/logs/ui` with that filter and UTC `start_date` / `end_date` values in `YYYY-MM-DD HH:MM:SS` format.
 
 ## Limits and billing {#attribution-and-cost}
 
@@ -79,7 +79,7 @@ Have each developer sign in with their own subscription, following [Anthropic's 
 
 ### Which requests use the subscription token
 
-Use direct Anthropic deployments on `/v1/messages` or `/v1/chat/completions` for subscription forwarding and credential attribution. Bedrock and Vertex AI use their own credentials (provider isolation requires v1.99.0 or later). `/v1/messages/count_tokens` uses configured credentials. The `/anthropic` pass-through route uses the proxy's Anthropic key when configured; use the proxy root for the subscription setup in this guide.
+Use direct Anthropic deployments on `/v1/messages` or `/v1/chat/completions` for subscription forwarding and credential attribution. Bedrock and Vertex AI use their own credentials (provider isolation works <SinceVersion v="1.99.0" />). `/v1/messages/count_tokens` uses configured credentials. The `/anthropic` pass-through route uses the proxy's Anthropic key when configured; use the proxy root for the subscription setup in this guide.
 
 ### Credential storage, refresh, and revocation
 

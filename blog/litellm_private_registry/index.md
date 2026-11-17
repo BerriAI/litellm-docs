@@ -20,7 +20,7 @@ With AI agents, publicly releasing a security patch can give attackers an immedi
 
 To address this, we're introducing a LiteLLM Private Registry in the coming weeks. For the most severe vulnerabilities, we'll first distribute fixes privately, giving organizations time to upgrade before publishing the patch and security advisory publicly.
 
-**Our commitment to open source remains unchanged.** All security fixes will continue to be released publicly.
+ **Our commitment to open source remains unchanged.** All security fixes will continue to be released publicly.
 
 {/* truncate */}
 

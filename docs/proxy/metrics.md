@@ -3,9 +3,12 @@
 The `GET /daily_metrics` endpoint that this page used to describe has been removed from the proxy. Daily spend and usage is now served by `GET /user/daily/activity`, which returns per-day spend, token counts and request counts with a breakdown by model, model group, provider, endpoint, API key and MCP server. See the [Daily Spend Breakdown API](./cost_tracking#daily-spend-breakdown-api) section for the full response shape and the [Swagger reference](https://docs.litellm.ai/api-reference/#/Budget%20%26%20Spend%20Tracking/get_user_daily_activity_user_daily_activity_get) for all parameters.
 
 ## Request Format
+
+The user, team and organization `/daily/activity/aggregated` endpoints also expose a [guardrail spend breakdown](./cost_tracking#guardrail-spend-breakdown), including per-key costs and units with no known price. Guardrail spend is already included in the existing spend totals.
+
 ```shell
 curl -X GET "http://0.0.0.0:4000/user/daily/activity?start_date=2025-03-20&end_date=2025-03-27" \
-  -H "Authorization: Bearer $LITELLM_API_KEY"
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
 ```
 
 Optional query parameters: `model`, `api_key` and `user_id` filter the results (non-admin callers must pass their own `user_id`), `page` and `page_size` (default 50, max 1000) paginate them, and `timezone` (offset in minutes from UTC) with `include_current_utc_day` control how day buckets are aligned.

@@ -13,7 +13,7 @@ authors:
     url: https://www.linkedin.com/in/reffajnaahsi/
     image_url: https://pbs.twimg.com/profile_images/1613813310264340481/lz54oEiB_400x400.jpg
   - name: Kerry Lu
-    title: Rust Engineer, LiteLLM
+    title: Software Engineer, LiteLLM
     url: https://github.com/kerrylu-berri
     image_url: https://github.com/kerrylu-berri.png
 hide_table_of_contents: false

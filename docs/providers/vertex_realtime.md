@@ -1,3 +1,9 @@
+---
+title: "Vertex AI Gemini Live Realtime with LiteLLM"
+sidebar_label: "Vertex AI Gemini Live - Realtime API"
+description: "Use Gemini Live on Gemini Enterprise Agent Platform (formerly Vertex AI) through LiteLLM's /realtime endpoint, with voice in, voice out and tools."
+---
+
 # Vertex AI Gemini Live - Realtime API
 
 Use Vertex AI's Gemini Live API (BidiGenerateContent) through LiteLLM's unified `/realtime` endpoint, which speaks the OpenAI Realtime protocol.
@@ -40,7 +46,7 @@ general_settings:
   master_key: sk-your-key
 ```
 
-`vertex_location` picks the host LiteLLM dials for the Live API websocket: a region such as `us-east4` dials `us-east4-aiplatform.googleapis.com`, a multi-region (`us` or `eu`) dials `aiplatform.us.rep.googleapis.com` or `aiplatform.eu.rep.googleapis.com`, and `global` dials `aiplatform.googleapis.com`. Google decides which models each location offers. As of October 2026, `gemini-3.8-live` is not offered in `global`. Multi-region locations on `/realtime` need LiteLLM v1.106.0-rc.1 or later ([PR #45166](https://github.com/BerriAI/litellm/pull/45166)).
+`vertex_location` picks the host LiteLLM dials for the Live API websocket: a region such as `us-east4` dials `us-east4-aiplatform.googleapis.com`, a multi-region (`us` or `eu`) dials `aiplatform.us.rep.googleapis.com` or `aiplatform.eu.rep.googleapis.com`, and `global` dials `aiplatform.googleapis.com`. Google decides which models each location offers. As of October 2026, `gemini-3.8-live` is not offered in `global`. Multi-region locations on `/realtime` work <SinceVersion v="1.106.0" />, first in `v1.106.0-rc.1` ([PR #45166](https://github.com/BerriAI/litellm/pull/45166)).
 
 ### 3. Start the proxy
 
@@ -156,8 +162,6 @@ asyncio.run(main())
 ```
 
 ## Voice in / Voice out
-
-For a complete voice example see [`voice_realtime_test.py`](https://github.com/BerriAI/litellm/blob/main/voice_realtime_test.py).
 
 Key settings for audio:
 - Microphone input: **16 kHz** PCM16 (`audio/pcm;rate=16000`)

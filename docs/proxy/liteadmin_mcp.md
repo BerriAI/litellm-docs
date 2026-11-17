@@ -18,7 +18,7 @@ Use **LiteAdmin MCP** ([LiteLLM Admin MCP](https://github.com/BerriAI/litellm-ad
 
 Your client runs the agent and model. The MCP server calls your gateway's management API with your personal admin credential. Connecting it leaves your client's model-provider settings unchanged.
 
-To host MCP inside your Enterprise deployment, follow [Deploy LiteAdmin MCP on Enterprise](./liteadmin_mcp_enterprise.md) for unified and componentized Docker images.
+To host MCP inside your Enterprise deployment, follow [Deploy LiteAdmin MCP on Enterprise](./liteadmin_mcp_enterprise.md) for the shared Docker image in monolith or componentized deployments.
 
 For gateway management in Slack, follow the [LiteAdmin Slack app setup](./liteadmin_slack.md) and choose the Enterprise or standalone deployment. To route third-party MCP tools through LiteLLM, see the separate [MCP Gateway](../mcp.md) guide.
 
@@ -149,7 +149,7 @@ Use names and limits that match your intended change. The gateway enforces the c
 
 Your gateway needs a database, `STORE_MODEL_IN_DB=True`, and provider authentication for [model management](./model_management.md). Include the public model name, exact provider/model ID, and a stored credential name or gateway environment-variable reference in your request. For example:
 
-> Add a model named support-chat using openai/gpt-4.1 and the existing gateway credential openai-production.
+> Add a model named support-chat using openai/{{openai_large}} and the existing gateway credential openai-production.
 
 Use a provider/model ID and credential that exist in your deployment. Keep provider API keys out of chat. Adding a gateway deployment does not provision provider access or test inference.
 
@@ -166,7 +166,7 @@ The connector discovers schemas from your gateway and exposes the reviewed opera
 
 ## Run LiteAdmin MCP inside LiteLLM
 
-Follow [Deploy LiteAdmin MCP on Enterprise](./liteadmin_mcp_enterprise.md) to serve `/admin/mcp` from a unified LiteLLM image or the management backend in a componentized deployment. The guide covers the opt-in flag, Enterprise license, ingress routing, authentication, client configuration, and verification
+Follow [Deploy LiteAdmin MCP on Enterprise](./liteadmin_mcp_enterprise.md) to serve `/admin/mcp` from the proxy or management backend process in the shared LiteLLM image. The guide covers the opt-in flag, Enterprise license, ingress routing, authentication, client configuration, and verification
 
 ### Embedded tool and response settings
 

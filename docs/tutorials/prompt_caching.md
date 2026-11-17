@@ -57,11 +57,7 @@ This is provider-side prompt caching, a different feature from [LiteLLM response
 
 ## Automatic checkpoints for Claude models
 
-:::info
-
-Requires LiteLLM v1.94.0
-
-:::
+<SinceVersion v="1.94.0" />
 
 Everything below asks you to decide *where* the checkpoints go. If all you want is the common case for Claude, one flag does it for you.
 
@@ -125,7 +121,7 @@ Configured points are added beside any `cache_control` the request already carri
 
 ### OpenAI GPT-5.6 and newer
 
-The same `cache_control_injection_points` work when the deployment resolves to an OpenAI model that supports [explicit prompt cache breakpoints](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-breakpoints), which the cost map marks with `supports_prompt_cache_breakpoint` (GPT-5.6 and newer on `openai/`). LiteLLM looks at the resolved deployment, not at the shape of the incoming request, so one config pattern covers a mixed Anthropic and OpenAI fleet and Anthropic-shaped clients on `/v1/messages` get the OpenAI markers too
+The same `cache_control_injection_points` work when the deployment resolves to an OpenAI model that supports [explicit prompt cache breakpoints](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-breakpoints), which the cost map marks with `supports_prompt_cache_breakpoint` (GPT-5.6 and newer on `openai/`). A deployment can set `supports_openai_prompt_cache_breakpoint` in `model_info` instead, which wins over the older name and needs a LiteLLM version that includes [PR #52180](https://github.com/BerriAI/litellm/pull/52180). Neither flag controls Bedrock Converse `cachePoint` blocks, see [Bedrock cache points](../completion/prompt_caching.md#control-bedrock-converse-cache-points). LiteLLM looks at the resolved deployment, not at the shape of the incoming request, so one config pattern covers a mixed Anthropic and OpenAI fleet and Anthropic-shaped clients on `/v1/messages` get the OpenAI markers too
 
 | Anthropic target | OpenAI GPT-5.6+ target |
 |---|---|

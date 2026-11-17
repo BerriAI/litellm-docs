@@ -1,11 +1,15 @@
+---
+title: "OpenInfer API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "OpenInfer"
+description: "Call OpenInfer Cloud models such as GLM-5.3-Flash and Qwen3.5 27B with streaming, native Responses and Anthropic Messages endpoints and spend tracking."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # OpenInfer
 
-:::info
-Available from v1.107.0.
-:::
+<SinceVersion v="1.107.0" />
 
 ## Overview
 

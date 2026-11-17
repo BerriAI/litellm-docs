@@ -1,3 +1,8 @@
+---
+title: "DynamoAI Guardrails on LiteLLM AI Gateway"
+sidebar_label: "DynamoAI Guardrails"
+description: "Add DynamoAI content moderation and policy enforcement to LLM inputs and outputs on the LiteLLM AI Gateway, with policy IDs and a custom API base."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

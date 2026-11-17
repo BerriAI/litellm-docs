@@ -1,3 +1,8 @@
+---
+title: "CrowdStrike AIDR Guardrails on LiteLLM AI Gateway"
+sidebar_label: "CrowdStrike AIDR"
+description: "Block prompt injection, PII and toxic content with CrowdStrike AIDR policies on the LiteLLM AI Gateway, with collector registration and setup."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

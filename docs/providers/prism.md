@@ -1,3 +1,9 @@
+---
+title: "Prism API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Prism"
+description: "Run DeepSeek V4.1 Flash on Prism Inference with zero data retention, tool calling, JSON schema, image input and native Responses and Messages endpoints."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

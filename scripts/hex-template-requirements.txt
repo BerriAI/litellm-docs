@@ -1,0 +1,6 @@
+PyYAML>=6,<7
+jsonschema>=4,<5
+pandas>=2.2,<4
+plotly>=6,<8
+psycopg[binary]>=3.2,<4
+Jinja2>=3.1,<4

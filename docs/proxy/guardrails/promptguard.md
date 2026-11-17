@@ -1,3 +1,8 @@
+---
+title: "PromptGuard Guardrails on LiteLLM AI Gateway"
+sidebar_label: "PromptGuard"
+description: "Detect prompt injection, redact PII and filter topics with PromptGuard on the LiteLLM AI Gateway, with fail-open mode and always-on protection."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

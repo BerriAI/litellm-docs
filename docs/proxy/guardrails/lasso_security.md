@@ -1,3 +1,8 @@
+---
+title: "Lasso Security Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Lasso Security"
+description: "Block prompt injection and mask PII with Lasso Security on the LiteLLM AI Gateway, scanning inputs and outputs with user and conversation tracking."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -8,7 +13,7 @@ Use [Lasso Security](https://www.lasso.security/) to protect your LLM applicatio
 
 ## Prerequisites
 
-The Lasso guardrail requires the `ulid-py` package (version 1.1.0 or higher) for generating unique conversation identifiers:
+The Lasso guardrail requires the `ulid-py` package (version 1.1.0 or higher) for generating unique conversation identifiers: {/* keep-version-note */}
 
 ```shell
 uv add ulid-py>=1.1.0

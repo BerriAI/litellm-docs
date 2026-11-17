@@ -1,3 +1,9 @@
+---
+title: "Azure AI OCR (Mistral, Cohere Parse) with LiteLLM"
+sidebar_label: "Azure AI OCR (Mistral, Cohere Parse)"
+description: "Extract text from PDFs and images with Mistral Document AI on Azure AI, or parse images with Cohere Parse, via litellm.ocr() or the AI Gateway /ocr route."
+---
+
 # Azure AI OCR (Mistral, Cohere Parse)
 
 ## Overview

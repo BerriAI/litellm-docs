@@ -1,3 +1,8 @@
+---
+title: "Javelin Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Javelin Guardrails"
+description: "Add Javelin prompt injection detection, trust and safety checks and language detection to the LiteLLM AI Gateway as pre_call guardrails in YAML."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
