@@ -166,7 +166,8 @@ export function CreditWallet() {
         </div>
         <div className={styles.creditSide}>
           <ol className={styles.events}>
-            {CREDIT_EVENTS.map(event => <li key={event.at} data-on={state.time >= event.at}>
+            {/* Newest event on top, so the list reads upward like the column. */}
+            {[...CREDIT_EVENTS].reverse().map(event => <li key={event.at} data-on={state.time >= event.at}>
               <strong>{event.label}</strong><span>{event.detail}</span>
             </li>)}
           </ol>
