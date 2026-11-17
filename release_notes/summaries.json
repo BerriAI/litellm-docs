@@ -1,6 +1,28 @@
 [
   {
     "folders": [
+      "v1.108.11"
+    ],
+    "title": "LiteLLM v1.108.11 (LTS) fixes OOM on 429 retries and SSO behind TLS",
+    "points": [
+      "The proxy refuses blocked and over-limit keys before it reads the request body, so clients that retry 429s with large bodies no longer exhaust memory.",
+      "SSO login no longer goes through `/sso/key/generate/` or redirects to `http://` behind TLS termination.",
+      "Team admins get a 403 when they set `os.environ/` values on team models, so a proxy admin sets those values."
+    ]
+  },
+  {
+    "folders": [
+      "v1.108.10"
+    ],
+    "title": "LiteLLM v1.108.10 (LTS) fixes Vertex Claude 4096-token cap and EU o3 spend",
+    "points": [
+      "Versioned Claude models on Vertex AI, such as `claude-*@<version>`, no longer stop at 4096 tokens when the request has no `max_tokens`.",
+      "Deployments with `base_model` set to `azure/eu/o3`, `o4-mini`, `o1` or `o3-mini` record real spend instead of $0.",
+      "Async Codestral chat with a `file` part no longer returns 400."
+    ]
+  },
+  {
+    "folders": [
       "v1.110.0rc3"
     ],
     "title": "LiteLLM v1.110.0rc3 fixes fallback overrides and WebSocket model aliases",
@@ -189,27 +211,6 @@
       "Bedrock Converse honors the `reserved`, `auto` and `standard_only` service tiers and returns 400 for a tier that it does not support.",
       "Base64 PDFs that you send to Claude as `image_url` work, and `openai/` deployments with an empty `api_key` no longer send `OPENAI_ADMIN_KEY`.",
       "Groups that accept unmatched tags keep the request after affinity or cooldown filters."
-    ]
-  },
-  {
-    "folders": [
-      "v1.108.1"
-    ],
-    "title": "LiteLLM v1.108.1 (LTS) fixes Bedrock guardrail billing and router cooldowns",
-    "points": [
-      "A string fallback target such as `default_fallbacks: gpt-3.5` stops the proxy at startup, so write it as a list, `default_fallbacks: [\"gpt-3.5\"]`.",
-      "Spend and budgets include native Bedrock guardrail traces and the Gemini audio rates for flex, priority and batch.",
-      "The router keeps the only deployment of a group warm under `allowed_fails`, and evicted SDK clients close their aiohttp sessions."
-    ]
-  },
-  {
-    "folders": [
-      "v1.106.7"
-    ],
-    "title": "LiteLLM v1.106.7 supports custom video providers on /v1/videos",
-    "points": [
-      "`/v1/videos` serves providers that `custom_provider_map` registers.",
-      "The proxy and its Helm charts no longer package the Lens beta, so remove `lensWorker.enabled` from your Helm values before you upgrade."
     ]
   }
 ]
