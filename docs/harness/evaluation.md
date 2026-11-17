@@ -11,35 +11,33 @@ description: Compare agent harnesses and models on your own tasks with typed eva
 This guide requires the SDK implementation in [PR #52174](https://github.com/BerriAI/litellm/pull/52174). It is not available in a published LiteLLM release yet.
 :::
 
-Use `litellm.agent_eval()` to compare harness and model combinations on the same tasks. Define each task and its success rule once, choose the targets, and get a scorecard with pass rate, cost, token usage, model calls, tool calls and duration.
-
-An `EvalTask` describes the work and how to grade it. An `EvalTarget` selects a harness and model. Tasks can cover answers, research, writing, tool use or code changes. Files and test commands are optional.
+Compare agent harnesses and models on your own tasks with `litellm.agent_eval()`. Define the work and its success check in an `EvalTask`, then choose a harness and model with an `EvalTarget`. Read the scorecard to compare pass rate, cost and duration.
 
 ## 1. Prepare your environment
 
-Install the SDK checkout containing this feature into your Python environment. Replace `/path/to/litellm` with that checkout's root directory.
+Install the checkout for [SDK PR #52174](https://github.com/BerriAI/litellm/pull/52174). Replace `/path/to/litellm` with its root directory.
 
 ```bash
 python -m pip install -e /path/to/litellm
 ```
 
-This walkthrough uses Tool Loop, which needs no CLI runtime. Have a working [LiteLLM AI Gateway](./gateway.md) and a virtual key that can call two model groups. The examples name those groups `fast` and `accurate`; replace them with your own group names.
+Use a [LiteLLM AI Gateway](./gateway.md) virtual key that can call two model groups. This example names them `model-a` and `model-b`. Replace those names with your groups. Both targets use Tool Loop, which needs no CLI runtime.
 
-Set your gateway's root URL, without `/v1`, and load its virtual key from your secret manager into `LITELLM_PROXY_API_KEY`.
+In Bash or Zsh, set your gateway's root URL, without `/v1`, and enter your virtual key after running `read`. The terminal hides the input:
 
 ```bash
 export LITELLM_PROXY_API_BASE=https://litellm.example.com
+export LITELLM_PROXY_API_KEY
+read -rs LITELLM_PROXY_API_KEY
 ```
 
-The script below prompts for the key if the environment variable is unset. To compare Claude Code, Codex or another CLI harness, first install that harness's dependencies from the [quickstart](./quickstart.md#1-install).
+Skip the `read` command if your secret manager has set `LITELLM_PROXY_API_KEY`. To compare CLI harnesses such as Claude Code or Codex, install their dependencies from the [quickstart](./quickstart.md#1-install).
 
 ## 2. Define tasks and targets
 
 Save this complete example as `evaluate_agents.py`.
 
 ```python title="evaluate_agents.py"
-import os
-from getpass import getpass
 from pathlib import Path
 
 import litellm
@@ -72,43 +70,21 @@ tasks = [
 ]
 
 targets = [
-    EvalTarget(
-        harness=Harness.TOOL_LOOP,
-        model="litellm_proxy/fast",
-        label="fast",
-    ),
-    EvalTarget(
-        harness=Harness.TOOL_LOOP,
-        model="litellm_proxy/accurate",
-        label="accurate",
-    ),
+    EvalTarget(Harness.TOOL_LOOP, "litellm_proxy/model-a", label="model-a"),
+    EvalTarget(Harness.TOOL_LOOP, "litellm_proxy/model-b", label="model-b"),
 ]
 
+report = litellm.agent_eval(
+    tasks=tasks,
+    targets=targets,
+    max_concurrency=2,
+)
 
-def main() -> None:
-    if not os.environ.get("LITELLM_PROXY_API_KEY"):
-        os.environ["LITELLM_PROXY_API_KEY"] = getpass("Gateway virtual key: ")
-
-    report = litellm.agent_eval(
-        tasks=tasks,
-        targets=targets,
-        trials=1,
-        max_concurrency=2,
-        timeout=120,
-        metadata={"experiment": "support-routing"},
-    )
-
-    print(report.to_markdown())
-    Path("scorecard.json").write_text(report.to_json(), encoding="utf-8")
-
-    assert len(report.runs) == len(tasks) * len(targets)
-
-
-if __name__ == "__main__":
-    main()
+print(report.to_markdown())
+Path("scorecard.json").write_text(report.to_json(), encoding="utf-8")
 ```
 
-`PredicateCheck` receives the agent's `Result` and returns a boolean. It can inspect the final text, structured output, file changes or events. Use an async predicate when grading requires async work.
+`PredicateCheck` receives the agent's `Result` and returns a boolean. Write the predicate against the result you need to verify, such as the final answer or tool calls. Predicates can be sync or async.
 
 Each target can use a different harness, model and harness-specific `options`. A label names that setup in the scorecard. Task IDs and resolved target labels must be unique.
 
@@ -120,7 +96,9 @@ From the directory containing `evaluate_agents.py`, run:
 python evaluate_agents.py
 ```
 
-Two tasks and two targets with one trial produce four run rows. Look for summary rows named `fast` and `accurate`, each with two total attempts. A target that returns both expected categories and stops with `done` has `2/2` passed runs. `scorecard.json` contains the same results for your own analysis. Increase `trials` to repeat the comparison with independent runs.
+With two tasks and two targets, you get four run rows. Find the `model-a` and `model-b` summaries and confirm that each has two attempts. If a target returns both expected categories and stops with `done`, you see `2/2` passed runs. Read `scorecard.json` to use those results in your own analysis.
+
+Set `trials=3` to repeat each task and target three times. This example then produces twelve runs.
 
 A run passes only when the agent stops with `stop_reason="done"` and its check passes. A failed check or turn limit produces `fail`. Setup failures, runtime errors, timeouts and cancelled agent runs produce `error` rows while the remaining runs continue. The runner skips grading when the agent does not finish with `done`. Cancelling the suite stops execution and triggers cleanup.
 
@@ -139,44 +117,33 @@ for run in report.runs:
         print(run.task_id, run.target, run.trial, run.detail)
 ```
 
-Run this code after the evaluation call, inside `main()`, where `report` is defined.
+Add this code after the evaluation call in `evaluate_agents.py`.
 
-Pass rate is passed runs divided by all scheduled runs, including errors. Known usage from unsuccessful runs remains in the totals. `metrics_complete=False` marks a summary whose cost or usage could not be collected for every run. Mean duration covers workspace preparation, setup, agent execution, grading and cleanup. It differs from suite wall time because runs can overlap.
+Pass rate divides passed runs by scheduled runs, including errors. Totals include known usage from unsuccessful runs. Check `metrics_complete` before treating a cost total as complete. A false value means some usage or cost is unavailable.
 
-Judge usage and cost appear separately from agent usage and cost. The JSON schema contains result data and identifiers, excluding authentication configuration, Python callables and raw internal event objects.
+Mean duration covers workspace preparation, setup, agent execution, grading and cleanup. Compare it separately from total suite time, since runs can overlap.
 
-The runner attaches `agent_eval_suite`, `agent_eval_run`, `agent_eval_task`, `agent_eval_target` and `agent_eval_trial` metadata to model requests. Your metadata accompanies those fields. Use these identifiers to correlate requests in existing gateway logs. Persisted spend logs require the gateway's existing database setup.
+Read agent and judge costs in their own columns. JSON exports include result data and identifiers. They omit authentication configuration, Python callables and raw events.
+
+The runner attaches `agent_eval_suite`, `agent_eval_run`, `agent_eval_task`, `agent_eval_target` and `agent_eval_trial` metadata to model requests. Pass `metadata={"experiment": "support-routing"}` to add your own label. Use these identifiers to correlate requests in existing gateway logs. Persisted spend logs require the gateway's existing database setup.
 
 ## Async execution
 
-Use `aagent_eval()` inside an async application or notebook. This example reuses the tasks and targets from `evaluate_agents.py`.
+In an async function or notebook, use `aagent_eval()` with the same tasks and targets:
 
 ```python
-import asyncio
+report = await litellm.aagent_eval(
+    tasks=tasks,
+    targets=targets,
+    max_concurrency=2,
+)
 
-import litellm
-from evaluate_agents import tasks, targets
-
-
-async def main() -> None:
-    report = await litellm.aagent_eval(
-        tasks=tasks,
-        targets=targets,
-        trials=3,
-        max_concurrency=2,
-        timeout=120,
-    )
-    print(report.to_markdown())
-
-
-asyncio.run(main())
+print(report.to_markdown())
 ```
-
-Set `LITELLM_PROXY_API_KEY` before running this script. In a notebook, call `await main()` instead of `asyncio.run(main())`.
 
 ## Grade writing or research with a model
 
-Use `JudgeCheck` when a rubric is more useful than an exact match. Choose the judge model explicitly. The judge receives the rubric, task prompt, final answer and reported file changes. It does not inspect a workspace on its own.
+Use `JudgeCheck` to grade against a rubric. Choose a judge model that supports JSON output. It receives the task prompt, answer and reported file changes, together with your rubric. It can grade file diffs but cannot read other workspace files.
 
 ```python
 from litellm import EvalTask, JudgeCheck
@@ -198,11 +165,13 @@ writing_task = EvalTask(
 )
 ```
 
-Add `writing_task` to `tasks` and allow your virtual key to call the `judge` model group. Judge calls incur additional usage and cost. A failed or invalid judge response becomes an error row rather than a passing grade.
+Add `writing_task` to `tasks` and allow your virtual key to call the `judge` model group. Budget for these calls in addition to the agent runs.
+
+A valid negative verdict produces `fail`. A failed judge request or invalid verdict produces `error`.
 
 ## Evaluate a task that changes files
 
-Skip this section for tasks that need no starting files. Supply `workspace` when an agent needs an existing project. Each attempt gets a fresh copy, and the original directory remains unchanged. The runner excludes `.git` metadata so a copied project does not share Git state with the source.
+For a task that needs starting files, pass a project directory as `workspace`. Each attempt gets a copy. The agent edits that copy, and the runner excludes `.git` metadata to keep Git state separate from the source.
 
 Create `calculator/calc.py` with a bug:
 
@@ -242,13 +211,13 @@ targets = [
 ]
 ```
 
-`CommandCheck` runs inside the attempt's sandbox after the agent finishes. Exit code zero passes. The assertions in this example belong to the evaluator configuration, outside the editable workspace. Add `setup` commands to a task when it needs dependencies installed before execution. Setup and grading use the same sandbox as the agent.
+Use `CommandCheck` to run a grading command in the same sandbox after the agent finishes. Exit code zero passes. This example keeps assertions in the evaluation script, outside the copied project. Use a task's `setup` commands to install dependencies before the agent starts.
 
 Tool Loop has no built-in file or shell tools. Use a coding harness for this example. Caller-supplied Python tools execute in the SDK process and do not gain sandbox isolation automatically.
 
 ## Choose a sandbox and execution limits
 
-By default, the runner creates a local sandbox in a temporary directory for each attempt. Local execution uses your user's permissions. A copied workspace separates file edits between runs; it does not isolate host installations or network access.
+By default, each attempt runs in a temporary local workspace with your user's permissions. Run trusted tasks in this mode. For CLI harnesses, use a container to isolate the runtime and its dependencies.
 
 For container execution, pass a factory that receives each attempt's fresh workspace:
 
@@ -278,7 +247,7 @@ Replace `my-eval-runtime:latest` with an image you built containing the required
 | `JudgeCheck.timeout` | `30` | Seconds allowed for the judge request |
 | `max_turns` | `None` | Existing agent turn limit, which counts tool-call events rather than model calls |
 
-Temporary workspaces and runner-owned sandboxes close after each attempt. The scorecard retains reported file changes and check details, so inspect or export those results rather than temporary paths.
+The runner closes its sandboxes and removes temporary workspaces after each attempt. Inspect file changes and check details in the scorecard, or export them to JSON.
 
 ## Troubleshoot a run
 
