@@ -1,6 +1,7 @@
 ---
-title: ResetData
-description: Call ResetData models through LiteLLM with the Python SDK or Gateway. Configure your API key, model name, and optional API base.
+title: "ResetData API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "ResetData"
+description: "Call ResetData's GLM, Qwen, Gemma and DeepSeek models from the LiteLLM Python SDK or AI Gateway, with streaming, reasoning_effort, USD spend tracking and the Messages and Responses bridges."
 ---
 
 # ResetData
@@ -62,9 +63,18 @@ for chunk in response:
     print(chunk.choices[0].delta.content or "", end="")
 ```
 
-Several ResetData models support reasoning, and reasoning tokens count toward `max_tokens`. Leave enough room for both, or the response can end before any visible text. The `reasoning_effort` levels each model accepts differ, and ResetData returns an error for a level the selected model does not accept.
+Several ResetData models support reasoning, and reasoning tokens count toward `max_tokens`. Leave enough room for both, or the response can end before any visible text.
+
+The reasoning models in the table below accept `reasoning_effort`. For a model without reasoning, LiteLLM rejects `reasoning_effort` with `UnsupportedParamsError` before it calls ResetData. Set `drop_params=True` on the call, or `drop_params: true` under `litellm_settings` on the Gateway, to drop the parameter and send the rest of the request.
 
 ## LiteLLM Gateway
+
+Install the proxy with `pip install 'litellm[proxy]'`. Set `RESETDATA_API_KEY` on the Gateway process, and set `LITELLM_MASTER_KEY` to a strong key for Gateway clients. The ResetData key authenticates upstream requests. The master key authenticates your client to LiteLLM.
+
+```bash
+export RESETDATA_API_KEY="your-resetdata-api-key"
+export LITELLM_MASTER_KEY="sk-your-strong-master-key"
+```
 
 Save this configuration as `config.yaml`:
 
@@ -74,18 +84,22 @@ model_list:
     litellm_params:
       model: resetdata/zai/glm-5.3
       api_key: os.environ/RESETDATA_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
-Start the proxy with the API key exported in its environment:
+Start the proxy:
 
 ```bash
-litellm --config config.yaml
+litellm --config config.yaml --port 4000
 ```
 
-Send a request using the configured model alias:
+In a second terminal with `LITELLM_MASTER_KEY` set, send a request using the configured model alias:
 
 ```bash
 curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "resetdata-glm-5.3",
@@ -98,23 +112,21 @@ The proxy returns an OpenAI-format chat completion. The usage block reports reas
 
 ```json
 {
-  "choices": [{"message": {"role": "assistant", "content": "Hello there, nice to meet you"}}],
+  "choices": [{"message": {"role": "assistant", "content": "Hello there, friend, how are you?"}}],
   "usage": {
-    "completion_tokens": 22,
-    "prompt_tokens": 21,
-    "total_tokens": 43,
-    "completion_tokens_details": {"reasoning_tokens": 16}
+    "completion_tokens": 25,
+    "prompt_tokens": 17,
+    "total_tokens": 42,
+    "completion_tokens_details": {"reasoning_tokens": 15, "text_tokens": 10}
   }
 }
 ```
-
-If your proxy requires authentication, also send `Authorization: Bearer <your-litellm-key>`. This is your LiteLLM key, not your ResetData API key.
 
 LiteLLM also accepts [Anthropic Messages](/docs/anthropic_unified) and [Responses API](/docs/response_api) requests for ResetData models through its translation layer. These requests use ResetData's chat completions endpoint, not native ResetData Messages or Responses endpoints.
 
 ## Supported Models
 
-These ResetData models are in the LiteLLM catalog with their context windows and output caps. ResetData bills in Australian dollars, so the catalog entries carry no prices and LiteLLM records $0 spend for ResetData requests by default.
+These ResetData models are in the LiteLLM catalog with their context windows, output caps and prices, so LiteLLM tracks spend for them in USD. ResetData bills in Australian dollars, and the catalog prices are converted at one dated exchange rate, so they drift from your ResetData invoice as the AUD moves.
 
 | Model | Context window | Max output tokens | Reasoning | Vision |
 |-------|----------------|-------------------|-----------|--------|
@@ -123,9 +135,8 @@ These ResetData models are in the LiteLLM catalog with their context windows and
 | `resetdata/qwen/qwen3-coder-30b-a3b-instruct` | 262,144 | 65,536 | No | No |
 | `resetdata/google/gemma-4-26b-a4b-it` | 262,144 | 8,192 | No | Yes |
 | `resetdata/deepseek/deepseek-v4-flash` | 1,048,576 | 65,536 | Yes | No |
-| `resetdata/deepseek/deepseek-v4.1-flash` | 1,048,576 | 65,536 | Yes | Yes |
 
-To track spend, set your own per-token costs in USD on each deployment:
+To bill at your own ResetData rates instead, set per-token costs in USD on the deployment. The values below are an example, not ResetData's prices:
 
 ```yaml
 model_list:
