@@ -296,7 +296,7 @@ Set `GITHUB_COPILOT_CLIENT_ID` to your own GitHub App's client ID when your orga
 
 Copilot also checks which client sent the request. For a custom App, send `copilot-integration-id: copilot-developer-cli`. On versions that still send `vscode-chat`, add it to each GitHub Copilot model:
 
-```yaml
+```yaml keep-model-ids
 model_list:
   - model_name: claude-sonnet
     litellm_params:
