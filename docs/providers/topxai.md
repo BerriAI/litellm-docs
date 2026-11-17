@@ -33,7 +33,7 @@ os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key, from https://api.topxa
 
 ## Available Models
 
-The live table is at https://api.topxai.xyz/pricing and as JSON at `GET https://api.topxai.xyz/api/pricing`. The following models and Auto-route prices were verified on November 10, 2026. Prices are USD per million tokens.
+The live table is at https://api.topxai.xyz/pricing and as JSON at `GET https://api.topxai.xyz/api/pricing`. The following models and Auto-route prices were checked on November 10, 2026, with the GPT-6.2 rows updated on November 18. Prices are USD per million tokens.
 
 | Model | Input | Output | Notes |
 |-------|-------|--------|-------|
@@ -41,8 +41,8 @@ The live table is at https://api.topxai.xyz/pricing and as JSON at `GET https://
 | `topxai/claude-opus-5-5` | $2 | $10 | 1M context; prompt caching through `anthropic/` (see Notes) |
 | `topxai/claude-fable-5-2` | $4 | $20 | 1M context; prompt caching through `anthropic/` (see Notes) |
 | `topxai/gpt-6.1-terra` | $0.50 | $2.50 | from 272,001 input tokens the whole request bills at $1 / $3.75; also on `/responses` |
-| `topxai/gpt-6.1-sol` | $1 | $5 | from 272,001 input tokens the whole request bills at $2 / $7.50; also on `/responses` |
-| `topxai/gpt-6-astra` | $5 | $25 | from 272,001 input tokens the whole request bills at $10 / $37.50; also on `/responses` |
+| `topxai/gpt-6.2-sol` | $1 | $5 | from 272,001 input tokens the whole request bills at $2 / $7.50; also on `/responses` |
+| `topxai/gpt-6.2-astra` | $4 | $20 | from 272,001 input tokens the whole request bills at $8 / $30; also on `/responses` |
 | `topxai/grok-4.7` | $1 | $3 | from 200,000 input tokens the whole request bills at $2 / $6; also on `/responses` |
 | `topxai/kimi-k3.1-pro` | $0.50 | $5 | 1,048,576 context; 131,072 output; private deployment; also on `/responses` |
 | `topxai/deepseek-flash-Abliterated` | $0.42 | $1.50 | 1,048,576 context; 131,072 output; private deployment; also on `/responses` |
@@ -58,7 +58,7 @@ Cache reads cost $0.30 per million tokens on Kimi, $0.105 on DeepSeek Abliterate
 
 Kimi K3.1 Pro always reasons, with `low`, `high` and `max` efforts and `low` as the default. Use base64 data URIs for images. Public image URLs, forced named-tool calls and strict response schemas are not covered by this integration's verified capabilities. See the [Kimi model guide](https://api.topxai.xyz/docs/kimi-k3-1-pro).
 
-`kimi-k3`, `deepseek-flash`, `deepseek-v4-pro` and `claude-fable-5-1` are retired; Claude Fable 5.2 replaced Fable 5.1 on November 10, 2026. Select a current model explicitly. TopxAI rejects retired IDs with HTTP 403 and does not alias them to a replacement.
+`kimi-k3`, `deepseek-flash`, `deepseek-v4-pro` and `claude-fable-5-1` are retired; Claude Fable 5.2 replaced Fable 5.1 on November 10, 2026. On November 18, `gpt-6.2-astra` replaced `gpt-6-astra` and `gpt-6.2-sol` replaced `gpt-6.1-sol`. Select a current model explicitly. TopxAI rejects retired IDs with HTTP 403 and does not alias them to a replacement.
 
 ## Usage - LiteLLM Python SDK
 
@@ -82,7 +82,7 @@ import os
 
 os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key
 stream = completion(
-    model="topxai/gpt-6.1-sol",
+    model="topxai/gpt-6.2-sol",
     messages=[{"role": "user", "content": "What is LiteLLM?"}],
     stream=True
 )
@@ -102,7 +102,7 @@ import os
 
 os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key
 response = litellm.responses(
-    model="topxai/gpt-6.1-sol",
+    model="topxai/gpt-6.2-sol",
     input="What is LiteLLM?",
     store=False,
 )
@@ -119,9 +119,9 @@ model_list:
     litellm_params:
       model: topxai/claude-sonnet-5-5
       api_key: os.environ/TOPXAI_API_KEY
-  - model_name: topxai/gpt-6.1-sol
+  - model_name: topxai/gpt-6.2-sol
     litellm_params:
-      model: topxai/gpt-6.1-sol
+      model: topxai/gpt-6.2-sol
       api_key: os.environ/TOPXAI_API_KEY
   - model_name: topxai/kimi-k3.1-pro
     litellm_params:
