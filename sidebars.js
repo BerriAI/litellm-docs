@@ -826,6 +826,7 @@ const sidebars = {
             { type: "doc", id: "proxy/dynamic_logging", className: "sidebar-enterprise" },
             "proxy/logging",
             "proxy/logging_spec",
+            "proxy/prefix_block_hashes",
             { type: "doc", id: "proxy/team_logging", className: "sidebar-enterprise" },
             { type: "ref", id: "proxy/audit_logs", label: "Audit Logs", className: "sidebar-enterprise" },
             { type: "ref", id: "proxy/prometheus", label: "Prometheus Metrics" },
