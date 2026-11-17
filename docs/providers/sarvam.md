@@ -3,21 +3,23 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-LiteLLM supports Sarvam's OpenAI-compatible `/v2` API, including Sarvam 105B and the open-weight models served on Sarvam infrastructure (GLM, Gemma, and DeepSeek). <SinceVersion v="1.110.0" />
+LiteLLM supports Sarvam's OpenAI-compatible `/v2` API, including Sarvam 105B and the open-weight models served on Sarvam infrastructure (GLM, Gemma, and DeepSeek). <SinceVersion v="1.112.0" />
 
 ## Supported models
 
 | Model | Context | Max output | Input | USD per 1M in / out |
 | --- | --- | --- | --- | --- |
-| `sarvam/sarvam-105b` | 128K | 128K | Text | $0.16 / $0.64 |
-| `sarvam/sarvam-105b-conversations` | 32K | 32K | Text | $0.16 / $0.64 |
+| `sarvam/sarvam-105b` | 128K | 128K | Text | $0.11 / $0.27 |
+| `sarvam/sarvam-105b-conversations` | 32K | 32K | Text | $0.11 / $0.27 |
 | `sarvam/glm5.3` | 1M | 1M | Text | $1.34 / $4.15 |
 | `sarvam/glm5.3-flash` | 1M | 1M | Text, image | $0.14 / $0.48 |
 | `sarvam/gemma4` | 256K | 256K | Text, image | $0.37 / $0.96 |
 | `sarvam/deepseekv4.1-flash-1017` | 1M | 1M | Text, image | $0.15 / $0.59 |
 | `sarvam/deepseekv4.1-flash-1017-interactive` | 1M | 1M | Text, image | $0.27 / $1.12 |
 
-USD values are converted from Sarvam's INR rates at ₹94 per USD. See [Sarvam Token Factory pricing](https://www.sarvam.ai/token-factory/pricing) for the current INR rates.
+USD values are converted from Sarvam's INR rates at ₹94 per USD. `sarvam-105b`, `sarvam-105b-conversations`, and `deepseekv4.1-flash-1017` show Sarvam's introductory rates, which apply through the end of 2026. See [Sarvam Token Factory pricing](https://www.sarvam.ai/token-factory/pricing) for the current INR rates.
+
+LiteLLM calls `https://api.sarvam.ai/v2` by default. Newer models such as `glm5.3` are not served on `/v1`, so remove any `api_base` that still points at `https://api.sarvam.ai/v1`.
 
 The legacy `sarvam-m` model is not served on `/v2`. If you are upgrading from `sarvam/sarvam-m`, switch to `sarvam/sarvam-105b`.
 
@@ -56,6 +58,13 @@ response = responses(
     input="Hello",
 )
 print(response.output_text)
+```
+
+LiteLLM sends Responses API calls to Sarvam's chat completions endpoint, because Sarvam does not store conversations. On the proxy, `previous_response_id` works when the proxy stores prompts:
+
+```yaml
+general_settings:
+  store_prompts_in_spend_logs: true
 ```
 
 ## Usage with LiteLLM Proxy Server
@@ -128,18 +137,39 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
 
 ## Reasoning
 
-Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning. On `gemma4`, reasoning is off by default and only runs when `reasoning_effort` is set.
+Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning. On `gemma4`, reasoning is off by default and only runs when `reasoning_effort` is set. LiteLLM forwards `reasoning_effort` to Sarvam only when you also pass it in `allowed_openai_params`:
+
+```python
+response = completion(
+    model="sarvam/gemma4",
+    messages=[{"role": "user", "content": "Is 221 a prime number?"}],
+    reasoning_effort="low",
+    allowed_openai_params=["reasoning_effort"],
+)
+print(response.choices[0].message.reasoning_content)
+```
 
 ## Token limits
 
 - On Chat, `max_tokens` defaults to `2048` on `glm5.3` only. Other models have no small default; set it explicitly.
-- On the Responses API, `max_output_tokens` has no default cap. Always set it in production.
+- The Responses API follows the same defaults, since LiteLLM sends those calls to Sarvam's chat completions endpoint. Set `max_output_tokens` explicitly.
 - Reasoning tokens count toward the output budget and are billed as output.
 
 ## Limitations
 
 - Images must be sent as base64 data URIs; remote `http(s)` URLs are rejected.
 - Beta models require beta access and are not listed above.
+- Some `/v2` requests can stall without an answer. Set `timeout` a little above your longest expected response, and `num_retries`, so LiteLLM retries a stalled call instead of waiting for the 600 second default:
+
+    ```yaml
+    model_list:
+      - model_name: sarvam-105b
+        litellm_params:
+          model: sarvam/sarvam-105b
+          api_key: os.environ/SARVAM_API_KEY
+          timeout: 120
+          num_retries: 2
+    ```
 - The API is OpenAI-compatible; no custom transformation is required.
 
 ## Security
