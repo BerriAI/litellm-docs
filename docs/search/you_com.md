@@ -1,4 +1,11 @@
+---
+title: "You.com Search API with LiteLLM: Setup"
+sidebar_label: "You.com Search"
+description: "Add You.com web search to LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, keyless on the free tier or with an API key."
+---
 # You.com Search
+
+The [You.com](https://you.com/docs) Search API returns web and news results for LLM applications; LiteLLM exposes it through one `search()` call in the Python SDK and the `/v1/search` endpoint on the AI Gateway.
 
 **Get API Key (optional, for higher rate limits):** [https://you.com/docs](https://you.com/docs)
 

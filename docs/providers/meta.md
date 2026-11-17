@@ -1,3 +1,9 @@
+---
+title: "Meta Model API (Muse) with LiteLLM: Setup"
+sidebar_label: "Meta Model API"
+description: "Call Meta's Muse Spark 1.1 with reasoning effort up to xhigh, tools and the Messages API, and transcribe live speech with Muse Voice over /v1/realtime."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

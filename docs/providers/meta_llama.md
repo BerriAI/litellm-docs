@@ -1,3 +1,9 @@
+---
+title: "Meta Llama API with LiteLLM AI Gateway"
+sidebar_label: "Meta Llama"
+description: "Call Llama 4 Maverick, Llama 4 Scout and Llama 3.3 on Meta's Llama API with streaming and function calling, then serve them to OpenAI clients via the proxy."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

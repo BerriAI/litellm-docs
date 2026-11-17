@@ -11,7 +11,7 @@ Install Claude Code or Codex before continuing. For Codex, use stable version 0.
 ## 1. Install the LiteLLM CLI
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install-cli.sh | sh
+curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/scripts/install-cli.sh | sh
 ```
 
 See the [LiteLLM Proxy CLI](/docs/proxy/management_cli#quick-start) for other installation options.

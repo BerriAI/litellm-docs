@@ -1,3 +1,8 @@
+---
+title: "Route Sensitive Data to On-Prem Models in LiteLLM"
+sidebar_label: "Sensitive Data Routing (Built-in Guardrail)"
+description: "Detect sensitive data in a request on the LiteLLM AI Gateway and reroute it to an on-premise model instead of blocking it, with session stickiness."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

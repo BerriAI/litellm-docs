@@ -1,7 +1,16 @@
+---
+title: "Z.AI (Zhipu) GLM API with LiteLLM: Setup"
+sidebar_label: "Z.AI (Zhipu AI)"
+description: "Call Z.AI (Zhipu AI) GLM models from glm-4.7 to the free glm-4.5-flash with streaming, per-model pricing and -latest aliases, from the SDK or AI Gateway."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Z.AI (Zhipu AI)
+
+Z.AI (Zhipu AI) makes the GLM model family; LiteLLM calls the GLM text and chat models with the `zai/` prefix from the Python SDK or AI Gateway.
+
 https://z.ai/
 
 **We support Z.AI GLM text/chat models, just set `zai/` as a prefix when sending completion requests**
@@ -60,6 +69,17 @@ We support ALL Z.AI GLM models, just set `zai/` as a prefix when sending complet
 | glm-4.5-airx | `completion(model="zai/glm-4.5-airx", messages)` | Fast lightweight |
 | glm-4-32b-0414-128k | `completion(model="zai/glm-4-32b-0414-128k", messages)` | 32B parameter model |
 | glm-4.5-flash | `completion(model="zai/glm-4.5-flash", messages)` | **FREE tier** |
+
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`zai/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Z.AI model name. LiteLLM sends Z.AI the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `zai/glm-latest` | GLM |
+| `zai/glm-flash-latest` | GLM Flash |
 
 ## Model Pricing
 

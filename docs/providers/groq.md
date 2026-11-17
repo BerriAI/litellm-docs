@@ -1,7 +1,16 @@
+---
+title: "Groq API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Groq"
+description: "Run Llama 3.3, Llama 4 Scout and Maverick, and Qwen3 on Groq from the Python SDK or AI Gateway, with streaming, tools, vision and Whisper transcription."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Groq
+
+LiteLLM calls every Groq model, including Llama chat models and Whisper speech to text, with the `groq/` prefix through one OpenAI-format API from the Python SDK or AI Gateway.
+
 https://groq.com/
 
 :::tip

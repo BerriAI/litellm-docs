@@ -1,3 +1,8 @@
+---
+title: "Ramp Spend Tracking for LiteLLM: Setup"
+sidebar_label: "Ramp"
+description: "Send LiteLLM AI usage and cost to Ramp from the Python SDK or AI Gateway for spend tracking, logging token counts, model costs and metadata."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

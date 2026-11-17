@@ -1,3 +1,9 @@
+---
+title: "LiteLLM Proxy (LLM Gateway) from the Python SDK"
+sidebar_label: "LiteLLM Proxy (LLM Gateway)"
+description: "Send Python SDK requests to a LiteLLM AI Gateway with the litellm_proxy/ prefix: chat, streaming, embeddings, images, audio and rerank, once or per call."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "Azure OpenAI Embeddings with LiteLLM"
+sidebar_label: "Azure OpenAI Embeddings"
+description: "Create text-embedding-ada-002 embeddings on your Azure OpenAI deployment with litellm.embedding() or the /embeddings route on the LiteLLM AI Gateway."
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

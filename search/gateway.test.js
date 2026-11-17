@@ -53,7 +53,7 @@ test('large successful completions have no answer character or response byte cap
 test('OIDC credentials are rejected in gateway responses and redacted from trace attributes', async t => {
   const spans = [];
   t.mock.method(OTLPTraceExporter.prototype, 'export', (batch, callback) => {spans.push(...batch); callback({code: 0});});
-  const traced = {...config, oidcToken: 'request-oidc-secret', vercelOidcToken: 'environment-oidc-secret',
+  const traced = {...config, oidcEnabled: true, oidcToken: 'request-oidc-secret', vercelOidcToken: 'environment-oidc-secret',
     tracing: {key: 'oidc-tracing-secret', endpoint: 'https://tracing.example.com/v1/traces'}};
   const tracing = getTracing(traced);
   try {

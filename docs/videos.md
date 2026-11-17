@@ -289,6 +289,10 @@ curl --location 'http://localhost:4000/v1/videos' \
 --header 'custom-llm-provider: azure'
 ```
 
+### Custom Video Providers
+
+A video backend LiteLLM does not ship (an in-house model, a regional provider) is served by registering a `BaseVideoConfig` subclass under your own provider name in `custom_provider_map`, the same list that holds `CustomLLM` handlers for chat and images. The create, status, content and list routes all resolve to it. See [Custom API Server: Video Generation](./providers/custom_llm_server.md#video-generation) for the class, the config and the curls.
+
 ### Character, Edit, and Extension Endpoints
 
 LiteLLM proxy also supports these OpenAI-compatible video routes:

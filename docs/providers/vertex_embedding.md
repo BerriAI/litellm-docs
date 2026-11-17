@@ -1,3 +1,9 @@
+---
+title: "Vertex AI Embeddings with LiteLLM"
+sidebar_label: "Vertex AI Embedding"
+description: "Create embeddings on Gemini Enterprise Agent Platform (formerly Vertex AI) via LiteLLM from the Python SDK or AI Gateway, including multimodal."
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

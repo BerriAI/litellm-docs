@@ -250,4 +250,4 @@ A rejected request looks like this:
 
 For advanced use cases, use [Model Access Groups](./model_access_groups) to dynamically group multiple models and manage access without restarting the proxy.
 
-## [Role Based Access Control (RBAC)](./jwt_auth_arch)
+## [Role Based Access Control (RBAC)](./access_management/jwt_permissions#beta-control-access-with-oidc-roles)

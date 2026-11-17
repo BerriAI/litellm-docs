@@ -69,7 +69,7 @@ function ArchitectureView() {
       {/* Control Plane */}
       <div className={`${styles.node} ${styles.nodeControlPlane}`}>
         <div className={styles.nodeHeader}>
-          <span className={styles.nodeTitle}>Global Control Plane</span>
+          <span className={styles.nodeTitle}>UI Deployment Selector</span>
           <span className={`${styles.badge} ${styles.badgeBlue}`}>ADMIN UI ONLY</span>
         </div>
         <div className={styles.nodeSubtitle}>cp.example.com</div>

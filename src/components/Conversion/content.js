@@ -30,7 +30,7 @@ const PROMPTS = {
     title: 'Run the LiteLLM Gateway locally',
     text: `Help me run the LiteLLM Gateway locally. First read ${DOCS}/docs/proxy/docker_quick_start.md. Then:
 1. Check that Docker Compose v2 is installed and running, and that port 4000 is free.
-2. In a new litellm-gateway directory, download https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml and create .env with LITELLM_MASTER_KEY and LITELLM_SALT_KEY, each "sk-" followed by the output of openssl rand -hex 32, and POSTGRES_PASSWORD set to the output of openssl rand -hex 24. Add .env to .gitignore and never print any of these values.
+2. In a new litellm-gateway directory, download https://github.com/BerriAI/litellm/raw/main/litellm/deploy/docker/docker-compose.quickstart.yml and create .env with LITELLM_MASTER_KEY and LITELLM_SALT_KEY, each "sk-" followed by the output of openssl rand -hex 32, and POSTGRES_PASSWORD set to the output of openssl rand -hex 24. Add .env to .gitignore and never print any of these values.
 3. Run docker compose -f docker-compose.quickstart.yml up -d and poll http://localhost:4000/health/readiness until the database shows as connected.
 4. Ask me which provider and model to add. Add it with POST /model/new using the master key, reading my provider API key from my shell environment without echoing it.
 5. Verify: GET /v1/models lists the model and POST /v1/chat/completions returns a reply.
@@ -119,16 +119,16 @@ If I do not have a license yet, stop and point me to ${SALES_URL}.`,
   },
 };
 
-const GATEWAY_COMPOSE = `curl -sSLO https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml
+const GATEWAY_COMPOSE = `curl -sSLO https://github.com/BerriAI/litellm/raw/main/litellm/deploy/docker/docker-compose.quickstart.yml
 printf 'LITELLM_MASTER_KEY=sk-%s\\nLITELLM_SALT_KEY=sk-%s\\nPOSTGRES_PASSWORD=%s\\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" "$(openssl rand -hex 24)" > .env
 docker compose -f docker-compose.quickstart.yml up -d`;
 
 // The one command per system shown in the Quick Start box. The gateway scripts
-// live in the litellm repo: scripts/quickstart.sh and scripts/quickstart.ps1.
+// live in the litellm repo: litellm/scripts/quickstart.sh and litellm/scripts/quickstart.ps1.
 const QUICKSTART = {
   gateway: {
-    mac: 'curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/quickstart.sh | sh',
-    windows: 'irm https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/quickstart.ps1 | iex',
+    mac: 'curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/scripts/quickstart.sh | sh',
+    windows: 'irm https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/scripts/quickstart.ps1 | iex',
   },
   sdk: 'uv add litellm',
 };
@@ -144,13 +144,14 @@ const GATEWAY_DOCKER_RUN = `docker run \\
 const ONE_CLICK = [
   ['Railway', 'https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic', 'https://railway.com/button.svg'],
   ['Render', 'https://render.com/deploy?repo=https://github.com/BerriAI/litellm', 'https://render.com/images/deploy-to-render-button.svg'],
-  ['AWS', 'https://console.aws.amazon.com/cloudshell/home', '/img/deploy-on-aws.png'],
-  ['GCP', 'https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FBerriAI%2Fterraform-google-litellm&cloudshell_git_branch=v1.105.0&cloudshell_workspace=examples%2Fdefault&cloudshell_tutorial=TUTORIAL.md&cloudshell_image=gcr.io/ds-artifacts-cloudshell/deploystack_custom_image&shellonly=true', '/img/deploy-on-gcp.png'],
+  ['AWS', '/docs/proxy/deploy/terraform#aws', '/img/deploy-on-aws.png'],
+  ['GCP', '/docs/proxy/deploy/terraform#gcp', '/img/deploy-on-gcp.png'],
 ];
 
-const INSTALLER = `curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install.sh | sh`;
+const INSTALLER = `curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/scripts/install.sh | sh`;
 
-const HELM = `helm install litellm oci://ghcr.io/berriai/litellm-helm -f values.yaml`;
+const HELM = `helm upgrade --install litellm oci://ghcr.io/YOUR_ORG/charts/litellm \\
+  --version 1.0.0 --namespace litellm -f values.yaml --wait --timeout 30m`;
 
 // Install options per path. The first entry is the recommended command and is
 // the only one shown up front; the rest sit under "Other ways to install",
@@ -177,16 +178,16 @@ const INSTALLS = {
       {
         id: 'helm',
         label: 'Helm',
-        when: 'You deploy to Kubernetes. Pair it with a values.yaml from the deploy guide.',
+        when: 'You deploy to Kubernetes. Publish the chart to your OCI registry and prepare values.yaml using the Helm guide. Replace YOUR_ORG with your registry namespace.',
         code: HELM,
-        more: '/docs/proxy/deploy#deploy-with-helm',
+        more: '/docs/proxy/deploy/helm',
       },
       {
         id: 'installer',
         label: 'One-line installer',
         when: 'You want the gateway as a local CLI without Docker (macOS and Linux). It runs from a config file with no database, so there are no virtual keys or admin UI.',
         code: INSTALLER,
-        more: 'https://github.com/BerriAI/litellm/blob/main/scripts/install.sh',
+        more: 'https://github.com/BerriAI/litellm/blob/main/litellm/scripts/install.sh',
         moreLabel: 'Read the script',
       },
     ],

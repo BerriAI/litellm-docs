@@ -1,3 +1,9 @@
+---
+title: "Bedrock Agents with LiteLLM: InvokeAgent API"
+sidebar_label: "Bedrock Agents"
+description: "Call Bedrock Agents in the OpenAI format via LiteLLM with the bedrock/agent/ model prefix from the Python SDK or AI Gateway, plus provider-specific params."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "Jina AI API with LiteLLM: Embeddings and Rerank"
+sidebar_label: "Jina AI"
+description: "Embed text with jina-embeddings-v3 and rerank results with jina-reranker-v2-base-multilingual, passing dimensions and other Jina AI params through LiteLLM."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

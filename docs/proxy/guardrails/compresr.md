@@ -1,3 +1,8 @@
+---
+title: "Compresr Context Compression on LiteLLM Gateway"
+sidebar_label: "Context Compression (Compresr)"
+description: "Use Compresr on the LiteLLM AI Gateway to compress tool outputs, retrieved documents and RAG payloads before they reach the model, per key or call."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

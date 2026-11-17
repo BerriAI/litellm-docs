@@ -45,7 +45,7 @@ openai/gpt-6-luna
 openai/gpt-6.1-sol
 ```
 
-The default gateway is `https://gateway.litellm-sandbox.ai`. Set `DOCS_AI_BASE_URL` only when using another HTTPS gateway. Start the local server:
+Set `DOCS_AI_BASE_URL` to the approved HTTPS gateway base URL, including `/v1`. Local work can instead use runtime-only `LITELLM_PROXY_API_BASE` and `LITELLM_PROXY_API_KEY` through the existing gateway environment helper. Start the local server:
 
 ```bash
 npm run search:serve
@@ -61,11 +61,17 @@ The server reads `.env.local`; the build and browser do not read the AI credenti
 
 The same-origin `/api/docs/search` function bundles only `build/search-index.json` and loads it once per function instance. `/api/docs/ask` bundles `build/search-*.json` for its research tools. Vercel uses `npm run build` and the `build` output directory. No separate API service or retrieval database is needed.
 
-In the docs project's **Settings > Environment Variables**, set `DOCS_AI_PUBLIC_ENABLED=true` for the intended environment, then redeploy. Production sets `DOCS_AI_BASE_URL=https://gateway.external.litellm.ai`. The default gateway remains `https://gateway.litellm-sandbox.ai`. The production origin defaults to `https://docs.litellm.ai`. For a preview or another domain, set `DOCS_ORIGIN` to that exact origin too. Without the public enable flag, Ask AI returns 503 while document search still works
+The OIDC change can be merged before the new gateway is ready. Before merging, confirm that Production has `DOCS_AI_BASE_URL` explicitly set to its current working endpoint; the code no longer contains a default infrastructure address. With `DOCS_AI_AUTH_MODE` unset, Ask AI continues using `DOCS_AI_API_KEY` and ignores OIDC headers and environment tokens. Keep the current production settings until the external gateway passes its readiness checks.
 
-Ask AI uses the current request's `x-vercel-oidc-token` header as its gateway bearer credential, then `VERCEL_OIDC_TOKEN` from the server environment when no header token is present, then `DOCS_AI_API_KEY` for existing deployments and local development. An upstream rejection does not retry with the API key. Enable Vercel OIDC in team issuer mode before switching production. The gateway must trust the production subject `owner:berriai:project:litellm:environment:production`; preview tokens are intentionally rejected. Tokens stay on the server and are excluded from responses and trace attributes. Bot and service-token authentication is unchanged
+To switch production, first enable Vercel OIDC in **Settings > Security > Secure backend access with OIDC federation**, using the team issuer. Configure the gateway to trust the issuer, audience and exact production subject for this project, with an existing team restricted to the model aliases above. Preview and other-project tokens must be rejected. Follow the [external gateway rollout guide](https://github.com/BerriAI/litellm-ops/pull/395) for the infrastructure, SSO, Cloudflare and team prerequisites.
 
-[Vercel's OIDC documentation](https://vercel.com/docs/oidc) defines the request header and the `VERCEL_OIDC_TOKEN` environment variable populated by `vercel env pull`. Reading these directly avoids a new dependency. The `@vercel/oidc` helper also supports rotating token files, which this service does not configure. Downloaded local tokens expire and use development claims, so use `DOCS_AI_API_KEY` with a development gateway when the production gateway rejects those claims
+In **Settings > Environment Variables**, select **Production** and set `DOCS_AI_AUTH_MODE=oidc`, `DOCS_AI_BASE_URL` to the approved external gateway's HTTPS base URL with `/v1`, and `DOCS_AI_PUBLIC_ENABLED=true`. Remove `DOCS_AI_API_KEY` from the new production deployment and redeploy. Leave Preview and Development on their existing settings. The production origin defaults to `https://docs.litellm.ai`; set `DOCS_ORIGIN` for a different origin.
+
+OIDC mode uses the request's `x-vercel-oidc-token`, then the server's `VERCEL_OIDC_TOKEN` if no header token is present. Missing tokens return 503; rejected tokens return a generic 502. Neither case falls back to an API key. Tokens remain on the server and are excluded from response content and trace attributes. Bot and service-token authentication remains separate.
+
+[Vercel's OIDC documentation](https://vercel.com/docs/oidc) defines both token sources. This service does not configure rotating token files. Downloaded local tokens expire and have development claims; use a development gateway and its scoped API key for local work.
+
+After redeploying, ask a question through the public UI and confirm a cited answer, streaming completion, and a matching spend-log entry on the docs team. A preview token must fail, and a machine token must not access management routes. Preserve the previous deployment and its configuration for rollback; restoring it must restore the old base URL and authentication mode together. To stop model traffic while keeping keyword search, set `DOCS_AI_PUBLIC_ENABLED=false` and redeploy.
 
 Keyword search is available without model credentials or an enable flag. `POST /api/docs/search` accepts `{query, type}`, with a query of 1 to 500 characters and an optional `all`, `docs`, `blog`, or `release` filter. It returns up to 100 results, uses `Cache-Control: no-store`, and makes no model calls. The existing engine preserves ranking, snippets, filters, typo handling, and chronological browsing. The endpoint limits request bodies to 16 KB and four concurrent requests per instance. The old Jev request-rate allowance does not apply to keyword searches. The Jev comparison remains available only through `npm run search:lab`.
 

@@ -1,3 +1,9 @@
+---
+title: "Abliteration API with LiteLLM AI Gateway"
+sidebar_label: "Abliteration"
+description: "Run Abliteration's abliterated models from the Python SDK or AI Gateway, with streaming, prompt caching, tools, reasoning_effort and the Responses API."
+---
+
 # Abliteration
 
 Use [Abliteration](https://abliteration.ai) through LiteLLM with the `abliteration/` model prefix. LiteLLM reads `ABLITERATION_API_KEY` and sends requests to `https://api.abliteration.ai/v1`.

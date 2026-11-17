@@ -57,7 +57,7 @@ async function readBody(req, signal, maxBytes = Infinity) {
 }
 function createAskHandler({index, documents, config, fetchImpl, now = Date.now, service = false}) {
   // The bot shares the answer engine and corpus, but never the website's model key.
-  if (service) config = {...config, apiKey: config.botApiKey, tracing: {
+  if (service) config = {...config, apiKey: config.botApiKey, oidcEnabled: false, tracing: {
     ...config.tracing, key: config.botTracingKey || config.tracing?.key, surface: 'slack',
   }};
   const clients = new Map();
@@ -85,8 +85,10 @@ function createAskHandler({index, documents, config, fetchImpl, now = Date.now, 
     if (!service) {clients.set(client, count + 1); globalCount += 1;}
     active += 1;
     const headerToken = req.headers['x-vercel-oidc-token'];
-    const oidcToken = !service && ((typeof headerToken === 'string' && headerToken.trim()) || config.vercelOidcToken);
-    const requestConfig = oidcToken ? {...config, oidcToken} : config;
+    const useOidc = !service && config.oidcEnabled;
+    const oidcToken = useOidc && ((typeof headerToken === 'string' && headerToken.trim()) || config.vercelOidcToken);
+    // OIDC is an explicit cutover. Missing or rejected tokens never use a saved key.
+    const requestConfig = useOidc ? {...config, oidcToken} : config;
     const controller = new AbortController();
     const disconnected = () => {if (!res.writableEnded) controller.abort();};
     res.on('close', disconnected);

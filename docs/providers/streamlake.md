@@ -1,5 +1,6 @@
 ---
-title: StreamLake
+title: "StreamLake API with LiteLLM AI Gateway"
+sidebar_label: "StreamLake"
 description: Call StreamLake models through LiteLLM with the Python SDK or Gateway. Configure your API key, model or endpoint ID, and optional API base.
 ---
 

@@ -11,11 +11,11 @@ import Image from '@theme/IdealImage';
 />
 
 
-As a Proxy Admin, you can check if and when a entity (key, team, user, model) was created, updated, deleted, or regenerated, along with who performed the action. This is useful for auditing and compliance.
+As a Proxy Admin, you can check if and when a entity (key, team, user, model, guardrail) was created, updated, deleted, or regenerated, along with who performed the action. This is useful for auditing and compliance.
 
 LiteLLM tracks changes to the following entities and actions:
 
-- **Entities:** Keys, Teams, Users, Models
+- **Entities:** Keys, Teams, Users, Models, Guardrails
 - **Actions:** Create, Update, Delete, Regenerate
 
 <EnterpriseFeature />
@@ -23,7 +23,7 @@ LiteLLM tracks changes to the following entities and actions:
 ## Usage
 
 ### 1. Switch on audit Logs 
-With an enterprise license, audit logs are on by default, so there is nothing to configure. On other plans, or if you want to be explicit, add `store_audit_logs` to your litellm config.yaml and then start the proxy
+With an enterprise license, audit logs are on by default, so there is nothing to configure. If you want to be explicit, add `store_audit_logs` to your litellm config.yaml and then start the proxy. Without an enterprise license the proxy writes no audit logs, whatever this setting says
 ```shell
 litellm_settings:
   store_audit_logs: true
@@ -89,7 +89,7 @@ s3://<bucket>/<s3_path>/audit_logs/<YYYY-MM-DD>/<HH-MM-SS>_<audit-log-id>.json
 
 :::info
 
-`audit_log_callbacks` only fires while audit logging is enabled, which is the default on an enterprise license and otherwise needs `store_audit_logs: true`.
+`audit_log_callbacks` only fires while audit logging is enabled on an enterprise license, which is the default unless `store_audit_logs` is set to `false`, or it is unset and `LITELLM_STORE_AUDIT_LOGS` is `false`.
 
 :::
 
@@ -211,7 +211,7 @@ curl -X POST 'http://0.0.0.0:4000/team/update' \
 
 ### `table_name`
 - **Type:** `String`
-- **Description:** This field stores the name of the table that was affected by the audited action. It can be one of the following values: `LiteLLM_TeamTable`, `LiteLLM_UserTable`, `LiteLLM_VerificationToken`
+- **Description:** This field stores the name of the table that was affected by the audited action. It can be one of the following values: `LiteLLM_TeamTable`, `LiteLLM_UserTable`, `LiteLLM_VerificationToken`, `LiteLLM_GuardrailsTable`
 
 
 ### `object_id`

@@ -1,3 +1,9 @@
+---
+title: "OpenAI API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "OpenAI"
+description: "Call GPT-5, GPT-4.1 and o-series models with reasoning effort, web search, vision, PDF input and the Responses API bridge, and transcribe audio with Whisper."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -348,6 +354,20 @@ model_list:
 </Tabs>
 
 For full details, see the [Web Search guide](../completion/web_search.md).
+
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`openai/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other OpenAI model name. LiteLLM sends OpenAI the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `openai/gpt-luna-latest` | GPT Luna |
+| `openai/gpt-sol-latest` | GPT Sol |
+| `openai/gpt-terra-latest` | GPT Terra |
+| `openai/gpt-astra-latest` | GPT Astra |
+| `openai/gpt-mini-latest` | GPT Mini |
 
 ## OpenAI Vision Models
 | Model Name            | Function Call                                                   |
@@ -1034,7 +1054,9 @@ curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 </TabItem>
 </Tabs>
 
+## OpenAI Realtime Translation
 
+For live speech-to-speech translation, add `openai/gpt-realtime-translate` and connect to `/v1/realtime/translations` on the proxy. The model sends back translated audio and text while the person speaks. See [Realtime translation](/docs/realtime_translation) for the config, a WebSocket client, WebRTC, and pricing.
 
 ## Advanced
 

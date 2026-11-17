@@ -1,6 +1,5 @@
 const MODEL = 'openai/gpt-6.1-sol';
 const FALLBACKS = ['anthropic/claude-haiku-5-5', 'openai/gpt-6-luna'];
-const BASE_URL = 'https://gateway.litellm-sandbox.ai';
 const {getTracing} = require('./tracing');
 
 function gatewayError(name, message) {
@@ -11,7 +10,7 @@ function gatewayError(name, message) {
 }
 
 function createModelCaller({config, signal, fetchImpl = fetch}) {
-  const endpoint = new URL(`${(config.baseUrl || BASE_URL).replace(/\/$/, '')}/chat/completions`);
+  const endpoint = new URL(`${(config.baseUrl || '').replace(/\/$/, '')}/chat/completions`);
   if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) {
     throw new Error('Invalid gateway configuration');
   }
@@ -32,7 +31,7 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
       requestSignal.throwIfAborted();
       const response = await fetchImpl(endpoint.href, {
         method: 'POST', redirect: 'error', signal: requestSignal,
-        headers: {'Content-Type': 'application/json', Authorization: `Bearer ${config.oidcToken || config.apiKey}`},
+        headers: {'Content-Type': 'application/json', Authorization: `Bearer ${config.oidcEnabled ? config.oidcToken : config.apiKey}`},
         body: JSON.stringify({model: MODEL, fallbacks: [
           {model: FALLBACKS[0], reasoning_effort: 'none'},
           {model: FALLBACKS[1], reasoning_effort: 'none'},
@@ -151,4 +150,4 @@ function record(span, result, message, finish) {
     'docs.search.response.content_length': typeof message?.content === 'string' ? message.content.length : undefined,
   });
 }
-module.exports = {MODEL, FALLBACKS, BASE_URL, createModelCaller};
+module.exports = {MODEL, FALLBACKS, createModelCaller};

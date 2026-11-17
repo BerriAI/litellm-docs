@@ -1,3 +1,9 @@
+---
+title: "Azure OpenAI Responses API with LiteLLM"
+sidebar_label: "Azure Responses API"
+description: "Use the Azure OpenAI Responses API via LiteLLM from the Python SDK or AI Gateway. Add models to config.yaml, call Azure Codex models or /chat/completions."
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

@@ -51,7 +51,19 @@ Then confirm the traffic in the Admin UI under **Logs** or **Usage**, attributed
 
 ## Sign in without a static key
 
-See [Claude Code SSO](../../tutorials/claude_code_gateway.md) for Claude apps gateway setup, Lite CLI SSO, and using a Claude subscription through LiteLLM.
+See [Claude Code sign-in](../../tutorials/claude_code_gateway.md) for Claude apps gateway setup, Lite CLI sign-in, and using a Claude subscription through LiteLLM.
+
+## Use an identity provider token
+
+If your administrator has configured [identity-to-Virtual-Key mapping](../jwt_key_mapping.md), Claude Code can send your identity provider's JWT directly. Set the gateway URL and bearer token, and clear any conflicting API key:
+
+```bash
+export ANTHROPIC_BASE_URL="http://localhost:4000"
+export ANTHROPIC_AUTH_TOKEN="<identity-provider-jwt>"
+unset ANTHROPIC_API_KEY
+```
+
+Your identity-provider integration must obtain and refresh this token. Setting environment variables does not start a sign-in flow. For browser sign-in that supplies a client credential, use [CLI sign-in](../cli_sso.md).
 
 ## MCP setup
 

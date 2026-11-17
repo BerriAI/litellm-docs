@@ -430,6 +430,52 @@ FROM "LiteLLM_SpendLogs";
 
 Both keys are set by the proxy and overwrite any client-supplied values of the same name. Rows written before this feature read `null` for both keys.
 
+### Context error fallback precedence
+
+After retry handling, a `ContextWindowExceededError` uses the `context_window_fallbacks` chain that matches the requested model group. A matching chain takes priority over later `order` levels and generic `fallbacks`. The same lookup supports wildcard fallback keys.
+
+If no context window rule matches, the router tries the remaining `order` levels in the group, then its generic `fallbacks`. A context window rule for another group does not disable these routes. If a matching context window chain is exhausted, the request returns an error rather than continuing through the original group's order or generic fallback chain. Include every desired backup in the matching context chain.
+
+| Configuration for the requested group | Recovery after a context error |
+| --- | --- |
+| Matching `context_window_fallbacks` rule | Use that chain before later orders or generic fallbacks |
+| No matching rule, with later `order` levels | Try later orders, then generic fallbacks |
+| No matching rule or later orders | Try generic fallbacks |
+| Context window rule for another group only | Follow this group's order and generic fallback settings |
+
+For example, both deployments named `chat` belong to one group. The second deployment is an ordered backup. The `other` group has its own context fallback, which does not affect requests to `chat`.
+
+```yaml
+model_list:
+  - model_name: chat
+    litellm_params:
+      model: openai/{{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+      order: 1
+  - model_name: chat
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_key: os.environ/OPENAI_API_KEY
+      order: 2
+  - model_name: other
+    litellm_params:
+      model: openai/{{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: large-context
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_key: os.environ/OPENAI_API_KEY
+router_settings:
+  context_window_fallbacks:
+    - other: [large-context]
+```
+
+If the first `chat` deployment returns a context window error, the router tries its `order: 2` deployment. Adding `- chat: [large-context]` under `context_window_fallbacks` instead sends that error directly to `large-context` after retry handling.
+
+Sibling retries, order failover, and cross-group fallbacks are separate operations. A sibling retry selects another eligible deployment in the current group and order level within the retry budget. Setting `num_retries: 0` disables those retries without disabling order or cross-group failover. Order failover advances to a later order. A context window fallback changes groups. `enable_weighted_failover` remains excluded for context window errors and content policy errors.
+
+These rules apply to errors LiteLLM classifies as `ContextWindowExceededError`, including provider refusals. `enable_pre_call_checks` additionally checks declared input limits before contacting the provider. The existing `max_fallbacks` limit still bounds the chain. A fallback deployment must still accept the prompt and pass access, health, and other routing checks.
+
 ### Context Window Fallbacks (Pre-Call Checks + Fallbacks)
 
 **Before call is made** check if a call is within model context window with  **`enable_pre_call_checks: true`**.

@@ -1,3 +1,9 @@
+---
+title: "Nadir Router API with LiteLLM: Setup"
+sidebar_label: "Nadir"
+description: "Send requests to Nadir's auto router, which picks the cheapest capable model per call, and log the routed model and Nadir's computed cost in LiteLLM."
+---
+
 # Nadir
 
 ## Overview

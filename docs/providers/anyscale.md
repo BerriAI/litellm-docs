@@ -1,3 +1,9 @@
+---
+title: "Anyscale Endpoints API in Python with LiteLLM"
+sidebar_label: "Anyscale"
+description: "Query Llama 2, Mistral 7B Instruct and CodeLlama 34B models on Anyscale Endpoints from the LiteLLM Python SDK, with standard and streaming chat completions."
+---
+
 # Anyscale
 https://app.endpoints.anyscale.com/
 

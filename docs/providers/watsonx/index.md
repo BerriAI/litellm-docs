@@ -1,3 +1,9 @@
+---
+title: "IBM watsonx.ai API with LiteLLM: Setup"
+sidebar_label: "WatsonX"
+description: "Chat with Llama, Granite and Mixtral on IBM watsonx.ai, call tuned models in deployment spaces, embed text with Slate and authenticate with a Zen API key."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -21,7 +27,7 @@ See [here](https://cloud.ibm.com/apidocs/watsonx-ai#api-authentication) for more
 
 ## Usage
 
-<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/liteLLM_IBM_Watsonx.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/liteLLM_IBM_Watsonx.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
@@ -226,5 +232,4 @@ response = client.chat.completions.create(
 ```
 
 See [IBM documentation](https://www.ibm.com/docs/en/watsonx/w-and-w/2.2.0?topic=keys-generating-zenapikey-authorization-tokens) for more information on generating Zen API keys.
-
 

@@ -1,3 +1,9 @@
+---
+title: "Cognition API with LiteLLM: SWE Models Setup"
+sidebar_label: "Cognition"
+description: "Call Cognition's swe-1.7, swe-1.7-lightning and swe-1.6 coding models from the Python SDK or AI Gateway, with tool calling, /v1/messages and cost tracking."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

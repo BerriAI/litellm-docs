@@ -20,7 +20,7 @@ Moyai is an open source coding agent you run in your cloud. Delegate a bug fix o
   <Heading as="h2" id="why-moyai">Why Moyai</Heading>
   <BenefitGrid />
   <GuideCards />
-  <p className={styles.setupRequirements}>Start with a Modal account and a LiteLLM gateway. The setup guide verifies a cloud task before you connect a repository.</p>
+  <p className={styles.setupRequirements}>Choose the Modal setup or deploy on AWS with EC2, Lambda MicroVMs, and Bedrock. Verify a cloud task before you connect a repository.</p>
 </section>
 
 ## Give Moyai a task from your browser {#start-in-the-browser}
@@ -71,7 +71,7 @@ Review the diff and test output, then check the session's model cost in Moyai. U
 <details>
 <summary>What do I need to get started?</summary>
 
-A Modal account, a cloud-reachable LiteLLM gateway, and a virtual key for your chosen model. The [setup guide](./moyai/setup.md) walks through installation and a cloud task. Opening GitHub PRs also requires an organization-owned GitHub App; verify the first task before connecting a repository.
+For Modal, you need an account, a cloud-reachable LiteLLM gateway, and a virtual key for your chosen model. The [setup guide](./moyai/setup.md) walks through installation and a cloud task. For AWS, follow the [Lambda MicroVM deployment guide](./moyai/aws.md) with MicroVM access, an enabled Bedrock model, and a public Route 53 hosted zone. Opening GitHub PRs also requires an organization-owned GitHub App; verify the first task before connecting a repository.
 
 </details>
 <details>

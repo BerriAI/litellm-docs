@@ -139,6 +139,7 @@ litellm_settings:
     models: ["{{openai_small}}"]      # Optional[List[str]]: models for the team (only applied to SSO auto-created teams)
     team_member_permissions:       # Optional[List[str]]: permissions granted to non-admin team members
       - "/team/daily/activity"     # Allow members to view team usage
+    access_group_ids: ["<access-group-id>"]  # Optional[List[str]]: access groups attached to teams created without access_group_ids
 ```
 
 ### 3.2 Auto-create a new team on LiteLLM

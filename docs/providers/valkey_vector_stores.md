@@ -1,3 +1,9 @@
+---
+title: "Valkey Vector Store with LiteLLM"
+sidebar_label: "Valkey - Vector Store"
+description: "Search documents indexed in Valkey via LiteLLM's unified vector store API: turn on vector search, store documents, register the index and test the store."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

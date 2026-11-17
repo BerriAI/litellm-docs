@@ -1,3 +1,8 @@
+---
+title: "Cato Networks Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Cato Networks"
+description: "Add Cato Networks AI Security guardrails to the LiteLLM AI Gateway: create a guard, choose detections, and set per-key policies by key alias."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

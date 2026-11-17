@@ -1,3 +1,8 @@
+---
+title: "Bedrock AgentCore Web Search API with LiteLLM"
+sidebar_label: "Amazon Bedrock AgentCore Web Search"
+description: "Use Bedrock AgentCore web search in LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, with SigV4 auth and no third-party key."
+---
 # Amazon Bedrock AgentCore Web Search
 
 [Web Search on Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/built-in-tools-web-search.html) is an AWS-managed web index exposed as an MCP tool on an AgentCore Gateway, so search traffic stays inside AWS and is billed by AWS instead of a third-party search API

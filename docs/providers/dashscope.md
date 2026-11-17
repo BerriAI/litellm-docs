@@ -1,3 +1,9 @@
+---
+title: "DashScope API (Qwen) with LiteLLM: Setup"
+sidebar_label: "Dashscope API (Qwen models)"
+description: "Call Alibaba Qwen Turbo, Plus and Max on DashScope from the LiteLLM Python SDK, with streaming, international or Beijing API bases and -latest model aliases."
+---
+
 # Dashscope API (Qwen models)
 https://dashscope.console.aliyun.com/
 
@@ -86,3 +92,14 @@ for chunk in response:
 | qwen3-235b-a22b | `completion(model="dashscope/qwen3-235b-a22b", messages)` |  
 | qwen3-32b | `completion(model="dashscope/qwen3-32b", messages)` |  
 | qwen3-30b-a3b | `completion(model="dashscope/qwen3-30b-a3b", messages)` |
+
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`dashscope/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other DashScope model name. LiteLLM sends DashScope the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `dashscope/qwen-max-latest` | Qwen Max |
+| `dashscope/qwen-flash-latest` | Qwen Flash |

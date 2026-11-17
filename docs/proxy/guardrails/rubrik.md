@@ -1,3 +1,8 @@
+---
+title: "Rubrik Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Rubrik Guardrail"
+description: "Screen prompts and responses with Rubrik moderation on the LiteLLM AI Gateway in OpenAI and Anthropic formats, and batch-log every LLM request."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

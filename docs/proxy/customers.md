@@ -1,644 +1,123 @@
-import Image from '@theme/IdealImage';
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+---
+title: Customer Management and end-user tracking
+sidebar_label: Quickstart
+description: Track customer and end-user spend, set budgets, and view usage by organization, team, and member. Available from LiteLLM v1.111.
+keywords: [customer management, customer tracking, end user tracking, end-user tracking, end_user, enduser, customer usage, customer spend, customer budgets, per-user budgets]
+---
 
-# Customers / End-Users
+# Customer Management
 
-Track spend, set budgets and permissions for your customers.
+<SinceVersion v="1.111.0" />
 
-## Tracking Customer Spend + Permissions
+Track LLM spend for your application's customers and end users. Use Customer Management for new integrations to view usage and set budgets by customer organization, team, and member.
 
-### 1. Make LLM API call w/ Customer ID
+Send your customer's identity with each request using your existing application key. You can start tracking without creating a key for each customer or setting up webhooks.
 
-LiteLLM checks for a customer/end-user ID in the following order (first match wins):
+| Customer level | Use it for |
+| --- | --- |
+| Organization | A customer account, such as Acme, and its total budget. |
+| Team | A group within that customer, such as Support, with a shared budget. |
+| Member | An individual end user, such as Alice, with their own allowance. |
 
-| Priority | Method | Where | Notes |
-|----------|--------|-------|-------|
-| 1 | `x-litellm-customer-id` header | Request headers | Standard header, always checked |
-| 2 | `x-litellm-end-user-id` header | Request headers | Standard header, always checked |
-| 3 | Custom header via `user_header_mappings` | Request headers | Configured in `general_settings` |
-| 4 | Custom header via `user_header_name` | Request headers | Deprecated — use `user_header_mappings` |
-| 5 | `user` field | Request body | Standard OpenAI field |
-| 6 | `litellm_metadata.user` field | Request body | Anthropic-style metadata |
-| 7 | `metadata.user_id` field | Request body | Generic metadata pattern |
-| 8 | `safety_identifier` field | Request body | Responses API |
+These customer records are separate from LiteLLM's internal organizations, teams, and users. If you use `user`, `x-litellm-customer-id`, `x-litellm-end-user-id`, or `/customer/*`, see [moving from legacy end-user tracking](#moving-from-legacy-end-user-tracking). Those APIs remain supported.
 
-:::info[JWT auth takes precedence]
+## Before you start
 
-If [JWT auth](token_auth) is enabled with `end_user_id_jwt_field`, the customer ID from the verified JWT claim takes precedence over all headers and body fields listed above. The request-supplied fields are only used when the JWT does not yield an end-user ID. Since the claim comes from a token LiteLLM has already validated, callers cannot override it with `x-litellm-end-user-id`, `metadata.user_id`, etc.
+Use a [LiteLLM Gateway](./docker_quick_start.md) on v1.111 or later with PostgreSQL and its database migrations applied. You need an application key that can call your chosen model, and proxy admin access to view Customer Management or read its management APIs.
 
-:::
+Set these environment variables through your existing environment or secret store:
 
-**Option 1: Standard headers** (recommended, no request body modification needed)
+| Variable | Value |
+| --- | --- |
+| `LITELLM_BASE_URL` | Your gateway root URL, without `/v1` or `/ui`, for example `http://localhost:4000`. |
+| `LITELLM_API_KEY` | Your existing application key. |
+| `LITELLM_MODEL` | A Chat Completions model alias configured on your gateway and allowed by that key. |
 
-```bash showLineNumbers title="Make request with customer ID in header"
-curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-        --header 'Content-Type: application/json' \
-        --header "Authorization: Bearer $LITELLM_API_KEY" \
-        --header 'x-litellm-end-user-id: ishaan3' \
-        --data '{
-        "model": "azure-gpt-3.5",
-        "messages": [{"role": "user", "content": "what time is it"}]
-        }'
+Keep keys on your server. Your backend authenticates the customer and chooses the organization alias and member ID from their session. Use stable member IDs, unique across your gateway, such as `acme-alice`.
+
+Without Enterprise, you can create up to **5 customer organizations, 5 teams per organization, and 5 members per team**. The `default` team counts toward that limit. See [capacity and tracking at the limit](./customer_management/track-customer-spend.md#free-tier-limits).
+
+## 1. Send a request {#track-customer-spend}
+
+Pass the organization alias and member ID in headers:
+
+```bash title="Track a request for Alice at Acme"
+curl --fail-with-body "$LITELLM_BASE_URL/v1/chat/completions" \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
+  --header "Content-Type: application/json" \
+  --header "x-litellm-customer-org-alias: Acme" \
+  --header "x-litellm-customer-member-id: acme-alice" \
+  --data "{
+    \"model\": \"$LITELLM_MODEL\",
+    \"messages\": [{\"role\": \"user\", \"content\": \"Say hello.\"}]
+  }"
 ```
 
-Both `x-litellm-customer-id` and `x-litellm-end-user-id` are supported and always checked without any configuration.
+Expect a model response. On the first request, LiteLLM registers an unknown organization alias and adds a new member to its `default` team, subject to capacity limits. Existing members keep their assigned teams. The same headers work with Responses and Anthropic Messages; see the [SDK examples](./customer_management/track-customer-spend.md#3-send-a-request-for-alice).
 
-**Option 2: `user` field in request body** (OpenAI-compatible)
+A new member inherits the organization's default member budget if you configured one. Without a default, the member starts without its own cap. To enforce customer limits from the first request, [create the organization and budgets first](./customer_management/track-customer-spend.md#2-import-a-customer).
 
-```bash showLineNumbers title="Make request with customer ID in body"
-curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-        --header 'Content-Type: application/json' \
-        --header "Authorization: Bearer $LITELLM_API_KEY" \
-        --data '{
-        "model": "azure-gpt-3.5",
-        "user": "ishaan3",
-        "messages": [{"role": "user", "content": "what time is it"}]
-        }'
-```
+## 2. View customer usage {#view-usage}
 
-**Option 3: Custom header via `user_header_mappings`** (configurable)
+Open **Customer Management → Customers** in the Admin UI, select **Acme**, and choose **Select Time Range** to include your request. Check spend, requests, and tokens. Use **Break down by** to inspect teams and members.
 
-```yaml showLineNumbers title="config.yaml"
-general_settings:
-  user_header_mappings:
-    - header_name: "x-my-app-user-id"
-      litellm_user_role: "customer"
-```
+![Customer Management usage for Acme](../../static/img/customer_portal/usage-overview.jpg)
 
-```bash showLineNumbers title="Make request with custom header"
-curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-        --header 'Content-Type: application/json' \
-        --header "Authorization: Bearer $LITELLM_API_KEY" \
-        --header 'x-my-app-user-id: ishaan3' \
-        --data '{
-        "model": "azure-gpt-3.5",
-        "messages": [{"role": "user", "content": "what time is it"}]
-        }'
-```
+*Example from a local gateway with a controlled provider. Your cost and token count depend on the model and request.*
 
-**Option 4: `litellm_metadata.user`** (Anthropic-style)
+Accounting runs in the background. If usage has not appeared, confirm the date range and headers, then check accounting completion and gateway warnings. A successful model response alone does not confirm customer tracking. At a free-tier limit, a request can succeed without registering or tracking the new customer level. Existing levels remain tracked. Zero-cost requests can show tokens and requests with $0 spend.
 
-```bash showLineNumbers title="Make request with litellm_metadata.user"
-curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-        --header 'Content-Type: application/json' \
-        --header "Authorization: Bearer $LITELLM_API_KEY" \
-        --data '{
-        "model": "{{anthropic}}",
-        "messages": [{"role": "user", "content": "what time is it"}],
-        "litellm_metadata": {"user": "ishaan3"}
-        }'
-```
+To read usage from your backend, use the [customer usage APIs](./customer_management/track-customer-spend.md#5-fetch-usage-for-your-product) with a proxy admin key. Authorize the customer's access before returning that data to your product. Organization, team, and member totals describe the same requests; do not add the levels together.
 
-**Option 5: `metadata.user_id`**
+## 3. Set budgets and add your customer structure {#customer-budgets}
 
-```bash showLineNumbers title="Make request with metadata.user_id"
-curl -X POST 'http://0.0.0.0:4000/chat/completions' \
-        --header 'Content-Type: application/json' \
-        --header "Authorization: Bearer $LITELLM_API_KEY" \
-        --data '{
-        "model": "azure-gpt-3.5",
-        "messages": [{"role": "user", "content": "what time is it"}],
-        "metadata": {"user_id": "ishaan3"}
-        }'
-```
+Open the customer's **Settings** and use **Set budget** or **Edit budget** to choose a **Spend limit (USD)** and **Reset period**. Use a member's **Budget template** for their default allowance.
 
-The customer_id will be upserted into the DB with the new spend.
+A team budget caps the group's combined spend. A member template gives each assigned member their own allowance. You can use both. Follow [Set budgets and read usage](./customer_management/track-customer-spend.md) for a complete API setup, shared-budget examples, rate limits, model access, budget refusals, and optional webhook notifications.
 
-If the customer_id already exists, spend will be incremented.
+| Next task | Guide |
+| --- | --- |
+| Create teams and members with budgets before their first request | [Import a customer](./customer_management/track-customer-spend.md#2-import-a-customer) |
+| Compare a shared team budget with a per-member allowance | [Budget examples](./customer_management/track-customer-spend.md#shared-team-budget-or-per-member-allowance) |
+| Show spend and remaining limits in your product | [Read usage](./customer_management/track-customer-spend.md#5-fetch-usage-for-your-product) and [read budgets](./customer_management/track-customer-spend.md#6-fetch-budgets-and-caps) |
+| Notify your backend when a customer reaches a threshold | [Budget webhooks](./customer_management/track-customer-spend.md#1-set-up-budget-webhooks) |
+| Find a request's customer and cost | [Spend logs](./customer_management/track-customer-spend.md#7-debug-a-request-in-spend-logs) |
+| Look up fields, endpoints, or errors | [Customer Management API reference](./customer_management/api_reference.md) |
 
-### 2. Get Customer Spend 
+<span id="tracking-customer-spend--permissions" />
+<span id="1-make-llm-api-call-w-customer-id" />
+<span id="2-get-customer-spend" />
+<span id="restricting-which-ids-become-customers" />
+<span id="keeping-a-default-budget-for-unregistered-customers" />
+<span id="bucketing-internal-traffic-under-one-customer" />
+<span id="restricting-which-models-a-customer-can-use" />
+<span id="setting-customer-object-permissions" />
+<span id="what-are-object-permissions" />
+<span id="creating-a-customer-with-object-permissions" />
+<span id="updating-customer-object-permissions" />
+<span id="viewing-customer-object-permissions" />
+<span id="use-cases" />
+<span id="setting-customer-budgets" />
+<span id="default-budget-for-all-customers" />
+<span id="quick-start" />
+<span id="assign-pricing-tiers" />
+<span id="1-create-a-budget" />
+<span id="2-assign-budget-to-customer" />
+<span id="3-test-it" />
 
-<Tabs>
-<TabItem value="all-up" label="All-up spend">
+## Moving from legacy end-user tracking
 
-Call `/customer/info` to get a customer's all up spend
+Customer Management is the recommended setup from v1.111. Existing end-user tracking keeps working. The two systems have separate records and usage APIs; sending a legacy identity field does not create a Customer Management member.
 
-```bash showLineNumbers title="Get customer spend"
-# end_user_id: CUSTOMER ID
-# Authorization: YOUR PROXY KEY
-curl -X GET 'http://0.0.0.0:4000/customer/info?end_user_id=ishaan3' \
-        -H "Authorization: Bearer $LITELLM_API_KEY"
-```
+| Existing integration | Customer Management |
+| --- | --- |
+| Flat end-user ID in `user`, `x-litellm-customer-id`, or `x-litellm-end-user-id` | Organization alias and member ID in `x-litellm-customer-org-alias` and `x-litellm-customer-member-id`. |
+| `/customer/new`, `/customer/update`, `/customer/info` | `/management/v1/customer_organizations`, `/management/v1/customer_teams`, and `/management/v1/customer_members`. |
+| Default end-user budget or an assigned legacy budget | Organization and team caps, plus member budget templates and overrides. |
+| **Usage → Customer Usage** and the **End User** log filter | **Customer Management → Customers**, customer usage APIs, and the request's **Customer** details. |
 
-Expected Response:
+Choose the organization and team for each existing end user. You can reuse a stable end-user ID as a member ID after checking that it is unique across your gateway. Create the customer records and equivalent budgets, switch your application's identity headers, then verify a request and its usage in Customer Management.
 
-```json showLineNumbers title="Response"
-{
-    "user_id": "ishaan3",
-    "blocked": false,
-    "alias": null,
-    "spend": 0.001413,
-    "allowed_model_region": null,
-    "default_model": null,
-    "litellm_budget_table": null
-}
-```
+Keep legacy records for historical reporting. This setup does not copy old spend or budget counters into the new records. Plan the budget cutover so a customer does not receive a fresh allowance mid-period by mistake. During an overlap, do not add legacy and new totals for the same requests.
 
-</TabItem>
-<TabItem value="event-webhook" label="Event Webhook">
-
-To update spend in your client-side DB, point the proxy to your webhook. 
-
-E.g. if your server is `https://webhook.site` and your listening on `6ab090e8-c55f-4a23-b075-3209f5c57906`
-
-1. Add webhook url to your proxy environment: 
-
-```bash showLineNumbers title="Set webhook URL"
-export WEBHOOK_URL="https://webhook.site/6ab090e8-c55f-4a23-b075-3209f5c57906"
-```
-
-2. Add 'webhook' to config.yaml
-
-```yaml showLineNumbers title="config.yaml"
-general_settings: 
-  alerting: ["webhook"] # KEY CHANGE
-```
-
-3. Test it! 
-
-```bash showLineNumbers title="Test webhook"
-curl -X POST 'http://localhost:4000/chat/completions' \
--H 'Content-Type: application/json' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--D '{
-    "model": "mistral",
-    "messages": [
-        {
-        "role": "user",
-        "content": "What's the weather like in Boston today?"
-        }
-    ],
-    "user": "krrish12"
-}
-'
-```
-
-Expected Response 
-
-```json showLineNumbers title="Webhook event payload"
-{
-  "spend": 0.0011120000000000001, # SPEND
-  "max_budget": null,
-  "token": "example-api-key-123",
-  "customer_id": "krrish12",  # CUSTOMER ID
-  "user_id": null,
-  "team_id": null,
-  "user_email": null,
-  "key_alias": null,
-  "projected_exceeded_date": null,
-  "projected_spend": null,
-  "event": "spend_tracked",
-  "event_group": "customer",
-  "event_message": "Customer spend tracked. Customer=krrish12, spend=0.0011120000000000001"
-}
-```
-
-[See Webhook Spec](./alerting.md#api-spec-for-webhook-event)
-
-</TabItem>
-</Tabs>
-
-
-## Restricting Which IDs Become Customers
-
-Every distinct customer ID LiteLLM sees is upserted into the customer table, which becomes a problem when a client sends a per-session identifier. Claude Code, for example, puts a JSON blob in `metadata.user_id`:
-
-```json title="What Claude Code sends"
-{"device_id": "4ec41ed1...", "account_uuid": "...", "session_id": "..."}
-```
-
-Each session then lands in Usage -> Customer Usage as its own customer, and if you have a [default customer budget](#default-budget-for-all-customers) configured, each session gets its own copy of that budget, so a monthly cap meant for real customers turns into a per-session cap on that traffic.
-
-Set `validate_end_user_id_in_db` to keep those IDs out. <SinceVersion v="1.87.0" />
-
-```yaml showLineNumbers title="config.yaml"
-litellm_settings:
-  validate_end_user_id_in_db: true
-```
-
-An ID is then accepted only when it matches an existing customer's `user_id`, an internal user's `user_id`, or an internal user's email. IDs shaped like a JSON object or array are dropped before any database lookup, since those are never real customer identifiers. Dropping is not an error: the request still succeeds, it just carries no customer, and its spend is attributed to the virtual key, team and internal user as usual. Lookups are cached for 5 minutes when the ID resolved and 1 minute when it did not, so a newly created customer can take up to a minute to be recognized.
-
-### Keeping a default budget for unregistered customers
-
-On its own, `validate_end_user_id_in_db` drops every ID with no matching row, which works against `max_end_user_budget_id` if you rely on that to cap customers you never explicitly created. Set both and the two cooperate: JSON-shaped IDs are still dropped, while a plain-string ID with no row is preserved so the default budget still applies to it.
-
-```yaml showLineNumbers title="config.yaml"
-litellm_settings:
-  validate_end_user_id_in_db: true
-  max_end_user_budget_id: "your_default_budget_id"
-```
-
-### Bucketing internal traffic under one customer
-
-If you would rather label that traffic than drop it, have the client send `x-litellm-customer-id`. Headers are checked before any request body field, so the header wins over whatever the client puts in `metadata.user_id`, and Claude Code can set it through `ANTHROPIC_CUSTOM_HEADERS` with no other change, while Codex CLI does the same through `http_headers` in its `config.toml`. See [Claude Code granular cost tracking](../tutorials/claude_code_customer_tracking.md) and [Codex CLI granular cost tracking](../tutorials/codex_customer_tracking.md).
-
-Create that customer through `/customer/new` with its own budget. That satisfies `validate_end_user_id_in_db`, and an explicit customer budget takes precedence over the default one, so internal traffic can carry a different limit than your real customers.
-
-## Restricting Which Models a Customer Can Use
-
-Set `models` on a customer to limit which models requests made on its behalf can call. A request that carries this customer's ID, through the `user` field or the `x-litellm-customer-id` header, is rejected with a 403 when the requested model is not in the list, even if the virtual key and team allow it. An empty or missing list means the customer adds no model restriction. The customer list only narrows access: the key's and team's own model restrictions still apply on top, so listing a model on the customer never grants a key access to it
-
-Entries follow the same rules as key and team `models`, so a wildcard such as `anthropic/*` or a model access group name works here too
-
-Client-supplied `fallbacks` are checked against the customer's list too, as are router fallbacks unless `enforce_fallback_model_access` is set to `false`
-
-```bash showLineNumbers title="Create a customer limited to one model"
-curl -L -X POST 'http://localhost:4000/customer/new' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--H 'Content-Type: application/json' \
--d '{
-    "user_id": "user_1",
-    "models": ["{{openai_small}}"]
-  }'
-```
-
-A request for any other model on behalf of `user_1` then fails with the same error shape as key and team model checks, with `type` set to `customer_model_access_denied`
-
-```bash showLineNumbers title="Request a model outside the customer's list"
-curl -L -X POST 'http://localhost:4000/v1/chat/completions' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--H 'Content-Type: application/json' \
--H 'x-litellm-customer-id: user_1' \
--d '{
-    "model": "{{openai_large}}",
-    "messages": [{"role": "user", "content": "hi"}]
-  }'
-```
-
-```json title="Response (403)"
-{
-  "error": {
-    "message": "The requested model '{{openai_large}}' is not in the allowed models for this customer. Check the models this customer can use and try again.",
-    "type": "customer_model_access_denied",
-    "param": "model",
-    "code": "403"
-  }
-}
-```
-
-Change the list with `/customer/update`. Omitting `models` leaves the current list untouched, and sending `"models": []` removes the restriction. `/customer/info` returns the current list in its `models` field
-
-```bash showLineNumbers title="Remove the customer's model restriction"
-curl -L -X POST 'http://localhost:4000/customer/update' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--H 'Content-Type: application/json' \
--d '{
-    "user_id": "user_1",
-    "models": []
-  }'
-```
-
-## Setting Customer Object Permissions
-
-Control which resources (MCP servers, vector stores, agents) a customer can access.
-
-### What are Object Permissions?
-
-Object permissions allow you to restrict customer access to specific:
-- **MCP Servers**: Limit which MCP servers the customer can call
-- **MCP Access Groups**: Assign customers to predefined groups of MCP servers
-- **MCP Tool Permissions**: Granular control over which tools within an MCP server the customer can use
-- **Vector Stores**: Control which vector stores the customer can query
-- **Agents**: Restrict which agents the customer can interact with
-- **Agent Access Groups**: Assign customers to predefined groups of agents
-
-### Creating a Customer with Object Permissions
-
-```bash showLineNumbers title="Create customer with object permissions"
-curl -L -X POST 'http://localhost:4000/customer/new' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--H 'Content-Type: application/json' \
--d '{
-    "user_id": "user_1",
-    "object_permission": {
-      "mcp_servers": ["server_1", "server_2"],
-      "mcp_access_groups": ["public_group"],
-      "mcp_tool_permissions": {
-        "server_1": ["tool_a", "tool_b"]
-      },
-      "vector_stores": ["vector_store_1"],
-      "agents": ["agent_1"],
-      "agent_access_groups": ["basic_agents"]
-    }
-  }'
-```
-
-**Parameters:**
-- `mcp_servers` (Optional[List[str]]): List of allowed MCP server IDs
-- `mcp_access_groups` (Optional[List[str]]): List of MCP access group names
-- `mcp_tool_permissions` (Optional[Dict[str, List[str]]]): Map of server ID to allowed tool names
-- `vector_stores` (Optional[List[str]]): List of allowed vector store IDs
-- `agents` (Optional[List[str]]): List of allowed agent IDs
-- `agent_access_groups` (Optional[List[str]]): List of agent access group names
-
-**Note:** If `object_permission` is `null` or `{}`, the customer has no object-level restrictions.
-
-### Updating Customer Object Permissions
-
-You can update object permissions for existing customers:
-
-```bash showLineNumbers title="Update customer object permissions"
-curl -L -X POST 'http://localhost:4000/customer/update' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--H 'Content-Type: application/json' \
--d '{
-    "user_id": "user_1",
-    "object_permission": {
-      "mcp_servers": ["server_3"],
-      "vector_stores": ["vector_store_2", "vector_store_3"]
-    }
-  }'
-```
-
-### Viewing Customer Object Permissions
-
-When you query customer info, object permissions are included in the response:
-
-```bash showLineNumbers title="Get customer info with object permissions"
-curl -X GET 'http://0.0.0.0:4000/customer/info?end_user_id=user_1' \
-    -H "Authorization: Bearer $LITELLM_API_KEY"
-```
-
-**Response:**
-```json showLineNumbers title="Response with object permissions"
-{
-  "user_id": "user_1",
-  "blocked": false,
-  "alias": "John Doe",
-  "spend": 0.0,
-  "object_permission": {
-    "object_permission_id": "perm_abc123",
-    "mcp_servers": ["server_1", "server_2"],
-    "mcp_access_groups": ["public_group"],
-    "mcp_tool_permissions": {
-      "server_1": ["tool_a", "tool_b"]
-    },
-    "vector_stores": ["vector_store_1"],
-    "agents": ["agent_1"],
-    "agent_access_groups": ["basic_agents"]
-  },
-  "litellm_budget_table": null
-}
-```
-
-### Use Cases
-
-**1. Tiered Access Control**
-Create different permission tiers for your customers:
-
-```bash showLineNumbers title="Free tier customer"
-# Free tier - limited access
-curl -L -X POST 'http://localhost:4000/customer/new' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--H 'Content-Type: application/json' \
--d '{
-    "user_id": "free_user",
-    "budget_id": "free_tier",
-    "object_permission": {
-      "mcp_access_groups": ["public_group"],
-      "agent_access_groups": ["basic_agents"]
-    }
-  }'
-```
-
-```bash showLineNumbers title="Premium tier customer"
-# Premium tier - full access
-curl -L -X POST 'http://localhost:4000/customer/new' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--H 'Content-Type: application/json' \
--d '{
-    "user_id": "premium_user",
-    "budget_id": "premium_tier",
-    "object_permission": {
-      "mcp_servers": ["server_1", "server_2", "server_3"],
-      "vector_stores": ["vector_store_1", "vector_store_2"],
-      "agents": ["agent_1", "agent_2", "agent_3"]
-    }
-  }'
-```
-
-**2. Department-Specific Access**
-Restrict customers to resources relevant to their department:
-
-```bash showLineNumbers title="Sales team customer"
-curl -L -X POST 'http://localhost:4000/customer/new' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--H 'Content-Type: application/json' \
--d '{
-    "user_id": "sales_user",
-    "object_permission": {
-      "mcp_servers": ["crm_server", "email_server"],
-      "agents": ["sales_assistant"],
-      "vector_stores": ["sales_knowledge_base"]
-    }
-  }'
-```
-
-**3. Tool-Level Restrictions**
-Grant access to specific tools within an MCP server:
-
-```bash showLineNumbers title="Limited tool access"
-curl -L -X POST 'http://localhost:4000/customer/new' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--H 'Content-Type: application/json' \
--d '{
-    "user_id": "restricted_user",
-    "object_permission": {
-      "mcp_servers": ["database_server"],
-      "mcp_tool_permissions": {
-        "database_server": ["read_only_query", "get_table_schema"]
-      }
-    }
-  }'
-```
-
-## Setting Customer Budgets
-
-Set customer budgets (e.g. monthly budgets, tpm/rpm limits) on LiteLLM Proxy 
-
-### Default Budget for All Customers
-
-Apply budget limits to all customers without explicit budgets. This is useful for rate limiting and spending controls across all end users.
-
-**Step 1: Create a default budget**
-
-```bash showLineNumbers title="Create default budget"
-curl -X POST 'http://localhost:4000/budget/new' \
--H 'Content-Type: application/json' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--d '{
-    "max_budget": 10,
-    "rpm_limit": 2,
-    "tpm_limit": 1000
-}'
-```
-
-**Step 2: Configure the default budget ID**
-
-```yaml showLineNumbers title="config.yaml"
-litellm_settings:
-  max_end_user_budget_id: "budget_id_from_step_1"
-```
-
-**Step 3: Test it**
-
-```bash showLineNumbers title="Make request with customer ID"
-curl -X POST 'http://localhost:4000/chat/completions' \
--H 'Content-Type: application/json' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--d '{
-    "model": "{{openai_small}}",
-    "messages": [{"role": "user", "content": "Hello"}],
-    "user": "my-customer-id"
-}'
-```
-
-The customer will be subject to the default budget limits (RPM, TPM, and $ budget). Customers with explicit budgets are unaffected, and the default also applies to customers that don't exist in the database yet. LiteLLM caches the budget object for 60 seconds, so edits to it take up to a minute to apply.
-
-The float setting `max_end_user_budget` is no longer enforced; if you have it in your config, replace it with `max_end_user_budget_id` as shown above.
-
-The default applies to every ID that reaches customer tracking, including per-session IDs sent by agent clients. See [Restricting Which IDs Become Customers](#restricting-which-ids-become-customers) if you want those kept out of the customer table while real customers keep the default budget.
-
-### Quick Start 
-
-Create / Update a customer with budget
-
-**Create New Customer w/ budget**
-```bash showLineNumbers title="Create customer with budget"
-curl -X POST 'http://0.0.0.0:4000/customer/new'         
-    -H "Authorization: Bearer $LITELLM_API_KEY"         
-    -H 'Content-Type: application/json'         
-    -d '{
-        "user_id" : "my-customer-id",
-        "max_budget": 10
-    }'
-```
-
-`/customer/new` accepts budget fields inline: `max_budget`, `soft_budget`, `budget_duration`, `tpm_limit`, `rpm_limit`, `max_parallel_requests` and `model_max_budget`. Set either `max_budget` or `budget_id`, not both; passing both is rejected. Customer `tpm_limit` and `rpm_limit` are stored on a budget object, so they only apply when the customer is linked to one, either inline as above or through `budget_id`.
-
-`/customer/update` accepts a narrower set of fields: `user_id`, `alias`, `blocked`, `max_budget`, `budget_id`, `allowed_model_region`, `default_model` and `object_permission`. Anything else, including `tpm_limit`, `rpm_limit` and `budget_duration`, is silently dropped; to change those, update the budget object with `/budget/update` instead.
-
-Customer budgets are global per deployment. Spend is tracked against the customer id alone, so the same customer shares one budget across every virtual key and team, and a customer budget can't be scoped to a single key or team.
-
-**Test it!**
-
-```bash showLineNumbers title="Test customer budget"
-curl -X POST 'http://localhost:4000/chat/completions' \
--H 'Content-Type: application/json' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--D '{
-    "model": "mistral",
-    "messages": [
-        {
-        "role": "user",
-        "content": "What'\''s the weather like in Boston today?"
-        }
-    ],
-    "user": "ishaan-jaff-48"
-}
-```
-
-### Assign Pricing Tiers
-
-Create and assign customers to pricing tiers.
-
-#### 1. Create a budget
-
-<Tabs>
-<TabItem value="ui" label="UI">
-
-- Go to the 'Budgets' tab on the UI. 
-- Click on '+ Create Budget'.
-- Create your pricing tier (e.g. 'my-free-tier' with budget $4). This means each user on this pricing tier will have a max budget of $4. 
-
-<Image img={require('../../img/create_budget_modal.png')} />
-
-</TabItem>
-<TabItem value="api" label="API">
-
-Use the `/budget/new` endpoint for creating a new budget. [API Reference](https://docs.litellm.ai/api-reference/#/budget%20management/new_budget_budget_new_post)
-
-```bash showLineNumbers title="Create budget via API"
-curl -X POST 'http://localhost:4000/budget/new' \
--H 'Content-Type: application/json' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--D '{
-    "budget_id": "my-free-tier", 
-    "max_budget": 4 
-}
-```
-
-</TabItem>
-</Tabs>
-
-:::info
-
-`tpm_limit` and `rpm_limit` are optional on a budget. Leaving them unset stores `null` and LiteLLM enforces no per-customer TPM or RPM limit for customers on that budget; only your provider's own rate limits apply. Set them only when you want LiteLLM to cap the customer
-
-```bash
-curl -X POST 'http://localhost:4000/budget/info' \
-  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
-  -H 'Content-Type: application/json' \
-  -d '{"budgets": ["my-free-tier"]}'
-```
-
-`tpm_limit` and `rpm_limit` come back as `null` when no LiteLLM limit is set
-
-:::
-
-#### 2. Assign Budget to Customer 
-
-In your application code, assign budget when creating a new customer. 
-
-Just use the `budget_id` used when creating the budget. In our example, this is `my-free-tier`.
-
-```bash showLineNumbers title="Assign budget to customer"
-curl -X POST 'http://localhost:4000/customer/new' \
--H 'Content-Type: application/json' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--D '{
-    "user_id": "my-customer-id",
-    "budget_id": "my-free-tier" # KEY CHANGE
-}
-```
-
-#### 3. Test it! 
-
-<Tabs>
-<TabItem value="curl" label="curl">
-
-```bash showLineNumbers title="Test with curl"
-curl -X POST 'http://localhost:4000/customer/new' \
--H 'Content-Type: application/json' \
--H "Authorization: Bearer $LITELLM_API_KEY" \
--D '{
-    "user_id": "my-customer-id",
-    "budget_id": "my-free-tier" # KEY CHANGE
-}
-```
-
-</TabItem>
-<TabItem value="openai" label="OpenAI">
-
-```python showLineNumbers title="Test with OpenAI SDK"
-from openai import OpenAI
-client = OpenAI(
-  base_url="<your_proxy_base_url>",
-  api_key="<your_proxy_key>"
-)
-
-completion = client.chat.completions.create(
-  model="{{openai_small}}",
-  messages=[
-    {"role": "system", "content": "You are a helpful assistant."},
-    {"role": "user", "content": "Hello!"}
-  ],
-  user="my-customer-id"
-)
-
-print(completion.choices[0].message)
-```
-
-</TabItem>
-</Tabs>
+Retain the legacy integration for features that depend on its identity path, including JWT end-user mapping and customer object permissions for MCP servers, vector stores, and agents. The new customer headers do not replace those controls. See the [legacy reference](./legacy_end_users.md) and [legacy usage dashboard](./customer_usage.md).

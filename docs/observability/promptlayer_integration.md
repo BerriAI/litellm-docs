@@ -1,3 +1,8 @@
+---
+title: "PromptLayer Logging for the LiteLLM Python SDK"
+sidebar_label: "PromptLayer"
+description: "Log LiteLLM Python SDK requests to PromptLayer across OpenAI, Azure, Anthropic and other providers with the promptlayer callback and metadata."
+---
 import Image from '@theme/IdealImage';
 
 # PromptLayer
