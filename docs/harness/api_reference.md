@@ -29,7 +29,7 @@ from litellm.harness import Text, ToolCall, FileChange, Done, Result, State
 | `litellm.agent_session(harness, *, sandbox, **options)` | `aagent_session` | `Session` |
 | `litellm.agent_resume(state, *, sandbox)` | `aagent_resume` | `Session` |
 | `litellm.agent_capabilities(harness)` | | `Capabilities` |
-| `litellm.agent_eval(tasks, targets, **options)` | `aagent_eval` | `EvalScorecard` |
+| `litellm.agent_eval(tasks, targets, *, sandbox, **options)` | `aagent_eval` | `EvalScorecard` |
 
 ## Evaluations
 
@@ -58,7 +58,9 @@ from litellm import (
 | `EvalRun` | `run_id`, `task_id`, `target`, one-based `trial`, `status`, optional agent `result`, optional `check`, `duration`, `detail` |
 | `EvalStatus` | `PASS`, `FAIL`, `ERROR` |
 
-`agent_eval()` and `aagent_eval()` take `trials=1`, `max_concurrency=1`, `max_turns=None`, `timeout=300`, `setup_timeout=120`, an optional sandbox factory, `metadata`, `api_base` and `api_key`. Unlike `agent()`, the evaluation API takes a sandbox factory that receives a fresh workspace for each attempt. Without a factory, the runner uses a local sandbox.
+`agent_eval()` and `aagent_eval()` require the keyword-only `sandbox` argument. Pass a factory of type `Callable[[Path], Sandbox]`. The runner calls it with a fresh temporary workspace for each attempt. For trusted tasks, use `sandbox=sandbox.local` to run with your user's permissions.
+
+Optional arguments are `trials=1`, `max_concurrency=1`, `max_turns=None`, `timeout=300`, `setup_timeout=120`, `metadata`, `api_base` and `api_key`.
 
 A run passes only when its agent result has `stop_reason="done"` and its check passes. Summary pass rates include error rows in the denominator. Agent and judge usage and cost remain separate, and incomplete metrics carry `metrics_complete=False`.
 
