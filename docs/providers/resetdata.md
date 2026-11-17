@@ -117,7 +117,6 @@ These ResetData models are in the LiteLLM catalog with their context windows and
 | Model | Context window | Max output tokens | Reasoning | Vision |
 |-------|----------------|-------------------|-----------|--------|
 | `resetdata/zai/glm-5.3` | 524,288 | 32,768 | Yes | No |
-| `resetdata/zai/glm-5.2` | 800,000 | 32,768 | Yes | No |
 | `resetdata/qwen/qwen3.8-27b` | 262,144 | 32,768 | Yes | Yes |
 | `resetdata/qwen/qwen3-coder-30b-a3b-instruct` | 262,144 | 65,536 | No | No |
 | `resetdata/google/gemma-4-26b-a4b-it` | 262,144 | 8,192 | No | Yes |
