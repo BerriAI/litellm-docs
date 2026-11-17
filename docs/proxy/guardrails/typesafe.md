@@ -1,3 +1,8 @@
+---
+title: "TypeSafe Jev Context Compaction on LiteLLM"
+sidebar_label: "Relevance-Based Compaction (TypeSafe / Jev)"
+description: "Blank out tool results that TypeSafe Jev scores below a relevance threshold on the LiteLLM AI Gateway, so stale context stops using input tokens."
+---
 # Relevance-Based Compaction (TypeSafe / Jev)
 
 [TypeSafe](https://typesafe.ai)'s Jev model judges whether each completed tool exchange is still relevant to the current task. As a LiteLLM guardrail, it blanks out tool results Jev scores below a relevance threshold before the request reaches the model, so dead context stops consuming input tokens. Unlike summarizing compressors, this is all-or-nothing per exchange: a result is either kept verbatim or replaced with a removal notice.

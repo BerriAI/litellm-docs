@@ -4,6 +4,8 @@ import TabItem from '@theme/TabItem';
 
 # Alerting / Webhooks
 
+For findings in the Admin UI, see [model deprecation alerts](./alerts/model-deprecations.md) and [performance alerts](./alerts/performance.md). This page covers notifications sent to external services.
+
 Get alerts for:
 
 | Category | Alert Type |

@@ -1,3 +1,9 @@
+---
+title: "Nebius AI Studio API with LiteLLM: Setup"
+sidebar_label: "Nebius AI Studio"
+description: "Call Qwen3 235B and other Nebius AI Studio models with JSON mode, tools and a fixed seed, stream output, and embed text with BAAI bge-en-icl via LiteLLM."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

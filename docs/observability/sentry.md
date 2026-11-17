@@ -1,3 +1,8 @@
+---
+title: "Sentry Error Tracking for LiteLLM"
+sidebar_label: "Sentry"
+description: "Send LiteLLM exceptions and breadcrumbs to Sentry for completion, acompletion and streaming calls, with PII scrubbing and message redaction."
+---
 # Sentry
 import Image from '@theme/IdealImage';
 

@@ -147,7 +147,7 @@ Configure different routing strategies for different use cases:
 
 Apply consistent router settings across all keys in a team:
 
-- Set team-wide fallback chains for reliability
+- Set team-wide fallback chains for reliability, and with `fallback_on_saturation: true` walk them as soon as the requested model reaches the dynamic rate limiter's `saturation_threshold` (see [Fall back before the preferred model saturates](./dynamic_rate_limit.md#fall-back-before-the-preferred-model-saturates))
 - Configure team-specific timeout policies
 - Apply uniform retry policies across team members
 

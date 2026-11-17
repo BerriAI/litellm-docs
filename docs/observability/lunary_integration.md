@@ -1,3 +1,8 @@
+---
+title: "Lunary Tracing for LiteLLM: Python SDK and Gateway"
+sidebar_label: "Lunary"
+description: "Send LiteLLM calls to Lunary from the Python SDK or AI Gateway, and trace LangChain ChatLiteLLM, prompt templates and custom chains in Lunary."
+---
 import Image from '@theme/IdealImage';
 
 # Lunary

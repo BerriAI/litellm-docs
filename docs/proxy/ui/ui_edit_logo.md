@@ -7,7 +7,7 @@ import Image from '@theme/IdealImage';
 <a id="custom-branding-admin-ui"></a>
 <a id="customize-ui-logo"></a>
 
-Customize the Admin UI logo, favicon, and color scheme.
+Customize the Admin UI logo and favicon.
 
 <Image img={require('../../../img/litellm_custom_ai.png')} />
 
@@ -121,26 +121,9 @@ environment_variables:
   UI_LOGO_PATH_DARK: "https://example.com/your-company-logo-dark.png"
 ```
 
-## Set a custom color theme {#set-custom-color-theme}
+## Custom color themes {#set-custom-color-theme}
 
-1. Open the [enterprise UI color template](https://github.com/BerriAI/litellm/blob/main/enterprise/enterprise_ui/_enterprise_colors.json).
-2. In `enterprise/enterprise_ui`, rename `_enterprise_colors.json` to `enterprise_colors.json`.
-3. Set your colors using the [supported color palette](https://www.tremor.so/docs/layout/color-palette#default-colors). For example:
-
-```json
-{
-  "brand": {
-    "DEFAULT": "teal",
-    "faint": "teal",
-    "muted": "teal",
-    "subtle": "teal",
-    "emphasis": "teal",
-    "inverted": "teal"
-  }
-}
-```
-
-4. Deploy the LiteLLM proxy with the updated file.
+{/* keep-version-note */} The Admin UI no longer supports custom color themes. LiteLLM v1.92.0 and later ignore `enterprise_colors.json`, and no setting replaces it. To brand the UI, set a custom logo and favicon as described above.
 
 ## Supported Logo Formats
 

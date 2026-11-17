@@ -1,3 +1,9 @@
+---
+title: "Azure AI Foundry (AI Studio) API with LiteLLM"
+sidebar_label: "Azure AI"
+description: "Call Command R, Mistral Large, Jamba and Claude on Azure AI Foundry (formerly AI Studio) from the Python SDK or AI Gateway, with tool calling and rerank."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

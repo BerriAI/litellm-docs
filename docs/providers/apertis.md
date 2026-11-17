@@ -1,3 +1,9 @@
+---
+title: "Apertis AI API with LiteLLM: Stima API Setup"
+sidebar_label: "Apertis AI (Stima API)"
+description: "Reach the 430+ models behind Apertis AI (formerly Stima API) from the LiteLLM Python SDK or AI Gateway, with streaming and OpenAI parameters such as tools."
+---
+
 # Apertis AI (Stima API)
 
 ## Overview

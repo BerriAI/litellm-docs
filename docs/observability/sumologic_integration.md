@@ -1,3 +1,8 @@
+---
+title: "Sumo Logic Logging for LiteLLM AI Gateway"
+sidebar_label: "Sumo Logic"
+description: "Send LiteLLM logs to Sumo Logic from the Python SDK or AI Gateway through an HTTP Logs and Metrics source, with batching, compression and queries."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

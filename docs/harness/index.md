@@ -35,6 +35,8 @@ The `litellm_proxy/` prefix works the same way it does for `litellm.completion`:
 
 See [Using with LiteLLM AI Gateway](./gateway.md) for the proxy config, virtual keys, which harness to pick, and spend by harness. Without the prefix, the model is called directly through the LiteLLM SDK; see [Models and routing](./models.md#sdk-mode).
 
+To compare harnesses and models on your own tasks, follow [Evaluate agents](./evaluation.md). Define typed tasks and success checks, run independent trials, and compare pass rate, cost and time.
+
 ## Supported harnesses
 
 | Harness | Runtime | Runs in |

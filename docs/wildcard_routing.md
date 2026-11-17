@@ -11,6 +11,8 @@ import TabItem from '@theme/TabItem';
 
 Use this if you want to **proxy all models from a specific provider without defining them on the config.yaml**
 
+For a new bare model ID such as `claude-newfamily-5`, [fallback generalizations](./fallback_generalizations.md) can infer the provider used in a virtual key's `provider/*` access check. Routing rules do not add pricing or bypass key permissions.
+
 ## Step 1. Define provider specific routing 
 
 <Tabs>

@@ -1,3 +1,8 @@
+---
+title: "Web Search APIs for AI Agents in LiteLLM"
+sidebar_label: "Overview"
+description: "Use one search() call in the Python SDK or /v1/search on the AI Gateway to query 19 web search APIs for AI agents, with cost tracking and per-key access."
+---
 # Overview
 
 | Feature | Supported | 

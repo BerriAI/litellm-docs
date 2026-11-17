@@ -66,6 +66,8 @@ These callouts cover user-facing behavior that differs from `v1.105.0`, the prev
 
 **Decisions requests that send media a model cannot read now return 400.** `images` on `/v1/systemone`, `audio` and `videos` on either route, and TypeSafe `assets` used to be dropped with a 200. They now return 400 naming the field unless `drop_params` is set, and OpenAI decision models now receive System One `images`, which are billed. See [PR #46628](https://github.com/BerriAI/litellm/pull/46628)
 
+**`supports_prompt_cache_breakpoint: false` on a Bedrock model turns off its Converse prompt caching.** The flag already selected the OpenAI `prompt_cache_breakpoint` format, and from this release Bedrock Converse also reads it to decide whether to send `cachePoint` blocks. A Bedrock Claude deployment with the flag set to `false` sends no `cachePoint` and gets no cache writes or reads. To restore caching, remove the flag from Bedrock Claude deployments that support prompt caching and only set it to describe the OpenAI marker. Keep it where it was meant to turn `cachePoint` blocks off, such as on an inference profile ARN or a model that rejects the field. A later release moves the Bedrock decision to its own `supports_bedrock_converse_cache_point` flag, see [Bedrock cache points](../../docs/completion/prompt_caching#control-bedrock-converse-cache-points) and [issue #52140](https://github.com/BerriAI/litellm/issues/52140). See [PR #44292](https://github.com/BerriAI/litellm/pull/44292)
+
 **`/v1/responses/compact` now checks `previous_response_id` the same way `/v1/responses` does.** Another user's or team's id returns 403, and so does an id the proxy never issued unless `general_settings.allow_unmanaged_response_ids` is `true`. Ids handed out by the websocket `/v1/responses` route are refused for every key. See [PR #46827](https://github.com/BerriAI/litellm/pull/46827)
 
 :::
@@ -192,7 +194,7 @@ Counts represent new catalog identifiers compared with `v1.105.0`, including ali
 - Send the project id to Bedrock Mantle as the documented `anthropic-workspace-id` header, so `aws_bedrock_project_id` takes effect - [PR #44173](https://github.com/BerriAI/litellm/pull/44173)
 - Honor the per-request `timeout` on Converse and Invoke streaming calls - [PR #44134](https://github.com/BerriAI/litellm/pull/44134)
 - Drop lookaround regex patterns from tool schemas for Converse models that reject them (Kimi K3, Grok 4.6 and 4.7), controlled by the new `supports_regex_lookaround` cost-map and `model_info` flag - [PR #44138](https://github.com/BerriAI/litellm/pull/44138)
-- Stop sending Converse `cachePoint` blocks to Kimi K3, gated by a new `supports_prompt_cache_breakpoint` flag - [PR #44292](https://github.com/BerriAI/litellm/pull/44292)
+- Stop sending Converse `cachePoint` blocks to Kimi K3, gated by the existing `supports_prompt_cache_breakpoint` flag, which now also controls Bedrock `cachePoint` blocks (see Breaking Changes) - [PR #44292](https://github.com/BerriAI/litellm/pull/44292)
 - Drop or reject reasoning effort levels a Bedrock GPT model does not support, following `drop_params`, instead of forwarding them for a Bedrock 400 - [PR #44183](https://github.com/BerriAI/litellm/pull/44183)
 - Split a leading `<reasoning>` tag out of the answer only for gpt-oss on native Chat Completions, so GPT 5.6 and Grok answers keep it - [PR #44432](https://github.com/BerriAI/litellm/pull/44432)
 - Forward each Nova Sonic assistant sentence once over the realtime API instead of twice - [PR #44987](https://github.com/BerriAI/litellm/pull/44987)

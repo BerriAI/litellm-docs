@@ -96,7 +96,7 @@ selection, reliability, state and health](../img/configuration-1.svg)
 | `default_fallbacks` | None | becomes the `"*"` entry of `fallbacks` |
 | `max_fallbacks` | `litellm.max_fallbacks`, else 5 | hop limit for fallbacks |
 | `fallback_on_unsupported_params` | True | fall back on an unsupported-parameter 400 |
-| `fallback_access_check`, `fallback_budget_check` | None | callables that may veto a fallback target |
+| `fallback_access_check`, `fallback_budget_check`, `fallback_rate_limit_check` | None | callables that may veto a fallback target |
 | `enable_weighted_failover` | False | pick again in the group before falling back, `simple-shuffle` only |
 | `enable_mid_stream_fallback_continuation` | False | continue a broken stream on a fallback group |
 | `cooldown_time` | 5 seconds | how long a deployment stays cooled down |

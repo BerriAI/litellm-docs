@@ -1,3 +1,9 @@
+---
+title: "Bedrock Mantle API with LiteLLM: Setup"
+sidebar_label: "Amazon Bedrock Mantle"
+description: "Call Claude Mythos preview, GPT-5.5 and gpt-oss on Amazon Bedrock Mantle from the Python SDK or AI Gateway, on /messages, /responses or chat at Bedrock rates."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,8 @@
+---
+title: "Gray Swan Cygnal Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Gray Swan Cygnal Guardrail"
+description: "Monitor or block policy violations, jailbreaks and indirect prompt injection with Gray Swan Cygnal on the LiteLLM AI Gateway, including Claude Code traffic."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,8 @@
+---
+title: "PointFive Cost Logging for LiteLLM AI Gateway"
+sidebar_label: "PointFive"
+description: "Ship LiteLLM AI Gateway request logs to PointFive for AI cost and usage analysis through presigned batch uploads, with UI setup and redaction."
+---
 # PointFive
 
 LiteLLM can ship proxy request logs to [PointFive](https://www.pointfive.co) for AI cost and usage analysis. Logs are buffered and uploaded through a presigned URL that the PointFive API issues per batch, so the proxy holds no cloud credentials of its own and runs unchanged wherever it is hosted.

@@ -1,3 +1,8 @@
+---
+title: "PostHog Logging for LiteLLM AI Gateway"
+sidebar_label: "PostHog"
+description: "Send LiteLLM completion, embedding and error events to PostHog from the Python SDK or AI Gateway, with team-based logging and custom instances."
+---
 # PostHog
 
 ## What is PostHog?

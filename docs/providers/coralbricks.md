@@ -1,3 +1,9 @@
+---
+title: "CoralBricks API with LiteLLM AI Gateway"
+sidebar_label: "CoralBricks"
+description: "Run GLM-5.3 Fast and DeepSeek V4.1 Flash Fast on CoralBricks from the Python SDK or AI Gateway, on chat, Responses and Messages routes with cost tracking."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

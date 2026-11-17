@@ -277,4 +277,4 @@ IdP-initiated (unsolicited) responses cannot be browser-bound, which is why they
 
 - [SSO permissions](./access_management/sso_permissions.md): sign-in restrictions, role mapping, and team membership.
 - [OpenID Connect (OIDC) SSO](./admin_ui_sso.md): connect an OIDC provider.
-- [Customize UI branding](./ui/ui_edit_logo.md): logos and color themes.
+- [Customize UI branding](./ui/ui_edit_logo.md): logos and favicon.

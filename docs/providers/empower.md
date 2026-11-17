@@ -1,3 +1,9 @@
+---
+title: "Empower API with LiteLLM: Setup and Models"
+sidebar_label: "Empower"
+description: "Call Empower's empower-functions and empower-functions-small models from the LiteLLM Python SDK for plain or streaming chat and automatic tool calling."
+---
+
 # Empower
 LiteLLM supports all models on Empower. 
 

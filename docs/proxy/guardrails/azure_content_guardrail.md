@@ -1,3 +1,8 @@
+---
+title: "Azure Content Safety Guardrails on LiteLLM"
+sidebar_label: "Azure Content Safety Guardrail"
+description: "Block jailbreaks and harmful text with Azure Content Safety on the LiteLLM AI Gateway, using Prompt Shield and Text Moderation, with cost tracking."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

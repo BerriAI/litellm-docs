@@ -1,3 +1,9 @@
+---
+title: "Azure AI Image Generation (FLUX) with LiteLLM"
+sidebar_label: "Azure AI Image Generation (Black Forest Labs - Flux)"
+description: "Generate images with FLUX 1.1 Pro, FLUX.1 Kontext Pro and FLUX 2 Pro or Flex on Azure AI from the Python SDK or AI Gateway, and edit them with FLUX 2 Pro."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

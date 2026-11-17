@@ -1,3 +1,8 @@
+---
+title: "Google Model Armor Guardrails on LiteLLM Gateway"
+sidebar_label: "Google Cloud Model Armor"
+description: "Apply Google Cloud Model Armor templates on the LiteLLM AI Gateway to sanitize or block prompts and responses, including document and file scanning."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

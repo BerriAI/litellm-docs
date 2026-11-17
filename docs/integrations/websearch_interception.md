@@ -476,4 +476,4 @@ The handler automatically detects response format:
 
 ## Contributing
 
-Found a bug or want to add support for a new provider? See our [Contributing Guide](https://github.com/BerriAI/litellm/blob/main/CONTRIBUTING.md).
+Found a bug or want to add support for a new provider? See our [Contributing Guide](https://github.com/BerriAI/litellm/blob/main/.github/CONTRIBUTING.md).

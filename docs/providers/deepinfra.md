@@ -1,7 +1,16 @@
+---
+title: "DeepInfra API with LiteLLM: Chat and Rerank"
+sidebar_label: "DeepInfra"
+description: "Call Llama 3, Llama 2 and CodeLlama chat models on DeepInfra from the Python SDK or AI Gateway, with streaming and Qwen3 rerankers on the /rerank endpoint."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # DeepInfra
+
+LiteLLM calls every DeepInfra model with the `deepinfra/` prefix from the Python SDK or AI Gateway and adds a Cohere-compatible `/rerank` endpoint for DeepInfra rerank models.
+
 https://deepinfra.com/
 
 :::tip
