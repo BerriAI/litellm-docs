@@ -112,12 +112,12 @@ The proxy returns an OpenAI-format chat completion. The usage block reports reas
 
 ```json
 {
-  "choices": [{"message": {"role": "assistant", "content": "Hello there, friend, how are you?"}}],
+  "choices": [{"message": {"role": "assistant", "content": "Hello there, my dear friend!"}}],
   "usage": {
-    "completion_tokens": 25,
+    "completion_tokens": 15,
     "prompt_tokens": 17,
-    "total_tokens": 42,
-    "completion_tokens_details": {"reasoning_tokens": 15, "text_tokens": 10}
+    "total_tokens": 32,
+    "completion_tokens_details": {"reasoning_tokens": 7, "text_tokens": 8}
   }
 }
 ```
@@ -161,13 +161,13 @@ These ResetData models are in the LiteLLM catalog with their context windows, ou
 
 `resetdata/openai/whisper-large-v3-turbo` is in the catalog too. ResetData prices audio per minute of input, and LiteLLM tracks it per second of audio at the same converted rate.
 
-`resetdata/qwen/qwen3.8-27b` takes images as base64 data URLs. ResetData answers an image URL on that model with a 500 error, while `resetdata/google/gemma-4-26b-a4b-it` takes both.
+`resetdata/qwen/qwen3.8-27b` takes images as base64 data URLs. ResetData answers an image URL on that model with a 500 error after about two minutes, while `resetdata/google/gemma-4-26b-a4b-it` takes both.
 
-To bill at your own ResetData rates instead, set per-token costs in USD on the deployment. On a model with prompt caching, like `resetdata/zai/glm-5.3` and `resetdata/deepseek/deepseek-v4-flash`, also set `cache_read_input_token_cost`, or LiteLLM bills cached tokens at the catalog rate. The values below are an example, not ResetData's prices:
+To bill at your own ResetData rates instead, set per-token costs in USD on the deployment. On a model with prompt caching, like `resetdata/zai/glm-5.3` and `resetdata/deepseek/deepseek-v4-flash`, also set `cache_read_input_token_cost`, or LiteLLM bills cached tokens at the catalog rate. Give the deployment its own `model_name`, since LiteLLM load-balances deployments that share one. The values below are an example, not ResetData's prices:
 
 ```yaml
 model_list:
-  - model_name: resetdata-glm-5.3
+  - model_name: resetdata-glm-5.3-own-rates
     litellm_params:
       model: resetdata/zai/glm-5.3
       api_key: os.environ/RESETDATA_API_KEY
