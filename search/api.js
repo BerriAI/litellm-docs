@@ -1,5 +1,6 @@
 const {answerQuestion} = require('./answer');
 const {createHash, timingSafeEqual} = require('node:crypto');
+const {getTracing} = require('./tracing');
 
 function authorizedService(req, secret) {
   if (!secret || typeof req.headers.authorization !== 'string') return false;
@@ -56,7 +57,7 @@ async function readBody(req, signal, maxBytes = Infinity) {
 }
 function createAskHandler({index, documents, config, fetchImpl, now = Date.now, service = false}) {
   // The bot shares the answer engine and corpus, but never the website's model key.
-  if (service) config = {...config, apiKey: config.botApiKey, tracing: {
+  if (service) config = {...config, apiKey: config.botApiKey, oidcEnabled: false, tracing: {
     ...config.tracing, key: config.botTracingKey || config.tracing?.key, surface: 'slack',
   }};
   const clients = new Map();
@@ -83,6 +84,11 @@ function createAskHandler({index, documents, config, fetchImpl, now = Date.now, 
     }
     if (!service) {clients.set(client, count + 1); globalCount += 1;}
     active += 1;
+    const headerToken = req.headers['x-vercel-oidc-token'];
+    const useOidc = !service && config.oidcEnabled;
+    const oidcToken = useOidc && ((typeof headerToken === 'string' && headerToken.trim()) || config.vercelOidcToken);
+    // OIDC is an explicit cutover. Missing or rejected tokens never use a saved key.
+    const requestConfig = useOidc ? {...config, oidcToken} : config;
     const controller = new AbortController();
     const disconnected = () => {if (!res.writableEnded) controller.abort();};
     res.on('close', disconnected);
@@ -105,7 +111,7 @@ function createAskHandler({index, documents, config, fetchImpl, now = Date.now, 
           await once(res, 'drain', {signal: requestSignal});
         }
       } : undefined;
-      const result = await answerQuestion({question: question.trim(), history, index, documents, config,
+      const result = await answerQuestion({question: question.trim(), history, index, documents, config: requestConfig,
         traceContext, onTraceContext: value => res.setHeader('X-Docs-Trace-Context', value),
         signal: requestSignal, fetchImpl, onEvent});
       if (streaming && result.status === 200) {
@@ -118,7 +124,11 @@ function createAskHandler({index, documents, config, fetchImpl, now = Date.now, 
         return send(res, 422, {error: 'This conversation exceeds the model context window. Start a new conversation or send less context.'});
       }
       return send(res, 502, {error: 'Ask AI is temporarily unavailable. Please try again or use document search.'});
-    } finally { active -= 1; res.off('close', disconnected); }
+    } finally {
+      active -= 1;
+      res.off('close', disconnected);
+      if (requestConfig !== config) await getTracing(requestConfig).shutdown().catch(() => {});
+    }
   };
 }
 module.exports = {createAskHandler, allowAI, send, validBody, readBody, loopback};

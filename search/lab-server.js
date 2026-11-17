@@ -71,7 +71,7 @@ async function start() {
   const corpus = await loadCorpus(corpusDir);
   let pageStructure = {};
   try {pageStructure = JSON.parse(await fs.readFile(path.join(corpusDir, 'search-structure.json'), 'utf8')).pages;} catch (error) {if (error.code !== 'ENOENT') throw error;}
-  const config = {apiKey: process.env.DOCS_AI_API_KEY, baseUrl: process.env.DOCS_AI_BASE_URL || 'https://gateway.litellm-sandbox.ai'};
+  const config = {apiKey: process.env.DOCS_AI_API_KEY || process.env.LITELLM_PROXY_API_KEY, baseUrl: process.env.DOCS_AI_BASE_URL || process.env.LITELLM_PROXY_API_BASE};
   if (!config.apiKey) throw new Error('Set DOCS_AI_API_KEY in .env.local or specify DOCS_AI_ENV_FILE.');
   const ranker = createReranker({...corpus, pageStructure, config});
   const html = await fs.readFile(path.join(__dirname, 'lab.html'), 'utf8');
