@@ -58,7 +58,7 @@ Cost tracking in LiteLLM uses the Auto-route prices above. For a key pinned to a
 
 Cache reads cost $0.30 per million tokens on Kimi, $0.105 on DeepSeek Abliterated, $0.004 on DeepSeek Flash Fast, $0.45 on GLM-5.3-Abliterated and $0.075 on GLM-5.3-Flash-Abliterated. These five publish no cache-write price; caching is automatic. The cost map also includes the published Claude, GPT and Grok cache prices, including Claude's one-hour writes.
 
-Kimi K3.1 Pro always reasons, with `low`, `high` and `max` efforts and `low` as the default. Use base64 data URIs for images. Public image URLs, forced named-tool calls and strict response schemas are not covered by this integration's verified capabilities. See the [Kimi model guide](https://api.topxai.xyz/docs/kimi-k3-1-pro).
+Kimi K3.1 Pro always reasons, with `low`, `high` and `max` efforts and `low` as the default. Send images as base64 data URIs. Kimi does not fetch public image URLs. To select one function, pass a `tool_choice` object with `type="function"` and the name in `function.name`. Kimi ignores `tool_choice="none"`, `tool_choice="required"` and the `json_schema` response format. For JSON output, use `json_object` and validate the result in your application. See the [Kimi model guide](https://api.topxai.xyz/docs/kimi-k3-1-pro).
 
 `kimi-k3`, `deepseek-flash`, `deepseek-v4-pro` and `claude-fable-5-1` are retired; Claude Fable 5.2 replaced Fable 5.1 on November 10, 2026. On November 18, `gpt-6.2-astra` replaced `gpt-6-astra` and `gpt-6.2-sol` replaced `gpt-6.1-sol`. Select a current model explicitly. TopxAI rejects retired IDs with HTTP 403 and does not alias them to a replacement.
 
