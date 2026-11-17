@@ -12,28 +12,30 @@ https://api.topxai.xyz/docs
 
 :::tip
 
-Use `model="topxai/<model-id>"` for the text models below. Endpoint support varies by model.
+Use `model="topxai/<model-id>"` for the text models below. This prefix requires a LiteLLM build that includes the [TopxAI provider](https://github.com/BerriAI/litellm/pull/41919).
 
 :::
 
 | Property | Details |
 |-------|-------|
-| Description | One OpenAI- and Anthropic-compatible endpoint for Claude, GPT and Grok, and private GLM, Kimi and DeepSeek deployments, at fixed USD prices on prepaid credit; prompts and completions are relayed in memory and never stored. |
+| Description | One OpenAI- and Anthropic-compatible endpoint for Claude, GPT and Grok, and private GLM, Kimi and DeepSeek deployments, at fixed USD prices on prepaid credit. TopxAI processes prompts and completions in memory. Its usage log stores request metadata. Upstream providers have their own retention policies. [TopxAI usage logs](https://api.topxai.xyz/docs/reading-your-usage-log) |
 | Provider Route on LiteLLM | `topxai/` |
 | Supported Endpoints | `/chat/completions`, `/responses` |
 | API Reference | [TopxAI API reference](https://api.topxai.xyz/docs/api-reference) |
 
 ## Required Variables
 
-```python showLineNumbers title="Environment Variables"
-os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key, from https://api.topxai.xyz/keys
+Create a [TopxAI API key](https://api.topxai.xyz/keys) and set it in the shell that runs LiteLLM.
+
+```bash showLineNumbers title="Environment Variables"
+export TOPXAI_API_KEY="your-topxai-api-key"
 ```
 
 `TOPXAI_API_BASE` overrides the default base URL `https://api.topxai.xyz/v1`.
 
 ## Available Models
 
-The live table is at https://api.topxai.xyz/pricing and as JSON at `GET https://api.topxai.xyz/api/pricing`. The following models and Auto-route prices were checked on November 10, 2026, with the GPT-6.2 rows updated on November 18. Prices are USD per million tokens.
+The live table is at https://api.topxai.xyz/pricing and as JSON at `GET https://api.topxai.xyz/api/pricing`. All twelve model IDs and their Auto-route input and output prices were checked on November 18, 2026. Prices are USD per million tokens.
 
 | Model | Input | Output | Notes |
 |-------|-------|--------|-------|
@@ -66,9 +68,7 @@ Kimi K3.1 Pro always reasons, with `low`, `high` and `max` efforts and `low` as 
 
 ```python keep-model-ids showLineNumbers title="TopxAI Text Generation"
 from litellm import completion
-import os
 
-os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key
 response = completion(
     model="topxai/claude-sonnet-5-5",
     messages=[{"role": "user", "content": "What is LiteLLM?"}]
@@ -78,9 +78,7 @@ print(response)
 
 ```python keep-model-ids showLineNumbers title="TopxAI Text Generation - Streaming"
 from litellm import completion
-import os
 
-os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key
 stream = completion(
     model="topxai/gpt-6.2-sol",
     messages=[{"role": "user", "content": "What is LiteLLM?"}],
@@ -98,9 +96,7 @@ The GPT models, `grok-4.7`, `kimi-k3.1-pro`, both DeepSeek models and `GLM-5.3-F
 
 ```python keep-model-ids showLineNumbers title="TopxAI Responses API"
 import litellm
-import os
 
-os.environ["TOPXAI_API_KEY"] = ""  # your TopxAI API key
 response = litellm.responses(
     model="topxai/gpt-6.2-sol",
     input="What is LiteLLM?",
@@ -145,7 +141,7 @@ from openai import OpenAI
 
 client = OpenAI(
     api_key="your-proxy-api-key",
-    base_url="http://0.0.0.0:4000"
+    base_url="http://localhost:4000/v1"
 )
 
 response = client.chat.completions.create(
@@ -160,7 +156,7 @@ print(response.choices[0].message.content)
 <TabItem value="curl" label="cURL">
 
 ```bash keep-model-ids showLineNumbers title="TopxAI via Proxy - cURL"
-curl http://0.0.0.0:4000/v1/chat/completions \
+curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-proxy-api-key" \
   -d '{
