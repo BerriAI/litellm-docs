@@ -1,12 +1,12 @@
 ---
 title: "ResetData API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "ResetData"
-description: "Call ResetData's GLM, Qwen, Gemma and DeepSeek models from the LiteLLM Python SDK or AI Gateway, with streaming, reasoning_effort, USD spend tracking and the Messages and Responses bridges."
+description: "Call ResetData's GLM, Qwen, Gemma, DeepSeek and Whisper models from the LiteLLM Python SDK or AI Gateway, with streaming and USD spend tracking."
 ---
 
 # ResetData
 
-[ResetData](https://docs.resetdata.ai) is an Australian sovereign AI-inference platform with an OpenAI-compatible chat completions API. ResetData model ids are `provider/model` slugs, so full LiteLLM model ids have three segments, for example `resetdata/zai/glm-5.3`. LiteLLM removes only the `resetdata/` prefix before it sends the model value to ResetData.
+[ResetData](https://docs.resetdata.ai) is an Australian sovereign AI-inference platform with OpenAI-compatible chat completions and audio transcription APIs. ResetData model ids are `provider/model` slugs, so full LiteLLM model ids have three segments, for example `resetdata/zai/glm-5.3`. LiteLLM removes only the `resetdata/` prefix before it sends the model value to ResetData.
 
 <SinceVersion v="1.112.0" />
 
@@ -20,7 +20,7 @@ Provider support was added in [PR #50819](https://github.com/BerriAI/litellm/pul
 | API key environment variable | `RESETDATA_API_KEY` |
 | Default API base | `https://api.resetdata.ai/api/v1` |
 | Optional API base override | `RESETDATA_API_BASE` or the `api_base` parameter |
-| Upstream endpoint | `/chat/completions` |
+| Upstream endpoints | `/chat/completions`, `/audio/transcriptions` |
 | Provider documentation | [ResetData docs](https://docs.resetdata.ai) |
 
 ## Setup
@@ -65,7 +65,7 @@ for chunk in response:
 
 Several ResetData models support reasoning, and reasoning tokens count toward `max_tokens`. Leave enough room for both, or the response can end before any visible text.
 
-LiteLLM accepts `reasoning_effort` only for the reasoning models in the table below. For any other ResetData model, including one ResetData lists with reasoning that isn't in the table, LiteLLM rejects `reasoning_effort` with `UnsupportedParamsError` before it calls ResetData. Set `drop_params=True` on the call, or `drop_params: true` under `litellm_settings` on the Gateway, to drop the parameter and send the rest of the request.
+LiteLLM accepts `reasoning_effort` only for the reasoning models in the table below. For any other ResetData model, including one ResetData lists with reasoning that isn't in the table, LiteLLM rejects `reasoning_effort` with `UnsupportedParamsError` before it calls ResetData. Set `drop_params=True` on the call, or `drop_params: true` under `litellm_settings` on the Gateway, to drop the parameter and send the rest of the request. To send `reasoning_effort` to ResetData anyway, pass `allowed_openai_params=["reasoning_effort"]` on the call, or set `allowed_openai_params: ["reasoning_effort"]` in the deployment's `litellm_params`. ResetData answers 400 if the model doesn't support it.
 
 ## LiteLLM Gateway
 
@@ -124,9 +124,32 @@ The proxy returns an OpenAI-format chat completion. The usage block reports reas
 
 LiteLLM also accepts [Anthropic Messages](/docs/anthropic_unified) and [Responses API](/docs/response_api) requests for ResetData models through its translation layer. These requests use ResetData's chat completions endpoint, not native ResetData Messages or Responses endpoints.
 
+## Audio Transcription
+
+ResetData serves `openai/whisper-large-v3-turbo` on its OpenAI-compatible `/audio/transcriptions` endpoint. Add it to the Gateway configuration:
+
+```yaml
+model_list:
+  - model_name: resetdata-whisper
+    litellm_params:
+      model: resetdata/openai/whisper-large-v3-turbo
+      api_key: os.environ/RESETDATA_API_KEY
+```
+
+Then send an audio file to the Gateway:
+
+```bash
+curl http://localhost:4000/v1/audio/transcriptions \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -F model=resetdata-whisper \
+  -F file=@speech.wav
+```
+
+The Gateway returns `{"text": "..."}` with the transcript. From the SDK, call `litellm.transcription(model="resetdata/openai/whisper-large-v3-turbo", file=open("speech.wav", "rb"))`.
+
 ## Supported Models
 
-These ResetData models are in the LiteLLM catalog with their context windows, output caps and prices, so LiteLLM tracks spend for them in USD. ResetData bills in Australian dollars, excluding GST. The catalog prices are ResetData's AUD prices converted at 1 AUD = 0.67566 USD, the European Central Bank reference rate for November 16, 2026. So tracked spend drifts from your ResetData invoice as the AUD moves, and it leaves out the GST your invoice adds.
+These ResetData models are in the LiteLLM catalog with their context windows, output caps and prices, so LiteLLM tracks spend for them in USD. ResetData bills in Australian dollars, excluding GST. The catalog prices are ResetData's AUD prices converted at 1 AUD = 0.67566 USD, derived from the European Central Bank's euro reference rates for November 16, 2026. So tracked spend drifts from your ResetData invoice as the AUD moves, and it leaves out the GST your invoice adds.
 
 | Model | Context window | Max output tokens | Reasoning | Vision |
 |-------|----------------|-------------------|-----------|--------|
@@ -136,9 +159,11 @@ These ResetData models are in the LiteLLM catalog with their context windows, ou
 | `resetdata/google/gemma-4-26b-a4b-it` | 262,144 | 8,192 | No | Yes |
 | `resetdata/deepseek/deepseek-v4-flash` | 1,048,576 | 65,536 | Yes | No |
 
+`resetdata/openai/whisper-large-v3-turbo` is in the catalog too. ResetData prices audio per minute of input, and LiteLLM tracks it per second of audio at the same converted rate.
+
 `resetdata/qwen/qwen3.8-27b` takes images as base64 data URLs. ResetData answers an image URL on that model with a 500 error, while `resetdata/google/gemma-4-26b-a4b-it` takes both.
 
-To bill at your own ResetData rates instead, set per-token costs in USD on the deployment. The values below are an example, not ResetData's prices:
+To bill at your own ResetData rates instead, set per-token costs in USD on the deployment. On a model with prompt caching, like `resetdata/zai/glm-5.3` and `resetdata/deepseek/deepseek-v4-flash`, also set `cache_read_input_token_cost`, or LiteLLM bills cached tokens at the catalog rate. The values below are an example, not ResetData's prices:
 
 ```yaml
 model_list:
@@ -148,4 +173,5 @@ model_list:
       api_key: os.environ/RESETDATA_API_KEY
       input_cost_per_token: 0.0000006
       output_cost_per_token: 0.0000022
+      cache_read_input_token_cost: 0.0000001
 ```
