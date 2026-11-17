@@ -67,7 +67,7 @@ const COLUMNS = [
       featured: [
         {id: 'gateway', icon: 'gateway', title: 'AI Gateway', desc: 'Route and control LLM traffic', to: '/docs/simple_proxy'},
         {id: 'router', icon: 'router', title: 'Auto Router', desc: 'Best model for each request', to: '/docs/auto_router'},
-        {id: 'subscriptions', icon: 'subscriptions', title: 'Claude, Codex & Copilot', desc: 'Use your existing subscriptions', to: '/docs/subscriptions'},
+        {id: 'subscriptions', icon: 'subscriptions', title: 'AI Subscriptions', desc: 'Claude, Codex, Copilot, Cursor', to: '/docs/subscriptions'},
       ],
       items: [
         {id: 'logs', icon: 'logs', title: 'Logging & Observability', short: 'Logging', desc: 'Logs, spend, and callbacks', to: '/docs/proxy/logging'},

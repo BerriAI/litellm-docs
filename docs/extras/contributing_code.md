@@ -101,7 +101,7 @@ uv sync --group dev --extra proxy
 
 ### 2. Adding tests
 
-- Add your tests to the [`tests/test_litellm/` directory](https://github.com/BerriAI/litellm/tree/main/tests/litellm).
+- Add your tests to the [`tests/unit/` directory](https://github.com/BerriAI/litellm/tree/main/tests/unit).
 - This directory mirrors the `litellm/` directory 1:1 and should **only** contain mocked tests.
 - **Do not** add real LLM API calls to this directory.
 

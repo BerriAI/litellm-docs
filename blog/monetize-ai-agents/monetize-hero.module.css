@@ -1,4 +1,4 @@
-:global(html:has(#customer-portal-title)) {
+:global(html:has(#monetize-agents-title)) {
   --ifm-background-color: #020304;
   --ifm-background-surface-color: #0d0f12;
   --ifm-navbar-background-color: #020304;
@@ -28,7 +28,7 @@
   --aurora-shadow: none;
 }
 
-:global(html:has(#customer-portal-title)) .byline {
+:global(html:has(#monetize-agents-title)) .byline {
   --lb-ink: #f4f5f7;
   --lb-text: #c6c9cf;
   --lb-muted: #969ca7;
@@ -38,14 +38,14 @@
   max-width: min(960px, calc(100% - 48px));
 }
 
-:global(html:has(#customer-portal-title)) .byline > div {
+:global(html:has(#monetize-agents-title)) .byline > div {
   width: 100%;
   flex-direction: column;
   align-items: stretch;
   gap: 16px;
 }
 
-:global(html:has(#customer-portal-title)) .byline > div > div {
+:global(html:has(#monetize-agents-title)) .byline > div > div {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: start;
@@ -53,56 +53,56 @@
   width: 100%;
 }
 
-:global(html:has(#customer-portal-title)) .byline > div > div > span {
+:global(html:has(#monetize-agents-title)) .byline > div > div > span {
   max-width: none;
 }
 
-:global(html:has(#customer-portal-title)) .byline b {
+:global(html:has(#monetize-agents-title)) .byline b {
   white-space: nowrap;
 }
 
-:global(html:has(#customer-portal-title) .navbar__logo img) {
+:global(html:has(#monetize-agents-title) .navbar__logo img) {
   filter: brightness(0) invert(1);
 }
 
-:global(html:has(#customer-portal-title) article .markdown) {
+:global(html:has(#monetize-agents-title) article .markdown) {
   color: #c6c9cf;
 }
 
-:global(html:has(#customer-portal-title) article .markdown :is(h2, h3)) {
+:global(html:has(#monetize-agents-title) article .markdown :is(h2, h3)) {
   color: #f4f5f7;
 }
 
-:global(html:has(#customer-portal-title) article .markdown a:not(.button)) {
+:global(html:has(#monetize-agents-title) article .markdown a:not(.button)) {
   color: #739bff;
 }
 
-:global(html:has(#customer-portal-title) article .markdown a:not(.button):hover) {
+:global(html:has(#monetize-agents-title) article .markdown a:not(.button):hover) {
   color: #adc2ff;
 }
 
-:global(html:has(#customer-portal-title) article .markdown :not(pre) > code) {
+:global(html:has(#monetize-agents-title) article .markdown :not(pre) > code) {
   color: #dbe3f2;
   background: #111419;
   border-color: #2b2f35;
 }
 
-:global(html:has(#customer-portal-title) article .markdown pre code),
-:global(html:has(#customer-portal-title) article .markdown pre code span) {
+:global(html:has(#monetize-agents-title) article .markdown pre code),
+:global(html:has(#monetize-agents-title) article .markdown pre code span) {
   color: #dbe3f2 !important;
 }
 
-:global(html:has(#customer-portal-title) .lite-footer) {
+:global(html:has(#monetize-agents-title) .lite-footer) {
   background: #020304;
   border-top: 1px solid #20242b;
 }
 
-:global(html:has(#customer-portal-title) .lite-footer form [type='submit']) {
+:global(html:has(#monetize-agents-title) .lite-footer form [type='submit']) {
   background: #174bff;
   color: #f4f5f7 !important;
 }
 
-:global(html:has(#customer-portal-title) .lite-footer form [type='submit']:hover:not(:disabled)) {
+:global(html:has(#monetize-agents-title) .lite-footer form [type='submit']:hover:not(:disabled)) {
   background: #3260ff;
 }
 
@@ -125,6 +125,68 @@
   width: 100%;
   margin: 0 auto;
   aspect-ratio: 16 / 9;
+}
+
+.setupCta {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  margin: 32px 0;
+  padding: 22px 24px;
+  border: 1px solid var(--ifm-color-emphasis-300, #2b2f35);
+  border-radius: 12px;
+  background: var(--ifm-background-surface-color, #0d0f12);
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.setupCta > div > p {
+  margin: 0;
+  color: var(--ifm-heading-color, #f4f5f7);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.setupCta .setupCtaFollowup {
+  margin-top: 8px;
+  color: var(--ifm-color-emphasis-700, #aeb7c6);
+  font-size: 14px;
+}
+
+.setupCtaButton {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  border: 1px solid #739bff;
+  border-radius: 8px;
+  background: #174bff;
+  color: #fff !important;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: none !important;
+}
+
+.setupCtaButton:hover {
+  background: #3260ff;
+}
+
+.setupCtaButton:focus-visible {
+  outline: 2px solid #adc2ff;
+  outline-offset: 4px;
+}
+
+@media (max-width: 760px) {
+  .setupCta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .setupCtaButton {
+    text-align: center;
+  }
 }
 
 .scene {
@@ -227,7 +289,7 @@
 }
 
 @media (max-width: 760px) {
-  :global(html:has(#customer-portal-title)) .byline > div > div {
+  :global(html:has(#monetize-agents-title)) .byline > div > div {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px 24px;
   }
@@ -259,5 +321,64 @@
   .heading .subtitle {
     margin-top: 0.7em;
     font-size: clamp(12px, 3.15vw, 24px);
+  }
+}
+
+/* "Monetize your AI agent" is longer than the launch title; keep it on one line on phones so the
+   subtitle clears the gateway in the compact scene. */
+@media (max-width: 760px) {
+  .heading h1 {
+    font-size: clamp(30px, 8.4vw, 64px) !important;
+    white-space: nowrap;
+  }
+}
+
+/* This post's hero is a compact band, smaller than the launch post's full-screen hero. */
+.hero {
+  min-height: 0;
+  padding: clamp(36px, 5vw, 72px) 0 clamp(12px, 2vw, 28px);
+}
+
+.canvas {
+  aspect-ratio: auto;
+  max-width: 1280px;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+.heading {
+  position: static;
+  margin-bottom: clamp(8px, 1.5vw, 20px);
+}
+
+.heading h1 {
+  font-size: clamp(40px, 4.8vw, 80px) !important;
+}
+
+.heading .subtitle {
+  font-size: clamp(15px, 1.35vw, 22px);
+}
+
+@media (max-width: 760px) {
+  .canvas {
+    aspect-ratio: auto;
+    padding: 0 16px;
+  }
+
+  .heading {
+    position: static;
+  }
+
+  .heading h1 {
+    font-size: clamp(30px, 8.4vw, 64px) !important;
+  }
+}
+
+/* Below 1024px the three side-by-side cards get too small to read, so the stacked scene takes
+   over. Cap its width so it does not grow taller than the screen on tablets. */
+@media (max-width: 1024px) {
+  .scene {
+    max-width: 640px;
+    margin: 0 auto;
   }
 }
