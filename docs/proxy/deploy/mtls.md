@@ -19,7 +19,7 @@ Use a dedicated API hostname in private DNS, such as `llm-api.example.com`. Clie
 
 ## LiteLLM configuration {#configure-litellm-identity}
 
-Add this mapping to `config.yaml`:
+For ingresses other than AWS ALB, add this mapping to `config.yaml`. AWS uses [`mtls_client_auth`](#aws-application-load-balancer) instead.
 
 ```yaml
 general_settings:
@@ -30,7 +30,7 @@ general_settings:
 
 This mapping stores the workload identity in LiteLLM's [customer ID field](../customers.md) for usage tracking and access policies. The field can identify a service, agent, or application. The virtual key selects the LiteLLM user and team.
 
-Except for AWS, each ingress overwrites `X-MTLS-Client-ID` and removes `X-LiteLLM-Customer-ID` and `X-LiteLLM-End-User-ID`. Those standard headers take precedence over this mapping. NGINX, HAProxy, and Kong map approved certificates to workload aliases. Azure and GCP forward IDs from certificates that pass CA validation. AWS uses custom auth to approve the issuer and subject, then maps the ALB subject header to the customer ID as shown below.
+Except for AWS, each ingress overwrites `X-MTLS-Client-ID` and removes `X-LiteLLM-Customer-ID` and `X-LiteLLM-End-User-ID`. Those standard headers take precedence over this mapping. NGINX, HAProxy, and Kong map approved certificates to workload aliases. Azure and GCP forward IDs from certificates that pass CA validation. AWS uses native certificate approval to record an approved alias or the certificate subject as the customer ID.
 
 Close alternate listeners, node ports, and default service URLs that bypass the ingress. Apply the policy to every route on the API hostname. These examples expose `/v1/` and preserve `Authorization`.
 
@@ -38,7 +38,7 @@ Configure backend HTTPS separately from frontend mTLS. LiteLLM's [`--ssl_certfil
 
 ## AWS Application Load Balancer
 
-Use an **internal ALB** with an HTTPS listener and an HTTPS target group that points directly to LiteLLM. ALB validates the client certificate. LiteLLM custom auth approves the certificate's issuer and subject and passes the supplied key to normal LiteLLM authentication. Allow inbound traffic to LiteLLM only from the ALB security group.
+Use an **internal ALB** with an HTTPS listener and an HTTPS target group that points directly to LiteLLM. ALB validates the client certificate. LiteLLM's `mtls_client_auth` approves the certificate's issuer and subject before normal virtual-key authentication. Allow inbound traffic to LiteLLM only from the ALB security group.
 
 <IngressArchitecture kind="mtls-aws" />
 
@@ -66,60 +66,24 @@ aws elbv2 modify-listener \
 
 ### Identity forwarding
 
-:::info Enterprise feature
-
-Returning a key string from custom auth requires LiteLLM Enterprise. See [Accept Virtual Keys alongside custom credentials](../custom_auth.md#support-litellm-virtual-keys--custom-auth).
-
-:::
-
-Save this as `alb_auth.py` beside `config.yaml`. Replace the approved set with your leaf certificates' exact [ALB issuer and subject header values](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/mutual-authentication.html#mtls-http-headers-verify). Renewals with the same issuer and subject keep the same identity.
-
-```python title="alb_auth.py"
-from fastapi import Request
-
-from litellm.proxy._types import ProxyException
-
-
-APPROVED_CLIENTS = {("CN=WorkloadCA,O=Example", "CN=billing-worker,O=Example")}
-IDENTITY_HEADERS = (
-    "x-litellm-customer-id",
-    "x-litellm-end-user-id",
-)
-
-
-async def user_api_key_auth(request: Request, api_key: str) -> str:
-    if any(name in request.headers for name in IDENTITY_HEADERS):
-        raise ProxyException(
-            message="Client-supplied workload identity is not allowed",
-            type="auth_error", param=None, code=403,
-        )
-
-    issuers = request.headers.getlist("x-amzn-mtls-clientcert-issuer")
-    subjects = request.headers.getlist("x-amzn-mtls-clientcert-subject")
-    if (
-        len(issuers) != 1
-        or len(subjects) != 1
-        or (issuers[0], subjects[0]) not in APPROVED_CLIENTS
-    ):
-        raise ProxyException(
-            message="Client certificate is missing or not approved",
-            type="auth_error", param=None, code=403,
-        )
-
-    return api_key
-```
-
-Configure [custom auth](../custom_auth.md) without `mode: auto`, so a failed certificate check cannot fall back to key-only authentication:
+This setup requires a LiteLLM version with `mtls_client_auth`. Configure the approved pairs using your leaf certificates' exact [ALB issuer and subject header values](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/mutual-authentication.html#mtls-http-headers-verify). Renewals with the same issuer and subject keep the same identity.
 
 ```yaml title="config.yaml"
 general_settings:
-  custom_auth: alb_auth.user_api_key_auth
-  user_header_mappings:
-    - header_name: x-amzn-mtls-clientcert-subject
-      litellm_user_role: customer
+  mtls_client_auth:
+    issuer_header: x-amzn-mtls-clientcert-issuer
+    subject_header: x-amzn-mtls-clientcert-subject
+    allowed_clients:
+      - issuer: "CN=WorkloadCA,O=Example"
+        subject: "CN=billing-worker,O=Example"
+        end_user_id: billing-worker
 ```
 
-The handler approves the issuer and subject without changing request headers. The mapping records the subject DN, such as `CN=billing-worker,O=Example`, as the customer ID ahead of any `user` field in the request body. The returned key still controls the LiteLLM user, team, models, and budget.
+The header names shown are the defaults and can be changed. Header names are case-insensitive, but issuer and subject values must match an approved pair exactly. An empty `allowed_clients` list denies every authenticated request.
+
+On routes that require authentication, missing, duplicate, or unapproved certificate headers return `403` before key validation. Client-supplied `X-LiteLLM-Customer-ID`, `X-LiteLLM-End-User-ID`, or customer-role headers configured in `user_header_mappings` also return `403`. An approved certificate with an invalid virtual key returns `401`. Public routes remain unchanged.
+
+The optional `end_user_id` records `billing-worker` as the customer/end-user ID. If omitted, LiteLLM records the subject DN. This identity takes precedence over request-body `user` and metadata values. The virtual key still controls the LiteLLM user, team, models, and budget. This setup needs no custom auth or header mapping.
 
 AWS's [mTLS documentation](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/mutual-authentication.html#mtls-http-headers) does not specify whether ALB overwrites or strips matching client-supplied headers. Keep the default header names and verify that clients cannot replace the certificate fields before production use, since rejecting duplicates alone does not prove their source.
 
