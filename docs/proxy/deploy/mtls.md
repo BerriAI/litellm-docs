@@ -30,7 +30,7 @@ general_settings:
 
 This mapping stores the workload identity in LiteLLM's [customer ID field](../customers.md) for usage tracking and access policies. The field can identify a service, agent, or application. The virtual key selects the LiteLLM user and team.
 
-Each ingress overwrites `X-MTLS-Client-ID` and removes `X-LiteLLM-Customer-ID` and `X-LiteLLM-End-User-ID`. Those standard headers take precedence over this mapping. AWS, NGINX, HAProxy, and Kong map approved certificates to workload aliases. Azure and GCP forward IDs from certificates that pass CA validation.
+Except for AWS, each ingress overwrites `X-MTLS-Client-ID` and removes `X-LiteLLM-Customer-ID` and `X-LiteLLM-End-User-ID`. Those standard headers take precedence over this mapping. NGINX, HAProxy, and Kong map approved certificates to workload aliases. Azure and GCP forward IDs from certificates that pass CA validation. AWS uses the LiteLLM custom auth configuration below instead of this mapping.
 
 Close alternate listeners, node ports, and default service URLs that bypass the ingress. Apply the policy to every route on the API hostname. These examples expose `/v1/` and preserve `Authorization`.
 
@@ -38,7 +38,7 @@ Configure backend HTTPS separately from frontend mTLS. LiteLLM's [`--ssl_certfil
 
 ## AWS Application Load Balancer
 
-Use an **internal ALB** with an HTTPS listener and a private NGINX target group. ALB validates the client certificate. NGINX maps the verified certificate fields to a workload alias before it forwards to LiteLLM.
+Use an **internal ALB** with an HTTPS listener and an HTTPS target group that points directly to LiteLLM. ALB validates the client certificate. LiteLLM custom auth maps the certificate fields to an approved workload and passes the supplied key to normal LiteLLM authentication. Allow inbound traffic to LiteLLM only from the ALB security group.
 
 <IngressArchitecture kind="mtls-aws" />
 
@@ -66,50 +66,67 @@ aws elbv2 modify-listener \
 
 ### Identity forwarding
 
-Place this configuration inside NGINX's `http` block. Replace the issuer and serial with an approved certificate's [ALB header values](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/mutual-authentication.html#mutual-authentication-http-headers). Replace the example subnet with the ALB subnets. The security group must also allow only the ALB security group.
+:::info Enterprise feature
 
-```nginx
-map "$http_x_amzn_mtls_clientcert_issuer|$http_x_amzn_mtls_clientcert_serial_number" $mtls_client_id {
-    default "";
-    "CN=WorkloadCA,O=Example|01" billing-worker;
-}
+Returning a key string from custom auth requires LiteLLM Enterprise. See [Accept Virtual Keys alongside custom credentials](../custom_auth.md#support-litellm-virtual-keys--custom-auth).
 
-server {
-    listen 443 ssl;
-    server_name mtls-mapper.internal;
-    ssl_certificate /etc/nginx/tls/server-chain.pem;
-    ssl_certificate_key /etc/nginx/tls/server-key.pem;
-    allow 10.20.0.0/24;
-    deny all;
+:::
 
-    location /v1/ {
-        if ($mtls_client_id = "") { return 403; }
-        proxy_pass https://litellm.internal:4000;
-        proxy_ssl_server_name on;
-        proxy_ssl_name litellm.internal;
-        proxy_ssl_trusted_certificate /etc/nginx/tls/origin-ca.pem;
-        proxy_ssl_verify on;
-        proxy_ssl_verify_depth 3;
-        proxy_set_header Host litellm.internal;
-        proxy_set_header Authorization $http_authorization;
-        proxy_set_header X-MTLS-Client-ID $mtls_client_id;
-        proxy_set_header X-LiteLLM-Customer-ID "";
-        proxy_set_header X-LiteLLM-End-User-ID "";
-        proxy_http_version 1.1;
-        proxy_set_header Connection "";
-        proxy_buffering off;
-        proxy_read_timeout 300s;
-        proxy_next_upstream off;
-    }
+Save this as `alb_auth.py` beside `config.yaml`. Replace the approved map with your leaf certificates' exact [ALB issuer and serial header values](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/mutual-authentication.html#mtls-http-headers-verify). A certificate renewal needs a new map entry.
 
-    location = /ingress-health { return 200; }
-    location / { return 404; }
-}
+```python title="alb_auth.py"
+from fastapi import Request
+from starlette.datastructures import Headers, MutableHeaders
+
+from litellm.proxy._types import ProxyException
+
+
+APPROVED_WORKLOADS = {"CN=WorkloadCA,O=Example|01": "billing-worker"}
+IDENTITY_HEADERS = (
+    "x-litellm-customer-id",
+    "x-litellm-end-user-id",
+    "x-mtls-client-id",
+)
+
+
+async def user_api_key_auth(request: Request, api_key: str) -> str:
+    if any(name in request.headers for name in IDENTITY_HEADERS):
+        raise ProxyException(
+            message="Client-supplied workload identity is not allowed",
+            type="auth_error", param=None, code=403,
+        )
+
+    issuers = request.headers.getlist("x-amzn-mtls-clientcert-issuer")
+    serials = request.headers.getlist("x-amzn-mtls-clientcert-serial-number")
+    workload = (
+        APPROVED_WORKLOADS.get(f"{issuers[0]}|{serials[0]}")
+        if len(issuers) == 1 and len(serials) == 1 else None
+    )
+    if workload is None:
+        raise ProxyException(
+            message="Client certificate is missing or not approved",
+            type="auth_error", param=None, code=403,
+        )
+
+    MutableHeaders(scope=request.scope)["x-litellm-customer-id"] = workload
+    request._headers = Headers(scope=request.scope)
+    if hasattr(request.state, "_cached_headers"):
+        del request.state._cached_headers
+    return api_key
 ```
 
-Keep NGINX's source IP check on the direct connection. Do not configure `real_ip_header` on this mapper. Empty, duplicate, or unlisted issuer/serial pairs fail the map. LiteLLM records `billing-worker` as the workload ID.
+Configure [custom auth](../custom_auth.md) without `mode: auto`, so a failed certificate check cannot fall back to key-only authentication:
 
-Set the target group's health-check path to `/ingress-health`. Keep the ALB listener rule limited to `/v1/*`. This probe checks NGINX. Monitor LiteLLM readiness separately.
+```yaml title="config.yaml"
+general_settings:
+  custom_auth: alb_auth.user_api_key_auth
+```
+
+The handler sets the standard customer ID header before normal key authentication reads end-user identity. It refreshes Starlette's header view and clears LiteLLM's cached headers so later reads see the approved alias. No `user_header_mappings` is needed for AWS. LiteLLM records `billing-worker` as the customer ID, ahead of any `user` field in the request body. The returned key still controls the LiteLLM user, team, models, and budget. Test this header-cache behavior when you upgrade LiteLLM.
+
+AWS documents that verify mode adds certificate headers, but its [mTLS documentation](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/mutual-authentication.html#mtls-http-headers) and [header modification documentation](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/header-modification.html#rename-header) do not specify whether matching client-supplied headers are overwritten or stripped. Do not assume this protection. Before production use, verify that forged issuer and serial headers cannot replace the certificate fields on your ALB. The handler rejects duplicate fields, but this alone does not prove their source. Keep default ALB header names for this example.
+
+Keep the ALB listener rule limited to `/v1/*`. Configure a private target health check separately from API authentication. Do not expose a second listener or direct LiteLLM route that bypasses ALB certificate validation.
 
 **ALB encrypts HTTPS backend traffic but does not validate the backend certificate.** If your policy requires origin identity checks, choose an ingress that validates origin certificates. See [ALB target group protocols](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html).
 

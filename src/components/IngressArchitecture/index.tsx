@@ -57,19 +57,18 @@ function assertionSequence(edge: Actor, adapter: Actor, assertion: string, note:
 const sequences: Record<Kind, Sequence> = {
   'mtls-aws': {
     title: 'AWS ALB mTLS',
-    actors: [caller, alb, nginx, litellm],
+    actors: [caller, alb, litellm],
     events: [
       request(0, 1, 'TLS + client certificate'),
       action(1, 'Verify certificate'),
       request(0, 1, 'Request + key'),
       request(1, 2, 'Certificate fields + key'),
-      action(2, 'Map workload ID'),
-      request(2, 3, 'Workload ID + key'),
-      action(3, 'Check key + policies', 'Record workload ID'),
+      action(2, 'Custom auth: map workload'),
+      action(2, 'Check key + policies', 'Record workload ID'),
       response,
     ],
-    identity: 'X-MTLS-Client-ID + LiteLLM key',
-    note: 'NGINX maps the ALB certificate headers to an approved workload. LiteLLM uses the key for permissions and the workload ID for usage tracking and access policies.',
+    identity: 'Certificate issuer + serial number + LiteLLM key',
+    note: 'LiteLLM custom auth maps the ALB certificate fields to an approved workload. LiteLLM checks the key for permissions and records the workload as the customer ID.',
   },
   'mtls-azure': mtls(
     { name: ['Application', 'Gateway'], icon: 'cloud_icons/azure-application-gateways.svg' },
