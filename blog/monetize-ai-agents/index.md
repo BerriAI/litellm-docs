@@ -1,6 +1,6 @@
 ---
 slug: monetize-ai-agents
-title: "How to Monetize Your AI Agent Without Losing Margin"
+title: "Monetize Your AI Agent with LiteLLM Customer Management"
 date: 2026-11-16T09:00:00
 authors:
   - misbah
@@ -8,13 +8,24 @@ description: "Five ways AI-native companies charge for their agents, from prepai
 tags: [ai-gateway, spend-tracking, customer-portal]
 hide_table_of_contents: true
 custom_hero: true
+image: /img/blog/monetize-ai-agents/cover.png
+card_video: /img/blog/monetize-ai-agents/hero.mp4
 draft: false
 ---
 
+import Head from '@docusaurus/Head';
 import {PostByline} from '@theme/BlogPostPage';
 import MonetizeHero from './MonetizeHero';
 import {CreditWallet, SeatAllowances, UsageInvoice, PlanUpgrade, ModelTiers} from './MonetizeFigures';
 import styles from './monetize-hero.module.css';
+
+<Head>
+  <meta property="og:video" content="https://docs.litellm.ai/img/blog/monetize-ai-agents/hero.mp4" />
+  <meta property="og:video:secure_url" content="https://docs.litellm.ai/img/blog/monetize-ai-agents/hero.mp4" />
+  <meta property="og:video:type" content="video/mp4" />
+  <meta property="og:video:width" content="1200" />
+  <meta property="og:video:height" content="630" />
+</Head>
 
 <MonetizeHero />
 

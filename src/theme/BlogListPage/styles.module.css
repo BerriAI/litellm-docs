@@ -473,7 +473,8 @@
   background: var(--lb-ph-bg);
 }
 
-.cover img {
+.cover img,
+.cover video {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -483,7 +484,9 @@
 }
 
 .featured:hover .cover img,
-.tile:hover .cover img {
+.featured:hover .cover video,
+.tile:hover .cover img,
+.tile:hover .cover video {
   transform: scale(1.03);
 }
 
