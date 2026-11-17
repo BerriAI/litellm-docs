@@ -45,12 +45,12 @@ export function RequestPricing() {
           <strong className="fx-cost">${usdCost.toFixed(6)}</strong>
           <span className="fx-unit">USD</span>
           <div className="fx-equation">{currency} {nativeCost.toFixed(4)} × {example.usdRate}</div>
-          <small>Configured model prices stay the same</small>
+          <small>Prices applied to this request</small>
         </div>
       </div>
       <footer className="fx-footer"><span>Per-request overrides</span><span>Streaming + non-streaming</span><span>USD accounting</span></footer>
     </div>
-    <figcaption>Interactive illustration. Sample token counts, prices, and exchange rates, not live quotes. Pricing permissions are required.</figcaption>
+    <figcaption>Interactive illustration. Sample token counts, prices, and exchange rates. Enable request pricing to use your own values.</figcaption>
   </figure>;
 }
 
@@ -71,18 +71,17 @@ export function ReferenceRates() {
         <div className="fx-wire" aria-hidden="true"><i /><i /><i /></div>
         <div className="fx-request-stack"><span>EUR request <b>USD spend</b></span><span>JPY request <b>USD spend</b></span><span>EUR request <b>USD spend</b></span></div>
       </div>
-      <footer className="fx-footer"><span>Automatic lookup</span><span>Cached conversion</span><span>No lookup for USD-only requests</span></footer>
+      <footer className="fx-footer"><span>Automatic lookup</span><span>Cached conversion</span><span>Automatic refresh</span></footer>
     </div>
-    <figcaption>Conceptual flow with sample rates. Caches are held per worker. A non-USD request needs a usable rate before it can proceed.</figcaption>
+    <figcaption>Conceptual flow with sample rates. Each worker caches reference rates for reuse across requests.</figcaption>
   </figure>;
 }
 
 export function SpendDashboard() {
   const [currency, setCurrency] = useState('EUR');
   const [period, setPeriod] = useState('7');
-  const [unavailable, setUnavailable] = useState(false);
   const usdSpend = period === '7' ? 12 : 42;
-  const shown = unavailable ? 'USD' : currency;
+  const shown = currency;
   return <figure className="fx-figure">
     <div className="fx-panel fx-dashboard-panel">
       <header className="fx-heading">
@@ -96,18 +95,18 @@ export function SpendDashboard() {
         <div className="fx-dashboard-tabs"><strong>Overview</strong><span>Model activity</span><span>Tag activity</span></div>
         <div className="fx-stats">
           <div className="fx-spend-stat"><span className="fx-stat-label">Total Spend</span><strong className="fx-usd">${usdSpend.toFixed(2)}</strong>
-            <label className="fx-spend-selector">Spend display<select value={shown} aria-label="Spend display currency" disabled={unavailable} onChange={event => setCurrency(event.target.value)}><option value="USD">USD</option><option value="EUR">EUR</option><option value="JPY">JPY</option></select></label>
+            <label className="fx-spend-selector">Spend display<select value={shown} aria-label="Spend display currency" onChange={event => setCurrency(event.target.value)}><option value="USD">USD</option><option value="EUR">EUR</option><option value="JPY">JPY</option></select></label>
             <div className="fx-estimate-slot" aria-live="polite" aria-atomic="true">
-              {unavailable ? <p className="fx-unavailable">Currency estimates unavailable. Showing USD.</p> : shown !== 'USD' ? <div key={`${shown}-${period}`} className="fx-estimate"><strong>≈ {money(usdSpend / DISPLAY_RATES[shown], shown)}</strong><span>Reference date · Nov 16, 2026</span></div> : <p className="fx-usd-note">Spend is recorded in USD</p>}
+              {shown !== 'USD' ? <div key={`${shown}-${period}`} className="fx-estimate"><strong>≈ {money(usdSpend / DISPLAY_RATES[shown], shown)}</strong><span>Reference date · Nov 16, 2026</span></div> : <p className="fx-usd-note">Spend is recorded in USD</p>}
             </div>
           </div>
           <div className="fx-secondary-stat"><span className="fx-stat-label">Total Requests</span><strong>{period === '7' ? '2,400' : '8,400'}</strong><span>Across your models</span></div>
           <div className="fx-secondary-stat"><span className="fx-stat-label">Total Tokens</span><strong>{period === '7' ? '1.8M' : '6.3M'}</strong><span>Input + output</span></div>
         </div>
-        <div className="fx-dashboard-bottom"><span>One USD total. A dated currency estimate.</span><label><input type="checkbox" checked={unavailable} onChange={event => setUnavailable(event.target.checked)} /> Simulate unavailable rates</label></div>
+        <div className="fx-dashboard-bottom"><span>One USD total. A dated currency estimate.</span></div>
       </div>
       <footer className="fx-footer"><span>Independent of request currency</span><span>Original USD total stays visible</span></footer>
     </div>
-    <figcaption>Interactive illustration of the Usage spend card, with sample data and fixed illustrative rates. Charts, budgets, and exports remain USD.</figcaption>
+    <figcaption>Interactive illustration of the Usage spend card, with sample data and fixed illustrative rates.</figcaption>
   </figure>;
 }

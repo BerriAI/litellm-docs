@@ -12,21 +12,17 @@ import { RequestPricing, ReferenceRates, SpendDashboard } from './visuals';
 
 **Your AI spend, in a currency familiar to your team.**
 
-A team with token prices quoted in euros should be able to use those prices directly. A team reviewing its AI spend in yen should be able to see an estimate without opening a separate currency calculator.
-
-LiteLLM now supports both. Send custom token prices in a declared currency on each chat request, let LiteLLM convert them using automatically fetched ECB reference rates, and view a dated currency estimate alongside your USD spend in the Usage dashboard.
+Send token prices in euros, review spend in yen, and let LiteLLM handle the conversion. Currency support brings per-request pricing, automatic ECB exchange rates, and dated spend estimates together in your gateway.
 
 {/* truncate */}
 
 ## Supply each request's prices in its original currency
 
-Your application can now send `pricing_currency` alongside `input_cost_per_token` and `output_cost_per_token`. One request can use EUR prices and the next can use JPY prices. LiteLLM converts the supplied prices into USD before calculating spend, so each request uses its own pricing inputs without changing your configured model prices.
+Send `pricing_currency` alongside `input_cost_per_token` and `output_cost_per_token`. One request can use EUR prices and the next can use JPY prices. LiteLLM converts each request's supplied prices into USD for spend tracking and budget accounting.
 
 <RequestPricing />
 
-**The currency belongs to the request.** These overrides work with streaming and non-streaming proxy chat completions. Only the explicitly supplied input and output token prices are converted. Currency overrides do not extend to cache-token, time-based, or other pricing fields, and cannot be combined with those pricing overrides.
-
-For example, send this JSON body to `/v1/chat/completions`, using your configured model alias and an authorized virtual key. The amounts below are sample prices per token, not per million tokens.
+**Each request carries its own prices and currency.** Use overrides with streaming and non-streaming proxy chat completions. Send this JSON body to `/v1/chat/completions` with your configured model alias and an authorized virtual key. The example uses sample prices per token.
 
 ```json
 {
@@ -38,31 +34,27 @@ For example, send this JSON body to `/v1/chat/completions`, using your configure
 }
 ```
 
-Client pricing remains opt-in. An admin must allow `pricing_currency`, `input_cost_per_token`, and `output_cost_per_token` through the deployment's `litellm_params.configurable_clientside_auth_params`, and set `allow_client_pricing_override: true` in the key or team's metadata. Requests without currency overrides keep their existing behavior. This feature applies to proxy chat-completion routes, not other endpoints or pass-through requests.
+To enable request pricing, allow these three fields through the deployment's `litellm_params.configurable_clientside_auth_params` and set `allow_client_pricing_override: true` in the key or team's metadata.
 
 ## Let LiteLLM keep track of exchange rates
 
-There is no exchange-rate table for your application to maintain. LiteLLM fetches European Central Bank reference rates automatically, caches them, and refreshes them when due. Requests can reuse a usable cached snapshot instead of waiting for a new lookup each time.
+LiteLLM automatically fetches European Central Bank reference rates, caches them, and refreshes them when due. Requests reuse the cached rates for conversion, so your application can supply prices directly in an ECB-supported currency.
 
 <ReferenceRates />
 
-**Automatic conversion keeps spend in a common unit.** EUR and JPY request prices become USD amounts for spend tracking and budget accounting. Supported non-USD currencies need an available ECB reference rate. USD-only requests do not need an ECB lookup.
-
-A usable cached snapshot can continue serving conversions during a refresh failure, up to its seven-day freshness limit. If no usable rate is available, non-USD pricing returns a `503` before the provider call. Unsupported currency codes are rejected. Reference rates provide a conversion estimate, not a bank's settlement quote.
+**Different currencies, consistent accounting.** LiteLLM converts EUR and JPY token prices into a common USD spend record. Automatic rate lookup and caching handle the exchange-rate work for you.
 
 ## Make spend easier for your team to interpret
 
-Open **Usage**, find the spend card, and use **Spend display** to select a currency. LiteLLM shows an estimated amount alongside the original USD total and includes the reference date used for the conversion.
+Open **Usage** and choose a currency from **Spend display** on the spend card. A local-currency estimate appears beside the USD total, together with the reference date used for conversion.
 
 <SpendDashboard />
 
-**You can use the display option with spend you already have.** It works independently of request pricing. Sending prices in EUR does not select EUR in the dashboard, and selecting JPY in the dashboard does not change how requests are priced.
+**Explore the spend you already have.** Choose a reporting period and view its total in a currency familiar to your team. Each estimate uses a recent reference rate to convert that period's USD spend.
 
-Rates load when you open the selector. If they are unavailable, the card keeps the USD total visible and shows an unavailable notice. Reopening the selector retries a failed lookup. The selection resets on page reload.
-
-The estimate converts the selected period's USD total using a recent reference rate. It does not reconstruct historical exchange rates for individual charges. This first release adds the estimate to the Usage overview spend card. Stored spend, budgets, charts, and exports remain in USD.
+Request pricing and dashboard display are independent choices. You can supply token prices in EUR and review the total in JPY, with USD as the common unit for accounting.
 
 <div className="currency-launch-note">
 <p><strong>Available now</strong></p>
-<p>Try the currency selector in Usage, or enable request pricing overrides and send your next chat request with prices in its original currency. See the <a href="/docs/proxy/custom_pricing">custom pricing guide</a> and <a href="/docs/proxy/cost_tracking">spend tracking guide</a> for the underlying pricing and accounting setup.</p>
+<p>Try the currency selector in Usage, or enable per-request pricing and send your next chat request with local token prices. See the <a href="/docs/proxy/custom_pricing">custom pricing guide</a> and <a href="/docs/proxy/cost_tracking">spend tracking guide</a> to get started.</p>
 </div>
