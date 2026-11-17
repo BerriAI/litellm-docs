@@ -564,7 +564,7 @@ router_settings:
 | allowed_fails_policy | object | `null` | Specifies the number of allowed failures for different error types before cooling down a deployment. [More information here](reliability) |
 | default_max_parallel_requests | Optional[int] | `null` (no limit) | The default maximum number of parallel requests for a deployment. |
 | default_priority | (Optional[int]) | `null` | The priority a `/chat/completions`, `/completions` or `/queue/chat/completions` request is queued at when it sends no `priority`. Lower numbers are served first. Default is None, so only requests that send a `priority` are queued. |
-| dynamic_queue | Optional[dict] | `null` (off) | <SinceVersion v="1.111.0" /> Opt-in congestion priority queue for async chat and text completions, including streams. Set `enabled: true`, `max_waiting` and `default_priority`. Uses the router Redis connection and one queue per deployment ID. The operator-set limit applies separately to each queue; API requests cannot change it. Options are `trigger_status_codes` (default `[429, 529]`), `queue_timeout` (default `30` seconds of cumulative queue waiting), and `max_waiting` (required when enabled, a whole number from 1 to 64 waiters per deployment, no default). Lower request priorities run first, with FIFO ties. Redis coordination failure falls back to ordinary routing and retries. Queue overflow and exhausted queue waiting still end the request. |
+| dynamic_queue | Optional[dict] | `null` (off) | <SinceVersion v="1.111.0" /> Opt-in congestion priority queue for asynchronous, non-streaming chat completions. Requires `enabled: true`, `default_priority`, router Redis, and an explicit `max_waiting` integer from 1 to 64 per deployment. There is no default queue size. `queue_timeout` defaults to 30 seconds of cumulative queue waiting. Fixed upstream statuses 429 and 529 mark congestion. Queue grants use request priority and FIFO ties. Redis coordination failure resumes ordinary routing. Streaming, text completions, synchronous calls and other endpoints retain their existing behavior. |
 | polling_interval | (Optional[float]) | `0.03` (seconds) | frequency of polling queue. Only for '.scheduler_acompletion()'. Default is 3ms. |
 | max_fallbacks | Optional[int] | `5` | The maximum number of fallbacks to try before exiting the call. |
 | default_litellm_params | Optional[dict] | `null` | The default litellm parameters to add to all requests (e.g. `temperature`, `max_tokens`). |
@@ -610,7 +610,7 @@ router_settings:
 
 #### Congestion priority queues
 
-`dynamic_queue` is opt-in for asynchronous chat and text completions, including streams. Workers share one Redis queue per configured deployment ID. Deployments from the same provider do not automatically share a queue.
+`dynamic_queue` supports asynchronous, non-streaming chat completions only. Streaming, text completions, synchronous calls and other endpoints keep their existing behavior, including when this setting is enabled. Workers share one Redis queue per configured deployment ID. Deployments from the same provider do not automatically share a queue.
 
 ```yaml
 router_settings:
@@ -620,21 +620,20 @@ router_settings:
   dynamic_queue:
     enabled: true
     max_waiting: 8
-    trigger_status_codes: [429, 529]
     queue_timeout: 30
 ```
 
 `max_waiting: 8` is an example, not a default or a capacity recommendation. When enabled, `max_waiting` must be an integer from 1 to 64. The same operator-set limit applies separately to every deployment queue. API callers cannot override it. A full queue does not evict an existing waiter when a higher-priority request arrives.
 
-Applications set the existing request `priority`. Lower values receive queue grants first, with FIFO ordering for ties. Grants authorize concurrent requests to proceed, so provider arrival and completion order can differ from grant order. For example, `priority: 0` runs before the default of `5` in this configuration. Enabling `dynamic_queue` also requires `default_priority`, which applies to requests without an explicit priority. Existing deployment eligibility and healthy-alternative routing still apply.
+Upstream 429 and 529 responses mark a deployment congested. These trigger statuses are fixed. The queue applies after ordinary routing selects an eligible deployment. It does not alter deployment selection, make cooling deployments eligible, replace retry backoff, or change fallback policy.
 
-Queue overflow returns 503. Exhausting `queue_timeout`, the cumulative time spent waiting across queue admissions for the request, returns 408. These queue rejections end the request without another retry or fallback. Provider retry delays and the request's total deadline still apply. For example, an 8-second queue timeout can expire before a provider's 20-second retry delay ends. If ordinary retry backoff cannot fit the remaining total deadline, the router returns the last provider error immediately.
+Applications set the existing request `priority`. Lower values receive queue grants first, with FIFO ordering for ties. Provider arrival and completion order can differ because requests proceed concurrently. Enabling the feature requires `default_priority`, which applies to requests without an explicit priority. Caller-owned credentials retain their existing routing behavior.
 
-When Redis coordination fails or a queue operation times out, requests resume ordinary routing and retries with their remaining budgets and backoff. Priority ordering is best-effort during that period. Ordinary cooldown and rate-limit behavior still apply. A restored Redis connection does not guarantee immediate queue recovery because the existing Redis circuit breaker can remain open. Debug logging records the coordination failure reason and elapsed queue wait without request contents.
+Queue overflow returns 503. Exhausting `queue_timeout`, the cumulative queue wait across the request's attempts, returns 408. These queue rejections end the request without another retry or fallback. Ordinary retry sleeping is separate from queue waiting and does not consume `queue_timeout`. Provider retry delays and the request's total deadline still apply.
 
-Size for the total number of waiting requests across deployments and workers. Ten full queues with `max_waiting: 64` mean 640 waiting requests, not 64. The per-deployment cap does not bound total proxy CPU use. Start with a small explicitly chosen limit and test it against the intended workload while monitoring proxy worker CPU, healthy-request latency and Redis command latency. Queue metadata uses relatively little memory, but polling and waiter management consume CPU. Test both the waiting period and recovery. Many deployments becoming ready at once can still cause coordination timeouts and ordinary-routing fallback, even when their waiting queues fit. Published benchmark results describe the tested environment and are not universal capacity guarantees.
+When Redis coordination fails or a queue operation times out, requests resume ordinary routing and retries with their remaining budgets. Priority ordering is best-effort during that period. Ordinary cooldown and rate-limit behavior still apply. The existing Redis circuit breaker can delay recovery after Redis becomes available again.
 
-While the next permitted probe is still in the future, the queue uses a bounded wait of up to one second between checks, subject to waiter liveness and the request deadline. It retains the existing short checks for probe readiness and priority release. This interval is internal and is not controlled by `router_settings.polling_interval`, which belongs to the separate scheduler.
+Size for the total number of waiting requests across deployments and workers. Ten full queues with `max_waiting: 64` mean 640 waiting requests. The per-deployment cap does not bound aggregate proxy CPU use. Test both waiting and simultaneous recovery under the intended workload, watching proxy CPU, healthy-request latency and Redis latency. Benchmark results are not universal capacity guarantees.
 
 ### environment variables - Reference
 
