@@ -29,6 +29,8 @@ You can [deploy Lens on its own](./deployment/local.md) or [add it to your LiteL
 
 Use the [coding agent guide](./coding-agents.md) to record personal Claude Code or Codex sessions. Once traces are available, [run an investigation](./investigations.md) or use the [API reference](./api.md).
 
+Use [Model optimizations](./model-optimizations.md) to compare models on live traffic or a saved dataset. Choose Live, Shadow, or Offline and inspect quality, cost, latency, and individual answers.
+
 ## How Lens works
 
 **1. Capture your agent's traces**
