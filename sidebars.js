@@ -1560,7 +1560,6 @@ const sidebars = {
             "search/index",
             "search/perplexity",
             "search/tavily",
-            "search/webiq",
             "search/exa_ai",
             "search/brave",
             "search/parallel_ai",
@@ -1576,6 +1575,7 @@ const sidebars = {
             "search/nimble",
             "search/bing_grounding",
             "search/deepseek",
+            "search/webiq",
           ]
         },
         "skills",

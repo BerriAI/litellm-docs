@@ -1,4 +1,9 @@
-# Microsoft Web IQ search
+---
+title: "Microsoft Web IQ Search API with LiteLLM: Python and Gateway"
+sidebar_label: "Microsoft Web IQ Search"
+description: "Add Microsoft Web IQ web search to LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, with domain filters and cost tracking."
+---
+# Microsoft Web IQ Search
 
 <SinceVersion v="1.111.0" />
 
