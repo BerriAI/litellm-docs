@@ -222,7 +222,7 @@ classifier_llm_config:
 
 This reference retains the field names supported by released builds. A build containing [backend #43626](https://github.com/BerriAI/litellm/pull/43626) also accepts `classifier_type: oss_classifier` with `opensource_classifier_config.provider: jev`; the settings below apply inside `opensource_classifier_config`. The existing names remain accepted. See the [OSS classifier guide](/docs/auto_router/decision_classifiers) for migration and the Jev, Nimble, Laya and Databricks provider configurations. With `provider: databricks`, `model` is `ai_decide` or a bare serving endpoint name, and `api_key` and `api_base` read `DATABRICKS_API_KEY` (or `DATABRICKS_TOKEN`) and `DATABRICKS_API_BASE` when omitted.
 
-Set `classifier_type: jev` with `jev_classifier_config` to use [TypeSafe System One](/docs/pass_through/typesafe). It sends one `questions.tier` Choice question to `POST /v1/systemone`, with the classification input in `state` and tier descriptions in `criteria`. The returned choice selects the existing tier pool. See [setup and dashboard instructions](/docs/auto_router/setup#jev-classifier-typesafe-ai)
+Set `classifier_type: jev` with `jev_classifier_config` to use TypeSafe System One. It sends one `questions.tier` Choice question to TypeSafe's `POST /v1/systemone`, with the classification input in `state` and tier descriptions in `criteria`. The returned choice selects the existing tier pool. To call Jev through the proxy, use the [unified decision endpoints](/docs/decisions#migrate-from-typesafe-pass-through). The classifier does not depend on the removed `/typesafe` pass-through route. See [setup and dashboard instructions](/docs/auto_router/setup#jev-classifier-typesafe-ai)
 
 ```yaml
 classifier_type: jev
