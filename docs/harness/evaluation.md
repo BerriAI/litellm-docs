@@ -7,19 +7,13 @@ description: Compare agent harnesses and models on your own tasks with typed eva
 
 {/* keep-version-note */}
 
-:::info Unreleased
-This guide requires the SDK implementation in [PR #52174](https://github.com/BerriAI/litellm/pull/52174). It is not available in a published LiteLLM release yet.
+:::info Unreleased API preview
+`agent_eval()` and `aagent_eval()` are not available in a published LiteLLM release yet. The examples below preview the API. This guide needs a verified release version and installation instructions before publication.
 :::
 
-Compare agent harnesses and models on your own tasks with `litellm.agent_eval()`. Define the work and its success check in an `EvalTask`, then choose a harness and model with an `EvalTarget`. Read the scorecard to compare pass rate, cost and duration.
+Compare agent harnesses and models on your own tasks with `litellm.agent_eval()`. Define the work and its success check in an `EvalTask`, then choose a harness and model with an `EvalTarget`. Compare pass rate, cost and duration in the scorecard.
 
-## 1. Prepare your environment
-
-Install the checkout for [SDK PR #52174](https://github.com/BerriAI/litellm/pull/52174). Replace `/path/to/litellm` with its root directory.
-
-```bash
-python -m pip install -e /path/to/litellm
-```
+## 1. Configure your AI Gateway
 
 Use a [LiteLLM AI Gateway](./gateway.md) virtual key that can call two model groups. This example names them `model-a` and `model-b`. Replace those names with your groups. Both targets use Tool Loop, which needs no CLI runtime.
 
@@ -37,11 +31,13 @@ Skip the `read` command if your secret manager has set `LITELLM_PROXY_API_KEY`. 
 
 Save this complete example as `evaluate_agents.py`.
 
+Choose a sandbox factory for each evaluation call. This example uses `sandbox.local` for trusted tasks that can run with your user's permissions. The runner passes a fresh temporary workspace to the factory for each attempt.
+
 ```python title="evaluate_agents.py"
 from pathlib import Path
 
 import litellm
-from litellm import EvalTarget, EvalTask, Harness, PredicateCheck
+from litellm import EvalTarget, EvalTask, Harness, PredicateCheck, sandbox
 
 
 tasks = [
@@ -77,6 +73,7 @@ targets = [
 report = litellm.agent_eval(
     tasks=tasks,
     targets=targets,
+    sandbox=sandbox.local,
     max_concurrency=2,
 )
 
@@ -84,9 +81,9 @@ print(report.to_markdown())
 Path("scorecard.json").write_text(report.to_json(), encoding="utf-8")
 ```
 
-`PredicateCheck` receives the agent's `Result` and returns a boolean. Write the predicate against the result you need to verify, such as the final answer or tool calls. Predicates can be sync or async.
+`PredicateCheck` receives the agent's `Result` and returns a boolean. Check the final answer, tool calls or another part of the result. Predicates can be sync or async.
 
-Each target can use a different harness, model and harness-specific `options`. A label names that setup in the scorecard. Task IDs and resolved target labels must be unique.
+Each target can use a different harness, model and harness-specific `options`. Use a label to identify each setup in the scorecard. Task IDs and resolved target labels must be unique.
 
 ## 3. Run the comparison
 
@@ -96,7 +93,7 @@ From the directory containing `evaluate_agents.py`, run:
 python evaluate_agents.py
 ```
 
-With two tasks and two targets, you get four run rows. Find the `model-a` and `model-b` summaries and confirm that each has two attempts. If a target returns both expected categories and stops with `done`, you see `2/2` passed runs. Read `scorecard.json` to use those results in your own analysis.
+Two tasks and two targets produce four runs. In the `model-a` and `model-b` summaries, confirm that each target has two attempts. A target that returns both expected categories and stops with `done` has `2/2` passed runs. Use `scorecard.json` for your own analysis.
 
 Set `trials=3` to repeat each task and target three times. This example then produces twelve runs.
 
@@ -119,11 +116,11 @@ for run in report.runs:
 
 Add this code after the evaluation call in `evaluate_agents.py`.
 
-Pass rate divides passed runs by scheduled runs, including errors. Totals include known usage from unsuccessful runs. Check `metrics_complete` before treating a cost total as complete. A false value means some usage or cost is unavailable.
+Pass rate is passed runs divided by scheduled runs, including errors. Totals include known usage from unsuccessful runs. Check `metrics_complete` before treating a cost total as complete. A false value means some usage or cost is unavailable.
 
 Mean duration covers workspace preparation, setup, agent execution, grading and cleanup. Compare it separately from total suite time, since runs can overlap.
 
-Read agent and judge costs in their own columns. JSON exports include result data and identifiers. They omit authentication configuration, Python callables and raw events.
+Compare agent and judge costs in separate columns. JSON exports include result data and identifiers. They omit authentication configuration, Python callables and raw events.
 
 The runner attaches `agent_eval_suite`, `agent_eval_run`, `agent_eval_task`, `agent_eval_target` and `agent_eval_trial` metadata to model requests. Pass `metadata={"experiment": "support-routing"}` to add your own label. Use these identifiers to correlate requests in existing gateway logs. Persisted spend logs require the gateway's existing database setup.
 
@@ -135,6 +132,7 @@ In an async function or notebook, use `aagent_eval()` with the same tasks and ta
 report = await litellm.aagent_eval(
     tasks=tasks,
     targets=targets,
+    sandbox=sandbox.local,
     max_concurrency=2,
 )
 
@@ -143,7 +141,7 @@ print(report.to_markdown())
 
 ## Grade writing or research with a model
 
-Use `JudgeCheck` to grade against a rubric. Choose a judge model that supports JSON output. It receives the task prompt, answer and reported file changes, together with your rubric. It can grade file diffs but cannot read other workspace files.
+Use `JudgeCheck` to grade against a rubric. Choose a judge model that supports JSON output. The judge receives the task prompt, answer and reported file changes, together with your rubric. It can grade file diffs but cannot read other workspace files.
 
 ```python
 from litellm import EvalTask, JudgeCheck
@@ -173,7 +171,7 @@ A valid negative verdict produces `fail`. A failed judge request or invalid verd
 
 For a task that needs starting files, pass a project directory as `workspace`. Each attempt gets a copy. The agent edits that copy, and the runner excludes `.git` metadata to keep Git state separate from the source.
 
-The runner rejects a symlink workspace root or symlinks in the copied project before creating a sandbox, including links within the project and broken links.
+Use a real directory for `workspace`. The runner rejects symlinks in the copied project before creating a sandbox, including links within the project and broken links. It also rejects a symlink used as the workspace root.
 
 Create `calculator/calc.py` with a bug:
 
@@ -215,11 +213,11 @@ targets = [
 
 Use `CommandCheck` to run a grading command in the same sandbox after the agent finishes. Exit code zero passes. This example keeps assertions in the evaluation script, outside the copied project. Use a task's `setup` commands to install dependencies before the agent starts.
 
-Tool Loop has no built-in file or shell tools. Use a coding harness for this example. Caller-supplied Python tools execute in the SDK process and do not gain sandbox isolation automatically.
+Tool Loop has no built-in file or shell tools. Use a coding harness for this example. Caller-supplied Python tools execute in the SDK process with its permissions.
 
 ## Choose a sandbox and execution limits
 
-By default, each attempt runs in a temporary local workspace with your user's permissions. Run trusted tasks in this mode. For CLI harnesses, use a container to isolate the runtime and its dependencies.
+Both evaluation functions require an explicit `sandbox` factory. Pass `sandbox=sandbox.local` for trusted tasks that can run with your user's permissions. For CLI harnesses, use a container to isolate the runtime and its dependencies.
 
 For container execution, pass a factory that receives each attempt's fresh workspace:
 
@@ -241,6 +239,7 @@ Replace `my-eval-runtime:latest` with an image you built containing the required
 
 | Option | Default | Meaning |
 |---|---|---|
+| `sandbox` | Required | Factory that receives each attempt's fresh workspace and returns a sandbox |
 | `trials` | `1` | Independent attempts per task and target |
 | `max_concurrency` | `1` | Concurrent attempts, including setup and grading |
 | `timeout` | `300` | Seconds allowed for each agent execution |
@@ -255,7 +254,7 @@ The runner closes its sandboxes and removes temporary workspaces after each atte
 
 | Symptom | Next action |
 |---|---|
-| Importing `agent_eval` fails | Use the SDK checkout containing this unreleased feature. |
+| Importing `agent_eval` fails | This API is unreleased. Run these examples after a release includes it. |
 | A CLI runtime is missing | Install that harness in the local environment or container image. |
 | A workspace error mentions symbolic links | Use a real directory for `workspace` and replace links with the files or directories the task needs. |
 | The gateway rejects a target | Check its model group name and the virtual key's allowed models. |
