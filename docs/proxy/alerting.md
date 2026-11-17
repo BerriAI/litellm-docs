@@ -79,6 +79,41 @@ curl -X GET 'http://0.0.0.0:4000/health/services?service=slack' \
 
 ## Advanced
 
+### Route actionable alerts {#route-actionable-alerts}
+
+Give each alert an owner and a response. Route database failures and sustained provider outages to gateway operators. Route budgets and spend reports to the cost owner. Keep individual slow calls in a diagnostic channel; page from a monitoring rule tied to your latency or error target. Compare Flex latency with that workload's deadline before treating it as an incident.
+
+Monitor gateway availability and missing metrics externally. A stopped or blocked gateway cannot reliably send its own outage alert.
+
+This example selects five alert types and routes them to separate Slack incoming webhooks. Store the URLs in environment variables and merge the fragment with your existing configuration:
+
+```yaml
+general_settings:
+  alerting: [slack]
+  alert_types: [db_exceptions, outage_alerts, llm_too_slow, budget_alerts, spend_reports]
+  alert_to_webhook_url:
+    db_exceptions: os.environ/SLACK_OPERATIONS_WEBHOOK_URL
+    outage_alerts: os.environ/SLACK_OPERATIONS_WEBHOOK_URL
+    llm_too_slow: os.environ/SLACK_DIAGNOSTICS_WEBHOOK_URL
+    budget_alerts: os.environ/SLACK_BUDGET_WEBHOOK_URL
+    spend_reports: os.environ/SLACK_BUDGET_WEBHOOK_URL
+  alert_type_config:
+    llm_too_slow:
+      digest: true
+      digest_interval: 300
+
+litellm_settings:
+  redact_messages_in_exceptions: true
+```
+
+`alert_types` is an allowlist: other types are excluded. Review the [full list](#all-possible-alert-types) before applying it. An enabled type without a mapping uses the default webhook, from `SLACK_WEBHOOK_URL` or its fallback `ALERTING_WEBHOOK_URL`. Each mapped environment variable must resolve to a webhook URL.
+
+Keep urgent types such as `db_exceptions` out of [digest mode](#digest-mode-reducing-alert-noise). A digest delays delivery, retains the first message and an event count for each group, and lives in each proxy process's memory. Restarts can lose pending events, and several workers or pods can send separate summaries. Use your monitoring system for durable aggregation and concise incident pages. These routing settings do not customize alert text. The mapping and digest settings apply to Slack; [Teams](#ms-teams-webhooks) uses its own destination and sends individual alerts.
+
+Add cooldown notifications to diagnostics when useful. `fallback_reports` is a scheduled report from Prometheus, not a notification for each fallback; it requires a configured `PROMETHEUS_URL` and collected fallback metrics.
+
+In staging, trigger the selected events and check their destinations. Confirm that repeated slow calls produce a digest, while urgent events have no digest delay. Inspect payloads for sensitive metadata. See [L7 proxy with LiteLLM](./deploy/ha/haproxy.md) and [Security Best Practices](./security_best_practices.md) for deployment and security checks.
+
 ### Redacting Messages from Alerts
 
 By default alerts show the `messages/input` passed to the LLM. If you want to redact this from slack alerting set the following setting on your config

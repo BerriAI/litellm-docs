@@ -20,7 +20,33 @@ Provider-specific cost tracking (e.g., [Vertex AI PayGo / priority pricing](../p
 Use the step-by-step workflow in [Debugging a cost discrepancy](../troubleshoot/cost_discrepancy): align time ranges, compare token categories (including cache), then decide whether the gap is ingestion, formula, or model-map pricing.
 :::
 
-### How to Track Spend with LiteLLM
+## Track a public model alias
+
+Set the public name in `model_list[].model_name` and the provider model in `litellm_params.model`. Clients send the public name, such as `product-chat`, as the request's `model`:
+
+```yaml
+model_list:
+  - model_name: product-chat
+    litellm_params:
+      model: openai/{{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+```
+
+| Logging field | Use |
+| --- | --- |
+| `model_group` | The routed group for this attempt. Group spend by this field to report which configured route served the call. |
+| `model` | The resolved underlying model or deployment used for the call. Use it for provider-level cost investigation. |
+| `original_model_group` in metadata | The model group before fallbacks. Use it with the routed group to attribute fallback traffic to its original route. |
+
+A fallback can change `model_group`, so grouping only by that field splits a workload across its primary and fallback routes. For original-route reports, use `metadata.original_model_group` when present and fall back to `model_group` otherwise. Team-scoped deployments can use internal group names, so verify the mapping to the team's public name before combining reports. Test one direct request and one forced fallback and inspect the [fallback metadata](./reliability.md#track-fallbacks-in-spend-logs) before building reports.
+
+### Share one budget across routes
+
+Use one virtual key, or keys assigned to the same team, and set the entity's overall `max_budget` and `budget_duration`. For example, `max_budget: 100` with `budget_duration: "30d"` pools that entity's spend across models into a $100 budget per 30-day period. See [key budgets](./users.md#add-budgets-to-keys) and [team budgets](./team_budgets.md).
+
+Use `model_max_budget` when you need separate model budgets. Entries use the public model-group name and the [per-model budget schema](./users.md#genericbudgetinfo). This does not create a single budget spanning every fallback route: admission checks the requested model, while post-call accounting uses the routed group, or a team deployment's public name. `original_model_group` is reporting metadata, not a shared budget key. Review [fallback budget scope and concurrency limits](./reliability.md#enforce-budget-on-fallbacks), and test both direct and fallback requests near the budget before relying on enforcement.
+
+## How to Track Spend with LiteLLM
 
 **Step 1**
 
