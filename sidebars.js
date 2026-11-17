@@ -1171,6 +1171,7 @@ const sidebars = {
               collapsible: false,
               items: [
                 "harness/quickstart",
+                "harness/evaluation",
                 "harness/models",
                 "harness/sessions",
                 "harness/events",
