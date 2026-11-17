@@ -9,6 +9,7 @@ The entry points live on the top-level `litellm` module, next to `litellm.comple
 ```python
 import litellm
 from litellm import (
+    Agent,
     Harness,
     ClaudeCodeOptions,
     CodexOptions,
@@ -29,7 +30,43 @@ from litellm.harness import Text, ToolCall, FileChange, Done, Result, State
 | `litellm.agent_session(harness, *, sandbox, **options)` | `aagent_session` | `Session` |
 | `litellm.agent_resume(state, *, sandbox)` | `aagent_resume` | `Session` |
 | `litellm.agent_capabilities(harness)` | | `Capabilities` |
+| `litellm.agent_eval(tasks, *, agent, sandbox, **options)` | `aagent_eval` | `EvalScorecard` |
 | `litellm.agent_eval(tasks, targets, *, sandbox, **options)` | `aagent_eval` | `EvalScorecard` |
+
+The first argument to `agent()` and `agent_session()` accepts either an `Agent` definition or a `Harness`. The async versions accept the same inputs.
+
+## `Agent`
+
+`Agent` is a reusable definition for individual runs, sessions and evaluation. Creating it does not execute a request or create a sandbox. This API is unreleased; see the [evaluation preview](./evaluation.md).
+
+```python
+support = Agent(
+    harness=Harness.TOOL_LOOP,
+    model="litellm_proxy/model-a",
+    instructions=(
+        "Classify tickets as billing, technical, or sales. "
+        "Reply with only the category."
+    ),
+)
+```
+
+| Field | Type | Default |
+|---|---|---|
+| `harness` | `Harness` | Required |
+| `model`, `instructions`, `api_key`, `api_base` | `str \| None` | `None` |
+| `tools` | `Sequence[Callable[..., object]]` | `()` |
+| `skills` | `Sequence[str \| os.PathLike[str]]` | `()` |
+| `disable_tools` | `Sequence[str]` | `()` |
+| `permissions` | `Literal["read-only", "ask", "edit", "full"]` | `"full"` |
+| `on_approval` | `ApprovalHandler \| None` | `None` |
+| `output` | `type[BaseModel] \| None` | `None` |
+| `max_turns` | `int \| None` | `None` |
+| `timeout` | `float \| None` | `None` |
+| `metadata` | `Mapping[str, object]` | Empty mapping |
+| `options` | `HarnessOptions \| None` | `None` |
+| `install` | `bool` | `False` |
+
+`Agent` is a frozen dataclass. Use `dataclasses.replace(support, model="litellm_proxy/model-b")` to create a candidate while retaining the other settings. Supply the prompt and sandbox when you run it.
 
 ## Evaluations
 
@@ -37,6 +74,7 @@ Evaluation inputs and outputs are available from the top-level package. See [Eva
 
 ```python
 from litellm import (
+    Agent,
     CommandCheck,
     EvalScorecard,
     EvalStatus,
@@ -50,7 +88,7 @@ from litellm import (
 | Type | Fields |
 |---|---|
 | `EvalTask` | `id`, `prompt`, required `check`, optional `workspace`, `files`, `setup` |
-| `EvalTarget` | `harness`, `model`, optional `label`, harness-specific `options`, custom `tools` |
+| `EvalTarget` | Required `agent: Agent`, optional `label`; also accepts the existing `harness`, `model`, `options` and `tools` arguments |
 | `CommandCheck` | Argument sequence `command`, optional `timeout=30` |
 | `PredicateCheck` | Sync or async boolean `predicate` receiving an agent `Result` |
 | `JudgeCheck` | `rubric`, explicit judge `model`, optional `timeout=30` |
@@ -58,19 +96,38 @@ from litellm import (
 | `EvalRun` | `run_id`, `task_id`, `target`, one-based `trial`, `status`, optional agent `result`, optional `check`, `duration`, `detail` |
 | `EvalStatus` | `PASS`, `FAIL`, `ERROR` |
 
+Evaluate one agent with `agent=support`, or compare named definitions with `targets`. Pass exactly one of these arguments:
+
+```python
+task = EvalTask(
+    id="billing-ticket",
+    prompt="I was charged twice for my subscription.",
+    check=PredicateCheck(lambda result: result.text.strip().lower() == "billing"),
+)
+
+report = litellm.agent_eval(
+    agent=support,
+    tasks=[task],
+    sandbox=sandbox.local,
+    trials=3,
+)
+```
+
+For a comparison, pass `targets=[EvalTarget(agent=support, label="production"), ...]` and omit `agent`. The existing `EvalTarget(Harness.TOOL_LOOP, "litellm_proxy/model-a")` constructor remains supported. Without an explicit label, a target uses `<harness>:<model>`. A model is required for evaluation.
+
 `agent_eval()` and `aagent_eval()` require the keyword-only `sandbox` argument. Pass a factory of type `Callable[[Path], Sandbox]`. The runner calls it with a fresh temporary workspace for each attempt. For trusted tasks, use `sandbox=sandbox.local` to run with your user's permissions.
 
-Optional arguments are `trials=1`, `max_concurrency=1`, `max_turns=None`, `timeout=300`, `setup_timeout=120`, `metadata`, `api_base` and `api_key`.
+Optional arguments are `trials=1`, `max_concurrency=1`, `setup_timeout=120`, `max_turns`, `timeout`, `metadata`, `api_base` and `api_key`. An omitted `max_turns` inherits the agent's limit, or `None`. An omitted `timeout` inherits the agent's timeout, or `300` seconds. Explicit `max_turns=None` clears the agent's limit for that evaluation.
 
 A run passes only when its agent result has `stop_reason="done"` and its check passes. Summary pass rates include error rows in the denominator. Agent and judge usage and cost remain separate, and incomplete metrics carry `metrics_complete=False`.
 
 ## Options
 
-All options are keyword-only, and only `sandbox` is required.
+All run options are keyword-only, and only `sandbox` is required. The signature below shows the effective defaults for a direct `Harness` call. When you pass an `Agent`, omitted options inherit its settings. Explicit arguments, including `None`, an empty sequence or `permissions="full"`, override the definition for that call. Explicit run metadata replaces the definition's metadata mapping.
 
 ```python
 def agent(
-    harness: Harness,
+    harness: Harness | Agent,
     prompt: str,
     *,
     sandbox: Sandbox,
