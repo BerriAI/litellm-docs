@@ -1,3 +1,8 @@
+---
+title: "Lakera AI Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Lakera AI"
+description: "Block prompt injection and mask PII with Lakera Guard on the LiteLLM AI Gateway: config.yaml setup plus pre_call, during_call and post_call modes."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -153,7 +158,7 @@ guardrails:
       # breakdown: Optional[bool] = True,
       # metadata: Optional[Dict] = None,
       # dev_info: Optional[bool] = True,
-      # on_flagged: Optional[str] = "block",  # "block", "monitor", or "inject_system_message"
+      # on_flagged: Optional[str] = "block",  # "block", "mask", "monitor", or "inject_system_message"
       # advisory_system_message: Optional[str] = None,  # custom template, only used with on_flagged: "inject_system_message"
       # skip_system_message_in_guardrail: Optional[bool] = None,  # exclude role: system from Lakera's inspection
       # skip_tool_message_in_guardrail: Optional[bool] = None,  # exclude role: tool from Lakera's inspection
@@ -167,7 +172,8 @@ guardrails:
 - `metadata`: (Optional[Dict]) Metadata tags can be attached to screening requests as an object that can contain any arbitrary key-value pairs. 
 - `dev_info`: (Optional[bool]) When true the response will return an object with developer information about the build of Lakera Guard.
 - `on_flagged`: (Optional[str]) Action to take when content is flagged. Defaults to `"block"`. 
-  - `"block"`: Raises an HTTP 400 exception when violations are detected (default behavior)
+  - `"block"`: Raises an HTTP 400 exception when violations are detected, including PII-only detections (default behavior).
+  - `"mask"`: When Lakera flags only PII, replaces each match with `[MASKED <TYPE>]` and lets the request proceed. Any other violation raises an HTTP 400 exception, and so does PII under `mode: during_call`, which runs too late to mask the outgoing request. Requires `payload` and `breakdown` to stay `true`. Earlier versions did this under `"block"`, so set `"mask"` to keep that behavior.
   - `"monitor"`: Logs violations but allows the request to proceed. Useful for tuning security policies without blocking legitimate requests.
   - `"inject_system_message"`: Appends an advisory system message to the request and lets the real LLM call proceed (HTTP 200), instead of blocking or allowing silently. See [Advisory mode](#advisory-mode) below for how it works and its limitations.
 - `advisory_system_message`: (Optional[str]) Custom advisory message template, used only when `on_flagged: "inject_system_message"`. Must be a valid `str.format()` string containing a real `{reason}` placeholder (an escaped `{{reason}}` is rejected); an invalid template raises an error when the guardrail is configured, not on the first flagged request. Defaults to a built-in generic message when unset.
@@ -176,7 +182,7 @@ guardrails:
 
 Unlike most other guardrails that run via a direct hook on the raw request, Lakera v2 honors both skip flags directly; most direct-hook guardrails do not. See [Where the skip flags apply](./quick_start#where-the-skip-flags-apply) for the full picture across guardrails.
 
-Masking in place preserves both skip flags and every other field on a message (a tool message's `tool_call_id`, an assistant message's `tool_calls`, `name`, `cache_control`, and so on): only the message's own `content` is rewritten, and a message excluded by either skip flag is left completely untouched at its original position rather than being dropped. Lakera v2 still degrades to blocking, rather than masking, in two narrower cases where a redacted result can't be safely written back: when a message carries non-string (multimodal) content, or when the request combines chat completions `messages` with a Responses API `input` field or carries a Responses API `instructions` field, since there's no single field masking can safely target there.
+With `on_flagged` set to `"mask"`, `"monitor"` or `"inject_system_message"`, a PII-only flag is masked in place. Masking in place preserves both skip flags and every other field on a message (a tool message's `tool_call_id`, an assistant message's `tool_calls`, `name`, `cache_control`, and so on): only the message's own `content` is rewritten, and a message excluded by either skip flag is left completely untouched at its original position rather than being dropped. Lakera v2 still degrades to blocking, rather than masking, in two narrower cases where a redacted result can't be safely written back: when a message carries non-string (multimodal) content, or when the request combines chat completions `messages` with a Responses API `input` field or carries a Responses API `instructions` field, since there's no single field masking can safely target there.
 
 ## Advisory mode
 
@@ -208,5 +214,5 @@ A PII-only flag is masked in place rather than getting the advisory message: the
 
 Advisory mode has two limitations tied to when in the request lifecycle the guardrail runs:
 
-- **`mode: "during_call"` is not supported.** `during_call` runs the guardrail concurrently with the LLM request with no barrier between the two, so there is no reliable point at which to append the advisory before the request is dispatched. Configuring `on_flagged: "inject_system_message"` with a mode that includes `during_call` raises an error when the guardrail is configured. Use `mode: "pre_call"` instead.
+- **`mode: "during_call"` has no advisory effect.** `during_call` runs the guardrail concurrently with the LLM request with no barrier between the two, so there is no reliable point at which to append the advisory before the request is dispatched. Configuring `on_flagged: "inject_system_message"` with a mode that includes `during_call` is accepted without error, but on that hook a flag that includes PII blocks the request, and any other flag is logged as a warning and the request is allowed unchanged, as with `on_flagged: "monitor"`. Use `mode: "pre_call"` to get the advisory message.
 - **`mode: "post_call"` behaves like `on_flagged: "monitor"`.** By the time a post-call guardrail runs, the LLM has already produced its response, so there is nothing left to inject the advisory into. The flag is logged and the response is returned unchanged.

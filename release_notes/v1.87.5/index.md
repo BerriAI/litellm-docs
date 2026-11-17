@@ -1,5 +1,6 @@
 ---
-title: "v1.87.5 - Web Search Costing & MCP Key Scoping"
+title: "LiteLLM v1.87.5 - Web Search Costing & MCP Key Scoping"
+description: "Recovers cost for interrupted Anthropic streams and fixes a completion_cost error on streaming web search responses. Also adds a no-mcp-servers sentinel."
 slug: "v1-87-5"
 date: 2026-06-24T18:28:54
 authors:

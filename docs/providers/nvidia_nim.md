@@ -1,7 +1,16 @@
+---
+title: "NVIDIA NIM API with LiteLLM AI Gateway"
+sidebar_label: "Nvidia NIM"
+description: "Run Llama 3, Mixtral, Phi-3, Nemotron and other NVIDIA NIM models with streaming, and embed passages with nv-embedqa-e5-v5, through LiteLLM."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Nvidia NIM
+
+NVIDIA NIM is a platform with a simple API for deploying and using AI models; LiteLLM calls them with the `nvidia_nim/` prefix from the Python SDK or AI Gateway, for chat and embeddings.
+
 https://docs.api.nvidia.com/nim/reference/
 
 :::tip
@@ -168,7 +177,7 @@ Here's how to call an Nvidia NIM Endpoint with the LiteLLM Proxy Server
 
 
 
-## Supported Models - 💥 ALL Nvidia NIM Models Supported!
+## Supported Models - ALL Nvidia NIM Models Supported!
 We support ALL `nvidia_nim` models, just set `nvidia_nim/` as a prefix when sending completion requests
 
 | Model Name | Function Call |

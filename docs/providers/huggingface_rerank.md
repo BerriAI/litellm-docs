@@ -1,3 +1,9 @@
+---
+title: "Hugging Face Rerank with LiteLLM"
+sidebar_label: "HuggingFace Rerank"
+description: "Rerank documents with BAAI bge-reranker models on Hugging Face or your own endpoint from the Python SDK or the AI Gateway /rerank route, sync or async."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';

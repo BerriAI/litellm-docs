@@ -1,5 +1,7 @@
 ---
+title: "Snowflake Cortex API with LiteLLM: Setup"
 sidebar_label: Snowflake Cortex
+description: "Call Snowflake Cortex models through LiteLLM with the snowflake/ prefix. Authenticate with a PAT or JWT, stream, call tools, use thinking and embeddings."
 ---
 
 import Tabs from '@theme/Tabs';
@@ -29,12 +31,14 @@ Snowflake Cortex REST API supports three authentication methods.
 
 The simplest approach. Generate a PAT in Snowsight under **User Menu → My Profile → Programmatic Access Tokens**.
 
+LiteLLM reads the token from `SNOWFLAKE_JWT` (the same env var used for JWT auth) and the account from `SNOWFLAKE_ACCOUNT_ID`. Prefix the PAT with `pat/` so LiteLLM sends it as a `PROGRAMMATIC_ACCESS_TOKEN` instead of a `KEYPAIR_JWT`.
+
 ```python
 import os
 from litellm import completion
 
-os.environ["SNOWFLAKE_API_KEY"] = "pat/<your-programmatic-access-token>"
-os.environ["SNOWFLAKE_API_BASE"] = "https://<account>.snowflakecomputing.com/api/v2/cortex/v1"
+os.environ["SNOWFLAKE_JWT"] = "pat/<your-programmatic-access-token>"
+os.environ["SNOWFLAKE_ACCOUNT_ID"] = "<orgname>-<account_name>"
 
 response = completion(
     model="snowflake/claude-sonnet-4-6",
@@ -69,7 +73,7 @@ response = completion(
     model="snowflake/claude-sonnet-4-6",
     messages=[{"role": "user", "content": "Hello!"}],
     api_key="pat/<your-pat-token>",
-    api_base="https://<account>.snowflakecomputing.com/api/v2/cortex/v1",
+    api_base="https://<account>.snowflakecomputing.com",
 )
 
 # Using JWT
@@ -80,6 +84,8 @@ response = completion(
     account_id="<orgname>-<account_name>",
 )
 ```
+
+When you pass `api_base`, use the account host (`https://<account>.snowflakecomputing.com`, optionally with `/api/v2`). LiteLLM appends `/api/v2` if it is missing and then the `/cortex/v1/messages`, `/cortex/v1/chat/completions` or `/cortex/inference:embed` path; an `api_base` that already contains `/cortex/v1` produces a duplicated, invalid URL.
 
 For all authentication options, see [Authenticating to Cortex REST API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-rest-api#authenticating-cortex-rest-api-requests).
 
@@ -92,8 +98,8 @@ For all authentication options, see [Authenticating to Cortex REST API](https://
 from litellm import completion
 import os
 
-os.environ["SNOWFLAKE_API_KEY"] = "pat/<your-pat>"
-os.environ["SNOWFLAKE_API_BASE"] = "https://<account>.snowflakecomputing.com/api/v2/cortex/v1"
+os.environ["SNOWFLAKE_JWT"] = "pat/<your-pat>"
+os.environ["SNOWFLAKE_ACCOUNT_ID"] = "<orgname>-<account_name>"
 
 response = completion(
     model="snowflake/claude-sonnet-4-6",
@@ -113,12 +119,12 @@ model_list:
     litellm_params:
       model: snowflake/claude-sonnet-4-6
       api_key: pat/<your-pat>
-      api_base: https://<account>.snowflakecomputing.com/api/v2/cortex/v1
+      api_base: https://<account>.snowflakecomputing.com
   - model_name: llama4-maverick
     litellm_params:
       model: snowflake/llama4-maverick
       api_key: pat/<your-pat>
-      api_base: https://<account>.snowflakecomputing.com/api/v2/cortex/v1
+      api_base: https://<account>.snowflakecomputing.com
 ```
 
 **2. Start proxy**
@@ -146,9 +152,11 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 ## Supported OpenAI Parameters
 
 ```
-temperature, max_tokens, top_p, stream, response_format,
+temperature, max_tokens, max_completion_tokens, top_p, stream,
 tools, tool_choice
 ```
+
+Claude models also accept `thinking` (see below). `response_format` is not supported and raises an `UnsupportedParamsError` unless `drop_params` is set.
 
 ## Streaming
 
@@ -159,8 +167,8 @@ tools, tool_choice
 from litellm import completion
 import os
 
-os.environ["SNOWFLAKE_API_KEY"] = "pat/<your-pat>"
-os.environ["SNOWFLAKE_API_BASE"] = "https://<account>.snowflakecomputing.com/api/v2/cortex/v1"
+os.environ["SNOWFLAKE_JWT"] = "pat/<your-pat>"
+os.environ["SNOWFLAKE_ACCOUNT_ID"] = "<orgname>-<account_name>"
 
 response = completion(
     model="snowflake/claude-sonnet-4-6",
@@ -200,8 +208,8 @@ Supported on Claude and select models. LiteLLM automatically transforms OpenAI t
 from litellm import completion
 import os, json
 
-os.environ["SNOWFLAKE_API_KEY"] = "pat/<your-pat>"
-os.environ["SNOWFLAKE_API_BASE"] = "https://<account>.snowflakecomputing.com/api/v2/cortex/v1"
+os.environ["SNOWFLAKE_JWT"] = "pat/<your-pat>"
+os.environ["SNOWFLAKE_ACCOUNT_ID"] = "<orgname>-<account_name>"
 
 tools = [
     {
@@ -239,7 +247,7 @@ model_list:
     litellm_params:
       model: snowflake/claude-sonnet-4-6
       api_key: pat/<your-pat>
-      api_base: https://<account>.snowflakecomputing.com/api/v2/cortex/v1
+      api_base: https://<account>.snowflakecomputing.com
 ```
 
 ```bash
@@ -299,8 +307,8 @@ See [Cortex REST API Billing & Cost Analysis](https://www.snowflake.com/en/devel
 from litellm import embedding
 import os
 
-os.environ["SNOWFLAKE_API_KEY"] = "pat/<your-pat>"
-os.environ["SNOWFLAKE_API_BASE"] = "https://<account>.snowflakecomputing.com/api/v2/cortex/v1"
+os.environ["SNOWFLAKE_JWT"] = "pat/<your-pat>"
+os.environ["SNOWFLAKE_ACCOUNT_ID"] = "<orgname>-<account_name>"
 
 response = embedding(
     model="snowflake/snowflake-arctic-embed-l-v2.0",

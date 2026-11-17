@@ -168,10 +168,10 @@ Slack documents the full list in [OAuth scopes](https://api.slack.com/scopes). R
 
 ***
 
-:::info Restrict who can use it
+:::info[Restrict who can use it]
 Grant the server per key or per team with `object_permission`, and cap call volume per server with `mcp_rpm_limit`, both covered in [MCP Permission Management](../mcp_control.md). Grant the narrowest scope set that works for the audience; a key that only needs to summarize channels does not need `chat:write`.
 :::
 
-:::warning Put the LiteLLM key in `x-litellm-api-key`
+:::warning[Put the LiteLLM key in `x-litellm-api-key`]
 Interactive OAuth needs the `Authorization` header free for the upstream token. If a client sends the LiteLLM API key as `Authorization: Bearer sk-...`, the OAuth flow never runs and LiteLLM forwards your LiteLLM key to Slack, which rejects it. To diagnose, add `x-litellm-mcp-debug: true` and read the response headers: `SAME_AS_LITELLM_KEY` confirms this case, and `m2m-client-credentials` means a `token_url` is set and every caller shares one identity. See [Debugging OAuth](../mcp_oauth.md#debugging-oauth) and the [MCP Troubleshooting Guide](../mcp_troubleshoot.md).
 :::

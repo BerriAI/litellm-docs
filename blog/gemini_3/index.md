@@ -7,6 +7,8 @@ authors:
   - krrish
   - ishaan-alt
 description: "Common questions and best practices for using gemini-3-pro-preview with LiteLLM Proxy and SDK."
+card_title: "Gemini 3"
+card_summary: "gemini-3-pro-preview on the proxy and SDK, with thought signatures and the new thinking controls."
 tags: [gemini, day 0 support, llms]
 hide_table_of_contents: false
 ---

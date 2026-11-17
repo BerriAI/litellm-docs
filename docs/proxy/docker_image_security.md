@@ -1,26 +1,21 @@
+---
+description: LiteLLM signs the Docker images it publishes to GHCR with cosign, starting with v1.83.0. How to verify signatures, enforce verification in CI/CD, and follow recommended deployment patterns.
+---
+
 # Docker Image Security Guide
 
-LiteLLM signs every Docker image published to GHCR with [cosign](https://docs.sigstore.dev/quickstart/quickstart-cosign/) starting from **v1.83.0**. This page covers how to verify signatures, enforce verification in CI/CD, and follow recommended deployment patterns.
+LiteLLM signs every Docker image it publishes to GHCR with [cosign](https://docs.sigstore.dev/quickstart/quickstart-cosign/) <SinceVersion v="1.83.0" />. Older images are not signed. This page covers how to verify signatures, enforce verification in CI/CD, and follow recommended deployment patterns.
 
 ## Signed images
 
-All image variants published to `ghcr.io/berriai/` are signed with the same cosign key:
+Use `ghcr.io/berriai/litellm`, mirrored at `docker.litellm.ai/berriai/litellm`. Verify the exact release tag or digest you deploy.
 
-| Image | Description |
-|---|---|
-| `ghcr.io/berriai/litellm` | Core proxy, including the Prisma toolchain for Postgres |
-| `ghcr.io/berriai/litellm-non_root` | Non-root variant |
-| `ghcr.io/berriai/litellm-spend_logs` | Spend-logs sidecar |
-| `ghcr.io/berriai/litellm-database` | Legacy alias of `litellm`, kept for existing deployments |
+The [Dockerfile](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/Dockerfile) builds one image for the proxy, gateway, backend, UI, migrations, metrics, and collector. Older release tags can use a different Dockerfile. Follow the [Helm guide](./deploy/helm.md) to match your chart and image. Sign internal builds with your own key. LiteLLM's public key only verifies images that LiteLLM signs.
 
-:::note `litellm-database` is a legacy alias
-`ghcr.io/berriai/litellm-database` used to be the image to pick when the proxy needed Postgres, because it bundled the Prisma toolchain that the core image lacked. `ghcr.io/berriai/litellm` now ships the same toolchain, entrypoint and migrations, so there is no longer a reason to choose between them. `litellm-database` is still published and signed with the same key, so deployments that pin it keep working and verify with the same commands. Use `ghcr.io/berriai/litellm` for new deployments; the examples on this page use it throughout.
-:::
+The current signing key was introduced in [commit `e82a3c6`](https://github.com/BerriAI/litellm/commit/e82a3c646908ba0a6ee0beddc4310d7a6cac4065) and the public key is checked into the repository at [`cosign.pub`](https://github.com/BerriAI/litellm/blob/main/cosign.pub). Its SHA-256 fingerprint is `e3fe3e08c44b16407fe0b37c43b4f8b603b3a0f4ee74c29e647bc022d762c2c0`. It signs images from `v1.103.8`, `v1.104.6`, `v1.105.4`, `v1.106.3` and every later release.
 
-The signing key was introduced in [commit `0112e53`](https://github.com/BerriAI/litellm/commit/0112e53046018d726492c814b3644b7d376029d0) and the public key is checked into the repository at [`cosign.pub`](https://github.com/BerriAI/litellm/blob/main/cosign.pub).
-
-:::info Enterprise images
-Enterprise images (`litellm-ee`) follow the same signing process. Contact [support@berri.ai](mailto:support@berri.ai) to confirm coverage for your specific enterprise image tag.
+:::warning[Previous signing key]
+Earlier images are signed with the previous key from [commit `0112e53`](https://github.com/BerriAI/litellm/commit/0112e53046018d726492c814b3644b7d376029d0). That key was rotated on October 23, 2026, after the [October 21, 2026 incident](/blog/security-incident-oct-21-2026#image-signing-key-rotation). Trust a signature from it only on an image published before the `v1.107.0` release on October 21, 2026.
 :::
 
 ## Verify image signatures
@@ -33,18 +28,11 @@ A commit hash is cryptographically immutable, making this the strongest verifica
 
 ```bash
 cosign verify \
-  --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
-  ghcr.io/berriai/litellm:v1.89.4
+  --key https://raw.githubusercontent.com/BerriAI/litellm/e82a3c646908ba0a6ee0beddc4310d7a6cac4065/cosign.pub \
+  ghcr.io/berriai/litellm:v1.106.6
 ```
 
-Replace the image reference with any signed variant:
-
-```bash
-# litellm-non_root
-cosign verify \
-  --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
-  ghcr.io/berriai/litellm-non_root:v1.89.4
-```
+Replace the example tag with the release you deploy. Signature verification identifies who signed the image. Check that the release includes the entrypoint and features your chart requires.
 
 ### Verify with a release tag (convenience)
 
@@ -52,8 +40,8 @@ Tags are protected in this repository and resolve to the same key:
 
 ```bash
 cosign verify \
-  --key https://raw.githubusercontent.com/BerriAI/litellm/v1.89.4/cosign.pub \
-  ghcr.io/berriai/litellm:v1.89.4
+  --key https://raw.githubusercontent.com/BerriAI/litellm/v1.106.6/cosign.pub \
+  ghcr.io/berriai/litellm:v1.106.6
 ```
 
 ### Expected output
@@ -92,8 +80,8 @@ spec:
     - key:
         data: |
           -----BEGIN PUBLIC KEY-----
-          MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKi4ivqGpE231OGH50PKbqy1Y1Kkb
-          POJC8+i2Wko82gBOUCe3M0Vw86H/4rhUhfoYEti4gdJ9wZbYmK0I2EE96g==
+          MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEG06dpKM+vEDnmp2zcjyXgVCXxzRg
+          JA5H2LnmwBKQafZGka6OOrWujCEWATQewiAgyD4WQdJ0pvU9RC4mvNAjvQ==
           -----END PUBLIC KEY-----
 ```
 
@@ -137,7 +125,7 @@ Add a verification step before any deployment job:
 - name: Verify LiteLLM image signature
   run: |
     cosign verify \
-      --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
+      --key https://raw.githubusercontent.com/BerriAI/litellm/e82a3c646908ba0a6ee0beddc4310d7a6cac4065/cosign.pub \
       ghcr.io/berriai/litellm:${{ env.LITELLM_VERSION }}
 ```
 
@@ -155,22 +143,22 @@ Get the digest after pulling:
 
 ```bash
 docker inspect --format='{{index .RepoDigests 0}}' \
-  ghcr.io/berriai/litellm:v1.89.4
+  ghcr.io/berriai/litellm:v1.106.6
 ```
 
 Cosign verification works with digests too:
 
 ```bash
 cosign verify \
-  --key https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub \
-  ghcr.io/berriai/litellm@sha256:<digest>
+  --key https://raw.githubusercontent.com/BerriAI/litellm/e82a3c646908ba0a6ee0beddc4310d7a6cac4065/cosign.pub \
+  'ghcr.io/berriai/litellm@sha256:<digest>'
 ```
 
 ### Use stable release tags
 
 If digest pinning is too rigid for your workflow, use plain semver / PEP 440 release tags (e.g. `v1.86.2`). These are immutable release tags that will not be overwritten.
 
-:::warning `main-stable` and `main-latest` are deprecated
+:::warning[`main-stable` and `main-latest` are deprecated]
 
 LiteLLM has moved to PEP 440 / semver versioning, so stable releases are now published as plain `vX.Y.Z` tags (e.g. `v1.86.2`) instead of the older `vX.Y.Z-stable` form. The rolling `main-stable` tag is still being updated for backwards compatibility but is deprecated; pin to a specific `vX.Y.Z` tag (or a digest) instead. The rolling `main-latest` tag is deprecated and is no longer being updated; use `latest` instead.
 :::
@@ -179,15 +167,28 @@ Avoid `latest` in production. This rolling tag points to the most recent build a
 
 ### Safe upgrade checklist
 
-1. **Verify the new image** — run `cosign verify` against the new release tag or digest.
-2. **Test in staging** — deploy the verified image to a non-production environment.
-3. **Update your pinned reference** — change the digest or tag in your deployment manifest.
-4. **Deploy to production** — roll out using your standard deployment process.
-5. **Monitor `/health`** — confirm the proxy is healthy after the upgrade.
+1. **Verify the new image.** Run `cosign verify` against the new release tag or digest.
+2. **Test in staging.** Deploy the verified image with the chart and values you intend to use.
+3. **Update your pinned reference.** Change the digest or tag in your deployment manifest.
+4. **Deploy to production.** Roll out using your standard deployment process.
+5. **Check readiness.** Confirm the proxy is healthy after the upgrade.
+
+### Runtime user and entrypoint
+
+The [consolidated source image](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/Dockerfile#L212) runs as UID/GID `65532:65532`. Its entrypoint accepts `proxy`, `gateway`, `backend`, `ui`, `migrations`, `metrics`, or `collector` as the first argument. No argument, or a CLI flag such as `--config`, starts the full proxy. Keep this entrypoint. Select a component in Kubernetes through `args`.
+
+Check the exact image you use before relying on that non-root default. Older published images use a different entrypoint and can run as root:
+
+```bash
+docker image inspect "$LITELLM_IMAGE" \
+  --format '{{.Config.User}} {{json .Config.Entrypoint}}'
+```
+
+Restrict mounted credentials to the runtime user. If you use a read-only root filesystem, add writable volumes for temporary files. The chart does not add them automatically. Configure security contexts and mounts for each enabled workload, including the migration Job. See the [chart values](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e3609cc7d17cf625d434c3e/helm/litellm/values.yaml).
 
 ## Further reading
 
-- [CI/CD v2 announcement](https://docs.litellm.ai/blog/ci-cd-v2-improvements) — background on LiteLLM's signing infrastructure
-- [Docker deployment guide](./deploy.md) — full Docker, Helm, and Terraform setup
-- [cosign documentation](https://docs.sigstore.dev/quickstart/quickstart-cosign/) — cosign usage and key management
-- [Sigstore Policy Controller](https://docs.sigstore.dev/policy-controller/overview/) — Kubernetes admission control
+- [CI/CD v2 announcement](https://docs.litellm.ai/blog/ci-cd-v2-improvements) explains LiteLLM's signing infrastructure.
+- [Deployment overview](./deploy.md) links to Helm, Terraform, and architecture guides.
+- [cosign documentation](https://docs.sigstore.dev/quickstart/quickstart-cosign/) covers signature verification and key management.
+- [Sigstore Policy Controller](https://docs.sigstore.dev/policy-controller/overview/) covers Kubernetes admission control.

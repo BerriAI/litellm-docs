@@ -1,3 +1,9 @@
+---
+title: "Hyperbolic API with LiteLLM AI Gateway"
+sidebar_label: "Hyperbolic"
+description: "Query Hyperbolic's DeepSeek V3, DeepSeek R1 and Qwen 2.5 models from the Python SDK or AI Gateway, with streaming, function calling and a custom API base."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

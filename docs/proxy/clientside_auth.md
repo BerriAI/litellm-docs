@@ -79,7 +79,7 @@ response = client.chat.completions.create(model="user-azure-instance", messages 
     extra_body={
       "user_config": user_config
     }
-) # 👈 User config
+) # User config
 
 print(response)
 ```
@@ -141,7 +141,7 @@ async function main() {
   const chatCompletion = await openai.chat.completions.create({
     messages: [{ role: 'user', content: 'Say this is a test' }],
     model: '{{openai_small}}',
-    user_config: userConfig // # 👈 User config
+    user_config: userConfig // # User config
   });
 }
 
@@ -166,14 +166,18 @@ model_list:
       model: "fireworks_ai/*"
       configurable_clientside_auth_params: ["api_base"]
       # OR 
-      configurable_clientside_auth_params: [{"api_base": '^https://litellm.*direct\.fireworks\.ai/v1$'}] # 👈 regex
+      configurable_clientside_auth_params: [{"api_base": '^https://litellm.*direct\.fireworks\.ai/v1$'}] # regex
 ```
 
-Specify any/all auth params you want the user to be able to configure:
+Specify the endpoint params you want the user to be able to configure:
 
-- api_base (✅ regex supported)
-- api_key
-- base_url 
+- api_base (regex supported)
+- base_url
+- model_id, see [Let clients choose a deployment's `model_id`](#let-clients-choose-a-deployments-model_id)
+
+Without this opt-in, or `general_settings.allow_client_side_credentials: true` proxy-wide, a request body that sets `api_base` or `base_url` is rejected with `Rejected Request: api_base is not allowed in request body`
+
+`api_key` does not need to be listed. A request-body `api_key` is accepted on any deployment, wildcard or not, and replaces the deployment's configured key for that request only. To send the user's key as a provider header instead, such as `x-api-key` for Anthropic, see [Forward LLM Provider Authentication Headers](./forward_client_headers.md#forward-llm-provider-authentication-headers)
 
 (check [provider docs](../providers/) for provider-specific auth params - e.g. `vertex_project`)
 
@@ -194,7 +198,7 @@ response = client.chat.completions.create(model="{{openai_small}}", messages = [
         "content": "this is a test request, write a short poem"
     }
 ], 
-    extra_body={"api_key": "my-bad-key", "api_base": "https://litellm-dev.direct.fireworks.ai/v1"}) # 👈 clientside credentials
+    extra_body={"api_key": "my-bad-key", "api_base": "https://litellm-dev.direct.fireworks.ai/v1"}) # clientside credentials
 
 print(response)
 ```
@@ -223,7 +227,7 @@ response = client.chat.completions.create(model="{{openai_small}}", messages = [
       "api_key": "my-azure-key",
       "api_base": "my-azure-base",
       "api_version": "my-azure-version"
-    }) # 👈 User Key
+    }) # User Key
 
 print(response)
 ```
@@ -246,7 +250,7 @@ async function main() {
   const chatCompletion = await openai.chat.completions.create({
     messages: [{ role: 'user', content: 'Say this is a test' }],
     model: '{{openai_small}}',
-    api_key: "my-bad-key" // 👈 User Key
+    api_key: "my-bad-key" // User Key
   });
 }
 
@@ -255,24 +259,64 @@ main();
 </TabItem>
 </Tabs>
 
+### Let clients choose a deployment's `model_id`
+
+<SinceVersion v="1.109.0" />
+
+If a deployment sets `model_id` (e.g. a SageMaker inference component, a Bedrock model ID or ARN) then LiteLLM will use the value of that deployment and ignore any `model_id` present in the request body, unless the deployment has opted in as described below. A SageMaker deployment that sets the `X-Amzn-SageMaker-Inference-Component` header in `extra_headers` is pinned in the same way. This applies to both proxy requests and to SDK `Router` calls.
+
+To let clients choose the value on a deployment, list `model_id` in its `configurable_clientside_auth_params`:
+
+```yaml
+model_list:
+  - model_name: my-sagemaker
+    litellm_params:
+      model: sagemaker_chat/<your-endpoint-name>
+      model_id: <default-inference-component>
+      configurable_clientside_auth_params: ["model_id"]
+```
+
+A request to `my-sagemaker` with `"model_id": "<other-inference-component>"` in the body is routed to that component, a request without `model_id` is routed to `<default-inference-component>`. `general_settings.allow_client_side_credentials: true` doesn't opt in so it leaves a pinned `model_id` in place. A deployment that sets neither `model_id` nor the SageMaker header still uses the request's `model_id`. Prior to 1.109.0 a `model_id` in the request body would take precedence over the deployment's. See [Pin the inference component on a deployment](../providers/aws_sagemaker.md#pin-the-inference-component-on-a-deployment) for SageMaker examples.
+
 ### Pass provider-specific params (e.g. Region, Project ID, etc.)
 
 Specify the region, project id, etc. to use for making requests to Vertex AI on the clientside.
+
+`vertex_location`, `vertex_project`, `vertex_ai_location`, and `vertex_ai_project` override the region and project set on the deployment, so the proxy rejects them in a request body by default with `Rejected Request: vertex_location is not allowed in request body`. To let users pick them, list them in `configurable_clientside_auth_params` on the deployment, or set `general_settings.allow_client_side_credentials: true` proxy-wide.
+
+```yaml
+model_list:
+  - model_name: gemini-2.5-flash
+    litellm_params:
+      model: vertex_ai/gemini-2.5-flash
+      vertex_project: my-project
+      vertex_location: europe-west4
+      configurable_clientside_auth_params: ["vertex_location"] # 👈 lets the request pick the region
+```
+
+When several deployments share a model name, every one of them must list the param, because the router, not the request, picks which deployment serves it. The same goes for the model group a `model_group_alias` routes the name to and for every fallback the request or the router's `fallbacks` can move it onto, since each of them serves the same request. Only Vertex AI, Gemini, and GDC deployments read these four params, so a model group whose deployments all use other providers needs no opt-in for them.
+
+This every-deployment rule covers every `configurable_clientside_auth_params` entry, `api_base` included, so a model group where only some deployments list `api_base` now rejects it. On routes that name the model in the URL, such as `/v1beta/models/<model>:generateContent` and Azure's `/openai/deployments/<model>/chat/completions`, the proxy checks the deployments of that model. A request that names more than 100 fallback models is rejected.
+
+:::info
+
+The proxy rejects these params without an opt-in, and checks every deployment for each opt-in, <SinceVersion v="1.111.0" />. Earlier versions accept the Vertex params from any request body and read one deployment's opt-in for the whole model group, so add the opt-in to every deployment before you upgrade if your users send them.
+
+:::
 
 Any value passed in the Proxy's request body, will be checked by LiteLLM against the mapped openai / litellm auth params. 
 
 Unmapped params, will be assumed to be provider-specific params, and will be passed through to the provider in the LLM API's request body.
 
-```bash
+```python
 import openai
 client = openai.OpenAI(
-    api_key="anything",
+    api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
 
-# request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="{{openai_small}}",
+    model="gemini-2.5-flash",
     messages = [
         {
             "role": "user",
@@ -280,7 +324,7 @@ response = client.chat.completions.create(
         }
     ],
     extra_body={ # pass any additional litellm_params here
-        vertex_ai_location: "us-east1" 
+        "vertex_location": "us-central1"
     }
 )
 

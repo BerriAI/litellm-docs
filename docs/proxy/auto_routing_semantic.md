@@ -4,7 +4,7 @@ import TabItem from '@theme/TabItem';
 
 # Semantic Auto Router (deprecated)
 
-:::warning Deprecated
+:::warning[Deprecated]
 
 The semantic Auto Router is superseded by [Auto Routing](./auto_routing.md), which folds semantic keyword matching, complexity scoring, and adaptive routing into a single `auto_router/complexity_router`. New deployments should start there; the semantic router page is preserved for existing configs.
 
@@ -28,7 +28,7 @@ Auto routing allows you to define routing rules that automatically select the be
     "encoder_name": "text-embedding-3-large",
     "routes": [
         {
-            "name": "litellm-gpt-4.1",
+            "name": "litellm-{{openai_large}}",
             "utterances": [
                 "litellm is great"
             ],
@@ -71,7 +71,7 @@ router = Router(
         },
         # Your target models
         {
-            "model_name": "litellm-gpt-4.1",
+            "model_name": "litellm-{{openai_large}}",
             "litellm_params": {
                 "model": "{{openai_large}}",
             },

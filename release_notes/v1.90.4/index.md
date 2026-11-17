@@ -1,5 +1,6 @@
 ---
-title: "v1.90.4 - Responses API Guardrail Coverage"
+title: "LiteLLM v1.90.4 - Responses API Guardrail Coverage"
+description: "Restores guardrail coverage on /v1/responses for AIM, Lakera v2 and Azure Content Safety. Request text is now checked like chat completions."
 slug: "v1-90-4"
 date: 2026-07-11T13:00:41
 authors:

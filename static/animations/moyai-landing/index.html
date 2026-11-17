@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Moyai: from a task to a pull request</title>
+<style>
+@font-face{font-family:Geist;src:url('/animations/internal-devin-two-days/assets/geist-variable.woff2') format('woff2');font-weight:100 900;font-display:swap}
+@font-face{font-family:GeistMono;src:url('/animations/internal-devin-two-days/assets/geist-mono-variable.woff2') format('woff2');font-weight:100 900;font-display:swap}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}
+:root{--bg:#faf8f2;--ink:#292b4e;--paper:#fffefa;--muted:#64647a;--cloud:#d4d3fa;--blue:#4142cf;--edge:#292b4e;--shadow:#292b4e;--sage:#dcebdc;--green:#286441;--accent:#6261d8}
+[data-theme=dark]{--bg:#202135;--ink:#f6f3ea;--paper:#303149;--muted:#c3c0d2;--cloud:#44446b;--edge:#9c9aba;--shadow:#131421;--sage:#344b41;--green:#c4ead4;--accent:#c2bbff}
+.stage{width:100%;height:100%;position:relative;container-type:inline-size;background:var(--bg);color:var(--ink);font-family:Geist,Arial,sans-serif}
+.scene{position:absolute;inset:0}
+.cloud-art{position:absolute;left:24%;top:5%;width:69%;height:85%;fill:var(--cloud)}
+.cloud-caption{position:absolute;left:31%;top:17%;width:39%;display:flex;align-items:center;justify-content:center;gap:.7cqw;font:500 1.15cqw GeistMono,monospace;letter-spacing:.05em}
+.cloud-caption svg{width:2cqw;height:1.6cqw;fill:none;stroke:currentColor;stroke-width:1.7}
+.section-label{position:absolute;top:23%;margin:0;font-size:2cqw;font-weight:550;letter-spacing:-.035em;line-height:1.2}
+.task-label{left:4%;width:23%}.result-label{left:77%;width:20%}
+.source-group{position:absolute;left:4%;top:35%;width:21%;height:33%}
+.source{position:absolute;width:100%;height:37%;border:1.6px solid var(--edge);border-radius:10px;background:var(--paper);display:flex;align-items:center;padding:0 12%;gap:1cqw;box-shadow:4px 4px 0 var(--shadow);font-size:2.2cqw;font-weight:550}
+.source img,.source svg{width:2.7cqw;height:2.7cqw;flex:none}.slack{top:0}.web{bottom:0}
+.wires{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:var(--edge);stroke-width:1.6}
+.wires .signal{stroke:var(--accent);stroke-width:4;stroke-linecap:round}
+.computer{position:absolute;left:31%;top:27%;width:39%;height:39%;border:1.6px solid var(--edge);border-radius:13px;background:var(--paper);box-shadow:6px 6px 0 var(--shadow);z-index:2;overflow:hidden}
+.chrome{height:19%;border-bottom:1.5px solid var(--edge);display:flex;align-items:center;justify-content:space-between;padding:0 6%;font:400 1cqw GeistMono,monospace;color:var(--muted)}
+.chrome-dots{display:flex;gap:5px}.chrome-dots i{width:5px;height:5px;border:1px solid var(--edge);border-radius:50%}
+.session-indicator{display:flex;align-items:center;gap:6px}.session-indicator i{width:5px;height:5px;border-radius:50%;background:var(--green)}
+.workspace{height:81%;display:flex;flex-direction:column;justify-content:center;padding:4% 8%}
+.name{font-size:5cqw;font-weight:600;letter-spacing:-.06em;line-height:1}
+.tagline{font-size:1.7cqw;letter-spacing:-.025em;margin-top:3%}
+.tools{display:flex;gap:1.4cqw;margin-top:7%;font:400 1.1cqw GeistMono,monospace;color:var(--muted)}
+.tools span{display:flex;align-items:center;gap:.4cqw}.tools svg{width:1.2cqw;height:1.2cqw;stroke:var(--green);stroke-width:2;fill:none}
+.code-mark{position:absolute;right:8%;top:40%;width:16%;height:25%;color:var(--accent);fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.stand{position:absolute;left:37%;top:66%;width:27%;height:8%;fill:var(--shadow);z-index:1}
+.inference{position:absolute;left:31%;top:78%;width:39%;height:13%;display:flex;align-items:center;justify-content:center;gap:1.2cqw;border:1.6px solid var(--edge);border-radius:10px;background:var(--blue);box-shadow:5px 5px 0 var(--shadow);color:#fffefa}
+.brand-tile{width:3.9cqw;height:3.9cqw;border-radius:8px;background:#fffefa;display:grid;place-items:center;flex:none}.brand-tile img{width:2.7cqw;height:2.7cqw}
+.inference-copy{font-size:1.35cqw;line-height:1.35}.inference-copy strong{font-size:2.4cqw;letter-spacing:-.035em;font-weight:550;display:block}
+.result{position:absolute;left:77%;top:36%;width:19%;height:35%;z-index:2}
+.sheet-back{position:absolute;inset:0;border:1.6px solid var(--edge);border-radius:10px;background:var(--sage);transform:translate(5px,-7px) rotate(4deg)}
+.pull-request{position:absolute;inset:0;border:1.6px solid var(--edge);border-radius:10px;background:var(--paper);box-shadow:4px 4px 0 var(--shadow);overflow:hidden}
+.pr-header{height:22%;padding:0 10%;display:flex;align-items:center;gap:.7cqw;border-bottom:1.5px solid var(--edge);font:400 1.15cqw GeistMono,monospace}.pr-header svg{width:1.7cqw;height:1.7cqw;fill:none;stroke:var(--green);stroke-width:1.8;flex:none}
+.pr-body{padding:10%;height:78%;display:flex;flex-direction:column;justify-content:space-between}
+.diff{display:flex;flex-direction:column;gap:.6cqw}.diff-line{display:flex;align-items:center;gap:.5cqw;color:var(--green);font:400 1.3cqw GeistMono,monospace}.diff-line i{height:3px;width:72%;background:currentColor;opacity:.5}.diff-line:nth-child(2) i{width:48%}.diff-line:nth-child(3) i{width:62%}
+.result-detail{font-size:1.15cqw;color:var(--muted)}
+.ready{display:flex;align-items:center;gap:.4cqw;font:500 1.05cqw GeistMono,monospace;color:var(--green)}.ready svg{width:1.2cqw;height:1.2cqw;fill:none;stroke:currentColor;stroke-width:2}
+.mobile-wire{display:none}
+@media(max-width:599px){
+ .cloud-art{left:5%;top:27%;width:91%;height:51%}
+ .section-label{font-size:19px;left:0;width:100%;text-align:center}.task-label{top:5%}.result-label{top:80%}
+ .source-group{left:10%;top:12%;width:80%;height:8%}.source{top:0;bottom:auto;width:44%;height:100%;padding:0;justify-content:center;font-size:17px;gap:8px;border-radius:8px;box-shadow:3px 3px 0 var(--shadow)}.web{left:56%}.source img,.source svg{width:23px;height:23px}
+ .cloud-caption{left:12%;top:28%;width:76%;font-size:10px;gap:7px}.cloud-caption svg{width:19px;height:15px}
+ .computer{left:12%;top:34%;width:76%;height:28%;border-radius:11px;box-shadow:5px 5px 0 var(--shadow)}.chrome{font-size:9px}.chrome-dots{gap:4px}.chrome-dots i{width:4px;height:4px}
+ .name{font-size:40px}.tagline{font-size:14px;margin-top:4px}.tools{font-size:10px;gap:14px;margin-top:12px}.tools span{gap:4px}.tools svg{width:12px;height:12px}.code-mark{stroke-width:2.5}
+ .stand{left:29%;top:62%;width:42%;height:5%}
+ .inference{left:17%;top:67%;width:66%;height:8%;gap:10px;border-radius:8px;box-shadow:4px 4px 0 var(--shadow)}.brand-tile{width:28px;height:28px;border-radius:5px}.brand-tile img{width:20px;height:20px}.inference-copy{font-size:10px;display:block;line-height:1.15}.inference-copy strong{font-size:17px}
+ .result{left:12%;top:87%;width:76%;height:8%}.sheet-back{transform:translate(4px,-4px) rotate(1deg);border-radius:8px}.pull-request{border-radius:8px;display:flex;align-items:center}.pr-header{height:100%;border:0;font-size:11px;padding:0 4%;gap:5px;white-space:nowrap}.pr-header svg{width:16px;height:16px}.pr-body{height:auto;padding:0 4% 0 0;margin-left:auto}.diff,.result-detail{display:none}.ready{font-size:9px;white-space:nowrap}.ready svg{display:none}
+ .desktop-wire{display:none}.mobile-wire{display:block}
+}
+</style>
+</head>
+<body>
+<main class="stage" data-composition-id="moyai" data-width="1200" data-height="620" data-duration="12">
+ <div id="cloud-workflow" class="scene clip" data-start="0" data-duration="12" data-track-index="0">
+  <svg class="cloud-art" viewBox="0 0 1000 650" preserveAspectRatio="none" aria-hidden="true"><path d="M180 590C70 590 20 530 20 450C20 370 70 315 150 307C135 185 235 100 350 123C415 -15 615 1 664 152C825 110 930 210 913 325C1029 375 1010 557 899 590Z"/></svg>
+  <div class="cloud-caption"><svg viewBox="0 0 28 22" aria-hidden="true"><path d="M7 19C-1 19 0 9 7 9C6 1 19-1 21 8C29 7 31 19 23 19Z"/></svg>YOUR CLOUD WORKSPACE</div>
+  <h2 class="section-label task-label">Give Moyai a task</h2>
+  <h2 class="section-label result-label">Come back to a PR</h2>
+  <svg class="wires desktop-wire" viewBox="0 0 1200 620" preserveAspectRatio="none" aria-hidden="true">
+   <path d="M300 255H318Q336 255 336 273V318 M300 384H318Q336 384 336 366V318H372 M361 310L370 318L361 326 M840 318H924 M913 310L922 318L913 326 M606 457V484"/>
+   <path class="signal route-in" d="M300 255H318Q336 255 336 273V302Q336 318 352 318H372"/>
+   <path class="signal route-in" d="M300 384H318Q336 384 336 366V334Q336 318 352 318H372"/>
+   <path class="signal route-model" d="M606 457V484"/>
+   <path class="signal route-out" d="M840 318H924"/>
+  </svg>
+  <svg class="wires mobile-wire" viewBox="0 0 360 560" preserveAspectRatio="none" aria-hidden="true">
+   <path d="M100 114V128H180 M260 114V128H180V146 M174 140L180 146L186 140 M180 422V444 M174 438L180 444L186 438"/>
+   <path class="signal route-in" d="M100 114V128H180V146"/><path class="signal route-in" d="M260 114V128H180V146"/>
+   <path class="signal route-out" d="M180 422V444"/>
+  </svg>
+  <div class="source-group">
+   <div class="source slack"><img src="/animations/internal-devin-two-days/assets/slack.svg" alt="" />Slack</div>
+   <div class="source web"><svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="24" height="21" rx="4"/><path d="M3 12H27 M8 8.5H9 M13 8.5H14"/></svg>Web</div>
+  </div>
+  <section class="computer" aria-label="Moyai cloud workspace">
+   <div class="chrome"><div class="chrome-dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="session-indicator"><i></i>cloud session</div></div>
+   <div class="workspace"><strong class="name">Moyai</strong><div class="tagline">Your agent at work.</div><div class="tools"><span class="step-edit"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7"/></svg>Edit code</span><span class="step-test"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7"/></svg>Run tests</span></div></div>
+   <svg class="code-mark" viewBox="0 0 60 48" aria-hidden="true"><path d="M8 10L22 24L8 38 M31 38H53"/></svg>
+  </section>
+  <svg class="stand" viewBox="0 0 320 80" preserveAspectRatio="none" aria-hidden="true"><path d="M122 0H198L208 58H286Q300 58 300 77H20Q20 58 34 58H112Z"/></svg>
+  <div class="inference"><span class="brand-tile"><img src="/animations/internal-devin-two-days/assets/litellm.svg" alt="" /></span><div class="inference-copy">Inference through<strong>LiteLLM</strong></div></div>
+  <section class="result" aria-label="Pull request ready for review">
+   <div class="sheet-back" aria-hidden="true"></div>
+   <div class="pull-request">
+    <div class="pr-header"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 7v10M18 17V9a4 4 0 0 0-4-4h-2m3-3-3 3 3 3"/></svg>Pull request</div>
+    <div class="pr-body"><div class="diff" aria-hidden="true"><div class="diff-line">+<i></i></div><div class="diff-line">+<i></i></div><div class="diff-line">+<i></i></div></div><span class="result-detail">Diff + test results</span><span class="ready"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7"/></svg>Ready for review</span></div>
+   </div>
+  </section>
+ </div>
+</main>
+<script src="/animations/internal-devin-two-days/assets/gsap.min.js"></script>
+<script>
+// Finite, seekable composition; looping and user controls live in player.js.
+// Path drawing reuses the HyperFrames svg-line-draw-loader pattern.
+const tl = gsap.timeline({paused:true, defaults:{ease:'power2.inOut'}});
+document.querySelectorAll('.signal').forEach(path => {
+ const length = path.getTotalLength();
+ path.style.strokeDasharray = length;
+ const start = path.classList.contains('route-in') ? .6 : path.classList.contains('route-model') ? 2.5 : 5.8;
+ tl.fromTo(path,{strokeDashoffset:length},{strokeDashoffset:0,duration:.9},start);
+ tl.to(path,{opacity:0,duration:.4},11.2);
+});
+tl.fromTo('.source',{y:3},{y:0,duration:.5,stagger:.15},0);
+tl.fromTo('.code-mark',{x:-3,opacity:.55},{x:0,opacity:1,duration:.6},1.6);
+tl.fromTo('.step-edit svg',{scale:0},{scale:1,duration:.4,ease:'back.out(1.4)'},2.6);
+tl.fromTo('.brand-tile',{scale:.9},{scale:1,duration:.5},3);
+tl.fromTo('.step-test svg',{scale:0},{scale:1,duration:.4,ease:'back.out(1.4)'},4.6);
+tl.fromTo('.diff-line i',{scaleX:.15,transformOrigin:'left center'},{scaleX:1,duration:.6,stagger:.12},6);
+tl.fromTo('.sheet-back',{rotation:0},{rotation:4,duration:.6},6);
+tl.fromTo('.ready svg',{scale:0},{scale:1,duration:.4,ease:'back.out(1.4)'},7);
+tl.to('.tools svg,.ready svg',{scale:0,duration:.3},11.1);
+tl.to('.diff-line i',{scaleX:.15,duration:.4},11.2);
+tl.to('.sheet-back',{rotation:0,duration:.4},11.2);
+tl.to('.code-mark',{x:-3,opacity:.55,duration:.4},11.2);
+tl.to('.brand-tile',{scale:.9,duration:.4},11.6);
+tl.to('.source',{y:3,duration:.4},11.6);
+window.__timelines = window.__timelines || {};
+window.__timelines.moyai = tl;
+</script>
+<script src="/animations/moyai-landing/player.js"></script>
+</body>
+</html>

@@ -13,6 +13,8 @@ import Image from '@theme/IdealImage';
 
 The CI/CD v2 is now live for LiteLLM.
 
+{/* truncate */}
+
 <Image
   img={require('../../img/ci_cd_architecture.png')}
   style={{width: '700px', height: 'auto', display: 'block'}}

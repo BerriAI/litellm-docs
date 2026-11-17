@@ -1,3 +1,8 @@
+---
+title: "OpenMeter Usage Billing for LiteLLM"
+sidebar_label: "OpenMeter"
+description: "Send LiteLLM cost and usage to OpenMeter for usage-based billing from the Python SDK or AI Gateway with the openmeter callback and two environment variables."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -46,7 +51,7 @@ litellm.callbacks = ["openmeter"]
 response = litellm.completion(
   model="{{openai_small}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - i'm openai"}
+    {"role": "user", "content": "Hi - i'm openai"}
   ]
 )
 ```
@@ -64,7 +69,7 @@ model_list:
   model_name: fake-openai-endpoint
 
 litellm_settings:
-  callbacks: ["openmeter"] # 👈 KEY CHANGE
+  callbacks: ["openmeter"] # KEY CHANGE
 ```
 
 2. Start Proxy

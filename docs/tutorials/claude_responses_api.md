@@ -16,7 +16,7 @@ This tutorial is based on [Anthropic's official LiteLLM configuration documentat
 
 ### Video Walkthrough
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/3c17d683cdb74d36a3698763cc558f56" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/3c17d683cdb74d36a3698763cc558f56" frameBorder="0" allowFullScreen></iframe>
 
 ## Prerequisites
 
@@ -237,7 +237,7 @@ Common issues and solutions:
 
 Expand your configuration to support multiple providers and models:
 
-:::tip Check live compatibility before you wire up a provider
+:::tip[Check live compatibility before you wire up a provider]
 
 Compatibility between Claude Code features and each provider (Anthropic, Bedrock, Vertex AI, Azure) changes as Claude Code and LiteLLM ship updates. The [Claude Code × LiteLLM compatibility matrix](https://docs.litellm.ai/docs/claude_code_compatibility) is regenerated daily against the latest stable LiteLLM proxy across Haiku 4.5, Sonnet 4.6, and Opus 4.7. Check it first to see which `(feature, provider)` cells are currently green.
 
@@ -323,7 +323,7 @@ claude --model claude-opus-vertex
 
 Two extra steps make Claude Code work cleanly against Bedrock through LiteLLM today. Please do both before launching `claude` against a Bedrock-backed model.
 
-:::note Temporary workaround
+:::note[Temporary workaround]
 
 The Invoke preference and the beta-header flag below are temporary. LiteLLM already re-implements many Anthropic-API features on top of Bedrock inside the gateway, and we're steadily extending that coverage on the Converse path. Soon, these workarounds will no longer be necessary.
 
@@ -369,7 +369,7 @@ The recommended place to set it is your **global Claude Code user settings file*
 
 3. **Fully quit and reopen Claude Code** so the new setting is picked up. For IDE plugins (VS Code, JetBrains), restart your IDE.
 
-:::tip Alternative: project-scoped or shell-scoped
+:::tip[Alternative: project-scoped or shell-scoped]
 
 If you only want to disable beta headers for a single project, put the same `env` block in `.claude/settings.json` (committed) or `.claude/settings.local.json` (gitignored, personal) at the project root.
 

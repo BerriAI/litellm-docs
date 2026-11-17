@@ -1,0 +1,173 @@
+.demo {
+  margin: 24px 0 0;
+  color: #40506b;
+  font-family:
+    "Geist",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  text-align: left;
+}
+
+.providers {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 19px;
+  color: #6b7690;
+  font-size: 13px;
+}
+
+.selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.demo .selector button {
+  appearance: none;
+  color-scheme: light;
+  min-height: 46px;
+  padding: 8px 13px;
+  border: 1px solid #cbd4ea;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #344768;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.demo .selector button[aria-pressed="true"] {
+  background: #e9edff;
+  color: #2038c6;
+  border-color: #243ce0;
+}
+.demo .selector button:hover {
+  background: #f1f4ff;
+  color: #2038c6;
+  border-color: #94a5e8;
+}
+.demo .selector button[aria-pressed="true"]:hover,
+.demo .selector button:active {
+  background: #dde5ff;
+  color: #152cae;
+  border-color: #243ce0;
+}
+.demo .selector button:focus-visible {
+  background: #e9edff;
+  color: #2038c6;
+  border-color: #243ce0;
+  outline: 2px solid #526bff;
+  outline-offset: 5px;
+}
+
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 30px;
+  padding: 42px 36px 46px;
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse at 0 5%, #edf0ff 0, transparent 52%),
+    radial-gradient(ellipse at 100% 100%, #b9c9fc 0, transparent 64%),
+    linear-gradient(120deg, #dde5ff, #d4d5f9 58%, #cddcff);
+}
+
+.editor {
+  min-width: 0;
+}
+.stage [data-code-window] {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.panelHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 3px 12px;
+  color: #4a587c;
+  font-size: 12px;
+  font-weight: 500;
+}
+.panelHeading > span:last-child {
+  color: #71809f;
+  font-size: 11px;
+  font-weight: 400;
+}
+.demo .panelHeading code {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  color: #657498 !important;
+  font:
+    11px/1.5 "Geist Mono",
+    ui-monospace,
+    monospace;
+}
+
+.modelName {
+  display: block;
+  margin-top: 6px;
+  font:
+    12px/1.5 "Geist Mono",
+    ui-monospace,
+    monospace;
+}
+.demo .modelHint {
+  margin: 16px 3px 0;
+  color: #40506b;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.caption {
+  margin-top: 10px;
+  color: #6d7b97;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@container tokenize (max-width: 900px) {
+  .stage {
+    gap: 23px;
+    padding: 34px 25px;
+  }
+  .panelHeading {
+    flex-wrap: wrap;
+    gap: 3px 12px;
+  }
+}
+
+@container tokenize (max-width: 720px) {
+  .stage {
+    grid-template-columns: 1fr;
+    gap: 29px;
+    padding: 24px 12px;
+    border-radius: 16px;
+  }
+  .providers {
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    gap: 10px 20px;
+  }
+  .caption {
+    font-size: 11px;
+  }
+}

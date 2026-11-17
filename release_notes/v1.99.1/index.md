@@ -1,5 +1,6 @@
 ---
-title: "v1.99.1 - OTel Cache Token Counts"
+title: "LiteLLM v1.99.1 - OTel Cache Token Counts"
+description: "Fixes OpenTelemetry v2 LLM spans so they emit cache token counts for each request. Observability backends now see cache token usage per call."
 slug: "v1-99-1"
 date: 2026-09-02T14:01:25
 authors:
@@ -18,7 +19,7 @@ authors:
 hide_table_of_contents: false
 ---
 
-:::info This is a Docker-only release
+:::info[This is a Docker-only release]
 
 `v1.99.1` is distributed as container images. There is no PyPI package for this version, so `pip install litellm==1.99.1` will not resolve. If you install LiteLLM from PyPI, stay on `1.99.0`; the change in this release reaches you through the image.
 

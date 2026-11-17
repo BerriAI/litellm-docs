@@ -24,7 +24,7 @@ If you see your LiteLLM key arriving at the upstream MCP server (the debug heade
 | Endpoint | Protocol | Use when | Required headers | Server scope | Expected response |
 |----------|----------|----------|------------------|--------------|-------------------|
 | `/mcp` | MCP JSON-RPC (streamable HTTP) | A direct MCP client (Claude Desktop/Code, Cursor, MCP Inspector, FastMCP) should see every server the key can access | `x-litellm-api-key: Bearer sk-...`; optionally `x-mcp-servers: <name1>,<group1>` to narrow the set | All servers the key/team is permitted to use, optionally narrowed by `x-mcp-servers` | MCP `initialize` / `tools/list` / `tools/call` JSON-RPC responses; tool names are prefixed with the server alias (e.g. `github_mcp-search_issues`) |
-| `/{server_name}/mcp` | MCP JSON-RPC (streamable HTTP) | A direct MCP client should see exactly one server (or a comma-separated list `/{name1,name2}/mcp`) | `x-litellm-api-key: Bearer sk-...` | The named server(s), toolset, or access group only | Same JSON-RPC responses, scoped to that server |
+| `/{server_name}/mcp` or `/mcp/{server_name}` | MCP JSON-RPC (streamable HTTP) | A direct MCP client should see exactly one server (or a comma-separated list `/{name1,name2}/mcp`). Both URL forms behave the same | `x-litellm-api-key: Bearer sk-...` | The named server(s), toolset, or access group only | Same JSON-RPC responses, scoped to that server |
 | `/toolset/{toolset_name}/mcp` | MCP JSON-RPC (streamable HTTP) | A direct MCP client should see exactly the tools in a [toolset](./mcp_toolsets) | `x-litellm-api-key: Bearer sk-...` | The named toolset | Same JSON-RPC responses, scoped to the toolset |
 | `server_url: "litellm_proxy"` inside `tools` | LLM API (`/v1/responses` or `/v1/chat/completions`) | The LLM should discover and execute MCP tools during a completion. `litellm_proxy` is a literal sentinel, never a URL | `Authorization: Bearer sk-...` on the LLM request; per-server upstream creds via `x-mcp-...` headers or the tool's `headers` object | All permitted servers, or use `litellm_proxy/mcp/<server_alias>` for a server or toolset | Responses / Chat Completions output; `require_approval: "never"` enables execution of model-selected tools |
 | `GET /v1/mcp/server` | REST | List configured servers and fetch a real `server_id` / `server_name` | `Authorization: Bearer sk-...` or `x-litellm-api-key: sk-...` | All servers visible to the key | JSON array of server objects |
@@ -179,7 +179,7 @@ For Cursor, use a network URL and match the credential header to the configured 
     "github": {
       "url": "http://localhost:4000/github_mcp/mcp",
       "headers": {
-        "x-litellm-api-key": "Bearer sk-1234",
+        "x-litellm-api-key": "Bearer sk-<your-virtual-key>",
         "x-mcp-github_mcp-authorization": "Bearer gho_your_token"
       }
     }
@@ -229,5 +229,7 @@ Expect a tool result containing the repository's wiki structure. Omitting `serve
 - [MCP Overview](./mcp): adding servers via UI or config.yaml, full field reference
 - [Using your MCP](./mcp_usage): Responses API, Cursor, and SDK walkthroughs
 - [MCP REST API](./mcp_rest_api): `/mcp-rest/*` request/response details and error shapes
+- [MCP Permission Management](./mcp_control): `allowed_tools` / `disallowed_tools`, per-key tool permissions, and pinning a server's tool list, descriptions, and input schemas (`pinned_tools`, `POST` / `DELETE /v1/mcp/server/{server_id}/pin`)
+- [MCP Guardrails](./mcp_guardrail): `pre_mcp_call` guardrails on tool arguments and on upstream tool descriptions at discovery
 - [MCP OAuth](./mcp_oauth), [MCP OBO Auth](./mcp_obo_auth), [MCP OAuth Passthrough](./mcp_oauth_passthrough), [MCP AWS SigV4](./mcp_aws_sigv4)
 - [MCP Troubleshooting](./mcp_troubleshoot): debug headers and hop-by-hop isolation

@@ -1,3 +1,7 @@
+---
+sidebar_label: "Batching"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -17,7 +21,7 @@ Trying to do batch completion on LiteLLM Proxy ? Go here: https://docs.litellm.a
 
 In the batch_completion method, you provide a list of `messages` where each sub-list of messages is passed to `litellm.completion()`, allowing you to process multiple prompts efficiently in a single API call.
 
-<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/LiteLLM_batch_completion.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/LiteLLM_batch_completion.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
@@ -92,7 +96,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
 -H 'Content-Type: application/json' \
 -H "Authorization: Bearer $LITELLM_API_KEY" \ 
 -D '{
-    "model": "{{openai_large}}, groq-llama", # 👈 Comma-separated models
+    "model": "{{openai_large}}, groq-llama", # Comma-separated models
     "messages": [
       {
         "role": "user",
@@ -100,7 +104,7 @@ curl -X POST 'http://localhost:4000/chat/completions' \
       }
     ],
     "stream": true,
-    "fastest_response": true # 👈 FLAG
+    "fastest_response": true # FLAG
 }
 
 '
@@ -118,14 +122,14 @@ client = openai.OpenAI(
 
 # request sent to model set on litellm proxy, `litellm --model`
 response = client.chat.completions.create(
-    model="{{openai_large}}, groq-llama", # 👈 Comma-separated models
+    model="{{openai_large}}, groq-llama", # Comma-separated models
     messages = [
         {
             "role": "user",
             "content": "this is a test request, write a short poem"
         }
     ],
-    extra_body={"fastest_response": true} # 👈 FLAG
+    extra_body={"fastest_response": true} # FLAG
 )
 
 print(response)

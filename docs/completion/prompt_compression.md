@@ -1,6 +1,6 @@
 # Prompt Compression (`compress()`)
 
-:::info Beta
+:::info[Beta]
 
 This feature is in beta. APIs and behavior may change before general availability.
 
@@ -152,5 +152,5 @@ python tests/eval_swe_bench.py --model {{openai_large}} --problems 10 \
 ### Running the HumanEval-style eval
 
 ```bash
-python scripts/eval_compression.py --model {{openai_large}} --problems 5
+python litellm/scripts/eval_compression.py --model {{openai_large}} --problems 5
 ```

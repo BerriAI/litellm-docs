@@ -1,5 +1,6 @@
 ---
-title: "v1.92.1 - Docker Migration Assets, Model Armor Attachments & Anthropic Passthrough"
+title: "LiteLLM v1.92.1 - Docker Migration Assets, Model Armor Attachments & Anthropic Passthrough"
+description: "Restores migration assets for non-root users and fixes Model Armor attachments and Anthropic passthrough temperature handling."
 slug: "v1-92-1"
 date: 2026-07-19T03:07:45
 authors:

@@ -32,34 +32,62 @@ DEFAULT_GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 Alternatively, configure in your `config.yaml`:
 
 ```yaml
-litellm_settings:
-  default_vertex_config:
-    vertex_project: "your-project-id"
-    vertex_location: "us-central1"
-    vertex_credentials: "os.environ/GOOGLE_APPLICATION_CREDENTIALS"
+default_vertex_config:
+  vertex_project: "your-project-id"
+  vertex_location: "us-central1"
+  vertex_credentials: "os.environ/GOOGLE_APPLICATION_CREDENTIALS"
 ```
+
+`default_vertex_config` is a top-level key, not a child of `litellm_settings`.
 
 ## Usage
 
-### WebSocket Endpoints
+### WebSocket Endpoint
 
-- `ws://your-proxy-host/v1/vertex-ai/live`
-- `ws://your-proxy-host/vertex-ai/live`
+- `ws://your-proxy-host/vertex_ai/live`
 
 ### Query Parameters
 
 - `vertex_project` (optional): Google Cloud project ID (can be set in config)
 - `vertex_location` (optional): Vertex AI location (can be set in config, default: us-central1)
-- `model` (optional): model name, used to determine the Vertex region for global models
+- `model` (optional): model name, used to determine the Vertex region for global models and to pick a `use_in_pass_through` deployment
+
+### Pinned deployments
+
+When `model` names a `use_in_pass_through` Vertex AI deployment and the proxy has no `default_vertex_config` or `DEFAULT_VERTEXAI_PROJECT`, the session uses that deployment's project and region. A `vertex_project` or `vertex_location` query param that differs from the deployment's value closes the connection with code `1008` and the reason `Rejected Request: vertex_location is pinned by the deployment, see configurable_clientside_auth_params`. A `vertex_project` and `vertex_location` pair that matches another `use_in_pass_through` deployment connects through that deployment instead.
+
+To let callers pick the region or project, list the param in the deployment's `configurable_clientside_auth_params`, or set `general_settings.allow_client_side_credentials: true` proxy-wide.
+
+When the proxy sets `default_vertex_config`, each field it sets pins the session the same way. A `vertex_project` or `vertex_location` query param that differs from it closes the connection with code `1008` and the reason `Rejected Request: vertex_location is pinned by default_vertex_config, see allow_client_side_credentials`. A region that `default_vertex_config` leaves unset is still the caller's choice, since it only picks which Google endpoint serves the session. A project that nothing pins is not, since it decides whose quota and billing the proxy's credentials are spent on. A `vertex_project` other than the proxy's own `VERTEXAI_PROJECT` or `DEFAULT_VERTEXAI_PROJECT` then closes the connection with code `1008` and the reason `Rejected Request: vertex_project must come from the proxy's configuration, see allow_client_side_credentials`. `default_vertex_config` has no per-field opt-in, so only `general_settings.allow_client_side_credentials: true` lifts its pin.
+
+Google's SDKs send the setup message's `model` as a full `projects/<project>/locations/<location>/publishers/google/models/<model>` path. The proxy moves the project and region in that path onto the session's own before it forwards the message, so the session stays on the project and region the admin chose. A setup message sent as a binary frame gets the same rewrite, and one that is not UTF-8 text closes the connection with code `1008`. With `allow_client_side_credentials: true` the path is forwarded as sent.
+
+```yaml
+model_list:
+  - model_name: gemini-live
+    litellm_params:
+      model: vertex_ai/gemini-3.8-live
+      vertex_project: my-project
+      vertex_location: us-central1
+      vertex_credentials: os.environ/GOOGLE_APPLICATION_CREDENTIALS
+      use_in_pass_through: true
+      configurable_clientside_auth_params: ["vertex_location"] # optional, lets callers pick the region
+```
+
+```javascript
+const ws = new WebSocket('ws://localhost:4000/vertex_ai/live?model=gemini-live');
+```
+
+<SinceVersion v="1.111.0" />
 
 ### Example Connection
 
 ```javascript
 // If vertex_project and vertex_location are set in config, you can connect without query params
-const ws = new WebSocket('ws://localhost:4000/v1/vertex-ai/live');
+const ws = new WebSocket('ws://localhost:4000/vertex_ai/live');
 
 // Or specify them explicitly
-const ws = new WebSocket('ws://localhost:4000/v1/vertex-ai/live?vertex_project=your-project-id&vertex_location=us-central1');
+const ws = new WebSocket('ws://localhost:4000/vertex_ai/live?vertex_project=your-project-id&vertex_location=us-central1');
 ```
 
 ## Cost Tracking
@@ -171,9 +199,11 @@ import json
 import websockets
 
 async def chat_with_gemini():
-    uri = "ws://localhost:4000/v1/vertex-ai/live?vertex_project=your-project-id"
+    uri = "ws://localhost:4000/vertex_ai/live?vertex_project=your-project-id"
     
-    async with websockets.connect(uri) as websocket:
+    headers = {"Authorization": "Bearer sk-<your-litellm-api-key>"}
+
+    async with websockets.connect(uri, additional_headers=headers) as websocket:
         # Setup
         setup = {
             "setup": {
@@ -210,7 +240,7 @@ asyncio.run(chat_with_gemini())
 ### JavaScript Client
 
 ```javascript
-const ws = new WebSocket('ws://localhost:4000/v1/vertex-ai/live?vertex_project=your-project-id');
+const ws = new WebSocket('ws://localhost:4000/vertex_ai/live?vertex_project=your-project-id');
 
 ws.onopen = function() {
     // Send setup
@@ -243,11 +273,13 @@ ws.onmessage = function(event) {
 
 ## Error Handling
 
-The WebSocket connection may close with these codes:
+If the proxy cannot resolve Vertex AI credentials or a project ID (no `use_in_pass_through` Vertex model, no `default_vertex_config`, and no `DEFAULT_VERTEXAI_*` env vars), it accepts the connection and then closes it with code `1011` and the reason:
 
-- `4001`: Vertex AI credentials not configured
-- `4002`: Project ID not provided
-- `1011`: Internal server error
+```
+Vertex AI auth failed: set a use_in_pass_through vertex model, default_vertex_config, or DEFAULT_VERTEXAI_* env
+```
+
+A `vertex_project` or `vertex_location` query param that moves a pinned deployment or a field `default_vertex_config` sets, or a `vertex_project` the proxy has no configuration for, closes the connection with code `1008` before any call to Vertex AI. See [Pinned deployments](#pinned-deployments).
 
 ## Authentication
 

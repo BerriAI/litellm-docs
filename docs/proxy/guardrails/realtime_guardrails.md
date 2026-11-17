@@ -1,3 +1,8 @@
+---
+title: "Guardrails for the Realtime API on LiteLLM"
+sidebar_label: "Realtime API Guardrails"
+description: "Guard voice conversations on the LiteLLM AI Gateway Realtime API by checking each speech transcription before the model responds, per virtual key."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -168,6 +173,8 @@ When the guardrail fires, the proxy:
 3. OpenAI's TTS **speaks the warning** back to the user, e.g. *"Content blocked: keyword 'system update' detected (Prompt injection attempt)"*
 
 The LLM never processes the injected instruction.
+
+On a transcription-only session (`/v1/realtime?intent=transcription`, or a `session.type` of `transcription`) there is no assistant turn to cancel or re-create, so the proxy sends nothing upstream on a block. It still forwards the transcript, then sends the client an `error` event with `"type": "guardrail_violation"` and the block message, and the session keeps transcribing the next turn. `on_violation: end_session` and `end_session_after_n_fails` close the session the same way they do on a voice session.
 
 ## Using with other guardrail providers
 

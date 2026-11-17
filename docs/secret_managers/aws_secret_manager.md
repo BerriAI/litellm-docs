@@ -29,9 +29,9 @@ os.environ["AWS_REGION_NAME"] = "" # us-east-1, us-east-2, us-west-1, us-west-2
 ```yaml
 general_settings:
   master_key: os.environ/litellm_master_key 
-  key_management_system: "aws_secret_manager" # 👈 KEY CHANGE
+  key_management_system: "aws_secret_manager" # KEY CHANGE
   key_management_settings: 
-    hosted_keys: ["litellm_master_key"] # 👈 Specify which env keys you stored on AWS 
+    hosted_keys: ["litellm_master_key"] # Specify which env keys you stored on AWS
 
 ```
 
@@ -43,7 +43,7 @@ This will only store virtual keys in AWS Secret Manager. No keys will be read fr
 
 ```yaml
 general_settings:
-  key_management_system: "aws_secret_manager" # 👈 KEY CHANGE
+  key_management_system: "aws_secret_manager" # KEY CHANGE
   key_management_settings: 
     store_virtual_keys: true # OPTIONAL. Defaults to False, when True will store virtual keys in secret manager
     prefix_for_stored_virtual_keys: "litellm/" # OPTIONAL. If set, this prefix will be used for stored virtual keys in the secret manager
@@ -60,7 +60,7 @@ general_settings:
 ```yaml
 general_settings:
   master_key: os.environ/litellm_master_key 
-  key_management_system: "aws_secret_manager" # 👈 KEY CHANGE
+  key_management_system: "aws_secret_manager" # KEY CHANGE
   key_management_settings: 
     store_virtual_keys: true # OPTIONAL. Defaults to False, when True will store virtual keys in secret manager
     prefix_for_stored_virtual_keys: "litellm/" # OPTIONAL. If set, this prefix will be used for stored virtual keys in the secret manager
@@ -104,7 +104,7 @@ general_settings:
       "OPENAI_API_KEY_MODEL_1",
       "OPENAI_API_KEY_MODEL_2",
     ]
-    primary_secret_name: "litellm_secrets" # 👈 Read multiple keys from one JSON secret
+    primary_secret_name: "litellm_secrets" # Read multiple keys from one JSON secret
 ```
 
 The `primary_secret_name` allows you to read multiple keys from a single AWS Secret as a JSON object. For example, the "litellm_secrets" would contain:

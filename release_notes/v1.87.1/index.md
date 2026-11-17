@@ -1,5 +1,6 @@
 ---
-title: "v1.87.1 - Azure AD, Batch Auth & Key Access Backports"
+title: "LiteLLM v1.87.1 - Azure AD, Batch Auth & Key Access Backports"
+description: "Fixes Azure AD token refresh, batch and video model routing and Vertex Claude effort handling. Backports five staged fixes to the 1.87 line."
 slug: "v1-87-1"
 date: 2026-06-03T21:54:19
 authors:

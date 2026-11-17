@@ -1,3 +1,9 @@
+---
+title: "Manus Agents API with LiteLLM: Responses API"
+sidebar_label: "Manus"
+description: "Create Manus agent tasks with manus-1.6, manus-1.6-lite or manus-1.6-max through the Responses API, poll until they finish and upload files to analyze."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -175,7 +181,7 @@ Manus operates as an **asynchronous agent API**:
 - `completed` - Task finished successfully
 - `error` - Task failed
 
-:::tip Production Usage
+:::tip[Production Usage]
 For production applications, use [webhooks](https://open.manus.im/docs/webhooks) instead of polling to get notified when tasks complete.
 :::
 

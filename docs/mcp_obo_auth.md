@@ -247,14 +247,11 @@ This means two different users get separate exchanged tokens, while repeated cal
 
 The cache TTL is based on `expires_in` minus LiteLLM's OAuth expiry buffer. If `expires_in` is missing or invalid, LiteLLM uses the default OAuth token cache TTL.
 
-## Fallback Behavior
+## Requests Without a Subject Token
 
-If an OBO server has no incoming subject token:
+If a request to an `oauth2_token_exchange` server carries no user bearer token, LiteLLM rejects it with `401 Unauthorized` and `WWW-Authenticate: Bearer resource_metadata="/.well-known/oauth-protected-resource/mcp/<server_name>", error="invalid_token", error_description="Missing or invalid subject token; authenticate with the IdP and retry"`. There is no fallback to OAuth `client_credentials` and the request is never forwarded to the MCP server without an exchanged token.
 
-- If `client_id`, `client_secret`, and `token_url` are configured, LiteLLM can fall back to OAuth `client_credentials`.
-- Otherwise, LiteLLM logs a warning and proceeds without token exchange.
-
-For strict OBO deployments, configure clients so every request includes the user bearer token.
+If you also need machine-to-machine access to the same MCP server, register a separate server entry with `auth_type: oauth2` and `client_id`, `client_secret`, and `token_url` configured. Set `oauth2_flow: client_credentials` on that entry; the proxy refuses to start an `oauth2` server without an explicit `oauth2_flow`.
 
 ## Troubleshooting
 

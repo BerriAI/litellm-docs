@@ -1,3 +1,8 @@
+---
+title: "Google Cloud Storage (GCS) Logging for LiteLLM"
+sidebar_label: "Google Cloud Storage"
+description: "Log LiteLLM AI Gateway requests to Google Cloud Storage (GCS) buckets with the gcs_bucket callback, an Enterprise feature that writes the standard log payload."
+---
 import Image from '@theme/IdealImage';
 
 # Google Cloud Storage
@@ -18,7 +23,7 @@ model_list:
   model_name: fake-openai-endpoint
 
 litellm_settings:
-  callbacks: ["gcs_bucket"] # 👈 KEY CHANGE # 👈 KEY CHANGE
+  callbacks: ["gcs_bucket"] # KEY CHANGE # KEY CHANGE
 ```
 
 2. Set required env variables
@@ -72,6 +77,6 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ## Support & Talk to Founders
 
-- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+- [Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Our emails ishaan@berri.ai / krrish@berri.ai

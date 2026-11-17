@@ -1,5 +1,6 @@
 ---
-title: v1.56.3
+title: "LiteLLM v1.56.3"
+description: "Adds guardrail trace logging, a /guardrails/list endpoint and mock_response support for guardrails. Also assigns keys to users in the Proxy UI."
 slug: v1.56.3
 date: 2024-12-28T10:00:00
 authors:

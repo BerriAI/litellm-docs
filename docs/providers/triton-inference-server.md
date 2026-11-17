@@ -1,3 +1,9 @@
+---
+title: "NVIDIA Triton Inference Server with LiteLLM"
+sidebar_label: "Triton Inference Server"
+description: "Call NVIDIA Triton Inference Server via LiteLLM with the triton/ prefix: /generate and /infer for chat, /embeddings for embedding, set up in config.yaml."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -192,7 +198,7 @@ response = completion(
 
 Use the `triton/` prefix to route to triton server
 ```python
-from litellm import embedding
+import litellm
 import os
 
 response = await litellm.aembedding(

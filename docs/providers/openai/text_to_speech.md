@@ -1,3 +1,9 @@
+---
+title: "OpenAI Text to Speech with LiteLLM"
+sidebar_label: "OpenAI - Text-to-speech"
+description: "Run OpenAI text to speech through LiteLLM's /audio/speech endpoint from the Python SDK or AI Gateway, with async calls and the supported TTS models."
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -104,7 +110,7 @@ litellm --config /path/to/config.yaml
 | gpt-4o-mini-tts | speech(model="gpt-4o-mini-tts", voice="alloy", input="Hello, world!") |
 
 
-## ✨ Enterprise LiteLLM Proxy - Set Max Request File Size 
+## Enterprise LiteLLM Proxy - Set Max Request File Size
 
 Use this when you want to limit the file size for requests sent to `audio/transcriptions`
 
@@ -113,7 +119,7 @@ Use this when you want to limit the file size for requests sent to `audio/transc
   litellm_params:
     model: whisper-1
     api_key: sk-*******
-    max_file_size_mb: 0.00001 # 👈 max file size in MB  (Set this intentionally very small for testing)
+    max_file_size_mb: 0.00001 # max file size in MB  (Set this intentionally very small for testing)
   model_info:
     mode: audio_transcription
 ```

@@ -1,3 +1,9 @@
+---
+title: "Writer Palmyra on Bedrock with LiteLLM"
+sidebar_label: "Bedrock - Writer Palmyra"
+description: "Call Writer Palmyra models on AWS Bedrock via LiteLLM from the Python SDK or AI Gateway, with config.yaml setup, multi-step tool calling and PDF inputs."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -311,6 +317,6 @@ response = client.chat.completions.create(
 | `bedrock/writer.palmyra-x5-v1:0` | 1M tokens | $0.0006 | $0.006 |
 | `bedrock/writer.palmyra-x4-v1:0` | 128K tokens | $0.0025 | $0.010 |
 
-:::info Cross-Region Inference
+:::info[Cross-Region Inference]
 The `us.writer.*` model IDs use cross-region inference profiles. Use these for production workloads.
 :::

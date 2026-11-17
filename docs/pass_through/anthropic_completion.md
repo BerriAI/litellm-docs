@@ -263,7 +263,7 @@ curl https://api.anthropic.com/v1/messages/batches \
 }'
 ```
 
-:::note Configuration Required for Batch Cost Tracking
+:::note[Configuration Required for Batch Cost Tracking]
 For batch passthrough cost tracking to work properly, you need to define the Anthropic model in your `proxy_config.yaml`:
 
 ```yaml

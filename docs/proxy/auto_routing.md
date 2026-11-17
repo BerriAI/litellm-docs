@@ -1,6 +1,6 @@
 ---
 title: "[Beta] Auto Routing"
-sidebar_label: "[Beta] Auto Routing"
+sidebar_label: "Auto Routing (Beta)"
 ---
 
 import Image from '@theme/IdealImage';
@@ -11,9 +11,11 @@ import TabItem from '@theme/TabItem';
 
 One router for complexity, semantic, and adaptive routing. Classify each request with heuristics, an LLM classifier, JEV through TypeSafe System One Choice, lexical/semantic keyword rules, or your own classifier plugin, then route to a pinned model, a random pool, or a Thompson-sampled pool per tier
 
-:::info Availability
+:::info[Availability]
 
-Auto routing is in **beta**, so config keys and defaults can still change between releases. Ships in **v1.94.x**. The earliest dev release cuts **Tuesday, 2026-07-14**. Suggestions and feedback: [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
+<SinceVersion v="1.94.0" />
+
+Auto routing is in **beta**, so config keys and defaults can still change between releases. Suggestions and feedback: [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
 
 :::
 
@@ -128,11 +130,8 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
       reminder_markers: ["<system-reminder>", "</system-reminder>"]   # default
 
       # Escalate a prompt that provably does not fit the decided tier, before dispatch
-      enable_context_window_escalation: true   # default
+      enable_context_window_escalation: false   # default; set true to opt in
       context_window_escalation_buffer: 0.95   # default; prompt must fit within this fraction of the window
-
-      # Send image-bearing requests to a tier that can see them
-      modality_routing: false   # default; set true to opt in
 
       # Classify new user asks only, carrying the decision through continuation turns
       classification_mode: every_request   # default; or user_turn
@@ -174,6 +173,24 @@ Every knob v2 exposes. All fields on `complexity_router_config` are optional exc
     # auto_router_model_compression: none
 ```
 
+## Image requests and text-only tiers
+
+An image request is a `/v1/chat/completions` call with an `image_url` content part, a `/v1/responses` call with an `input_image` item, or a `/v1/messages` call with an `image` block. LiteLLM does not send one to a deployment that is declared text-only. A deployment is text-only when `model_info.supports_vision` is `false`, or when that key is unset and the model catalog says `supports_vision: false` for `model_info.base_model`, then `litellm_params.base_model`, then the deployment model name. A deployment with no declaration and no catalog entry is treated as image-capable, so a custom text-only deployment needs an explicit `model_info.supports_vision: false` before it is skipped. LiteLLM never probes a provider during routing.
+
+```yaml
+model_list:
+  - model_name: oss-120b
+    litellm_params:
+      model: hosted_vllm/my-text-only-model
+      api_base: os.environ/TEXT_API_BASE
+    model_info:
+      supports_vision: false
+```
+
+Within a model group this check runs on by default under every routing strategy, including streaming, and does not need `enable_pre_call_checks`. When the group mixes text-only and vision deployments, an image request chooses among the vision deployments and the rest of routing (health, cooldowns, access, quota, order, plugins) applies within that subset. When every deployment in the group is text-only nothing is removed and the provider's own error is returned, so a group that only ever served text keeps its previous behavior. See [vision capability filtering](./reliability#vision-capability-filtering-image-requests) for the model group version.
+
+The auto-router adds a tier level check on top of that. With `modality_routing: true` in the complexity router config, an image turn that was classified onto a text-only tier moves to the next capable tier or the default model instead of failing at the provider. It skips a tier when any deployment behind that tier's model is declared text-only, resolved the same way as above, and an undeclared model stays eligible. Session pins are retained by default, so a pinned text-only model keeps receiving the image turns of that session. Set `modality_pin_override: true` to let that image turn move to a capable model without changing the stored session pin.
+
 ## Classification
 
 Choose a classifier, with optional keyword rules before classification. Unless configured otherwise, an LLM, JEV or custom classifier failure falls back to the heuristic scorer
@@ -202,6 +219,8 @@ classifier_llm_config:
 ```
 
 ### JEV classifier
+
+This reference retains the field names supported by released builds. A build containing [backend #43626](https://github.com/BerriAI/litellm/pull/43626) also accepts `classifier_type: oss_classifier` with `opensource_classifier_config.provider: jev`; the settings below apply inside `opensource_classifier_config`. The existing names remain accepted. See the [OSS classifier guide](/docs/auto_router/decision_classifiers) for migration and the Jev, Nimble, Laya and Databricks provider configurations. With `provider: databricks`, `model` is `ai_decide` or a bare serving endpoint name, and `api_key` and `api_base` read `DATABRICKS_API_KEY` (or `DATABRICKS_TOKEN`) and `DATABRICKS_API_BASE` when omitted.
 
 Set `classifier_type: jev` with `jev_classifier_config` to use [TypeSafe System One](/docs/pass_through/typesafe). It sends one `questions.tier` Choice question to `POST /v1/systemone`, with the classification input in `state` and tier descriptions in `criteria`. The returned choice selects the existing tier pool. See [setup and dashboard instructions](/docs/auto_router/setup#jev-classifier-typesafe-ai)
 
@@ -346,7 +365,7 @@ The deprecated [semantic auto router](./auto_routing_semantic.md) has a much thi
 
 :::info
 
-Context-window support ships in **v1.96.x** ([PR #35185](https://github.com/BerriAI/litellm/pull/35185)); assistant turns in the window arrived in the same release ([PR #35471](https://github.com/BerriAI/litellm/pull/35471)). On earlier versions the classifier saw only the current message, and these keys are silently ignored.
+Context-window support works <SinceVersion v="1.96.0" /> ([PR #35185](https://github.com/BerriAI/litellm/pull/35185)); assistant turns in the window arrived in the same release ([PR #35471](https://github.com/BerriAI/litellm/pull/35471)). On earlier versions the classifier saw only the current message, and these keys are silently ignored.
 
 :::
 
@@ -416,7 +435,7 @@ session_affinity_ttl_seconds: 3600
 
 `session_id` is read from request metadata; when no `session_id` is resolvable the router classifies every turn as usual, whatever this is set to. When `adaptive: true` is also set, a pinned turn still stamps the adaptive bandit's chosen-model metadata key so reward feedback keeps working. `session_affinity` is ignored when routing `plugins` are configured, so a mid-session policy change still applies on later turns rather than being skipped by a cached pin. That is routing `plugins` specifically; a `classifier_plugin` picks the tier on the turns that are classified and leaves the pin in place.
 
-:::info Changed default
+:::info[Changed default]
 
 `session_affinity` used to default to `true`. Routers created before that changed have no `session_affinity` key stored, so they pick up the new `false` default and start reclassifying every turn. Add `session_affinity: true` to any router that should keep pinning.
 
@@ -543,7 +562,7 @@ Because `model` is a standard OpenAI response field, every SDK and framework alr
 
 Two things change once the flag is on. Callers stop getting back the alias they sent, which some clients assert on. And the value is the resolved model as the deployment reports it, so a provider-prefixed identifier such as `hosted_vllm/my-model` reaches the client verbatim rather than the `model_list` `model_name` that the [decision log](#decision-log) prints as `routed_model=`.
 
-:::info No dedicated body field
+:::info[No dedicated body field]
 
 The v1.99 release candidates briefly carried a separate `router_model_name` body field for this ([PR #37725](https://github.com/BerriAI/litellm/pull/37725)), added with LangChain callers in mind. It never reached them: `@langchain/openai` builds `additional_kwargs` and `response_metadata` from fixed key allowlists and drops unknown fields at both the top level of a chunk and inside `delta`, so no proxy-side placement of a namespaced key could work. The field was removed before the stable release in favor of `return_raw_model_name`, which lands in the `model` field that LangChain does propagate.
 
@@ -563,7 +582,7 @@ savings = cost(baseline model, this request)
 - **"Most expensive" is settled by cost, not by rate**, since a model dearer per output token can be cheaper per cached token. Candidates are priced once against a fixed reference request (20k prompt tokens: 19k cache reads and a 1k cache write, plus 1k completion) through the same engine the savings use. Unpriceable candidates drop out, and if none price the driver reports zero. The ranking is pinned per router instance, so it stays off the per-request path
 - **Only one side is hypothetical.** What the request actually cost is read back from what the cost calculator recorded, on the service tier and data residency it was billed on, rather than re-derived; the baseline never ran, so it is priced through the same engine on that same basis. That figure is input plus output cost, leaving built-in tool cost, discounts and margins outside the comparison
 - **The result is signed.** Switching models leaves the new one cold, and when the resulting cache-creation charge outweighs the cheaper rates the number goes negative and the dashboard says so
-- **The classifier's own charge counts against the saving** (v1.100 and later). An LLM classifier records what its call cost on the routing decision as `classifier_cost`, and the reported figure is net of it, so the number is what routing earned after paying for the decision. A decision the heuristic made on its own records no charge, and nothing is deducted there
+- **The classifier's own charge counts against the saving** <SinceVersion v="1.100.0" />. An LLM classifier records what its call cost on the routing decision as `classifier_cost`, and the reported figure is net of it, so the number is what routing earned after paying for the decision. A decision the heuristic made on its own records no charge, and nothing is deducted there
 - **Zero savings retains both costs.** For supported native Anthropic requests, complete observed usage establishes equal model costs while the recorded session has used the exact baseline deployment at the same prices, including overlapping requests. Both costs remain nonzero when the request was billable. A recorded classifier charge still counts against savings. After routing diverges, returning to the same model requires cache-history evidence; model identity alone does not establish zero savings. Missing pricing or evidence produces an unavailable estimate
 
 ### Cache-prefix history and expiry {#the-baseline-is-priced-with-a-warm-cache}
@@ -655,7 +674,7 @@ Both values then appear on `/v1/models`, `/model/info`, and `/model_group/info`,
 
 Where a `model_name` fronts both a router marker and ordinary deployments, `/model_group/info` reports the largest `max_input_tokens` in that group rather than the smallest, since model-group metadata aggregates by maximum across deployments.
 
-:::info Cost fields read zero on a router entry
+:::info[Cost fields read zero on a router entry]
 
 `/model_group/info` reports `input_cost_per_token` and `output_cost_per_token` as `0.0` for an auto router, and its `providers` as an empty string, because custom pricing on a strategy alias is deliberately excluded from the cost map. Spend is still tracked against the tier model that served the request, so those zeros are a gap in this metadata view rather than untracked usage.
 
@@ -671,11 +690,11 @@ Routing resolves first. The router picks a tier, the marker drops out of the can
 
 ### Context-window escalation
 
-From v1.101.0 the complexity router checks whether the decided tier can hold the prompt before dispatch and moves the request when it provably cannot. This is on by default.
+From v1.101.0 the complexity router can check whether the decided tier can hold the prompt before dispatch and move the request when it provably cannot. This is off by default, so a router that omits the key dispatches on complexity alone; set `enable_context_window_escalation: true` to turn it on.
 
 ```yaml title="config.yaml"
 complexity_router_config:
-  enable_context_window_escalation: true   # default
+  enable_context_window_escalation: true   # default false
   context_window_escalation_buffer: 0.95   # default
 ```
 
@@ -745,6 +764,8 @@ Anthropic-family rungs use `thinking` the same way, since it is an ordinary `lit
 Effort levels are per-model capabilities, so check the model supports the rung you are asking for: `gpt-5-mini` rejects `xhigh` while `gpt-5.4-mini` accepts it, and `drop_params: true` on the router alias turns that rejection into a silently dropped parameter, which reads as a ladder that changed nothing. Two more things to keep in mind. Cost tracking prices each rung under its underlying model, so a ladder built this way shows up in spend as one model at several effort levels rather than as separate models. And `session_affinity` pins the rung's `model_name`; the TTL is refreshed on cache hits, and an escalation request can move the pin up a tier rather than leaving it on a hard fixed-duration lock
 
 ## Python SDK
+
+For installation, credentials, and a complete runnable example, follow the [Autorouter SDK guide](/docs/autorouter_sdk).
 
 ```python
 from litellm import Router

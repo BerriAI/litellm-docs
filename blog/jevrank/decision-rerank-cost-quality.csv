@@ -1,0 +1,12 @@
+model,method,origin,ndcg_at_10,usd_per_1000_queries,cost_source
+Perplexity v1.2,MC,Reference,0.777,0.15,Rounded external reference API cost
+Perplexity Flash,MC,Reference,0.775,0.07,Rounded external reference API cost
+Liquid D1 Ultra,PD,Reference,0.777,0.34,Rounded external reference API cost
+TypeSafe Jev 1.14,PD,Reference,0.776,0.58,Rounded external reference API cost
+OpenAI Luna,MC,Reference,0.773,0.7,Rounded external reference API cost
+Cohere 4 Pro,API,Reference,0.775,2.5,Rounded external reference API cost
+Voyage 2.5,API,Reference,0.768,0.37,Rounded external reference API cost
+Cohere 4 Fast,API,Reference,0.761,2.0,Rounded external reference API cost
+Cohere 3.5,API,Reference,0.754,1.0,Rounded external reference API cost
+TypeSafe Jev 1.13.0,PD,LiteLLM run,0.7676260618846087,0.57539426,Estimated from returned tokens: $0.042 / million input; $0 output
+BM25,No reranking,LiteLLM run,0.6863002612489066,0,No reranking calls

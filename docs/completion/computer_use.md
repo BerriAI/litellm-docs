@@ -146,16 +146,16 @@ print(response)
 <Tabs>
 <TabItem label="LiteLLM Python SDK" value="Python">
 
-Use `litellm.supports_computer_use(model="")` -> returns `True` if model supports computer use and `False` if not
+Use `supports_computer_use(model="")` from `litellm.utils` -> returns `True` if model supports computer use and `False` if not. It is not exported on the top-level `litellm` package, so `litellm.supports_computer_use` raises `AttributeError`
 
 ```python
-import litellm
+from litellm.utils import supports_computer_use
 
-assert litellm.supports_computer_use(model="anthropic/{{anthropic}}") == True
-assert litellm.supports_computer_use(model="anthropic/{{anthropic_large}}") == True
-assert litellm.supports_computer_use(model="bedrock/us.anthropic.{{anthropic}}") == True
-assert litellm.supports_computer_use(model="vertex_ai/{{anthropic}}") == True
-assert litellm.supports_computer_use(model="openai/{{openai_large}}") == False
+assert supports_computer_use(model="anthropic/{{anthropic}}") == True
+assert supports_computer_use(model="anthropic/{{anthropic_large}}") == True
+assert supports_computer_use(model="bedrock/us.anthropic.{{anthropic}}") == True
+assert supports_computer_use(model="vertex_ai/{{anthropic}}") == True
+assert supports_computer_use(model="openai/{{openai_large}}") == False
 ```
 </TabItem>
 
@@ -163,11 +163,11 @@ assert litellm.supports_computer_use(model="openai/{{openai_large}}") == False
 
 1. Define computer use models on config.yaml
 
-```yaml keep-model-ids
+```yaml
 model_list:
-  - model_name: claude-3-5-sonnet-latest # Anthropic claude-3-5-sonnet-latest
+  - model_name: claude-sonnet          # Anthropic model, supports_computer_use comes from the model cost map
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-latest
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: claude-bedrock         # Bedrock Anthropic model
     litellm_params:
@@ -185,39 +185,41 @@ model_list:
 litellm --config config.yaml
 ```
 
-3. Call `/model_group/info` to check if your model supports `computer use`
+3. Call `/model/info` to check if your model supports `computer use`. The flag is on each deployment's `model_info`. `/model_group/info` does not return `supports_computer_use`
 
 ```shell
 curl -X 'GET' \
-  'http://localhost:4000/model_group/info' \
+  'http://localhost:4000/model/info' \
   -H 'accept: application/json' \
   -H "x-api-key: $LITELLM_API_KEY"
 ```
 
-Expected Response 
+Expected Response (trimmed)
 
-```json keep-model-ids
+```json
 {
   "data": [
     {
-      "model_group": "claude-3-5-sonnet-latest",
-      "providers": ["anthropic"],
-      "max_input_tokens": 200000,
-      "max_output_tokens": 8192,
-      "mode": "chat",
-      "supports_computer_use": true, # 👈 supports_computer_use is true
-      "supports_vision": true,
-      "supports_function_calling": true
+      "model_name": "claude-sonnet",
+      "litellm_params": {"model": "anthropic/{{anthropic}}"},
+      "model_info": {
+        "litellm_provider": "anthropic",
+        "mode": "chat",
+        "supports_computer_use": true,
+        "supports_vision": true,
+        "supports_function_calling": true
+      }
     },
     {
-      "model_group": "claude-bedrock",
-      "providers": ["bedrock"],
-      "max_input_tokens": 200000,
-      "max_output_tokens": 8192,
-      "mode": "chat",
-      "supports_computer_use": true, # 👈 supports_computer_use is true
-      "supports_vision": true,
-      "supports_function_calling": true
+      "model_name": "claude-bedrock",
+      "litellm_params": {"model": "bedrock/us.anthropic.claude-3-5-sonnet-20241022-v2:0"},
+      "model_info": {
+        "litellm_provider": "bedrock",
+        "mode": "chat",
+        "supports_computer_use": true,
+        "supports_vision": true,
+        "supports_function_calling": true
+      }
     }
   ]
 }

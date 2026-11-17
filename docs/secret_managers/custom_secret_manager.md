@@ -51,9 +51,9 @@ Reference your custom secret manager in `config.yaml`:
 ```yaml showLineNumbers title="config.yaml"
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
-  key_management_system: custom  # 👈 KEY CHANGE
+  key_management_system: custom  # KEY CHANGE
   key_management_settings:
-    custom_secret_manager: my_secret_manager.InMemorySecretManager  # 👈 KEY CHANGE
+    custom_secret_manager: my_secret_manager.InMemorySecretManager  # KEY CHANGE
 
 model_list:
   - model_name: {{openai_large}}
@@ -244,9 +244,8 @@ async def async_delete_secret(
 
 ## Example
 
-See [cookbook/litellm_proxy_server/secret_manager/my_secret_manager.py](https://github.com/BerriAI/litellm/blob/main/cookbook/litellm_proxy_server/secret_manager/my_secret_manager.py) for a complete working example with:
+See [cookbook/litellm_proxy_server/secret_manager/my_secret_manager.py](https://github.com/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/litellm_proxy_server/secret_manager/my_secret_manager.py) for a complete working example with:
 
 - In-memory secret manager implementation  
 - Integration with LiteLLM Proxy  
 - Read, write, and delete operations
-

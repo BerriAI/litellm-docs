@@ -30,3 +30,34 @@ Every new stable release note must link the GitHub releases page, https://github
 
 This release is published as [`ghcr.io/berriai/litellm:vX.Y.Z`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/vX.Y.Z) and the full [releases page](https://github.com/BerriAI/litellm/releases).
 ```
+
+## Release notes: runnable docker command
+
+The Docker tab under "Deploy this version" must be a command that actually boots the proxy. `STORE_MODEL_IN_DB=True` alone does nothing without a database, so always pair it with `LITELLM_MASTER_KEY` and `DATABASE_URL`:
+
+```bash
+docker run \
+-e LITELLM_MASTER_KEY=sk-<paste-a-long-random-key> \
+-e DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname> \
+-e STORE_MODEL_IN_DB=True \
+-p 4000:4000 \
+docker.litellm.ai/berriai/litellm:X.Y.Z
+```
+
+## Release notes: titles, descriptions and the changelog summary
+
+Every release note is also a search result and a changelog entry, so each new note needs three things beyond its body. The `title` frontmatter names the product, the version and the change, in the form `LiteLLM vX.Y.Z <verb> <the 2 or 3 most important named changes>`, such as `LiteLLM v1.104.0 adds Claude Opus 5.5, GPT-6 and master key enforcement`. Use a plain verb (adds, fixes, updates, removes, supports), exact model, provider and feature names, at most about 75 characters, and no colon or em dash. A backport shipped on several release lines lists every version, as in `LiteLLM v1.104.1, v1.103.4 and v1.102.3 update pgbouncer to 1.26.0`.
+
+The `description` frontmatter is the snippet under that title in search and answer engines. Without it Docusaurus uses the first heading, "Deploy this version". Write 110 to 155 characters in one or two sentences that say what changed with concrete names, start with a verb or the main subject rather than the version number, "This release" or "LiteLLM", and leave out how the release is published (images, PyPI, tags).
+
+Add an entry at the top of `release_notes/summaries.json`, which feeds the changelog at `/release_notes` and its RSS feed, and remove the oldest entry so the file keeps the latest 20. An entry is `{"folders": [...], "title": ..., "points": [...]}`: same-day backports share one entry with all their folders, `title` matches the frontmatter title, and `points` holds 2 to 4 sentences (2 or 3 for a patch). Each point is one sentence of at most 25 words that says what changed and what it means for someone upgrading, with model names, endpoints, settings and numbers in backticks where they are code. Never write a bare label such as "New models on day one". When the release has a breaking change, one point states it and the setting that restores the old behavior. Use only facts from the note.
+
+Write titles, descriptions and points in ASD-STE100 Simplified Technical English: active voice, simple present, no "-ing" verb forms except in technical names such as streaming, and no should, would, may or might. Check them with `python3 ~/.claude/skills/simplified-technical-english/scripts/ste_check.py --mode descriptive <file>` when that skill is installed, and fix every error it reports.
+
+## Blog and release note authors
+
+Every post names at least one person who stands behind it. If an agent writes the post, credit whoever requested or drove the work. Never use a team or company byline. Keep only individual people in `blog/authors.yml` and `release_notes/authors.yml`; `author-person` in `scripts/check-docs.py` enforces this rule.
+
+## Supported Endpoints page
+
+`docs/supported_endpoints.mdx` builds its cards and its pass-through list from `src/data/endpoints.js`, not from the sidebar. When you add, rename, or remove an endpoint page in the "Supported Endpoints" sidebar category, update its entry in `src/data/endpoints.js` in the same PR: the main route and method as the proxy serves them, a one-sentence description, and the Python SDK function if one exists. A new provider pass-through page also needs its route prefix, taken from `litellm/proxy/pass_through_endpoints/llm_passthrough_endpoints.py`. Check every route against the LiteLLM source before you add it. `npm run test:endpoints` compares the data with the sidebar, and `npm run check:endpoints` compares it with BerriAI/litellm main; both only warn for now.

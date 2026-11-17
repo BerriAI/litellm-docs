@@ -1,8 +1,10 @@
 # Routing Plugins
 
+<SinceVersion v="1.94.0" />
+
 :::info
 
-Routing plugins are available from **v1.92.x** (Thursday's release). The design is still evolving, so tell us how you'd use it and what you'd want next in the autorouter discussion on GitHub: [#32168](https://github.com/BerriAI/litellm/discussions/32168).
+The design is still evolving, so tell us how you'd use routing plugins and what you'd want next in the autorouter discussion on GitHub: [#32168](https://github.com/BerriAI/litellm/discussions/32168).
 
 :::
 
@@ -320,4 +322,4 @@ PRs: [#32972](https://github.com/BerriAI/litellm/pull/32972) (SDK), [#33251](htt
 
 ## Join the discussion
 
-Available from **v1.92.x** (Thursday's release). We're actively shaping where routing plugins and the autorouter go next, and want your input on the plugins you'd write, the signals you'd want, and the routing strategies you'd reach for. Share your use case and follow along in the autorouter discussion on GitHub: [#32168](https://github.com/BerriAI/litellm/discussions/32168).
+We're actively shaping where routing plugins and the autorouter go next, and want your input on the plugins you'd write, the signals you'd want, and the routing strategies you'd reach for. Share your use case and follow along in the autorouter discussion on GitHub: [#32168](https://github.com/BerriAI/litellm/discussions/32168).

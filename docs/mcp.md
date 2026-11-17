@@ -10,9 +10,7 @@ LiteLLM Proxy provides an MCP Gateway that allows you to use a fixed endpoint fo
   img={require('../img/mcp_2.png')}
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  LiteLLM MCP Architecture: Use MCP tools with all LiteLLM supported models
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>LiteLLM MCP Architecture: Use MCP tools with all LiteLLM supported models</p>
 
 ## Overview
 | Feature | Description |
@@ -22,7 +20,7 @@ LiteLLM Proxy provides an MCP Gateway that allows you to use a fixed endpoint fo
 | Supported MCP Transports | • Streamable HTTP<br/>• SSE<br/>• Standard Input/Output (stdio) |
 | LiteLLM Permission Management | • By Key<br/>• By Team<br/>• By Organization |
 
-:::caution MCP protocol update
+:::warning[MCP protocol update]
 The gateway negotiates the protocol version during `initialize`. See [tested versions and capability limits](./mcp_config_reference#protocol-version).<br/>
 LiteLLM namespaces multiple MCP servers by prefixing each tool name with its MCP server name, so newly created servers now must use names that comply with SEP-986; noncompliant names cannot be added anymore. Existing servers that still violate SEP-986 only emit warnings today, but future MCP-side rollouts may block those names entirely, so we recommend updating any legacy server names proactively before MCP enforcement makes them unusable.
 :::
@@ -84,6 +82,8 @@ LiteLLM supports the following MCP transports:
 
 <Image 
   img={require('../img/add_mcp.png')}
+  dark={require('../img/add_mcp_dark.png')}
+  alt="Add New MCP Server form with a Streamable HTTP server"
   style={{width: '80%', display: 'block', margin: '0'}}
 />
 
@@ -94,7 +94,7 @@ LiteLLM supports the following MCP transports:
 
 This video walks through adding and using an HTTP MCP server on LiteLLM UI and using it in Cursor IDE.
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/e2aebce78e8d46beafeb4bacdde31f14" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/e2aebce78e8d46beafeb4bacdde31f14" frameBorder="0" allowFullScreen></iframe>
 
 <br/>
 <br/>
@@ -103,17 +103,29 @@ This video walks through adding and using an HTTP MCP server on LiteLLM UI and u
 
 This video walks through adding and using an SSE MCP server on LiteLLM UI and using it in Cursor IDE.
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/07e04e27f5e74475b9cf8ef8247d2c3e" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/07e04e27f5e74475b9cf8ef8247d2c3e" frameBorder="0" allowFullScreen></iframe>
 
 <br/>
 <br/>
 
 ### Add STDIO MCP Server
 
+:::warning stdio is off by default
+
+stdio MCP servers are disabled unless the proxy is started with `LITELLM_ENABLE_MCP_STDIO=true` in its environment. While it is off, the stdio transport is greyed out in the UI, creating or updating a stdio server returns an error, and existing stdio servers stay listed but never start: their tools are left out of tool listings, direct tool calls return `403`, and their health check reports them as unhealthy
+
+The flag is read from the proxy's process environment only. Setting it under `environment_variables` in config.yaml or in the database has no effect
+
+:::
+
+**Upgrading with existing stdio servers?** Add `LITELLM_ENABLE_MCP_STDIO=true` to the proxy's environment and restart it. Until you do, the proxy logs a warning naming each stdio server it will not start
+
 For stdio MCP servers, select "Standard Input/Output (stdio)" as the transport type and provide the stdio configuration in JSON format:
 
 <Image 
   img={require('../img/add_stdio_mcp.png')}
+  dark={require('../img/add_stdio_mcp_dark.png')}
+  alt="Stdio configuration for an MCP server"
   style={{width: '80%', display: 'block', margin: '0'}}
 />
 
@@ -128,6 +140,8 @@ LiteLLM attempts [OAuth 2.0 Authorization Server Discovery](https://datatracker.
 
 <Image 
   img={require('../img/mcp_oauth.png')}
+  dark={require('../img/mcp_oauth_dark.png')}
+  alt="OAuth authentication settings for an MCP server"
   style={{width: '80%', display: 'block', margin: '0'}}
 />
 
@@ -142,6 +156,8 @@ For MCP servers hosted on [AWS Bedrock AgentCore](https://docs.aws.amazon.com/be
 
 <Image
   img={require('../img/mcp_aws_sigv4_ui.png')}
+  dark={require('../img/mcp_aws_sigv4_ui_dark.png')}
+  alt="AWS SigV4 authentication settings for an MCP server"
   style={{width: '80%', display: 'block', margin: '0'}}
 />
 
@@ -157,6 +173,8 @@ Sometimes your MCP server needs specific headers on every request. Maybe it's an
 
 <Image 
   img={require('../img/static_headers.png')}
+  dark={require('../img/static_headers_dark.png')}
+  alt="Static headers in the MCP server permission settings"
   style={{width: '80%', display: 'block', margin: '0'}}
 />
 
@@ -172,7 +190,7 @@ These headers get sent with every request to the server. That's it.
 
 Store credentials on the server and reference them in static headers or authentication with `${VAR_NAME}` (e.g. `${DB_PROTOCOL}://${CORP_USERNAME}:${CORP_PASSWORD}@${DB_HOSTNAME}`). Scope each variable as **Instance** (shared) or **Per-user** (each user supplies their own).
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/12878e2be19140069170c3a270b50d1c" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/12878e2be19140069170c3a270b50d1c" frameBorder="0" allowFullScreen></iframe>
 
 **When to use this:**
 - Each user needs to connect with their own static credentials
@@ -207,6 +225,7 @@ mcp_servers:
     url: "https://actions.zapier.com/mcp/sk-akxxxxx/sse"
   
   # Standard Input/Output (stdio) Server - CircleCI Example
+  # Requires LITELLM_ENABLE_MCP_STDIO=true in the proxy's environment
   circleci_mcp:
     transport: "stdio"
     command: "npx"
@@ -351,6 +370,27 @@ curl -s http://localhost:4000/v1/mcp/server \
 `server_id` must be a non-empty string. Config entries cannot reuse an id or another entry's name or alias. Clashes with a database-backed server only log a warning: if the id matches, the database server wins and the config one is unreachable, and if it matches that server's name or alias, permissions naming it reach the config server instead.
 
 If `LITELLM_USE_SHORT_MCP_TOOL_PREFIX` is enabled, changing the id also changes the server's tool prefix. Servers added through the UI or `/v1/mcp/server` already have stable ids.
+
+### Skipping Tool Output Validation
+
+<SinceVersion v="1.110.0" />
+
+When a tool declares an `outputSchema`, the MCP client library checks each result against it. To find the schema, the client needs the server's tool list. A caller that does not send an `Mcp-Session-Id` header gets a fresh upstream session for every call, so the client has nothing cached and downloads the full `tools/list` before every `tools/call`. For a server with hundreds of tools this can be hundreds of kilobytes per call.
+
+Set `skip_tool_output_validation` in the server's `mcp_info` to skip the check and the extra list request:
+
+```yaml
+mcp_servers:
+  internal_docs:
+    url: "https://docs.internal.example/mcp"
+    transport: "http"
+    mcp_info:
+      skip_tool_output_validation: true
+```
+
+The value must be a boolean and defaults to `false`. The same key works in `mcp_info` on `POST /v1/mcp/server` and `PUT /v1/mcp/server`.
+
+With the setting on, LiteLLM returns the upstream's result as is, even if its structured content does not match the declared `outputSchema`. Callers that need that guarantee should leave it off. Servers pinned to `protocol_version: "2026-07-28"` ignore the setting, because that revision lists tools before every call anyway.
 
 ### MCP Walkthroughs
 
@@ -745,7 +785,7 @@ config = {
             "url": "http://localhost:4000/github_mcp/mcp",
             "headers": {
                 "x-litellm-api-key": "Bearer sk-<your-litellm-api-key>",
-                "x-litellm-end-user-id": "customer_123",  # 👈 CUSTOMER ID
+                "x-litellm-end-user-id": "customer_123",  # CUSTOMER ID
                 "Authorization": "Bearer gho_token"
             }
         }
@@ -785,13 +825,13 @@ asyncio.run(main())
 - Customer budgets are applied
 - All tool calls are tracked under `customer_123`
 
-[Learn more about customer management →](./proxy/customers)
+[Legacy customer object permissions](./proxy/legacy_end_users.md#setting-customer-object-permissions). For customer spend and budgets from v1.111, use [Customer Management](./proxy/customers.md).
 
 ## Calling the Proxy's /v1/responses Endpoint
 
 When calling your LiteLLM Proxy's `/v1/responses` endpoint to use MCP tools, use `server_url: "litellm_proxy"` for all permitted servers, or `litellm_proxy/mcp/<server_alias>` for one server in the tools array. This tells the proxy to use its configured MCP servers.
 
-:::important Do not use the full proxy URL
+:::important[Do not use the full proxy URL]
 Using `server_url: "https://your-proxy.com/mcp"` is incorrect when the request is already going to the proxy. Use the [documented sentinel forms](./mcp_config_reference#endpoint-matrix) to route to configured MCP servers. Direct MCP clients use the network URL instead.
 :::
 
@@ -1054,7 +1094,7 @@ Existing deployments can rename the deprecated broadcast header. See the [centra
 
 ## Use MCP tools with `/chat/completions`
 
-:::tip Works with all providers
+:::tip[Works with all providers]
 This flow is **provider-agnostic**: the same MCP tool definition works for _every_ LLM backend behind LiteLLM (OpenAI, Azure OpenAI, Anthropic, Amazon Bedrock, Vertex, self-hosted deployments, etc.).
 :::
 
@@ -1091,21 +1131,23 @@ LiteLLM exposes an MCP Gateway for admins to add all their MCP servers to LiteLL
 
 This video demonstrates how you can onboard an MCP server to LiteLLM Proxy, use it and set access controls.
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/f7aa8d217879430987f3e64291757bfc" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/f7aa8d217879430987f3e64291757bfc" frameBorder="0" allowFullScreen></iframe>
 
 ## LiteLLM Python SDK MCP Bridge
 
 LiteLLM Python SDK acts as a MCP bridge to use MCP tools with all LiteLLM supported models. LiteLLM offers the following features for using MCP
 
 - **List** Available MCP Tools: OpenAI clients can view all available MCP tools
-  - `litellm.experimental_mcp_client.load_mcp_tools` to list all available MCP tools
+  - `litellm.mcp_client.load_mcp_tools` to list all available MCP tools
 - **Call** MCP Tools: OpenAI clients can call MCP tools
-  - `litellm.experimental_mcp_client.call_openai_tool` to call an OpenAI tool on an MCP server
+  - `litellm.mcp_client.call_openai_tool` to call an OpenAI tool on an MCP server
+
+`litellm.experimental_mcp_client` is a deprecated alias of `litellm.mcp_client`. It still works and emits a `DeprecationWarning` on import, so update imports to the new name.
 
 
 ### 1. List Available MCP Tools
 
-In this example we'll use `litellm.experimental_mcp_client.load_mcp_tools` to list all available MCP tools on any MCP server. This method can be used in two ways:
+In this example we'll use `litellm.mcp_client.load_mcp_tools` to list all available MCP tools on any MCP server. This method can be used in two ways:
 
 - `format="mcp"` - (default) Return MCP tools 
   - Returns: `mcp.types.Tool`
@@ -1121,7 +1163,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 import os
 import litellm
-from litellm import experimental_mcp_client
+from litellm import mcp_client
 
 
 server_params = StdioServerParameters(
@@ -1136,7 +1178,7 @@ async with stdio_client(server_params) as (read, write):
         await session.initialize()
 
         # Get tools
-        tools = await experimental_mcp_client.load_mcp_tools(session=session, format="openai")
+        tools = await mcp_client.load_mcp_tools(session=session, format="openai")
         print("MCP TOOLS: ", tools)
 
         messages = [{"role": "user", "content": "what's (3 + 5)"}]
@@ -1161,7 +1203,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 import os
 from openai import OpenAI
-from litellm import experimental_mcp_client
+from litellm import mcp_client
 
 server_params = StdioServerParameters(
     command="python3",
@@ -1175,7 +1217,7 @@ async with stdio_client(server_params) as (read, write):
         await session.initialize()
 
         # Get tools using litellm mcp client
-        tools = await experimental_mcp_client.load_mcp_tools(session=session, format="openai")
+        tools = await mcp_client.load_mcp_tools(session=session, format="openai")
         print("MCP TOOLS: ", tools)
 
         # Use OpenAI SDK pointed to LiteLLM proxy
@@ -1199,12 +1241,12 @@ async with stdio_client(server_params) as (read, write):
 ### 2. List and Call MCP Tools
 
 In this example we'll use 
-- `litellm.experimental_mcp_client.load_mcp_tools` to list all available MCP tools on any MCP server
-- `litellm.experimental_mcp_client.call_openai_tool` to call an OpenAI tool on an MCP server
+- `litellm.mcp_client.load_mcp_tools` to list all available MCP tools on any MCP server
+- `litellm.mcp_client.call_openai_tool` to call an OpenAI tool on an MCP server
 
-The first llm response returns a list of OpenAI tools. We take the first tool call from the LLM response and pass it to `litellm.experimental_mcp_client.call_openai_tool` to call the tool on the MCP server.
+The first llm response returns a list of OpenAI tools. We take the first tool call from the LLM response and pass it to `litellm.mcp_client.call_openai_tool` to call the tool on the MCP server.
 
-#### How `litellm.experimental_mcp_client.call_openai_tool` works
+#### How `litellm.mcp_client.call_openai_tool` works
 
 - Accepts an OpenAI Tool Call from the LLM response
 - Converts the OpenAI Tool Call to an MCP Tool
@@ -1220,7 +1262,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 import os
 import litellm
-from litellm import experimental_mcp_client
+from litellm import mcp_client
 
 
 server_params = StdioServerParameters(
@@ -1235,7 +1277,7 @@ async with stdio_client(server_params) as (read, write):
         await session.initialize()
 
         # Get tools
-        tools = await experimental_mcp_client.load_mcp_tools(session=session, format="openai")
+        tools = await mcp_client.load_mcp_tools(session=session, format="openai")
         print("MCP TOOLS: ", tools)
 
         messages = [{"role": "user", "content": "what's (3 + 5)"}]
@@ -1249,7 +1291,7 @@ async with stdio_client(server_params) as (read, write):
 
         openai_tool = llm_response["choices"][0]["message"]["tool_calls"][0]
         # Call the tool using MCP client
-        call_result = await experimental_mcp_client.call_openai_tool(
+        call_result = await mcp_client.call_openai_tool(
             session=session,
             openai_tool=openai_tool,
         )
@@ -1287,7 +1329,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 import os
 from openai import OpenAI
-from litellm import experimental_mcp_client
+from litellm import mcp_client
 
 server_params = StdioServerParameters(
     command="python3",
@@ -1301,7 +1343,7 @@ async with stdio_client(server_params) as (read, write):
         await session.initialize()
 
         # Get tools using litellm mcp client
-        tools = await experimental_mcp_client.load_mcp_tools(session=session, format="openai")
+        tools = await mcp_client.load_mcp_tools(session=session, format="openai")
         print("MCP TOOLS: ", tools)
 
         # Use OpenAI SDK pointed to LiteLLM proxy
@@ -1322,7 +1364,7 @@ async with stdio_client(server_params) as (read, write):
         tool_call = llm_response.choices[0].message.tool_calls[0]
         
         # Call the tool using MCP client
-        call_result = await experimental_mcp_client.call_openai_tool(
+        call_result = await mcp_client.call_openai_tool(
             session=session,
             openai_tool=tool_call.model_dump(),
         )

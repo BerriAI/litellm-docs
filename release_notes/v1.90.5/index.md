@@ -1,5 +1,6 @@
 ---
-title: "v1.90.5 - Docker Migration Assets Restored"
+title: "LiteLLM v1.90.5 - Docker Migration Assets Restored"
+description: "Fixes pre-deploy migration jobs by restoring the litellm-proxy-extras folder with the Prisma schema and migrations."
 slug: "v1-90-5"
 date: 2026-07-16T15:38:03
 authors:

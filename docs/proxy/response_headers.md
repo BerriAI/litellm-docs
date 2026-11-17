@@ -39,8 +39,11 @@ These headers are useful for clients to understand the current rate limit status
 | Header | Type | Description |
 |--------|------|-------------|
 | `x-litellm-attempted-retries` | int | Number of retry attempts made |
+| `x-litellm-max-retries` | int | Configured `num_retries`, only sent when at least one retry was attempted |
 | `x-litellm-attempted-fallbacks` | int | Number of fallback attempts made |
-| `x-litellm-max-fallbacks` | int | Maximum number of fallback attempts allowed |
+| `x-litellm-fallback-reason` | string | Why the proxy left the requested model, only sent when a local rate limit caused the fallback. `rate_limit:<scope>`, where the scope is the limit that rejected the requested model, for example `rate_limit:model_per_key` or `rate_limit:model_per_end_user`, or `rate_limit:model_saturation_fallback` when a key or team with `router_settings.fallback_on_saturation` left a model that reached the dynamic rate limiter's saturation threshold |
+
+`max_fallbacks` is not returned as a response header
 
 ## Cost Tracking Headers
 | Header | Type | Description | Available on Pass-Through Endpoints |
@@ -110,7 +113,7 @@ These headers are available on streaming and non-streaming requests to `/v1/chat
 | `x-litellm-attempted-retries` | `0` | Retries. |
 | `x-litellm-attempted-fallbacks` | `1` | Fallbacks to another deployment. |
 | `x-litellm-call-id` | `019b2c4d-e5f6-7890-abcd-ef1234567890` | Logs / tracing. |
-| `x-litellm-version` | `1.55.3` | Version. |
+| `x-litellm-version` | `1.55.3` {/* keep-version-note */} | Version. |
 | `x-litellm-model-api-base` | `https://api.openai.com/v1` | Provider base (no query string). |
 
 ## Response headers from LLM providers

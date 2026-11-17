@@ -1,5 +1,6 @@
 ---
-title: "v1.102.0 - Auto Router Controls, Native OCR & Gateway Reliability"
+title: "LiteLLM v1.102.0 - Auto Router Controls, Native OCR & Gateway Reliability"
+description: "Adds Auto Router controls, native OCR and Meta Muse Voice realtime transcription. Also adds 99 model catalog entries and shared PgBouncer connections."
 slug: "v1-102-0"
 date: 2026-09-19T00:00:00
 authors:
@@ -44,7 +45,7 @@ pip install litellm==1.102.0
 </Tabs>
 
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 These callouts cover changes to behavior available in `v1.101.0`, the previous stable release
 
@@ -58,7 +59,7 @@ These callouts cover changes to behavior available in `v1.101.0`, the previous s
 
 **Auto Router replaces the caller’s output cap with the selected tier model’s limit by default.** Per-tier limits still take precedence. Set `max_tokens_from_tier_model: false` to retain the caller’s cap. See [PR #40209](https://github.com/BerriAI/litellm/pull/40209)
 
-**Editing multiple heuristic-v1 routers requires the auto-router license.** Existing snapshots and unchanged defaults remain valid; one changed router is available without the license. A second tuned router is refused. See [PR #39952](https://github.com/BerriAI/litellm/pull/39952), [PR #40007](https://github.com/BerriAI/litellm/pull/40007)
+**Existing enterprise license keys have full access to all Auto-Router features.** Valid enterprise keys with `allowed_features: ["*"]` or an explicit `auto_router` grant include unlimited tuning of heuristic-v1 routers. Keep using your existing key when upgrading; no replacement key or additional Auto-Router license is required. Without either grant, existing snapshots and unchanged defaults remain valid, but only one tuned router is allowed. See [PR #39952](https://github.com/BerriAI/litellm/pull/39952), [PR #40007](https://github.com/BerriAI/litellm/pull/40007), [PR #41684](https://github.com/BerriAI/litellm/pull/41684)
 
 **Prompt Security blocks file-modification verdicts by default.** Set `block_on_file_modify: false` if your workflow intentionally accepts rewritten files. See [PR #38204](https://github.com/BerriAI/litellm/pull/38204)
 
@@ -78,7 +79,7 @@ These callouts cover changes to behavior available in `v1.101.0`, the previous s
 
 **Very large local token counts become sampled estimates.** The default exact-count ceiling is 4,000,000 characters per string. Set `TOKEN_COUNTER_MAX_EXACT_CHARS` to choose a different limit. See [PR #40186](https://github.com/BerriAI/litellm/pull/40186)
 
-**Model health checks enforce deployment visibility and limit returned fields.** Explicit out-of-scope targets return 403, team-specific deployments follow routing permissions, and results contain an allowlist of display fields. Update monitoring clients that depended on the previous responses. See [PR #40765](https://github.com/BerriAI/litellm/pull/40765)
+**Model health checks enforce deployment visibility and limit returned fields.** Explicit out-of-scope targets return 403, team-specific deployments follow routing permissions, and results contain an allowlist of display fields. Update monitoring clients that depended on the previous responses, using [the `/health` reference](../../docs/proxy/health#model-health-from-the-api) for the scoping rules, status codes, and fields. See [PR #40765](https://github.com/BerriAI/litellm/pull/40765)
 
 **The existing lite login --config-claude command now writes a static gateway token.** Claude Code settings previously used `apiKeyHelper` to retrieve the login token dynamically. Rerun `lite login --config-claude` when the stored login key expires. See [PR #40330](https://github.com/BerriAI/litellm/pull/40330)
 
@@ -578,7 +579,7 @@ The registry also updates capability flags, context/output limits, non-token rat
 
 ### Auto Router
 
-- Preserve existing heuristic-v1 router tuning across upgrades and enforce the free one-router editing quota consistently - [PR #39952](https://github.com/BerriAI/litellm/pull/39952), [PR #40007](https://github.com/BerriAI/litellm/pull/40007), [PR #40140](https://github.com/BerriAI/litellm/pull/40140)
+- Preserve existing heuristic-v1 router tuning across upgrades and apply the one-router tuning quota only without `auto_router` access. Valid enterprise licenses with `allowed_features: ["*"]` retain unlimited tuning access - [PR #39952](https://github.com/BerriAI/litellm/pull/39952), [PR #40007](https://github.com/BerriAI/litellm/pull/40007), [PR #40140](https://github.com/BerriAI/litellm/pull/40140), [PR #41684](https://github.com/BerriAI/litellm/pull/41684)
 - Build semantic routing configuration without blocking the event loop - [PR #39954](https://github.com/BerriAI/litellm/pull/39954)
 - Restore adaptive-routing scores from both their initial prior and persisted learning - [PR #39955](https://github.com/BerriAI/litellm/pull/39955)
 - Use deployment `model_info` pricing when scoring adaptive routes by cost - [PR #39957](https://github.com/BerriAI/litellm/pull/39957)

@@ -1,3 +1,9 @@
+---
+title: "vLLM with LiteLLM: Self-Hosted Model Setup"
+sidebar_label: "vLLM"
+description: "Call a hosted vLLM server via LiteLLM with the hosted_vllm/ prefix and your api_base, from the Python SDK or AI Gateway, for chat, embeddings and rerank."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -625,6 +631,10 @@ curl -X POST http://0.0.0.0:4000/chat/completions \
 </Tabs>
 
 
+## Decisions
+
+vLLM v0.32.0 and later serve [`/v1/systemone`](https://github.com/vllm-project/vllm/pull/59299) and answer `choice`, `noul` and `score` questions as described in vLLM's [Structured Decisions](https://github.com/vllm-project/vllm/blob/v0.32.0/docs/serving/online_serving/structured_decisions.md) docs. They serve the model architectures listed in vLLM's [`READ_STRATEGIES`](https://github.com/vllm-project/vllm/blob/v0.32.0/vllm/entrypoints/generate/structured_decisions/strategies.py#L812), Qwen3 and Qwen3.5 among them. Use a `hosted_vllm/` model on LiteLLM's [`/v1/decisions` and `/v1/systemone` routes](../decisions.md), or as the [Auto Router classifier](../auto_router/decision_classifiers.md#vllm).
+
 ## (Deprecated) for packaged `vllm` installs
 ### Using - `litellm.completion`
 
@@ -678,7 +688,7 @@ def default_pt(messages):
     return " ".join(message["content"] for message in messages)
 ```
 
-[Code for how prompt templates work in LiteLLM](https://github.com/BerriAI/litellm/blob/main/litellm/llms/prompt_templates/factory.py)
+[Code for how prompt templates work in LiteLLM](https://github.com/BerriAI/litellm/blob/main/litellm/litellm_core_utils/prompt_templates/factory.py)
 
 
 #### Models we already have Prompt Templates for

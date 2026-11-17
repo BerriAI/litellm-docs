@@ -47,13 +47,13 @@ model_list:
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
     model_info:
-      access_groups: ["beta-models"] # 👈 Model Access Group
+      access_groups: ["beta-models"] # Model Access Group
   - model_name: fireworks-llama-v3-70b-instruct
     litellm_params:
       model: fireworks_ai/accounts/fireworks/models/llama-v3-70b-instruct
       api_key: "os.environ/FIREWORKS"
     model_info:
-      access_groups: ["beta-models"] # 👈 Model Access Group
+      access_groups: ["beta-models"] # Model Access Group
 ```
 
 <Tabs>
@@ -66,7 +66,7 @@ model_list:
 curl --location 'http://localhost:4000/key/generate' \
 -H 'Authorization: Bearer <your-master-key>' \
 -H 'Content-Type: application/json' \
--d '{"models": ["beta-models"], # 👈 Model Access Group
+-d '{"models": ["beta-models"], # Model Access Group
 			"max_budget": 0,}'
 ```
 
@@ -184,7 +184,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 </Tabs>
 
 
-### ✨ Control Access on Wildcard Models
+### Control Access on Wildcard Models
 
 Control access to all models with a specific prefix (e.g. `openai/*`). 
 
@@ -258,7 +258,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 ## Managing Access Groups via API
 
-:::warning Database Models Only
+:::warning[Database Models Only]
 Access group management APIs only work with models stored in the database (added via `/model/new`). 
 
 Models defined in `config.yaml` cannot be managed through these APIs and must be configured directly in the config file.
@@ -418,7 +418,7 @@ A group can also carry one shared budget that every key granted the group draws 
 
 ### API Reference - Access Group Management
 
-For complete API documentation including all endpoints, parameters, and response schemas, see the [Access Group Management API Reference](https://litellm-api.up.railway.app/#/model%20management/create_model_group_access_group_new_post).
+For complete API documentation including all endpoints, parameters, and response schemas, see the [Access Group Management API Reference](https://docs.litellm.ai/api-reference/#/model%20management/create_model_group_access_group_new_post).
 
 ## Managing Access Groups via UI
 

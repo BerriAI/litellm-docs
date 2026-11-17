@@ -1,5 +1,6 @@
 ---
-title: "v1.79.0-stable - Search APIs"
+title: "LiteLLM v1.79.0-stable - Search APIs"
+description: "Adds a native /v1/search endpoint, Sora-2 video generation and Vertex AI Search as a vector store. Extends guardrails to the Responses API."
 slug: "v1-79-0"
 date: 2025-10-26T10:00:00
 authors:

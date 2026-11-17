@@ -28,8 +28,8 @@ Endpoint activity is **automatically tracked** whenever you make API calls throu
 When you make a request to any endpoint, activity is automatically recorded:
 
 ```bash showLineNumbers title="Endpoint activity is automatically tracked"
-# /chat/completions: 👈 ENDPOINT AUTOMATICALLY TRACKED
-# Authorization: 👈 YOUR PROXY KEY
+# /chat/completions: ENDPOINT AUTOMATICALLY TRACKED
+# Authorization: YOUR PROXY KEY
 curl -X POST 'http://0.0.0.0:4000/chat/completions' \
   --header 'Content-Type: application/json' \
   --header "Authorization: Bearer $LITELLM_API_KEY" \

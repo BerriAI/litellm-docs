@@ -1,5 +1,6 @@
 ---
-title: "v1.92.0 - Claude Sonnet 5, Production MCP OAuth & New Providers"
+title: "LiteLLM v1.92.0 - Claude Sonnet 5, Production MCP OAuth & New Providers"
+description: "Adds Claude Sonnet 5 with a 1M-token context window, plus Tencent and Google Distributed Cloud providers. Limits permissions to proxy admins."
 slug: "v1-92-0"
 date: 2026-07-11T00:00:00
 authors:
@@ -43,7 +44,7 @@ pip install litellm==1.92.0
 </TabItem>
 </Tabs>
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **Setting `permissions` and `allowed_routes` now requires proxy-admin privileges.** These fields are admin-gated across the key, user, and team endpoints (`/key/update`, `/key/regenerate`, `/user/new`, `/user/update`, and bulk key updates), so non-admin callers that previously set them will now be rejected. See [PR #31810](https://github.com/BerriAI/litellm/pull/31810), [PR #31987](https://github.com/BerriAI/litellm/pull/31987).
 

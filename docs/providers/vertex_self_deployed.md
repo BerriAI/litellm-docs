@@ -1,3 +1,9 @@
+---
+title: "Vertex AI Self-Deployed Models with LiteLLM"
+sidebar_label: "Vertex AI - Self Deployed Models"
+description: "Call your own Model Garden, Gemma and MedGemma endpoints on Gemini Enterprise Agent Platform (formerly Vertex AI) via LiteLLM and config.yaml."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -75,7 +81,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "llama3-1-8b-instruct", # 👈 the 'model_name' in config
+            "model": "llama3-1-8b-instruct", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",

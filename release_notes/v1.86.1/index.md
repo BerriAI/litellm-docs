@@ -1,5 +1,6 @@
 ---
-title: "v1.86.1 - Non-Root Docker Build Fix"
+title: "LiteLLM v1.86.1 - Non-Root Docker Build Fix"
+description: "Restores npm in the non-root build stage, so Prisma resolves Node without a fallback. Application code matches v1.86.0."
 slug: "v1-86-1"
 date: 2026-05-26T00:00:00
 authors:

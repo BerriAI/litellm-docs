@@ -1,5 +1,6 @@
 ---
-title: "v1.88.4 - Proxy Exception & Guardrails Fixes"
+title: "LiteLLM v1.88.4 - Proxy Exception & Guardrails Fixes"
+description: "Restores readable ProxyException messages and returns 400 instead of 500 when AIM guardrails block a request. Also fixes Datadog 413 errors."
 slug: "v1-88-4"
 date: 2026-06-20T14:44:42
 authors:

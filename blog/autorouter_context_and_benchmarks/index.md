@@ -19,7 +19,7 @@ hide_table_of_contents: false
 
 Get early access, work directly with the LiteLLM team, and influence the roadmap with your production traffic.
 
-<a className="button button--primary button--lg" style={{background: '#2e8555', borderColor: '#2e8555', color: '#fff'}} href="https://calendar.app.google/i2e7qVEJphHi5S8UA">Apply to Become a Design Partner</a>
+<a className="button button--primary button--lg" href="https://calendly.com/tin-berri/litellm-auto-router-design-partner">Apply to Become a Design Partner</a>
 
 <br /><br />
 
@@ -33,7 +33,7 @@ v1.97 makes three changes to the auto router.
 * A new Benchmarks view prices routed traffic against an all-frontier baseline and reports the difference, and those savings now also appear in the Cost Optimization totals.
 * Session affinity is now off by default, following our [previous post](/blog/auto-router-prompt-caching-benchmark) showing this was leading to worse quality without cost improvements.
 
-:::warning Two defaults changed
+:::warning[Two defaults changed]
 
 `classifier_context_window_size` now defaults to `3` (LLM classifier only), and `session_affinity` now defaults to `false` (all routers). Config files are not modified, but the new defaults apply to any key left unset, so a config that never mentioned `session_affinity` will reclassify every turn after upgrading. Configs that set either key explicitly are unaffected.
 

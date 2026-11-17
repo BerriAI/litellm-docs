@@ -17,6 +17,7 @@ Calling through the AI Gateway rather than the SDK? See the [Error Reference](/d
 | 400         | ImageFetchError | litellm.BadRequestError | Raised when there are errors fetching or processing images |
 | 400 | InvalidRequestError | openai.BadRequestError | Deprecated error, use BadRequestError instead |
 | 401         | AuthenticationError      | openai.AuthenticationError |
+| 402         | PaymentRequiredError     | litellm.BadRequestError | Raised when the provider answers 402, for example an account that is out of credits. The router cools that deployment down when its model group has another deployment |
 | 403         | PermissionDeniedError    | openai.PermissionDeniedError |
 | 404         | NotFoundError            | openai.NotFoundError | raise when invalid models passed, example gpt-8 |
 | 408 | Timeout | openai.APITimeoutError | Raised when a timeout occurs |

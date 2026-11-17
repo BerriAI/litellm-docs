@@ -1,8 +1,14 @@
+---
+title: "Vertex AI Image Generation with LiteLLM"
+sidebar_label: "Vertex AI Image Generation"
+description: "Generate images with Gemini image models and Imagen on Gemini Enterprise Agent Platform (formerly Vertex AI) via LiteLLM from the Python SDK or AI Gateway."
+---
+
 # Vertex AI Image Generation
 
 Vertex AI supports two types of image generation:
 
-1. **Gemini Image Generation Models** (Nano Banana 🍌) - Conversational image generation using `generateContent` API
+1. **Gemini Image Generation Models** (Nano Banana) - Conversational image generation using `generateContent` API
 2. **Imagen Models** - Traditional image generation using `predict` API
 
 | Property | Details |

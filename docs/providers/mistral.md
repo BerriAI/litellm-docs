@@ -1,7 +1,16 @@
+---
+title: "Mistral AI API with LiteLLM AI Gateway"
+sidebar_label: "Mistral AI"
+description: "Call Mistral Large, Codestral and Magistral with tool calling and reasoning effort, transcribe audio with Voxtral, clone voices for speech and embed text."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Mistral AI API
+
+Mistral AI serves its chat, reasoning, embedding and audio models through the Mistral API; LiteLLM calls them with the `mistral/` prefix from the Python SDK or AI Gateway.
+
 https://docs.mistral.ai/api/
 
 ## API Key
@@ -384,119 +393,128 @@ curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 --form 'model="voxtral"'
 ```
 
+## Text to Speech
+
+Mistral's Voxtral TTS models turn text into audio through `litellm.speech()` and the proxy's `/v1/audio/speech` route. Both `mistral/voxtral-mini-tts-2603` and `mistral/voxtral-mini-tts-latest` are supported <SinceVersion v="1.102.0" />.
+
+### SDK Usage
+
+```python
+from litellm import speech
+import os
+
+os.environ["MISTRAL_API_KEY"] = ""
+
+response = speech(
+    model="mistral/voxtral-mini-tts-2603",
+    input="The quick brown fox jumped over the lazy dog.",
+    voice="alloy",
+)
+
+response.write_to_file("speech.mp3")
+```
+
+### Voices
+
+`voice` takes either an OpenAI voice name or a native Mistral voice id. LiteLLM maps these six OpenAI names onto Mistral voices, so an integration that uses one of them keeps working without a change:
+
+| OpenAI voice | Mistral voice     |
+|--------------|-------------------|
+| `alloy`      | `en_paul_neutral` |
+| `echo`       | `gb_oliver_neutral` |
+| `fable`      | `en_paul_cheerful` |
+| `onyx`       | `en_paul_confident` |
+| `nova`       | `gb_jane_sarcasm` |
+| `shimmer`    | `gb_jane_sarcasm` |
+
+Any other value passes through to Mistral untouched, so a native id such as `en_paul_excited` works as-is. Newer OpenAI voices such as `coral` or `ash` are not mapped, and Mistral answers them, like any voice it does not know, with a 404 `invalid_voice` error. `nova` and `shimmer` both map to a sarcastic voice, so pass `gb_jane_neutral` directly when you want a neutral female voice. `GET https://api.mistral.ai/v1/audio/voices?limit=100` lists the voices your account can use. The endpoint is paginated and returns 10 voices when you leave `limit` out.
+
+### Response Formats
+
+`response_format` accepts `mp3`, `wav`, `pcm`, `flac`, and `opus`, and defaults to `mp3` when you leave it out. LiteLLM sets the response `content-type` to match the format you asked for, so `opus` comes back as `audio/ogg` and the other four as `audio/mpeg`, `audio/wav`, `audio/pcm`, and `audio/flac`. OpenAI's `aac` format is not supported, and Mistral rejects it with a 422. Mistral's `pcm` is raw 32-bit float little-endian samples at 24 kHz mono, not the 16-bit signed samples OpenAI's `pcm` returns, so read it as float32 or ask for `wav` instead.
+
+### Voice Cloning
+
+Pass a base64 encoded audio sample as `ref_audio`, and Voxtral speaks the input in the sampled voice:
+
+```python
+import base64
+from litellm import speech
+
+with open("sample.wav", "rb") as sample:
+    ref_audio = base64.b64encode(sample.read()).decode()
+
+response = speech(
+    model="mistral/voxtral-mini-tts-2603",
+    input="This sentence comes back in the sampled voice.",
+    ref_audio=ref_audio,
+)
+
+response.write_to_file("cloned.mp3")
+```
+
+On the proxy, send the same `ref_audio` field in the JSON body of `/v1/audio/speech`. When a request also carries a `voice`, including a default `voice` set on the deployment, Mistral uses `ref_audio`, so a client that requires `voice`, such as the OpenAI SDK, can pass any voice and send `ref_audio` through `extra_body`.
+
+### Unsupported Parameters
+
+Mistral's speech API rejects `speed` and `instructions` with a 422, so LiteLLM drops both before sending the request instead of failing it. A call that passes either one still returns audio, generated from the parameters Mistral does accept.
+
+### Usage with LiteLLM Proxy
+
+```yaml
+model_list:
+  - model_name: voxtral-tts
+    litellm_params:
+      model: mistral/voxtral-mini-tts-2603
+      api_key: os.environ/MISTRAL_API_KEY
+```
+
+```bash
+litellm --config /path/to/config.yaml
+```
+
+```bash
+curl --location 'http://0.0.0.0:4000/v1/audio/speech' \
+--header "Authorization: Bearer $LITELLM_API_KEY" \
+--header 'Content-Type: application/json' \
+--data '{
+    "model": "voxtral-tts",
+    "input": "The quick brown fox jumped over the lazy dog.",
+    "voice": "alloy"
+}' \
+--output speech.mp3
+```
+
+### Cost Tracking
+
+Voxtral TTS is priced per input character, at the `input_cost_per_character` rate in the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). LiteLLM counts the non-whitespace characters of `input`, so a 19 character sentence holding 2 spaces is tracked as 17 characters. Mistral's own character meter, reported in the `x-ratelimit-input-characters-query-cost` response header, counts the spaces too, so whenever `input` contains whitespace, the spend LiteLLM tracks is lower than what Mistral meters.
+
+## Token Counting
+
+<SinceVersion v="1.111.0" />
+
+LiteLLM supports native upstream token counting for Mistral models via Mistral's `/v1/responses/input_tokens` endpoint. See [Token Counting](../count_tokens.md) for usage and details.
+
+A Mistral deployment on Azure (an Azure `api_base`, `MISTRAL_AZURE_API_BASE`, or only `MISTRAL_AZURE_API_KEY` set) is counted with LiteLLM's local tokenizer instead, so the prompt and the Azure key never go to `api.mistral.ai`.
+
+```python
+import asyncio
+import litellm
+
+async def main():
+    result = await litellm.acount_tokens(
+        model="mistral/mistral-large-4",
+        messages=[{"role": "user", "content": "Hello, how are you?"}],
+    )
+    print(f"Token count: {result.total_tokens}")
+    print(f"Tokenizer: {result.tokenizer_type}")  # "mistral_api"
+
+asyncio.run(main())
+```
+
 ## Files and Batches API
 
-LiteLLM routes the OpenAI-compatible `/v1/files` and `/v1/batches` endpoints to Mistral's [Files](https://docs.mistral.ai/api/#tag/files) and [Batch](https://docs.mistral.ai/api/#tag/batch) APIs. A Mistral batch job runs one model for every line of the input file, so the model is picked once, on the file upload or the batch request, instead of per line. The job can target `/v1/chat/completions` or `/v1/ocr`, and OCR pages inside a batch are billed at Mistral's batch rate.
-
-| Feature | Supported |
-|---------|-----------|
-| Upload, retrieve, list, delete files | ✅ |
-| Download file content | ✅ |
-| Create and retrieve batches | ✅ |
-| List and cancel batches | Not yet |
-| Cost tracking for batch OCR | ✅ per page, see [Batch OCR cost tracking](#batch-ocr-cost-tracking) |
-
-### 1. Add a Mistral model to config.yaml
-
-```yaml
-model_list:
-  - model_name: mistral-ocr
-    litellm_params:
-      model: mistral/mistral-ocr-latest
-      api_key: os.environ/MISTRAL_API_KEY
-```
-
-### 2. Upload the batch input file
-
-Each line is an OpenAI batch request. For OCR the `url` is `/v1/ocr` and the `body` is a Mistral OCR request:
-
-```json
-{"custom_id": "doc-0", "method": "POST", "url": "/v1/ocr", "body": {"document": {"type": "document_url", "document_url": "https://arxiv.org/pdf/2201.04234"}}}
-{"custom_id": "doc-1", "method": "POST", "url": "/v1/ocr", "body": {"document": {"type": "document_url", "document_url": "https://arxiv.org/pdf/2201.04234"}}}
-```
-
-Pass `model` with the upload so LiteLLM sends the file with that deployment's credentials and encodes the model into the returned file id. Every later call that carries the id reuses it.
-
-```bash
-curl http://0.0.0.0:4000/v1/files \
-  -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -F purpose="batch" \
-  -F model="mistral-ocr" \
-  -F file="@ocr_batch_input.jsonl"
-```
-
-Mistral accepts the `batch`, `fine-tune`, and `ocr` purposes. LiteLLM maps `user_data` onto `ocr`, and any other purpose (`assistants`, `vision`, `evals`) is rejected with a 400 because Mistral has no equivalent.
-
-### 3. Create the batch
-
-`endpoint` is `/v1/ocr` for OCR jobs or `/v1/chat/completions` for chat jobs. The `model` is read from the encoded file id, so sending it again is optional.
-
-```bash
-curl http://0.0.0.0:4000/v1/batches \
-  -H "Authorization: Bearer $LITELLM_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "input_file_id": "file-bGl0ZWxsbTo1YTJm...",
-    "endpoint": "/v1/ocr",
-    "completion_window": "24h",
-    "model": "mistral-ocr"
-  }'
-```
-
-Mistral has no `completion_window`; the value is accepted and echoed back as `24h`.
-
-### 4. Poll the batch and download the output
-
-```bash
-curl http://0.0.0.0:4000/v1/batches/batch_bGl0ZWxsbTo1YzU4... \
-  -H "Authorization: Bearer $LITELLM_API_KEY"
-```
-
-Mistral's job statuses map onto the OpenAI ones: `QUEUED` -> `validating`, `RUNNING` -> `in_progress`, `SUCCESS` -> `completed`, `FAILED` -> `failed`, `TIMEOUT_EXCEEDED` -> `expired`, `CANCELLATION_REQUESTED` -> `cancelling`, `CANCELLED` -> `cancelled`. Once the status is `completed`, download `output_file_id`:
-
-```bash
-curl http://0.0.0.0:4000/v1/files/file-bGl0ZWxsbToyNjE0.../content \
-  -H "Authorization: Bearer $LITELLM_API_KEY"
-```
-
-Each output line carries the OCR response under `response.body`, including `usage_info.pages_processed`.
-
-### Listing files
-
-A file id that LiteLLM encoded carries its own routing, but a plain list has no id to route on, so name the provider on the request:
-
-```bash
-curl "http://0.0.0.0:4000/v1/files?provider=mistral&purpose=batch" \
-  -H "Authorization: Bearer $LITELLM_API_KEY"
-```
-
-OCR files read back with `purpose=user_data`, and files created by other Mistral products with a purpose the upload endpoint does not accept (`playground`, `audio`, and similar) also read back as `user_data`, so an unfiltered list never fails on them.
-
-### Batch OCR cost tracking
-
-When a batch that targets `/v1/ocr` completes, LiteLLM reads `usage_info.pages_processed` and `usage_info.pages_processed_annotation` from every line of the output file and bills each page at the model's batch rate. The rates come from the [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json):
-
-| Key | Used for |
-|-----|----------|
-| `ocr_cost_per_page_batches` | OCR pages inside a batch |
-| `annotation_cost_per_page_batches` | Annotation pages inside a batch |
-| `ocr_cost_per_page` | Synchronous `/v1/ocr` calls, and the fallback when no batch rate is set |
-| `annotation_cost_per_page` | Synchronous annotation pages, and the fallback when no batch rate is set |
-
-The batch rates for `mistral/mistral-ocr-latest` are half the synchronous per-page rates, matching Mistral's 50% batch discount. To bill at a different rate, set the keys on the deployment's `model_info`, which wins over the cost map for that deployment:
-
-```yaml
-model_list:
-  - model_name: mistral-ocr
-    litellm_params:
-      model: mistral/mistral-ocr-latest
-      api_key: os.environ/MISTRAL_API_KEY
-    model_info:
-      ocr_cost_per_page_batches: 0.002
-      annotation_cost_per_page_batches: 0.0025
-```
-
-The spend is recorded the first time a completed batch is retrieved, on the key that created it, under the batch id with a `_batch_cost` suffix, and shows up on the `/spend/logs` routes and the Admin UI Logs page.
+LiteLLM routes the OpenAI-compatible `/v1/files` and `/v1/batches` endpoints to Mistral's Files and Batch APIs. See [Mistral AI Batch API](./mistral_batches) for the full flow and cost tracking.
 
 ## Sample Usage - Embedding
 ```python

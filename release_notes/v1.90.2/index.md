@@ -1,5 +1,6 @@
 ---
-title: "v1.90.2 - Realtime Stability & Bounded Logging"
+title: "LiteLLM v1.90.2 - Realtime Stability & Bounded Logging"
+description: "Prevents a second Gemini Live setup in realtime sessions and closes a guardrail bypass. Also retries hung handshakes."
 slug: "v1-90-2"
 date: 2026-07-01T02:09:44
 authors:

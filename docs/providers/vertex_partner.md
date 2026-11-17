@@ -1,3 +1,9 @@
+---
+title: "Vertex AI Partner Models: Claude, DeepSeek, Llama"
+sidebar_label: "Vertex AI - Anthropic, DeepSeek, Model Garden, xAI"
+description: "Call Claude, DeepSeek, Llama, Mistral, Qwen and Grok on Gemini Enterprise Agent Platform (formerly Vertex AI) via LiteLLM with config.yaml setup."
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -18,6 +24,20 @@ import TabItem from '@theme/TabItem';
 | Qwen | `vertex_ai/qwen/*` | [Vertex AI - Qwen Models](https://cloud.google.com/vertex-ai/generative-ai/docs/maas/qwen) |
 | OpenAI (GPT-OSS) | `vertex_ai/openai/gpt-oss-*` | [Vertex AI - GPT-OSS Models](https://console.cloud.google.com/vertex-ai/publishers/openai/model-garden/) |
 | xAI (Grok) | `vertex_ai/xai/{MODEL}` | [xAI models (incl. Vertex)](https://docs.x.ai/docs/models), [Vertex AI Model Garden](https://cloud.google.com/vertex-ai/generative-ai/docs/model-garden/explore-models) |
+
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`vertex_ai/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Vertex AI model name. LiteLLM sends Vertex AI the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `vertex_ai/claude-opus-latest` | Claude Opus |
+| `vertex_ai/claude-sonnet-latest` | Claude Sonnet |
+| `vertex_ai/claude-haiku-latest` | Claude Haiku |
+| `vertex_ai/claude-fable-latest` | Claude Fable |
+| `vertex_ai/grok-latest` | Grok |
 
 ## Vertex AI - Anthropic (Claude)
 
@@ -89,7 +109,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "anthropic-vertex", # 👈 the 'model_name' in config
+            "model": "anthropic-vertex", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -374,7 +394,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "anthropic-llama", # 👈 the 'model_name' in config
+            "model": "anthropic-llama", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -468,7 +488,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "vertex-mistral", # 👈 the 'model_name' in config
+            "model": "vertex-mistral", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -492,7 +512,7 @@ Note: You can also call Codestral via `/chat/completion`.
 <TabItem value="sdk" label="SDK">
 
 ```python
-from litellm import completion
+from litellm import text_completion
 import os
 
 # os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ""
@@ -553,7 +573,7 @@ curl -X POST 'http://0.0.0.0:4000/completions' \
       -H "Authorization: Bearer $LITELLM_API_KEY" \
       -H 'Content-Type: application/json' \
       -d '{
-            "model": "vertex-codestral", # 👈 the 'model_name' in config
+            "model": "vertex-codestral", # the 'model_name' in config
             "prompt": "def is_odd(n): \n return n % 2 == 1 \ndef test_is_odd():", 
             "suffix":"return True",                                              # optional
             "temperature":0,                                                     # optional
@@ -587,7 +607,7 @@ import os
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ""
 
-model = "meta/jamba-1.5-mini@001"
+model = "jamba-1.5-mini@001"
 
 vertex_ai_project = "your-vertex-project" # can also set this as os.environ["VERTEXAI_PROJECT"]
 vertex_ai_location = "your-vertex-location" # can also set this as os.environ["VERTEXAI_LOCATION"]
@@ -720,7 +740,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "vertex-qwen", # 👈 the 'model_name' in config
+            "model": "vertex-qwen", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",
@@ -800,7 +820,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
       --header "Authorization: Bearer $LITELLM_API_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
-            "model": "gpt-oss", # 👈 the 'model_name' in config
+            "model": "gpt-oss", # the 'model_name' in config
             "messages": [
                 {
                 "role": "user",

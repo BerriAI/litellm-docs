@@ -1,5 +1,6 @@
 ---
-title: "v1.73.6-stable"
+title: "LiteLLM v1.73.6-stable"
+description: "Adds gemini-cli support through LiteLLM, so gemini-cli can call Claude, gemini-2.5-flash and gpt-4.1. Also adds Batch API cost tracking."
 slug: "v1-73-6-stable"
 date: 2025-06-28T10:00:00
 authors:

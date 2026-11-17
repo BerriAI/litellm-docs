@@ -1,5 +1,6 @@
 ---
-title: "v1.90.3 - Bedrock Tool Config & MCP Log Redaction"
+title: "LiteLLM v1.90.3 - Bedrock Tool Config & MCP Log Redaction"
+description: "Drops the unsupported toolSpec.strict field for Bedrock Converse on Claude Opus 4.7 and 4.8. Also stops MCP client tool-call input logging."
 slug: "v1-90-3"
 date: 2026-07-03T19:17:20
 authors:

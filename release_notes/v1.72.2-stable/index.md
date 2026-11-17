@@ -1,5 +1,6 @@
 ---
-title: "v1.72.2-stable"
+title: "LiteLLM v1.72.2-stable"
+description: "Cuts /v1/messages proxy overhead to 50ms at 250 RPS, adds zero-spillover multi-instance rate limits and UI audit logs."
 slug: "v1-72-2-stable"
 date: 2025-06-07T10:00:00
 authors:
@@ -268,6 +269,6 @@ Here's a Demo Instance to test changes:
 - Instance: https://demo.litellm.ai/
 - Login Credentials:
     - Username: admin
-    - Password: sk-1234
+    - Password: `sk-<your-master-key>`
 
 ## [Git Diff](https://github.com/BerriAI/litellm/releases/tag/v1.72.2-stable)

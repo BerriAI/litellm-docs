@@ -1,3 +1,9 @@
+---
+title: "Gemini Files API (Beta) with LiteLLM"
+sidebar_label: "[BETA] Google AI Studio (Gemini) Files API"
+description: "Beta: upload large media files to Google AI Studio (Gemini) through the LiteLLM AI Gateway for generateContent, with config.yaml setup and Azure Blob Storage."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -37,9 +43,9 @@ encoded_string = base64.b64encode(wav_data).decode('utf-8')
 
 
 file = create_file(
-    file=wav_data,
-    purpose="user_data",
-    extra_headers={"custom-llm-provider": "gemini"},
+    file=("alloy.wav", wav_data),
+    purpose="assistants",
+    custom_llm_provider="gemini",
     api_key=os.getenv("GEMINI_API_KEY"),
 )
 
@@ -64,7 +70,7 @@ completion = completion(
                     "file": {
                         "file_id": file.id,
                         "filename": "my-test-name",
-                        "format": "audio/wav"
+                        "format": "audio/x-wav"
                     }
                 }
             ]
@@ -237,7 +243,7 @@ file = client.files.create(
     purpose="user_data",
     extra_body={
         "target_model_names": "{{gemini_flash}}",
-        "target_storage": "azure_storage"  # 👈 Use Azure Blob Storage
+        "target_storage": "azure_storage"  # Use Azure Blob Storage
     }
 )
 

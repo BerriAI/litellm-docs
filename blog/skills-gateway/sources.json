@@ -1,0 +1,52 @@
+{
+  "screenshots": [
+    {
+      "file": "upload-skill.png",
+      "source_pr": "https://github.com/BerriAI/litellm/pull/50008",
+      "source_asset": "https://github.com/user-attachments/assets/6fd5f9c5-eab9-4d80-8f9b-e5f312368dd5",
+      "crop": {
+        "left": 514,
+        "top": 30,
+        "right": 1214,
+        "bottom": 437
+      },
+      "note": "Crop of a real dashboard capture from the merged feature PR, using local test data. UI text and scan results are unchanged."
+    },
+    {
+      "file": "review-submission.png",
+      "source_pr": "https://github.com/BerriAI/litellm/pull/50160",
+      "source_asset": "https://github.com/user-attachments/assets/c562fb82-059a-4c83-9195-cb58d19d9628",
+      "crop": {
+        "left": 664,
+        "top": 31,
+        "right": 1628,
+        "bottom": 978
+      },
+      "note": "Crop of a real dashboard capture from the merged feature PR, using local test data. UI text and scan results are unchanged."
+    },
+    {
+      "file": "security-scan.png",
+      "source_pr": "https://github.com/BerriAI/litellm/pull/50194",
+      "source_asset": "https://github.com/user-attachments/assets/d562b2fd-b81b-4a81-92a9-6d44384d9222",
+      "crop": {
+        "left": 24,
+        "top": 660,
+        "right": 664,
+        "bottom": 934
+      },
+      "note": "Crop of a real dashboard capture from the merged feature PR, using local test data. UI text and scan results are unchanged."
+    },
+    {
+      "file": "download-history.png",
+      "source_pr": "https://github.com/BerriAI/litellm/pull/50165",
+      "source_asset": "https://github.com/user-attachments/assets/4025bad7-16e2-490e-8315-b911fe4b3fbd",
+      "crop": {
+        "left": 280,
+        "top": 200,
+        "right": 1248,
+        "bottom": 647
+      },
+      "note": "Crop of a real dashboard capture from the merged feature PR, using a local test skill. Shows the Downloads tab, totals, and first history row. UI text and counts are unchanged."
+    }
+  ]
+}

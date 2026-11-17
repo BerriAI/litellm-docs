@@ -5,6 +5,7 @@ date: 2026-09-08T10:00:00
 authors:
   - krrish
 description: "LiteLLM's updated SOC 2 Type 2 report is now available through the LiteLLM Trust Center."
+image: /img/blog/soc2_type_2_report.png
 tags: [security, compliance]
 hide_table_of_contents: true
 ---

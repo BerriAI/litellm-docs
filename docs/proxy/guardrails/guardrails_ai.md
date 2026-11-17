@@ -1,3 +1,8 @@
+---
+title: "Guardrails AI Checks on LiteLLM AI Gateway"
+sidebar_label: "Guardrails AI"
+description: "Run Guardrails AI guards on LLM calls through the LiteLLM AI Gateway: point config.yaml at your Guardrails AI server and control guards per key."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -25,10 +30,10 @@ guardrails:
   - guardrail_name: "guardrails_ai-guard"
     litellm_params:
       guardrail: guardrails_ai
-      guard_name: "detect-secrets-guard"            # 👈 Guardrail AI guard name
+      guard_name: "detect-secrets-guard"            # Guardrail AI guard name
       mode: "pre_call"
-      guardrails_ai_api_input_format: "llmOutput"   # 👈 This is the only option that currently works (and it is a default), use it for both pre_call and post_call hooks
-      api_base: os.environ/GUARDRAILS_AI_API_BASE   # 👈 Guardrails AI API Base. Defaults to "http://0.0.0.0:8000"
+      guardrails_ai_api_input_format: "llmOutput"   # This is the only option that currently works (and it is a default), use it for both pre_call and post_call hooks
+      api_base: os.environ/GUARDRAILS_AI_API_BASE   # Guardrails AI API Base. Defaults to "http://0.0.0.0:8000"
 ```
 
 2. Start LiteLLM Gateway 
@@ -55,7 +60,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 ```
 
 
-## ✨ Control Guardrails per Project (API Key)
+## Control Guardrails per Project (API Key)
 
 <EnterpriseFeature />
 

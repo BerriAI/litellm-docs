@@ -1,3 +1,9 @@
+---
+title: "Helicone AI Gateway with LiteLLM: Setup"
+sidebar_label: "Helicone"
+description: "Route OpenAI and Anthropic calls through Helicone's AI Gateway from the LiteLLM Python SDK, with streaming, custom property headers, caching and fallbacks."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -79,7 +85,7 @@ for chunk in response:
     print(chunk)
 ```
 
-### With Metadata (Helicone Custom Properties)
+### With Custom Properties
 
 ```python showLineNumbers title="Helicone with Custom Properties"
 import os
@@ -91,7 +97,7 @@ os.environ["HELICONE_API_KEY"] = ""  # your Helicone API key
 response = completion(
     model="helicone/{{openai_small}}",
     messages=[{"role": "user", "content": "What's the weather like?"}],
-    metadata={
+    extra_headers={
         "Helicone-Property-Environment": "production",
         "Helicone-Property-User-Id": "user_123",
         "Helicone-Property-Session-Id": "session_abc"
@@ -124,7 +130,7 @@ print(response)
 import litellm
 
 litellm.api_base = "https://ai-gateway.helicone.ai/"
-litellm.metadata = {
+litellm.headers = {
     "Helicone-Retry-Enabled": "true",
     "helicone-retry-num": "3",
     "helicone-retry-factor": "2",
@@ -159,7 +165,7 @@ Helicone supports all standard OpenAI-compatible parameters:
 
 ## Helicone-Specific Headers
 
-Pass these as metadata to use Helicone features:
+Pass these as request headers with `extra_headers` to use Helicone features, or set `litellm.headers` to send them on every call. The `metadata` param is not forwarded to Helicone:
 
 | Header | Description |
 |--------|-------------|
@@ -178,7 +184,7 @@ import litellm
 response = litellm.completion(
     model="helicone/{{openai_large}}",
     messages=[{"role": "user", "content": "Hello"}],
-    metadata={
+    extra_headers={
         "Helicone-Cache-Enabled": "true",
         "Helicone-Property-Environment": "production",
         "Helicone-Property-User-Id": "user_123",
@@ -216,7 +222,7 @@ import litellm
 response = litellm.completion(
     model="helicone/{{openai_large}}",
     messages=[{"role": "user", "content": "What is 2+2?"}],
-    metadata={
+    extra_headers={
         "Helicone-Cache-Enabled": "true"
     }
 )
@@ -225,7 +231,7 @@ response = litellm.completion(
 response2 = litellm.completion(
     model="helicone/{{openai_large}}",
     messages=[{"role": "user", "content": "What is 2+2?"}],
-    metadata={
+    extra_headers={
         "Helicone-Cache-Enabled": "true"
     }
 )

@@ -1,0 +1,63 @@
+{
+  "run_sha256": "715ed256f85cce3f9ef445f3178575c3820bc7711e383d3baa6eea2d932371c7",
+  "finished_at": "2026-10-21T03:45:14.263801+00:00",
+  "implementation_revision": "5aa0a8304cd5bfa095bbd07e77f6f8c367084595",
+  "measured_queries": 300,
+  "resolved_model": "jev-1.13.0",
+  "cost_is_estimated": true,
+  "row_cost_unit": "projected USD per million queries",
+  "row_score_metric": "nDCG@10",
+  "input_usd_per_million": 0.042,
+  "output_usd_per_million": 0,
+  "reference_comparability": "Candidate protocols and infrastructure are not verified identical across reference and LiteLLM runs.",
+  "rows": [
+    {
+      "model": "Perplexity Decider v1.2",
+      "method": "Multiple choice",
+      "score": 0.777,
+      "cost": 146,
+      "origin": "Reference",
+      "cost_source": "Reference Table 8"
+    },
+    {
+      "model": "TypeSafe Jev 1.14",
+      "method": "Per-document",
+      "score": 0.776,
+      "cost": 580,
+      "origin": "Reference",
+      "cost_source": "Rounded reference Table 2 per-1,000 price \u00d7 1,000"
+    },
+    {
+      "model": "Perplexity Decider Flash v1.2",
+      "method": "Multiple choice",
+      "score": 0.775,
+      "cost": 73,
+      "origin": "Reference",
+      "cost_source": "Reference Table 8"
+    },
+    {
+      "model": "Cohere Rerank 4 Pro",
+      "method": "Rerank API",
+      "score": 0.775,
+      "cost": 2500,
+      "origin": "Reference",
+      "cost_source": "Reference Table 8"
+    },
+    {
+      "model": "TypeSafe Jev 1.13.0",
+      "method": "Per-document",
+      "score": 0.7676260618846087,
+      "cost": 575.39426,
+      "origin": "LiteLLM run",
+      "cost_source": "Estimated from returned tokens: $0.042 / million input; $0 output"
+    },
+    {
+      "model": "BM25",
+      "method": "Local retrieval",
+      "score": 0.6863002612489066,
+      "cost": 0,
+      "origin": "LiteLLM run",
+      "cost_source": "No reranking calls"
+    }
+  ]
+}

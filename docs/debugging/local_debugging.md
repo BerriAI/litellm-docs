@@ -8,7 +8,7 @@ This is good for getting print statements for everything litellm is doing.
 import litellm
 from litellm import completion
 
-litellm._turn_on_debug() # 👈 this is the 1-line change you need to make
+litellm._turn_on_debug() # this is the 1-line change you need to make
 
 ## set ENV variables
 os.environ["OPENAI_API_KEY"] = "openai key"
@@ -69,4 +69,4 @@ response = completion("command-nightly", messages, logger_fn=my_custom_logging_f
 
 Join the [Discord](https://discord.com/invite/wuPM9dRgDw). 
 
-We promise to help you in `lite`ning speed ❤️
+We promise to help you in `lite`ning speed

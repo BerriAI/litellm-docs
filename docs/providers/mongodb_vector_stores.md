@@ -1,9 +1,15 @@
+---
+title: "MongoDB Atlas Vector Search with LiteLLM"
+sidebar_label: "MongoDB - Vector Store (BETA)"
+description: "Use MongoDB Vector Search indexes as a LiteLLM vector store (beta) via the MongoDB sidecar: connect an index, retrieve context in chat, search from Python."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # MongoDB - Vector Store (BETA)
 
-:::warning BETA
+:::warning[BETA]
 The MongoDB vector store integration is a **BETA** feature. It supports searching existing MongoDB Vector Search indexes through the optional [LiteLLM MongoDB sidecar](https://github.com/BerriAI/litellm-mongodb). Prepare your collections, indexes, and embedded documents before connecting them to LiteLLM.
 :::
 
@@ -30,7 +36,7 @@ pip install 'litellm[proxy]'
 
 For direct Python SDK use, install `litellm`, deploy the sidecar, then follow [Search with the Python SDK](#search-with-the-python-sdk). Neither the SDK nor the standard LiteLLM images need PyMongo. LiteLLM does not start or install the sidecar automatically.
 
-:::note RC configuration change
+:::note[RC configuration change]
 If you tried MongoDB in `v1.101.0-rc.1`, move `mongodb_connection_string` to the sidecar's `MONGODB_CONNECTION_STRING` environment variable. Replace it in your LiteLLM registration with `api_base` and `api_key`. Existing MongoDB data and indexes stay in place; application search and chat requests stay the same. This integration remains BETA.
 :::
 
@@ -105,49 +111,50 @@ The dependency's `restart: true` applies to Compose operations; Docker's automat
 </TabItem>
 <TabItem value="helm" label="Kubernetes / Helm">
 
-Create a Kubernetes Secret named `mongodb-sidecar` in the LiteLLM namespace with keys `connection-string` and `api-key`. For the LiteLLM `litellm-helm` chart, add the sidecar through its existing `extraContainers` setting:
+Create a Kubernetes Secret named `mongodb-sidecar` in the LiteLLM namespace with keys `connection-string` and `api-key`. For the [LiteLLM chart](../proxy/deploy/helm.md), add the sidecar through `gateway.extraContainers` in either deployment mode:
 
 ```yaml title="values-mongodb.yaml"
-extraEnvVars:
-  - name: MONGODB_SIDECAR_API_KEY
-    valueFrom:
-      secretKeyRef:
-        name: mongodb-sidecar
-        key: api-key
-extraContainers:
-  - name: mongodb-sidecar
-    image: ghcr.io/berriai/litellm-mongodb:v0.1.0-beta.1
-    ports:
-      - name: mongodb-http
-        containerPort: 8080
-    env:
-      - name: MONGODB_CONNECTION_STRING
-        valueFrom:
-          secretKeyRef:
-            name: mongodb-sidecar
-            key: connection-string
-      - name: MONGODB_SIDECAR_API_KEY
-        valueFrom:
-          secretKeyRef:
-            name: mongodb-sidecar
-            key: api-key
-    securityContext:
-      runAsNonRoot: true
-      runAsUser: 10001
-      runAsGroup: 10001
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop: [ALL]
-    livenessProbe:
-      httpGet:
-        path: /health/liveness
-        port: mongodb-http
-    startupProbe:
-      httpGet:
-        path: /health/liveness
-        port: mongodb-http
-      failureThreshold: 30
-      periodSeconds: 2
+gateway:
+  extraEnv:
+    - name: MONGODB_SIDECAR_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: mongodb-sidecar
+          key: api-key
+  extraContainers:
+    - name: mongodb-sidecar
+      image: ghcr.io/berriai/litellm-mongodb:v0.1.0-beta.1
+      ports:
+        - name: mongodb-http
+          containerPort: 8080
+      env:
+        - name: MONGODB_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-sidecar
+              key: connection-string
+        - name: MONGODB_SIDECAR_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-sidecar
+              key: api-key
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: [ALL]
+      livenessProbe:
+        httpGet:
+          path: /health/liveness
+          port: mongodb-http
+      startupProbe:
+        httpGet:
+          path: /health/liveness
+          port: mongodb-http
+        failureThreshold: 30
+        periodSeconds: 2
 ```
 
 Merge these values with your existing chart configuration, preserving any existing extra environment variables and containers. Set the MongoDB registration's `api_base` to `http://127.0.0.1:8080`; containers in the same Pod share the network. No additional Service or mandatory chart dependency is needed.
@@ -251,7 +258,7 @@ The registration is stored in the LiteLLM database. See [Managed Vector Stores](
 </TabItem>
 </Tabs>
 
-:::note First registration through the UI or management API
+:::note[First registration through the UI or management API]
 If the proxy started without any registered vector stores, direct search can work before chat retrieval is ready. Wait for the proxy's database sync or restart it after saving the first store before using `file_search` in chat completions. Loading a store through `config.yaml` at startup avoids this initial delay.
 :::
 

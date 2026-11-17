@@ -1,6 +1,8 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
+import ThemedImage from '@theme/ThemedImage';
 import SubscribeForm from '@site/src/components/SubscribeForm';
 import styles from './styles.module.css';
 
@@ -41,7 +43,7 @@ function searchableText(item) {
   return [
     metadata.title,
     metadata.description,
-    metadata.keywords,
+    ...(metadata.frontMatter?.keywords || []),
     ...(metadata.tags || []).map(tag => tag.label),
     ...(metadata.authors || []).map(author => author.name),
   ].filter(Boolean).join(' ').toLowerCase();
@@ -107,86 +109,77 @@ function itemScore(item, tokens) {
   }, 0);
 }
 
-// ── Provider marquee ──────────────────────────────────────────────────────
-const PROVIDERS = [
-  { name: 'OpenAI',        img: 'https://www.google.com/s2/favicons?domain=openai.com&sz=64' },
-  { name: 'Anthropic',     img: 'https://www.google.com/s2/favicons?domain=claude.ai&sz=64' },
-  { name: 'Google Gemini', img: 'https://www.google.com/s2/favicons?domain=ai.google.dev&sz=64' },
-  { name: 'AWS Bedrock',   img: 'https://www.google.com/s2/favicons?domain=aws.amazon.com&sz=64' },
-  { name: 'Azure OpenAI',  img: 'https://www.google.com/s2/favicons?domain=azure.microsoft.com&sz=64' },
-  { name: 'Mistral AI',    img: 'https://www.google.com/s2/favicons?domain=mistral.ai&sz=64' },
-  { name: 'Meta Llama',    img: 'https://www.google.com/s2/favicons?domain=meta.com&sz=64' },
-  { name: 'Groq',          img: 'https://www.google.com/s2/favicons?domain=groq.com&sz=64' },
-  { name: 'Hugging Face',  img: 'https://www.google.com/s2/favicons?domain=huggingface.co&sz=64' },
-  { name: 'Perplexity',    img: 'https://www.google.com/s2/favicons?domain=perplexity.ai&sz=64' },
-  { name: 'DeepSeek',      img: 'https://www.google.com/s2/favicons?domain=deepseek.com&sz=64' },
-  { name: 'Cohere',        img: 'https://www.google.com/s2/favicons?domain=cohere.com&sz=64' },
-  { name: 'Together AI',   img: 'https://www.google.com/s2/favicons?domain=together.ai&sz=64' },
-  { name: 'Vertex AI',     img: 'https://www.google.com/s2/favicons?domain=cloud.google.com&sz=64' },
-];
+// ── Cards ─────────────────────────────────────────────────────────────────
+// Same anatomy as the litellm.ai/blog cards: a 1200:630 cover, a mono
+// "TAG · DATE" line, the title and a three-line excerpt.
 
-const DOUBLED = [...PROVIDERS, ...PROVIDERS];
+// The grid shows this many posts after the featured one, then "Load more"
+// reveals the next batch, like the website. Hidden cards stay in the HTML so
+// every post is still linked from /blog for crawlers.
+const PAGE_SIZE = 12;
 
-function ProviderMarquee() {
-  return (
-    <div className={styles.marqueeWrap}>
-      <p className={styles.marqueeLabel}>Routing to 100+ providers</p>
-      <div className={styles.marqueeOuter}>
-        <div className={styles.fadeLeft} />
-        <div className={styles.fadeRight} />
-        <div className={styles.marqueeTrack}>
-          {DOUBLED.map((p, i) => (
-            <span key={i} className={styles.marqueeItem}>
-              <img src={p.img} alt={p.name} width={18} height={18} className={styles.marqueeIcon} />
-              <span>{p.name}</span>
-              <span className={styles.marqueeSep}>|</span>
-            </span>
-          ))}
-        </div>
+function formatDate(dateStr) {
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+function CardImage({item, title}) {
+  const image = item.content?.assets?.image || item.content?.metadata?.frontMatter?.image;
+  const lightImage = item.content?.metadata?.frontMatter?.image_light;
+  const resolved = useBaseUrl(typeof image === 'string' ? image : '');
+  const resolvedLight = useBaseUrl(typeof lightImage === 'string' ? lightImage : '');
+  const src = typeof image === 'string' && /^(https?:)?\/\//.test(image) ? image : image ? resolved : null;
+  const lightSrc = typeof lightImage === 'string' && /^(https?:)?\/\//.test(lightImage) ? lightImage : lightImage ? resolvedLight : null;
+  // Opt-in looping card video (frontmatter `card_video`), with the still image as poster.
+  // Readers who prefer reduced motion keep the still image.
+  const video = item.content?.metadata?.frontMatter?.card_video;
+  const resolvedVideo = useBaseUrl(typeof video === 'string' ? video : '');
+  const [motionOk, setMotionOk] = useState(false);
+  useEffect(() => {
+    if (!video) return undefined;
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setMotionOk(!query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, [video]);
+  if (video && motionOk) {
+    return (
+      <div className={styles.cover}>
+        <video src={resolvedVideo} poster={src || undefined} autoPlay muted loop playsInline preload="metadata" aria-hidden="true" />
       </div>
+    );
+  }
+  return (
+    <div className={styles.cover}>
+      {src && lightSrc ? (
+        <ThemedImage sources={{light: lightSrc, dark: src}} alt="" loading="lazy" decoding="async" />
+      ) : src ? (
+        <img src={src} alt="" loading="lazy" decoding="async" />
+      ) : (
+        <div className={styles.coverTitle} aria-hidden="true">{title}</div>
+      )}
     </div>
   );
 }
 
-// ── Post row ──────────────────────────────────────────────────────────────
-function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric',
-  });
-}
-
-function AuthorList({authors}) {
-  if (!authors || authors.length === 0) return null;
+function PostCard({item, featured = false, hidden = false}) {
+  const {title, permalink, date, description, tags} = item.content.metadata;
+  const tag = tags && tags[0] ? tags[0].label : '';
   return (
-    <>
-      {authors.map((a, i) => (
-        <React.Fragment key={a.name}>
-          {i > 0 && <span className={styles.authorSep}> </span>}
-          {a.url ? (
-            <a href={a.url} target="_blank" rel="noopener" className={styles.authorLink}>{a.name}</a>
-          ) : (
-            <span className={styles.authorName}>{a.name}</span>
-          )}
-        </React.Fragment>
-      ))}
-    </>
-  );
-}
-
-export function PostRow({post}) {
-  const {title, permalink, date, description, authors} = post;
-  return (
-    <article className={styles.post}>
-      <Link to={permalink} className={styles.titleLink}>
-        <h2 className={styles.title}>{title}</h2>
-      </Link>
-      {description && <p className={styles.desc}>{description}</p>}
-      <div className={styles.meta}>
-        <AuthorList authors={authors} />
-        {authors && authors.length > 0 && <span className={styles.metaDash}> — </span>}
-        <time className={styles.date} dateTime={date}>{formatDate(date)}</time>
+    <Link to={permalink} className={featured ? styles.featured : styles.tile} hidden={hidden}>
+      <CardImage item={item} title={title} />
+      <div className={styles.tileBody}>
+        <div className={styles.tileMeta}>
+          {tag && <span>{tag}</span>}
+          <time dateTime={date}>{formatDate(date)}</time>
+        </div>
+        <h2 className={styles.tileTitle}>{title}</h2>
+        {description && <p className={styles.tileDesc}>{description}</p>}
       </div>
-    </article>
+    </Link>
   );
 }
 
@@ -195,9 +188,64 @@ function Pagination({metadata}) {
   if (!previousPage && !nextPage) return null;
   return (
     <nav className={styles.pagination} aria-label="Blog list pagination">
-      {previousPage ? <Link to={previousPage} className={styles.pageLink}>&larr; Newer posts</Link> : <span />}
-      {nextPage ? <Link to={nextPage} className={styles.pageLink}>Older posts &rarr;</Link> : <span />}
+      {previousPage ? <Link to={previousPage} className={styles.moreBtn}>&larr; Newer posts</Link> : <span />}
+      {nextPage ? <Link to={nextPage} className={styles.moreBtn}>Older posts &rarr;</Link> : <span />}
     </nav>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6l-8-3Z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+function RssIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M5 11a8 8 0 0 1 8 8M5 5a14 14 0 0 1 14 14" />
+      <circle cx="6" cy="18" r="1.4" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function MailIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </svg>
+  );
+}
+
+// The hero keeps the email box open: the form sits in one blue pill, with
+// RSS and the security list as pills beside it.
+function HeroSubscribe() {
+  return (
+    <div className={styles.via}>
+      <div className={styles.mailPill}>
+        <MailIcon />
+        <SubscribeForm />
+      </div>
+      <div className={styles.viaLinks}>
+        <a href="/blog/rss.xml" className={styles.viaBtn}><RssIcon />RSS</a>
+        <Link to="/security/subscribe" className={styles.viaBtn} title="Join the security mailing list">
+          <ShieldIcon />Security announcements
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
   );
 }
 
@@ -207,6 +255,7 @@ export default function BlogListPage(props) {
   const metadata = props.metadata || {};
   const [activeTab, setActiveTab] = useState('all');
   const [query, setQuery] = useState('');
+  const [shown, setShown] = useState(PAGE_SIZE);
   const tokens = queryTokens(query);
   const filtered = filterItems(items, activeTab)
     .map((item, index) => ({item, index, score: itemScore(item, tokens)}))
@@ -214,77 +263,89 @@ export default function BlogListPage(props) {
     .sort((first, second) => second.score - first.score || first.index - second.index)
     .map(({item}) => item);
 
+  // The newest post is featured only on the unfiltered first page.
+  const featured = !query && activeTab === 'all' && !metadata.previousPage ? filtered[0] : null;
+  const rest = featured ? filtered.slice(1) : filtered;
+
   return (
     <Layout
       title="Engineering Blog"
       description="How we build the world's most widely used open-source AI Gateway. Routing, reliability, observability, and what we learn along the way."
     >
       <div className={styles.page}>
-        {/* Hero */}
-        <header className={styles.hero}>
-          <p className={styles.eyebrow}>AI Gateway</p>
-          <h1 className={styles.heroTitle}>Engineering</h1>
-          <p className={styles.heroSub}>
-            How we build the world's most widely used open-source AI Gateway.
-            Routing, reliability, observability, and what we learn along the way.
-          </p>
-          <a href="https://jobs.ashbyhq.com/litellm" target="_blank" rel="noopener noreferrer" className={styles.hiringBtn}>
-            We're hiring!
-          </a>
-          <div className={styles.subscribeSection}>
-            <p className={styles.subscribeLabel}>Get new posts in your inbox</p>
-            <SubscribeForm />
+        <div className={styles.frame}>
+          <header className={styles.hero}>
+            <h1 className={styles.heroTitle}>Blog</h1>
+            <HeroSubscribe />
+          </header>
+
+          <div className={styles.body}>
+            <div className={styles.inner}>
+              <div className={styles.bar}>
+                <nav className={styles.chips} aria-label="Filter posts by category">
+                  {TABS.map(tab => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      className={styles.chip}
+                      onClick={() => {
+                        setActiveTab(tab.id);
+                        setShown(PAGE_SIZE);
+                      }}
+                      aria-pressed={activeTab === tab.id}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                  <label className={styles.search}>
+                    <SearchIcon />
+                    <input
+                      type="search"
+                      value={query}
+                      onChange={event => {
+                        setQuery(event.target.value);
+                        setShown(PAGE_SIZE);
+                      }}
+                      onKeyDown={event => {
+                        if (event.key === 'Escape') setQuery('');
+                      }}
+                      placeholder="Search posts"
+                      aria-label="Search posts"
+                      autoComplete="off"
+                    />
+                  </label>
+                </nav>
+              </div>
+
+              <p className={styles.resultCount} role="status" aria-live="polite">
+                {query ? `${filtered.length} of ${items.length} posts` : ''}
+              </p>
+
+              <main>
+                {filtered.length === 0 && (
+                  <p className={styles.empty}>
+                    {query ? `No posts match “${query}”.` : 'No posts on this page match the selected filter.'}
+                  </p>
+                )}
+                {featured && <PostCard item={featured} featured />}
+                {rest.length > 0 && (
+                  <div className={styles.tiles}>
+                    {rest.map((item, index) => (
+                      <PostCard key={item.content.metadata.permalink} item={item} hidden={index >= shown} />
+                    ))}
+                  </div>
+                )}
+                {rest.length > shown && (
+                  <button type="button" className={styles.moreBtn} onClick={() => setShown(shown + PAGE_SIZE)}>
+                    Load more posts
+                  </button>
+                )}
+              </main>
+
+              <Pagination metadata={metadata} />
+            </div>
           </div>
-        </header>
-
-        <ProviderMarquee />
-
-        <div className={styles.searchRow}>
-          <input
-            type="search"
-            className={styles.searchInput}
-            value={query}
-            onChange={event => setQuery(event.target.value)}
-            onKeyDown={event => {
-              if (event.key === 'Escape') setQuery('');
-            }}
-            placeholder="Search posts"
-            aria-label="Search posts"
-            autoComplete="off"
-          />
         </div>
-
-        {/* Tabs */}
-        <nav className={styles.tabs} aria-label="Filter posts by category">
-          {TABS.map(tab => (
-            <button
-              key={tab.id}
-              className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-              aria-pressed={activeTab === tab.id}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-
-        <p className={styles.resultCount} role="status" aria-live="polite">
-          {query ? `${filtered.length} of ${items.length} posts` : ''}
-        </p>
-
-        {/* Post list */}
-        <main className={styles.list}>
-          {filtered.length === 0 && (
-            <p className={styles.emptyMsg}>
-              {query ? `No posts match "${query}".` : 'No posts on this page match the selected filter.'}
-            </p>
-          )}
-          {filtered.map(({content}) => (
-            <PostRow key={content.metadata.permalink} post={content.metadata} />
-          ))}
-        </main>
-
-        <Pagination metadata={metadata} />
       </div>
     </Layout>
   );

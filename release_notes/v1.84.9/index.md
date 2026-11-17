@@ -1,5 +1,6 @@
 ---
-title: "v1.84.9 - Anthropic Cache-Control Cap"
+title: "LiteLLM v1.84.9 - Anthropic Cache-Control Cap"
+description: "Caps Anthropic cache_control injection at the 4-block API limit, so prompt caching requests no longer fail when more blocks are eligible."
 slug: "v1-84-9"
 date: 2026-06-16T18:19:59
 authors:

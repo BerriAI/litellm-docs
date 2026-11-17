@@ -1,5 +1,6 @@
 ---
-title: "v1.90.0 - Six New Providers, OpenTelemetry v2 Parity & Streaming Reliability"
+title: "LiteLLM v1.90.0 - Six New Providers, OpenTelemetry v2 Parity & Streaming Reliability"
+description: "Adds six providers, 91 models and OpenTelemetry v2 metrics parity. Also changes /key/list to exact user_id and key_alias matching."
 slug: "v1-90-0"
 date: 2026-06-26T19:52:37
 authors:
@@ -44,7 +45,7 @@ pip install litellm==1.90.0
 </TabItem>
 </Tabs>
 
-:::danger Breaking Changes
+:::danger[Breaking Changes]
 
 **`/key/list` now matches `user_id` and `key_alias` exactly by default.** Earlier releases matched these filters as substrings, so integrations that relied on partial matching will return fewer or different keys after upgrading. The change closes a cross-user key disclosure path. See [PR #30593](https://github.com/BerriAI/litellm/pull/30593).
 

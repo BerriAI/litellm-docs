@@ -1,5 +1,6 @@
 ---
-title: v1.59.0
+title: "LiteLLM v1.59.0"
+description: "Adds the opt-in store_prompts_in_spend_logs option, which shows messages and responses in the Admin UI. It is off by default."
 slug: v1.59.0
 date: 2025-01-17T10:00:00
 authors:

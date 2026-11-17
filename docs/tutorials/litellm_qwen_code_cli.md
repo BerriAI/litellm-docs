@@ -3,15 +3,11 @@
 This tutorial shows you how to integrate the Qwen Code CLI with LiteLLM Proxy, allowing you to route requests through LiteLLM's unified interface.
 
 
-:::info 
-
-This integration is supported from LiteLLM v1.73.3-nightly and above.
-
-:::
+<SinceVersion v="1.73.6" />
 
 <br />
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/d7059b059c0f425fb0b8839418adffd6" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/d7059b059c0f425fb0b8839418adffd6" frameBorder="0" allowFullScreen></iframe>
 
 ## Benefits of using qwen-code with LiteLLM
 

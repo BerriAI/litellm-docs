@@ -1,3 +1,7 @@
+---
+sidebar_label: "Web Search Interception"
+---
+
 # Web Search Integration
 
 Enable transparent server-side web search execution for any LLM provider. LiteLLM automatically intercepts web search tool calls and executes them using your configured search provider (Parallel, Perplexity, Tavily, and others).
@@ -472,4 +476,4 @@ The handler automatically detects response format:
 
 ## Contributing
 
-Found a bug or want to add support for a new provider? See our [Contributing Guide](https://github.com/BerriAI/litellm/blob/main/CONTRIBUTING.md).
+Found a bug or want to add support for a new provider? See our [Contributing Guide](https://github.com/BerriAI/litellm/blob/main/.github/CONTRIBUTING.md).

@@ -1,3 +1,8 @@
+---
+title: "Splunk Observability Cloud Tracing for LiteLLM"
+sidebar_label: "Splunk Observability Cloud"
+description: "Send LiteLLM AI Gateway traces to Splunk Observability Cloud with the otel callback and standard OTLP environment variables, then verify them."
+---
 # Splunk Observability Cloud
 
 Send LiteLLM traces to [Splunk Observability Cloud](https://www.splunk.com/en_us/products/observability-cloud.html) using the built-in **`otel`** callback and standard OpenTelemetry OTLP environment variables.
@@ -6,7 +11,7 @@ LiteLLM uses the same OpenTelemetry path as the [OpenTelemetry integration](./op
 
 ## Video walkthrough
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/9dc21b753bbe4f6fb3c1b44c06e39c20" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen title="LiteLLM Splunk Observability Cloud OTEL demo"></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/9dc21b753bbe4f6fb3c1b44c06e39c20" frameBorder="0" allowFullScreen title="LiteLLM Splunk Observability Cloud OTEL demo"></iframe>
 
 Or [watch on Loom](https://www.loom.com/share/9dc21b753bbe4f6fb3c1b44c06e39c20).
 

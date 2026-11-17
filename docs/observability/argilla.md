@@ -1,3 +1,8 @@
+---
+title: "Argilla Logging for LiteLLM: Build LLM Datasets"
+sidebar_label: "Argilla"
+description: "Log LiteLLM calls to an Argilla dataset from the Python SDK or AI Gateway to build annotation data, with field mapping and a sampling rate for logged calls."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -67,7 +72,7 @@ litellm.callbacks = ["argilla"]
 
 # add argilla transformation object
 litellm.argilla_transformation_object = {
-    "user_input": "messages", # 👈 key= argilla field, value = either message (argilla.ChatField) | response (argilla.TextField)
+    "user_input": "messages", # key= argilla field, value = either message (argilla.ChatField) | response (argilla.TextField)
     "llm_output": "response"
 }
 
@@ -86,7 +91,7 @@ response = completion(
 litellm_settings:
   callbacks: ["argilla"]
   argilla_transformation_object:
-    user_input: "messages" # 👈 key= argilla field, value = either message (argilla.ChatField) | response (argilla.TextField)
+    user_input: "messages" # key= argilla field, value = either message (argilla.ChatField) | response (argilla.TextField)
     llm_output: "response"
 ```
 

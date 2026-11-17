@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Abliterated models cover</title>
+<style>
+@font-face{font-family:Geist;src:url(../../static/animations/internal-devin-two-days/assets/geist-variable.woff2)}
+@font-face{font-family:Mono;src:url(../../static/animations/internal-devin-two-days/assets/geist-mono-variable.woff2)}
+*{box-sizing:border-box}body{margin:0;background:#0d1117;color:#efefe7;font-family:Geist;width:1200px;height:630px;overflow:hidden}
+main{position:relative;isolation:isolate;width:1200px;height:630px;padding:30px 48px}
+header{display:flex;justify-content:space-between;align-items:center;font:12px Mono;color:#bfc1b6}header img{width:160px}
+.art{position:absolute;inset:90px 0 auto;height:495px;z-index:-1;opacity:.34;mask-image:linear-gradient(transparent,#000 18%,#000 78%,transparent)}canvas{width:100%;height:100%}
+h1{font-size:211px;font-weight:550;letter-spacing:-.07em;line-height:.9;margin:159px 0 0}
+.sub{display:flex;justify-content:space-between;align-items:center;font-size:52px;letter-spacing:-.05em;margin-top:27px}.sub span{font-size:72px;line-height:1}
+footer{position:absolute;left:48px;bottom:38px;font:13px Mono;color:#bfc1b6}
+body.light{background:#f3f3f3;color:#191a18}body.light header,body.light footer{color:#55594e}body.light .art{filter:grayscale(1) invert(1);opacity:.23;mix-blend-mode:multiply}
+</style><main><header><img src="../../static/img/brand/litellm-logo-white.png" alt="LiteLLM"><span>REFUSELESS / ABLITERATION</span></header><div class="art"><canvas id="glitch-art"></canvas></div><h1>Abliterated</h1><div class="sub">models on LiteLLM<span>↘</span></div><footer>AVAILABLE THROUGH YOUR AI GATEWAY</footer></main><script>if(new URLSearchParams(location.search).get("theme")==="light"){document.body.classList.add("light");document.querySelector("header img").src="../../static/img/brand/litellm-logo-blue.png";}</script><script type="module">import drawArtwork from "./artwork.js"; drawArtwork(document.getElementById("glitch-art"));</script></html>

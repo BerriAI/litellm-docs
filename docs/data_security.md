@@ -6,9 +6,9 @@ At LiteLLM, **safeguarding your data privacy and security** is our top priority.
 
 ### Self-hosted Instances LiteLLM
 
-- **No data or telemetry is stored on LiteLLM Servers when you self-host**
+- **No data or telemetry is stored on LiteLLM Servers when you self-host**, unless you point usage telemetry's HTTP endpoint at them as described below
 - For installation and configuration, see: [Self-hosting guide](../docs/proxy/deploy.md)
-- **Telemetry**: We run no telemetry when you self-host LiteLLM
+- **Telemetry**: Usage telemetry is off by default when you self-host LiteLLM. If you turn it on, it keeps aggregate counts in your own database or sends them to the HTTP endpoint you set. There is no default endpoint, so nothing reaches LiteLLM servers unless you set one that points there. See [Usage telemetry](./proxy/telemetry.md) for every field it can collect
 
 For security inquiries, please contact us at support@berri.ai
 
@@ -34,18 +34,18 @@ For security inquiries, please contact us at support@berri.ai
 
 ## Security Vulnerability Reporting Guidelines
 
-We value the security community's role in protecting our systems and users. To report a security vulnerability:
+We value the security community's role in protecting our systems and users.
 
-- Email support@berri.ai with details
-- Include steps to reproduce the issue
-- Provide any relevant additional information
+The canonical vulnerability disclosure policy lives in [`SECURITY.md` in the LiteLLM repository](https://github.com/BerriAI/litellm/blob/main/.github/SECURITY.md), which includes information about our bug bounty.
 
-We'll review all reports promptly. Note that we don't currently offer a bug bounty program.
+The preferred way to report a vulnerability is the [LiteLLM vulnerability disclosure form](https://security.litellm.ai/vdp). Reports submitted through the form go to the LiteLLM program on HackerOne and are triaged there, and you do not need a HackerOne account to submit one. Please do not open a draft GitHub Security Advisory (GHSA) to report a vulnerability to us. If you cannot use the form, emailing [support@berri.ai](mailto:support@berri.ai) with the same details works in a pinch, though may be triaged more slowly.
+
+Please note that in order to combat low-quality AI spam, all vulnerability reports require a video or screen recording of you demonstrating the full exploit.
 
 ## Vulnerability Scanning
 
 - LiteLLM runs [`grype`](https://github.com/anchore/grype) security scans on all built Docker images.
-    - See [`grype litellm` check on ci/cd](https://github.com/BerriAI/litellm/blob/main/.circleci/config.yml#L1099). 
+    - See the [archived `grype litellm` CI check](https://github.com/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/.circleci/config.yml#L1099).
     - Current Status: ✅ Passing. 0 High/Critical severity vulnerabilities found.
 
 ## Legal/Compliance FAQs
@@ -72,7 +72,7 @@ Has an information security management system been implemented?
 - Yes - [CodeQL](https://codeql.github.com/) and an ISMS covering multiple security domains.
 
 Is logging of key events - auth, creation, update changes occurring? 
-- Yes - we have [audit logs](https://docs.litellm.ai/docs/proxy/multiple_admins#1-switch-on-audit-logs)
+- Yes - we have [audit logs](https://docs.litellm.ai/docs/proxy/audit_logs#1-switch-on-audit-logs)
 
 Does the Vendor have an established Cybersecurity incident management program? 
 - Yes, Incident Response Policy available upon request.

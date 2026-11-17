@@ -1,3 +1,8 @@
+---
+title: "Scrub PII and Redact Messages in LiteLLM Logs"
+sidebar_label: "Scrub Logged Data"
+description: "Mask PII and redact messages before LiteLLM sends data to logging integrations such as Langfuse, with a custom callback using sync or async hooks."
+---
 # Scrub Logged Data
 
 Redact messages / mask PII before sending data to logging integrations (langfuse/etc.).
@@ -79,7 +84,7 @@ litellm.success_callback = ["langfuse"]
 
 
 ## sync 
-response = completion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+response = completion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi - i'm openai"}],
                               stream=True)
 for chunk in response: 
     continue
@@ -89,7 +94,7 @@ for chunk in response:
 import asyncio 
 
 async def completion():
-    response = await acompletion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi 👋 - i'm openai"}],
+    response = await acompletion(model="{{openai_small}}", messages=[{ "role": "user", "content": "Hi - i'm openai"}],
                               stream=True)
     async for chunk in response: 
         continue

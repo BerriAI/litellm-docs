@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1040" viewBox="0 0 1120 1040" role="img" aria-labelledby="aws-title aws-desc">
+  <title id="aws-title">Moyai AWS deployment with Lambda MicroVMs</title>
+  <desc id="aws-desc">Send browser or Slack requests through an HTTPS load balancer to one private EC2 host running Moyai, Temporal, and LiteLLM. Use RDS for application records, S3 for artifacts and checkpoints, and encrypted EBS for installation keys and Temporal's PostgreSQL data. Run guest tools in Lambda MicroVMs and call Bedrock through LiteLLM with the host IAM role. Keep runtime credentials in Secrets Manager on the trusted side. Give guests scoped S3 checkpoint URLs without application credentials.</desc>
+  <defs>
+    <marker id="aws-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10Z" fill="#767386"/>
+    </marker>
+    <style>
+      .aws-label{font-size:24px;font-weight:600}
+      .aws-small{font-size:19px;fill:#5b586b}
+      .aws-heading{font-size:18px;font-weight:600;letter-spacing:1px}
+      .aws-wire{fill:none;stroke:#767386;stroke-width:2;marker-end:url(#aws-arrow)}
+      .aws-box{fill:#fff;stroke:#c7c4d2;stroke-width:1.5}
+    </style>
+  </defs>
+  <rect width="1120" height="1040" rx="16" fill="#fff"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#292337">
+    <text x="32" y="34" class="aws-heading">MOYAI / AWS DEPLOYMENT</text>
+    <rect x="52" y="64" width="280" height="64" rx="10" class="aws-box"/>
+    <text x="192" y="104" text-anchor="middle" class="aws-label">Browser / Slack</text>
+    <text x="420" y="90" class="aws-small">Route 53 DNS + ACM certificate</text>
+    <text x="420" y="117" class="aws-small">Single-host Terraform quickstart</text>
+
+    <rect x="24" y="160" width="672" height="854" rx="14" fill="#faf9fc" stroke="#c7c4d2" stroke-width="1.5"/>
+    <text x="48" y="193" class="aws-heading">YOUR AWS VPC</text>
+    <rect x="744" y="160" width="352" height="854" rx="14" fill="#faf9fc" stroke="#c7c4d2" stroke-width="1.5"/>
+    <text x="768" y="193" class="aws-heading">AWS MANAGED SERVICES</text>
+
+    <rect x="52" y="222" width="616" height="80" rx="10" class="aws-box"/>
+    <text x="360" y="254" text-anchor="middle" class="aws-label">HTTPS load balancer</text>
+    <text x="360" y="282" text-anchor="middle" class="aws-small">ALB · public subnets</text>
+    <path d="M260 128V222" class="aws-wire"/>
+    <text x="272" y="151" class="aws-small">HTTPS</text>
+
+    <rect x="40" y="336" width="640" height="652" rx="12" fill="none" stroke="#c7c4d2" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="60" y="362" class="aws-heading">PRIVATE SUBNETS</text>
+    <rect x="56" y="380" width="608" height="390" rx="12" fill="#f0ecfb" stroke="#8c7bb8" stroke-width="1.5"/>
+    <text x="80" y="408" class="aws-heading">ONE EC2 HOST · DOCKER SPLIT DEPLOYMENT</text>
+
+    <rect x="80" y="428" width="560" height="82" rx="9" class="aws-box"/>
+    <text x="360" y="460" text-anchor="middle" class="aws-label">Moyai application</text>
+    <text x="360" y="489" text-anchor="middle" class="aws-small">API · coordinator · broker · Pydantic AI worker</text>
+    <path d="M620 302V428" class="aws-wire"/>
+
+    <rect x="80" y="546" width="260" height="82" rx="9" class="aws-box"/>
+    <text x="210" y="580" text-anchor="middle" class="aws-label">Temporal</text>
+    <text x="210" y="608" text-anchor="middle" class="aws-small">Durable execution</text>
+    <rect x="380" y="546" width="260" height="82" rx="9" class="aws-box"/>
+    <text x="510" y="580" text-anchor="middle" class="aws-label">LiteLLM gateway</text>
+    <text x="510" y="608" text-anchor="middle" class="aws-small">Private HTTPS</text>
+    <path d="M210 510V546" class="aws-wire"/>
+    <path d="M510 510V546" class="aws-wire"/>
+
+    <rect x="80" y="680" width="560" height="66" rx="9" class="aws-box"/>
+    <text x="360" y="707" text-anchor="middle" class="aws-label">Encrypted EBS</text>
+    <text x="360" y="733" text-anchor="middle" class="aws-small">Temporal PostgreSQL · installation keys</text>
+    <path d="M210 628V680" class="aws-wire"/>
+    <path d="M360 510V656H510V680" class="aws-wire"/>
+
+    <rect x="80" y="866" width="560" height="82" rx="9" class="aws-box"/>
+    <text x="360" y="900" text-anchor="middle" class="aws-label">RDS PostgreSQL</text>
+    <text x="360" y="929" text-anchor="middle" class="aws-small">Moyai users · sessions · application records</text>
+    <path d="M80 470H48V907H80" class="aws-wire"/>
+    <text x="360" y="975" text-anchor="middle" class="aws-small">No public IP · maintenance through SSM</text>
+
+    <rect x="768" y="238" width="304" height="108" rx="10" class="aws-box"/>
+    <text x="920" y="271" text-anchor="middle" class="aws-label">Private S3</text>
+    <text x="920" y="301" text-anchor="middle" class="aws-small">Artifacts + filesystem</text>
+    <text x="920" y="327" text-anchor="middle" class="aws-small">checkpoints</text>
+    <path d="M640 446H716V292H768" class="aws-wire"/>
+    <text x="710" y="278" text-anchor="middle" class="aws-small">Objects</text>
+
+    <rect x="768" y="410" width="304" height="116" rx="10" fill="#f0ecfb" stroke="#8c7bb8" stroke-width="1.5"/>
+    <text x="920" y="444" text-anchor="middle" class="aws-label">Lambda MicroVMs</text>
+    <text x="920" y="476" text-anchor="middle" class="aws-small">Shell · files · browser</text>
+    <text x="920" y="505" text-anchor="middle" class="aws-small">No application credentials</text>
+    <path d="M640 469H768" class="aws-wire"/>
+    <text x="710" y="494" text-anchor="middle" class="aws-small">Tools</text>
+    <path d="M920 410V346" class="aws-wire" marker-start="url(#aws-arrow)"/>
+    <text x="936" y="375" class="aws-small">Scoped URLs</text>
+
+    <rect x="768" y="546" width="304" height="82" rx="10" class="aws-box"/>
+    <text x="920" y="580" text-anchor="middle" class="aws-label">Amazon Bedrock</text>
+    <text x="920" y="608" text-anchor="middle" class="aws-small">Host IAM role</text>
+    <path d="M640 587H768" class="aws-wire"/>
+    <text x="710" y="571" text-anchor="middle" class="aws-small">Models</text>
+
+    <text x="776" y="686" class="aws-small">Connect to MicroVMs through</text>
+    <text x="776" y="714" class="aws-small">AWS-authenticated endpoints</text>
+    <text x="776" y="742" class="aws-small">outside the application VPC.</text>
+    <text x="776" y="790" class="aws-small">Route host outbound traffic</text>
+    <text x="776" y="818" class="aws-small">through the NAT gateway.</text>
+
+    <rect x="768" y="870" width="304" height="78" rx="10" class="aws-box"/>
+    <text x="920" y="902" text-anchor="middle" class="aws-label">Secrets Manager</text>
+    <text x="920" y="930" text-anchor="middle" class="aws-small">Runtime credentials</text>
+    <path d="M768 909H716V812H360V770" class="aws-wire"/>
+  </g>
+</svg>

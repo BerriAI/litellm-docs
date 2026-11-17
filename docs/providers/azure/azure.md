@@ -1,3 +1,9 @@
+---
+title: "Azure OpenAI API with LiteLLM AI Gateway"
+sidebar_label: "Azure OpenAI"
+description: "Route Azure OpenAI deployments, including GPT-5, o-series, vision and audio models, through the Python SDK or AI Gateway with Entra ID auth and Batches."
+---
+
 
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
@@ -5,13 +11,15 @@ import TabItem from '@theme/TabItem';
 
 # Azure OpenAI
 
+Azure OpenAI Service provides REST API access to OpenAI models such as GPT-5 and GPT-4o; LiteLLM calls your Azure deployments with the `azure/` prefix through the same OpenAI-format API from the Python SDK or AI Gateway.
+
 ## Overview
 
 | Property | Details |
 |-------|-------|
 | Description | Azure OpenAI Service provides REST API access to OpenAI's powerful language models including o1, o1-mini, GPT-5, GPT-4o, GPT-4o mini, GPT-4 Turbo with Vision, GPT-4, GPT-3.5-Turbo, and Embeddings model series. Also supports Claude models via Azure Foundry. |
-| Provider Route on LiteLLM | `azure/`, [`azure/o_series/`](#o-series-models), [`azure/gpt5_series/`](#gpt-5-models). Claude models via Azure Foundry use the [`azure_ai/claude-*`](./azure_anthropic) route instead. |
-| Supported Operations | [`/chat/completions`](#azure-openai-chat-completion-models), [`/responses`](./azure_responses), [`/completions`](#azure-instruct-models), [`/embeddings`](./azure_embedding), [`/audio/speech`](azure_speech), [`/audio/transcriptions`](../../audio_transcription), `/fine_tuning`, [`/batches`](#azure-batches-api), `/files`, [`/images`](../../image_generation#azure-openai-image-generation-models) |
+| Provider Route on LiteLLM | `azure/`, [`azure/o_series/`](#o-series-models), [`azure/gpt5_series/`](#gpt-5-models). Claude models via Azure Foundry use the [`azure_ai/claude-*`](/docs/providers/azure/azure_anthropic) route instead. |
+| Supported Operations | [`/chat/completions`](#azure-openai-chat-completion-models), [`/responses`](/docs/providers/azure/azure_responses), [`/completions`](#azure-instruct-models), [`/embeddings`](/docs/providers/azure/azure_embedding), [`/audio/speech`](/docs/providers/azure/azure_speech), [`/audio/transcriptions`](/docs/audio_transcription), `/fine_tuning`, [`/batches`](#azure-batches-api), `/files`, [`/images`](/docs/image_generation#azure-openai-image-generation-models) |
 | Link to Provider Doc | [Azure OpenAI ↗](https://learn.microsoft.com/en-us/azure/ai-services/openai/overview), [Azure Foundry Claude ↗](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/use-foundry-models-claude)
 
 ## API Keys, Params
@@ -27,9 +35,9 @@ os.environ["AZURE_AD_TOKEN"] = ""
 os.environ["AZURE_API_TYPE"] = ""
 ```
 
-:::info Azure Foundry Claude Models
+:::info[Azure Foundry Claude Models]
 
-Claude models via Azure Foundry are routed through the `azure_ai/` provider, not `azure/`. Use `azure_ai/claude-*` model names (e.g., `azure_ai/{{anthropic}}`) with Azure authentication. See the [Azure Anthropic documentation](./azure_anthropic) for details.
+Claude models via Azure Foundry are routed through the `azure_ai/` provider, not `azure/`. Use `azure_ai/claude-*` model names (e.g., `azure_ai/{{anthropic}}`) with Azure authentication. See the [Azure Anthropic documentation](/docs/providers/azure/azure_anthropic) for details.
 
 :::
 
@@ -230,6 +238,20 @@ model_list:
 | gpt-3.5-turbo-16k    | `completion('azure/<your deployment name>', messages)` |
 | gpt-3.5-turbo-16k-0613    | `completion('azure/<your deployment name>', messages)`
 
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`azure/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Azure OpenAI model name. LiteLLM sends Azure OpenAI the current target model and bills at that model's price. See [Latest model aliases](../../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `azure/gpt-luna-latest` | GPT Luna |
+| `azure/gpt-sol-latest` | GPT Sol |
+| `azure/gpt-terra-latest` | GPT Terra |
+| `azure/gpt-astra-latest` | GPT Astra |
+| `azure/gpt-mini-latest` | GPT Mini |
+
 ## Azure OpenAI Vision Models 
 | Model Name            | Function Call                                                   |
 |-----------------------|-----------------------------------------------------------------|
@@ -333,7 +355,7 @@ To set this explicitly, set `model` to `azure/o_series/<your-deployment-name>`.
 ```python
 import litellm
 
-litellm.completion(model="azure/my-o3-deployment", messages=[{"role": "user", "content": "Hello, world!"}]) # 👈 Note: 'o3' in the deployment name
+litellm.completion(model="azure/my-o3-deployment", messages=[{"role": "user", "content": "Hello, world!"}]) # Note: 'o3' in the deployment name
 ```
 </TabItem>
 <TabItem value="proxy" label="PROXY">
@@ -358,7 +380,7 @@ model_list:
 ```python
 import litellm
 
-litellm.completion(model="azure/o_series/my-random-deployment-name", messages=[{"role": "user", "content": "Hello, world!"}]) # 👈 Note: 'o_series/' in the deployment name
+litellm.completion(model="azure/o_series/my-random-deployment-name", messages=[{"role": "user", "content": "Hello, world!"}]) # Note: 'o_series/' in the deployment name
 ```
 </TabItem>
 <TabItem value="proxy" label="PROXY">
@@ -518,6 +540,10 @@ curl http://localhost:4000/v1/chat/completions \
 </TabItem>
 </Tabs>
 
+## Azure Realtime Translation
+
+For live speech-to-speech translation, add `azure/gpt-realtime-translate` with your `api_base` and `api_key`, then connect to `/v1/realtime/translations` on the proxy. See [Realtime translation](/docs/realtime_translation) for the config, a WebSocket client, WebRTC, and pricing.
+
 ## Azure Instruct Models
 
 Use `model="azure_text/<your-deployment>"`
@@ -650,7 +676,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 Example video of using `tenant_id`, `client_id`, `client_secret` with LiteLLM Proxy Server
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/70d3f219ee7f4e5d84778b7f17bba506?sid=04b8ff29-485f-4cb8-929e-6b392722f36d" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/70d3f219ee7f4e5d84778b7f17bba506?sid=04b8ff29-485f-4cb8-929e-6b392722f36d" frameBorder="0" allowFullScreen></iframe>
 
 ### Entra ID - use client_id, username, password
 
@@ -752,7 +778,7 @@ model_list:
       api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
 
 litellm_settings:
-    enable_azure_ad_token_refresh: true # 👈 KEY CHANGE
+    enable_azure_ad_token_refresh: true # KEY CHANGE
 ```
 
 **Scenario 2: Managed Identity (AKS, Azure VMs) - No Hard-coded Credentials Required**
@@ -767,7 +793,7 @@ model_list:
       api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
 
 litellm_settings:
-    enable_azure_ad_token_refresh: true # 👈 KEY CHANGE
+    enable_azure_ad_token_refresh: true # KEY CHANGE
 ```
 
 **Scenario 3: Azure CLI Authentication**
@@ -782,7 +808,7 @@ model_list:
       api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
 
 litellm_settings:
-    enable_azure_ad_token_refresh: true # 👈 KEY CHANGE
+    enable_azure_ad_token_refresh: true # KEY CHANGE
 ```
 
 3. Start proxy
@@ -1038,18 +1064,18 @@ print("list_batches_response=", list_batches_response)
 ### [BETA] Loadbalance Multiple Azure Deployments 
 In your config.yaml, set `enable_loadbalancing_on_batch_endpoints: true`
 
-```yaml
+```yaml keep-model-ids
 model_list:
-  - model_name: "batch-gpt-4o-mini"
+  - model_name: "batch-model"
     litellm_params:
-      model: "azure/{{openai_small}}"
+      model: "azure/gpt-5.6-luna"
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
     model_info:
       mode: batch
 
 litellm_settings:
-  enable_loadbalancing_on_batch_endpoints: true # 👈 KEY CHANGE
+  enable_loadbalancing_on_batch_endpoints: true # KEY CHANGE
 ```
 
 Note: This works on `{PROXY_BASE_URL}/v1/files` and `{PROXY_BASE_URL}/v1/batches`.
@@ -1057,7 +1083,7 @@ Note: Response is in the OpenAI-format.
 
 1. Upload a file 
 
-Just set `model: batch-gpt-4o-mini` in your .jsonl.
+Just set `model: batch-model` in your .jsonl.
 
 ```bash
 curl http://localhost:4000/v1/files \
@@ -1071,9 +1097,9 @@ curl http://localhost:4000/v1/files \
 Note: `model` should be your azure deployment name.
 
 ```json
-{"custom_id": "task-0", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-gpt-4o-mini", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "When was Microsoft founded?"}]}}
-{"custom_id": "task-1", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-gpt-4o-mini", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "When was the first XBOX released?"}]}}
-{"custom_id": "task-2", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-gpt-4o-mini", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "What is Altair Basic?"}]}}
+{"custom_id": "task-0", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-model", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "When was Microsoft founded?"}]}}
+{"custom_id": "task-1", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-model", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "When was the first XBOX released?"}]}}
+{"custom_id": "task-2", "method": "POST", "url": "/chat/completions", "body": {"model": "batch-model", "messages": [{"role": "system", "content": "You are an AI assistant that helps people find information."}, {"role": "user", "content": "What is Altair Basic?"}]}}
 ```
 
 Expected Response (OpenAI-compatible)
@@ -1092,7 +1118,7 @@ curl http://0.0.0.0:4000/v1/batches \
     "input_file_id": "file-f0be81f654454113a922da60acb0eea6",
     "endpoint": "/v1/chat/completions",
     "completion_window": "24h",
-    "model: "batch-gpt-4o-mini"
+    "model": "batch-model"
   }'
 ```
 
@@ -1307,7 +1333,7 @@ model_list:
         api_version: 2023-06-01-preview
         api_base: https://openai-gpt-4-test-v-1.openai.azure.com/
         api_key: os.environ/AZURE_API_KEY
-        base_model: dall-e-3 # 👈 set dall-e-3 as base model
+        base_model: dall-e-3 # set dall-e-3 as base model
     model_info:
         mode: image_generation
 ```

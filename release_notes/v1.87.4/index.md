@@ -1,5 +1,6 @@
 ---
-title: "v1.87.4 - Guardrails & Logging Fixes"
+title: "LiteLLM v1.87.4 - Guardrails & Logging Fixes"
+description: "Fixes guardrail pre-call hooks and DB guardrail polling, and returns 400 instead of 500 when AIM blocks a request. Also fixes duplicate passthrough logs."
 slug: "v1-87-4"
 date: 2026-06-20T14:44:03
 authors:

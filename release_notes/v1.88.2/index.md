@@ -1,5 +1,6 @@
 ---
-title: "v1.88.2 - DB Resilience, Passthrough, Model-Info & Budget"
+title: "LiteLLM v1.88.2 - DB Resilience, Passthrough, Model-Info & Budget"
+description: "Backports database resilience fixes and the disable_budget_reservation setting to the 1.88 line. Also fixes /v1/model/info team access and BYOK edits."
 slug: "v1-88-2"
 date: 2026-06-13T19:29:53
 authors:

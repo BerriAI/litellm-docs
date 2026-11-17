@@ -1,8 +1,16 @@
+---
+title: "Novita AI API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Novita AI"
+description: "Run DeepSeek R1 Turbo, Qwen3, Llama 4 Maverick and other Novita AI models with tool calling, JSON mode and min_p or top_k sampling through LiteLLM."
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Novita AI
+
+Novita AI is an AI cloud platform that serves models through a simple API; LiteLLM calls them with the `novita/` prefix from the Python SDK or AI Gateway, with tool calling and JSON mode.
 
 | Property | Details |
 |-------|-------|
@@ -166,7 +174,7 @@ messages = [
 response = completion(
     model="novita/deepseek/deepseek-r1-turbo", 
     messages=messages, 
-    response_format={"type": "json_object"} # 👈 KEY CHANGE
+    response_format={"type": "json_object"} # KEY CHANGE
 )
 
 print(json.loads(response.choices[0].message.content))
@@ -212,7 +220,7 @@ curl -X POST 'http://0.0.0.0:4000/chat/completions' \
 
 ## Chat Models
 
-🚨 LiteLLM supports ALL Novita AI models, send `model=novita/<your-novita-model>` to send it to Novita AI. See all Novita AI models [here](https://novita.ai/models/llm?utm_source=github_litellm&utm_medium=github_readme&utm_campaign=github_link)
+LiteLLM supports ALL Novita AI models, send `model=novita/<your-novita-model>` to send it to Novita AI. See all Novita AI models [here](https://novita.ai/models/llm?utm_source=github_litellm&utm_medium=github_readme&utm_campaign=github_link)
 
 | Model Name                | Function Call                                       |
 |---------------------------|-----------------------------------------------------|

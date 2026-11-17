@@ -1,3 +1,9 @@
+---
+title: "Bedrock Rerank API with LiteLLM"
+sidebar_label: "AWS Bedrock - Rerank API"
+description: "Rerank documents with AWS Bedrock in the Cohere /rerank format via LiteLLM. Set up config.yaml on the AI Gateway or call the Python SDK, and track cost."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -5,7 +11,7 @@ import TabItem from '@theme/TabItem';
 
 Use Bedrock's Rerank API in the Cohere `/rerank` format.
 
-:::info Cost Tracking
+:::info[Cost Tracking]
 
 ✅ **Cost tracking is supported** for Bedrock Rerank API calls.
 

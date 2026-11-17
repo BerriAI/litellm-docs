@@ -1,3 +1,9 @@
+---
+title: "Replicate API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Replicate"
+description: "Call Llama 3, Llama 2 and Mistral on Replicate or your own Replicate deployments, set custom prompt templates, and pass seed, min_tokens and top_k."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -204,7 +210,7 @@ response = completion(
 )
 ```
 
-:::warning Replicate Cold Boots
+:::warning[Replicate Cold Boots]
 
 Replicate responses can take 3-5 mins due to replicate cold boots, if you're trying to debug try making the request with `litellm.set_verbose=True`. [More info on replicate cold boots](https://replicate.com/docs/how-does-replicate-work#cold-boots)
 

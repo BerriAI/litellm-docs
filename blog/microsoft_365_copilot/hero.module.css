@@ -1,0 +1,34 @@
+.hero {
+  width: 100%;
+  aspect-ratio: 400 / 209;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.hero picture,
+.hero img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hero img {
+  object-fit: contain;
+  margin: 0;
+}
+
+.hero .dark {
+  display: none;
+}
+
+:global(html[data-theme='dark']) .hero .light {
+  display: none;
+}
+
+:global(html[data-theme='dark']) .hero .dark {
+  display: block;
+}
+
+@media (max-width: 600px) {
+  .hero { aspect-ratio: 8 / 7; }
+}

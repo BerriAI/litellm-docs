@@ -1,3 +1,8 @@
+---
+title: "EnkryptAI Guardrails on LiteLLM AI Gateway"
+sidebar_label: "EnkryptAI Guardrails"
+description: "Add EnkryptAI content moderation and safety checks to LLM inputs and outputs on the LiteLLM AI Gateway, with custom policies and observability."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -24,16 +29,7 @@ guardrails:
       guardrail: enkryptai
       mode: "pre_call"
       api_key: os.environ/ENKRYPTAI_API_KEY
-      detectors:
-        toxicity:
-          enabled: true
-        nsfw:
-          enabled: true
-        pii:
-          enabled: true
-          entities: ["email", "phone", "secrets"]
-        injection_attack:
-          enabled: true
+      policy_name: "my-policy"  # EnkryptAI policy that defines which detectors run
 ```
 
 #### Supported values for `mode`
@@ -44,12 +40,12 @@ guardrails:
 
 #### Available Detectors
 
-EnkryptAI supports multiple content detection types:
+Detectors are configured in the EnkryptAI policy referenced by `policy_name`, not in the LiteLLM config. LiteLLM sends only the text and the `x-enkrypt-policy` header, so a `detectors:` block under `litellm_params` has no effect. EnkryptAI policies support these detection types:
 
 - **toxicity** - Detect toxic language
 - **nsfw** - Detect NSFW (Not Safe For Work) content
 - **pii** - Detect personally identifiable information
-  - Configure entities: `["pii", "email", "phone", "secrets", "ip_address", "url"]`
+  - Entities configurable in the policy: `["pii", "email", "phone", "secrets", "ip_address", "url"]`
 - **injection_attack** - Detect prompt injection attempts
 - **keyword_detector** - Detect custom keywords/phrases
 - **policy_violation** - Detect policy violations
@@ -111,29 +107,17 @@ curl -i http://localhost:4000/v1/chat/completions \
   }'
 ```
 
-**Expected Response on Failure: HTTP 400 Error**
+**Expected Response on Failure: HTTP 500 Error**
+
+The `message` is a plain string listing each violation, and its details come from the EnkryptAI response.
 
 ```json
 {
   "error": {
-    "message": {
-      "error": "Content blocked by EnkryptAI guardrail",
-      "detected": true,
-      "violations": ["pii"],
-      "response": {
-        "summary": {
-          "pii": 1
-        },
-        "details": {
-          "pii": {
-            "detected": ["email", "ssn"]
-          }
-        }
-      }
-    },
-    "type": "None",
-    "param": "None",
-    "code": "400"
+    "message": "Guardrail failed: 1 violation(s) detected\n\n- PII:\n  PII Detected: {'email': ['test@example.com']}",
+    "type": "internal_server_error",
+    "param": null,
+    "code": "500"
   }
 }
 ```
@@ -143,7 +127,7 @@ curl -i http://localhost:4000/v1/chat/completions \
 
 ## Video Walkthrough
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/ff222211e0864937aee4aeef0f28c3b7" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/ff222211e0864937aee4aeef0f28c3b7" frameBorder="0" allowFullScreen></iframe>
 
 ## Advanced Configuration
 
@@ -175,12 +159,7 @@ guardrails:
       guardrail: enkryptai
       mode: "pre_call"
       api_key: os.environ/ENKRYPTAI_API_KEY
-      detectors:
-        pii:
-          enabled: true
-          entities: ["email", "phone", "ssn"]
-        injection_attack:
-          enabled: true
+      policy_name: "my-input-policy"
 
   # Output guardrail
   - guardrail_name: "enkryptai-output"
@@ -188,11 +167,7 @@ guardrails:
       guardrail: enkryptai
       mode: "post_call"
       api_key: os.environ/ENKRYPTAI_API_KEY
-      detectors:
-        toxicity:
-          enabled: true
-        nsfw:
-          enabled: true
+      policy_name: "my-output-policy"
 ```
 
 ## Configuration Options

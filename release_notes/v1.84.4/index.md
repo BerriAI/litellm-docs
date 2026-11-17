@@ -1,5 +1,6 @@
 ---
-title: "v1.84.4 - Reset-Budget & Observability Fixes"
+title: "LiteLLM v1.84.4 - Reset-Budget & Observability Fixes"
+description: "Fixes ResetBudgetJob spend resets for UI-created keys and stops duplicate Datadog logs and OTLP traces on completed streams."
 slug: "v1-84-4"
 date: 2026-05-31T00:00:00
 authors:

@@ -1,3 +1,8 @@
+---
+title: "Supabase Logging for LiteLLM: Track LLM Spend"
+sidebar_label: "Supabase"
+description: "Log LiteLLM Python SDK requests to a Supabase table and see total spend across LLM providers, using success and failure callbacks and a SQL table."
+---
 # Supabase
 
 :::tip
@@ -67,14 +72,14 @@ litellm.failure_callback=["supabase"]
 # openai call
 response = completion(
   model="{{openai_small}}", 
-  messages=[{"role": "user", "content": "Hi 👋 - i'm openai"}],
+  messages=[{"role": "user", "content": "Hi - i'm openai"}],
   user="ishaan22" # identify users
 ) 
 
 # bad call, expect this call to fail and get logged
 response = completion(
   model="chatgpt-test", 
-  messages=[{"role": "user", "content": "Hi 👋 - i'm a bad call to test error logging"}]
+  messages=[{"role": "user", "content": "Hi - i'm a bad call to test error logging"}]
 )
  
 ```
@@ -88,7 +93,7 @@ Pass `user` to `litellm.completion` to map your llm call to an end-user
 ```python
 response = completion(
   model="{{openai_small}}", 
-  messages=[{"role": "user", "content": "Hi 👋 - i'm openai"}],
+  messages=[{"role": "user", "content": "Hi - i'm openai"}],
   user="ishaan22" # identify users
 ) 
 ```
@@ -103,6 +108,6 @@ litellm.modify_integration("supabase",{"table_name": "litellm_logs"})
 
 ## Support & Talk to Founders
 
-- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+- [Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Our emails ishaan@berri.ai / krrish@berri.ai

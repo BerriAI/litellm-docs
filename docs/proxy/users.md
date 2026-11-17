@@ -1,9 +1,12 @@
+import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Budgets, Rate Limits
 
-:::info **Budget Setup Options**
+For customer and end-user spend tracking from v1.111, start with [Customer Management](./customers.md). The end-user budget examples below cover the supported [legacy APIs](./legacy_end_users.md).
+
+:::info[**Budget Setup Options**]
 **Personal budgets**: Create virtual keys without team_id for individual spending limits
 
 **Team budgets**: Add team_id to virtual keys to draw on a team's shared budget
@@ -19,7 +22,7 @@ Requirements:
 
 - Need to a postgres database (e.g. [Supabase](https://supabase.com/), [Neon](https://neon.tech/), etc) [**See Setup**](./virtual_keys.md#setup)
 
-:::warning Budgets require a database
+:::warning[Budgets require a database]
 
 Every budget on this page is enforced against spend read from the database, so none of them cap anything on a [DB-less deployment](./docker_quick_start.md#running-without-a-database). `litellm_settings.max_budget` fails open there rather than erroring: the proxy's global spend is only loaded when a database client exists, and with no total to compare against, the global budget check is skipped and requests keep being served past the limit. A warning is logged once at startup when a budget is set with no database connected, but nothing blocks at request time. Key, team, and user budgets are unavailable for the same reason, since virtual keys cannot be resolved without a database (`No connected db.`). Run with a database if a budget is part of how you bound spend
 
@@ -89,7 +92,7 @@ curl --location 'http://localhost:4000/team/new' \
 }' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 **Sample Response**
 
@@ -216,6 +219,21 @@ curl -X POST 'http://0.0.0.0:4000/team/member_update' \
 
 Spend the member already accrued in this team counts against the new budget. See [Existing spend counts against a budget added later](#existing-spend-counts-against-a-budget-added-later)
 
+A budget change is permanent. When the member's `budget_duration` window rolls over, the reset only sets their current cycle spend back to $0 and moves the next reset date forward, so a raised `max_budget_in_team` stays at the new value in every later cycle and does not revert to the earlier amount or to the team default. Raising `team_member_budget` with `/team/update` behaves the same way for every member still on the team default
+
+When a member on the team default gets their own budget this way, their current reset window carries over and the next reset lands on the same date as before. Sending `budget_duration` in the same `/team/member_update` call starts a new window from that point instead
+
+To raise a member's budget for a limited time, send `temp_budget_increase` together with `temp_budget_expiry` (a UTC datetime) on `/team/member_update`, or fill in **Temporary Budget Increase (USD)** and **Temporary Budget Expiry (UTC)** when editing the member in the UI. The increase is added on top of the member's budget, or the team default if they are on it, until `temp_budget_expiry` and stops applying after that without any action. It expires at that time rather than at the next budget reset, so set the expiry to the member's next reset if you want it to last only for the current cycle. A member on the team default who only gets a temporary increase stays on the team default, and the increase has no effect on a member with no budget at all
+
+```shell
+curl -X POST 'http://0.0.0.0:4000/team/member_update' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{"team_id": "e8d1460f-846c-45d7-9b43-55f3cc52ac32", "user_id": "ishaan", "temp_budget_increase": 25, "temp_budget_expiry": "2026-11-01T00:00:00Z"}'
+```
+
+To put a customized member back on the team default, click **Use team default** next to their budget on the team's **Members** tab, or call `POST /team/{team_id}/member/{user_id}/reset_budget`. Their spend is kept and later `/team/update` changes to `team_member_budget` reach them again. <SinceVersion v="1.104.0" />
+
 #### Reset a team member's spend
 
 Reset the spend tracked against a member's in-team budget without changing the budget itself. This sets the member's current cycle spend, which is the value checked against their budget, and leaves their total spend and logs untouched. Callable by a proxy admin, or by an admin of the team or its organization. A team admin cannot reset their own spend, only a proxy admin can do that
@@ -292,7 +310,7 @@ curl --location 'http://localhost:4000/user/new' \
 --data-raw '{"models": ["azure-models"], "max_budget": 0, "user_id": "krrish3@berri.ai"}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/user%20management/new_user_user_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/new_user_user_new_post)
 
 **Sample Response**
 
@@ -441,29 +459,29 @@ Each window is tracked independently and resets on its own schedule:
 |---|---|
 | `1h`  | Every hour |
 | `24h` | Daily at midnight UTC |
-| `7d`  | Every Sunday at midnight UTC |
+| `7d`  | Every Monday at midnight UTC (or the configured reset time) |
 | `30d` | 1st of every month at midnight UTC |
 
 **Via Dashboard**
 
 Open **Virtual Keys → Create Key → Optional Settings → Budget Windows**.
 
-![Step 1 - open key settings](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/18930ba5-67c0-4031-afc0-57f37b4e59e4/ascreenshot_ef79d8a000bb41cdacf1bd9827732ee8_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_1.png')} dark={require('../../img/key_budget_window_1_dark.png')} alt="Budget Windows section in the key form" />
 
 Click **+ Add Budget Window** to add a row, choose the period from the dropdown, and enter the spend cap.
 
-![Step 2 - add a window](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/5ae8c0b3-2d03-41ad-a63c-47b20c350dfe/ascreenshot_1a7dc6c7d65544f38fd8a65604674f22_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_2.png')} dark={require('../../img/key_budget_window_2_dark.png')} alt="A budget window row with a period and spend cap" />
 
 Add a second row for a different time period (e.g. monthly $100 on top of a daily $10).
 
-![Step 3 - add second window](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/cbded3a7-1086-4e20-8f0f-de154b76146c/ascreenshot_c51c18752c3b4f8b976d28799b2638b6_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_3.png')} dark={require('../../img/key_budget_window_3_dark.png')} alt="Two budget windows with different periods" />
 
 Each window shows the reset schedule below the input so it's always clear when spend resets.
 
-![Step 4 - reset hints](https://colony-recorder.s3.amazonaws.com/files/2026-04-01/8754f121-1640-4892-9dd0-fd4a870418bf/ascreenshot_8079eb0df2194e8f99e5258ba4b3c082_text_export.jpeg)
+<Image img={require('../../img/key_budget_window_4.png')} dark={require('../../img/key_budget_window_4_dark.png')} alt="Reset schedule shown below each budget window" />
 
 
-### ✨ Virtual Key (Model Specific)
+### Virtual Key (Model Specific) {#-virtual-key-model-specific}
 
 Set a separate budget for each model available to a virtual key. For example, one key can have:
 
@@ -506,7 +524,7 @@ Set the budget using the name configured in `model_list`. If you route the same 
 
 #### View current usage
 
-`/key/info` returns `model_max_budget_usage` together with `model_max_budget`. For each budgeted model, it reports the amount spent during the current budget period. LiteLLM uses the same usage value to enforce the budget, so the reported usage is consistent with enforcement.
+`/key/info` returns `model_max_budget_usage` together with `model_max_budget`. For each budgeted model, it reports the amount spent during the current budget period. LiteLLM uses the same usage value to enforce the budget, so the reported usage is consistent with enforcement. `/user/info` and `/team/info` return the same block for per-model budgets set on a user or a team.
 
 ```bash
 curl -X GET 'http://0.0.0.0:4000/key/info?key=sk-...' \
@@ -518,11 +536,26 @@ curl -X GET 'http://0.0.0.0:4000/key/info?key=sk-...' \
   "info": {
     "model_max_budget": {"{{openai_large}}": {"budget_limit": 0.0001, "time_period": "30d"}},
     "model_max_budget_usage": {
-      "{{openai_large}}": {"current_spend": 0.0002, "budget_limit": 0.0001, "time_period": "30d"}
+      "{{openai_large}}": {
+        "current_spend": 0.0002,
+        "budget_limit": 0.0001,
+        "time_period": "30d",
+        "budget_reset_at": "2026-11-14T09:30:12.418093+00:00"
+      }
     }
   }
 }
 ```
+
+<SinceVersion v="1.107.0" /> Each entry also has `budget_reset_at`, first in `v1.107.0-rc.1`. It is the time the model's current budget window ends and its `current_spend` goes back to 0. A model that is over this limit accepts requests again at this time, unless another budget still blocks it, such as a per-model budget on the key, user, team, team member, or end user, or an overall budget like the key's `max_budget`. The value is an ISO 8601 timestamp in UTC. It is not the `budget_reset_at` at the top level of the same response, which belongs to the overall budget set with `budget_duration`.
+
+A window opens when the first successful request on the model finishes, even one that costs $0, such as a cache hit or a request to a model priced at $0, and lasts for `time_period` from that moment, not from a calendar boundary. Later requests in the same window do not move `budget_reset_at`. For example, a `1d` window ends 24 hours after it opens. A `1mo` window ends at the same time on the same day of the next month in UTC, or on the last day of that month when it is shorter.
+
+`budget_reset_at` is `null` when no window is open, which is the case before the first request on the model and after a window ends, until the next request opens a new one.
+
+Before v1.109.0, without Redis, each proxy instance and each worker keeps its own windows. The same entry can then read `null` on one and a timestamp on another, or two different timestamps, depending on which one answers. <SinceVersion v="1.109.0" /> They share each key, user, and team window through the database. One that did not serve the request that opened the window reads `null` until the window has spend in the database, which usually takes up to about 20 seconds after a request that costs more than $0 with the default `proxy_batch_write_at` of 10 seconds. It takes longer with a larger `proxy_batch_write_at`, or when a [read replica](./db_read_replica) lags behind the primary database.
+
+On `/team/info`, when a key has its own `budget_limit` for the model a request uses, that request is neither limited by nor charged to the team's entry under that model's name, with both names matched to the request's model name as described in [How LiteLLM matches model names](#how-litellm-matches-model-names). That entry's window then opens only with a request from a key that has no such budget.
 
 If a model's `time_period` is missing or invalid, the model is omitted from `model_max_budget_usage` instead of being reported with zero usage.
 
@@ -590,7 +623,7 @@ Expected response:
 
 By default, LiteLLM returns a `budget_exceeded` error when a per-model budget is exceeded. To route the request to another model instead, see [Budget Fallbacks](./budget_fallbacks).
 
-### ✨ Internal User (Model Specific)
+### Internal User (Model Specific)
 
 Use an internal-user per-model budget to apply one limit across all keys owned by that user. This prevents a user from bypassing the limit by creating another key. For example, use this scope to give each engineer a $200 monthly Opus budget when engineers have multiple keys.
 
@@ -608,7 +641,7 @@ curl 'http://0.0.0.0:4000/user/new' \
 }'
 ```
 
-Use `1mo` for a calendar-month budget that resets on the first day of each month. After the user exceeds the limit, LiteLLM rejects requests made with any of the user's keys:
+Use `1mo` for a monthly budget. <SinceVersion v="1.107.0" /> The window opens with the user's first request on the model and resets one calendar month later in UTC, first in `v1.107.0-rc.1`, as described in [View current usage](#view-current-usage). After the user exceeds the limit, LiteLLM rejects requests made with any of the user's keys:
 
 ```json
 {
@@ -621,7 +654,7 @@ Use `1mo` for a calendar-month budget that resets on the first day of each month
 }
 ```
 
-`/user/info` returns each model's spend for the current budget period in `model_max_budget_usage`, using the same format as `/key/info`.
+`/user/info` returns each model's spend for the current budget period in `model_max_budget_usage`, using the same format as `/key/info`, including when each window resets in `budget_reset_at`.
 
 **Via Dashboard**
 
@@ -819,7 +852,7 @@ curl 'http://0.0.0.0:4000/user/new' \
 --header 'Content-Type: application/json' \
 --data-raw '{
   "max_budget": 10,
-  "budget_duration": "30s", # 👈 KEY CHANGE
+  "budget_duration": "30s", # KEY CHANGE
 }'
 ```
 </TabItem>
@@ -831,7 +864,7 @@ curl 'http://0.0.0.0:4000/key/generate' \
 --header 'Content-Type: application/json' \
 --data-raw '{
   "max_budget": 10,
-  "budget_duration": "30s", # 👈 KEY CHANGE
+  "budget_duration": "30s", # KEY CHANGE
 }'
 ```
 
@@ -844,7 +877,7 @@ curl 'http://0.0.0.0:4000/team/new' \
 --header 'Content-Type: application/json' \
 --data-raw '{
   "max_budget": 10,
-  "budget_duration": "30s", # 👈 KEY CHANGE
+  "budget_duration": "30s", # KEY CHANGE
 }'
 ```
 </TabItem>
@@ -1035,7 +1068,7 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 --data '{"team_id": "my-prod-team", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 **Expected Response**
 
@@ -1099,9 +1132,22 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 
 **Resolution order:** When a key belongs to a team, rate limits are resolved as: **Key metadata > Key model_max_budget > Team metadata**. Keys can override team-level per-model limits with their own `model_rpm_limit` or `model_tpm_limit`.
 
+#### Per-model rate limits and fallbacks
+
+By default, when a request goes over a key, team, organization, project or customer `model_rpm_limit` / `model_tpm_limit` and `router_settings.fallbacks` has an entry for that model, LiteLLM retries the request on the fallback model. The fallback model is admitted against the caller's own per-model limits for it, and the client gets a 200 from the fallback with `x-litellm-attempted-fallbacks: 1` and `x-litellm-fallback-reason: rate_limit:<scope>`, for example `rate_limit:model_per_end_user` when a customer's per-model limit caused the hop. Limits that are not model-specific, such as a customer's or key's overall `tpm_limit`, still return 429 on every model.
+
+To make per-model key, team, organization and project limits a hard cap that returns 429, set:
+
+```yaml
+general_settings:
+  disable_fallbacks_on_per_model_rate_limits: true
+```
+
+Other local rate limits (for example a key's overall `rpm_limit`) keep their existing fallback behavior
+
 **Verify:** Make a `/chat/completions` request and check response headers `x-litellm-key-remaining-requests-{model}` and `x-litellm-key-remaining-tokens-{model}` for the model-specific limits.
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/team%20management/new_team_team_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
 
 </TabItem>
 <TabItem value="per-user" label="Per Internal User">
@@ -1116,7 +1162,7 @@ curl --location 'http://0.0.0.0:4000/user/new' \
 --data '{"user_id": "krrish@berri.ai", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
 
-[**See Swagger**](https://litellm-api.up.railway.app/#/user%20management/new_user_user_new_post)
+[**See Swagger**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/new_user_user_new_post)
 
 **Expected Response**
 
@@ -1146,7 +1192,7 @@ curl --location 'http://0.0.0.0:4000/key/generate' \
 {
     "key": "sk-ulGNRXWtv7M0lFnnsQk0wQ",
     "expires": "2024-01-18T20:48:44.297973",
-    "user_id": "78c2c8fc-c233-43b9-b0c3-eb931da27b84"  // 👈 auto-generated
+    "user_id": "78c2c8fc-c233-43b9-b0c3-eb931da27b84"  // auto-generated
 }
 ```
 
@@ -1163,7 +1209,7 @@ Here `{{openai_large}}` is the `model_name` set on the [litellm config.yaml](con
 curl --location 'http://0.0.0.0:4000/key/generate' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --header 'Content-Type: application/json' \
---data '{"model_rpm_limit": {"{{openai_large}}": 2}, "model_tpm_limit": {"{{openai_large}}":}}' 
+--data '{"model_rpm_limit": {"{{openai_large}}": 2}, "model_tpm_limit": {"{{openai_large}}": 1000}}' 
 ```
 
 **Expected Response**
@@ -1365,13 +1411,28 @@ Expected Response:
 
 
 **Important Notes:**
-- **Rate limits do not apply to proxy admin users.** 
-- When testing rate limits, use internal user roles (non-admin) to ensure limits are enforced as expected.
+- Rate limits apply to any key, user or team that has `tpm_limit`, `rpm_limit` or `max_parallel_requests` set, regardless of role. The master key has no limits unless you configure them.
+- When testing rate limits, use a virtual key with explicit limits so the limiter has something to enforce.
 
 Changes: 
 - This moves to using async_increment instead of async_set_cache when updating current requests/tokens. 
 - The in-memory cache is synced with redis every 0.01s, to avoid calling redis for every request. 
 - In testing, this was found to be 2x faster than the previous implementation, and reduced drift between expected and actual fails to at most 10 requests at high-traffic (100 RPS across 3 instances). 
+
+### Hard rate limit enforcement (fail closed)
+
+Across several instances, the tpm, rpm, and max_parallel_requests counters live in Redis (`general_settings.coordination_redis` or the `REDIS_*` environment variables) so every instance enforces the same limit. While Redis is unreachable, each instance falls back to counters in its own memory and keeps serving, so a key with `rpm_limit: 2` is admitted up to 2 requests per instance, N times the limit across N instances, until Redis is back
+
+For deployments where a configured rate limit must be a hard ceiling even while Redis is down, set `fail_closed_rate_limit_enforcement`:
+
+```yaml
+general_settings:
+  fail_closed_rate_limit_enforcement: true
+```
+
+With it enabled, a request whose counters cannot be verified against Redis is rejected with a `503` instead of being admitted against a per-instance counter. It is a `503` rather than a `429` so clients and load balancers can tell a Redis outage from a rate limit. The setting changes nothing while Redis answers, requests that carry no rate limit are unaffected, and post-request accounting stays best effort, so a request that was already admitted is never failed after the fact
+
+Leave the setting off (the default) to keep serving through a Redis outage on per-instance limits. Without Redis the setting has no effect: a proxy that starts with it on and no Redis configured logs a warning and keeps enforcing limits per instance. The legacy limiter selected by `LEGACY_MULTI_INSTANCE_RATE_LIMITING=true` ignores the setting as well
 
 
 ## Grant Access to new model 
@@ -1391,7 +1452,7 @@ model_list:
       api_key: "os.environ/AZURE_API_KEY"
       api_version: "2023-07-01-preview"
     model_info:
-      access_groups: ["beta-models"] # 👈 Model Access Group
+      access_groups: ["beta-models"] # Model Access Group
 ```
 
 **Step 2. Create key with access group**
@@ -1400,7 +1461,7 @@ model_list:
 curl --location 'http://localhost:4000/user/new' \
 -H 'Authorization: Bearer <your-master-key>' \
 -H 'Content-Type: application/json' \
--d '{"models": ["beta-models"], # 👈 Model Access Group
+-d '{"models": ["beta-models"], # Model Access Group
 			"max_budget": 0}'
 ```
 

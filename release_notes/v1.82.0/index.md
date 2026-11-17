@@ -1,5 +1,6 @@
 ---
-title: "v1.82.0 - Realtime Guardrails, Projects Management, and 10+ Performance Optimizations"
+title: "LiteLLM v1.82.0 - Realtime Guardrails, Projects Management, and 10+ Performance Optimizations"
+description: "Adds guardrails for /v1/realtime sessions and a Projects UI. Routes /v1/messages to the Responses API by default for OpenAI and Azure models."
 slug: "v1-82-0"
 date: 2026-02-28T00:00:00
 authors:
@@ -48,7 +49,7 @@ pip install litellm==1.82.0
 - **10+ performance optimizations**: Streaming hot-path fixes, Redis pipeline batching, database task batching, ModelResponse init skip, and router cache improvements, for lower latency and CPU on every request
 - **`/v1/messages` → `/responses` routing** — `/v1/messages` requests are now routed to the [Responses API](../../docs/response_api) by default for OpenAI/Azure models
 
-:::danger v1/messages routing change
+:::danger[v1/messages routing change]
 This version starts routing `/v1/messages` requests to the `/responses` API by default. To opt out and continue using chat/completions, set `LITELLM_USE_CHAT_COMPLETIONS_URL_FOR_ANTHROPIC_MESSAGES=true` or `litellm_settings.use_chat_completions_url_for_anthropic_messages: true` in your config.
 :::
 

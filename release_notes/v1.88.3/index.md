@@ -1,5 +1,6 @@
 ---
-title: "v1.88.3 - Guardrail Polling & Hook Fixes"
+title: "LiteLLM v1.88.3 - Guardrail Polling & Hook Fixes"
+description: "Fixes guardrail regressions where DB guardrails re-initialized on every poll and model-level pre-call hooks ran more than once."
 slug: "v1-88-3"
 date: 2026-06-17T12:44:42
 authors:

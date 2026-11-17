@@ -1,5 +1,6 @@
 ---
-title: "v1.77.7-stable - 2.9x Lower Median Latency"
+title: "LiteLLM v1.77.7-stable - 2.9x Lower Median Latency"
+description: "Lowers median latency 2.9x at 1,000 concurrent users. Adds Claude Sonnet 4.5, scheduled virtual key rotations and MCP OAuth 2.0 client credentials."
 slug: "v1-77-7"
 date: 2025-10-04T10:00:00
 authors:

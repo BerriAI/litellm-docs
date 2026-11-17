@@ -1,3 +1,8 @@
+---
+title: "Grafana Cloud Tracing for LiteLLM: OTLP Setup"
+sidebar_label: "Grafana Cloud"
+description: "Send LiteLLM AI Gateway traces and GenAI metrics to Grafana Cloud over OTLP, with Basic auth token setup, a ready dashboard and Prometheus metrics."
+---
 # Grafana Cloud
 
 Send LiteLLM traces and GenAI metrics to [Grafana Cloud](https://grafana.com/products/cloud/) over OTLP
@@ -46,7 +51,7 @@ The `include_list` keeps metric attributes to a bounded set, which is what lets 
 
 Start the proxy and send a request. Traces land in Tempo, metrics in the hosted Prometheus, both queryable from Explore
 
-:::info Why `Basic%20` and not `Basic `
+:::info[Why `Basic%20` and not `Basic `]
 
 `OTEL_HEADERS` follows the OTLP spec, which encodes values in [W3C Baggage](https://www.w3.org/TR/baggage/#baggage-http-header-format) format, so a space is written `%20`. Grafana Cloud's setup screens hand you the value in exactly this form. A literal space works too
 
@@ -81,7 +86,7 @@ Metrics arrive as OTLP histograms, queryable in Explore under their Prometheus-n
 
 ## Dashboard
 
-LiteLLM ships a dashboard for these metrics at [cookbook/litellm_proxy_server/grafana_dashboard/dashboard_genai_otel](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_genai_otel). Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source
+LiteLLM ships a dashboard for these metrics at [cookbook/litellm_proxy_server/grafana_dashboard/dashboard_genai_otel](https://github.com/BerriAI/litellm/tree/main/litellm/integrations/prometheus_helpers/grafana_dashboards/dashboard_genai_otel). Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source
 
 Spend, tokens, request count and p95 duration as stats, then request rate, spend per hour, token throughput split by input and output, and p95 duration, time to first token, and provider generation time, all by model
 

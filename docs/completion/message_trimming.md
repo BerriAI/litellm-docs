@@ -1,3 +1,7 @@
+---
+sidebar_label: "Message Trimming"
+---
+
 # Trimming Input Messages
 **Use litellm.trim_messages() to ensure messages does not exceed a model's token limit or specified `max_tokens`**
 

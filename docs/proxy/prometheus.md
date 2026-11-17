@@ -2,7 +2,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
 
-# 📈 Prometheus metrics
+# Prometheus metrics
 
 
 LiteLLM Exposes a `/metrics` endpoint for Prometheus to Poll
@@ -62,7 +62,7 @@ This directory is used by the Prometheus client library to store metric files th
 
 By default, LiteLLM renders `/metrics` on the proxy port using the same Uvicorn workers that serve inference requests. In multi-worker deployments, each scrape aggregates Prometheus data across workers. Large or high-cardinality metric sets can therefore consume CPU on a request-serving worker and increase tail latency.
 
-LiteLLM v1.101.0 and later can serve the same metric set from a dedicated process. Configure `--prometheus_metrics_port` or `PROMETHEUS_METRICS_PORT`, then update Prometheus to scrape that port. The original `/metrics` route on the proxy port remains available for backward compatibility, so you can migrate scrape targets without interrupting inference traffic.
+LiteLLM can serve the same metric set from a dedicated process <SinceVersion v="1.101.0" />. Configure `--prometheus_metrics_port` or `PROMETHEUS_METRICS_PORT`, then update Prometheus to scrape that port. The original `/metrics` route on the proxy port remains available for backward compatibility, so you can migrate scrape targets without interrupting inference traffic.
 
 The `prometheus` callback must be enabled. When the dedicated port is configured, LiteLLM creates `PROMETHEUS_MULTIPROC_DIR` if needed, binds the metrics process to the proxy `--host`, and stops the process with the proxy.
 
@@ -77,37 +77,25 @@ scrape_configs:
       - targets: ["litellm:4001"]
 ```
 
-:::warning Secure the metrics listener
+:::warning[Secure the metrics listener]
 The dedicated listener does not use LiteLLM virtual-key authentication. `require_auth_for_metrics_endpoint` applies only to `/metrics` on the proxy port. Permit access only from trusted Prometheus or collector networks, and do not publish the dedicated port through a public ingress or load balancer.
 :::
 
 ### Deployment configuration
 
 <Tabs>
-<TabItem value="helm" label="Helm: litellm-helm">
-
-```yaml title="values.yaml"
-metricsServer:
-  enabled: true
-  port: 4001
-
-serviceMonitor:
-  enabled: true
-```
-
-The chart creates a dedicated `<release>-litellm-metrics` `ClusterIP` Service and directs the ServiceMonitor to it. The primary Service is unchanged, including when `service.type` is `LoadBalancer`. `metricsServer.port` must differ from `service.port`.
-
-</TabItem>
-<TabItem value="helm-componentized" label="Helm: componentized">
+<TabItem value="helm" label="Helm">
 
 ```yaml title="values.yaml"
 gateway:
   metricsServer:
     enabled: true
     port: 4001
+  serviceMonitor:
+    enabled: true
 ```
 
-The chart runs the metrics server as a sidecar that shares Prometheus multiprocess data with the gateway. It exposes the listener through a dedicated `<release>-litellm-gateway-metrics` `ClusterIP` Service; configure Prometheus to discover that private Service. The gateway Service remains unchanged.
+The [LiteLLM chart](./deploy/helm.md) uses these values in both componentized and monolith modes. It runs a sidecar from the shared image and exposes a private metrics `ClusterIP` Service. The ServiceMonitor requires Prometheus Operator and targets that Service. Keep the metrics port separate from the gateway's serving port.
 
 </TabItem>
 <TabItem value="aws" label="Terraform: AWS">
@@ -249,6 +237,15 @@ Only emitted when [`end_user` tracking](#tracking-end_user-on-prometheus) is ena
 | `litellm_remaining_api_key_requests_for_model`                | Remaining Requests for a LiteLLM virtual API key, only if a model-specific rate limit (rpm) has been set for that virtual key. Labels: `"hashed_api_key", "api_key_alias", "model", "model_id"`|
 | `litellm_remaining_api_key_tokens_for_model`                | Remaining Tokens for a LiteLLM virtual API key, only if a model-specific token limit (tpm) has been set for that virtual key. Labels: `"hashed_api_key", "api_key_alias", "model", "model_id"`|
 
+### Dynamic Rate Limiter
+
+Published when `dynamic_rate_limiter_v3` runs next to the `prometheus` callback. See [dynamic rate limiting](./dynamic_rate_limit.md#prometheus-metrics-for-shares-and-throttling) for how the values are computed. The share holder is a team, a key or a customer organization, and a series fills only its holder's labels.
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_dynamic_limiter_share_tokens` | The share holder's token share of the model for the current window, as of its last settled request. Labels: `"model_group", "team", "team_alias", "hashed_api_key", "api_key_alias", "customer_org_id", "customer_org_alias", "priority"` |
+| `litellm_dynamic_limiter_borrowed_tokens` | Tokens the share holder has used above its share this window, `0` while under it. Labels: `"model_group", "team", "team_alias", "hashed_api_key", "api_key_alias", "customer_org_id", "customer_org_alias", "priority"` |
+| `litellm_dynamic_limiter_throttled_total` | Requests the dynamic rate limiter refused. `reason` is the `rate_limited_by` header of the 429 the caller got: `model_per_team_saturated`, `model_per_team_max_borrow_multiple`, their `model_per_key_*` and `model_per_customer_org_*` counterparts, or `priority_class_share_saturated`. Labels: `"model_group", "team", "team_alias", "hashed_api_key", "api_key_alias", "customer_org_id", "customer_org_alias", "priority", "rate_limit_type", "reason"` |
 
 ### Initialize Budget Metrics on Startup
 
@@ -365,6 +362,7 @@ Use this for LLM API Error monitoring and tracking remaining rate limits and tok
 |-------|-------------|
 | litellm_model_name | The name of the LLM model used by LiteLLM |
 | requested_model | The model sent in the request |
+| model_group | The `model_name` from `config.yaml` the deployment belongs to; group by it to see one series per model pool |
 | model_id | The model_id of the deployment. Autogenerated by LiteLLM, each deployment has a unique model_id |
 | api_base | The API Base of the deployment |
 | api_provider | The LLM API provider, used for the provider. Example (azure, openai, vertex_ai) |
@@ -379,9 +377,9 @@ Use this for LLM API Error monitoring and tracking remaining rate limits and tok
 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
- `litellm_deployment_success_responses`              | Total number of successful LLM API calls for deployment. Labels: `"requested_model", "litellm_model_name", "model_id", "api_base", "api_provider", "hashed_api_key", "api_key_alias", "team", "team_alias", "client_ip", "user_agent"` |
-| `litellm_deployment_failure_responses`              | Total number of failed LLM API calls for a specific LLM deployment. Labels: `"requested_model", "litellm_model_name", "model_id", "api_base", "api_provider", "exception_status", "exception_class", "hashed_api_key", "api_key_alias", "team", "team_alias", "client_ip", "user_agent"` |
-| `litellm_deployment_total_requests`                 | Total number of LLM API calls for deployment - success + failure. Labels: `"requested_model", "litellm_model_name", "model_id", "api_base", "api_provider", "hashed_api_key", "api_key_alias", "team", "team_alias", "client_ip", "user_agent"` |
+| `litellm_deployment_success_responses`              | Total number of successful LLM API calls for deployment. Labels: `"model_group", "requested_model", "litellm_model_name", "model_id", "api_base", "api_provider", "hashed_api_key", "api_key_alias", "team", "team_alias", "client_ip", "user_agent"` |
+| `litellm_deployment_failure_responses`              | Total number of failed LLM API calls for a specific LLM deployment. Labels: `"model_group", "requested_model", "litellm_model_name", "model_id", "api_base", "api_provider", "exception_status", "exception_class", "hashed_api_key", "api_key_alias", "team", "team_alias", "client_ip", "user_agent"` |
+| `litellm_deployment_total_requests`                 | Total number of LLM API calls for deployment - success + failure. Labels: `"model_group", "requested_model", "litellm_model_name", "model_id", "api_base", "api_provider", "hashed_api_key", "api_key_alias", "team", "team_alias", "client_ip", "user_agent"` |
 
 ### Remaining Requests and Tokens
 
@@ -396,13 +394,19 @@ Use this for LLM API Error monitoring and tracking remaining rate limits and tok
 |----------------------|--------------------------------------|
 | `litellm_provider_remaining_budget_metric`       | Remaining budget for an LLM provider; only emitted when [provider budget routing](provider_budget_routing) is configured. Labels: `"api_provider"` |
 
+### Spend Capture Rate
+
+| Metric Name          | Description                          |
+|----------------------|--------------------------------------|
+| `litellm_spend_capture_rate`       | Share of the provider's bill LiteLLM captured as spend over the [scheduled capture-rate check](spend_capture_rate)'s window (captured spend / provider bill). `NaN` when the last check produced no rate, and on every proxy with a database where the check is not configured. Labels: `"api_provider"` |
+
 ### Deployment State 
 | Metric Name          | Description                          |
 |----------------------|--------------------------------------|
 | `litellm_deployment_state`             | The state of the deployment: 0 = healthy, 1 = partial outage, 2 = complete outage. Labels: `"litellm_model_name", "model_id", "api_base", "api_provider"` |
-| `litellm_deployment_latency_per_output_token`       | Latency per output token for deployment. Labels: `"litellm_model_name", "model_id", "api_base", "api_provider", "hashed_api_key", "api_key_alias", "team", "team_alias"` |
-| `litellm_deployment_tpm_limit`             | Configured TPM limit for the deployment; only set for deployments with a tpm limit in config. Labels: `"litellm_model_name", "model_id", "api_base", "api_provider"` |
-| `litellm_deployment_rpm_limit`             | Configured RPM limit for the deployment; only set for deployments with an rpm limit in config. Labels: `"litellm_model_name", "model_id", "api_base", "api_provider"` |
+| `litellm_deployment_latency_per_output_token`       | Latency per output token for deployment. Labels: `"model_group", "litellm_model_name", "model_id", "api_base", "api_provider", "hashed_api_key", "api_key_alias", "team", "team_alias"` |
+| `litellm_deployment_tpm_limit`             | Configured TPM limit for the deployment; only set for deployments with a tpm limit in config. Labels: `"model_group", "litellm_model_name", "model_id", "api_base", "api_provider"` |
+| `litellm_deployment_rpm_limit`             | Configured RPM limit for the deployment; only set for deployments with an rpm limit in config. Labels: `"model_group", "litellm_model_name", "model_id", "api_base", "api_provider"` |
 
 #### Fallback (Failover) Metrics
 
@@ -440,12 +444,18 @@ For example, this query returns end-to-end p95 latency over the last five minute
 histogram_quantile(0.95, sum by (le) (rate(litellm_request_total_latency_metric_bucket[5m])))
 ```
 
+Group by `model_group` to get one p95 per model pool from `config.yaml`, across every deployment behind it:
+
+```promql
+histogram_quantile(0.95, sum by (model_group, le) (rate(litellm_request_total_latency_metric_bucket[5m])))
+```
+
 <details>
 <summary>Labels for request latency metrics</summary>
 
 | Metrics | Labels |
 |---|---|
-| `litellm_request_total_latency_metric`<br />`litellm_llm_api_latency_metric`<br />`litellm_llm_api_time_to_first_token_metric` | `end_user`, `hashed_api_key`, `api_key_alias`, `requested_model`, `team`, `team_alias`, `user`, `model`, `model_id`, `api_provider`, `service_tier` |
+| `litellm_request_total_latency_metric`<br />`litellm_llm_api_latency_metric`<br />`litellm_llm_api_time_to_first_token_metric` | `model_group`, `end_user`, `hashed_api_key`, `api_key_alias`, `requested_model`, `team`, `team_alias`, `user`, `model`, `model_id`, `api_provider`, `service_tier` |
 | `litellm_request_queue_time_seconds` | `end_user`, `hashed_api_key`, `api_key_alias`, `requested_model`, `team`, `team_alias`, `user`, `model`, `model_id`, `api_provider` |
 | `litellm_overhead_latency_metric`<br />`litellm_overhead_with_guardrails_latency_metric` | `model_group`, `api_provider`, `api_base`, `litellm_model_name`, `hashed_api_key`, `api_key_alias`, `model_id` |
 
@@ -852,6 +862,33 @@ litellm_settings:
 
 Both lists are validated at startup; an unknown metric or label name raises a configuration error so typos surface immediately. Exclusion always wins, so a metric named in `prometheus_exclude_metrics` is dropped even if a `prometheus_metrics_config` group enables it, and a label in `prometheus_exclude_labels` is removed even when a group's `include_labels` lists it.
 
+### Cap Series per Metric
+
+Every distinct label combination a metric has ever seen stays in the proxy's memory until the process restarts, so labels such as `user`, `user_email`, `hashed_api_key`, `api_key_alias`, `client_ip`, and `user_agent` grow the metric state with every new caller. Dropping the labels you do not query is the first lever (above). When a label has to stay, set `prometheus_metrics_max_series_per_metric` to bound how many series each metric keeps. It is off by default and applies to every labeled metric the `prometheus` callback emits
+
+```yaml showLineNumbers title="config.yaml"
+litellm_settings:
+  callbacks: ["prometheus"]
+  prometheus_metrics_max_series_per_metric: 5000
+```
+
+The first `5000` label combinations a metric sees keep a series of their own. For a counter or histogram, every later combination is recorded on one extra series whose labels are all `other`, so sums over the metric stay exact and only the per-label breakdown of the overflow is lost. A gauge skips combinations past the cap, because one gauge value shared by many callers would mean nothing. A value that is not a number greater than `0` is ignored: the proxy logs a warning naming the setting and the value at startup and emits metrics without a cap
+
+The cap is counted per proxy instance. With multiple workers, the workers of one instance agree on which `5000` combinations keep a series, through one small file per metric in `PROMETHEUS_MULTIPROC_DIR`, so a scrape that merges the workers still shows the cap plus the `other` series, and a worker that is replaced, for example by `--max_requests_before_restart`, keeps the same combinations. Across instances the cap is not shared, so once an instance has hit its cap a combination it kept may be `other` on another instance, and a fleet-wide sum of that one series only counts the instances that kept it. Gauges are the exception with multiple workers, since each worker exports its gauges under its own `pid` label, so a gauge can show up to the cap per worker
+
+To free slots held by callers that went away, also set `prometheus_metrics_ttl_seconds`. A series that has not been updated for that many seconds is removed, checked at most every `prometheus_metrics_cleanup_interval_seconds` (default `60`), and its slot goes to the next new label combination. A removed series disappears from `/metrics` until it is emitted again, at which point its counter restarts from zero, which PromQL `rate()` and `increase()` treat as a counter reset. A TTL that is not a number greater than `0` is ignored with the same startup warning, and a cleanup interval that is not a number of `0` or more is ignored with the same warning while the checks keep the default `60` seconds
+
+```yaml showLineNumbers title="config.yaml"
+litellm_settings:
+  callbacks: ["prometheus"]
+  prometheus_metrics_max_series_per_metric: 5000
+  prometheus_metrics_ttl_seconds: 3600
+```
+
+The TTL only works in single-process mode. With `PROMETHEUS_MULTIPROC_DIR` set (multiple workers or the [dedicated metrics port](#isolate-prometheus-scraping-from-inference-traffic)), the Prometheus client library cannot remove a series it has written, so LiteLLM ignores `prometheus_metrics_ttl_seconds` there and logs a warning at startup. The cap still holds in that mode, and slots are freed when the proxy restarts, because `litellm` wipes that directory at boot whenever `PROMETHEUS_MULTIPROC_DIR` is set, with one worker too, so the samples of the workers that exited do not keep the merged scrape past the cap. If you start the workers yourself instead of through `litellm`, wipe `PROMETHEUS_MULTIPROC_DIR` before they start
+
+The `end_user` caps in [Tracking `end_user` on Prometheus](#tracking-end_user-on-prometheus) are separate settings and still apply to metrics that carry the `end_user` label
+
 ## Monitor System Health
 
 To monitor the health of litellm adjacent services (redis / postgres), do:
@@ -909,13 +946,13 @@ Use these metrics to monitor the health of the DB Transaction Queue. Eg. Monitor
 
 
 
-## 🔥 LiteLLM Maintained Grafana Dashboards 
+## LiteLLM Maintained Grafana Dashboards
 
-LiteLLM maintains two Grafana dashboards for the `litellm_*` metrics on this page, both in the [`cookbook/litellm_proxy_server/grafana_dashboard`](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard) folder. Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source when prompted
+LiteLLM maintains two Grafana dashboards for the `litellm_*` metrics on this page, both in the [`cookbook/litellm_proxy_server/grafana_dashboard`](https://github.com/BerriAI/litellm/tree/main/litellm/integrations/prometheus_helpers/grafana_dashboards) folder. Import the JSON from **Dashboards > New > Import** and pick your Prometheus data source when prompted
 
-The [All Prometheus Metrics dashboard](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_all_metrics) has a panel for every metric in the tables above, grouped by theme: traffic, latency, spend and tokens, cache, deployments, rate limits, budgets, guardrails, MCP, managed files and batches, users and teams, plus the `prometheus_system` service metrics and DB transaction queue sizes. Panels for features you have not enabled stay empty; its [readme](https://github.com/BerriAI/litellm/blob/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_all_metrics/readme.md) lists which setting each row needs
+The [All Prometheus Metrics dashboard](https://github.com/BerriAI/litellm/tree/main/litellm/integrations/prometheus_helpers/grafana_dashboards/dashboard_all_metrics) has a panel for every metric in the tables above, grouped by theme: traffic, latency, spend and tokens, cache, deployments, rate limits, budgets, guardrails, MCP, managed files and batches, users and teams, plus the `prometheus_system` service metrics and DB transaction queue sizes. Panels for features you have not enabled stay empty; its [readme](https://github.com/BerriAI/litellm/blob/main/litellm/integrations/prometheus_helpers/grafana_dashboards/dashboard_all_metrics/readme.md) lists which setting each row needs
 
-The [v2 dashboard](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm_proxy_server/grafana_dashboard/dashboard_v2) is a compact view of request rate, failures, latency and the remaining-request and remaining-token gauges per model group, shown below
+The [v2 dashboard](https://github.com/BerriAI/litellm/tree/main/litellm/integrations/prometheus_helpers/grafana_dashboards/dashboard_v2) is a compact view of request rate, failures, latency and the remaining-request and remaining-token gauges per model group, shown below
 
 
 <Image img={require('../../img/grafana_1.png')} />
@@ -935,7 +972,7 @@ The [v2 dashboard](https://github.com/BerriAI/litellm/tree/main/cookbook/litellm
 
 ## Authentication on `/metrics` endpoint
 
-**By default, `/metrics` requires LiteLLM API key authentication** (since v1.85.0).
+**From v1.85.0, `/metrics` requires LiteLLM API key authentication by default.**
 
 For Prometheus, add `authorization` to your scrape config:
 

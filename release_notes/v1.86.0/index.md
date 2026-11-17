@@ -1,5 +1,6 @@
 ---
-title: "v1.86.0 - Weighted-Routing Failover, Native Web-Search Citations & OTel-Standard Tracing"
+title: "LiteLLM v1.86.0 - Weighted-Routing Failover, Native Web-Search Citations & OTel-Standard Tracing"
+description: "Adds weighted-routing failover to another deployment, native web-search citations for Anthropic clients and OTel server-span attributes."
 slug: "v1-86-0"
 date: 2026-05-16T00:00:00
 authors:

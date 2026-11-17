@@ -10,6 +10,8 @@ By default, LiteLLM does not forward client headers to LLM provider APIs. Howeve
 
 `x-litellm-timeout` Optional[float]: The timeout for the request in seconds.
 
+`x-litellm-priority` Optional[int]: The [scheduler](../scheduler#priority-header) queue priority for the request. Lower values run first. This outranks a `priority` in the request body. <SinceVersion v="1.109.0" />
+
 `x-litellm-stream-timeout` Optional[float]: The timeout for getting the first chunk of the response in seconds (only applies for streaming requests). [Demo Video](https://www.loom.com/share/8da67e4845ce431a98c901d4e45db0e5)
 
 `x-litellm-enable-message-redaction`: Optional[bool]: Don't log the message content to logging integrations. Just track spend. [Learn More](./logging#redact-messages-response-content)
@@ -19,6 +21,8 @@ By default, LiteLLM does not forward client headers to LLM provider APIs. Howeve
 `x-litellm-num-retries`: Optional[int]: The number of retries for the request. This outranks a `num_retries` in the request body, in a deployment's `litellm_params`, and in `litellm_settings`. [Learn More](../routing#where-num_retries-can-be-set-and-which-one-wins)
 
 `x-litellm-keepalive-seconds`: Optional[float]: Emit an SSE `: ping` comment frame after this many seconds of stream silence, to keep idle-looking connections alive through load balancer timeouts. Subject to the deployment's `allow_client_keepalive_override` setting; has no effect if the deployment hasn't opted in. [Learn More](./timeout#keepalive-pings-for-idle-streaming-connections)
+
+`x-litellm-include-cost-in-streaming-usage`: Optional[bool]: Add `cost` to the usage-carrying event of this one stream (`/v1/messages`, Anthropic and OpenAI pass-throughs) without turning on `litellm_settings.include_cost_in_streaming_usage` for every request. [Learn More](../completion/usage#proxy-include-cost-in-streaming-usage) <SinceVersion v="1.110.0" />
 
 `x-litellm-spend-logs-metadata`: Optional[str]: JSON string containing custom metadata to include in spend logs. Example: `{"user_id": "12345", "project_id": "proj_abc", "request_type": "chat_completion"}`. [Learn More](./cost_tracking)
 

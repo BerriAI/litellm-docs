@@ -30,8 +30,8 @@ litellm_settings:
 
     # Optional configurations
     supported_call_types:
-      ["acompletion", "atext_completion", "aembedding", "atranscription"]
-      # /chat/completions, /completions, /embeddings, /audio/transcriptions
+      ["acompletion", "atext_completion", "aembedding", "atranscription", "aresponses"]
+      # /chat/completions, /completions, /embeddings, /audio/transcriptions, /v1/responses
 ```
 
 ## Supported `cache_params` on proxy config.yaml
@@ -51,8 +51,8 @@ cache_params:
   # List of litellm call types to cache for
   # Options: "completion", "acompletion", "embedding", "aembedding"
   supported_call_types:
-    ["acompletion", "atext_completion", "aembedding", "atranscription"]
-    # /chat/completions, /completions, /embeddings, /audio/transcriptions
+    ["acompletion", "atext_completion", "aembedding", "atranscription", "aresponses"]
+    # /chat/completions, /completions, /embeddings, /audio/transcriptions, /v1/responses
 
   # Redis cache parameters
   host: localhost # Redis server hostname or IP address

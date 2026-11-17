@@ -2,7 +2,7 @@
 
 Pass-through endpoints for Langfuse - call langfuse endpoints with LiteLLM Virtual Key.
 
-Just replace `https://us.cloud.langfuse.com` with `LITELLM_PROXY_BASE_URL/langfuse` 🚀
+Just replace `https://us.cloud.langfuse.com` with `LITELLM_PROXY_BASE_URL/langfuse`
 
 #### **Example Usage**
 ```python
@@ -15,7 +15,8 @@ langfuse = Langfuse(
 )
 
 print("sending langfuse trace request")
-trace = langfuse.trace(name="test-trace-litellm-proxy-passthrough")
+span = langfuse.start_observation(name="test-trace-litellm-proxy-passthrough")
+span.end()  # the root observation's name/input/output become the trace's
 print("flushing langfuse request")
 langfuse.flush()
 
@@ -59,7 +60,8 @@ langfuse = Langfuse(
 )
 
 print("sending langfuse trace request")
-trace = langfuse.trace(name="test-trace-litellm-proxy-passthrough")
+span = langfuse.start_observation(name="test-trace-litellm-proxy-passthrough")
+span.end()  # the root observation's name/input/output become the trace's
 print("flushing langfuse request")
 langfuse.flush()
 
@@ -122,7 +124,8 @@ langfuse = Langfuse(
 )
 
 print("sending langfuse trace request")
-trace = langfuse.trace(name="test-trace-litellm-proxy-passthrough")
+span = langfuse.start_observation(name="test-trace-litellm-proxy-passthrough")
+span.end()  # the root observation's name/input/output become the trace's
 print("flushing langfuse request")
 langfuse.flush()
 

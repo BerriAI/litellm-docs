@@ -1,6 +1,6 @@
 ---
 title: Fusion model
-sidebar_label: Fusion model
+sidebar_label: Fusion Model
 description: Use litellm/fusion-1 for judge-synthesized answers from a parallel model panel.
 ---
 
@@ -8,6 +8,12 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Fusion model
+
+:::caution Not yet released
+
+Fusion is not in any released litellm version or on litellm `main` yet. It lives on the `litellm_fusion_router` branch and ships once [litellm PR #39224](https://github.com/BerriAI/litellm/pull/39224) merges. Until then, the snippets on this page fail with `BadRequestError: LLM Provider NOT provided ... You passed model=litellm/fusion-1`
+
+:::
 
 `litellm/fusion-1` is a LiteLLM-provided virtual model for requests that benefit from independent model perspectives. It sends the request to a configurable panel in parallel, asks a judge to compare the successful responses, then has the judge synthesize one public response.
 
@@ -30,16 +36,16 @@ Set credentials for every provider used by the panel and judge. The same `fusion
 <Tabs>
 <TabItem value="chat" label="Chat Completions" default>
 
-```python showLineNumbers
+```python showLineNumbers keep-model-ids
 import litellm
 
 fusion = {
     "models": [
-        "openai/gpt-4o-mini",
+        "openai/{{openai_small}}",
         "anthropic/claude-haiku-4-5",
     ],
     "judge": {
-        "model": "openai/gpt-4o-mini",
+        "model": "openai/gpt-5.4-mini",
         "criteria": "Prioritize correctness and verifiable evidence.",
     },
 }
@@ -62,16 +68,16 @@ print(response.choices[0].message.content)
 </TabItem>
 <TabItem value="messages" label="Anthropic Messages">
 
-```python showLineNumbers
+```python showLineNumbers keep-model-ids
 import litellm
 
 fusion = {
     "models": [
-        "openai/gpt-4o-mini",
+        "openai/{{openai_small}}",
         "anthropic/claude-haiku-4-5",
     ],
     "judge": {
-        "model": "openai/gpt-4o-mini",
+        "model": "openai/gpt-5.4-mini",
         "criteria": "Prioritize correctness and verifiable evidence.",
     },
 }
@@ -95,16 +101,16 @@ print(response["content"][0]["text"])
 </TabItem>
 <TabItem value="responses" label="Responses">
 
-```python showLineNumbers
+```python showLineNumbers keep-model-ids
 import litellm
 
 fusion = {
     "models": [
-        "openai/gpt-4o-mini",
+        "openai/{{openai_small}}",
         "anthropic/claude-haiku-4-5",
     ],
     "judge": {
-        "model": "openai/gpt-4o-mini",
+        "model": "openai/gpt-5.4-mini",
         "criteria": "Prioritize correctness and verifiable evidence.",
     },
 }

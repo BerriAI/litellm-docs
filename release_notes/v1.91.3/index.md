@@ -1,5 +1,6 @@
 ---
-title: "v1.91.3 - Responses Guardrail Coverage & OTel Exception Events"
+title: "LiteLLM v1.91.3 - Responses Guardrail Coverage & OTel Exception Events"
+description: "Fixes guardrails on the Responses API so text checks see user and tool output. Records failed LLM calls as OTel exception events."
 slug: "v1-91-3"
 date: 2026-07-11T15:20:47
 authors:

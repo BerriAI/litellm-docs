@@ -1,3 +1,8 @@
+---
+title: "LangSmith Tracing for LiteLLM AI Gateway"
+sidebar_label: "LangSmith"
+description: "Send LiteLLM traces to LangSmith from the Python SDK or AI Gateway, set project, run name and tags per request, and tune batch size and base URL."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -48,7 +53,7 @@ litellm.callbacks = ["langsmith"]
 response = litellm.completion(
   model="{{openai_small}}",
   messages=[
-    {"role": "user", "content": "Hi 👋 - i'm openai"}
+    {"role": "user", "content": "Hi - i'm openai"}
   ]
 )
 ```
@@ -114,12 +119,12 @@ os.environ['OPENAI_API_KEY']=""
 
 # set langsmith as a callback, litellm will send the data to langsmith
 litellm.callbacks = ["langsmith"] 
-litellm.langsmith_batch_size = 1 # 👈 KEY CHANGE
+litellm.langsmith_batch_size = 1 # KEY CHANGE
  
 response = litellm.completion(
     model="{{openai_small}}",
      messages=[
-        {"role": "user", "content": "Hi 👋 - i'm openai"}
+        {"role": "user", "content": "Hi - i'm openai"}
     ]
 )
 print(response)
@@ -186,7 +191,7 @@ litellm.success_callback = ["langsmith"]
 response = litellm.completion(
     model="{{openai_small}}",
      messages=[
-        {"role": "user", "content": "Hi 👋 - i'm openai"}
+        {"role": "user", "content": "Hi - i'm openai"}
     ],
     metadata={
         "run_name": "litellmRUN",                                   # langsmith run name
@@ -225,6 +230,6 @@ environment_variables:
 
 ## Support & Talk to Founders
 
-- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+- [Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Our emails ishaan@berri.ai / krrish@berri.ai

@@ -1,18 +1,13 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
+import LiteLLMFlow from '@site/src/components/LiteLLMFlow';
 
 # Agent Gateway (A2A Protocol) - Overview
 
 Add A2A Agents on LiteLLM AI Gateway, Invoke agents in A2A Protocol, track request/response logs in LiteLLM Logs. Manage which Teams, Keys can access which Agents onboarded.
 
-<Image 
-  img={require('../img/a2a_gateway.png')}
-  style={{width: '80%', display: 'block', margin: '0', borderRadius: '8px'}}
-/>
-
-<br />
-<br />
+<LiteLLMFlow copyCommand={false} agentPrompt={false} highlight="A2A agents" />
 
 | Feature | Supported | 
 |---------|-----------|
@@ -35,13 +30,16 @@ LiteLLM follows the [A2A (Agent-to-Agent) Protocol](https://github.com/google/A2
 
 You can add A2A-compatible agents through the LiteLLM Admin UI.
 
-1. Navigate to the **Agents** tab
-2. Click **Add Agent**
-3. Enter the agent name (e.g., `ij-local`) and the URL of your A2A agent
+1. Navigate to **Agentic** > **Agents**
+2. Click **Add New Agent**
+3. In the **Configure** step, enter the agent name (e.g., `ij-local`) and the URL of your A2A agent
 4. Choose a **Protocol Version** (`1.0` or `0.3`) - the wire format LiteLLM serves to clients for this agent
+5. Continue through the remaining steps and save the agent
 
 <Image 
   img={require('../img/add_agent_1.png')}
+  dark={require('../img/add_agent_1_dark.png')}
+  alt="Add New Agent dialog showing the agent name, URL and protocol version"
   style={{width: '80%', display: 'block', margin: '0'}}
 />
 
@@ -77,7 +75,7 @@ If an agent created in the UI already uses a name you then declare in `config.ya
 
 Agents declared in `config.yaml` are not stored in the database, so they cannot be edited or deleted from the Admin UI. Change the config file and restart the gateway instead.
 
-The `agents` key is read correctly starting in the next release (after `v1.95.0`). On earlier versions, use `agent_list`, and note that config-defined agents are dropped on gateways that have a database attached.
+The `agents` key is read correctly <SinceVersion v="1.96.0" />. On earlier versions, use `agent_list`, and note that config-defined agents are dropped on gateways that have a database attached.
 
 :::
 
@@ -85,7 +83,7 @@ The `agents` key is read correctly starting in the next release (after `v1.95.0`
 
 Follow [this guide, to add your azure ai foundry agent to LiteLLM Agent Gateway](./providers/azure_ai_agents#litellm-a2a-gateway)
 
-Agents created in the current Foundry portal expose an A2A endpoint instead of the Assistants API; register those under `agents:` with Entra credentials as shown in [Foundry agents over A2A](./providers/azure_ai_agents#foundry-agents-over-a2a)
+Agents created in the current Foundry portal do not speak the Assistants API. Call them by name as a model through the project Responses API, as shown in [Foundry agents through the Responses API](./providers/azure_ai_agents#foundry-agents-through-the-responses-api), or register their A2A endpoint under `agents:` with Entra credentials as shown in [Foundry agents over A2A](./providers/azure_ai_agents#foundry-agents-over-a2a)
 
 ### Add Vertex AI Agent Engine
 
@@ -129,7 +127,7 @@ If an agent has no pinned version, LiteLLM infers the served version from the cl
 | Request header `a2a-version: 1.x` | `1.0` |
 | Otherwise (e.g. `message/send` with no header) | `0.3` |
 
-:::tip Always pin `protocolVersion`
+:::tip[Always pin `protocolVersion`]
 
 The proxied agent card defaults to `1.0` when unset, but legacy `message/send` callers without an `a2a-version` header receive **0.3**-shaped responses. Pin `protocolVersion` explicitly so your card and responses always match.
 
@@ -139,7 +137,7 @@ Task methods (`tasks/get`, `tasks/list`, …) are forwarded to the upstream agen
 
 ### Dependency
 
-LiteLLM proxy A2A routes require **a2a-sdk >= 1.1.0** (included in the `proxy` / `proxy-dev` dependency groups). If you call agents from your own code, install the matching SDK version:
+LiteLLM proxy A2A routes require **a2a-sdk >= 1.1.0** (included in the `proxy` / `proxy-dev` dependency groups). If you call agents from your own code, install the matching SDK version: {/* keep-version-note */}
 
 ```bash
 pip install "a2a-sdk>=1.1.0,<2.0"
@@ -156,12 +154,14 @@ See the [Invoking A2A Agents](./a2a_invoking_agents) guide to learn how to call 
 After invoking an agent, you can view the request logs in the LiteLLM **Logs** tab.
 
 The logs show:
-- **Request/Response content** sent to and received from the agent
+- **Request/Response content** sent to and received from the agent (open a row, then switch the **Request & Response** section to **JSON**; requires `store_prompts_in_spend_logs: true`)
 - **User, Key, Team** information for tracking who made the request
 - **Latency and cost** metrics
 
 <Image 
   img={require('../img/agent2.png')}
+  dark={require('../img/agent2_dark.png')}
+  alt="Request log details for an A2A agent call showing the request JSON"
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
 />
 
@@ -276,8 +276,12 @@ With header forwarding enabled, you'll see:
 
 **Agent Spend Attribution:**
 
+Open **Usage**, choose **Agent Usage (A2A)** and stay on the **Cost** tab to see spend per agent.
+
 <Image
   img={require('../img/a2a_agent_spend.png')}
+  dark={require('../img/a2a_agent_spend_dark.png')}
+  alt="Agent Usage (A2A) page showing daily spend and spend by agent"
   style={{width: '80%', display: 'block', margin: '0', borderRadius: '8px'}}
 />
 

@@ -1,5 +1,6 @@
 ---
-title: "v1.89.5 - Vertex Batch Upload Fix & Key Redaction"
+title: "LiteLLM v1.89.5 - Vertex Batch Upload Fix & Key Redaction"
+description: "Fixes Vertex AI batch uploads that failed with 499 errors on large files and redacts the API key from /key/info client error messages."
 slug: "v1-89-5"
 date: 2026-06-29T18:17:14
 authors:
@@ -18,7 +19,7 @@ authors:
 hide_table_of_contents: false
 ---
 
-:::info Update: no performance regression found
+:::info[Update: no performance regression found]
 
 An earlier version of this note flagged a potential throughput regression. We investigated and could not confirm or reproduce any regression in the released version. The one report we received came from a deployment running custom code on top of what we shipped, and our testing points to those changes, not LiteLLM, as the likely cause.
 

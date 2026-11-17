@@ -1,17 +1,34 @@
+---
+title: "FOCUS Cost Export for LiteLLM: S3 and GCS"
+sidebar_label: "Focus Export (Experimental)"
+description: "Export LiteLLM AI Gateway usage in the FinOps FOCUS format to an S3 or GCS bucket, set up with environment variables and config.yaml (experimental)."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Focus Export (Experimental)
 
-:::caution Experimental feature
+:::warning[Experimental feature]
 Focus Format export is under active development and currently considered experimental.
 Interfaces, schema mappings, and configuration options may change as we iterate based on user feedback.
 Please treat this integration as a preview and report any issues or suggestions to help us stabilize and improve the workflow.
 :::
 
-LiteLLM can emit usage data in the [FinOps FOCUS format](https://focus.finops.org/focus-specification/v1-2/) and push artifacts (for example Parquet files) to destinations such as Amazon S3 or Google Cloud Storage. This enables downstream cost-analysis tooling to ingest a standardised dataset directly from LiteLLM.
+LiteLLM can emit usage data in the [FinOps FOCUS format](https://focus.finops.org/) and push artifacts (for example Parquet files) to destinations such as Amazon S3 or Google Cloud Storage. This enables downstream cost-analysis tooling to ingest a standardised dataset directly from LiteLLM.
 
-LiteLLM currently conforms to the FinOps FOCUS v1.2 specification when emitting this dataset.
+The experimental export follows the [FOCUS 1.5 release candidate Cost and Usage dataset](https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS_Spec/tree/v1.5-cr/specification/datasets/cost_and_usage).
+
+## Export columns and request meter
+
+`ServiceProviderName` and `HostProviderName` replace `ProviderName` and `PublisherName`. Both contain the LiteLLM provider name. `InvoiceIssuerName` remains available.
+
+`PrincipalId` identifies the user. `CredentialId` contains the stored hashed API key, not an authenticating key. `RequesterDetails` is a JSON array with a Principal entry when a user ID exists and a Credential entry when a credential ID exists. Known user emails and key aliases supply descriptive attributes; unknown attributes are omitted. The column is null when neither ID exists.
+
+Each row represents one daily per-key/model request meter. Rows are not split by token direction or cache action, because the daily spend aggregate combines their costs. `PricingQuantity` and `ConsumedQuantity` both contain the request count; `PricingUnit` and `ConsumedUnit` are `Requests`.
+
+`SkuId` is a LiteLLM-defined stable identifier formed as `provider/model`. `SkuPriceId` adds `/requests` to identify the combined request meter, not an individual token price. These IDs do not include account identifiers or price amounts and are null if the provider or model is unknown. `SkuPriceDetails` is a JSON object with the FOCUS-defined `ModelId` property, set to the model. It is null when `SkuPriceId` is null and does not include `TokenDirection` or `TokenCacheAction`.
+
+The Vantage destination removes columns outside its supported allowlist, including the SKU and requester details columns, before upload.
 
 ## Overview
 

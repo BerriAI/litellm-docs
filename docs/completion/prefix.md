@@ -1,3 +1,7 @@
+---
+sidebar_label: "Assistant Prefill"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -13,7 +17,7 @@ Supported by:
   "role": "assistant", 
   "content": "..", 
   ...,
-  "prefix": true # 👈 KEY CHANGE
+  "prefix": true # KEY CHANGE
 }
 ```
 

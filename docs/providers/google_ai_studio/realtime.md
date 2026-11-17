@@ -1,9 +1,15 @@
+---
+title: "Gemini Live Realtime API with LiteLLM"
+sidebar_label: "Gemini Realtime API - Google AI Studio"
+description: "Connect to the Gemini Realtime API from Google AI Studio through the LiteLLM AI Gateway: add the model to config, start the proxy, and use tool calling."
+---
+
 # Gemini Realtime API - Google AI Studio
 
 | Feature | Description | Comments |
 | --- | --- | --- |
 | Proxy | ✅ |  |
-| SDK | ⌛️ | Experimental access via `litellm._arealtime`. |
+| SDK | | Experimental access via `litellm._arealtime`. |
 
 
 ## Proxy Usage

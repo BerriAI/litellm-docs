@@ -9,25 +9,25 @@ Easily benchmark LLMs for a given question by viewing
 ### Benchmark Output
 <Image img={require('../../img/bench_llm.png')} />
 
-## Setup:
-```
-git clone https://github.com/BerriAI/litellm
-```
-cd to `litellm/cookbook/benchmark` dir
+## Setup
 
-Located here: 
-https://github.com/BerriAI/litellm/tree/main/cookbook/benchmark
-```
-cd litellm/cookbook/benchmark
+The [archived benchmark example](https://github.com/BerriAI/litellm/tree/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/benchmark) was removed from `main`. Check out the archived commit before entering its directory:
+
+```bash
+git clone https://github.com/BerriAI/litellm.git
+cd litellm
+git checkout 89a6b5fbb26b632ef0faf633b0d3cf317d73deaa
+cd cookbook/benchmark
 ```
 
 ### Install Dependencies
 ```
-uv add litellm click tqdm tabulate termcolor
+uv venv
+uv pip install litellm click tqdm tabulate termcolor
 ```
 
 ### Configuration - Set LLM API Keys + LLMs in benchmark.py
-In `benchmark/benchmark.py` select your LLMs, LLM API Key and questions
+In `benchmark.py` select your LLMs, LLM API Key and questions
 
 Supported LLMs: https://docs.litellm.ai/docs/providers
 
@@ -49,7 +49,7 @@ questions = [
 
 ## Run benchmark.py
 ```
-python3 benchmark.py
+uv run --no-project python benchmark.py
 ```
 
 ## Expected Output
@@ -82,10 +82,10 @@ Benchmark Results for 'When will BerriAI IPO?':
 +-----------------+----------------------------------------------------------------------------------+---------------------------+------------+
 ```
 ## Support
-**🤝 Schedule a 1-on-1 Session:** Book a [1-on-1 session](https://enterprise.litellm.ai/demo) with Krrish and Ishaan, the founders, to discuss any issues, provide feedback, or explore how we can improve LiteLLM for you.
+** Schedule a 1-on-1 Session:** Book a [1-on-1 session](https://enterprise.litellm.ai/demo) with Krrish and Ishaan, the founders, to discuss any issues, provide feedback, or explore how we can improve LiteLLM for you.
 
 
-<!-- 
+{/* 
 ## Pre-requisites:
 ```bash
 uv add litellm
@@ -367,4 +367,4 @@ for question, group_data in grouped_by_question:
       <td>0.001022</td>
     </tr>
   </tbody>
-</table> -->
+</table> */}

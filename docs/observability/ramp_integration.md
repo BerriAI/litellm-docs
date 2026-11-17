@@ -1,3 +1,8 @@
+---
+title: "Ramp Spend Tracking for LiteLLM: Setup"
+sidebar_label: "Ramp"
+description: "Send LiteLLM AI usage and cost to Ramp from the Python SDK or AI Gateway for spend tracking, logging token counts, model costs and metadata."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -125,7 +130,7 @@ Set the `RAMP_API_KEY` environment variable with your Ramp API key.
 
 ## Support & Talk to Founders
 
-- [Schedule Demo 👋](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Our numbers 📞 +1 (770) 8783-106 / ‭+1 (412) 618-6238‬
-- Our emails ✉️ ishaan@berri.ai / krrish@berri.ai
+- [Schedule Demo](https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-litellm-hosted-version)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Our numbers +1 (770) 8783-106 / ‭+1 (412) 618-6238‬
+- Our emails ishaan@berri.ai / krrish@berri.ai

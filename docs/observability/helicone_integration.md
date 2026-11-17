@@ -1,3 +1,8 @@
+---
+title: "Helicone Logging for LiteLLM AI Gateway"
+sidebar_label: "Helicone"
+description: "Log LiteLLM requests to Helicone from the Python SDK or AI Gateway, as a provider or a callback, with session tracking and retry and fallback options."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -29,7 +34,7 @@ os.environ["HELICONE_API_KEY"] = "your-helicone-key"
 # OpenAI call
 response = completion(
     model="helicone/{{openai_small}}",
-    messages=[{"role": "user", "content": "Hi 👋 - I'm OpenAI"}],
+    messages=[{"role": "user", "content": "Hi - I'm OpenAI"}],
 )
 
 print(response)
@@ -175,7 +180,7 @@ Log requests to Helicone while using any LLM provider directly.
   # OpenAI call
   response = completion(
       model="{{openai_large}}",
-      messages=[{"role": "user", "content": "Hi 👋 - I'm OpenAI"}],
+      messages=[{"role": "user", "content": "Hi - I'm OpenAI"}],
   )
 
   print(response)

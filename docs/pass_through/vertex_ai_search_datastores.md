@@ -4,7 +4,7 @@ Call the Vertex AI Discovery Engine Search API through LiteLLM, using Google's n
 
 Provider Doc: https://cloud.google.com/generative-ai-app-builder/docs/reference/rest/v1/projects.locations.dataStores.servingConfigs/search
 
-:::tip Want the unified API instead?
+:::tip[Want the unified API instead?]
 This page is the raw Google API through the proxy. If you want to query the datastore through the OpenAI-compatible `POST /v1/vector_stores/{id}/search` endpoint, or use it for RAG in `/chat/completions`, register it as a [managed vector store](../vector_stores/managed_vector_stores.md) (provider `vertex_ai/search_api`).
 :::
 

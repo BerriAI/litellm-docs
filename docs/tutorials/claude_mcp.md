@@ -9,7 +9,7 @@ Note: LiteLLM supports OAuth for MCP servers as well. [Learn more](https://docs.
 
 ## Demo
 
-<iframe width="840" height="500" src="https://www.loom.com/embed/e3721fc44e284c559dc4dca67ba7603a" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="840" height="500" src="https://www.loom.com/embed/e3721fc44e284c559dc4dca67ba7603a" frameBorder="0" allowFullScreen></iframe>
 
 ## Connecting MCP Servers
 

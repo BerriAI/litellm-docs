@@ -1,3 +1,8 @@
+---
+title: "Bedrock AgentCore Web Search API with LiteLLM"
+sidebar_label: "Amazon Bedrock AgentCore Web Search"
+description: "Use Bedrock AgentCore web search in LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, with SigV4 auth and no third-party key."
+---
 # Amazon Bedrock AgentCore Web Search
 
 [Web Search on Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/built-in-tools-web-search.html) is an AWS-managed web index exposed as an MCP tool on an AgentCore Gateway, so search traffic stays inside AWS and is billed by AWS instead of a third-party search API
@@ -123,7 +128,7 @@ AgentCore caps queries at 200 characters, so longer queries are truncated
 
 ## Notes
 
-The gateway is billed by AWS directly, so LiteLLM tracks `agentcore/search` at zero cost
+LiteLLM tracks `agentcore/search` at $0.007 per query, matching the [Web Search on AgentCore price](https://aws.amazon.com/bedrock/agentcore/pricing/) of $7 per 1,000 queries. AWS bills AgentCore Gateway API invocations separately, and LiteLLM does not track them
 
 The SigV4 signing region comes from the gateway hostname. If you front the gateway with a custom hostname, set `aws_region_name` (or `AWS_REGION`, or a profile region) to the gateway's region
 

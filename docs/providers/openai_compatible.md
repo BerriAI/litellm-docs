@@ -1,3 +1,9 @@
+---
+title: "OpenAI-Compatible Endpoints with LiteLLM"
+sidebar_label: "OpenAI-Compatible Endpoints"
+description: "Call any OpenAI-compatible endpoint via LiteLLM with the openai/ prefix and your api_base, from the Python SDK or AI Gateway, for completion and embedding."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -149,5 +155,5 @@ model_list:
       model: openai/google/gemma
       api_base: http://my-custom-base
       api_key: "" 
-      supports_system_message: False # 👈 KEY CHANGE
+      supports_system_message: False # KEY CHANGE
 ```

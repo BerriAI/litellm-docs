@@ -1,5 +1,6 @@
 ---
-title: "v1.90.1 - Vertex Batch Uploads & Key Redaction"
+title: "LiteLLM v1.90.1 - Vertex Batch Uploads & Key Redaction"
+description: "Backports Vertex AI batch upload fixes, OpenAI to Vertex JSONL streaming and API key redaction in /key/info errors to the 1.90 line."
 slug: "v1-90-1"
 date: 2026-06-30T01:40:47
 authors:

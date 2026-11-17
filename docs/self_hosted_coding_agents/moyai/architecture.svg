@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="810" viewBox="0 0 1120 810" role="img" aria-labelledby="title desc">
+<title id="title">Moyai: orchestration, execution, and access</title>
+<desc id="desc">Slack and browser requests enter the Moyai control plane. A worker coordinates an independent Modal agent sandbox. The sandbox uses a run capability to call the app broker for model and connected-app access. LiteLLM holds provider keys. The app stores session state; sandbox snapshots store files and context. Optional Temporal schedules the worker in the Render deployment.</desc>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#64647a"/></marker>
+  <style>
+    text{font-family:Arial,Helvetica,sans-serif;fill:#292b4e}.label{font-size:22px;font-weight:700}.small{font-size:18px;fill:#53536d}.eyebrow{font-size:15px;font-weight:700;letter-spacing:1.8px}.wire{fill:none;stroke:#64647a;stroke-width:2;marker-end:url(#arrow)}.box{stroke:#292b4e;stroke-width:2}
+  </style>
+</defs>
+<rect width="1120" height="810" rx="20" fill="#faf8f2"/>
+<text x="38" y="42" class="eyebrow">MOYAI / SYSTEM DESIGN</text>
+<rect x="43" y="79" width="244" height="62" rx="12" fill="#292b4e"/>
+<rect x="38" y="74" width="244" height="62" rx="12" fill="#fffefa" class="box"/>
+<text x="160" y="113" text-anchor="middle" class="label">Slack / Browser</text>
+<path d="M282 105H384V173" class="wire"/>
+<text x="306" y="93" class="small">submit task</text>
+<rect x="662" y="65" width="416" height="89" rx="12" fill="#ffe1c7" class="box" stroke-dasharray="6 5"/>
+<text x="682" y="99" class="label">Temporal · optional</text>
+<text x="682" y="128" class="small">Session IDs, timers, activity retries</text>
+<path d="M662 109H592V205H555" class="wire"/>
+<rect x="43" y="185" width="512" height="282" rx="16" fill="#292b4e"/>
+<rect x="38" y="180" width="512" height="282" rx="16" fill="#e6dff9" class="box"/>
+<text x="62" y="215" class="eyebrow">CONTROL PLANE</text>
+<text x="62" y="251" class="label">Moyai app + worker</text>
+<text x="62" y="282" class="small">Auth · chat · queue · execution phase</text>
+<rect x="62" y="307" width="464" height="61" rx="10" fill="#fffefa" class="box"/>
+<text x="82" y="344" class="label">Broker: model and app access</text>
+<text x="62" y="402" class="small">SQLite + encrypted connections</text>
+<text x="62" y="431" class="small">Modal app, or Render with Temporal</text>
+<rect x="714" y="185" width="365" height="282" rx="16" fill="#292b4e"/>
+<rect x="709" y="180" width="365" height="282" rx="16" fill="#d4d3fa" class="box"/>
+<text x="732" y="215" class="eyebrow">AGENT SANDBOX / MODAL</text>
+<text x="732" y="251" class="label">Selected agent harness</text>
+<text x="732" y="282" class="small">Terminal · filesystem · browser</text>
+<rect x="732" y="307" width="318" height="61" rx="10" fill="#fffefa" class="box"/>
+<text x="752" y="344" class="label">Run-scoped capability</text>
+<text x="732" y="402" class="small">Supervisor + execution journal</text>
+<text x="732" y="431" class="small">Public context + tool ledger</text>
+<path d="M550 261H704" class="wire"/>
+<text x="628" y="239" text-anchor="middle" class="small">coordinate</text>
+<path d="M709 338H554" class="wire"/>
+<text x="627" y="371" text-anchor="middle" class="small">model / app</text>
+<text x="627" y="393" text-anchor="middle" class="small">requests</text>
+<path d="M152 462V523" class="wire"/>
+<path d="M428 462V523" class="wire"/>
+<path d="M891 462V523" class="wire"/>
+<rect x="38" y="529" width="256" height="120" rx="12" fill="#c4e6d8" class="box"/>
+<text x="59" y="567" class="label">LiteLLM gateway</text>
+<text x="59" y="598" class="small">Routing · budgets · spend</text>
+<text x="59" y="626" class="small">Provider keys stay here</text>
+<rect x="326" y="529" width="282" height="120" rx="12" fill="#fffefa" class="box"/>
+<text x="347" y="567" class="label">Connected apps</text>
+<text x="347" y="598" class="small">GitHub · Slack</text>
+<text x="347" y="626" class="small">Linear · Notion</text>
+<rect x="709" y="529" width="365" height="120" rx="12" fill="#fffefa" class="box"/>
+<text x="731" y="567" class="label">Filesystem checkpoints</text>
+<text x="731" y="598" class="small">Saved files + conversation state</text>
+<text x="731" y="626" class="small">No RAM or running processes</text>
+<path d="M165 649V693" class="wire"/>
+<rect x="38" y="699" width="256" height="63" rx="12" fill="#fffefa" class="box"/>
+<text x="166" y="738" text-anchor="middle" class="label">Model providers</text>
+<text x="328" y="718" class="small">App state and sandbox files have separate lifetimes.</text>
+<text x="328" y="747" class="small">Temporal coordinates recovery; it does not back up either store.</text>
+</svg>

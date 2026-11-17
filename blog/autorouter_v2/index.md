@@ -9,7 +9,7 @@ tags: [routing, complexity-router, semantic-router, adaptive, product]
 hide_table_of_contents: false
 ---
 
-:::info Availability
+:::info[Availability]
 
 Auto Router v2 ships in **v1.94.x**. The earliest dev release cuts **Tuesday, 2026-07-14**. Suggestions and feedback: [discussion #32168](https://github.com/BerriAI/litellm/discussions/32168).
 

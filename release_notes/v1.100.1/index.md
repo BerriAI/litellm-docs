@@ -1,5 +1,6 @@
 ---
-title: "v1.100.1 - Retry Breadcrumb Memory Fix"
+title: "LiteLLM v1.100.1 - Retry Breadcrumb Memory Fix"
+description: "Fixes a memory leak in router retry breadcrumbs that kept earlier requests in memory. Upgrade if your deployments use retries or fallbacks."
 slug: "v1-100-1"
 date: 2026-09-10T01:42:29
 authors:

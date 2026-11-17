@@ -63,7 +63,9 @@ general_settings:
 
 ## Forward LLM Provider Authentication Headers
 
-**New in v1.82+**: By default, LiteLLM strips authentication headers like `x-api-key`, `x-goog-api-key`, and `api-key` from client requests for security (these are typically used to authenticate with the proxy itself). However, you can enable forwarding of these LLM provider authentication headers to allow **Bring Your Own Key (BYOK)** scenarios where clients send their own API keys to the LLM provider.
+<SinceVersion v="1.82.0" />
+
+By default, LiteLLM strips authentication headers like `x-api-key`, `x-goog-api-key`, and `api-key` from client requests for security (these are typically used to authenticate with the proxy itself). However, you can enable forwarding of these LLM provider authentication headers to allow **Bring Your Own Key (BYOK)** scenarios where clients send their own API keys to the LLM provider.
 
 ### Configuration
 
@@ -72,7 +74,7 @@ Add `forward_llm_provider_auth_headers: true` to your `general_settings`:
 ```yaml
 general_settings:
   forward_client_headers_to_llm_api: true
-  forward_llm_provider_auth_headers: true  # 👈 Enable BYOK
+  forward_llm_provider_auth_headers: true  # Enable BYOK
 ```
 
 ### Which Headers Are Forwarded
@@ -86,7 +88,7 @@ When `forward_llm_provider_auth_headers: true`, the following LLM provider authe
 | `api-key` | Azure OpenAI | `api-key: your-azure-key` |
 | `ocp-apim-subscription-key` | Azure APIM | `ocp-apim-subscription-key: your-key` |
 
-:::warning Important Security Note
+:::warning[Important Security Note]
 The proxy's `Authorization` header (used for proxy authentication) is **never** forwarded to LLM providers, even with this setting enabled. This ensures your proxy authentication remains secure.
 :::
 
@@ -112,7 +114,7 @@ general_settings:
   forward_llm_provider_auth_headers: true  # Enable BYOK
 ```
 
-For **Claude Code**, see [Claude Code BYOK](../tutorials/claude_code_byok.md). Use `ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: $LITELLM_API_KEY"` to pass your LiteLLM key. A configured Anthropic API key is sent as `x-api-key` and needs `forward_llm_provider_auth_headers` above to be forwarded; `/login` instead sends an OAuth token as `Authorization: Bearer <token>`, which LiteLLM forwards regardless of this setting.
+For **Claude Code**, see [Claude Code BYOK](../tutorials/claude_code_byok.md). Use `ANTHROPIC_CUSTOM_HEADERS="x-litellm-api-key: $LITELLM_API_KEY"` to pass your LiteLLM key. A configured Anthropic API key is sent as `x-api-key` and needs `forward_llm_provider_auth_headers` above to be forwarded; `/login` instead sends an OAuth token as `Authorization: Bearer <token>`, which LiteLLM forwards regardless of this setting. From LiteLLM v1.105.0, each spend log row records which credential the upstream call used in `metadata.used_client_oauth_token` (`true` for a forwarded OAuth token, `false` for the deployment's configured key, never the token itself), filterable on the Logs page **Credential** dropdown or with `GET /spend/logs/ui?used_client_oauth_token=true`.
 
 Client request:
 ```bash
@@ -154,6 +156,43 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
   }'
 ```
 
+#### Example: custom Anthropic-compatible `api_base`
+
+Use this when the models sit behind your own gateway that speaks the Anthropic Messages API and each user holds their own token for it. A wildcard route passes whatever model the caller names through to the gateway, so newly available models need no config change. Only `forward_llm_provider_auth_headers` is required here
+
+```yaml
+model_list:
+  - model_name: "my-gateway/*"
+    litellm_params:
+      model: "anthropic/*"
+      api_base: "https://gateway.example.com/anthropic"
+      # No api_key: each request supplies its own
+
+general_settings:
+  forward_llm_provider_auth_headers: true
+```
+
+Authenticate to LiteLLM with `Authorization: Bearer` or `x-litellm-api-key`, and put the user's gateway token in `x-api-key`:
+
+```bash
+curl -X POST "http://localhost:4000/v1/chat/completions" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "x-api-key: $USER_GATEWAY_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "my-gateway/claude-sonnet-4-5",
+    "messages": [{"role": "user", "content": "Hello"}]
+  }'
+```
+
+LiteLLM drops the `my-gateway/` prefix and calls `https://gateway.example.com/anthropic/v1/messages` with `"model": "claude-sonnet-4-5"` and `x-api-key: $USER_GATEWAY_TOKEN`. Requests to `/v1/messages` and `/v1/chat/completions` both reach the gateway this way. The token always goes out as `x-api-key`, so the gateway must accept that header. To list the gateway's models on `/v1/models`, see [Model Discovery](./model_discovery.md#which-key-discovery-uses)
+
+#### Which key reaches the provider
+
+A forwarded provider header takes precedence over the deployment's `api_key` for that request. When a request carries no provider key, LiteLLM falls back to the deployment's `api_key`, then to the provider's environment variable on the proxy host (for example `ANTHROPIC_API_KEY`), and the call runs on that key without any error. To require every caller to bring their own key, leave both unset; a request without one then fails with `Missing Anthropic API Key` before anything is sent to the provider
+
+Do not send the LiteLLM key in `x-api-key`. LiteLLM accepts it there as proxy authentication and then removes it, so it is not forwarded and the request falls back as described above
+
 ### Security Considerations
 
 **When to Use This Feature:**
@@ -181,7 +220,7 @@ general_settings:
 # BYOK enabled - auth headers ARE forwarded
 general_settings:
   forward_client_headers_to_llm_api: true
-  forward_llm_provider_auth_headers: true  # 👈 Opt-in required
+  forward_llm_provider_auth_headers: true  # Opt-in required
 ```
 
 ## Enable for a Model Group
@@ -248,7 +287,7 @@ When `add_user_information_to_llm_headers` is enabled, LiteLLM adds:
 
 ## Security Considerations
 
-⚠️ **Important Security Notes:**
+**Important Security Notes:**
 
 1. **Sensitive Data**: Only enable header forwarding for trusted model groups, as headers may contain sensitive information
 2. **API Keys**: Never include API keys or secrets in forwarded headers
@@ -303,7 +342,7 @@ curl -X POST "https://your-proxy.com/v1/chat/completions" \
 ```yaml
 model_list:
   # Fixed model with header forwarding
-  - model_name: byok-fixed-gpt-4o-mini
+  - model_name: byok-fixed-{{openai_small}}
     litellm_params:
       model: openai/{{openai_small}}
       api_base: "https://your-openai-endpoint.com"
@@ -317,7 +356,7 @@ model_list:
       api_key: "your-api-key"
       
   # Standard model without header forwarding
-  - model_name: standard-gpt-4o
+  - model_name: standard-{{openai_large}}
     litellm_params:
       model: openai/{{openai_large}}
       api_key: "your-api-key"
@@ -328,9 +367,9 @@ litellm_settings:
   
   model_group_settings:
     forward_client_headers_to_llm_api:
-      - byok-fixed-gpt-4o-mini
+      - byok-fixed-{{openai_small}}
       - byok-wildcard/*
-      # Note: standard-gpt-4o is NOT included, so no headers forwarded
+      # Note: standard-{{openai_large}} is NOT included, so no headers forwarded
 
 general_settings:
   # Enable OpenAI organization header forwarding (optional)
@@ -352,6 +391,10 @@ To test if headers are being forwarded:
 1. **Check Model Name**: Ensure the model name in your request matches the configuration
 2. **Verify Pattern Matching**: Wildcard patterns must match exactly
 3. **Review Logs**: Enable verbose logging to see header processing
+
+### Healthy accounts receive "No deployments available"
+
+If a healthy account receives `429 No deployments available for selected model`, see [recovering an existing deployment cooldown](../tutorials/claude_code_byok.md#model-is-unavailable-for-everyone-after-one-user-hits-their-limit).
 
 ### Provider Errors
 

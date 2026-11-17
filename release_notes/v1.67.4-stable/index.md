@@ -1,5 +1,6 @@
 ---
-title: v1.67.4-stable - Improved User Management
+title: "LiteLLM v1.67.4-stable - Improved User Management"
+description: "Adds search and filtering across users, keys, teams and models, Responses API load balancing with session continuity and UI session logs."
 slug: v1.67.4-stable
 date: 2025-04-26T10:00:00
 authors:

@@ -1,3 +1,9 @@
+---
+title: "Azure AI OCR (Mistral, Cohere Parse) with LiteLLM"
+sidebar_label: "Azure AI OCR (Mistral, Cohere Parse)"
+description: "Extract text from PDFs and images with Mistral Document AI on Azure AI, or parse images with Cohere Parse, via litellm.ocr() or the AI Gateway /ocr route."
+---
+
 # Azure AI OCR (Mistral, Cohere Parse)
 
 ## Overview
@@ -142,7 +148,7 @@ response = await litellm.aocr(
 
 ## Important Notes
 
-:::info URL Conversion
+:::info[URL Conversion]
 Azure AI OCR endpoints don't have internet access. LiteLLM automatically converts public URLs to base64 data URIs before sending requests to Azure AI.
 :::
 
@@ -188,7 +194,7 @@ model_list:
 
 ```bash showLineNumbers title="Test request"
 curl http://0.0.0.0:4000/v1/ocr \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "azure-cohere-parse",
@@ -211,4 +217,3 @@ Health checks (`/health` and the Admin UI's Test Connection button) send Parse a
 - `Cohere-parse-v5` - Cohere Parse, image documents only
 
 Use the Azure AI provider prefix: `azure_ai/<model-name>`
-

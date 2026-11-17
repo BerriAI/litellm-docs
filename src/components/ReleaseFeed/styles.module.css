@@ -1,0 +1,133 @@
+/* A timeline: the date sits on a thin rule at the left, each release to its right. */
+.feed {
+  margin-top: 2rem;
+}
+
+.entry {
+  scroll-margin-top: calc(var(--ifm-navbar-height) + 1rem);
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: 2rem;
+  position: relative;
+  padding-bottom: 3rem;
+}
+
+.entry::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55rem;
+  bottom: 0;
+  width: 1px;
+  background: var(--ifm-color-emphasis-300);
+}
+
+.date {
+  position: relative;
+  padding-left: 1rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--ifm-color-emphasis-700);
+  white-space: nowrap;
+}
+
+.date::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55rem;
+  width: 0.6rem;
+  height: 1px;
+  background: var(--ifm-color-emphasis-300);
+}
+
+.body {
+  min-width: 0;
+}
+
+.version {
+  display: inline-block;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0.3rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  color: var(--ifm-color-emphasis-800);
+}
+
+.version:hover {
+  text-decoration: none;
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+}
+
+.headline {
+  margin: 0.7rem 0 0.6rem;
+  font-size: 1.5rem;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+}
+
+.headline a {
+  color: var(--ifm-heading-color);
+}
+
+.headline a:hover {
+  text-decoration: none;
+  color: var(--ifm-color-primary);
+}
+
+.points {
+  margin: 0 0 0.9rem;
+  padding-left: 1.1rem;
+  color: var(--ifm-color-emphasis-800);
+}
+
+.points li {
+  margin: 0.2rem 0;
+  line-height: 1.5;
+}
+
+.points code,
+.headline code {
+  font-size: 0.85em;
+}
+
+.versions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.more {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.older {
+  margin: 0 0 2rem;
+  font-size: 0.9rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+@media (max-width: 640px) {
+  .entry {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4rem;
+    padding-left: 1rem;
+  }
+
+  .date {
+    padding-left: 0;
+  }
+
+  .date::before {
+    left: -1rem;
+  }
+
+  .headline {
+    font-size: 1.3rem;
+  }
+}

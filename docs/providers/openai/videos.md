@@ -1,3 +1,9 @@
+---
+title: "OpenAI Video Generation (Sora) with LiteLLM"
+sidebar_label: "OpenAI Video Generation"
+description: "Generate videos with OpenAI Sora through LiteLLM's /v1/videos endpoints from the Python SDK or AI Gateway: create, check status, download and remix videos."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -47,10 +53,12 @@ with open("generated_video.mp4", "wb") as f:
 
 LiteLLM provides OpenAI API compatible video endpoints for complete video generation workflow:
 
-- `/videos/generations` - Generate new videos
-- `/videos/remix` - Edit existing videos with reference images  
-- `/videos/status` - Check video generation status
-- `/videos/retrieval` - Download completed videos
+- `POST /v1/videos` - Generate new videos
+- `GET /v1/videos/{video_id}` - Check video generation status
+- `GET /v1/videos/{video_id}/content` - Download completed videos
+- `POST /v1/videos/{video_id}/remix` - Remix an existing video with a new prompt
+
+Each route is also served without the `/v1` prefix.
 
 **Setup**
 

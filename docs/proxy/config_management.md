@@ -1,3 +1,7 @@
+---
+displayed_sidebar: tutorialSidebar
+---
+
 # File Management
 
 ## `include` external YAML files in a config.yaml 
@@ -11,7 +15,7 @@ To include a config file, use `include` with either a single file or a list of f
 Contents of `parent_config.yaml`:
 ```yaml
 include:
-  - model_config.yaml # 👈 Key change, will include the contents of model_config.yaml
+  - model_config.yaml # Key change, will include the contents of model_config.yaml
 
 litellm_settings:
   callbacks: ["prometheus"] 

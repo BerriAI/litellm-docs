@@ -1,0 +1,65 @@
+.hero {
+  position: relative;
+  margin: 0;
+  background: #10131e;
+  color: #edf2ff;
+}
+
+.stage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.metadata {
+  font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.07em;
+}
+
+.labels {
+  font-family: Geist, Arial, Helvetica, sans-serif;
+  font-weight: 400;
+}
+
+.toggle {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  padding: 5px 10px;
+  border: 1px solid #3a486b;
+  border-radius: 4px;
+  background: #151c2d;
+  color: #d1ddf8;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.toggle:hover {
+  background: #202d49;
+}
+
+.toggle:focus-visible {
+  outline: 2px solid #a5bfff;
+  outline-offset: 4px;
+}
+
+@media (max-width: 600px) {
+  .groupLabel {
+    font-size: 33px;
+  }
+
+  .processName {
+    font-size: 42px;
+  }
+
+  .detailLabel {
+    display: none;
+  }
+
+  .toggle {
+    font-size: 12px;
+  }
+}

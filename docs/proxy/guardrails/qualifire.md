@@ -1,3 +1,8 @@
+---
+title: "Qualifire Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Qualifire"
+description: "Detect prompt injection, hallucinations, PII and harmful content with Qualifire on the LiteLLM AI Gateway, with evaluations and custom assertions."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

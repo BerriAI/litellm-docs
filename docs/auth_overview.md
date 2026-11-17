@@ -36,7 +36,7 @@ This is the section where MCP and A2A diverge most. MCP has a first-class `auth_
 
 ### MCP: `auth_type` enum
 
-Nine values. The MCP server's outbound `Authorization` header (or per-request SigV4 signature) is determined by `auth_type`. See [MCP Overview: Add HTTP MCP Server](./mcp#add-http-mcp-server) for the full table.
+The MCP server's outbound `Authorization` header (or per-request SigV4 signature) is determined by `auth_type`. See [MCP Overview: Add HTTP MCP Server](./mcp#add-http-mcp-server) for the full table.
 
 | `auth_type` | Mechanism | Dedicated docs |
 |---|---|---|
@@ -45,6 +45,8 @@ Nine values. The MCP server's outbound `Authorization` header (or per-request Si
 | `oauth2` | PKCE (interactive) or M2M `client_credentials`. Discriminated by `oauth2_flow`. | [MCP OAuth](./mcp_oauth) |
 | `oauth2_token_exchange` | RFC 8693 On-Behalf-Of (OBO) — exchange the caller's bearer token for a scoped MCP token | [MCP OBO Auth](./mcp_obo_auth) |
 | `oauth2_id_jag` | Identity Assertion Authorization Grant: two-leg exchange of the user's identity token (inbound or captured at SSO login) for an MCP access token | [MCP ID-JAG Auth](./mcp_id_jag) |
+| `true_passthrough` | No LiteLLM admission. The client's own `Authorization` is forwarded to the upstream verbatim | [MCP OAuth Passthrough](./mcp_oauth_passthrough) |
+| `oauth_delegate` | LiteLLM admits the caller on `x-litellm-api-key`, then forwards the separate upstream bearer the client sends in `Authorization`. The admission key is never forwarded | [MCP OAuth Passthrough](./mcp_oauth_passthrough) |
 | `aws_sigv4` | Per-request SigV4 signature using a dedicated MCP-side credential chain | [MCP AWS SigV4](./mcp_aws_sigv4) |
 
 ### A2A: auth mode inferred from `litellm_params`

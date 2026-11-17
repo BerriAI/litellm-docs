@@ -1,3 +1,8 @@
+---
+title: "Vigil Guard on LiteLLM AI Gateway"
+sidebar_label: "Vigil Guard"
+description: "Evaluate chat input and model output with Vigil Guard on the LiteLLM AI Gateway before results return to your app, with run-by-default and fail-open."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -238,7 +243,7 @@ guardrails:
       unreachable_fallback: fail_open
 ```
 
-:::caution
+:::warning
 `unreachable_fallback: fail_open` only applies when the Vigil Guard backend cannot be reached or returns an invalid guardrail response. It does not override a policy block decision.
 :::
 

@@ -1,3 +1,8 @@
+---
+title: "Pangea Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Pangea"
+description: "Block prompt injection, PII and toxic content with Pangea AI Guard recipes on the LiteLLM AI Gateway, with separate input and output recipes."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -136,7 +141,7 @@ The above request should not be blocked, and you should receive a regular LLM re
       "finish_reason": "stop",
       "index": 0,
       "message": {
-        "content": "Hello! 😊 How can I assist you today?",
+        "content": "Hello! How can I assist you today?",
         "role": "assistant",
         "tool_calls": null,
         "function_call": null,

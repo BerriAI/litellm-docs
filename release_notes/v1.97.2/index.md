@@ -1,5 +1,6 @@
 ---
-title: "v1.97.2 - Docker-Only Dependency Refresh"
+title: "LiteLLM v1.97.2 - Docker-Only Dependency Refresh"
+description: "Updates tornado to 6.5.8 and pypdf on the 1.97.x line, which clears the image scanner findings on v1.97.1."
 slug: "v1-97-2"
 date: 2026-09-03T18:54:20
 authors:
@@ -18,7 +19,7 @@ authors:
 hide_table_of_contents: false
 ---
 
-:::info This is a Docker-only release
+:::info[This is a Docker-only release]
 
 `v1.97.2` is distributed as container images. There is no PyPI package for this version, so `pip install litellm==1.97.2` will not resolve. If you install LiteLLM from PyPI, stay on `1.97.0`; the only change in this release is a refresh of three locked third-party dependencies, which only reaches you through the image.
 

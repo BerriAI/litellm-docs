@@ -1,3 +1,7 @@
+---
+sidebar_label: "Fallback Management API"
+---
+
 # [New] Fallback Management Endpoints
 
 Dedicated endpoints for managing model fallbacks separately from the general configuration.
@@ -150,7 +154,7 @@ print(response.json())
 
 ### Test fallback
 
-:::warning Deprecated for Proxy requests
+:::warning[Deprecated for Proxy requests]
 Starting in LiteLLM Proxy v1.85.0, `mock_testing_fallbacks` is stripped from incoming Proxy requests and has no effect. It remains supported only for direct `litellm.Router` calls in tests.
 :::
 
@@ -237,8 +241,8 @@ Specifically triggered when a context window exceeded error occurs.
 
 ```json keep-model-ids
 {
-  "model": "gpt-3.5-turbo",
-  "fallback_models": ["gpt-4-32k", "claude-3-opus"],
+  "model": "gpt-5.4-mini",
+  "fallback_models": ["{{openai_large}}", "{{anthropic_large}}"],
   "fallback_type": "context_window"
 }
 ```

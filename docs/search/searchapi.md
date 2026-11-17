@@ -1,3 +1,8 @@
+---
+title: "SearchAPI.io Google Search API with LiteLLM"
+sidebar_label: "SearchAPI.io (Google Search)"
+description: "Add SearchAPI.io Google results to LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, with location and time filters."
+---
 # SearchAPI.io (Google Search)
 
 Get started by creating a free API key via https://www.searchapi.io/.

@@ -8,6 +8,8 @@ authors:
   - mateo
   - kerry
 description: "Day 0 support for Grok 4.7 on LiteLLM, at the same price as Grok 4.6."
+card_title: "Grok 4.7"
+card_summary: "SpaceXAI's update to Grok 4.6 at the same price and limits, better at checking its own work and long context."
 tags: [xai, grok, grok-4.7, day 0 support]
 hide_table_of_contents: false
 ---

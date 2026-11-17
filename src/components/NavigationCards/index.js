@@ -1,11 +1,13 @@
 import React from 'react';
 import Link from '@docusaurus/Link';
+import { ArrowRight } from 'lucide-react';
 import styles from './styles.module.css';
 
-export default function NavigationCards({ items, columns = 2 }) {
+export default function NavigationCards({ items, columns = 2, variant = 'grid' }) {
+  const separated = variant === 'cards';
   return (
     <div
-      className={styles.grid}
+      className={separated ? styles.tiles : styles.grid}
       style={{ '--nav-columns': columns }}
     >
       {items.map((item, i) => {
@@ -15,13 +17,15 @@ export default function NavigationCards({ items, columns = 2 }) {
           <Link
             key={i}
             to={item.to}
-            className={styles.card}
-            target={isExternal ? '_blank' : undefined}
-            rel={isExternal ? 'noopener noreferrer' : undefined}
+            className={separated ? styles.tile : styles.card}
+            data-tone={separated ? item.tone : undefined}
+            target={isExternal ? "_blank" : undefined}
+            rel={isExternal ? "noopener noreferrer" : undefined}
           >
             {item.icon && (
-              <div className={styles.icon}>{item.icon}</div>
+              <div className={styles.icon} aria-hidden={separated ? true : undefined}>{item.icon}</div>
             )}
+            {separated && <ArrowRight className={styles.arrow} size={16} aria-hidden="true" />}
             <div className={styles.title}>{item.title}</div>
             {item.description && (
               <div className={styles.description}>{item.description}</div>
@@ -32,6 +36,11 @@ export default function NavigationCards({ items, columns = 2 }) {
                   <li key={j}>{line}</li>
                 ))}
               </ul>
+            )}
+            {item.ctaLabel && (
+              <span className={`button button--primary button--sm ${styles.cta}`}>
+                {item.ctaLabel}
+              </span>
             )}
             {isExternal && (
               <span className={styles.externalIcon}>↗</span>

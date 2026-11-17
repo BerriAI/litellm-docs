@@ -1,3 +1,8 @@
+---
+title: "DeepEval Tracing for LiteLLM: Confident AI"
+sidebar_label: "DeepEval"
+description: "Send LiteLLM Python SDK traces to Confident AI, the DeepEval platform, with the deepeval callbacks to debug, monitor and evaluate LLM calls."
+---
 import Image from '@theme/IdealImage';
 
 # DeepEval
@@ -49,7 +54,7 @@ You can obtain your `CONFIDENT_API_KEY` by logging into [Confident AI](https://a
 :::
 
 ## Support & Talk with Deepeval team
-- [Confident AI Docs 📝](https://documentation.confident-ai.com)
-- [Platform 🚀](https://confident-ai.com)
-- [Community Discord 💭](https://discord.gg/wuPM9dRgDw)
-- Support ✉️ support@confident-ai.com
+- [Confident AI Docs](https://documentation.confident-ai.com)
+- [Platform](https://confident-ai.com)
+- [Community Discord](https://discord.gg/wuPM9dRgDw)
+- Support support@confident-ai.com

@@ -1,5 +1,6 @@
 ---
-title: v1.55.8-stable
+title: "LiteLLM v1.55.8-stable"
+description: "Adds Langfuse prompt management, client-side fallback prompts and Azure Data Lake usage export. Also adds NVIDIA Triton /infer and Infinity rerank models."
 slug: v1.55.8-stable
 date: 2024-12-22T10:00:00
 authors:

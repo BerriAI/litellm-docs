@@ -1,3 +1,8 @@
+---
+title: "Mavvrik Cost Export for LiteLLM AI Gateway"
+sidebar_label: "Mavvrik"
+description: "Export LiteLLM AI Gateway spend to Mavvrik as FOCUS 1.2 cost reports, uploaded as gzip-compressed CSV through a signed URL, set up in config.yaml."
+---
 # Mavvrik
 
 LiteLLM can export proxy spend data to [Mavvrik](https://mavvrik.ai) as [FOCUS 1.2](https://focus.finops.org/) formatted cost reports. This lets you track and analyse LLM spend within the Mavvrik cost management platform.
@@ -30,7 +35,7 @@ You need the following from your Mavvrik account:
 | `MAVVRIK_CONNECTION_ID` | Yes | AI cost connection identifier |
 | `MAVVRIK_FOCUS_MAX_ROWS` | No | Maximum rows per daily export (default: 500000). Increase for very high-traffic deployments. |
 
-:::info Daily export only
+:::info[Daily export only]
 Only `daily` frequency is supported. The Mavvrik ingestion protocol stores one file per calendar date (`metrics/YYYY-MM-DD`). Hourly or interval exports would overwrite each other within the same day, producing incomplete data.
 :::
 

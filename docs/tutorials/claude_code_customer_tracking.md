@@ -1,16 +1,52 @@
 # Claude Code - Granular Cost Tracking
 
-Track Claude Code usage by customer or tags using LiteLLM proxy. This enables granular cost attribution for billing, budgeting, and analytics.
+Track Claude Code spend by customer organization and member with [Customer Management](../proxy/customers.md). Add tags to group costs by project or environment.
 
-## How It Works
+<SinceVersion v="1.111.0" />
+
+## Set up customer tracking
+
+Start with a gateway on v1.111 or later, PostgreSQL with migrations applied, and an application key that can call your configured Claude model. Use your existing `LITELLM_BASE_URL` and `LITELLM_API_KEY` environment values. Keep the gateway URL at its root, without `/v1`.
+
+Set `ANTHROPIC_CUSTOM_HEADERS` with one header per line:
+
+```bash
+export ANTHROPIC_BASE_URL="$LITELLM_BASE_URL"
+export ANTHROPIC_API_KEY="$LITELLM_API_KEY"
+export ANTHROPIC_CUSTOM_HEADERS="x-litellm-customer-org-alias: Acme
+x-litellm-customer-member-id: acme-alice"
+claude
+```
+
+Replace `Acme` and `acme-alice` with your customer's organization alias and stable member ID. Use a member ID that is unique across the gateway. LiteLLM registers new identities under the default team, subject to [capacity limits](../proxy/customers.md#before-you-start). [Create budgets first](../proxy/customer_management/track-customer-spend.md#2-import-a-customer) if you need customer caps from the first request.
+
+Send a prompt in Claude Code. Then open **Customer Management → Customers → Acme**, select a date range that includes the request, and check the member's spend, requests, and tokens. Allow for background accounting. See [request details](../proxy/customer_management/track-customer-spend.md#7-debug-a-request-in-spend-logs) to inspect the resolved customer and cost in Logs.
+
+## Add project or environment tags
+
+Append `x-litellm-tags` to the same variable. Keep the two customer headers to attribute the request to a customer too:
+
+```bash
+export ANTHROPIC_CUSTOM_HEADERS="x-litellm-customer-org-alias: Acme
+x-litellm-customer-member-id: acme-alice
+x-litellm-tags: project:support,env:prod"
+```
+
+You can also send the tags header on its own. See [tag budgets](../proxy/tag_budgets.md) for spending limits on tags.
+
+## Legacy end-user tracking
+
+These examples remain supported for the flat `/customer/*` APIs and the **End User** log field. Use the setup above for Customer Management. The screenshots below show the legacy tracking flow.
+
+### How It Works
 
 Claude Code supports custom headers via `ANTHROPIC_CUSTOM_HEADERS`. LiteLLM automatically tracks requests with specific headers for cost attribution.
 
-## Why Set a Customer Header
+### Why Set a Customer Header
 
-Without one, Claude Code still reaches customer tracking on its own. It sends a per-session JSON blob in `metadata.user_id`, which LiteLLM reads as a customer ID, so every session shows up as a separate customer and picks up its own copy of any default customer budget you have configured. Setting `x-litellm-customer-id` overrides that, since headers are checked before any request body field. If you would rather have that traffic carry no customer at all, see [Restricting Which IDs Become Customers](../proxy/customers.md#restricting-which-ids-become-customers).
+Without one, Claude Code still reaches customer tracking on its own. It sends a per-session JSON blob in `metadata.user_id`, which LiteLLM reads as a customer ID, so every session shows up as a separate customer and picks up its own copy of any default customer budget you have configured. Setting `x-litellm-customer-id` overrides that, since headers are checked before any request body field. If you would rather have that traffic carry no customer at all, see [Restricting Which IDs Become Customers](../proxy/legacy_end_users.md#restricting-which-ids-become-customers).
 
-## Tracking Options
+### Tracking Options
 
 Choose how you want to attribute costs:
 
@@ -19,7 +55,7 @@ Choose how you want to attribute costs:
 | Customer | `x-litellm-customer-id` | Bill customers, per-user budgets |
 | Tags | `x-litellm-tags` | Project tracking, cost centers, environments |
 
-## Environment Variables
+### Environment Variables
 
 | Variable | Description | Example |
 |----------|-------------|---------|
@@ -27,7 +63,7 @@ Choose how you want to attribute costs:
 | `ANTHROPIC_API_KEY` | LiteLLM API key | `sk-<your-api-key>` |
 | `ANTHROPIC_CUSTOM_HEADERS` | Custom headers (`header-name: value` format) | See examples below |
 
-## Option 1: Track by Customer
+### Option 1: Track by Customer
 
 Use this to attribute costs to specific customers or end-users.
 
@@ -37,7 +73,7 @@ export ANTHROPIC_API_KEY=sk-<your-api-key>
 export ANTHROPIC_CUSTOM_HEADERS="x-litellm-customer-id: claude-ishaan-local"
 ```
 
-## Option 2: Track by Tags
+### Option 2: Track by Tags
 
 Use this to attribute costs to projects, cost centers, or environments. Pass comma-separated tags.
 
@@ -48,9 +84,9 @@ export ANTHROPIC_CUSTOM_HEADERS="x-litellm-tags: project:acme,env:prod,team:back
 ```
 
 
-## Quick Start
+### Quick Start
 
-### 1. Set Environment Variables
+#### 1. Set Environment Variables
 
 ```bash
 export ANTHROPIC_BASE_URL=http://localhost:4000
@@ -58,7 +94,7 @@ export ANTHROPIC_API_KEY=sk-<your-api-key>
 export ANTHROPIC_CUSTOM_HEADERS="x-litellm-customer-id: claude-ishaan-local"
 ```
 
-### 2. Use Claude Code
+#### 2. Use Claude Code
 
 ```bash
 claude
@@ -72,7 +108,7 @@ All requests will now be tracked under the customer ID `claude-ishaan-local`.
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-01-16/0c30309e-7117-4999-a3df-d22a2d5629c1/ascreenshot_d76a48c53b9a4fad8f6727baf4aa6a9c_text_export.jpeg)
 
-### 3. View Usage in LiteLLM UI
+#### 3. View Usage in LiteLLM UI
 
 Navigate to the **Logs** tab in the LiteLLM UI.
 
@@ -86,7 +122,7 @@ Filter by customer ID to see all requests for that customer.
 
 ![](https://colony-recorder.s3.amazonaws.com/files/2026-01-16/dd1c8aba-e75b-4714-9eee-c785e9db99af/ascreenshot_36aaec0fe12f4189b64f704a551e6729_text_export.jpeg)
 
-## Supported Headers
+### Supported Headers
 
 | Header | Description |
 |--------|-------------|
@@ -94,10 +130,11 @@ Filter by customer ID to see all requests for that customer.
 | `x-litellm-end-user-id` | Alternative customer ID header |
 | `x-litellm-tags` | Comma-separated tags for cost attribution |
 
-## Related
+### Related
 
 - [Claude Code Quickstart](./claude_responses_api.md)
-- [Customer Budgets](../proxy/customers.md)
+- [Codex CLI - Granular Cost Tracking](./codex_customer_tracking.md)
+- [Legacy customer budgets](../proxy/legacy_end_users.md)
 - [Tag Budgets](../proxy/tag_budgets.md)
 - [Track Usage for Coding Tools](./cost_tracking_coding.md)
 

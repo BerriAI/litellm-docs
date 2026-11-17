@@ -1,3 +1,8 @@
+---
+title: "Lasso Security Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Lasso Security"
+description: "Block prompt injection and mask PII with Lasso Security on the LiteLLM AI Gateway, scanning inputs and outputs with user and conversation tracking."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -8,7 +13,7 @@ Use [Lasso Security](https://www.lasso.security/) to protect your LLM applicatio
 
 ## Prerequisites
 
-The Lasso guardrail requires the `ulid-py` package (version 1.1.0 or higher) for generating unique conversation identifiers:
+The Lasso guardrail requires the `ulid-py` package (version 1.1.0 or higher) for generating unique conversation identifiers: {/* keep-version-note */}
 
 ```shell
 uv add ulid-py>=1.1.0
@@ -225,6 +230,18 @@ Expected response:
 
 </TabItem>
 </Tabs>
+
+## What Gets Scanned
+
+The Lasso guardrail scans the whole agentic turn, not the prompt text alone. Agent tool use is a common path for both exfiltration and injection, such as a poisoned tool result carrying instructions or a tool call carrying sensitive arguments, so tool traffic is classified in both directions.
+
+On `pre_call` the guardrail sends every message in the request. That covers `system`, `user` and `assistant` text; each entry of an assistant message's `tool_calls` as a `tool_use` block holding the tool name and its arguments; each `role: "tool"` message as a `tool_result` block holding the tool's output; and the request's `tools` array, so Lasso also sees tool names, descriptions and JSON schema parameters.
+
+On `post_call` the guardrail sends the model's reply for each choice, which is the assistant text plus any `tool_calls` the model generated on that turn, again as `tool_use` blocks. Tool results appear only on `pre_call`, because a tool's output reaches the proxy on the next request rather than in the model's reply.
+
+Tool payloads are masked as well as classified. With `mask: true`, masked tool call arguments are written back into `tool_calls` before the request continues to the LLM, and masked tool output is written back into the `tool` message, so the model never sees the raw values.
+
+The [Generic Guardrail API](#alternative-configuration-generic-guardrail-api) configuration has the same coverage; it delivers the turn to Lasso as `structured_messages`, `tool_calls` and `tools`.
 
 ## PII Masking with Lasso
 

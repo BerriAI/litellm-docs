@@ -1,5 +1,6 @@
 ---
-title: "v1.84.3 - Dockerfile Re-cut for Non-Root Image"
+title: "LiteLLM v1.84.3 - Dockerfile Re-cut for Non-Root Image"
+description: "Restores npm in the non-root build stage, which the v1.84.2 build lacked. The application code matches v1.84.2."
 slug: "v1-84-3"
 date: 2026-05-27T00:00:00
 authors:

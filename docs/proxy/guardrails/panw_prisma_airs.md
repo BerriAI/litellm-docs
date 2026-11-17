@@ -1,3 +1,8 @@
+---
+title: "Prisma AIRS Guardrails on LiteLLM AI Gateway"
+sidebar_label: "PANW Prisma AIRS"
+description: "Scan prompts and responses with Palo Alto Networks Prisma AIRS on the LiteLLM AI Gateway, with security profiles, content masking and fail-open."
+---
 import Image from '@theme/IdealImage';
 
 # PANW Prisma AIRS
@@ -106,6 +111,7 @@ On success, the guardrail name appears in the `x-litellm-applied-guardrails` res
 | `post_call` | After LLM call | Response output |
 | `pre_mcp_call` | Before MCP tool execution | MCP tool input |
 | `during_mcp_call` | Parallel with MCP tool execution | MCP tool input |
+| `post_mcp_call` | After MCP tool execution | MCP tool result |
 
 
 ### Configuration Parameters
@@ -123,6 +129,7 @@ On success, the guardrail name appears in the `x-litellm-applied-guardrails` res
 | `mask_request_content` | No | Mask sensitive data in prompts instead of blocking | `false` |
 | `mask_response_content` | No | Mask sensitive data in responses instead of blocking | `false` |
 | `mask_on_block` | No | Backwards-compatible flag that enables both request and response masking | `false` |
+| `include_masked_response_on_block` | No | When a `post_call` scan blocks a response, add the AIRS `response_masked_data` (masked text and `pattern_detections`) to the HTTP 400 error body. Applies only to this guardrail. No effect when `mask_response_content` is on | `false` |
 | `experimental_use_latest_role_message_only` | No | Anthropic `/v1/messages` only. When unset: scans only latest user message on request side. Set `false` to scan all user/system/developer messages. Non-Anthropic unaffected. | Unset (true for Anthropic) |
 
 Use the regional `api_base` that matches your Prisma AIRS deployment profile region for lower latency and data residency compliance.
@@ -180,7 +187,7 @@ guardrails:
 
 ### Content Masking
 
-:::warning Important: Masking is Controlled by PANW Security Profile
+:::warning[Important: Masking is Controlled by PANW Security Profile]
 The actual masking behavior (what content gets masked and how) is controlled by your PANW Prisma AIRS security profile in Strata Cloud Manager. The LiteLLM flags (`mask_request_content`, `mask_response_content`) only control whether to apply the masked content and allow the request to continue, or block entirely.
 :::
 
@@ -199,6 +206,47 @@ guardrails:
 - `mask_request_content: true` — mask sensitive data in prompts instead of blocking
 - `mask_response_content: true` — mask sensitive data in responses instead of blocking
 - `mask_on_block: true` — backwards-compatible flag that enables both request and response masking
+
+### Masked Response Details on Block
+
+By default a blocked `post_call` response returns HTTP 400 with the AIRS scan metadata (`action`, `category`, `response_detected`, scan and report IDs) but leaves out `response_masked_data`. Set `include_masked_response_on_block: true` on the guardrail to add it, so clients can see which patterns AIRS matched and where, without the raw model output.
+
+```yaml
+guardrails:
+  - guardrail_name: "panw-block-details"
+    litellm_params:
+      guardrail: panw_prisma_airs
+      mode: "post_call"
+      api_key: os.environ/PANW_PRISMA_AIRS_API_KEY
+      profile_name: "default"
+      include_masked_response_on_block: true
+```
+
+The status stays 400, and the extra field appears under `error.provider_specific_fields.error` on `/v1/chat/completions`, `/v1/responses`, and `/v1/messages`:
+
+```json
+{
+  "error": {
+    "code": "400",
+    "provider_specific_fields": {
+      "error": {
+        "code": "panw_prisma_airs_response_blocked",
+        "action": "block",
+        "category": "malicious",
+        "response_detected": {"dlp": true},
+        "response_masked_data": {
+          "data": "Sample values:\n\n- Email ID: `XXXXXXXXXXXXXXXXXXXXX`",
+          "pattern_detections": [
+            {"pattern": "Internet - addr_email", "locations": [[41, 61]]}
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+The field is only added when AIRS returns it, and only for guardrails that set the flag. If `mask_response_content` is also on, the response is masked and returned with HTTP 200 as before, so there is no block body to extend. The setting can also be set from the guardrail form in the Admin UI.
 
 ### Fail-Open Configuration
 
@@ -284,11 +332,29 @@ Tool invocations are sent to AIRS as structured `tool_event` payloads containing
 
 **What is scanned:** LLM-driven `tool_calls` (name + arguments) and MCP request-side invocations when `mcp_tool_name` (or fallback `name`) is present. Response-side OpenAI-compatible `tool_calls` are also scanned when surfaced into `apply_guardrail()`.
 
-**What is not scanned:** Tool definitions in `inputs["tools"]` and post-MCP tool results (no `post_mcp_call` hook exists yet).
+**What is not scanned:** Tool definitions in `inputs["tools"]`.
 
+### Scanning MCP tool results
+
+With `mode: post_mcp_call`, the guardrail scans the result an MCP server returns, before it reaches the model, as a response-side scan. Every text content block and every string value inside `structuredContent` is sent to AIRS. A `block` verdict rejects the tool call. With `mask_response_content: true`, the masked text AIRS returns is written back into the tool result in place; a masking hit on a `structuredContent` key or a non-string value cannot be rewritten and is treated as a block. This applies to both the MCP gateway (`/mcp`) and MCP tools the Responses API executes on the model's behalf.
+
+```yaml
+guardrails:
+  - guardrail_name: "panw-mcp-results"
+    litellm_params:
+      guardrail: panw_prisma_airs
+      mode: "post_mcp_call"
+      api_key: os.environ/PANW_PRISMA_AIRS_API_KEY
+      profile_name: os.environ/PANW_PRISMA_AIRS_PROFILE_NAME
+      mask_response_content: true
+      default_on: true
+```
+
+Set `mode: post_mcp_call` explicitly and `default_on: true` so the MCP child call selects the guardrail. Ordinary `post_call` configuration continues to scan LLM responses only. This requires a LiteLLM version containing [the integration fix](https://github.com/BerriAI/litellm/pull/43109).
+
+A blocked `/mcp` call returns an MCP tool error (`result.isError: true`), which can arrive with HTTP 200. During `/v1/responses` MCP auto-execution, the model receives a tool error instead of the blocked content and can continue generating a response. The block does not by itself make the overall Responses request return HTTP 400.
 
 ### Current Limitations
 
-- **No post-MCP response scanning.** Actual post-MCP tool-result scanning is not supported because there is no `post_mcp_call` hook in the framework. Response-side MCP events are only scanned when they appear as regular `tool_calls` in the LLM response.
-- **Guardrail selection not inherited by MCP sub-calls.** With `default_on: false`, MCP request-side child-call scans can be skipped because the parent request's guardrail selection is not propagated to the synthetic MCP payload. Workaround: use a dedicated guardrail with `mode: pre_mcp_call` and `default_on: true`.
+- **Guardrail selection not inherited by MCP sub-calls.** With `default_on: false`, MCP child-call scans can be skipped because the parent request's guardrail selection is not propagated to the synthetic MCP payload. Workaround: use a dedicated guardrail with `mode: pre_mcp_call` or `mode: post_mcp_call` and `default_on: true`.
 - **MCP transaction correlation.** MCP tool scans use the parent `litellm_call_id` when available; otherwise a fallback ID is synthesized and will not be grouped with the parent request in AIRS dashboards.

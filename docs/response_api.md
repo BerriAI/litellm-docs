@@ -8,6 +8,8 @@ LiteLLM provides an endpoint in the spec of [OpenAI's `/responses` API](https://
 
 Requests to /chat/completions may be bridged here automatically when the provider lacks support for that endpoint. The model’s default `mode` determines how bridging works.(see `model_prices_and_context_window`) 
 
+The reverse also happens: a deployment whose provider has no Responses API config of its own (`custom_openai/`, `baseten/`, `openai_like/` and most other OpenAI-compatible providers) bridges `/v1/responses` through `/v1/chat/completions`. When the server serves `/responses` itself, add `supported_endpoints: ["/v1/responses"]` under the deployment's `model_info` to forward the request untranslated. See [Native /v1/responses passthrough](./response_api_native_passthrough.md)
+
 | Feature | Supported | Notes |
 |---------|-----------|--------|
 | Cost Tracking | ✅ | Works with all supported models |
@@ -20,7 +22,7 @@ Requests to /chat/completions may be bridged here automatically when the provide
 | Loadbalancing | ✅ | Works between supported models |
 | Guardrails | ✅ | Applies to input and output text (non-streaming only) |
 | Supported operations | Create a response, Get a response, Delete a response | |
-| Supported LiteLLM Versions | 1.63.8+ | |
+| Supported LiteLLM Versions | <SinceVersion v="1.63.8" /> | |
 | Supported LLM providers | **All LiteLLM supported providers** | `openai`, `anthropic`, `bedrock`, `vertex_ai`, `gemini`, `azure`, `azure_ai` etc. |
 
 ## Usage
@@ -1050,6 +1052,17 @@ model_list:
 
 Both models will automatically support WebSocket mode at `ws://localhost:4000/v1/responses`.
 
+### Session duration limit
+
+A WebSocket session on `/v1/responses` lasts at most 60 minutes by default, matching OpenAI's own WebSocket connection limit. The limit is counted from when the proxy accepts the connection, so clients that open connections ahead of time, such as Codex, can leave them idle and send their first `response.create` later. When the limit is reached the proxy closes the socket with code `1000` and reason `Session duration limit reached`, whether or not a response is in progress, and the client should reconnect.
+
+To change the limit, set `responses_websocket_session_limit_seconds` under `general_settings`. It accepts values from 60 to 7200 seconds; any other value logs a warning and the proxy uses 3600.
+
+```yaml showLineNumbers title="config.yaml"
+general_settings:
+  responses_websocket_session_limit_seconds: 1800  # 30 minutes
+```
+
 ## Response ID Security
 
 By default, LiteLLM Proxy prevents users from accessing other users' response IDs.
@@ -1104,7 +1117,7 @@ LiteLLM passes OpenAI's `background: true` parameter through to the provider. Th
 
 ```bash showLineNumbers title="Create a background response"
 curl http://localhost:4000/v1/responses \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gpt-5.6",
@@ -1115,7 +1128,7 @@ curl http://localhost:4000/v1/responses \
 
 ```bash showLineNumbers title="Poll for the result"
 curl http://localhost:4000/v1/responses/{response_id} \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 ### Cost tracking for background responses
@@ -1143,6 +1156,10 @@ Responses still pending after `MANAGED_OBJECT_STALENESS_CUTOFF_DAYS` (default `7
 ## Load Balancing with Session Continuity.
 
 When using the Responses API with multiple deployments of the same model (e.g., multiple Azure OpenAI endpoints), LiteLLM provides session continuity. This ensures that follow-up requests using a `previous_response_id` are routed to the same deployment that generated the original response.
+
+:::warning[Where these checks apply]
+`responses_api_deployment_check`, `encrypted_content_affinity`, `session_affinity`, and `deployment_affinity` apply to proxy requests on `/v1/responses` and to `router.aresponses`. The sync `router.responses` skips them, so a follow-up can land on a deployment that did not serve the first turn. A top-level `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips them on every call, the proxy included, and so does a custom strategy that doesn't pick through `router.select(..., kind="healthy")`. See [Session Affinity](./routing.md#session-affinity-sticky-sessions) for the full rules.
+:::
 
 
 #### Example Usage
@@ -1211,12 +1228,12 @@ follow_up = await router.aresponses(
 To enable session continuity for Responses API in your LiteLLM proxy, set `optional_pre_call_checks` in your proxy config.yaml.
 
 - `responses_api_deployment_check`: high priority routing when `previous_response_id` is provided
-- `encrypted_content_affinity`: **[Recommended]** content-aware routing for encrypted items (e.g., `rs_...` reasoning items) (**requires LiteLLM >= 1.82.3**)
+- `encrypted_content_affinity`: **[Recommended]** content-aware routing for encrypted items (e.g., `rs_...` reasoning items) <SinceVersion v="1.82.3" />
 - `session_affinity`: sticky sessions based on session id (takes priority over `deployment_affinity`)
 - `deployment_affinity`: sticky sessions based on user key (applies even without `previous_response_id`)
 
-:::tip Recommended: Use `encrypted_content_affinity`
-For Responses API with load balancing across deployments with **different API keys**, use `encrypted_content_affinity` instead of `deployment_affinity`. It only pins requests that contain encrypted content, avoiding quota reduction while preventing `invalid_encrypted_content` errors. (Requires LiteLLM >= 1.82.3.)
+:::tip[Recommended: Use `encrypted_content_affinity`]
+For Responses API with load balancing across deployments with **different API keys**, use `encrypted_content_affinity` instead of `deployment_affinity`. It only pins requests that contain encrypted content, avoiding quota reduction while preventing `invalid_encrypted_content` errors. <SinceVersion v="1.82.3" />
 :::
 
 Notes:
@@ -1304,6 +1321,10 @@ This error occurs when:
 
 The `encrypted_content_affinity` pre-call check routes follow-up requests containing encrypted items to the originating deployment **only when necessary**
 
+:::warning[Where this check applies]
+`encrypted_content_affinity` applies to proxy requests on the LLM API routes, such as `/v1/responses`, and to async Router methods such as `router.aresponses`. The sync `router.responses` skips it, so a follow-up carrying encrypted items can land on a deployment that did not create them. A top-level `routing_strategy` of `usage-based-routing` (the legacy v1 strategy) also skips it on every call, the proxy included, and so does a custom strategy that doesn't pick through `router.select(..., kind="healthy")`. See [Session Affinity](./routing.md#session-affinity-sticky-sessions) for the full rules.
+:::
+
 **Key Benefits:**
 - ✅ **No quota reduction**: Unlike `deployment_affinity`, only pins requests that contain encrypted items
 - ✅ **Bypasses rate limits**: When encrypted content requires a specific deployment, RPM/TPM limits are bypassed (the request would fail on any other deployment anyway)
@@ -1321,6 +1342,57 @@ The `encrypted_content_affinity` pre-call check routes follow-up requests contai
    - Scans request `input` for `encitem_` prefixed IDs
    - If found → decodes `model_id`, pins to originating deployment, bypasses rate limits
    - If no encoded items → normal load balancing
+
+### When the originating deployment cannot serve the turn
+
+The pin holds only while the originating deployment is in the healthy pool of the routed model group. When it is not, because it is cooled down after errors, it was removed from the config, or the follow-up was routed to a different model group (an auto-router tier change, or a client switching `model` between turns), LiteLLM first looks for a peer, a deployment whose resolved `api_base` and `api_key` are identical to the origin's, and pins to that instead. Deployments in different regions or with different keys don't count as peers on their own, whatever the provider would accept, so a multi-region group has none unless you [declare a shared encryption boundary](#declaring-a-shared-encryption-boundary). An origin that was removed from the config, or an id that matches no deployment, has no credentials left to match and skips the peer search
+
+Without a peer the turn is served in degraded form rather than failed. On the Responses API each reasoning item keeps its summary text and loses only its encrypted payload and id (an item with no readable text is dropped whole), and on a `/v1/messages` follow-up the thinking block is dropped whole. The rest of the conversation is untouched, the request goes to the healthy deployments through the normal routing strategy, and the model reasons fresh on that turn. The reasoning items it returns carry the id of the deployment that served it, so later turns pin there. Every degraded turn logs one router warning, so watch for it when reasoning continuity across turns matters to you:
+
+```
+EncryptedContentAffinityCheck: model_id=<id> cannot serve group <model> and no deployment on the same encryption boundary is configured; forwarding without its encrypted reasoning
+```
+
+Only a peer keeps the reasoning across such a turn. On an auto-router, `complexity_router_config.session_affinity: true` keeps a session that carries a `session_id` on the tier that produced the items (see [auto routing](./proxy/auto_routing.md)), so the turn usually stays with its origin, though escalation and routing plugins can still move it. Releases through v1.103.x failed a cooled-down origin with no peer with a 429 or 503 instead of serving the turn, and releases before v1.102.0 failed a removed origin or a group change the same way
+
+The same strip runs on every fallback hop, with or without the check: an [order-based hop](./proxy/load_balancing.md#how-order-based-fallback-works) to the next `order`, a configured [`fallbacks`](./proxy/reliability.md) hop to another model group, and the retry of a Responses stream that broke before completing. The hop drops the reasoning items its target cannot decrypt and keeps their summaries, so a hop from OpenAI to Bedrock, or between two keys of one provider, answers the turn instead of failing with `invalid_encrypted_content`. There is no per-deployment switch for it. Without the check the items carry no origin marker, so the hop attributes every one of them to the deployment that just failed: a hop to a deployment with the same `api_base` and `api_key` keeps them, any other hop drops them, the ones the hop target produced itself on an earlier turn included, and the turn after a hop replays the hop target's reasoning to `order: 1` first, which fails on it before the request hops again. Such a hop logs only its `Falling back to model_group` line
+
+Turn the check on for an ordered group of two providers all the same. Its marker names the deployment that produced each item, so the turn after a hop keeps the reasoning of the deployment that answers it with no failed call first, a hop logs the warning above as well, and a turn dispatched straight to `order: 2` while `order: 1` is cooled down (no hop, so no hop strip) drops what that deployment cannot decrypt through the pin instead of failing. Releases through v1.105.x replayed the failed deployment's reasoning on the hop, so the target answered 400 (`invalid_encrypted_content` on OpenAI, `invalid encrypted reasoning` on Bedrock), and with the check on, an order-based hop answered 429 `No deployments available` instead
+
+The check can be turned on and off on a running proxy through `POST /config/update`, see [changing affinity settings at runtime](./routing.md#settings)
+
+### Declaring a shared encryption boundary
+
+<SinceVersion v="1.110.0" /> Some deployments can decrypt each other's reasoning even though their `api_base` differs. Regional endpoints of one OpenAI organization are the common case, since OpenAI encrypts reasoning per organization. Give each of them the same `model_info.encrypted_content_boundary` and LiteLLM treats them as peers, so a follow-up whose origin cannot serve the turn keeps its encrypted reasoning on a peer instead of reasoning fresh. This applies to the peer search above, across model groups, and to the strip on order-based and `fallbacks` hops. The origin itself still wins while it is in the healthy pool.
+
+When both deployments set the key, they are peers exactly when the values match, whatever their `api_base` and `api_key`. When either one leaves it unset, the `api_base` and `api_key` match decides, as before. The value is a name you pick and LiteLLM doesn't check it with the provider, so give one value only to deployments that really share an organization. A deployment in the wrong boundary receives reasoning it cannot decrypt, and the turn fails with `invalid_encrypted_content` instead of being served with fresh reasoning.
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: {{openai_large}}
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_base: https://<region-1 endpoint>/v1
+      api_key: os.environ/OPENAI_API_KEY
+      order: 1
+    model_info:
+      id: region-1
+      encrypted_content_boundary: org-1
+
+  - model_name: {{openai_large}}
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_base: https://<region-2 endpoint>/v1
+      api_key: os.environ/OPENAI_API_KEY
+      order: 2
+    model_info:
+      id: region-2
+      encrypted_content_boundary: org-1
+
+router_settings:
+  optional_pre_call_checks:
+    - encrypted_content_affinity
+```
 
 ### Configuration
 
@@ -1411,7 +1483,7 @@ litellm --config config.yaml
 |---------------|----------|-------|--------------|
 | **`encrypted_content_affinity`** | **[Recommended]** Multi-region Responses API with different API keys | Only requests with tracked encrypted items | ✅ None (surgical pinning) |
 | `responses_api_deployment_check` | When `previous_response_id` is available | Requests with `previous_response_id` | ✅ None |
-| `session_affinity` | Session-based applications | All requests with same `session_id` | ⚠️ Reduces quota by # of sessions |
+| `session_affinity` | Session-based applications | All requests with same `session_id` | Reduces quota by # of sessions |
 | `deployment_affinity` | Simple sticky sessions | All requests from same API key | ❌ Reduces quota by # of users |
 
 
@@ -1966,7 +2038,6 @@ Response:
   }]
 }
 ```
-
 
 
 

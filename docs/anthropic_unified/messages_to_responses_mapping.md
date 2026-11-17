@@ -1,8 +1,8 @@
 # v1/messages → /responses Parameter Mapping
 
-When you send a request to `/v1/messages` targeting an OpenAI or Azure model, LiteLLM internally routes it through the OpenAI Responses API. This page documents exactly how every parameter gets translated in both directions.
+When you send a request to `/v1/messages` targeting an `openai/*` model, or a few Responses-only deployments of other providers such as `perplexity/perplexity/sonar`, LiteLLM internally routes it through the OpenAI Responses API. A request with `stop_sequences`, or any request when `use_chat_completions_url_for_anthropic_messages` is on, goes through chat completions instead. This page documents exactly how every parameter gets translated in both directions.
 
-The transformation lives in `litellm/llms/anthropic/experimental_pass_through/responses_adapters/transformation.py`.
+The transformation lives in `litellm/llms/anthropic/messages/responses_adapters/transformation.py`.
 
 
 ## Request: Anthropic → Responses API
@@ -22,10 +22,10 @@ The transformation lives in `litellm/llms/anthropic/experimental_pass_through/re
 | `tool_choice` | `tool_choice` | Type-remapped — see the tool_choice section below |
 | `thinking` | `reasoning` | Budget tokens mapped to effort level — see the thinking section below |
 | `output_format` or `output_config.format` | `text` | Wrapped as `{"format": {"type": "json_schema", "name": "structured_output", "schema": ..., "strict": ...}}`. `strict` is copied from the request's `strict` flag and defaults to `false`, so schemas with optional properties pass through; set `strict: true` to opt into OpenAI strict mode, which requires every property in `required` |
-| `context_management` | `context_management` | Converted from Anthropic dict to OpenAI array format — see the context_management section below |
+| `context_management` | `context_management` | Only `compact_20260112` is converted, see the context_management section below. Other edits run in LiteLLM before the request is translated |
 | `metadata.user_id` | `user` | Extracted from the metadata object and truncated to 64 characters |
 | `metadata.user_id` | `prompt_cache_key` | Same value, truncated to 64 characters (OpenAI's key limit), so one user's requests keep hitting the same prompt cache. Not set when `user_id` is empty or null. A `prompt_cache_key` sent in the request body wins over the derived one |
-| `stop_sequences` | ❌ Not mapped | Dropped silently |
+| `stop_sequences` | ❌ Not mapped | A request with `stop_sequences` goes through chat completions instead of this path |
 | `top_k` | ❌ Not mapped | Dropped silently |
 | `speed` | ❌ Not mapped | Only used to set Anthropic beta headers on the native path |
 
@@ -82,7 +82,7 @@ If `thinking.type` is anything other than `"enabled"`, the `reasoning` field is 
 
 ### context_management
 
-Anthropic uses a nested dict with an `edits` array. OpenAI uses a flat array of compaction objects.
+Anthropic uses a nested dict with an `edits` array. OpenAI uses a flat array of compaction objects. Only `compact_20260112` becomes a compaction object. LiteLLM runs `clear_tool_uses_20250919` on the messages before this translation, as [Context Management](../claude_code_context_management.md) describes.
 
 ```
 Anthropic input:

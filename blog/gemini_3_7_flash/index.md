@@ -7,6 +7,8 @@ authors:
   - krrish
   - ishaan-alt
 description: "day 0 support for Gemini 3.7 Flash on LiteLLM, with launch pricing tracked across Google AI Studio and Vertex AI."
+card_title: "Gemini 3.7 Flash"
+card_summary: "Gemini Flash refresh with launch pricing tracked on Google AI Studio and Vertex AI, no image upgrade needed."
 image: ./hero.png
 tags: [gemini, gemini-3.7-flash, day 0 support, llms]
 hide_table_of_contents: false
@@ -112,7 +114,7 @@ response = completion(
 print(response.choices[0].message.content)
 ```
 
-:::warning Known limitation at launch
+:::warning[Known limitation at launch]
 The `minimal` thinking level is not yet supported on `gemini-3.7-flash`. The Gemini API returns a 400 (`Thinking level MINIMAL is not supported for this model`). Google plans minimal thinking support as a fast follow. All other thinking levels work as expected.
 :::
 

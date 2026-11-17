@@ -4,17 +4,19 @@ import Image from '@theme/IdealImage';
 
 # Spend Tracking
 
+For customer and end-user spend tracking from v1.111, start with [Customer Management](./customers.md). Its customer usage APIs report organization, team, and member totals. The `end_user` field and `/customer/*` examples below refer to [legacy tracking](./legacy_end_users.md).
+
 Track spend for keys, users, and teams across 100+ LLMs.
 
-LiteLLM automatically tracks spend for all known models. See our [model cost map](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json)
+LiteLLM automatically tracks spend for all known models. See how the [model cost map](./model_cost_map) prices each request
 
 Provider-specific cost tracking (e.g., [Vertex AI PayGo / priority pricing](../providers/vertex.md#paygo--priority-cost-tracking), [Bedrock service tiers](../providers/bedrock.md#usage---service-tier), [Azure base model mapping](./custom_pricing.md#set-base_model-for-cost-tracking-eg-azure-deployments)) is applied automatically when the response includes tier metadata.
 
-:::tip Keep Pricing Data Updated
+:::tip[Keep Pricing Data Updated]
 [Sync model pricing data from GitHub](./sync_models_github.md) to ensure accurate cost tracking.
 :::
 
-:::info Cost does not match your provider bill?
+:::info[Cost does not match your provider bill?]
 Use the step-by-step workflow in [Debugging a cost discrepancy](../troubleshoot/cost_discrepancy): align time ranges, compare token categories (including cache), then decide whether the gap is ingestion, formula, or model-map pricing.
 :::
 
@@ -22,7 +24,7 @@ Use the step-by-step workflow in [Debugging a cost discrepancy](../troubleshoot/
 
 **Step 1**
 
-👉 [Setup LiteLLM with a Database](https://docs.litellm.ai/docs/proxy/virtual_keys#setup)
+[Setup LiteLLM with a Database](https://docs.litellm.ai/docs/proxy/virtual_keys#setup)
 
 **Step2** Send `/chat/completions` request
 
@@ -304,7 +306,7 @@ By default, non-admin callers are **scoped to their own data**:
 | Caller role | `/spend/keys` | `/spend/users` |
 |-------------|---------------|----------------|
 | `proxy_admin` / `proxy_admin_viewer` | All keys | All users (or `?user_id=` for one row) |
-| `internal_user` / `internal_user_view_only` | Keys where `user_id` matches the caller | Only the caller's row |
+| `internal_user` / `internal_user_viewer` | Keys where `user_id` matches the caller | Only the caller's row |
 | Non-admin with no `user_id` on the key | Empty list `[]` | Empty list `[]` |
 
 An internal user who passes `?user_id=` for **another** user receives **HTTP 403** (not a silently filtered list).
@@ -319,31 +321,9 @@ curl -X GET 'http://localhost:4000/spend/keys' \
   -H 'Authorization: Bearer <internal-user-key>'
 ```
 
-### Legacy unscoped behavior (upgrade path)
+### Scoping cannot be disabled
 
-Before this scoping change, any authenticated key could list the **full** key/user tables. If you rely on that behavior (for example automation using an `internal_user` key), opt out explicitly:
-
-```yaml title="config.yaml" showLineNumbers
-general_settings:
-  legacy_unscoped_spend_list_endpoints: true
-```
-
-Or set the environment variable:
-
-```shell
-export LITELLM_LEGACY_UNSCOPED_SPEND_LIST_ENDPOINTS=true
-```
-
-When legacy mode is enabled, `/spend/keys` and `/spend/users` behave as they did previously for non-admin callers.
-
-To disable scoping without the legacy flag name:
-
-```yaml
-general_settings:
-  scope_spend_list_endpoints_to_caller: false
-```
-
-See [general_settings reference](./config_settings.md#general_settings---reference) for `scope_spend_list_endpoints_to_caller` and `legacy_unscoped_spend_list_endpoints`.
+Caller scoping on `/spend/keys` and `/spend/users` is unconditional. There is no `general_settings` key or environment variable that restores the pre-scoping behavior where any authenticated key could list the full key and user tables. Automation that needs the full tables must use a `proxy_admin` or `proxy_admin_viewer` key.
 
 :::info
 Prefer `/user/info?user_id=...` or `/global/spend/report` for per-user spend analytics. The list endpoints are intended for admin dashboards and scoped self-service views.
@@ -357,7 +337,7 @@ Example Request:
 
 ```shell title="Daily Spend Breakdown API" showLineNumbers
 curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&end_date=2025-03-27' \
--H 'Authorization: Bearer sk-...'
+-H "Authorization: Bearer $LITELLM_MASTER_KEY"
 ```
 
 ```json title="Daily Spend Breakdown API Response" showLineNumbers
@@ -375,30 +355,127 @@ curl -L -X GET 'http://localhost:4000/user/daily/activity?start_date=2025-03-20&
             "breakdown": {
                 "models": {
                     "{{openai_small}}": {
-                        "spend": 1.82e-05,
-                        "prompt_tokens": 37,
-                        "completion_tokens": 9,
-                        "total_tokens": 46,
-                        "api_requests": 1
+                        "metrics": {
+                            "spend": 0.0177072,
+                            "prompt_tokens": 111,
+                            "completion_tokens": 1711,
+                            "total_tokens": 1822,
+                            "api_requests": 11
+                        },
+                        "metadata": {},
+                        "api_key_breakdown": {}
                     }
                 },
-                "providers": { "openai": { ... }, "azure_ai": { ... } },
-                "api_keys": { "3126b6eaf1...": { ... } }
+                "providers": {
+                    "openai": {
+                        "metrics": { "spend": 0.0177072 },
+                        "metadata": {},
+                        "api_key_breakdown": {}
+                    }
+                },
+                "api_keys": {
+                    "3126b6eaf1...": {
+                        "metrics": { "spend": 0.0177072 },
+                        "metadata": { "key_alias": "my-key", "key_exists": true }
+                    }
+                }
             }
         }
     ],
     "metadata": {
-        "total_spend": 0.7274667,
-        "total_prompt_tokens": 280990,
-        "total_completion_tokens": 376674,
-        "total_api_requests": 14
+        "total_spend": 0.0177072,
+        "total_prompt_tokens": 111,
+        "total_completion_tokens": 1711,
+        "total_api_requests": 11
     }
 }
 ```
 
+The example shows selected response fields. Each breakdown entry nests its values under `metrics` and its descriptive fields under `metadata`.
+
+### Missing identities and API key filters
+
+Daily reports, drilldowns and exports keep usage with missing model or key values in fallback buckets. Zero-spend requests and negative adjustments remain part of the totals.
+
+| Stored value | Reporting identity |
+| --- | --- |
+| Empty or null model | `unknown-model` |
+| Empty or null model group, with a known model | Model name |
+| Empty or null model group and model | `unknown-model-group` |
+| Empty or null API key | `unattributed` |
+| Literal API key `unattributed` | `raw:unattributed` |
+| API key starting with `raw:` | The key with one additional `raw:` prefix |
+| Other nonempty values, including whitespace | Unchanged |
+
+Literal model names that equal fallback labels share those model buckets. The `unattributed` key bucket has no clickable key details.
+
+Pass the reporting identity to the `api_key` query parameter. For example, to filter the literal stored key `unattributed`, use `raw:unattributed`. For the literal stored key `raw:example`, use `raw:raw:example`. To select missing keys instead, use `unattributed`.
+
+```bash title="Filter an escaped API key identity"
+curl --get 'http://localhost:4000/user/daily/activity/aggregated' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  --data-urlencode 'start_date=2025-03-20' \
+  --data-urlencode 'end_date=2025-03-27' \
+  --data-urlencode 'api_key=raw:unattributed'
+```
+
+:::warning Export compatibility
+
+Daily activity exports, such as `/user/daily/activity/export?export_type=daily_with_keys&format=json`, replace missing model and key values with the bucket labels above and escape reserved API key IDs. Consumers that expect null values or unescaped reserved key IDs must adapt. Use the exported reporting identity unchanged when filtering daily reports.
+
+:::
+
+### Guardrail spend breakdown
+
+`GET /user/daily/activity/aggregated`, `GET /team/daily/activity/aggregated` and `GET /organization/daily/activity/aggregated` return each day's guardrail costs in `breakdown.guardrails`, keyed by guardrail ID. The breakdown follows the response's date, entity and API key filters.
+
+```bash title="Get daily guardrail spend"
+curl --get 'http://localhost:4000/user/daily/activity/aggregated' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  --data-urlencode 'start_date=2025-03-20' \
+  --data-urlencode 'end_date=2025-03-27'
+```
+
+Use `/team/daily/activity/aggregated` or `/organization/daily/activity/aggregated` in the same request for those scopes. The following excerpt shows one day's guardrail breakdown.
+
+```json title="Guardrail spend response excerpt"
+{
+  "results": [
+    {
+      "date": "2025-03-27",
+      "metrics": { "spend": 0.05 },
+      "breakdown": {
+        "api_keys": {
+          "3126b6eaf1...": {
+            "metrics": { "spend": 0.05 },
+            "metadata": { "key_alias": "my-key", "key_exists": true }
+          }
+        },
+        "guardrails": {
+          "guardrail-id": {
+            "metrics": { "spend": 0.01, "untracked_units": 2 },
+            "metadata": { "guardrail_name": "content-safety" },
+            "api_key_breakdown": {
+              "3126b6eaf1...": {
+                "metrics": { "spend": 0.01, "untracked_units": 2 },
+                "metadata": { "key_alias": "my-key", "key_exists": true }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+Guardrail spend is already included in key and model spend. Do not add it on top of those totals. `untracked_units` counts guardrail units with no known price, so nonzero units mean the reported spend is a lower bound, not the full guardrail cost.
+
+Each guardrail's `api_key_breakdown` includes only keys in that day's `breakdown.api_keys`. The guardrail's total still covers all matching keys, even when the per-key list is truncated. A nonempty `model` filter leaves `guardrails` empty because guardrail costs are not attributed per model. If the guardrail query fails with a database error, the daily response still succeeds with an empty guardrail breakdown.
+
 ### API Reference
 
-See our [Swagger API](https://litellm-api.up.railway.app/#/Budget%20%26%20Spend%20Tracking/get_user_daily_activity_user_daily_activity_get) for more details on the `/user/daily/activity` endpoint
+See our [Swagger API](https://docs.litellm.ai/api-reference/#/Budget%20%26%20Spend%20Tracking/get_user_daily_activity_user_daily_activity_get) for more details on the `/user/daily/activity` endpoint
 
 :::info
 Request counts on this endpoint are derived from spend logs, so they only cover requests that were logged and they record each upstream attempt separately. For counts of what the gateway actually answered, including requests rejected before a key or model was resolved, use [`/gateway/daily/activity`](./endpoint_activity.md#gateway-daily-activity). The two are not expected to match
@@ -406,8 +483,8 @@ Request counts on this endpoint are derived from spend logs, so they only cover 
 
 ## Custom Tags
 
-:::tip See Full Request Tags Documentation
-For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page.
+:::tip[See Full Request Tags Documentation]
+For full documentation on all tag options including `x-litellm-tags` header, request body `tags`, and config-based tags, see the dedicated [Request Tags](./request_tags.md) page. To tag requests from the W3C `baggage` header that OpenTelemetry clients already send, see [Map Baggage Values to Tags](./tag_budgets.md#map-baggage-values-to-tags).
 :::
 
 Requirements:
@@ -475,7 +552,7 @@ response = client.chat.completions.create(
     ],
     extra_body={
         "metadata": {
-            "tags": ["model-anthropic-claude-v2.1", "app-ishaan-prod"] # 👈 Key Change
+            "tags": ["model-anthropic-claude-v2.1", "app-ishaan-prod"] # Key Change
         }
     }
 )
@@ -506,7 +583,7 @@ async function runOpenAI() {
         },
       ],
       metadata: {
-        tags: ["model-anthropic-claude-v2.1", "app-ishaan-prod"], // 👈 Key Change
+        tags: ["model-anthropic-claude-v2.1", "app-ishaan-prod"], // Key Change
       },
     });
     console.log(response);
@@ -599,7 +676,7 @@ litellm_settings:
   disable_add_user_agent_to_request_tags: true
 ```
 
-## ✨ (Enterprise) Generate Spend Reports
+## (Enterprise) Generate Spend Reports {#-enterprise-generate-spend-reports}
 
 Use this to charge other teams, customers, users
 
@@ -611,7 +688,7 @@ Use the `/global/spend/report` endpoint to get spend reports
 
 #### Example Request
 
-👉 Key Change: Specify `group_by=team`
+Key Change: Specify `group_by=team`
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&group_by=team' \
@@ -741,7 +818,7 @@ Customer [this is `user` passed to `/chat/completions` request](#how-to-track-sp
 
 #### Example Request
 
-👉 Key Change: Specify `group_by=customer`
+Key Change: Specify `group_by=customer`
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&group_by=customer' \
@@ -794,7 +871,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 <TabItem value="per key" label="Spend for Specific API Key">
 
-👉 Key Change: Specify `api_key=sk-<your-litellm-api-key>`
+Key Change: Specify `api_key=sk-<your-litellm-api-key>`
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-06-30&api_key=sk-<your-litellm-api-key>' \
@@ -834,11 +911,11 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 :::info
 
-Internal User (Key Owner): This is the value of `user_id` passed when calling [`/key/generate`](https://litellm-api.up.railway.app/#/key%20management/generate_key_fn_key_generate_post)
+Internal User (Key Owner): This is the value of `user_id` passed when calling [`/key/generate`](https://docs.litellm.ai/api-reference/#/key%20management/generate_key_fn_key_generate_post)
 
 :::
 
-👉 Key Change: Specify `internal_user_id=ishaan`
+Key Change: Specify `internal_user_id=ishaan`
 
 ```shell
 curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end_date=2024-12-30&internal_user_id=ishaan' \
@@ -910,7 +987,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 </Tabs>
 
-## 📊 Spend Logs API - Individual Transaction Logs
+## Spend Logs API - Individual Transaction Logs {#-spend-logs-api---individual-transaction-logs}
 
 The `/spend/logs` endpoint now supports a `summarize` parameter to control data format when using date filters.
 
@@ -971,11 +1048,9 @@ There are two ways to read every matching row. When `total_is_capped` is `true`,
 
 With `group_by_session=true`, pagination is bounded to the same 10,000-row window and a page starting past it returns no rows, so chunk the time window instead of paging past the cap.
 
-## ✨ Custom Spend Log metadata
+## Custom Spend Log metadata
 
 Log specific key,value pairs as part of the metadata for a spend log
-
-<EnterpriseFeature feature="Logging specific key,value pairs in spend logs metadata" />
 
 Requirements: 
 
@@ -1104,7 +1179,7 @@ async function runOpenAI() {
         },
       ],
       metadata: {
-        spend_logs_metadata: { // 👈 Key Change
+        spend_logs_metadata: { // Key Change
             hello: "world"
         }
       }
@@ -1264,7 +1339,7 @@ curl -X GET "http://0.0.0.0:4000/spend/logs?request_id=<your-call-id" \
         "metadata": {
             "user_api_key": "example-api-key-123",
             "user_api_key_alias": null,
-            "spend_logs_metadata": { # 👈 LOGGED CUSTOM METADATA
+            "spend_logs_metadata": { # LOGGED CUSTOM METADATA
                 "hello": "world"
             },
             "user_api_key_team_id": null,

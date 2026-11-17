@@ -1,3 +1,9 @@
+---
+title: "vLLM Batch and Files API with LiteLLM"
+sidebar_label: "vLLM - Batch + Files API"
+description: "Run OpenAI Batch API jobs against a hosted vLLM server through the LiteLLM AI Gateway, which stores the input file, runs each line and serves the results."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -54,7 +60,7 @@ Every line has to name the same `url`, and it has to match the `endpoint` you gi
 
 ### 4. Upload File & Create Batch
 
-:::tip Model Routing
+:::tip[Model Routing]
 The upload has to name the deployment, either with the `x-litellm-model` header, the `?model=` query parameter, or the `target_model_names` form field. Use `purpose=batch`: an upload with another purpose to a deployment LiteLLM runs batches for answers 400, because there is no server to keep the file on. The returned file id is a long base64 id, not an OpenAI-style `file-...` id; batch operations on it route to the same deployment automatically
 :::
 
@@ -65,7 +71,7 @@ The upload has to name the deployment, either with the `x-litellm-model` header,
 
 ```bash
 curl http://localhost:4000/v1/files \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "x-litellm-model: my-vllm-model" \
   -F purpose="batch" \
   -F file="@batch_requests.jsonl"
@@ -75,7 +81,7 @@ curl http://localhost:4000/v1/files \
 
 ```bash
 curl http://localhost:4000/v1/batches \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "input_file_id": "<file id from the upload>",
@@ -88,24 +94,26 @@ curl http://localhost:4000/v1/batches \
 
 ```bash
 curl http://localhost:4000/v1/batches/<batch id> \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 **Download the results**
 
 ```bash
 curl http://localhost:4000/v1/files/<output_file_id>/content \
-  -H "Authorization: Bearer sk-1234"
+  -H "Authorization: Bearer $LITELLM_API_KEY"
 ```
 
 </TabItem>
 <TabItem value="python" label="OpenAI SDK">
 
 ```python
+import os
 import time
+
 from openai import OpenAI
 
-client = OpenAI(api_key="sk-1234", base_url="http://localhost:4000/v1")
+client = OpenAI(api_key=os.environ["LITELLM_API_KEY"], base_url="http://localhost:4000/v1")
 
 input_file = client.files.create(
     file=open("batch_requests.jsonl", "rb"),

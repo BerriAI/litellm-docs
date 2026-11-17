@@ -1,3 +1,8 @@
+---
+title: "Guardrail Policy Flow Builder in LiteLLM"
+sidebar_label: "Policy Flow Builder"
+description: "Chain guardrails into ordered steps with the LiteLLM Policy Flow Builder and choose what runs on pass, fail or error, with fallbacks and retries."
+---
 # Policy Flow Builder
 
 The Policy Flow Builder lets you design guardrail pipelines with **conditional execution**. Instead of running guardrails independently, you chain them into ordered steps and control what happens when each guardrail **passes**, **fails a policy check** (content intervention), or hits a **technical error** (e.g. timeout, unreachable provider, missing guardrail).

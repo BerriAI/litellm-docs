@@ -1,3 +1,9 @@
+---
+title: "SAP Generative AI Hub with LiteLLM: Setup"
+sidebar_label: "SAP Generative AI Hub"
+description: "Call models on SAP Generative AI Hub's Orchestration Service via LiteLLM from the Python SDK or AI Gateway, with AI Core service key auth and streaming."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -21,7 +27,7 @@ Before you begin, ensure you have:
 3. **Service Key** created for your AI Core instance (this contains your credentials)
 4. **Resource Group** with deployed AI models (check with your SAP administrator)
 
-:::tip Where to Find Your Credentials
+:::tip[Where to Find Your Credentials]
 Your credentials come from the **Service Key** you create in SAP BTP Cockpit:
 
 1. Navigate to your **Subaccount** → **Instances and Subscriptions**
@@ -42,7 +48,7 @@ The service key JSON looks like this:
 }
 ```
 
-:::info Resource Group
+:::info[Resource Group]
 The resource group is typically configured separately in your AI Core deployment, not in the service key itself. You can set it via the `AICORE_RESOURCE_GROUP` environment variable (defaults to "default").
 :::
 
@@ -165,7 +171,7 @@ try:
         max_tokens=20
     )
     print(f"✓ API Response: {response.choices[0].message.content}")
-    print("\n🎉 Setup complete! You're ready to use SAP Gen AI Hub with LiteLLM.")
+    print("\n Setup complete! You're ready to use SAP Gen AI Hub with LiteLLM.")
 except Exception as e:
     print(f"✗ API Error: {e}")
     print("\nTroubleshooting tips:")
@@ -192,7 +198,7 @@ python verify_sap_setup.py
 
 ✓ API Response: Connection successful!
 
-🎉 Setup complete! You're ready to use SAP Gen AI Hub with LiteLLM.
+Setup complete! You're ready to use SAP Gen AI Hub with LiteLLM.
 ```
 
 ## Authentication
@@ -487,7 +493,7 @@ response = completion(
 print(response.choices[0].message.content)
 ```
 
-:::note SAP Platform Requirement
+:::note[SAP Platform Requirement]
 When using `json_object` type, SAP's orchestration service requires the word "json" to appear in your prompt. This ensures explicit intent for JSON formatting. For schema-validated output without this requirement, use `json_schema` instead (recommended).
 :::
 
@@ -781,7 +787,7 @@ print(response.choices[0].message.content)
 
 For the complete and up-to-date list of available models provided by SAP Gen AI Hub, please refer to the [SAP AI Core Generative AI Hub documentation](https://help.sap.com/docs/sap-ai-core/sap-ai-core-service-guide/models-and-scenarios-in-generative-ai-hub).
 
-:::info Model Availability
+:::info[Model Availability]
 Model availability varies by SAP deployment region and your subscription. Contact your SAP administrator to confirm which models are available in your environment.
 :::
 

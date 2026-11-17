@@ -31,12 +31,7 @@ Before contributing code to LiteLLM, you must sign our [Contributor License Agre
 
 ## Commit and Branch Conventions
 
-LiteLLM enforces two community specs:
-
-- **Commits** follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/): `<type>(<scope>)!: <description>`
-- **Branches** follow [Conventional Branches](https://conventional-branch.github.io/): `<type>/<description>`
-
-Enforcement happens in two places: opt-in local git hooks in `.githooks/`, and a required CI check on the PR title (since squash-merge uses the PR title as the commit subject).
+Commit subjects follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/). They are enforced by the opt-in local `commit-msg` hook and the required CI check on PR titles, since squash-merge uses the PR title as the commit subject.
 
 ### Commit message format
 
@@ -66,24 +61,7 @@ PR titles must follow the same format, because squash-merge uses the PR title as
 
 ### Branch naming
 
-Format: `<type>/<short-description>` where `<type>` is one of `feature`, `bugfix`, `hotfix`, `release`, `chore`.
-
-```
-feature/weighted-round-robin
-bugfix/streaming-empty-chunks
-chore/bump-ruff
-hotfix/auth-bypass
-release/v1.45.0
-```
-
-Branches always allowed (the `pre-push` hook bypasses them):
-
-- `main`
-- `litellm_internal_staging`
-- `dependabot/*`
-- `gh-readonly-queue/*`
-
-Tag pushes and branch deletions are also skipped.
+Internal contributors branch off `main` with a `litellm_` prefix and no `/`, for example `litellm_weighted_round_robin`. Fork branches can be named anything.
 
 ### Installing the hooks
 
@@ -93,16 +71,12 @@ The hooks live in `.githooks/` and are opt-in. Run once per clone:
 make install-hooks
 ```
 
-This sets `core.hooksPath=.githooks` for the local repository. After that:
+This sets `core.hooksPath=.githooks` for the local repository. After that, `git commit` runs `commit-msg`, which validates the subject line.
 
-- `git commit` runs `commit-msg`, which validates the subject line.
-- `git push` runs `pre-push`, which validates branch names.
-
-In a rare emergency you can bypass either hook per command:
+In a rare emergency you can bypass the commit hook for a single command:
 
 ```shell
 git commit --no-verify -m "..."
-git push   --no-verify
 ```
 
 To uninstall: `git config --unset core.hooksPath`.
@@ -127,7 +101,7 @@ uv sync --group dev --extra proxy
 
 ### 2. Adding tests
 
-- Add your tests to the [`tests/test_litellm/` directory](https://github.com/BerriAI/litellm/tree/main/tests/litellm).
+- Add your tests to the [`tests/unit/` directory](https://github.com/BerriAI/litellm/tree/main/tests/unit).
 - This directory mirrors the `litellm/` directory 1:1 and should **only** contain mocked tests.
 - **Do not** add real LLM API calls to this directory.
 
@@ -176,7 +150,7 @@ git clone https://github.com/BerriAI/litellm.git
 Step 2: Navigate to the UI dashboard directory
 
 ```shell
-cd ui/litellm-dashboard
+cd litellm/litellm/ui/litellm-dashboard
 ```
 
 Step 3: Install dependencies

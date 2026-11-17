@@ -1,3 +1,7 @@
+---
+sidebar_label: "Knowledge Bases"
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
@@ -8,9 +12,7 @@ import Image from '@theme/IdealImage';
   img={require('../../img/kb.png')}
   style={{width: '100%', display: 'block', margin: '2rem auto'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  Use Vector Stores with any LiteLLM supported model
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>Use Vector Stores with any LiteLLM supported model</p>
 
 
 LiteLLM integrates with vector stores, allowing your models to access your organization's data for more accurate and contextually relevant responses.
@@ -302,9 +304,7 @@ After completing a request with a vector store, navigate to the `Logs` page on L
   img={require('../../img/kb_4.png')}
   style={{width: '80%'}}
 />
-<p style={{textAlign: 'left', color: '#666'}}>
-  LiteLLM Logs Page: Vector Store Usage
-</p>
+<p style={{textAlign: 'left', color: '#666'}}>LiteLLM Logs Page: Vector Store Usage</p>
 
 
 ### Listing available vector stores

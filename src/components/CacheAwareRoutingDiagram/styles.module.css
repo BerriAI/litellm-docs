@@ -1,0 +1,119 @@
+.figure {
+  max-width: 640px;
+  margin: 1.25rem auto;
+}
+
+.viewport {
+  overflow-x: auto;
+}
+
+.diagram {
+  display: block;
+  width: 100%;
+  min-width: 580px;
+  height: auto;
+  font-family: var(--ifm-font-family-base);
+  --session: var(--ifm-color-primary-dark);
+  --discovery: #326ce5;
+  --round-robin: var(--ifm-color-emphasis-600);
+}
+
+:global([data-theme='dark']) .diagram {
+  --session: var(--ifm-color-primary-light);
+  --discovery: #79a5ff;
+}
+
+.card {
+  fill: var(--ifm-background-surface-color);
+  stroke: var(--ifm-color-emphasis-300);
+  stroke-width: 1.5;
+}
+
+.cluster {
+  fill: rgba(50, 108, 229, 0.035);
+  stroke: var(--ifm-color-emphasis-300);
+  stroke-dasharray: 6 5;
+}
+
+.gateway,
+.selectedPod {
+  fill: rgba(75, 166, 140, 0.09);
+  stroke: var(--session);
+  stroke-width: 1.8;
+}
+
+.title {
+  fill: var(--ifm-font-color-base);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.subtitle,
+.legend,
+.clusterLabel {
+  fill: var(--ifm-color-emphasis-700);
+  font-size: 14px;
+}
+
+.resourceTitle {
+  fill: var(--ifm-font-color-base);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.resourceSubtitle {
+  fill: var(--ifm-color-emphasis-700);
+  font-size: 14px;
+}
+
+.session,
+.roundRobin,
+.discovery {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.session {
+  stroke: var(--session);
+  stroke-width: 2.5;
+}
+
+.roundRobin {
+  stroke: var(--round-robin);
+  stroke-width: 1.6;
+  stroke-dasharray: 5 5;
+}
+
+.discovery {
+  stroke: var(--discovery);
+  stroke-width: 1.7;
+  stroke-dasharray: 4 5;
+}
+
+.sessionLabel,
+.connectorLabel {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sessionLabel,
+.sessionArrow {
+  fill: var(--session);
+}
+
+.connectorLabel,
+.discoveryArrow {
+  fill: var(--discovery);
+}
+
+.roundRobinArrow {
+  fill: var(--round-robin);
+}
+
+.figure figcaption {
+  margin-top: 0.5rem;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}

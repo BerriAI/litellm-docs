@@ -1,3 +1,9 @@
+---
+title: "Nscale API with LiteLLM: EU Sovereign Inference"
+sidebar_label: "Nscale (EU Sovereign)"
+description: "Generate text with Llama 4 Scout and Llama 3.3 70B and images with Stable Diffusion XL on Nscale's EU sovereign cloud, from the Python SDK or AI Gateway."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -27,7 +33,7 @@ os.environ["NSCALE_API_KEY"] = ""  # your Nscale API key
 ## Explore Available Models  
 
 Explore our full list of text and multimodal AI models, all available at highly competitive pricing:
-📚 [Full List of Models](https://docs.nscale.com/docs/inference/serverless-models/current)  
+[Full List of Models](https://docs.nscale.com/docs/inference/serverless-models/current)  
 
 
 ## Key Features

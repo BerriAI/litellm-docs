@@ -1,0 +1,84 @@
+.hero {
+  --hero-bg: #f7f8fc;
+  --hero-ink: #1b2236;
+  --hero-muted: #5b6680;
+  --hero-baseline: #c9cfdc;
+  --hero-baseline-ink: #2f3a52;
+  --hero-core: #0117be;
+  --hero-saved: #0117be;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background: var(--hero-bg);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+
+:global([data-theme='dark']) .hero {
+  --hero-bg: #12162a;
+  --hero-ink: #eef1fa;
+  --hero-muted: #a9b3cc;
+  --hero-baseline: #3a4360;
+  --hero-baseline-ink: #e3e7f2;
+  --hero-core: #3f63ff;
+  --hero-saved: #8ea3ff;
+}
+
+.hero svg {
+  display: block;
+}
+
+.metric {
+  fill: var(--hero-ink);
+  font-size: 68px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.caption {
+  fill: var(--hero-muted);
+  font-size: 26px;
+}
+
+.label {
+  fill: var(--hero-ink);
+  font-size: 30px;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.baseline {
+  fill: var(--hero-baseline);
+}
+
+.baselineValue {
+  fill: var(--hero-baseline-ink);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.core {
+  fill: var(--hero-core);
+}
+
+.coreValue {
+  fill: #fff;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.saved {
+  fill: none;
+  stroke: var(--hero-saved);
+  stroke-width: 2;
+  stroke-dasharray: 8 6;
+}
+
+.savedValue {
+  fill: var(--hero-saved);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.footnote {
+  fill: var(--hero-muted);
+  font-size: 22px;
+}
