@@ -200,6 +200,8 @@ curl -s http://localhost:4000/v1/chat/completions -H "Authorization: Bearer $LIT
 
 Ids that don't start with `openai/` (e.g. `zai-org/GLM-5.3-Flash`) get the prefix once. A custom prefix works in exactly the same way so `model_name: my-vllm/*` over `model: openai/*` will list `my-vllm/openai/gpt-oss-120b` and a catch all `model_name: "*"` over `openai/*` will list `openai/gpt-oss-120b`.
 
+A catch-all deployment with `model: "*"` and `custom_llm_provider: openai` removes one `openai/` from the matched part of the name before it calls the server, so its names carry one more `openai/` for those ids. `model_name: my-*` over it will list `my-openai/openai/gpt-oss-120b`, `model_name: openai/*` will list `openai/openai/openai/gpt-oss-120b`, and ids such as `zai-org/GLM-5.3-Flash` keep their usual names (`my-zai-org/GLM-5.3-Flash`).
+
 A `hosted_vllm/*` deployment lists the same way, so a `model_name: openai/*` over `model: hosted_vllm/*` deployment will list `openai/openai/gpt-oss-120b`. A deployment that sets `custom_llm_provider: hosted_vllm` on `model: openai/*` will send the `openai/` segment to the server as-is, so it will only list the server ids that start with `openai/` (e.g. `model_name: my-vllm/*` lists `my-vllm/gpt-oss-120b`) and will not list ids such as `zai-org/GLM-5.3-Flash` that it can't reach.
 
 A key or team restricted to named models must have the named model in its `models`. Grant `openai/openai/gpt-oss-120b` not `openai/gpt-oss-120b`.
