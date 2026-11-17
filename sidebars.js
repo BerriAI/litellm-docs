@@ -441,6 +441,7 @@ const sidebars = {
                   label: "High Availability",
                   items: [
                     { type: "doc", id: "proxy/deploy/ha/overview", label: "Overview" },
+                    "proxy/deploy/ha/haproxy",
                     "proxy/deploy/ha/blue_green",
                     "proxy/deploy/ha/canary",
                     {
