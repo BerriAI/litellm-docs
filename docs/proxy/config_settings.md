@@ -627,9 +627,9 @@ router_settings:
 
 Upstream 429 and 529 responses mark a deployment congested. These trigger statuses are fixed. The queue applies after ordinary routing selects an eligible deployment. It does not alter deployment selection, make cooling deployments eligible, replace retry backoff, or change fallback policy.
 
-Applications set the existing request `priority`. Lower values receive queue grants first, with FIFO ordering for ties. Provider arrival and completion order can differ because requests proceed concurrently. Enabling the feature requires `default_priority`, which applies to requests without an explicit priority. Caller-owned credentials retain their existing routing behavior.
+Applications set the existing request `priority`. Lower values receive queue grants first, with FIFO ordering for ties. Provider arrival and completion order can differ because requests proceed concurrently. Enabling the feature requires `default_priority`, which applies to requests without an explicit priority. Caller-owned credentials retain their existing routing behavior. The queue uses caller-supplied priorities and does not reserve waiting slots per tenant.
 
-Queue overflow returns 503. Exhausting `queue_timeout`, the cumulative queue wait across the request's attempts, returns 408. These queue rejections end the request without another retry or fallback. Ordinary retry sleeping is separate from queue waiting and does not consume `queue_timeout`. Provider retry delays and the request's total deadline still apply.
+Queue overflow returns 503. Exhausting `queue_timeout`, the cumulative queue wait across the request's attempts, returns 408. These queue rejections end the request without another retry or fallback. A selected deployment can therefore time out even when another deployment could serve the request. Ordinary retry sleeping is separate from queue waiting and does not consume `queue_timeout`. Provider retry delays and the request's total deadline still apply.
 
 When Redis coordination fails or a queue operation times out, requests resume ordinary routing and retries with their remaining budgets. Priority ordering is best-effort during that period. Ordinary cooldown and rate-limit behavior still apply. The existing Redis circuit breaker can delay recovery after Redis becomes available again.
 
