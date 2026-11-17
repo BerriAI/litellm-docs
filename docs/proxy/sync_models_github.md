@@ -1,7 +1,5 @@
 # Auto Sync New Models (Day-0 Launches)
 
-For missing prices or a newly released model, start with [Pulling a New Model on Day-0](./new_model_day_0).
-
 Automatically keep your model pricing and context window data up to date without restarting your service. **This allows you to add day-0 support for new models without restarting your service.**
 
 ## Overview
