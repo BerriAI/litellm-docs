@@ -28,6 +28,10 @@ The value is a fraction between 0 and 10, so `0.02` is 2%. A fixed amount per re
 
 The surcharge is applied on top of any [provider or global margin](../provider_margins.md). A request with a base cost of $1.00 and a 2% customer surcharge is billed at $1.02.
 
+## Surcharge per application
+
+An application can carry its own surcharge, which replaces the gateway-wide one for that application's customer requests. See [Give an application its own surcharge](./applications.md#give-an-application-its-own-surcharge).
+
 ## How spend and budgets count it
 
 The surcharge is part of spend. Customer organization, customer team and customer member spend all include it, and so do key, team and user spend for the same request. Customer budgets are enforced against the billed amount, so a $50 budget is used up by $50 of billed spend and not by $50 of base cost.
