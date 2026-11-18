@@ -18,6 +18,8 @@ To help you manage those skills, we've added:
 - Version history
 - Download tracking
 
+Skills Gateway ships in [LiteLLM v1.110.0](/release_notes/v1.110.0/v1-110-0). Upgrade to that release or later to use these features.
+
 {/* truncate */}
 
 ## Upload a complete skill
