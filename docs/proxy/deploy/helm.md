@@ -9,6 +9,8 @@ import TabItem from '@theme/TabItem';
 
 # Deploy with Helm
 
+For new model prices, [reload pricing without upgrading the image or Helm chart](../sync_models_github).
+
 {/* keep-version-note */}
 
 ## Prerequisites
