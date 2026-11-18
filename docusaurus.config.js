@@ -60,6 +60,7 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          {from: '/docs/liteagents', to: '/docs/harness'},
           {from: '/docs/proxy/customer_portal/api_reference_guide', to: '/docs/proxy/customer_management/track-customer-spend'},
           {from: '/docs/proxy/customer_portal/track-customer-spend', to: '/docs/proxy/customer_management/track-customer-spend'},
           {from: '/docs/proxy/customer_portal/api_reference', to: '/docs/proxy/customer_management/api_reference'},

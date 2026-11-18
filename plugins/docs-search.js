@@ -74,7 +74,7 @@ function extractSections(html, url, metadata = {}) {
 }
 
 function sdkDocIds(sidebars) {
-  const ids = new Set(['liteagents']);
+  const ids = new Set();
   function visit(item) {
     if (item.type === 'doc') ids.add(item.id);
     if (item.type === 'category') {

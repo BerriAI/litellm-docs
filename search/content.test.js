@@ -95,12 +95,11 @@ test('blog extraction preserves article headings and code without author or navi
   assert.deepEqual(extractSections('<meta http-equiv="refresh" content="0;url=/elsewhere">' + html, '/blog/redirect'), []);
 });
 
-test('SDK scope follows the Python SDK subtree and includes the standalone LiteAgents doc', () => {
+test('SDK scope follows the Python SDK subtree, including agents', () => {
   const docs = [
     ['python_sdk', '/docs/python_sdk'],
     ['response_api', '/docs/response_api'],
     ['harness/index', '/docs/harness'],
-    ['liteagents', '/docs/liteagents'],
     ['gateway_overview', '/docs/gateway_overview'],
   ].map(([id, permalink]) => ({id, permalink, title: id, sidebar: 'tutorialSidebar'}));
   const pages = collectPages({
@@ -109,14 +108,13 @@ test('SDK scope follows the Python SDK subtree and includes the standalone LiteA
         {type: 'category', items: [{type: 'doc', id: 'response_api'}, {type: 'doc', id: 'harness/index'}]},
         {type: 'link', href: '/docs/gateway_overview'},
       ]},
-      {type: 'doc', id: 'liteagents'},
       {type: 'doc', id: 'gateway_overview'},
     ]}}]}},
   });
   const html = '<article class="theme-doc-markdown"><h1>SDK guide</h1><p>Run a harness.</p></article>';
   const sections = [...pages].flatMap(([url, metadata]) => extractSections(html, url, metadata));
   assert.deepEqual(sections.filter(section => section.sdk).map(section => section.url),
-    ['/docs/python_sdk', '/docs/response_api', '/docs/harness', '/docs/liteagents']);
+    ['/docs/python_sdk', '/docs/response_api', '/docs/harness']);
 });
 
 test('SDK scope includes shared completion guides and the Requests & Responses subtree, not proxy guides', () => {
