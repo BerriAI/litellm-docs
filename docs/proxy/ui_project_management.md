@@ -20,6 +20,7 @@ For detailed information about the project API and configuration, see [Project M
 
 ## Prerequisites
 
+- A valid LiteLLM Enterprise license
 - Admin or Team Admin access
 - At least one team created (projects belong to teams)
 - The LiteLLM Admin UI running locally or remote
@@ -27,6 +28,10 @@ For detailed information about the project API and configuration, see [Project M
 ## Create and Manage Projects
 
 Projects appear in the Admin UI sidebar under Access Control for Proxy Admins, Org Admins, and Team Admins. Create and manage them from the Projects page.
+
+Without a valid Enterprise license, the Projects page shows an Enterprise notice and a trial link instead of project controls.
+
+![Projects page with the Enterprise license notice](/img/projects-ga/projects-enterprise-notice.jpg)
 
 ### Step 1: Navigate to Projects
 
