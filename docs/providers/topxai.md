@@ -8,6 +8,8 @@ import TabItem from '@theme/TabItem';
 
 # TopxAI
 
+<SinceVersion v="1.112.0" />
+
 https://api.topxai.xyz/docs
 
 :::tip
