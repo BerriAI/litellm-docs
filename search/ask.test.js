@@ -386,7 +386,7 @@ test('100 authenticated bot questions from one worker bypass website quotas with
 test('bot tracing uses its dedicated key and keeps website tracing and agent names unchanged', async t => {
   const {createHmac} = require('node:crypto');
   const {OTLPTraceExporter} = require('@opentelemetry/exporter-trace-otlp-proto');
-  const {AGENT_NAME} = require('./tracing');
+  const agentName = 'litellm-docs-search';
   const spans = [];
   t.mock.method(OTLPTraceExporter.prototype, 'export', (batch, callback) => {spans.push(...batch); callback({code: 0});});
   const env = {DOCS_AI_PUBLIC_ENABLED: 'true', LITELLM_PROXY_API_BASE: config.baseUrl, LITELLM_PROXY_API_KEY: config.apiKey,
@@ -404,11 +404,12 @@ test('bot tracing uses its dedicated key and keeps website tracing and agent nam
       const response = await fetch(url, post(question, {headers}));
       assert.equal(response.status, 200);
       const traceContext = response.headers.get('x-docs-trace-context');
+      assert.ok(traceContext, 'The answer should carry a signed Lens trace reference');
       const [traceId, spanId, signature] = traceContext.split('.');
       const key = service ? traced.botTracingKey : traced.tracing.key;
-      assert.equal(signature, createHmac('sha256', key).update(`${AGENT_NAME}:conversation:v1:${traceId}.${spanId}`).digest('base64url'));
+      assert.equal(signature, createHmac('sha256', key).update(`${agentName}:conversation:v1:${traceId}.${spanId}`).digest('base64url'));
       const root = spans.find(span => span.spanContext().spanId === spanId);
-      assert.equal(root.attributes['gen_ai.agent.name'], AGENT_NAME);
+      assert.equal(root.attributes['gen_ai.agent.name'], agentName);
       assert.equal(root.attributes['docs.search.surface'], service ? 'slack' : undefined);
       const answer = await response.text();
       assert.ok(!answer.includes(key));
