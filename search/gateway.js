@@ -10,6 +10,7 @@ function gatewayError(name, message) {
 }
 
 function createModelCaller({config, signal, fetchImpl = fetch}) {
+  const {createToolAnswerReader, parseToolAnswer} = require('./tool-answer');
   const cloudflareConfigured = config.cfAccessClientId !== undefined || config.cfAccessClientSecret !== undefined;
   const validCredential = value => typeof value === 'string' && /^[\x21-\x7e]+$/.test(value);
   let endpoint;
@@ -31,7 +32,7 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
   const assertSafe = text => {
     if (secrets.some(secret => text.includes(secret))) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
   };
-  async function turn(messages, {toolDefinitions, toolChoice = 'auto', onDelta, timeout = 25000} = {}) {
+  async function turn(messages, {toolDefinitions, toolChoice = 'auto', onDelta, answerTool, timeout = 25000} = {}) {
     const requestSignal = signal ? AbortSignal.any([signal, AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout);
     requestSignal.throwIfAborted();
     const response = await fetchImpl(endpoint.href, {
@@ -55,7 +56,7 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
       }
       throw gatewayError('GatewayHTTPError', 'Gateway request failed');
     }
-    let message, finish, pending = '';
+    let message, finish, pending = '', answerReader, answerArgumentsRead = 0;
     const deliver = async text => {
       pending += text; assertSafe(pending);
       // Retain enough suffix to detect a configured credential split across deltas.
@@ -68,6 +69,7 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
     if (response.headers.get('content-type')?.includes('text/event-stream')) {
       const {readEvents} = await import('./stream.mjs');
       message = {role: 'assistant', content: ''};
+      const toolCalls = new Map();
       let completed = false;
       for await (const frame of readEvents(response.body, requestSignal)) {
         if (frame.data === '[DONE]') {completed = true; break;}
@@ -80,9 +82,35 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
         const delta = choice.delta || {};
         if (typeof delta.content === 'string') {
           message.content += delta.content;
-          await deliver(delta.content);
+          if (!answerTool) await deliver(delta.content);
         }
-        if (delta.tool_calls?.length) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
+        if (delta.tool_calls?.length) {
+          if (!answerTool || !Array.isArray(delta.tool_calls)) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
+          for (const part of delta.tool_calls) {
+            if (!Number.isInteger(part.index) || part.index < 0 || part.index > 3) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
+            if (!toolCalls.has(part.index)) toolCalls.set(part.index, {id: '', type: undefined, function: {name: '', arguments: ''}});
+            const call = toolCalls.get(part.index);
+            if (part.type !== undefined) call.type = part.type;
+            for (const [target, field, value] of [[call, 'id', part.id],
+              [call.function, 'name', part.function?.name], [call.function, 'arguments', part.function?.arguments]]) {
+              if (value !== undefined) {
+                if (typeof value !== 'string') throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
+                target[field] += value;
+              }
+            }
+          }
+          message.tool_calls = [...toolCalls.entries()].sort(([a], [b]) => a - b).map(([, call]) => call);
+          const writing = message.tool_calls.find(call => call.function.name === answerTool);
+          if (writing) {
+            if (message.tool_calls.length !== 1) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
+            answerReader ||= createToolAnswerReader();
+            let text;
+            try {text = answerReader.push(writing.function.arguments.slice(answerArgumentsRead));}
+            catch {throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');}
+            answerArgumentsRead = writing.function.arguments.length;
+            if (text) await deliver(text);
+          }
+        }
       }
       if (!completed || !finish) throw gatewayError('GatewayStreamInterrupted', 'Gateway response stream ended early');
     } else {
@@ -100,8 +128,21 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
         message.tool_calls.some(call => !call.id || call.type !== 'function' || !allowed.has(call.function?.name) || typeof call.function.arguments !== 'string')) {
         throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
       }
+      const writing = answerTool && message.tool_calls.find(call => call.function.name === answerTool);
+      if (writing) {
+        if (message.tool_calls.length !== 1) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
+        let answer;
+        try {answer = answerReader ? answerReader.finish() : parseToolAnswer(writing.function.arguments);}
+        catch {throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');}
+        assertSafe(answer);
+        if (onDelta) {
+          await deliver(answer.slice(answerReader?.emittedLength || 0));
+          if (pending) await onDelta(pending);
+        }
+      }
       return {role: 'assistant', content: message.content || null, tool_calls: message.tool_calls};
     }
+    if (answerTool) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
     if (finish !== 'stop' || typeof message?.content !== 'string' || !message.content.trim()) {
       throw gatewayError('GatewayEmptyResponse', 'Gateway returned no complete answer text');
     }
