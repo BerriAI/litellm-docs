@@ -19,7 +19,7 @@ LiteLLM supports Sarvam's OpenAI-compatible `/v2` API, including Sarvam 105B and
 
 USD values are converted from Sarvam's INR rates at ₹94 per USD. `sarvam-105b`, `sarvam-105b-conversations`, and `deepseekv4.1-flash-1017` show Sarvam's introductory rates, which apply through the end of 2026. See [Sarvam Token Factory pricing](https://www.sarvam.ai/token-factory/pricing) for the current INR rates.
 
-LiteLLM calls `https://api.sarvam.ai/v2` by default. Newer models such as `glm5.3` are not served on `/v1`, so remove any `api_base` that still points at `https://api.sarvam.ai/v1`.
+LiteLLM calls `https://api.sarvam.ai/v2` by default. Sarvam's `/v1` API serves only `sarvam-105b` and `sarvam-105b-conversations`, so remove any `api_base` that points at `https://api.sarvam.ai/v1` from the other models. Keeping `/v1` on those two models still works, and on `sarvam-105b` it avoids the `/v2` stalls described under [Limitations](#limitations).
 
 The legacy `sarvam-m` model is not served on `/v2`. If you are upgrading from `sarvam/sarvam-m`, switch to `sarvam/sarvam-105b`.
 
@@ -60,7 +60,7 @@ response = responses(
 print(response.output_text)
 ```
 
-LiteLLM sends Responses API calls to Sarvam's chat completions endpoint, because Sarvam does not store conversations. On the proxy, `previous_response_id` works when the proxy stores prompts:
+LiteLLM sends Responses API calls to Sarvam's chat completions endpoint, because Sarvam does not store conversations. On the proxy, `previous_response_id` works when the proxy is connected to a database and stores prompts:
 
 ```yaml
 general_settings:
@@ -137,7 +137,7 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
 
 ## Reasoning
 
-Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning. On `gemma4`, reasoning is off by default and only runs when `reasoning_effort` is set. LiteLLM forwards `reasoning_effort` to Sarvam only when you also pass it in `allowed_openai_params`:
+Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning. On `gemma4`, reasoning is off by default and only runs when `reasoning_effort` is set. LiteLLM forwards `reasoning_effort` to Sarvam only when you also pass it in `allowed_openai_params`. Without it, LiteLLM drops `reasoning_effort` without an error:
 
 ```python
 response = completion(
@@ -151,7 +151,7 @@ print(response.choices[0].message.reasoning_content)
 
 ## Token limits
 
-- On Chat, `max_tokens` defaults to `2048` on `glm5.3` only. Other models have no small default; set it explicitly.
+- When `max_tokens` is not set, `glm5.3` stops at 2048 output tokens, and its reasoning can use all of them, which leaves `content` empty. `gemma4` and `deepseekv4.1-flash-1017` returned longer answers in our tests. Set `max_tokens` explicitly on every model.
 - The Responses API follows the same defaults, since LiteLLM sends those calls to Sarvam's chat completions endpoint. Set `max_output_tokens` explicitly.
 - Reasoning tokens count toward the output budget and are billed as output.
 
@@ -159,7 +159,7 @@ print(response.choices[0].message.reasoning_content)
 
 - Images must be sent as base64 data URIs; remote `http(s)` URLs are rejected.
 - Beta models require beta access and are not listed above.
-- Some `/v2` requests can stall without an answer. Set `timeout` a little above your longest expected response, and `num_retries`, so LiteLLM retries a stalled call instead of waiting for the 600 second default:
+- Some `/v2` requests to `sarvam-105b` stall without an answer, while the same requests on `/v1` answer. Either pin `api_base: https://api.sarvam.ai/v1` on that model, or set `timeout` a little above your longest expected response together with `num_retries`, so LiteLLM retries a stalled call instead of waiting for the 600 second default. Each stalled attempt still waits the full `timeout` before the retry starts:
 
     ```yaml
     model_list:
@@ -170,7 +170,6 @@ print(response.choices[0].message.reasoning_content)
           timeout: 120
           num_retries: 2
     ```
-- The API is OpenAI-compatible; no custom transformation is required.
 
 ## Security
 
