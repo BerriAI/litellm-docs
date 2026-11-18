@@ -225,6 +225,37 @@ An existing member ID can resolve its parents without the organization header. W
 
 For first-request registration and team selection, see [inference identity headers](./api_reference.md#attribute-inference-requests).
 
+### Send customer identity through JWT claims
+
+To track customer spend without customer headers, include the customer identity in your signed JWT. Configure claim paths under `general_settings.litellm_jwtauth` after you [enable JWT authentication](../token_auth.md).
+
+```yaml
+general_settings:
+  enable_jwt_auth: true
+  litellm_jwtauth:
+    customer_org_alias_jwt_field: "customer.org_alias"
+    customer_member_id_jwt_field: "customer.member_id"
+    customer_team_id_jwt_field: "customer.team_id"
+```
+
+Your identity provider can issue a token with these claims:
+
+```json
+{
+  "customer": {
+    "org_alias": "example-org",
+    "member_id": "member-123",
+    "team_id": "example-org:default"
+  }
+}
+```
+
+Send the token as `Authorization: Bearer <JWT>`. LiteLLM verifies the token before it reads customer identity. Each mapped claim takes precedence over its matching `x-litellm-customer-org-alias`, `x-litellm-customer-member-id`, or `x-litellm-customer-team-id` header. A missing or empty claim leaves the existing header behavior unchanged.
+
+The organization alias and member ID use the same lookup, automatic registration, budgets, and spend tracking as headers. A new member joins the organization's `default` team. The optional customer-team claim selects one of the member's teams, not a regular LiteLLM team, and cannot add team membership. Omit it to use the member's default team.
+
+For multiple identity providers, set these same fields on each entry in `litellm_jwtauth.issuers`. Issuer-specific mappings override global mappings when the issuer's claim supplies a value. These customer mappings are separate from `org_id_jwt_field`, `team_id_jwt_field`, and the legacy `end_user_id_jwt_field`.
+
 ## 3. Fetch usage for your product {#5-fetch-usage-for-your-product}
 
 The organization aggregated endpoint returns complete spend, token, and request totals for the date range, without pagination. It accepts up to 100 customer organization IDs.
