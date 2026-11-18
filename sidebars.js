@@ -28,6 +28,12 @@ const sidebars = {
       items: [
         { type: "ref", id: "subscriptions", className: "sidebar-xlink" },
         {
+          type: "category",
+          label: "LiteLLM Remote",
+          link: { type: "doc", id: "tutorials/litellm_remote" },
+          items: ["tutorials/litellm_remote_deployment"],
+        },
+        {
           type: "doc",
           id: "tutorials/openweb_ui",
           customProps: { icon: "/img/integrations/openwebui.png" },
