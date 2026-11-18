@@ -250,7 +250,7 @@ Your identity provider can issue a token with these claims:
 }
 ```
 
-Send the token as `Authorization: Bearer <JWT>`. LiteLLM verifies the token before it reads customer identity. Each mapped claim takes precedence over its matching `x-litellm-customer-org-alias`, `x-litellm-customer-member-id`, or `x-litellm-customer-team-id` header. A missing or empty claim leaves the existing header behavior unchanged.
+Send the token as `Authorization: Bearer <JWT>`. LiteLLM verifies the token before it reads customer identity. Once any customer claim is mapped, a JWT request takes its customer identity only from the token and ignores the `x-litellm-customer-org-alias`, `x-litellm-customer-member-id`, and `x-litellm-customer-team-id` headers, so a caller cannot name a different customer. A token without the claims runs without customer tracking. Requests that do not use a JWT still read the headers.
 
 The organization alias and member ID use the same lookup, automatic registration, budgets, and spend tracking as headers. A new member joins the organization's `default` team. The optional customer-team claim selects one of the member's teams, not a regular LiteLLM team, and cannot add team membership. Omit it to use the member's default team.
 
