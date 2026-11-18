@@ -1,6 +1,6 @@
 # Error Reference
 
-Every failed request through the LiteLLM AI Gateway returns an OpenAI-compatible JSON error body and an HTTP status code. This page is the reference for reading them: what the payload contains, which errors come from the gateway versus the upstream provider, what each status code and error type means, and what the gateway returns when a fallback chain runs out of targets
+Every failed request through the LiteLLM AI Gateway returns a JSON error body and an HTTP status code. The OpenAI-shaped routes return an OpenAI-compatible body, and the Anthropic Messages routes return Anthropic's error body, described in [Errors on the Anthropic Messages routes](#errors-on-the-anthropic-messages-routes). This page is the reference for reading them: what the payload contains, which errors come from the gateway versus the upstream provider, what each status code and error type means, and what the gateway returns when a fallback chain runs out of targets
 
 If you only need the quick provider-versus-gateway rule, see [Diagnosing Errors](/docs/proxy/error_diagnosis). For the Python SDK exception classes and the per-provider mapping table, see [Exception Mapping](/docs/exception_mapping)
 
@@ -51,6 +51,78 @@ A malformed body, by contrast, is normalized into the standard envelope. Unparse
 
 :::
 
+## Errors on the Anthropic Messages routes
+
+<SinceVersion v="1.110.0" />
+
+The routes that serve the Anthropic Messages API answer the gateway's own errors in [Anthropic's error shape](https://docs.claude.com/en/api/errors), so the Anthropic SDK and Claude Code read them the same way they read an error from Anthropic. These routes are `/v1/messages`, `/v1/messages/count_tokens`, the same two under `/claude_code_gateway`, and every route under `/anthropic/`. The model list routes (`/v1/models`, `/models`, and `/claude_code_gateway/v1/models`) use this shape only when the request sends an `anthropic-version` header, and without one they keep the OpenAI body. Every other route keeps the OpenAI body described above
+
+A key with a zero budget that calls `/v1/messages` with an `x-request-id: req-docs-check-1` header gets this body, with the same 422 status it gets on `/v1/chat/completions`:
+
+```json
+{
+  "type": "error",
+  "error": {
+    "type": "invalid_request_error",
+    "message": "Budget has been exceeded! Key=zero-budget (sk-...PO3g) Current cost: 0.0, Max budget: 0.0",
+    "litellm_error_type": "budget_exceeded"
+  },
+  "request_id": "req-docs-check-1"
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `type` | string | Always `"error"` |
+| `error.type` | string | Anthropic's error type for the HTTP status, from the table below |
+| `error.message` | string | The same message the OpenAI-shaped routes return for this error |
+| `error.litellm_error_type` | string | Optional. The LiteLLM error type that the OpenAI-shaped routes put in `error.type`, such as `budget_exceeded`, `team_model_access_denied`, or `token_not_found_in_db`. Left out when it would only repeat `error.type` or the default type for the status |
+| `request_id` | string | Optional. The value of the request's `x-request-id` header, present only when the client sent one |
+| `error.provider_specific_fields` | object | Optional. The same provider detail the OpenAI-shaped body carries |
+
+There is no `error.code` or `error.param` on these routes, so read the status from the HTTP status line
+
+:::tip
+
+Code that matches a gateway error type such as `budget_exceeded` in `error.type` must read `error.litellm_error_type` on these routes instead, since `error.type` holds Anthropic's type for the status. The [Gateway error types](#gateway-error-types) table lists the values
+
+:::
+
+Errors the gateway raises before the request reaches the Messages handler (authentication, model access, budgets, a malformed body, the request size limit, and [admission control](/docs/proxy/server_tuning#per-worker-admission-control)) map their status to `error.type` like this:
+
+| Status | `error.type` |
+|---|---|
+| 400 | `invalid_request_error` |
+| 401 | `authentication_error` |
+| 402 | `billing_error` |
+| 403 | `permission_error` |
+| 404 | `not_found_error` |
+| 409 | `conflict_error` |
+| 413 | `request_too_large` |
+| 429 | `rate_limit_error` |
+| 500 | `api_error` |
+| 503 from admission control | `overloaded_error` |
+| 504 | `timeout_error` |
+| 529 | `overloaded_error` |
+| 408, and any other 5xx | `api_error` |
+| Any other 4xx, such as a 422 budget refusal | `invalid_request_error` |
+
+Errors raised while the handler serves the request, such as a gateway rate limit, a provider rejection, a timeout, or an unknown model name, carry Anthropic's type for the statuses Anthropic lists (400, 401, 403, 404, 413, 429, 500, and 529) and `api_error` for any other status, with no `error.litellm_error_type`. A provider error still names the provider in `error.message`, the same way it does on the OpenAI-shaped routes:
+
+```json
+{
+  "type": "error",
+  "error": {
+    "type": "invalid_request_error",
+    "message": "litellm.BadRequestError: AnthropicException - {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"max_tokens: 100000000 > 128000, which is the maximum allowed number of output tokens for claude-haiku-5-5\"}} ..."
+  }
+}
+```
+
+So a gateway rate limit on these routes returns 429 with `error.type` set to `rate_limit_error` and no `error.litellm_error_type`. Tell it apart from a provider's 429 by its message, which starts with `Rate limit exceeded for` and names no provider
+
+An unhandled exception inside the gateway returns `{"type": "error", "error": {"type": "api_error", "message": "Internal server error"}}` on these routes, and unparseable JSON returns 400 with `error.type` set to `invalid_request_error` and no `error.litellm_error_type`
+
 ## Response headers
 
 The headers on a failed response carry the diagnostic context that the JSON body does not
@@ -88,7 +160,7 @@ The presence of a `<Provider>Exception` token means the request left the gateway
 | Signal in the response | Origin |
 |---|---|
 | `message` contains `OpenAIException`, `AnthropicException`, `AzureException`, `BedrockException`, `VertexAIException`, or any other `<Provider>Exception` | Upstream provider |
-| `message` contains no provider name, and `type` is a LiteLLM value such as `budget_exceeded`, `expired_key`, `token_not_found_in_db`, `key_model_access_denied` | LiteLLM gateway |
+| `message` contains no provider name, and `type` (`litellm_error_type` on the Anthropic Messages routes) is a LiteLLM value such as `budget_exceeded`, `expired_key`, `token_not_found_in_db`, `key_model_access_denied` | LiteLLM gateway |
 | `message` starts with `No deployments available for selected model` or `There are no healthy deployments for this model` | LiteLLM gateway (routing) |
 | 429 with a `retry-after`, `rate_limit_type`, `rate_limited_by`, or `reset_at` header | LiteLLM gateway (rate limiting) |
 | 429 with no such headers | Upstream provider |
@@ -140,7 +212,7 @@ A note on 500 versus 503. A connection that never reaches the provider (DNS fail
 
 ## Gateway error types
 
-These `error.type` values are produced by the gateway itself. Seeing one of them means no provider was involved in the failure
+These `error.type` values are produced by the gateway itself. Seeing one of them means no provider was involved in the failure. On the [Anthropic Messages routes](#errors-on-the-anthropic-messages-routes) the same values come in `error.litellm_error_type`
 
 | `error.type` | Status | Cause | What to do |
 |---|---|---|---|
