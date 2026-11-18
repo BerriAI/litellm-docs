@@ -166,6 +166,8 @@ LITELLM_UI_CURRENCY="EUR"
 
 This changes only the currency symbol and number format. LiteLLM does not convert any amount, and its built-in model prices are in US dollars, so a dollar price would be shown with a euro sign. Set it only when every model price the proxy uses is in that currency, for example when you set `input_cost_per_token` and `output_cost_per_token` on each model from your provider's EUR price list. A value that is not a 3-letter code logs a warning, and the UI keeps showing USD.
 
+If you send request prices with `pricing_currency`, LiteLLM converts them to USD and tracks spend in USD, so leave `LITELLM_UI_CURRENCY` unset: it would show those USD amounts with another currency's symbol. With it set, the Usage page also drops the currency estimate beside the spend total, because that estimate converts from USD.
+
 ## Disable Admin UI
 
 Set `DISABLE_ADMIN_UI="True"` in your environment to disable the Admin UI.
