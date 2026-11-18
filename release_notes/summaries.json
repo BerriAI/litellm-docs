@@ -1,6 +1,18 @@
 [
   {
     "folders": [
+      "v1.111.0rc1"
+    ],
+    "title": "LiteLLM v1.111.0rc1 adds Customer Management and performance alerts",
+    "points": [
+      "Customer Management adds customer organizations, teams and members, each with its own budgets, rate limits and daily usage in the dashboard.",
+      "Performance alerts flag spend and traffic spikes, slower responses and higher error rates against the previous seven days, and are on by default.",
+      "Claude Fable 5.2 and Mythos 5.2, Gemini 4 Carbon and Hydrogen, and 1,020 new fal.ai and Replicate models join the model catalog.",
+      "The Docker image now runs as non-root, `helm/litellm` is the only chart, and `LITELLM_EMAIL_FALLBACK_LINKS_ANY_USER=true` restores the old SSO email matching."
+    ]
+  },
+  {
+    "folders": [
       "v1.108.11"
     ],
     "title": "LiteLLM v1.108.11 (LTS) fixes OOM on 429 retries and SSO behind TLS",
@@ -200,17 +212,6 @@
     "points": [
       "Bedrock deployments with `api_base: \"\"` serve requests again, and no longer return 500 or 400.",
       "MCP tool results over 1 MiB no longer fail with `SSE stream ended without a response`, and model-level `post_call` guardrails check each response once."
-    ]
-  },
-  {
-    "folders": [
-      "v1.108.2"
-    ],
-    "title": "LiteLLM v1.108.2 (LTS) fixes Bedrock service tiers and Claude PDF input",
-    "points": [
-      "Bedrock Converse honors the `reserved`, `auto` and `standard_only` service tiers and returns 400 for a tier that it does not support.",
-      "Base64 PDFs that you send to Claude as `image_url` work, and `openai/` deployments with an empty `api_key` no longer send `OPENAI_ADMIN_KEY`.",
-      "Groups that accept unmatched tags keep the request after affinity or cooldown filters."
     ]
   }
 ]
