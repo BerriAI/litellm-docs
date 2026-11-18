@@ -6,9 +6,9 @@ description: Run the Pi coding agent with litellm.agent(), route calls through y
 
 # Pi
 
-`Harness.PI` runs the [Pi coding agent](https://github.com/earendil-works/pi) in your sandbox. Use the same `litellm.agent()` API for model routing, events, file changes, token usage and cost.
+<SinceVersion v="1.109.0" />
 
-Pi is available in the published LiteLLM 1.110.0 package.
+`Harness.PI` runs the [Pi coding agent](https://github.com/earendil-works/pi) in your sandbox. Use the same `litellm.agent()` API for model routing, events, file changes, token usage and cost.
 
 ## Install and run
 
