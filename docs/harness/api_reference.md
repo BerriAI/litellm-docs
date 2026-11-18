@@ -15,6 +15,7 @@ from litellm import (
     ClaudeCodeOptions,
     CodexOptions,
     OpenCodeOptions,
+    PiOptions,
     DeepAgentsOptions,
     ToolLoopOptions,
     sandbox,
@@ -94,6 +95,7 @@ def agent(
         ClaudeCodeOptions
         | CodexOptions
         | OpenCodeOptions
+        | PiOptions
         | DeepAgentsOptions
         | ToolLoopOptions
         | None

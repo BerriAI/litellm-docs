@@ -6,7 +6,7 @@ description: See which harnesses litellm.agent() supports and compare the runtim
 
 # Supported harnesses for `litellm.agent()`
 
-This release supports five harnesses. Each one is driven through its own programmatic interface, never by scraping a terminal
+This release supports six harnesses. Each one is driven through its own programmatic interface, never by scraping a terminal
 
 ```python
 from enum import Enum
@@ -15,6 +15,7 @@ class Harness(Enum):
     CLAUDE_CODE = "claude_code"
     CODEX = "codex"
     OPENCODE = "opencode"
+    PI = "pi"
     DEEPAGENTS = "deepagents"
     TOOL_LOOP = "tool_loop"
 ```
@@ -23,17 +24,17 @@ class Harness(Enum):
 
 ## Capabilities
 
-| Capability | Claude Code | Codex | OpenCode | Deep Agents | Tool Loop |
-|---|:-:|:-:|:-:|:-:|:-:|
-| Any gateway model group | yes | yes | yes | yes | yes |
-| Cost tracking | yes | yes | yes | yes | yes |
-| Skills | yes | yes | yes | yes | no |
-| Structured output | yes | yes | yes | yes | yes |
-| Detach and resume | yes | yes | yes | yes | no |
-| Built-in tool filtering (`disable_tools=`) | yes | no | yes | yes | no |
-| Custom Python tools (`tools=`) | no | no | no | yes | yes |
-| History (`s.history()`) | no | no | no | yes | yes |
-| Permission modes | `read-only`, `edit`, `full` | `read-only`, `full` | `read-only`, `edit`, `full` | `read-only`, `edit`, `full` | `ask`, `full` |
+| Capability | Claude Code | Codex | OpenCode | Pi | Deep Agents | Tool Loop |
+|---|:-:|:-:|:-:| :-: |:-:|:-:|
+| Any gateway model group | yes | yes | yes | yes | yes | yes |
+| Cost tracking | yes | yes | yes | yes | yes | yes |
+| Skills | yes | yes | yes | yes | yes | no |
+| Structured output | yes | yes | yes | yes | yes | yes |
+| Detach and resume | yes | yes | yes | yes | yes | no |
+| Built-in tool filtering (`disable_tools=`) | yes | no | yes | yes | yes | no |
+| Custom Python tools (`tools=`) | no | no | no | no | yes | yes |
+| History (`s.history()`) | no | no | no | no | yes | yes |
+| Permission modes | `read-only`, `edit`, `full` | `read-only`, `full` | `read-only`, `edit`, `full` | `read-only`, `edit`, `full` | `read-only`, `edit`, `full` | `ask`, `full` |
 
 `permissions="ask"` with interactive approval isn't available on the CLI harnesses in this release. Asking a harness for something it doesn't support raises `CapabilityUnsupported` before the runtime starts, and it never falls back to a looser mode. You can read the same table in code.
 
@@ -50,6 +51,7 @@ caps.permission_modes   # frozenset({'read-only', 'full'})
 | `CLAUDE_CODE` | `claude -p --output-format stream-json` | Anthropic Messages | sandbox | `claude` |
 | `CODEX` | `codex exec --json` | OpenAI Responses | sandbox | `codex` |
 | `OPENCODE` | `opencode run --format json` | OpenAI Chat Completions | sandbox | `opencode` |
+| `PI` | `pi --mode json` | OpenAI Chat Completions | sandbox | `pi` |
 | `DEEPAGENTS` | `deepagents` Python API | LangChain chat model | your process | nothing |
 | `TOOL_LOOP` | LiteLLM tool loop | OpenAI Chat Completions | your process | nothing |
 

@@ -18,6 +18,7 @@ import TabItem from '@theme/TabItem';
 | Claude Code | `pip install litellm starlette uvicorn` | `npm install -g @anthropic-ai/claude-code` |
 | Codex | `pip install litellm starlette uvicorn` | `npm install -g @openai/codex` |
 | OpenCode | `pip install litellm starlette uvicorn` | `npm install -g opencode-ai` |
+| [Pi](./pi.md) | `pip install litellm starlette uvicorn` | `npm install -g @earendil-works/pi-coding-agent` |
 | Deep Agents | `pip install litellm deepagents langchain-litellm` (Python 3.11+) {/* keep-python-version */} | nothing |
 | Tool Loop | `pip install litellm` | nothing |
 

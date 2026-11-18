@@ -9,7 +9,7 @@ import NavigationCards from '@site/src/components/NavigationCards';
 
 # LiteLLM Python SDK
 
-The LiteLLM Python SDK gives you one interface to call 100+ LLM providers, such as OpenAI, Anthropic, Vertex AI, and Bedrock, in the OpenAI format. The same package runs [agents with `litellm.agent()`](/docs/harness), including Claude Code, Codex, OpenCode, Deep Agents and Tool Loop.
+The LiteLLM Python SDK gives you one interface to call 100+ LLM providers, such as OpenAI, Anthropic, Vertex AI, and Bedrock, in the OpenAI format. The same package runs [agents with `litellm.agent()`](/docs/harness), including Claude Code, Codex, OpenCode, Pi, Deep Agents and Tool Loop.
 
 You import the SDK into your application code. You do not operate a server.
 

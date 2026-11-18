@@ -7,7 +7,7 @@ description: Run agents from Python with litellm.agent(), included in the LiteLL
 
 # Agents in the LiteLLM SDK
 
-Use `litellm.agent()` to run Claude Code, Codex, OpenCode, Deep Agents or Tool Loop from Python. It is part of the same `litellm` package as `completion()`. Choose the harness and model for each task, stream its output, and read usage and cost from the result.
+Use `litellm.agent()` to run Claude Code, Codex, OpenCode, Pi, Deep Agents or Tool Loop from Python. It is part of the same `litellm` package as `completion()`. Choose the harness and model for each task, stream its output, and read usage and cost from the result.
 
 Start with the [agent quickstart](./quickstart.md) to install the SDK and your chosen harness, then run your first task.
 
@@ -48,6 +48,7 @@ To compare harnesses and models on your own tasks, follow [Evaluate agents](./ev
 | [`Harness.CLAUDE_CODE`](./claude_code.md) | Anthropic's Claude Code CLI | your sandbox |
 | [`Harness.CODEX`](./codex.md) | OpenAI's Codex CLI | your sandbox |
 | [`Harness.OPENCODE`](./opencode.md) | OpenCode CLI | your sandbox |
+| [`Harness.PI`](./pi.md) | Pi coding agent CLI | your sandbox |
 | [`Harness.DEEPAGENTS`](./deepagents.md) | LangChain Deep Agents | your Python process, tools act on your sandbox |
 | [`Harness.TOOL_LOOP`](./tool_loop.md) | LiteLLM tool-calling loop | your Python process, calls your tools |
 
