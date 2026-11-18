@@ -119,7 +119,7 @@ response = completion(
 
 ## Foundry project and `/openai/v1` endpoints
 
-<SinceVersion v="1.111.0" />
+<SinceVersion v="1.112.0" />
 
 `api_base` can point at a Foundry resource, its `/openai/v1` endpoint, or a Foundry project. LiteLLM picks the chat route from the shape of `api_base`.
 
