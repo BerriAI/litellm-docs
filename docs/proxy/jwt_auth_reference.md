@@ -111,6 +111,8 @@ general_settings:
 
 Use [user and team provisioning settings](./jwt_user_team_auth.md#2-map-the-claims) to control whether missing user records are created. `team_id_upsert: true` can create a missing team; leave it disabled when administrators must define team policies before access is granted. See [legacy customer ID precedence](./legacy_end_users.md#1-make-llm-api-call-w-customer-id) for JWT end-user tracking, or [Customer Management](./customers.md) for the recommended spend tracking setup from v1.111.
 
+If the JWT identifies the app but not the customer, see [how to send a JWT and customer headers together](./customer_management/jwt-customer-identity.md#app-jwt-customer-headers).
+
 ## Add custom validation {#custom-jwt-validate}
 
 `custom_validate` receives the verified claims. Raise an exception to reject the token and return `True` to accept it.
