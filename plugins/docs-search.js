@@ -33,6 +33,7 @@ function extractSections(html, url, metadata = {}) {
         const chunk = text.slice(offset, offset + 3000);
         sections.push({id: `${url}#${anchor}:${sections.length}`, title, heading, description, keywords, breadcrumb,
           type, date: metadata.date || '', version: metadata.version || '', category,
+          ...(metadata.sdk ? {sdk: true} : {}),
           url: anchor ? `${url}#${encodeURIComponent(anchor)}` : url,
           text: chunk, snippet: chunk.replace(/\s+/g, ' ').slice(0, 240),
           ...(links.size ? {links: [...links.values()]} : {})});
@@ -72,9 +73,24 @@ function extractSections(html, url, metadata = {}) {
   return sections;
 }
 
+function sdkDocIds(sidebars) {
+  const ids = new Set(['liteagents']);
+  const sdk = sidebars?.tutorialSidebar?.find(item => item.type === 'category' &&
+    item.link?.type === 'doc' && item.link.id === 'python_sdk');
+  function visit(item) {
+    if (item.type === 'doc') ids.add(item.id);
+    if (item.type === 'category') {
+      if (item.link?.type === 'doc') ids.add(item.link.id);
+      item.items.forEach(visit);
+    }
+  }
+  if (sdk) visit(sdk);
+  return ids;
+}
+
 function collectPages(allContent) {
   const pages = new Map();
-  const add = metadata => {
+  const add = (metadata, sdk = false) => {
     const route = metadata.permalink;
     if (!isContentUrl(route) || metadata.draft || metadata.unlisted || metadata.frontMatter?.draft || metadata.frontMatter?.unlisted) return;
     const type = contentType(route);
@@ -83,12 +99,16 @@ function collectPages(allContent) {
     if (type === 'release' && !version) return;
     const published = metadata.date || metadata.frontMatter?.date;
     pages.set(route, {type, title: metadata.title, description: metadata.description,
+      ...(type === 'docs' && sdk ? {sdk: true} : {}),
       date: published && Number.isFinite(Date.parse(published)) ? new Date(published).toISOString().slice(0, 10) : '',
       version: version || '', category: metadata.sidebar === 'integrationsSidebar' ? 'Integrations' : undefined,
       keywords: [metadata.frontMatter?.keywords, metadata.tags?.map(tag => tag.label)].flat(2).filter(Boolean).join(' ')});
   };
   for (const instance of Object.values(allContent['docusaurus-plugin-content-docs'] || {})) {
-    for (const version of instance.loadedVersions || []) for (const doc of version.docs || []) add(doc);
+    for (const version of instance.loadedVersions || []) {
+      const sdkIds = sdkDocIds(version.sidebars);
+      for (const doc of version.docs || []) add(doc, sdkIds.has(doc.id));
+    }
   }
   for (const instance of Object.values(allContent['docusaurus-plugin-content-blog'] || {})) {
     for (const post of instance.blogPosts || []) add(post.metadata);

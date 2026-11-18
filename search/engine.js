@@ -56,11 +56,11 @@ const indexTerm = term => {
 };
 const pageOptions = {
   fields: ['title', 'keywords', 'description', 'headings', 'path', 'version'],
-  storeFields: ['title', 'url', 'description', 'category', 'breadcrumb', 'firstId', 'type', 'date', 'version'], tokenize, processTerm: indexTerm,
+  storeFields: ['title', 'url', 'description', 'category', 'breadcrumb', 'firstId', 'type', 'date', 'version', 'sdk'], tokenize, processTerm: indexTerm,
 };
 const passageOptions = {
   fields: ['title', 'heading', 'text'],
-  storeFields: ['title', 'heading', 'url', 'text', 'type', 'date', 'version', 'category'], tokenize, processTerm: indexTerm,
+  storeFields: ['title', 'heading', 'url', 'text', 'type', 'date', 'version', 'category', 'sdk'], tokenize, processTerm: indexTerm,
 };
 
 function createCollection(documents) {
@@ -77,7 +77,7 @@ function createCollection(documents) {
       type: first.type || contentType(url), date: first.date || '', version: first.version || '',
       breadcrumb: first.breadcrumb || categoryFor(url),
       description: first.description?.length > 30 ? first.description : first.text.replace(/Join the waitlist now/gi, '').replace(/\s+/g, ' ').trim().slice(0, 300),
-      keywords: first.keywords || '',
+      keywords: first.keywords || '', sdk: first.sdk,
       headings: [...new Set(sections.map(doc => doc.heading))].join(' '),
       path: url.replace(/[/_-]/g, ' ')};
   }));
@@ -113,9 +113,9 @@ function distance(a, b) {
   return d[a.length][b.length];
 }
 
-function retrieve(index, terms, boost) {
+function retrieve(index, terms, boost, filter) {
   const query = terms.join(' ');
-  const options = {boost, combineWith: 'AND'};
+  const options = {boost, combineWith: 'AND', filter};
   const exact = index.search(query, options);
   const exactIds = new Set(exact.map(hit => hit.id));
   // Keep exact scores and matched terms: aliases such as "azureopenai" must not
@@ -183,7 +183,7 @@ function expandTitleTerms(title, terms, queryTerms = terms) {
     .map(normalize).filter(Boolean))];
 }
 
-function searchCollection(index, query, {limit = 10, groupPages = true, category = 'All docs', correctTypo = true} = {}) {
+function searchCollection(index, query, {limit = 10, groupPages = true, category = 'All docs', sdkOnly, correctTypo = true} = {}) {
   const rawTerms = termsOf(query.slice(0, 500));
   // Setup verbs and the product name add noise when someone names a specific feature.
   const optional = new Set(['litellm', 'setup', 'configure', 'enable', 'set', 'up', 'docs', 'documentation', 'page']);
@@ -196,8 +196,9 @@ function searchCollection(index, query, {limit = 10, groupPages = true, category
   const terms = focused.length ? focused : rawTerms;
   if (rawTerms.includes('setup') && focused.length && (/\bquick\s?start\b/i.test(query) || focused.length === 1 && ['proxy', 'gateway'].includes(focused[0]))) terms.push('setup');
   if (!terms.length) return [];
-  const pageHits = retrieve(index.pages, terms, {title: 8, keywords: 5, description: 2, headings: 1, path: 2, version: 12});
-  const passageHits = retrieve(index.passages, terms, {title: 5, heading: 3, text: 1});
+  const filter = sdkOnly ? hit => hit.sdk === true : undefined;
+  const pageHits = retrieve(index.pages, terms, {title: 8, keywords: 5, description: 2, headings: 1, path: 2, version: 12}, filter);
+  const passageHits = retrieve(index.passages, terms, {title: 5, heading: 3, text: 1}, filter);
   const groups = new Map();
   const getGroup = url => {
     if (!groups.has(url)) {
@@ -262,7 +263,7 @@ function searchCollection(index, query, {limit = 10, groupPages = true, category
   // A fuzzy title must not rewrite a query already matched by a passage.
   const hasFullMatch = [...pageHits, ...passageHits].some(hit => hit.matchType !== 'typo' && hit.queryTerms?.length === terms.length);
   if (correctTypo && ranked[0]?.correction && !hasFullMatch) {
-    return searchCollection(index, ranked[0].correction, {limit, groupPages, category, correctTypo: false})
+    return searchCollection(index, ranked[0].correction, {limit, groupPages, category, sdkOnly, correctTypo: false})
       .map(hit => ({...hit, matchType: 'typo', highlights: [...new Set([...(hit.highlights || []), ...words(query)])]}));
   }
   const filtered = ranked.filter(group => category === 'All docs' || group.category === category);
@@ -294,7 +295,8 @@ function newestFirst(a, b) {
 }
 
 function search(index, query, {limit = 10, groupPages = true, type = 'all', category = 'All docs', intent} = {}) {
-  if (typeof query !== 'string' || !query.trim() || !['all', ...contentTypes].includes(type)) return [];
+  if (typeof query !== 'string' || !query.trim() || !['all', 'sdk', ...contentTypes].includes(type)) return [];
+  const sdkOnly = type === 'sdk';
   // Protect the product name before treating "vs" as a comparison operator.
   query = query.replace(/\b(?:visual studio code|vs\s+code|vscode)\b/gi, 'vscode');
   intent ||= queryIntent(query);
@@ -308,7 +310,7 @@ function search(index, query, {limit = 10, groupPages = true, type = 'all', cate
   const browse = (wantsBlog || wantsRelease || intent === 'latest') && !termsOf(scopedQuery).filter(term => term !== 'litellm').length;
   if (wantsRelease && !browse && !versions.length) scopedQuery += ' release';
   scopedQuery = scopedQuery.replace(/\b(compare|versus|vs)\b/gi, ' ');
-  const scope = type !== 'all' ? type : wantsBlog ? 'blog' : browse && (wantsRelease || intent === 'latest') ? 'release' : 'all';
+  const scope = sdkOnly ? 'docs' : type !== 'all' ? type : wantsBlog ? 'blog' : browse && (wantsRelease || intent === 'latest') ? 'release' : 'all';
   const browseType = wantsBlog ? 'blog' : wantsRelease || type === 'all' ? 'release' : type;
   const candidates = [];
   for (const sourceType of contentTypes) {
@@ -319,7 +321,7 @@ function search(index, query, {limit = 10, groupPages = true, type = 'all', cate
       candidates.push(...collection.pages.search(MiniSearch.wildcard).map(hit => ({...hit, type: sourceType,
         heading: '', snippet: hit.description, highlights: [], score: 0, matchType: 'browse'})));
     } else {
-      const hits = searchCollection(collection, scopedQuery, {limit: Math.max(limit, 30), groupPages, category});
+      const hits = searchCollection(collection, scopedQuery, {limit: Math.max(limit, 30), groupPages, category, sdkOnly});
       candidates.push(...hits.map(hit => ({...hit, type: sourceType})));
     }
   }
