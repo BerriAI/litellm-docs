@@ -56,7 +56,7 @@ Write titles, descriptions and points in ASD-STE100 Simplified Technical English
 
 ## Launch posts: name the release
 
-A blog post that announces a feature must name the first LiteLLM release that ships it and link that release note, for example `[LiteLLM v1.110.0](/release_notes/v1.110.0/v1-110-0)`, near the top of the post before the `{/* truncate */}` marker. Take the version from the release note that lists the feature's PRs, not from the date. If the feature has not shipped in a stable release yet, name the release candidate or say which upcoming release will include it.
+A blog post that announces a feature must name the first LiteLLM release that ships it and link that release note in the form `Available in the [LiteLLM 1.110.x release](/release_notes/v1.110.0/v1-110-0). Upgrade to v1.110.0 or later to use these features.`, near the top of the post before the `{/* truncate */}` marker. Take the version from the release note that lists the feature's PRs, not from the date. If the feature has not shipped in a stable release yet, name the release candidate or say which upcoming release will include it.
 
 ## Blog and release note authors
 
