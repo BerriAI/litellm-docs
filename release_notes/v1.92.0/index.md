@@ -2,7 +2,7 @@
 title: "LiteLLM v1.92.0 - Claude Sonnet 5, Production MCP OAuth & New Providers"
 description: "Adds Claude Sonnet 5 with a 1M-token context window, plus Tencent and Google Distributed Cloud providers. Limits permissions to proxy admins."
 slug: "v1-92-0"
-date: 2026-07-11T00:00:00
+date: 2026-07-12T01:15:37
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

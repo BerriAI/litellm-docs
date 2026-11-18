@@ -2,7 +2,7 @@
 title: "LiteLLM v1.85.0 - Realtime GA, MCP Gateway Expansion & Hardened Multi-Tenancy"
 description: "Adds OpenAI Realtime GA support with gpt-realtime-2, xAI grok-4.3 and org-level MCP permissions. Also hardens per-tenant scoping."
 slug: "v1-85-0"
-date: 2026-05-16T00:00:00
+date: 2026-05-17T01:59:11
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

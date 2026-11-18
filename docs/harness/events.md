@@ -1,8 +1,10 @@
 ---
-title: Events
+title: Streaming events from litellm.agent()
+sidebar_label: Events
+description: Read the normalized events litellm.agent() streams for output, tool calls, approvals, and turn completion.
 ---
 
-# Events
+# Streaming events from `litellm.agent()`
 
 `litellm.agent(..., stream=True)` yields eight kinds of event. Each adapter translates its runtime's native events into these.
 

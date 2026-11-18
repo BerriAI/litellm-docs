@@ -225,7 +225,7 @@ An existing member ID can resolve its parents without the organization header. W
 
 For first-request registration and team selection, see [inference identity headers](./api_reference.md#attribute-inference-requests).
 
-To send customer identity in a JWT instead of headers, see [customer identity from JWT claims](./jwt-customer-identity.md).
+To send customer identity in a JWT instead of headers, see [customer identity from JWT claims](./jwt-customer-identity.md). If the JWT identifies your app but your customer identity comes from headers, see [how to send both in one request](./jwt-customer-identity.md#app-jwt-customer-headers).
 
 ## 3. Fetch usage for your product {#5-fetch-usage-for-your-product}
 

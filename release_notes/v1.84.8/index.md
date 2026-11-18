@@ -2,7 +2,7 @@
 title: "LiteLLM v1.84.8 - Database Resilience & Grace-Period Key Rotation"
 description: "Fixes grace-period key rotation and Prisma reconnects, and returns 5xx on database errors during auth. Adds a prepared statement toggle."
 slug: "v1-84-8"
-date: 2026-06-12T18:20:57
+date: 2026-06-13T01:25:12
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

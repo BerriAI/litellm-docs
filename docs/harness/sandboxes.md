@@ -1,8 +1,10 @@
 ---
-title: Sandboxes
+title: Sandboxes for litellm.agent()
+sidebar_label: Sandboxes
+description: Choose where litellm.agent() runs a harness and understand which tools run inside or outside the sandbox.
 ---
 
-# Sandboxes
+# Sandboxes for `litellm.agent()`
 
 A sandbox is required by every call. CLI harnesses run there, and Deep Agents' built-in file and shell tools use it. Tool Loop and Deep Agents run Python tools in your process, so those tools are not restricted by the sandbox automatically
 
