@@ -56,11 +56,12 @@ export async function readConversation() {
     turns: (Array.isArray(value.turns) ? value.turns : []).filter(turn =>
       turn && typeof turn.question === 'string' && typeof turn.answer === 'string' && Array.isArray(turn.sources) &&
       turn.sources.every(source => source && isContentUrl(source.url))),
+    traceContext: typeof value.traceContext === 'string' ? value.traceContext : undefined,
   };
 }
 
-export async function saveConversation({open, turns}) {
-  const record = {open, turns, updatedAt: Math.max(Date.now(), (current?.updatedAt || 0) + 1)};
+export async function saveConversation(value) {
+  const record = {...value, updatedAt: Math.max(Date.now(), (current?.updatedAt || 0) + 1)};
   current = record;
   const id = getSessionId();
   const saved = await transaction('readwrite', store => store.put(record, id));

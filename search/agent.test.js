@@ -2,6 +2,7 @@ const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const {createIndex} = require('./engine');
 const {answerQuestion} = require('./answer');
+const {getTracing} = require('./tracing');
 const {tools, createDocumentationTools} = require('./tools');
 
 const docs = [
@@ -75,7 +76,7 @@ test('the agent can search, read, search again and read before one final answer'
 });
 
 test('search results do not become citations until the agent reads them; unrelated pages stay out', async () => {
-  const tool = createDocumentationTools({...corpus, config});
+  const tool = createDocumentationTools({tracing: getTracing(config), ...corpus, config});
   const found = await tool.execute(toolCall('s', 'search_docs', {queries: ['Pi AI', 'Gemini']}));
   assert.equal(found.results.length, 2);
   assert.equal(tool.sources.size, 0);
@@ -87,7 +88,7 @@ test('search results do not become citations until the agent reads them; unrelat
 });
 
 test('tools reject undiscovered IDs, arbitrary URLs, malformed arguments and oversized batches', async () => {
-  const tool = createDocumentationTools({...corpus});
+  const tool = createDocumentationTools({tracing: getTracing(config), ...corpus});
   for (const call of [
     toolCall('a', 'read_docs', {passage_ids: ['decisions']}),
     toolCall('b', 'read_docs', {passage_ids: ['https://private.example/secret']}),
@@ -135,7 +136,7 @@ test('page reads include all indexed link destinations and keep stable source nu
   const linked = {...docs[1], links: [{title: 'Public reference', url: '/api-reference/'},
     ...Array.from({length: 40}, (_, i) => ({title: `Related ${i}`, url: `/docs/related-${i}`}))]};
   const documents = new Map([[linked.id, linked], ['pi', docs[3]]]);
-  const tool = createDocumentationTools({index: createIndex([...documents.values()]), documents});
+  const tool = createDocumentationTools({tracing: getTracing(config), index: createIndex([...documents.values()]), documents});
   const found = await tool.execute(toolCall('s', 'search_docs', {queries: ['decision vllm', 'Pi AI']}));
   assert.equal(found.results[0].matches[0].passages[0].links[0].url, '/api-reference/');
   assert.equal(tool.sources.size, 0);
@@ -155,7 +156,7 @@ test('reading a page includes the requested evidence, remaining chunks, and requ
     {...docs[1], id: 'example', url: '/docs/decisions#request', heading: '/v1/decisions', text: 'A choice request has a choices array.'},
   ];
   const documents = new Map(parts.map(doc => [doc.id, doc]));
-  const tool = createDocumentationTools({index: createIndex(parts), documents});
+  const tool = createDocumentationTools({tracing: getTracing(config), index: createIndex(parts), documents});
   await tool.execute(toolCall('s', 'search_docs', {queries: ['decision vllm']}));
   const first = await tool.execute(toolCall('r1', 'read_docs', {passage_ids: ['part1']}));
   assert.equal(first.passages.length, 3);

@@ -382,30 +382,53 @@ test('100 authenticated bot questions from one worker bypass website quotas with
   }, {config: {...config, botServiceToken: 'service-token', botApiKey: 'bot-key'}, fetchImpl});
 });
 
-test('website and bot follow-ups ignore legacy trace references and export no trace context', async () => {
-  const legacyTrace = `${'a'.repeat(32)}.${'b'.repeat(16)}.${'c'.repeat(43)}`;
-  const settings = readConfig({LITELLM_PROXY_API_BASE: config.baseUrl, LITELLM_PROXY_API_KEY: config.apiKey,
-    DOCS_AI_PUBLIC_ENABLED: 'true', DOCS_BOT_SERVICE_TOKEN: 'service-token', DOCS_BOT_AI_API_KEY: 'bot-key',
-    DOCS_BOT_AI_BASE_URL: config.baseUrl, DOCS_BOT_TRACING_KEY: 'unused-bot-tracing-key',
-    LITELLM_TRACING_KEY: 'unused-website-tracing-key', OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: 'https://traces.example.com/v1/traces'});
-  assert.equal(settings.tracing, undefined);
-  assert.equal(settings.botTracingKey, undefined);
+test('bot tracing uses its dedicated key and keeps website tracing and agent names unchanged', async t => {
+  const {createHmac} = require('node:crypto');
+  const {OTLPTraceExporter} = require('@opentelemetry/exporter-trace-otlp-proto');
+  const agentName = 'litellm-docs-search';
+  const spans = [];
+  t.mock.method(OTLPTraceExporter.prototype, 'export', (batch, callback) => {spans.push(...batch); callback({code: 0});});
+  const env = {DOCS_AI_PUBLIC_ENABLED: 'true', LITELLM_PROXY_API_BASE: config.baseUrl, LITELLM_PROXY_API_KEY: config.apiKey,
+    CF_ACCESS_CLIENT_ID: 'website-access-client-id', CF_ACCESS_CLIENT_SECRET: 'website-access-secret',
+    DOCS_BOT_AI_BASE_URL: config.baseUrl, DOCS_BOT_AI_API_KEY: 'bot-key', DOCS_BOT_SERVICE_TOKEN: 'service-token',
+    DOCS_BOT_CF_ACCESS_CLIENT_ID: 'bot-access-client-id', DOCS_BOT_CF_ACCESS_CLIENT_SECRET: 'bot-access-secret',
+    DOCS_BOT_TRACING_KEY: 'bot-tracing-key', LITELLM_TRACING_KEY: 'website-tracing-key',
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: 'https://lens.example.com/v1/traces'};
+  const traced = readConfig(env, config);
   for (const service of [false, true]) {
     await withServer(async origin => {
-      const response = await fetch(origin + (service ? '/api/docs/bot-ask' : '/api/docs/ask'), {
-        method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer service-token'},
-        body: JSON.stringify({question: 'Lens', history: [{question: 'How do I set it up?', answer: 'Use the docs.'}], traceContext: legacyTrace}),
-      });
+      const url = origin + (service ? '/api/docs/bot-ask' : '/api/docs/ask');
+      const headers = {'Content-Type': 'application/json', Authorization: 'Bearer service-token'};
+      const question = 'Lens website-access-secret bot-access-secret';
+      const response = await fetch(url, post(question, {headers}));
       assert.equal(response.status, 200);
-      assert.equal(response.headers.get('x-docs-trace-context'), null);
-      assert.equal((await response.json()).answer, citedAnswer);
-    }, {config: settings, fetchImpl: modelSteps([accepted, readLens, citedAnswer], body => {
-      assert.ok(!JSON.stringify(body).includes(legacyTrace));
-      assert.ok(!JSON.stringify(body).includes('unused-'));
+      const traceContext = response.headers.get('x-docs-trace-context');
+      assert.ok(traceContext, 'The answer should carry a signed Lens trace reference');
+      const [traceId, spanId, signature] = traceContext.split('.');
+      const key = service ? traced.botTracingKey : traced.tracing.key;
+      assert.equal(signature, createHmac('sha256', key).update(`${agentName}:conversation:v1:${traceId}.${spanId}`).digest('base64url'));
+      const root = spans.find(span => span.spanContext().spanId === spanId);
+      assert.equal(root.attributes['gen_ai.agent.name'], agentName);
+      assert.equal(root.attributes['docs.search.surface'], service ? 'slack' : undefined);
+      const answer = await response.text();
+      assert.ok(!answer.includes(key));
+      const followUp = await fetch(url, {...post('What about the gateway?', {headers}),
+        body: JSON.stringify({question: 'What about the gateway?', history: [{question, answer: citedAnswer}], traceContext})});
+      assert.equal(followUp.status, 200);
+      assert.equal(followUp.headers.get('x-docs-trace-context'), traceContext);
+      await followUp.text();
+      assert.ok(spans.filter(span => span.spanContext().traceId === traceId)
+        .some(span => span.attributes['input.value'] === 'What about the gateway?'));
+      const attributes = JSON.stringify(spans.map(span => span.attributes));
+      for (const secret of [env.CF_ACCESS_CLIENT_SECRET, env.DOCS_BOT_CF_ACCESS_CLIENT_SECRET]) {
+        assert.ok(!attributes.includes(secret));
+      }
+    }, {config: traced, fetchImpl: modelSteps([accepted, readLens, citedAnswer, accepted, readLens, citedAnswer], body => {
+      assert.ok(!JSON.stringify(body).includes('tracing-key'));
     }).fetch});
   }
+  assert.equal(traced.tracing.key, 'website-tracing-key');
 });
-
 
 test('gateway cutover selects endpoint and key together and keeps Access credentials server-side', () => {
   const legacy = {DOCS_AI_BASE_URL: 'https://old-gateway.example.com/v1', DOCS_AI_API_KEY: 'old-example-key'};

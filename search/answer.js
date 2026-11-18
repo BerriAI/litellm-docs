@@ -1,4 +1,5 @@
 const {createModelCaller} = require('./gateway');
+const {getTracing} = require('./tracing');
 const {tools, createDocumentationTools} = require('./tools');
 
 const instructions = `Answer the user's question using LiteLLM docs, API reference, integration guides, blog posts, and release notes.
@@ -15,12 +16,33 @@ const writeAnswer = {type: 'function', function: {name: 'write_answer',
 const researchInstructions = `${instructions}${sayItStyle}
 Use the search and read tools to find supporting evidence. Search previews are for discovery; use read_docs for evidence before answering product questions. When ready, use write_answer alone to provide the answer. Only its answer text is shown to the user.`;
 
-async function answerQuestion({question, history = [], index, documents, config, signal, fetchImpl = fetch, onEvent}) {
+async function answerQuestion(options) {
+  const tracing = getTracing(options.config);
+  try {
+    return await tracing.conversation({context: options.traceContext, question: options.question,
+      onContext: options.onTraceContext}, () => tracing.span('answer question', {
+      'openinference.span.kind': 'CHAIN',
+      'input.value': options.question,
+      'input.mime_type': 'text/plain',
+    }, async span => {
+      const result = await generateAnswer(options);
+      if (result.status >= 400) span.setError('DocsAIUnavailable');
+      span.setAttribute('output.value', result.body.answer || result.body.error);
+      span.setAttribute('output.mime_type', 'text/plain');
+      return result;
+    }));
+  } finally {
+    // Finish exporting before a serverless invocation can be suspended.
+    await tracing.flush();
+  }
+}
+
+async function generateAnswer({question, history = [], index, documents, config, signal, fetchImpl = fetch, onEvent}) {
   if (!config.apiKey) return {status: 503, body: {error: 'Ask AI is not configured yet. Document search is still available.'}};
   const {mapCitations} = await import('./citations.mjs');
-  const callModel = createModelCaller({config, signal, fetchImpl});
+  const tracing = getTracing(config), callModel = createModelCaller({config, signal, fetchImpl});
   const emit = async (event, data) => {signal?.throwIfAborted(); await onEvent?.(event, data);};
-  const documentation = createDocumentationTools({index, documents, signal, onEvent: emit});
+  const documentation = createDocumentationTools({index, documents, tracing, signal, onEvent: emit});
   const conversation = history.map(({question, answer}) => ({question, ...(answer === undefined ? {} : {answer})}));
   const messages = [
     {role: 'system', content: [{type: 'text', text: researchInstructions, cache_control: {type: 'ephemeral'}}]},
@@ -39,7 +61,7 @@ async function answerQuestion({question, history = [], index, documents, config,
   for (let round = 0; round <= 8; round++) {
     const message = await callModel.turn(messages, {
       toolDefinitions: round === 8 ? [writeAnswer] : [...tools, writeAnswer], toolChoice: 'required',
-      answerTool: 'write_answer', onDelta: onEvent ? async text => {await beginAnswer(); await emit('answer-delta', {text});} : undefined,
+      stage: `research ${round + 1}`, answerTool: 'write_answer', onDelta: onEvent ? async text => {await beginAnswer(); await emit('answer-delta', {text});} : undefined,
     });
     if (!message.tool_calls?.length) throw new Error('Expected a documentation tool call');
     const writing = message.tool_calls.find(call => call.function.name === 'write_answer');

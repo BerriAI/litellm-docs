@@ -81,7 +81,7 @@ The website cutover preserves the authenticated bot's existing gateway and dedic
 
 Set `DOCS_CHAT_PROVIDER=internal` before rebuilding; otherwise an existing `INKEEP_API_KEY` keeps the Inkeep UI active. Redeploy after setting the variables. Without the public enable flag, Ask AI returns 503 while document search still works. Before production activation, use a branch-specific preview and restricted preview credentials, set its exact `DOCS_ORIGIN`, and run the checks below. Do not expose production secrets to every preview branch.
 
-After the gateway-backed website passes the checks below, remove its legacy `DOCS_AI_API_KEY` and, if no Inkeep fallback is needed, `INKEEP_API_KEY`. Keep `DOCS_BOT_SERVICE_TOKEN` and `DOCS_BOT_AI_API_KEY` for Slack. After deploying this version, remove unused Lens variables: `DOCS_BOT_TRACING_KEY`, `LITELLM_TRACING_KEY`, `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`, `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL`, `OTEL_EXPORTER_OTLP_PROTOCOL`, and `LENS_UI_URL`.
+After the gateway-backed website passes the checks below, remove its legacy `DOCS_AI_API_KEY` and, if no Inkeep fallback is needed, `INKEEP_API_KEY`. Keep `DOCS_BOT_SERVICE_TOKEN` and `DOCS_BOT_AI_API_KEY` for Slack.
 
 Keyword search is available without model credentials or an enable flag. `POST /api/docs/search` accepts `{query, type}`, with a query of 1 to 500 characters and an optional `all`, `docs`, `blog`, or `release` filter. It returns up to 100 results, uses `Cache-Control: no-store`, and makes no model calls. The existing engine preserves ranking, snippets, filters, typo handling, and chronological browsing. The endpoint limits request bodies to 16 KB and four concurrent requests per instance. The old Jev request-rate allowance does not apply to keyword searches. The Jev comparison remains available only through `npm run search:lab`.
 
@@ -166,7 +166,7 @@ The API accepts a non-empty question, previous turns as `{question, answer?}` ob
 
 Each question permits up to eight research rounds. The agent can call `write_answer` in any round; if all eight rounds retrieve documentation, a ninth call permits only `write_answer`. Each call allows up to three provider attempts through native fallbacks. The prompt does not require a particular number of searches. Reads have no character, passage, or linked-destination cap. Provider context limits still apply; exceeding them fails the request instead of silently dropping page content. Hosting payload limits and execution deadlines still apply. The public endpoint also bounds request rates and concurrent work. Redirects are disabled, errors are generic, and client disconnects cancel upstream requests. Static serving denies dotfiles, traversal, and symlinks outside the build directory
 
-The model has no privileged actions or access to secrets, but its answers can still be wrong or influenced by malicious text. Topic restrictions are not a security boundary. A public endpoint can also be used to consume its budget. Model restrictions, gateway spending limits, shared ingress rate limits, and monitoring remain necessary. The service does not export traces or store or log questions and answers. Gateway retention follows its own configuration
+The model has no privileged actions or access to secrets, but its answers can still be wrong or influenced by malicious text. Topic restrictions are not a security boundary. A public endpoint can also be used to consume its budget. Model restrictions, gateway spending limits, shared ingress rate limits, and monitoring remain necessary. When configured, Lens receives questions, retrieved documentation, answers, model names, timing, and usage. Gateway retention follows its own configuration
 
 ## Streaming
 
@@ -197,4 +197,22 @@ The bot route does not require `DOCS_AI_PUBLIC_ENABLED` and has no public per-IP
 
 Both Vercel and `npm run search:serve` expose the route. Vercel bundles the same build-generated index and documents into its function; a warm function instance reuses that corpus across requests. The Slack worker never loads an index. Missing either bot secret returns 503; an incorrect bearer credential returns 401. An authenticated empty JSON object returns 400 without calling a model, which the worker uses as a configuration preflight.
 
-Legacy workers can still send `traceContext`; the service ignores it and returns no trace header. Follow-up history continues to work without tracing.
+When Lens is enabled, the bot receives a signed `X-Docs-Trace-Context` header. Pass that value as `traceContext` on follow-ups to keep the conversation in one trace.
+
+## Lens tracing
+
+Set these server-only variables in Vercel and redeploy. Use ingestion keys from the same Lens instance. The Slack key overrides the website key on the authenticated bot route.
+
+```dotenv
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=https://lens.example.com/v1/traces
+LITELLM_TRACING_KEY=your-website-lens-ingestion-key
+DOCS_BOT_TRACING_KEY=your-slack-lens-ingestion-key
+```
+
+Ask “How do I list models on the LiteLLM proxy?” in Ask AI. In Lens, open the `litellm-docs-search` agent and check for the trace with its research and answer spans. Follow up in the same chat and check that both turns appear in the same trace. For Slack, repeat in the docs bot and check for the `docs.search.surface=slack` attribute. Export failures leave Ask AI available.
+
+For a local receipt check, use the same variables with your local model configuration and built docs corpus.
+
+```sh
+node --env-file=.env.local search/verify-trace.js "How do I list models on the LiteLLM proxy?"
+```
