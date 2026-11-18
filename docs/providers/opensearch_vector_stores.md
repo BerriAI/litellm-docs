@@ -208,6 +208,18 @@ curl -X POST 'http://localhost:4000/v1/vector_stores/support-docs/search' \
       "file_id": "1%3A0%3A1rpUh6EBHM3B89oa2RE3",
       "filename": "facilities-office-access.md",
       "attributes": {"filename": "facilities-office-access.md", "category": "facilities"}
+    },
+    {
+      "score": 0.41095334,
+      "content": [
+        {
+          "type": "text",
+          "text": "Travel expense policy (FIN-204): Hotel stays are reimbursed up to 240 USD per night in tier-1 cities and 165 USD elsewhere. Receipts must be uploaded to the Ledgerline portal within 30 days of the trip ending, and late receipts are reimbursed only with VP approval."
+        }
+      ],
+      "file_id": "1%3A0%3A17pUh6EBHM3B89oa2RE3",
+      "filename": "finance-expense-policy.md",
+      "attributes": {"filename": "finance-expense-policy.md", "category": "finance"}
     }
   ]
 }
