@@ -209,6 +209,8 @@ LITELLM_TRACING_KEY=your-website-lens-ingestion-key
 DOCS_BOT_TRACING_KEY=your-slack-lens-ingestion-key
 ```
 
+If the Lens ingress has a Cloudflare Access Service Auth policy that allows the existing Docs service token, set `LENS_USE_DOCS_CLOUDFLARE_ACCESS=true` alongside these variables. Both the exporter and the receipt check then send the server-side `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET` to the configured Lens endpoint. Use the approved Lens ingestion URL and keep the dedicated Lens ingestion key in place.
+
 Ask “How do I list models on the LiteLLM proxy?” in Ask AI. In Lens, open the `litellm-docs-search` agent and check for the trace with its research and answer spans. Follow up in the same chat and check that both turns appear in the same trace. For Slack, repeat in the docs bot and check for the `docs.search.surface=slack` attribute. Export failures leave Ask AI available.
 
 For a local receipt check, use the same variables with your local model configuration and built docs corpus.

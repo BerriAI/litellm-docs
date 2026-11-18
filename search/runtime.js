@@ -29,6 +29,10 @@ function readConfig(env, defaults = {}) {
       endpoint: env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
       key: env.LITELLM_TRACING_KEY,
       protocol: env.OTEL_EXPORTER_OTLP_TRACES_PROTOCOL || env.OTEL_EXPORTER_OTLP_PROTOCOL,
+      cloudflareAccess: env.LENS_USE_DOCS_CLOUDFLARE_ACCESS === 'true' ? {
+        clientId: env.CF_ACCESS_CLIENT_ID,
+        clientSecret: env.CF_ACCESS_CLIENT_SECRET,
+      } : undefined,
     },
     publicAIEnabled: env.DOCS_AI_PUBLIC_ENABLED === 'true',
     publicRerankEnabled: env.DOCS_SEARCH_RERANK_ENABLED === 'true',
