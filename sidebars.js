@@ -681,6 +681,7 @@ const sidebars = {
               items: [
                 "proxy/customers",
                 "proxy/customer_management/track-customer-spend",
+                "proxy/customer_management/jwt-customer-identity",
                 "proxy/customer_management/api_reference",
               ],
             },
