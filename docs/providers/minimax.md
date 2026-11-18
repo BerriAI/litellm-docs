@@ -1,3 +1,9 @@
+---
+title: "MiniMax API with LiteLLM: Chat, Speech, Video"
+sidebar_label: "MiniMax"
+description: "Chat with MiniMax-M2.1 in Anthropic or OpenAI format with thinking and tools, convert text to speech with speech-2.6-hd and generate MiniMax-H3 videos."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -381,6 +387,16 @@ response = litellm.completion(
 # Access cost information
 print(f"Cost: ${response._hidden_params.get('response_cost', 0)}")
 ```
+
+## Latest model aliases
+
+<SinceVersion v="1.109.0" />
+
+`minimax/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other MiniMax model name. LiteLLM sends MiniMax the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+
+| Alias | Model family |
+| --- | --- |
+| `minimax/minimax-latest` | MiniMax |
 
 ## MiniMax - Text-to-Speech
 

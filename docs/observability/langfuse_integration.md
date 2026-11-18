@@ -1,3 +1,8 @@
+---
+title: "Langfuse Tracing for LiteLLM: Setup"
+sidebar_label: "Langfuse"
+description: "Send LiteLLM traces to Langfuse from the Python SDK or AI Gateway, set trace IDs, user IDs, tags and metadata per request, and redact messages."
+---
 import Image from '@theme/IdealImage';
 
 # Langfuse
@@ -14,6 +19,8 @@ Example trace in Langfuse using multiple models via LiteLLM:
 :::tip[Recommended: Use OpenTelemetry v2]
 
 For Langfuse v3 and v4, we recommend using the `langfuse_otel` preset in the [OpenTelemetry v2 guide](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets). This provides better span quality, lower latency, and native OpenTelemetry semantics.
+
+Moving from the SDK-based `langfuse` callback? Read the [Langfuse SDK to OpenTelemetry v2 migration guide](./langfuse_to_otel_v2_migration) first for ingestion costs, server compatibility, content capture and metadata changes. Use `llm_only` unless you need the full request tree in Langfuse.
 
 The SDK callback below (`langfuse`) requires the Langfuse Python SDK v4 (`langfuse>=4.7,<5`). It exports traces through LiteLLM's own OpenTelemetry pipeline to Langfuse's OTLP endpoint, so traces appear in near real time, and uses the SDK's REST client only for prompt management and credential checks. Batch size and prompt cache TTL are tuned with `LANGFUSE_FLUSH_AT` and `LANGFUSE_PROMPT_CACHE_DEFAULT_TTL_SECONDS` (see [config settings](../proxy/config_settings)).
 
@@ -46,7 +53,7 @@ uv add "langfuse>=4.7,<5" litellm
 ### Quick Start
 Use just 2 lines of code, to instantly log your responses **across all providers** with Langfuse:
 
-<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/main/cookbook/logging_observability/LiteLLM_Langfuse.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/logging_observability/LiteLLM_Langfuse.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 

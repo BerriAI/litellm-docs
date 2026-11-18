@@ -1,3 +1,9 @@
+---
+title: "vLLM with LiteLLM: Self-Hosted Model Setup"
+sidebar_label: "vLLM"
+description: "Call a hosted vLLM server via LiteLLM with the hosted_vllm/ prefix and your api_base, from the Python SDK or AI Gateway, for chat, embeddings and rerank."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -682,7 +688,7 @@ def default_pt(messages):
     return " ".join(message["content"] for message in messages)
 ```
 
-[Code for how prompt templates work in LiteLLM](https://github.com/BerriAI/litellm/blob/main/litellm/llms/prompt_templates/factory.py)
+[Code for how prompt templates work in LiteLLM](https://github.com/BerriAI/litellm/blob/main/litellm/litellm_core_utils/prompt_templates/factory.py)
 
 
 #### Models we already have Prompt Templates for

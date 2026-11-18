@@ -1,3 +1,8 @@
+---
+title: "MLflow Tracing for LiteLLM: Python SDK and Gateway"
+sidebar_label: "MLflow"
+description: "Trace LiteLLM calls in MLflow from the Python SDK or AI Gateway, including tool calls and evaluation, and export traces to OpenTelemetry collectors."
+---
 import Image from '@theme/IdealImage';
 
 # MLflow

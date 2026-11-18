@@ -9,6 +9,23 @@ const contentPath = value => value === '/docs' || value === '/api-reference/' ||
 // Ordinary documentation fragments still identify sections within one page.
 const contentPage = url => url.startsWith('/api-reference/#/') ? url : url.split('#')[0];
 
+function categoryFor(url, breadcrumbs = []) {
+  const pathname = url.split(/[?#]/)[0];
+  if (/^\/docs\/providers(?:\/|$)/.test(pathname)) return 'Providers';
+  // The first ancestor identifies the owning product or section. The final
+  // breadcrumb is the page itself, and must not become its category.
+  if (breadcrumbs.length > 1) return breadcrumbs[0] === 'LiteLLM Lens' ? 'Lens' : breadcrumbs[0];
+  // Product landing pages and documents without breadcrumbs need a fallback.
+  if (/^\/docs\/proxy\/lens(?:\/|$)/.test(pathname)) return 'Lens';
+  if (/^\/docs\/mcp(?:[/_]|$)/.test(pathname)) return 'MCP Gateway';
+  if (/^\/docs\/a2a(?:[/_]|$)/.test(pathname)) return 'Agent Gateway';
+  if (/^\/docs\/auto_router(?:\/|$)/.test(pathname)) return 'Auto Router';
+  if (/^\/docs\/(?:proxy\/|simple_proxy(?:\/|$))/.test(pathname)) return 'AI Gateway';
+  if (/^\/docs\/(?:python_sdk|completion|caching|embedding|routing|set_keys)(?:[/_]|$)/.test(pathname)) return 'Python SDK';
+  if (/^\/docs\/(?:observability|integrations|pass_through)\//.test(pathname)) return 'Integrations';
+  return 'Docs';
+}
+
 function isContentUrl(value) {
   if (typeof value !== 'string' || !contentPath(value.split(/[?#]/)[0]) || /[\\\u0000-\u001f]/.test(value)) return false;
   try {
@@ -36,4 +53,4 @@ function sourceDetail(source) {
   return parts.join(' · ');
 }
 
-module.exports = {contentTypes, contentType, contentPage, versionsIn, normalizeVersion, isContentUrl, sourceLabel, sourceDetail};
+module.exports = {contentTypes, contentType, contentPage, categoryFor, versionsIn, normalizeVersion, isContentUrl, sourceLabel, sourceDetail};

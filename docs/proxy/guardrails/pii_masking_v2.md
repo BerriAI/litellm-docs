@@ -1,3 +1,8 @@
+---
+title: "PII and PHI Masking with Presidio on LiteLLM"
+sidebar_label: "PII, PHI Masking - Presidio"
+description: "Mask PII and PHI in LLM requests and responses with Microsoft Presidio on the LiteLLM AI Gateway, with entity types and confidence thresholds."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

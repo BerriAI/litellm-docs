@@ -19,7 +19,7 @@ model_list:
 
 2. `uv add locust`
 
-3. Create a file called `locustfile.py` on your local machine. Copy the contents from the litellm load test located [here](https://github.com/BerriAI/litellm/blob/main/.github/workflows/locustfile.py)
+3. Create a file called `locustfile.py` on your local machine. Copy the contents from the litellm load test located [here](https://github.com/BerriAI/litellm/blob/df2a36dd27fa222623f08ab9a6d794ad88287888/.github/workflows/locustfile.py)
 
 4. Start locust
   Run `locust` in the same directory as your `locustfile.py` from step 2

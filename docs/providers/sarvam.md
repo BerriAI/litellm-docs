@@ -1,3 +1,9 @@
+---
+title: "Sarvam AI API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Sarvam.ai"
+description: "Send chat requests to Sarvam AI text models such as sarvam-m with the sarvam/ prefix, then serve them to OpenAI clients and curl through the AI Gateway."
+---
+
 # Sarvam.ai
 
 import Tabs from '@theme/Tabs';

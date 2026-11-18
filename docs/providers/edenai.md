@@ -1,3 +1,9 @@
+---
+title: "Eden AI API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Eden AI"
+description: "Reach 1000+ models through Eden AI from the Python SDK or AI Gateway for chat, embeddings, audio, images and video, with fallbacks and Eden-reported cost."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

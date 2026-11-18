@@ -1,3 +1,8 @@
+---
+title: "Levo Tracing for LiteLLM: Python SDK and Gateway"
+sidebar_label: "Levo"
+description: "Send LiteLLM traces to Levo from the Python SDK or AI Gateway over OpenTelemetry for API and LLM security testing, with a collector URL and key."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

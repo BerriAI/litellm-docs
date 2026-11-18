@@ -1,3 +1,9 @@
+---
+title: "OpenAI Text Completion API with LiteLLM"
+sidebar_label: "OpenAI (Text Completion)"
+description: "Send prompts to OpenAI's legacy Completions endpoint with gpt-5.4, gpt-5.4-mini and gpt-5.4-nano through text-completion-openai/, via the SDK or AI Gateway."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

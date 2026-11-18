@@ -1,0 +1,54 @@
+import React from 'react';
+import Layout from '@theme/Layout';
+import useBrokenLinks from '@docusaurus/useBrokenLinks';
+import RouterPlayground from '@site/src/components/RouterPlayground';
+import {CASES} from '@site/src/components/RouterPlayground/cases';
+import styles from './router-playground.module.css';
+
+// The playground lives in src/components/RouterPlayground; this page only frames it.
+
+export default function RouterPlaygroundPage() {
+  // Docs pages link to #case=<id>; the playground reads that hash itself, so each one is a real anchor.
+  const brokenLinks = useBrokenLinks();
+  CASES.forEach(item => brokenLinks.collectAnchor(`case=${item.id}`));
+  return (
+    <Layout
+      title="Router playground"
+      description="Run the LiteLLM router core in your browser and watch how it picks, retries, cools down and falls back.">
+      <main className={styles.page}>
+        <header className={styles.hero}>
+          <h1 className={styles.title}>Router playground</h1>
+          <ol className={styles.guide}>
+            <li>Pick a preset, or edit the config in Form or YAML.</li>
+            <li>
+              Press <strong>Play</strong> in the simulator to send traffic, then use <strong>Trigger outage</strong> on a
+              deployment to watch retries, cooldowns and fallbacks.
+            </li>
+            <li>Click a bar or a cross in a lane to see every step the router took for that request.</li>
+          </ol>
+        </header>
+        <RouterPlayground />
+        <details className={styles.about}>
+          <summary className={styles.aboutSummary}>How it works</summary>
+          <p className={styles.description}>
+            This page runs the router core that <code>litellm.Router</code> uses, compiled to WebAssembly, in your
+            browser. Paste a <code>model_list</code> and <code>router_settings</code>, choose how each deployment
+            answers, and send requests. No request leaves the page: the playground answers each attempt from its script,
+            and retry waits move a simulated clock forward instead of waiting.
+          </p>
+          <p className={styles.description}>
+            The simulator runs steady traffic on simulated time with a behaviour profile per deployment: click incidents
+            into a live run and watch cooldowns and fallbacks cascade, or script a scenario and compare two configs on
+            the same seed.
+          </p>
+          <p className={styles.description}>
+            It covers <code>simple-shuffle</code> with weights and <code>order</code>, retries, fallbacks, cooldowns and
+            allowed fails. Strategies that still run in Python, such as <code>least-busy</code>,{' '}
+            <code>usage-based-routing-v2</code> and <code>latency-based-routing</code>, are not offered until they run
+            in the Rust core.
+          </p>
+        </details>
+      </main>
+    </Layout>
+  );
+}

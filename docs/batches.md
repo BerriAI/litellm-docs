@@ -659,6 +659,46 @@ Two details to plan around:
 - `disable_batch_input_file_rate_limiting` and `skip_batch_input_file_rate_limiting_for_providers` take precedence. When they apply, LiteLLM performs no enqueued-token accounting.
 - Reservations for batches whose terminal state LiteLLM never observes (for example, a batch only ever polled directly against the provider) expire after 8 days.
 
+#### Per-model limits on a project
+
+<SinceVersion v="1.111.0" />
+
+When several applications share one team, run each application as its own project and cap the tokens it can have enqueued for each model with `model_batch_enqueued_token_limit` in the project metadata:
+
+```bash
+curl -X POST 'http://localhost:4000/project/update' \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"project_id": "batch-app-project", "metadata": {"model_batch_enqueued_token_limit": {"gpt-5.5": 2000}}}'
+```
+
+Every key in the project shares one counter per model, so callers whose custom auth issues rotating tokens still hit the same limit. A batch that does not fit gets a `429`:
+
+```json
+{"error": {"message": "Batch enqueued token limit exceeded for project_model: batch-app-project:gpt-5.5. Batch requires 1221 tokens but only 779 enqueued tokens remaining out of 2000 enqueued token limit. Tokens free up as running batches complete or are cancelled.", "type": "throttling_error", "param": null, "code": "429"}}
+```
+
+How a batch is charged:
+
+- The batch is charged against the model it routes to and against every capped model named in its records' `body.model`. Records without a `body.model` count toward the model the batch routes to.
+- A managed file (uploaded with `target_model_names`) is charged only against the model the batch routes to, because LiteLLM rewrites its records to the deployment model on upload.
+- Names that resolve to the same model group, such as an alias and its model group or a deployment id, share one counter under the tightest limit set among them. A `-latest` model name is also charged against the limit set for the model it points to, and a dated snapshot such as `gpt-5.5-2026-04-23` against the limit set for its undated name.
+- Tokens are refunded the same way as key and team allowances: when LiteLLM serves a response showing the batch in a terminal state, or after 8 days.
+- Set project limits only after every proxy instance runs a version that supports them, and keep that in mind before a rollback. An instance on an older version that serves a batch's terminal state refunds only key and team allowances. The project tokens it skips stay held until no batch has reserved against that project and model for 8 days, so a project that keeps sending batches keeps them. If that fills a project's limit, raise the limit to make room.
+
+How it combines with other limits:
+
+- When the key or team also has a `batch_enqueued_token_limit`, the batch must fit every allowance and no other batch limit applies, as described above.
+- When only the project limit applies and it caps both the model the batch routes to and every model named in its records, the per-minute batch limits (key, team, user, and end-user TPM and RPM, plus the project's per-model TPM, ITPM, and OTPM) are skipped for that batch. Daily `tpd_limit` caps still apply.
+- When any of those models has no project cap, the batch keeps the normal batch limits on top of the project reservation.
+
+Only a proxy admin can set or change `model_batch_enqueued_token_limit` on a project. Team admins who try get a `403`. Each value must be a positive integer, otherwise `/project/new` and `/project/update` return `400`.
+
+The limit applies to callers whose request resolves to a project:
+
+- With custom auth, set `custom_auth_run_common_checks: true` under `general_settings` so LiteLLM loads the project's metadata.
+- Native JWT auth does not assign a project, so JWT callers are not covered.
+
 ### Operational behavior
 
 | Behavior | Operational impact |

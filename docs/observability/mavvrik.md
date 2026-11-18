@@ -1,3 +1,8 @@
+---
+title: "Mavvrik Cost Export for LiteLLM AI Gateway"
+sidebar_label: "Mavvrik"
+description: "Export LiteLLM AI Gateway spend to Mavvrik as FOCUS 1.2 cost reports, uploaded as gzip-compressed CSV through a signed URL, set up in config.yaml."
+---
 # Mavvrik
 
 LiteLLM can export proxy spend data to [Mavvrik](https://mavvrik.ai) as [FOCUS 1.2](https://focus.finops.org/) formatted cost reports. This lets you track and analyse LLM spend within the Mavvrik cost management platform.

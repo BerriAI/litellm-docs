@@ -23,10 +23,20 @@ function getTracing(config) {
   return tracing;
 }
 
+function gatewaySecrets(config) {
+  return [config.apiKey, config.cfAccessClientId, config.cfAccessClientSecret,
+    config.botApiKey, config.botServiceToken, config.botGateway?.cfAccessClientId,
+    config.botGateway?.cfAccessClientSecret, ...(config.websiteGatewaySecrets || [])].filter(Boolean);
+}
+
+function docsSecrets(config) {
+  return [...gatewaySecrets(config), ...[config.tracing?.key, config.botTracingKey].filter(Boolean)];
+}
+
 function createTracing(config) {
   const endpoint = new URL(config.tracing.endpoint);
   if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || endpoint.search || endpoint.hash ||
-      config.tracing.key === config.apiKey ||
+      gatewaySecrets(config).includes(config.tracing.key) ||
       (config.tracing.protocol && config.tracing.protocol !== 'http/protobuf')) {
     throw new Error('Invalid tracing configuration');
   }
@@ -68,7 +78,7 @@ function createTracing(config) {
   });
   const tracer = provider.getTracer(AGENT_NAME);
   const active = new AsyncLocalStorage();
-  const secrets = [config.apiKey, config.tracing.key].filter(Boolean);
+  const secrets = docsSecrets(config);
   const clean = value => typeof value === 'string'
     ? secrets.reduce((text, secret) => text.replaceAll(secret, '[REDACTED]'), value)
     : Array.isArray(value) ? value.map(clean) : value;
@@ -143,4 +153,4 @@ function createTracing(config) {
   };
 }
 
-module.exports = {AGENT_NAME, getTracing};
+module.exports = {AGENT_NAME, getTracing, docsSecrets, gatewaySecrets};

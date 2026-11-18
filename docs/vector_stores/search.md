@@ -12,7 +12,7 @@ Search a vector store for relevant chunks based on a query and file attributes f
 | Cost Tracking | ✅ | Tracked per search operation |
 | Logging | ✅ | Works across all integrations |
 | End-user Tracking | ✅ | |
-| Support LLM Providers | **OpenAI, Azure OpenAI, Bedrock, Vertex RAG Engine, Azure AI, Milvus, Valkey, Gemini** | Full vector stores API support across providers |
+| Support LLM Providers | **OpenAI, Azure OpenAI, Bedrock, Vertex RAG Engine, Azure AI, Milvus, Valkey, Amazon OpenSearch, Gemini** | Full vector stores API support across providers |
 
 For **retrieve, list, update, and delete** over HTTP (including `custom_llm_provider` / `model` routing), see [Create vector store](./create.md#vector-store-management-and-routing-on-the-proxy).
 
@@ -219,6 +219,29 @@ print(response)
 ```
 
 [See full Valkey vector store documentation](../providers/valkey_vector_stores.md)
+
+</TabItem>
+
+<TabItem value="opensearch-provider" label="Amazon OpenSearch Provider">
+
+#### Using Amazon OpenSearch
+```python showLineNumbers title="Search Vector Store - Amazon OpenSearch Provider"
+import litellm
+
+response = await litellm.vector_stores.asearch(
+    vector_store_id="support-docs",  # name of the k-NN index in OpenSearch
+    query="What is the capital of France?",
+    custom_llm_provider="opensearch",
+    api_base="https://abc123.us-east-1.aoss.amazonaws.com",
+    litellm_embedding_model="openai/text-embedding-3-small",
+    max_num_results=3,
+)
+print(response)
+```
+
+LiteLLM signs the request with AWS SigV4, using `aws_*` params or the default AWS credential chain.
+
+[See full Amazon OpenSearch vector store documentation](../providers/opensearch_vector_stores.md)
 
 </TabItem>
 

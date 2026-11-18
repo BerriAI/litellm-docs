@@ -131,7 +131,7 @@ elif _custom_llm_provider == "your_provider":
 
 ## 4. Add Tests
 
-Add a test file to [`tests/llm_translation`](https://github.com/BerriAI/litellm/tree/main/tests/llm_translation)
+Add a test file to [`tests/unit/llms`](https://github.com/BerriAI/litellm/tree/main/tests/unit/llms)
 
 ```python
 def test_basic_rerank_cohere():

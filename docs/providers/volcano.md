@@ -1,3 +1,9 @@
+---
+title: "Volcano Engine (Volcengine) API with LiteLLM"
+sidebar_label: "Volcano Engine (Volcengine)"
+description: "Call Volcano Engine (Volcengine) chat endpoints, embed text with Doubao embedding models and generate Doubao-Seedance videos as async tasks via LiteLLM."
+---
+
 # Volcano Engine (Volcengine)
 https://www.volcengine.com/docs/82379/1263482
 

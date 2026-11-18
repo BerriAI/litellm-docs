@@ -1,3 +1,9 @@
+---
+title: "IBM watsonx.ai Rerank with LiteLLM"
+sidebar_label: "watsonx.ai Rerank"
+description: "Rerank documents with IBM watsonx.ai cross-encoder models such as ms-marco-minilm-l-12-v2, using top_n and return_documents, from the SDK or AI Gateway."
+---
+
 # watsonx.ai Rerank
 
 ## Overview

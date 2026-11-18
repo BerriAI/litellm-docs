@@ -152,7 +152,7 @@ A token for the same user minted by another client without the `litellm` audienc
 {"error": {"message": "Authentication Error, Validation fails: Audience doesn't match", "type": "auth_error", "param": "None", "code": "401"}}
 ```
 
-See [OIDC JWT-based Auth](../proxy/token_auth.md) for every claim mapping option, including `team_alias_jwt_field`, role mapping with `jwt_litellm_role_map`, and `sync_user_role_and_teams`.
+See [JWT configuration reference](../proxy/jwt_auth_reference.md) for identity claim mapping, including `team_alias_jwt_field`. [JWT permissions](../proxy/access_management/jwt_permissions.md) covers `jwt_litellm_role_map` and `sync_user_role_and_teams`.
 
 ## Step 3. Create organizations and teams in LiteLLM
 

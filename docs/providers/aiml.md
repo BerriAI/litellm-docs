@@ -1,3 +1,9 @@
+---
+title: "AI/ML API with LiteLLM: Chat, Embeddings, Images"
+sidebar_label: "AI/ML API"
+description: "Call Llama, Qwen and other AI/ML API models from the LiteLLM Python SDK, with sync and async chat, streaming, embeddings and dall-e-3 image generation."
+---
+
 # AI/ML API  
 https://aimlapi.com/
 

@@ -2,6 +2,8 @@
 
 LiteLLM prices every request from its model cost map, [`model_prices_and_context_window.json`](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json). Each entry maps a model to its rates, context limits, and capabilities. The raw JSON is large enough that GitHub will not render it, so browse the same data at [models.litellm.ai](https://models.litellm.ai/), which lists every model with its prices, context window, and supported features and lets you search by model name or provider. The proxy fetches the latest map from GitHub at startup, so new models and price changes arrive without upgrading LiteLLM. To change a price for your own deployment, see [Custom LLM Pricing](./custom_pricing) and [Custom Model Cost Map](./custom_model_cost_map).
 
+The map also contains [fallback generalizations](../fallback_generalizations.md) for new IDs. These rules infer providers and capability defaults when exact entries are missing. The shipped rules contain no prices, so add verified rates before relying on cost tracking for an unmapped model.
+
 ## Every price is USD per billable unit
 
 Every price in the map is in US dollars for one unit of what the provider bills. For token-priced models that unit is a single token, so `"input_cost_per_token": 1e-05` means $0.00001 per input token, which is $10 per 1M input tokens. `1e-05` is just how Python prints `0.00001`.

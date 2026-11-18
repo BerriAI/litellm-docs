@@ -1,3 +1,8 @@
+---
+title: "HiddenLayer Guardrails on LiteLLM AI Gateway"
+sidebar_label: "HiddenLayer Guardrails"
+description: "Send every request and response on the LiteLLM AI Gateway to HiddenLayer to block or redact unsafe content, with SaaS or self-hosted credentials."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

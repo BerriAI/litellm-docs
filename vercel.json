@@ -2,6 +2,10 @@
   "buildCommand": "npm run build",
   "rewrites": [
     {
+      "source": "/mcp{/}?",
+      "destination": "/api/mcp"
+    },
+    {
       "source": "/api/docs/bot-ask",
       "destination": "/api/docs/bot-ask"
     },
@@ -77,6 +81,11 @@
     }
   ],
   "functions": {
+    "api/mcp.js": {
+      "includeFiles": "build/{search-runtime.bin,openapi.json,mcp-pages.json,mcp-nav.json,mcp-models.json,**/*.md}",
+      "maxDuration": 30,
+      "memory": 1024
+    },
     "api/docs/search.js": {
       "includeFiles": "build/search-runtime.bin",
       "maxDuration": 20,

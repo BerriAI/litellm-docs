@@ -151,7 +151,7 @@ Get a 7 day free trial for LiteLLM Enterprise [here](https://litellm.ai/#trial).
 1. JWT / OIDC Auth - new `enforce_rbac` param,allows proxy admin to prevent any unmapped yet authenticated jwt tokens from calling proxy. [Start Here](/docs/proxy/token_auth)
 2. fix custom openapi schema generation for customized swagger’s 
 3. Request Headers - support reading `x-litellm-timeout` param from request headers. Enables model timeout control when using Vercel’s AI SDK + LiteLLM Proxy. [Start Here](../../docs/proxy/request_headers#litellm-headers)
-4. JWT / OIDC Auth - new `role` based permissions for model authentication. [See Here](https://docs.litellm.ai/docs/proxy/jwt_auth_arch)
+4. JWT / OIDC Auth - new `role` based permissions for model authentication. [See Here](/docs/proxy/access_management/jwt_permissions#beta-control-access-with-oidc-roles)
 
 ## Complete Git Diff
 

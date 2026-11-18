@@ -1,3 +1,8 @@
+---
+title: "Datadog LLM Observability and Logging for LiteLLM"
+sidebar_label: "Datadog"
+description: "Send LiteLLM logs, LLM Observability traces, custom metrics and cloud costs to Datadog from the AI Gateway, with message redaction and ddtrace."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

@@ -242,6 +242,7 @@ Configure which search provider to use. LiteLLM supports multiple search provide
 | **Linkup** | `linkup` | `LINKUP_API_KEY` |
 | **Serper** | `serper` | `SERPER_API_KEY` |
 | **SearchAPI.io** | `searchapi` | `SEARCHAPI_API_KEY` |
+| **Microsoft Web IQ** | `webiq` | `WEBIQ_API_KEY` |
 
 See [Search Providers Documentation](../search/index.md) for detailed setup instructions.
 
@@ -476,4 +477,4 @@ The handler automatically detects response format:
 
 ## Contributing
 
-Found a bug or want to add support for a new provider? See our [Contributing Guide](https://github.com/BerriAI/litellm/blob/main/CONTRIBUTING.md).
+Found a bug or want to add support for a new provider? See our [Contributing Guide](https://github.com/BerriAI/litellm/blob/main/.github/CONTRIBUTING.md).

@@ -1,3 +1,8 @@
+---
+title: "Aim Security Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Aim Security"
+description: "Add Aim Security guardrails to the LiteLLM AI Gateway: create an Aim Guard, tune its detections, and set per-key policies by virtual key alias."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

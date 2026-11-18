@@ -1,4 +1,11 @@
+---
+title: "Firecrawl Search API with LiteLLM: Search + Scrape"
+sidebar_label: "Firecrawl Search"
+description: "Add Firecrawl search to LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, with web, news and image sources plus page scraping."
+---
 # Firecrawl Search
+
+[Firecrawl](https://firecrawl.dev) is a web search and scraping API that can return the page content of each result; LiteLLM exposes it through one `search()` call in the Python SDK and the `/v1/search` endpoint on the AI Gateway.
 
 **Get API Key:** [https://firecrawl.dev](https://firecrawl.dev)
 

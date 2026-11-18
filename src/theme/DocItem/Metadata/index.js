@@ -41,13 +41,34 @@ function ReleaseJsonLd() {
   );
 }
 
+// schema.org FAQPage for a doc that lists `faq: [{question, answer}]` in its
+// front matter. The page must show the same questions and answers in its text.
+function FaqJsonLd({faq}) {
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faq.map(({question, answer}) => ({
+      '@type': 'Question',
+      name: question,
+      acceptedAnswer: {'@type': 'Answer', text: answer},
+    })),
+  };
+  return (
+    <Head>
+      <script type="application/ld+json">{JSON.stringify(data)}</script>
+    </Head>
+  );
+}
+
 export default function DocItemMetadata() {
   const {metadata, frontMatter, assets} = useDoc();
   const {images} = usePluginData('social-cards');
   const isRelease = useActivePlugin()?.pluginId === 'release-notes' && metadata.id !== 'index';
+  const faq = Array.isArray(frontMatter.faq) ? frontMatter.faq.filter((f) => f?.question && f?.answer) : [];
   return <>
     <OriginalMetadata />
     {!(assets.image ?? frontMatter.image) && <PageMetadata image={images[metadata.permalink]} />}
     {isRelease && <ReleaseJsonLd />}
+    {faq.length > 0 && <FaqJsonLd faq={faq} />}
   </>;
 }

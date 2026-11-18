@@ -1,3 +1,9 @@
+---
+title: "SCX.ai API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "SCX.ai"
+description: "Call GLM-5.2 and Qwen3.8-Max on SCX.ai, an Australian sovereign AI platform, with streaming, function calling, JSON schema output and image input."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

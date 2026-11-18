@@ -1,3 +1,8 @@
+---
+title: "Pydantic Logfire Tracing for LiteLLM Python SDK"
+sidebar_label: "Logfire"
+description: "Send LiteLLM Python SDK traces to Pydantic Logfire with the logfire callback to see production traces of quality, cost and latency per call."
+---
 import Image from '@theme/IdealImage';
 
 # Logfire

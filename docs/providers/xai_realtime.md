@@ -1,3 +1,9 @@
+---
+title: "xAI Grok Voice Agent Realtime API with LiteLLM"
+sidebar_label: "xAI Voice Agent (Realtime API)"
+description: "Connect to xAI's Grok Voice Agent realtime API through the LiteLLM AI Gateway over WebSocket: add the model to config.yaml, start the proxy and test it."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

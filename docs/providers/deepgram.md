@@ -1,3 +1,9 @@
+---
+title: "Deepgram Speech to Text with LiteLLM"
+sidebar_label: "Deepgram"
+description: "Transcribe audio with Deepgram Nova-2 using litellm.transcription() or the OpenAI-compatible /audio/transcriptions endpoint on the LiteLLM AI Gateway."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

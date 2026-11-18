@@ -1,3 +1,9 @@
+---
+title: "EmpirioLabs AI API with LiteLLM: Setup"
+sidebar_label: "EmpirioLabs AI"
+description: "Call Qwen3.7, DeepSeek V4, GLM-5.1 and Kimi K2.6 hosted by EmpirioLabs AI from the LiteLLM Python SDK or AI Gateway, with streaming and reasoning_effort."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

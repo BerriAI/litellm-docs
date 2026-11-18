@@ -1,3 +1,9 @@
+---
+title: "OpenAI Text to Speech with LiteLLM"
+sidebar_label: "OpenAI - Text-to-speech"
+description: "Run OpenAI text to speech through LiteLLM's /audio/speech endpoint from the Python SDK or AI Gateway, with async calls and the supported TTS models."
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

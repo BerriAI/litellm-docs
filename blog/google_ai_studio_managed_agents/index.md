@@ -345,5 +345,5 @@ There is no way to use managed agents with any provider other than Google AI Stu
 
 - `base_agent` only accepts `"antigravity-preview-05-2026"` (Google's current restriction).
 - Agents are stored on Google's side only. LiteLLM does not persist them in its database. If you delete an agent via Google's API directly, the proxy will not know.
-- Using the Interactions API via the `agent` param is only supported by Gemini as of now. Use the `model` param to call other providers' models.
+- When this post was written, the Interactions API `agent` param was only supported by Gemini. It now also works on Vertex AI, see [Deep Research on Vertex AI](/docs/interactions#deep-research-on-vertex-ai). Use the `model` param to call other providers' models.
 - `GEMINI_API_KEY` / `GOOGLE_API_KEY` must be present in the proxy environment. Passing the key per-request via `api_key` is supported in the SDK but not currently via the proxy endpoint.

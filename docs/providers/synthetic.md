@@ -1,3 +1,9 @@
+---
+title: "Synthetic API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Synthetic"
+description: "Call open-source models that Synthetic hosts in secure US and EU datacenters, with streaming and OpenAI sampling parameters, via the SDK or AI Gateway."
+---
+
 # Synthetic
 
 ## Overview

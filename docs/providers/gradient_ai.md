@@ -1,3 +1,9 @@
+---
+title: "GradientAI API with LiteLLM: Setup and Agents"
+sidebar_label: "GradientAI"
+description: "Call DigitalOcean GradientAI serverless models or your own GradientAI agents from the LiteLLM Python SDK, with streaming and knowledge base params like k."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

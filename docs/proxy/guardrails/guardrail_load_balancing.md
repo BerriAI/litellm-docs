@@ -1,3 +1,8 @@
+---
+title: "Guardrail Load Balancing on LiteLLM AI Gateway"
+sidebar_label: "Guardrail Load Balancing"
+description: "Load balance guardrail calls across deployments on the LiteLLM AI Gateway, with weighted routing and multi-account Bedrock Guardrails setup."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
