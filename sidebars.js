@@ -2032,6 +2032,7 @@ const providersSidebar = {
     "providers/stability",
     "providers/streamlake",
     "providers/strands_decider",
+    "providers/superbot",
     "providers/synthetic",
     "providers/tencent",
     "providers/tensormesh",
