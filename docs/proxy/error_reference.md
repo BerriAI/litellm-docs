@@ -76,9 +76,10 @@ A key with a zero budget that calls `/v1/messages` with an `x-request-id: req-do
 | `type` | string | Always `"error"` |
 | `error.type` | string | Anthropic's error type for the HTTP status, from the table below |
 | `error.message` | string | The same message the OpenAI-shaped routes return for this error |
-| `error.litellm_error_type` | string | Optional. The LiteLLM error type that the OpenAI-shaped routes put in `error.type`, such as `budget_exceeded`, `team_model_access_denied`, or `token_not_found_in_db`. Left out when it would only repeat `error.type` or the default type for the status |
-| `request_id` | string | Optional. The value of the request's `x-request-id` header, present only when the client sent one |
+| `error.litellm_error_type` | string | Optional. Set only on errors raised before the Messages handler, to the LiteLLM error type that the OpenAI-shaped routes put in `error.type`, such as `budget_exceeded`, `team_model_access_denied`, or `token_not_found_in_db`. Left out when it would only repeat `error.type` or the default type for the status |
+| `request_id` | string | Optional. The value of the request's `x-request-id` header, present only when the client sent one. A provider error on an `/anthropic/` route carries Anthropic's own `request_id` instead, as described below |
 | `error.provider_specific_fields` | object | Optional. The same provider detail the OpenAI-shaped body carries |
+| `error.litellm_call_id` | string | Optional. Set when `general_settings.include_call_id_in_error_body` is on. See [Reporting a problem](#reporting-a-problem) |
 
 There is no `error.code` or `error.param` on these routes, so read the status from the HTTP status line
 
@@ -107,7 +108,7 @@ Errors the gateway raises before the request reaches the Messages handler (authe
 | 408, and any other 5xx | `api_error` |
 | Any other 4xx, such as a 422 budget refusal | `invalid_request_error` |
 
-Errors raised while the handler serves the request, such as a gateway rate limit, a provider rejection, a timeout, or an unknown model name, carry Anthropic's type for the statuses Anthropic lists (400, 401, 403, 404, 413, 429, 500, and 529) and `api_error` for any other status, with no `error.litellm_error_type`. A provider error still names the provider in `error.message`, the same way it does on the OpenAI-shaped routes:
+Errors raised while the handler serves the request, such as a gateway rate limit, a provider rejection, a timeout, or an unknown model name, carry Anthropic's type for 400, 401, 403, 404, 413, 429, 500, and 529, and `api_error` for any other status, 402, 409, and 504 included. They carry no `error.litellm_error_type`. On every route except those under `/anthropic/`, a provider error still names the provider in `error.message`, the same way it does on the OpenAI-shaped routes:
 
 ```json
 {
@@ -119,7 +120,13 @@ Errors raised while the handler serves the request, such as a gateway rate limit
 }
 ```
 
-So a gateway rate limit on these routes returns 429 with `error.type` set to `rate_limit_error` and no `error.litellm_error_type`. Tell it apart from a provider's 429 by its message, which starts with `Rate limit exceeded for` and names no provider
+The `/anthropic/` routes are a pass-through, so a provider error there is Anthropic's own response, passed back unchanged. The gateway's own errors on these routes have no `request-id` response header. A provider error's `error.message` names no provider, and its `request_id` is Anthropic's, the same value as the `request-id` response header, even when the client sent `x-request-id`:
+
+```json
+{"type":"error","error":{"type":"invalid_request_error","message":"max_tokens: 100000000 > 128000, which is the maximum allowed number of output tokens for claude-haiku-5-5"},"request_id":"req_011Ch9u1XnKBcB7mazDjbXH1"}
+```
+
+So a gateway rate limit on these routes returns 429 with `error.type` set to `rate_limit_error` and no `error.litellm_error_type`. The 429 header rules under [Response headers](#response-headers) and [Is it the gateway or the provider?](#is-it-the-gateway-or-the-provider) do not apply here, so tell the two apart the way this section does for any error. A provider's 429 names the provider in `error.message`, or on the `/anthropic/` routes comes with a `request-id` header, and a gateway 429 has neither
 
 An unhandled exception inside the gateway returns `{"type": "error", "error": {"type": "api_error", "message": "Internal server error"}}` on these routes, and unparseable JSON returns 400 with `error.type` set to `invalid_request_error` and no `error.litellm_error_type`
 
@@ -141,7 +148,7 @@ Three families of header appear on successful responses only, so do not build fa
 
 :::tip
 
-`retry-after` is a strong disambiguation signal. The gateway sets it on its own rate limits and cooldowns, and it does not forward the provider's `retry-after` onto an error response. So a 429 that carries `retry-after` is the gateway's limit, and a 429 without it is the provider's
+`retry-after` is a strong disambiguation signal. The gateway sets it on its own rate limits and cooldowns, and it does not forward the provider's `retry-after` onto an error response. So on the OpenAI-shaped routes a 429 that carries `retry-after` is the gateway's limit, and a 429 without it is the provider's. On the Anthropic Messages routes, use the checks in [Errors on the Anthropic Messages routes](#errors-on-the-anthropic-messages-routes) instead
 
 :::
 
@@ -163,7 +170,7 @@ The presence of a `<Provider>Exception` token means the request left the gateway
 | `message` contains no provider name, and `type` (`litellm_error_type` on the Anthropic Messages routes) is a LiteLLM value such as `budget_exceeded`, `expired_key`, `token_not_found_in_db`, `key_model_access_denied` | LiteLLM gateway |
 | `message` starts with `No deployments available for selected model` or `There are no healthy deployments for this model` | LiteLLM gateway (routing) |
 | 429 with a `retry-after`, `rate_limit_type`, `rate_limited_by`, or `reset_at` header | LiteLLM gateway (rate limiting) |
-| 429 with no such headers | Upstream provider |
+| 429 with no such headers, on the OpenAI-shaped routes | Upstream provider |
 
 Worked example, gateway origin. The virtual key is capped below its accrued spend, so the request is rejected before any provider is contacted:
 
@@ -212,7 +219,7 @@ A note on 500 versus 503. A connection that never reaches the provider (DNS fail
 
 ## Gateway error types
 
-These `error.type` values are produced by the gateway itself. Seeing one of them means no provider was involved in the failure. On the [Anthropic Messages routes](#errors-on-the-anthropic-messages-routes) the same values come in `error.litellm_error_type`
+These `error.type` values are produced by the gateway itself. Seeing one of them means no provider was involved in the failure. On the [Anthropic Messages routes](#errors-on-the-anthropic-messages-routes), errors raised before the Messages handler carry the same values in `error.litellm_error_type`, except a value that is only its status's default type, such as `invalid_request_error` on a 4xx
 
 | `error.type` | Status | Cause | What to do |
 |---|---|---|---|
@@ -245,7 +252,7 @@ Routing failures do not currently set a distinctive `error.type`; identify them 
 
 ## Which 429 is this?
 
-429 is the one status the gateway and the providers both use heavily, so it deserves a dedicated check. Work through the response in this order
+429 is the one status the gateway and the providers both use heavily, so it deserves a dedicated check. On the OpenAI-shaped routes, work through the response in this order. On the Anthropic Messages routes, use the checks in [Errors on the Anthropic Messages routes](#errors-on-the-anthropic-messages-routes) instead
 
 A gateway rate limit sets `retry-after`, `rate_limit_type`, `rate_limited_by`, and `reset_at`. `rate_limited_by` names the limit that was hit (`api_key` below) so you do not have to parse the message, which repeats it in words:
 
