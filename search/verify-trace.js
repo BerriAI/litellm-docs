@@ -54,7 +54,7 @@ async function main() {
   const config = readConfig(process.env);
   const tracing = getTracing(config);
   if (!tracing.enabled) throw new Error('Configure LITELLM_TRACING_KEY and OTEL_EXPORTER_OTLP_TRACES_ENDPOINT in .env.local first.');
-  if (!config.apiKey) throw new Error('The existing DOCS_AI_API_KEY is missing.');
+  if (!config.apiKey) throw new Error('Configure the docs model gateway key before verifying a trace.');
   const traces = new Map();
   const unsubscribe = tracing.subscribeExports(spans => {
     for (const {trace_id, span_id} of spans) {
@@ -104,7 +104,7 @@ async function main() {
 
 if (require.main === module) main().catch(error => {
   // Deliberately avoid dumping upstream errors or configuration objects.
-  const message = /^(Pass |Configure |The existing |The docs |The exporter |Lens |Trace receipt |Invalid LENS_UI_URL)/.test(error.message)
+  const message = /^(Pass |Configure |The docs |The exporter |Lens |Trace receipt |Invalid LENS_UI_URL)/.test(error.message)
     ? error.message : 'Could not verify a real docs trace. Check model access and Lens connectivity.';
   console.error(message);
   process.exitCode = 1;
