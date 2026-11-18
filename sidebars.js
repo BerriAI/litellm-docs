@@ -696,6 +696,7 @@ const sidebars = {
             "proxy/ptu_flat_cost",
             "proxy/pricing_calculator",
             "proxy/provider_margins",
+            "proxy/team_cost_margin",
             "proxy/provider_discounts",
             "proxy/off_peak_pricing",
             "tutorials/vertex_ai_pay_go",
