@@ -1927,6 +1927,7 @@ const providersSidebar = {
     { type: "html", value: "Vector Stores", className: "sidebar-group-label", defaultStyle: true },
     "providers/milvus_vector_stores",
     "providers/mongodb_vector_stores",
+    "providers/opensearch_vector_stores",
     "providers/s3_vectors",
     "providers/valkey_vector_stores",
     "providers/ragflow_vector_store",
