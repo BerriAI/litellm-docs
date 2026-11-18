@@ -1,6 +1,18 @@
 [
   {
     "folders": [
+      "v1.110.0"
+    ],
+    "title": "LiteLLM v1.110.0 adds the Agent Skills Hub and a Rust-only router",
+    "points": [
+      "The router always runs on the Rust core, and a router config that the Rust core declines now stops the proxy at startup.",
+      "Spend goes through the `LiteLLM_SpendLogDelivery` ledger by default, and `general_settings.use_spend_logs_ledger: false` restores the previous spend queues.",
+      "The Agent Skills Hub adds skill upload and import, version history and an admin review queue for member submissions.",
+      "Model and pass-through routes refuse Azure login fields such as `client_id` and `tenant_id` in the request body, so move them into `metadata`."
+    ]
+  },
+  {
+    "folders": [
       "v1.111.0rc1"
     ],
     "title": "LiteLLM v1.111.0rc1 adds Customer Management and performance alerts",
@@ -31,17 +43,6 @@
       "Versioned Claude models on Vertex AI, such as `claude-*@<version>`, no longer stop at 4096 tokens when the request has no `max_tokens`.",
       "Deployments with `base_model` set to `azure/eu/o3`, `o4-mini`, `o1` or `o3-mini` record real spend instead of $0.",
       "Async Codestral chat with a `file` part no longer returns 400."
-    ]
-  },
-  {
-    "folders": [
-      "v1.110.0rc3"
-    ],
-    "title": "LiteLLM v1.110.0rc3 fixes fallback overrides and WebSocket model aliases",
-    "points": [
-      "A string fallback override such as `\"fallbacks\": \"default\"` no longer returns 500.",
-      "Responses WebSocket requests keep the team's model alias and no longer land on another deployment.",
-      "Hugging Face chat honors `HUGGINGFACE_API_BASE`, and unmapped Fireworks AI models sized like `1p5b` no longer bill at double the up-to-4B rate."
     ]
   },
   {
@@ -87,8 +88,7 @@
   },
   {
     "folders": [
-      "v1.109.1",
-      "v1.110.0rc2"
+      "v1.109.1"
     ],
     "title": "LiteLLM v1.109.1 and v1.110.0rc2 refuse Azure login fields in the body",
     "points": [
@@ -135,18 +135,6 @@
     "points": [
       "GitHub Copilot per-user credentials work on GHE.com tenants with the optional `github_copilot_host` field.",
       "Per-user Copilot connect no longer fails with `no Copilot access found` when `GITHUB_COPILOT_CLIENT_ID` is set."
-    ]
-  },
-  {
-    "folders": [
-      "v1.110.0rc1"
-    ],
-    "title": "LiteLLM v1.110.0rc1 adds the Agent Skills Hub and a Rust-only router",
-    "points": [
-      "The router always runs on the Rust core, and a router config that the Rust core declines now stops the proxy at startup.",
-      "Spend goes through the `LiteLLM_SpendLogDelivery` ledger by default, and `general_settings.use_spend_logs_ledger: false` restores the previous spend queues.",
-      "The Agent Skills Hub adds skill upload and import, version history and an admin review queue for member submissions.",
-      "Streamed `/v1/responses` no longer ends with `[DONE]`, and raw response ids that the proxy did not issue are rejected by default."
     ]
   },
   {

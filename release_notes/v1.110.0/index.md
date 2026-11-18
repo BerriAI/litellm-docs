@@ -1,8 +1,8 @@
 ---
-title: "LiteLLM v1.110.0rc1 adds the Agent Skills Hub and a Rust-only router"
-description: "Release candidate for LiteLLM 1.110.0 with the Agent Skills Hub, a Rust-only router, the spend ledger by default and the latest OpenAI realtime models."
-slug: "v1-110-0-rc-1"
-date: 2026-11-11T00:06:06
+title: "LiteLLM v1.110.0 adds the Agent Skills Hub and a Rust-only router"
+description: "Adds the Agent Skills Hub, a Rust-only router, the spend ledger by default, Claude structured output on Bedrock and the latest OpenAI realtime models."
+slug: "v1-110-0"
+date: 2026-11-18T01:36:48
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -33,38 +33,34 @@ docker run \
 -e DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname> \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.110.0-rc.1
+docker.litellm.ai/berriai/litellm:1.110.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.110.0rc1
+pip install litellm==1.110.0
 ```
 
 </TabItem>
 </Tabs>
 
-This release is published as [`ghcr.io/berriai/litellm:v1.110.0-rc.1`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.110.0-rc.1) and the full [releases page](https://github.com/BerriAI/litellm/releases).
+This release is published as [`ghcr.io/berriai/litellm:v1.110.0`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.110.0) and the full [releases page](https://github.com/BerriAI/litellm/releases).
 
-The published GitHub tag is `v1.110.0-rc.1`. These notes compare it with `v1.109.0-rc.1`, the previous release candidate. Changes backported onto `rc/1.109.0` and already shipped in `v1.109.0` are omitted.
+These notes compare `v1.110.0` with `v1.109.0`, the previous stable release. Changes added to the release line after rc.1, through rc.3 and the fixes backported before the stable tag, are under [Included after the v1.110.0-rc.1 cut](#included-after-the-v11100-rc1-cut).
 
 Customer-facing changes come first. Test, CI and internal changes are listed at the bottom.
 
 :::danger Breaking Changes
 
-These callouts cover user-facing behavior that differs from [`v1.109.0`](/release_notes/v1.109.0/v1-109-0), the latest stable release.
+Changes from [`v1.109.0`](/release_notes/v1.109.0/v1-109-0), the previous stable release, that may need action when upgrading.
 
-**The router always runs on the Rust core.** A router config the Rust core declines now raises an error at startup instead of falling back to the Python router, and `LITELLM_RUST` no longer picks the router core. Fix the config that the startup error names. See [PR #50178](https://github.com/BerriAI/litellm/pull/50178).
-
-**Stored `general_settings` keys that no settings API manages no longer apply.** Values left in the database by older versions, such as a stale `enforce_user_param`, stop taking effect. Set any you still need in the config file or through a supported setting. See [PR #48967](https://github.com/BerriAI/litellm/pull/48967).
-
-**Streamed `/v1/responses` no longer ends with `[DONE]`.** Every SSE event is now named, like OpenAI's Responses stream. Update clients that wait for `[DONE]` or read only unnamed `onmessage` events. See [PR #47980](https://github.com/BerriAI/litellm/pull/47980).
-
-**Raw response ids that the proxy did not issue are rejected by default.** Reuse the managed ids the proxy returned, or set `allow_unmanaged_response_ids` to keep accepting raw ids. See [PR #49402](https://github.com/BerriAI/litellm/pull/49402).
-
-**Batch requests can only name S3 buckets the admin allows.** A request body with `s3_bucket_name` or `s3_output_bucket_name` now gets a 401 unless the bucket is in `general_settings.allowed_client_side_s3_buckets`. Add the buckets your clients use before upgrading. See [PR #47496](https://github.com/BerriAI/litellm/pull/47496).
+- **Router**: `Router` always runs on the Rust core, and a config the Rust core declines fails at startup instead of falling back to Python. Fix the config the error names - [PR #50178](https://github.com/BerriAI/litellm/pull/50178)
+- **Settings**: stored `general_settings` keys that no settings API manages stop applying. Set the ones you need in the config file - [PR #48967](https://github.com/BerriAI/litellm/pull/48967)
+- **Responses API**: streamed `/v1/responses` no longer ends with `[DONE]`, and raw response ids the proxy did not issue are rejected unless `allow_unmanaged_response_ids` is set - [PR #47980](https://github.com/BerriAI/litellm/pull/47980), [PR #49402](https://github.com/BerriAI/litellm/pull/49402)
+- **Batches**: request bodies can only name S3 buckets listed in `general_settings.allowed_client_side_s3_buckets` - [PR #47496](https://github.com/BerriAI/litellm/pull/47496)
+- **Azure auth**: model and pass-through routes refuse `client_id`, `client_secret`, `tenant_id` and Azure login fields in the request body. Move these tags into `metadata` - [PR #51254](https://github.com/BerriAI/litellm/pull/51254)
 
 :::
 
@@ -77,6 +73,39 @@ These callouts cover user-facing behavior that differs from [`v1.109.0`](/releas
 - **Model lifecycle**: `-latest` aliases for first-party models, plus model deprecation alerts and opt-in emails to affected key owners
 - **Reliability**: each request frees its Redis batch scope when it ends, which stops about 40 KiB of worker memory growth per request, and `total_timeout` caps a whole request including retries
 
+## Included after the v1.110.0-rc.1 cut
+
+- Model and pass-through routes refuse `client_id`, `client_secret`, `tenant_id` and Azure login fields in the request body (rc.2) - [PR #51254](https://github.com/BerriAI/litellm/pull/51254)
+- Hugging Face chat honors `HUGGINGFACE_API_BASE` and env endpoints instead of calling `None` or crashing (rc.3) - [PR #51449](https://github.com/BerriAI/litellm/pull/51449)
+- Unmapped Fireworks AI models sized like `1p5b` or `0p6b` stop billing at double the up-to-4B rate (rc.3) - [PR #51451](https://github.com/BerriAI/litellm/pull/51451)
+- OpenCode Go Messages-protocol models stream through chat completions instead of returning 500 (rc.3) - [PR #51715](https://github.com/BerriAI/litellm/pull/51715)
+- Responses WebSocket requests keep the team's model alias instead of landing on another deployment (rc.3) - [PR #51380](https://github.com/BerriAI/litellm/pull/51380)
+- Follow-up requests with Anthropic server tool history, such as web search, go through the context-window check (rc.3) - [PR #51334](https://github.com/BerriAI/litellm/pull/51334)
+- A string fallback override such as `"fallbacks": "default"` no longer returns 500 (rc.3) - [PR #51502](https://github.com/BerriAI/litellm/pull/51502)
+- opentelemetry, dnspython, tornado and soupsieve move to the versions main ships (rc.3) - [PR #51854](https://github.com/BerriAI/litellm/pull/51854)
+- Proxy boot works on PostgreSQL 12 without `pgcrypto` - [PR #51868](https://github.com/BerriAI/litellm/pull/51868)
+- `/health` errors no longer include Python stack traces - [PR #52005](https://github.com/BerriAI/litellm/pull/52005)
+- Blocked and over-limit keys are refused before the request body is read, so clients retrying 429s with large bodies no longer exhaust proxy memory - [PR #51428](https://github.com/BerriAI/litellm/pull/51428)
+- Keys refused before the body is read keep their call id, model and endpoint in failure logs, and a key that used up its rpm limit can still list models and count tokens - [PR #51525](https://github.com/BerriAI/litellm/pull/51525), [PR #51675](https://github.com/BerriAI/litellm/pull/51675)
+- Raising a team's rpm or tpm limit takes effect right away instead of after the key cache expires - [PR #52169](https://github.com/BerriAI/litellm/pull/52169)
+- SSO login uses full page navigation, so it no longer detours through `/sso/key/generate/` or redirects to `http://` behind TLS termination - [PR #52213](https://github.com/BerriAI/litellm/pull/52213)
+- Gemini Developer API batches run on `/v1/batches` with output download and spend tracking, and batches created through `/gemini` are charged to the calling key - [PR #51032](https://github.com/BerriAI/litellm/pull/51032), [PR #51279](https://github.com/BerriAI/litellm/pull/51279)
+- The provider file ownership check matches every spelling of a provider file id - [PR #51498](https://github.com/BerriAI/litellm/pull/51498)
+- `reasoning_effort: "xhigh"` on `gemini-4-hydrogen` is sent as `thinkingLevel: "xhigh"` instead of returning 400 - [PR #52060](https://github.com/BerriAI/litellm/pull/52060)
+- Bedrock Invoke `/v1/messages` forwards the `compact-2026-09-04` compaction param instead of dropping it - [PR #51223](https://github.com/BerriAI/litellm/pull/51223), [PR #51272](https://github.com/BerriAI/litellm/pull/51272)
+- A streamed `/v1/responses` call that breaks before any output retries in its own model group before trying fallbacks - [PR #51953](https://github.com/BerriAI/litellm/pull/51953)
+- Malformed Anthropic server-tool blocks return 400 on `count_tokens` again instead of 500 - [PR #51957](https://github.com/BerriAI/litellm/pull/51957)
+- Custom image handlers receive the caller's `n`, `size`, `quality`, `response_format`, `user` and `mask` - [PR #52051](https://github.com/BerriAI/litellm/pull/52051)
+- Perplexity bills cached prompt tokens at the cache read rate when the response has no cost - [PR #51669](https://github.com/BerriAI/litellm/pull/51669)
+- fal.ai versioned Seedream and FLUX Pro models go to the endpoint they name, and the `/fal_ai` pass-through price gate checks the path sent upstream - [PR #51668](https://github.com/BerriAI/litellm/pull/51668), [PR #51671](https://github.com/BerriAI/litellm/pull/51671)
+- fal.ai Luma Ray v3.2 videos without a resolution bill at fal's 540p default, and MiniMax H3 Max video endpoints get their own resolution profile - [PR #51477](https://github.com/BerriAI/litellm/pull/51477), [PR #51348](https://github.com/BerriAI/litellm/pull/51348)
+- `budget_duration` spellings like `1month`, `7days` and `2weeks` reset on their short form's schedule. `12months` still resets daily because this line has no annual resets - [PR #51672](https://github.com/BerriAI/litellm/pull/51672)
+- `/customer/new` budgets reset on the calendar schedule other budgets use - [PR #51689](https://github.com/BerriAI/litellm/pull/51689)
+- Members auto-joined to a default team, or given `default_team_member_models`, get a team member budget that resets - [PR #51728](https://github.com/BerriAI/litellm/pull/51728), [PR #51960](https://github.com/BerriAI/litellm/pull/51960)
+- Free Responses reads and cancels no longer overwrite the original request's spend row - [PR #51110](https://github.com/BerriAI/litellm/pull/51110)
+- The Models page keeps the credential action menu open when it re-renders - [PR #50845](https://github.com/BerriAI/litellm/pull/50845)
+- The dashboard moves to `next` 16.4.5 - [PR #52102](https://github.com/BerriAI/litellm/pull/52102)
+
 ## New Providers and Endpoints
 
 ### New Providers (2 new providers)
@@ -88,12 +117,12 @@ These callouts cover user-facing behavior that differs from [`v1.109.0`](/releas
 
 ## New Models / Updated Models
 
-#### New Model Support (370 new models)
+#### New Model Support (377 new models)
 
 Counts represent new catalog identifiers compared with `v1.109.0`, including aliases and regional variants. Prices are the values bundled in this release, in USD, and runtime pricing-map reloads can update them. 52 rows for retired models were removed, such as `azure/gpt-4`, `azure/gpt-35-turbo-16k` and `azure/command-r-plus`.
 
 <details>
-<summary>All 370 new catalog entries</summary>
+<summary>All 377 new catalog entries</summary>
 
 | Provider | Model | Context Window | Input ($/1M tokens) | Output ($/1M tokens) | Features / special pricing |
 | --- | --- | --- | --- | --- | --- |
@@ -298,10 +327,16 @@ Counts represent new catalog identifiers compared with `v1.109.0`, including ali
 | Empirio Labs | `empiriolabs/text-embedding-v4` | 8,192 | $0.07 | - | Embedding |
 | Empirio Labs | `empiriolabs/tongyi-embedding-vision-flash` | 1,024 | $0.09 | - | Embedding |
 | Empirio Labs | `empiriolabs/tongyi-embedding-vision-plus` | 1,024 | $0.09 | - | Embedding |
+| fal.ai | `fal_ai/luma/agent/ray/v3.2/image-to-video` | - | - | - | Video generation; $0.03 per second |
+| fal.ai | `fal_ai/luma/agent/ray/v3.2/reframe` | - | - | - | Video generation; $0.06 per second |
+| fal.ai | `fal_ai/luma/agent/ray/v3.2/text-to-video` | - | - | - | Video generation; $0.1 per second |
+| fal.ai | `fal_ai/luma/agent/ray/v3.2/video-to-video` | - | - | - | Video generation; $0.144 per second |
+| fal.ai | `fal_ai/minimax/h3-max/recast` | - | - | - | Video generation; $0.45 per second |
 | Fireworks AI | `fireworks_ai/accounts/fireworks/models/kimi-k3p1-pro` | 1,048,576 | $2 | $10 | Chat; Reasoning; Vision; Tool calling; Structured output |
 | Fireworks AI | `fireworks_ai/accounts/fireworks/routers/deepseek-v4p1-flash-1017-ultrafast` | 1,048,576 | $2.4 | $9.6 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output |
 | Fireworks AI | `fireworks_ai/kimi-latest` | 1,048,576 | $3 | $15 | Chat; Reasoning; Vision; Tool calling; Structured output; Alias of `fireworks_ai/accounts/fireworks/models/kimi-k3` |
 | Fireworks AI | `fireworks_ai/minimax-latest` | 512,000 | $0.3 | $1.2 | Chat; Reasoning; Vision; Tool calling; Structured output; Alias of `fireworks_ai/accounts/fireworks/models/minimax-m3` |
+| Gemini | `gemini/gemini-4-hydrogen` | 1,048,576 | $1.5 | $7.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Computer use; Web search; Audio input; Video input |
 | Gemini | `gemini/gemini-omni-1.2-flash` | 131,072 | $1.5 | $9 | Chat; Reasoning; Vision; Audio output |
 | GitHub Copilot | `github_copilot/claude-fable-latest` | 200,000 | $10 | $50 | Chat; Reasoning; Vision; Tool calling; Structured output; Alias of `github_copilot/claude-fable-5.1` |
 | GitHub Copilot | `github_copilot/claude-haiku-latest` | 128,000 | $0.1 | $0.5 | Chat; Reasoning; Vision; Tool calling; Structured output; Alias of `github_copilot/claude-haiku-5.5` |
@@ -451,6 +486,7 @@ Counts represent new catalog identifiers compared with `v1.109.0`, including ali
 | Vertex AI | `vertex_ai/claude-haiku-latest` | 1,000,000 | $0.1 | $0.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Computer use; Alias of `vertex_ai/claude-haiku-5-5` |
 | Vertex AI | `vertex_ai/claude-opus-latest` | 1,000,000 | $4 | $20 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Computer use; Alias of `vertex_ai/claude-opus-5-5` |
 | Vertex AI | `vertex_ai/claude-sonnet-latest` | 1,000,000 | $2 | $10 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Computer use; Alias of `vertex_ai/claude-sonnet-5-5` |
+| Vertex AI | `vertex_ai/gemini-4-hydrogen` | 1,048,576 | $1.5 | $7.5 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; PDF input; Computer use; Web search; Audio input; Video input |
 | Vertex AI | `vertex_ai/gemini-omni-1.2-flash` | 131,072 | $1.5 | $9 | Chat; Reasoning; Vision |
 | Vertex AI | `vertex_ai/grok-latest` | 524,288 | $2 | $6 | Chat; Reasoning; Vision; Tool calling; Prompt caching; Structured output; Alias of `vertex_ai/xai/grok-4.7` |
 | Wally | `wally/deepseek-v4-flash-0731` | 1,048,576 | $0.44 | $1.32 | Chat; Reasoning; Tool calling; Prompt caching; Structured output |
@@ -982,6 +1018,7 @@ Counts represent new catalog identifiers compared with `v1.109.0`, including ali
 - Update integration and e2e spend tests that still expected the old accounting queues now that the SpendLogs ledger is the default - [PR #50805](https://github.com/BerriAI/litellm/pull/50805)
 - Ignore Ollama model-info calls in the Decisions integration test decoy check so it no longer fails depending on test order - [PR #50827](https://github.com/BerriAI/litellm/pull/50827)
 - Repair four integration tests, including the Redis client cache eviction case and the detached worktree native extension case under `env -i` - [PR #50855](https://github.com/BerriAI/litellm/pull/50855)
+- Install `tzdata` in CI so zoneinfo tests pass on runners without legacy time zone aliases - [PR #51057](https://github.com/BerriAI/litellm/pull/51057)
 
 ### PR roll-up by ownership area
 
@@ -1001,10 +1038,12 @@ PRs by ownership area (total: 372)
 
 ## New Contributors
 
+- [@Abelo9996](https://github.com/Abelo9996) made their first contribution in [PR #51451](https://github.com/BerriAI/litellm/pull/51451)
 - [@adityabatra072](https://github.com/adityabatra072) made their first contribution in [PR #45662](https://github.com/BerriAI/litellm/pull/45662)
 - [@alchemicjon](https://github.com/alchemicjon) made their first contribution in [PR #47398](https://github.com/BerriAI/litellm/pull/47398)
 - [@alekc](https://github.com/alekc) made their first contribution in [PR #38086](https://github.com/BerriAI/litellm/pull/38086)
 - [@apex-mochen](https://github.com/apex-mochen) made their first contribution in [PR #43577](https://github.com/BerriAI/litellm/pull/43577)
+- [@brianhong-dev](https://github.com/brianhong-dev) made their first contribution in [PR #51380](https://github.com/BerriAI/litellm/pull/51380)
 - [@chuckiihub](https://github.com/chuckiihub) made their first contribution in [PR #49851](https://github.com/BerriAI/litellm/pull/49851)
 - [@davanstrien](https://github.com/davanstrien) made their first contribution in [PR #49056](https://github.com/BerriAI/litellm/pull/49056)
 - [@devin-gupta](https://github.com/devin-gupta) made their first contribution in [PR #49188](https://github.com/BerriAI/litellm/pull/49188)
@@ -1026,4 +1065,4 @@ PRs by ownership area (total: 372)
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.109.0-rc.1...v1.110.0-rc.1
+https://github.com/BerriAI/litellm/compare/v1.109.0...v1.110.0
