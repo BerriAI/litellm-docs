@@ -95,6 +95,30 @@ test('blog extraction preserves article headings and code without author or navi
   assert.deepEqual(extractSections('<meta http-equiv="refresh" content="0;url=/elsewhere">' + html, '/blog/redirect'), []);
 });
 
+test('SDK scope follows the Python SDK subtree and includes the standalone LiteAgents doc', () => {
+  const docs = [
+    ['python_sdk', '/docs/python_sdk'],
+    ['response_api', '/docs/response_api'],
+    ['harness/index', '/docs/harness'],
+    ['liteagents', '/docs/liteagents'],
+    ['gateway_overview', '/docs/gateway_overview'],
+  ].map(([id, permalink]) => ({id, permalink, title: id, sidebar: 'tutorialSidebar'}));
+  const pages = collectPages({
+    'docusaurus-plugin-content-docs': {default: {loadedVersions: [{docs, sidebars: {tutorialSidebar: [
+      {type: 'category', link: {type: 'doc', id: 'python_sdk'}, items: [
+        {type: 'category', items: [{type: 'doc', id: 'response_api'}, {type: 'doc', id: 'harness/index'}]},
+        {type: 'link', href: '/docs/gateway_overview'},
+      ]},
+      {type: 'doc', id: 'liteagents'},
+      {type: 'doc', id: 'gateway_overview'},
+    ]}}]}},
+  });
+  const html = '<article class="theme-doc-markdown"><h1>SDK guide</h1><p>Run a harness.</p></article>';
+  const sections = [...pages].flatMap(([url, metadata]) => extractSections(html, url, metadata));
+  assert.deepEqual(sections.filter(section => section.sdk).map(section => section.url),
+    ['/docs/python_sdk', '/docs/response_api', '/docs/harness', '/docs/liteagents']);
+});
+
 test('archive growth leaves docs scores unchanged and source filters survive serialization', () => {
   const docs = [passage('/docs/routing', 'Request routing'), passage('/docs/routing-config', 'Routing configuration')];
   const archive = Array.from({length: 80}, (_, i) => passage(`/blog/routing-${i}`, 'Request routing benchmark', {type: 'blog', date: '2025-01-02'}));

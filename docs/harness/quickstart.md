@@ -1,11 +1,13 @@
 ---
-title: Quickstart
+title: litellm.agent() quickstart
+sidebar_label: Quickstart
+description: Install a harness, make your first litellm.agent() call, and stream events from a coding agent in Python.
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Quickstart
+# `litellm.agent()` quickstart
 
 ## 1. Install
 

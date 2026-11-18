@@ -6,7 +6,7 @@ function validSearchBody(body) {
   return body && typeof body === 'object' && !Array.isArray(body) &&
     Object.keys(body).every(key => ['query', 'type'].includes(key)) &&
     typeof body.query === 'string' && body.query.trim().length > 0 && body.query.length <= 500 &&
-    (body.type === undefined || ['all', 'docs', 'blog', 'release'].includes(body.type));
+    (body.type === undefined || ['all', 'docs', 'sdk', 'blog', 'release'].includes(body.type));
 }
 
 function createKeywordSearchHandler({index, getIndex = () => index, config, now = () => performance.now()}) {

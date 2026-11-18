@@ -2,7 +2,7 @@
 id: liteagents
 title: liteagents SDK
 sidebar_label: liteagents SDK
-description: Switch between DeepAgents, Pydantic AI, Claude Agent SDK, Codex, and OpenCode through one Python SDK, with the same application code and your choice of model.
+description: The liteagents Python SDK supports five agent harnesses. Switch between DeepAgents, Pydantic AI, Claude Agent SDK, Codex, and OpenCode with the same application code.
 ---
 
 # liteagents SDK
@@ -94,7 +94,7 @@ Set the matching key and change `profile.model`. The harness can stay the same.
 
 [Model setup](https://github.com/BerriAI/liteagents/blob/main/docs/models.md) covers these providers plus Mistral, DeepSeek, Together AI, xAI, Azure, Bedrock, Vertex AI, and Ollama. Choose a model that is enabled for your account and that supports the tools and settings you use.
 
-## Install other harnesses
+## Supported harnesses {#install-other-harnesses}
 
 Select the integrations you need in the square brackets of the install command. liteagents reuses compatible packages that are already installed and does not download harnesses during a run.
 

@@ -1,9 +1,10 @@
 ---
-title: Evaluate agents
-description: Compare agent harnesses and models on your own tasks with typed evaluations, repeatable runs, and a scorecard of success, cost and time.
+title: Evaluate agents with litellm.agent_eval()
+sidebar_label: Evaluate agents
+description: Use litellm.agent_eval() to compare agent harnesses and models on repeatable tasks and score their success, cost, and time.
 ---
 
-# Evaluate agents
+# Evaluate agents with `litellm.agent_eval()`
 
 {/* keep-version-note */}
 

@@ -1,9 +1,10 @@
 ---
-title: Supported harnesses
+title: Supported harnesses for litellm.agent()
 sidebar_label: Supported harnesses
+description: See which harnesses litellm.agent() supports and compare the runtime, session, and tool capabilities of each one.
 ---
 
-# Supported harnesses
+# Supported harnesses for `litellm.agent()`
 
 This release supports five harnesses. Each one is driven through its own programmatic interface, never by scraping a terminal
 

@@ -1,9 +1,10 @@
 ---
-title: Tools and skills
+title: Tools and skills for litellm.agent()
 sidebar_label: Tools and skills
+description: Configure the built-in tools, custom tools, and skills available to a harness when you call litellm.agent().
 ---
 
-# Tools and skills
+# Tools and skills for `litellm.agent()`
 
 ## Turning off built-in tools
 
