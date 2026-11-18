@@ -54,6 +54,10 @@ Add an entry at the top of `release_notes/summaries.json`, which feeds the chang
 
 Write titles, descriptions and points in ASD-STE100 Simplified Technical English: active voice, simple present, no "-ing" verb forms except in technical names such as streaming, and no should, would, may or might. Check them with `python3 ~/.claude/skills/simplified-technical-english/scripts/ste_check.py --mode descriptive <file>` when that skill is installed, and fix every error it reports.
 
+## Launch posts: name the release
+
+A blog post that announces a feature must name the first LiteLLM release that ships it and link that release note in the form `Available in the [LiteLLM 1.110.x release](/release_notes/v1.110.0/v1-110-0). Upgrade to v1.110.0 or later to use these features.`, near the top of the post before the `{/* truncate */}` marker. Take the version from the release note that lists the feature's PRs, not from the date. If the feature has not shipped in a stable release yet, name the release candidate or say which upcoming release will include it.
+
 ## Blog and release note authors
 
 Every post names at least one person who stands behind it. If an agent writes the post, credit whoever requested or drove the work. Never use a team or company byline. Keep only individual people in `blog/authors.yml` and `release_notes/authors.yml`; `author-person` in `scripts/check-docs.py` enforces this rule.
