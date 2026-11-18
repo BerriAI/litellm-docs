@@ -1,4 +1,5 @@
 const {createModelCaller} = require('./gateway');
+const {getTracing} = require('./tracing');
 const {tools, createDocumentationTools} = require('./tools');
 
 const instructions = `Answer the user's question using LiteLLM docs, API reference, integration guides, blog posts, and release notes.
@@ -15,12 +16,33 @@ const finishResearch = {type: 'function', function: {name: 'finish_research',
 const researchInstructions = `${instructions}
 Use the search and read tools to find supporting evidence. Search previews are for discovery; use read_docs for evidence before answering product questions. When ready to answer, call finish_research. Only the final answer is shown to the user.`;
 
-async function answerQuestion({question, history = [], index, documents, config, signal, fetchImpl = fetch, onEvent}) {
+async function answerQuestion(options) {
+  const tracing = getTracing(options.config);
+  try {
+    return await tracing.conversation({context: options.traceContext, question: options.question,
+      onContext: options.onTraceContext}, () => tracing.span('answer question', {
+      'openinference.span.kind': 'CHAIN',
+      'input.value': options.question,
+      'input.mime_type': 'text/plain',
+    }, async span => {
+      const result = await generateAnswer(options);
+      if (result.status >= 400) span.setError('DocsAIUnavailable');
+      span.setAttribute('output.value', result.body.answer || result.body.error);
+      span.setAttribute('output.mime_type', 'text/plain');
+      return result;
+    }));
+  } finally {
+    // Finish exporting before a serverless invocation can be suspended.
+    await tracing.flush();
+  }
+}
+
+async function generateAnswer({question, history = [], index, documents, config, signal, fetchImpl = fetch, onEvent}) {
   if (!config.apiKey) return {status: 503, body: {error: 'Ask AI is not configured yet. Document search is still available.'}};
   const {mapCitations} = await import('./citations.mjs');
-  const callModel = createModelCaller({config, signal, fetchImpl});
+  const tracing = getTracing(config), callModel = createModelCaller({config, signal, fetchImpl});
   const emit = async (event, data) => {signal?.throwIfAborted(); await onEvent?.(event, data);};
-  const documentation = createDocumentationTools({index, documents, signal, onEvent: emit});
+  const documentation = createDocumentationTools({index, documents, tracing, signal, onEvent: emit});
   const conversation = history.map(({question, answer}) => ({question, ...(answer === undefined ? {} : {answer})}));
   const messages = [
     {role: 'system', content: [{type: 'text', text: researchInstructions, cache_control: {type: 'ephemeral'}}]},
@@ -31,7 +53,7 @@ async function answerQuestion({question, history = [], index, documents, config,
   // showing tool-call preambles or replacing an answer with a regenerated draft.
   for (let round = 0; round < 8; round++) {
     const message = await callModel.turn(messages, {
-      toolDefinitions: [...tools, finishResearch], toolChoice: 'required',
+      toolDefinitions: [...tools, finishResearch], toolChoice: 'required', stage: `research ${round + 1}`,
     });
     if (!message.tool_calls?.length) throw new Error('Expected a documentation tool call');
     messages.push(message);
@@ -45,7 +67,7 @@ async function answerQuestion({question, history = [], index, documents, config,
   // Discovery snippets stay in research. The answer receives all read evidence,
   // without unrelated search previews that could be mistaken for citable sources.
   const answer = await callModel(instructions + sayItStyle, {question, history: conversation,
-    documentation: [...documentation.passages.values()]}, 25000,
+    documentation: [...documentation.passages.values()]}, 25000, 'answer',
     onEvent ? text => emit('answer-delta', {text}) : undefined);
   const byId = new Map([...documentation.sources.values()].map(source => [source.id, source]));
   const cited = new Set();

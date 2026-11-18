@@ -1,4 +1,5 @@
 const {answerQuestion} = require('./answer');
+const {gatewaySecrets} = require('./tracing');
 const {createHash, timingSafeEqual} = require('node:crypto');
 
 function authorizedService(req, secret) {
@@ -27,7 +28,6 @@ const fieldsAre = (value, fields) => value && typeof value === 'object' && !Arra
   Object.keys(value).every(key => fields.includes(key));
 const validText = value => typeof value === 'string' && value.trim().length > 0;
 function validBody(body) {
-  // Accept legacy trace references from existing bot conversations, but ignore them.
   return fieldsAre(body, ['question', 'history', 'traceContext']) && validText(body.question) &&
     (body.traceContext === undefined || (typeof body.traceContext === 'string' &&
       /^[a-f0-9]{32}\.[a-f0-9]{16}\.[A-Za-z0-9_-]{43}$/.test(body.traceContext))) &&
@@ -57,7 +57,9 @@ async function readBody(req, signal, maxBytes = Infinity) {
 }
 function createAskHandler({index, documents, config, fetchImpl, now = Date.now, service = false}) {
   // The bot shares the answer engine and corpus, but never the website's model key.
-  if (service) config = {...config, ...config.botGateway, apiKey: config.botApiKey};
+  if (service) config = {...config, ...config.botGateway, apiKey: config.botApiKey, websiteGatewaySecrets: gatewaySecrets(config), tracing: {
+    ...config.tracing, key: config.botTracingKey || config.tracing?.key, surface: 'slack',
+  }};
   const clients = new Map();
   let windowStart = now(), globalCount = 0, active = 0;
   return async (req, res) => {
@@ -89,7 +91,7 @@ function createAskHandler({index, documents, config, fetchImpl, now = Date.now, 
       const parsed = await readBody(req, AbortSignal.any([controller.signal, AbortSignal.timeout(5000)]));
       if (parsed.error) return send(res, parsed.status, {error: parsed.error});
       if (!validBody(parsed.body)) return send(res, 400, {error: 'Send a non-empty question and optional history of questions with optional answers.'});
-      const {question, history = []} = parsed.body;
+      const {question, history = [], traceContext} = parsed.body;
       const requestSignal = AbortSignal.any([controller.signal, AbortSignal.timeout(50000)]);
       const streaming = (req.headers.accept || '').includes('text/event-stream');
       const onEvent = streaming ? async (event, data) => {
@@ -105,6 +107,7 @@ function createAskHandler({index, documents, config, fetchImpl, now = Date.now, 
         }
       } : undefined;
       const result = await answerQuestion({question: question.trim(), history, index, documents, config,
+        traceContext, onTraceContext: value => res.setHeader('X-Docs-Trace-Context', value),
         signal: requestSignal, fetchImpl, onEvent});
       if (streaming && result.status === 200) {
         await onEvent('done', result.body);

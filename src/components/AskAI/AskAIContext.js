@@ -43,7 +43,7 @@ export function AskAIProvider({children}) {
   const [streamedSources, setStreamedSources] = useState([]);
   const [progress, setProgress] = useState('Searching documentation…');
   const [copied, setCopied] = useState(false);
-  const controller = useRef(null), turnsRef = useRef([]), askingRef = useRef(false);
+  const controller = useRef(null), traceContext = useRef(undefined), turnsRef = useRef([]), askingRef = useRef(false);
   const restoration = useRef(null), panelTouched = useRef(false);
   const pendingRef = useRef(''), copiedTimer = useRef(null);
   const askUrl = useBaseUrl('/api/docs/ask');
@@ -58,7 +58,7 @@ export function AskAIProvider({children}) {
       if (stored) {
         if (!panelTouched.current) setOpenState(stored.open);
         turnsRef.current = stored.turns;
-        setTurns(stored.turns);
+        setTurns(stored.turns); traceContext.current = stored.traceContext;
       }
       setHydrated(true);
     });
@@ -67,7 +67,7 @@ export function AskAIProvider({children}) {
 
   useEffect(() => {
     if (!hydrated) return;
-    void saveConversation({open, turns});
+    void saveConversation({open, turns, traceContext: traceContext.current});
   }, [hydrated, open, turns]);
 
   const setOpen = useCallback(value => {
@@ -91,6 +91,7 @@ export function AskAIProvider({children}) {
   const newChat = useCallback(async () => {
     await restoration.current;
     controller.current?.abort(); askingRef.current = false; setAsking(false); setPendingQuestion('');
+    traceContext.current = undefined;
     turnsRef.current = [];
     setTurns([]); setDraft(''); setError(''); setFailedQuestion('');
     setStreamedAnswer(''); setStreamedSources([]);
@@ -108,7 +109,9 @@ export function AskAIProvider({children}) {
     const history = turnsRef.current.map(({question, answer}) => ({question, answer}));
     try {
       const response = await fetch(askUrl, {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'text/event-stream'},
-        body: JSON.stringify({question, history}), signal: pending.signal});
+        body: JSON.stringify({question, history, traceContext: traceContext.current}), signal: pending.signal});
+      const context = response.headers.get('X-Docs-Trace-Context');
+      if (!pending.signal.aborted && context) traceContext.current = context;
       const data = await readAnswer(response, (event, data) => {
         if (pending.signal.aborted) return;
         if (event === 'status') setProgress(data.message);

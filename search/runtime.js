@@ -24,6 +24,12 @@ function readConfig(env, defaults = {}) {
       cfAccessClientSecret: env.DOCS_BOT_CF_ACCESS_CLIENT_SECRET,
     },
     botServiceToken: env.DOCS_BOT_SERVICE_TOKEN,
+    botTracingKey: env.DOCS_BOT_TRACING_KEY,
+    tracing: {
+      endpoint: env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+      key: env.LITELLM_TRACING_KEY,
+      protocol: env.OTEL_EXPORTER_OTLP_TRACES_PROTOCOL || env.OTEL_EXPORTER_OTLP_PROTOCOL,
+    },
     publicAIEnabled: env.DOCS_AI_PUBLIC_ENABLED === 'true',
     publicRerankEnabled: env.DOCS_SEARCH_RERANK_ENABLED === 'true',
     origin: env.DOCS_ORIGIN || defaults.origin || 'https://docs.litellm.ai',
