@@ -17,7 +17,7 @@ LiteLLM supports Sarvam's OpenAI-compatible `/v2` API, including Sarvam 105B and
 | `sarvam/deepseekv4.1-flash-1017` | 1M | 1M | Text, image | $0.15 / $0.59 |
 | `sarvam/deepseekv4.1-flash-1017-interactive` | 1M | 1M | Text, image | $0.27 / $1.12 |
 
-USD values are converted from Sarvam's INR rates at ₹94 per USD. `sarvam-105b`, `sarvam-105b-conversations`, and `deepseekv4.1-flash-1017` show Sarvam's introductory rates, which apply through the end of 2026. See [Sarvam Token Factory pricing](https://www.sarvam.ai/token-factory/pricing) for the current INR rates.
+USD values are converted from Sarvam's INR rates at ₹94 per USD. `sarvam-105b`, `sarvam-105b-conversations`, and `deepseekv4.1-flash-1017` show Sarvam's introductory rates, which apply [through the end of 2026](https://docs.sarvam.ai/api/getting-started/pricing). See [Sarvam Token Factory pricing](https://www.sarvam.ai/token-factory/pricing) for the current INR rates.
 
 LiteLLM calls `https://api.sarvam.ai/v2` by default. Sarvam's `/v1` API serves only `sarvam-105b` and `sarvam-105b-conversations`, so remove any `api_base` that points at `https://api.sarvam.ai/v1` from the other models. Keeping `/v1` on those two models still works, and on `sarvam-105b` it avoids the `/v2` stalls described under [Limitations](#limitations).
 
