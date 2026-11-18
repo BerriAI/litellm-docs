@@ -93,7 +93,7 @@ The presence of a `<Provider>Exception` token means the request left the gateway
 | 429 with a `retry-after`, `rate_limit_type`, `rate_limited_by`, or `reset_at` header | LiteLLM gateway (rate limiting) |
 | 429 with no such headers | Upstream provider |
 
-Worked example, gateway origin. The virtual key is capped below its accrued spend, so the request is rejected before any provider is contacted:
+Worked example, gateway origin. The virtual key is capped below its accrued spend, so the request is rejected with HTTP 422 before any provider is contacted:
 
 ```json
 {
@@ -101,12 +101,12 @@ Worked example, gateway origin. The virtual key is capped below its accrued spen
     "message": "Budget has been exceeded! Key=analytics-team (sk-...W8TA) Current cost: 0.06, Max budget: 0.05",
     "type": "budget_exceeded",
     "param": null,
-    "code": "429"
+    "code": "422"
   }
 }
 ```
 
-Worked example, provider origin. The same 429 status, but the message names the provider and the payload carries none of the gateway's rate-limit headers:
+Worked example, provider origin. A 429 whose message names the provider and whose payload carries none of the gateway's rate-limit headers:
 
 ```json
 {
@@ -130,8 +130,8 @@ The gateway returns the status code of the underlying failure rather than collap
 | 403 | Gateway | The key, team, user, or organization is not permitted to use the requested model, tool, or vector store | No |
 | 404 | Either | The requested model or route does not exist | No |
 | 408 | Either | The call exceeded the timeout in force. The message reports both the configured timeout and the elapsed time | Yes, with backoff |
-| 422 | Provider | The provider accepted the shape of the request but could not process its contents | No |
-| 429 | Either | A rate limit or budget was exceeded. See [Which 429 is this?](#which-429-is-this) below | Yes, honoring `retry-after` |
+| 422 | Either | Gateway: a key, team, user, or tag spend cap was reached (`budget_exceeded`). Provider: the provider accepted the shape of the request but could not process its contents | No |
+| 429 | Either | A rate limit was exceeded. See [Which 429 is this?](#which-429-is-this) below | Yes, honoring `retry-after` |
 | 499 | Client | The client disconnected and the upstream call was cancelled | N/A |
 | 500 | Either | Gateway: an unhandled internal error. Provider: a provider-side error, including a network failure reaching the provider, which surfaces as `InternalServerError ... Connection error.` | Yes, with backoff |
 | 503 | Provider | The provider reported itself unavailable or overloaded | Yes, with backoff |
@@ -154,7 +154,7 @@ These `error.type` values are produced by the gateway itself. Seeing one of them
 | `key_vector_store_access_denied`, `team_vector_store_access_denied`, `user_vector_store_access_denied`, `org_vector_store_access_denied` | 401 | The caller may not use the requested vector store | Add the store to `object_permission.vector_stores` on the object named by the type |
 | `team_member_permission_error` | 401 | The caller lacks the team-member permission for this management action | Ask a team admin to perform it or to grant the permission |
 | `key_search_tool_access_denied`, `team_search_tool_access_denied`, `user_search_tool_access_denied` | 403 | `search_tool_deny_by_default` is on and the key, team, or user named by the type does not grant the requested search tool | Add the tool to `object_permission.search_tools` on the object named by the type |
-| `budget_exceeded` | 429 | A key, team, user, or per-session spend cap was reached. The message reports current cost and max budget | Raise the budget, or wait for the budget window to reset |
+| `budget_exceeded` | 422 | A key, team, user, or per-session spend cap was reached. The message reports current cost and max budget. Set `litellm_settings.budget_exceeded_status_code: 429` to return 429 instead | Raise the budget, or wait for the budget window to reset |
 | `throttling_error` | 429 | An RPM, TPM, or max-parallel-requests ceiling was exceeded. Also used for provider 429s, so check the headers to tell them apart | Back off using `retry-after` |
 | `invalid_request_error` | 400 | A required parameter is missing or malformed. `error.param` names it | Fix the request body |
 | `bad_request_error` | 400 | Generic gateway-side request rejection | Read the message |
@@ -188,7 +188,7 @@ A gateway rate limit sets `retry-after`, `rate_limit_type`, `rate_limited_by`, a
 }
 ```
 
-A gateway budget cap sets `type` to `budget_exceeded` and reports the spend against the cap. A routing cooldown sets `retry-after` and opens with `No deployments available for selected model`. Anything else with a `<Provider>Exception` in the message is the provider's own throttle, and the gateway has already exhausted its configured retries and fallbacks before returning it
+A gateway budget cap is not a 429 by default: it returns 422 with `type` set to `budget_exceeded`, unless `litellm_settings.budget_exceeded_status_code` is set to 429. A routing cooldown sets `retry-after` and opens with `No deployments available for selected model`. Anything else with a `<Provider>Exception` in the message is the provider's own throttle, and the gateway has already exhausted its configured retries and fallbacks before returning it
 
 From the Python SDK, this classification is available without parsing strings. Every `litellm.RateLimitError` carries a `category` attribute drawn from `RateLimitErrorCategory` and a `rate_limit_type` attribute drawn from `RateLimitType`:
 
@@ -277,8 +277,8 @@ The Python SDK raises typed exceptions that inherit from the corresponding OpenA
 | 404 | `NotFoundError` | Raised for unknown model names |
 | 408 | `Timeout` | |
 | 422 | `UnprocessableEntityError` | |
+| 422 | `BudgetExceededError` | Proxy budget caps; carries `current_cost` and `max_budget`. The status comes from `litellm.budget_exceeded_status_code` (default 422) |
 | 429 | `RateLimitError` | Carries `category` and `rate_limit_type` |
-| 429 | `BudgetExceededError` | Proxy budget caps; carries `current_cost` and `max_budget` |
 | 500 | `APIConnectionError` | The base case for any unmapped error |
 | 500 | `APIError` | |
 | 503 | `ServiceUnavailableError` | |
@@ -319,7 +319,7 @@ curl -X POST 'http://localhost:4000/key/generate' \
   -H 'Content-Type: application/json' \
   -d '{"key_alias": "capped", "rpm_limit": 1}'
 
-# 429 budget_exceeded, once accrued spend passes the cap
+# 422 budget_exceeded, once accrued spend passes the cap
 curl -X POST 'http://localhost:4000/key/generate' \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \
