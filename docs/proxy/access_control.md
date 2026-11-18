@@ -220,7 +220,7 @@ curl -X POST 'http://0.0.0.0:4000/team/member_add' \
 
 #### Choosing what team admins can edit
 
-By default team admins cannot change team settings at all: `/team/update` from a team admin returns 403 and names the setting a proxy admin needs to enable. A proxy admin picks the fields in the Admin UI under Settings > UI > "Team admin editable fields", or sets `team_admin_editable_team_fields` through the API. The same key also works under `general_settings` in the proxy config yaml; a value saved through the UI or API takes precedence over the yaml. The list applies to every team admin on the proxy, only for the teams they administer. Proxy admins and org admins are not affected by it.
+By default team admins cannot change team settings at all: `/team/update` from a team admin returns 403 and names the setting a proxy admin needs to enable. A proxy admin picks the fields in the Admin UI under Settings > UI > "Team admin editable fields", or sets `team_admin_editable_team_fields` through the API. The same key also works under `general_settings` in the proxy config yaml; when the yaml declares it, the yaml owns the setting and the API returns 400 on any attempt to change it, so remove it from the file to let the database own it. The list applies to every team admin on the proxy, only for the teams they administer. Proxy admins and org admins are not affected by it.
 
 ```shell
 curl -X PATCH 'http://localhost:4000/update/ui_settings' \
