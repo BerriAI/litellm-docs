@@ -1142,7 +1142,7 @@ const sidebars = {
             },
           ],
         },
-        // litellm.agent(): agent harnesses (Claude Code, Codex, OpenCode, Deep Agents, Tool Loop).
+        // litellm.agent(): agent harnesses (Claude Code, Codex, OpenCode, Pi, Deep Agents, Tool Loop).
         // Styled by the "litellm.harness docs" block in src/css/custom.css.
         {
           type: "category",
@@ -1169,6 +1169,7 @@ const sidebars = {
                 "harness/claude_code",
                 "harness/codex",
                 "harness/opencode",
+                "harness/pi",
                 "harness/deepagents",
                 "harness/tool_loop",
               ],

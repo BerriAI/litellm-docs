@@ -38,7 +38,7 @@ litellm.agent(
 )
 ```
 
-The type hints and docstring become the tool's schema. Synchronous functions run in a worker thread and asynchronous functions are awaited. Passing `tools=` to Claude Code, Codex or OpenCode raises `CapabilityUnsupported`
+The type hints and docstring become the tool's schema. Synchronous functions run in a worker thread and asynchronous functions are awaited. Passing `tools=` to Claude Code, Codex, OpenCode or Pi raises `CapabilityUnsupported`
 
 ## Skills
 

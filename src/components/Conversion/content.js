@@ -391,7 +391,7 @@ const PRODUCT_CARDS = [
     id: 'sdk_agents',
     product: 'Agents in the LiteLLM SDK',
     problem: 'Run agents from Python with one API.',
-    text: 'Use litellm.agent() with Claude Code, Codex, OpenCode, Deep Agents or Tool Loop. Choose a harness and model, stream output, and track cost. Included in the litellm package.',
+    text: 'Use litellm.agent() with Claude Code, Codex, OpenCode, Pi, Deep Agents or Tool Loop. Choose a harness and model, stream output, and track cost. Included in the litellm package.',
     visual: {
       type: 'code',
       lang: 'python',
