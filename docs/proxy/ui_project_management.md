@@ -1,16 +1,8 @@
-import Image from '@theme/IdealImage';
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Project Management UI
 
 <EnterpriseFeature />
 
 Manage projects directly from the LiteLLM Admin UI. Projects sit between teams and keys in your organizational hierarchy, enabling fine-grained access control and budget management for specific use cases or applications.
-
-:::info
-For the full API documentation, see [Project Management](./project_management.md).
-:::
 
 ## Overview
 
@@ -28,85 +20,54 @@ For detailed information about the project API and configuration, see [Project M
 
 ## Prerequisites
 
+- A valid LiteLLM Enterprise license
 - Admin or Team Admin access
 - At least one team created (projects belong to teams)
 - The LiteLLM Admin UI running locally or remote
 
-## Enable Projects in UI Settings
-
-Before you can create projects, you need to enable the Projects feature in the Admin UI settings.
-
-### Step 1: Access Admin Settings
-
-Navigate to the Admin UI (e.g., `http://localhost:4000/ui/?login=success`).
-
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/b8de4dbf-a23b-4979-84a3-95fe17427b5a/ascreenshot_84dcb13b57a84fd589dff2d5af58adde_text_export.jpeg)
-
-### Step 2: Open Settings Menu
-
-Click the **"New"** button in the top navigation.
-
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/b8de4dbf-a23b-4979-84a3-95fe17427b5a/ascreenshot_447c8ea124f64d0eb18d3c9621f7cbbc_text_export.jpeg)
-
-### Step 3: Navigate to Admin Settings
-
-Click **"Admin Settings"**.
-
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/cc2ce9d9-d2d2-49f3-9fb8-c546fb8dfdcf/ascreenshot_fd792e9dbda24e7eb5cdb508c4f181f8_text_export.jpeg)
-
-### Step 4: Open UI Settings
-
-Click **"UI Settings New"**.
-
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/d667f4b4-300b-47c6-9d76-12e439519da6/ascreenshot_3f3db4df432843a48b53ae16b311e7df_text_export.jpeg)
-
-### Step 5: Enable Projects Feature
-
-Click the toggle to enable the Projects feature.
-
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/4819f76b-4855-4f5c-8c4b-b4c272399724/ascreenshot_9df0555ae6db425ab839d73485ee9b99_text_export.jpeg)
-
-Once enabled, the Projects section will appear in your Admin UI navigation, and you'll be able to create and manage projects.
-
 ## Create and Manage Projects
 
-After enabling the Projects feature, you can create projects from the Projects page.
+Projects appear in the Admin UI sidebar under Access Control for Proxy Admins, Org Admins, and Team Admins. Create and manage them from the Projects page.
+
+Without a valid Enterprise license, the Projects page shows an Enterprise notice and a trial link instead of project controls.
+
+![Projects page with the Enterprise license notice](/img/projects-ga/projects-enterprise-notice.jpg)
 
 ### Step 1: Navigate to Projects
 
-Click **"Projects New"** in the sidebar.
+Click **"Projects"** in the sidebar.
 
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/889e2e55-af7a-42f1-90d5-8bba8efaa986/ascreenshot_c42e33e2226c4e8b8e8ea83a7c8955e4_text_export.jpeg)
+![Projects under Access Control in the Admin UI sidebar](/img/projects-ga/projects-01-navigation.jpg)
 
 ### Step 2: Create a New Project
 
 Click **"Create Project"**.
 
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/8ecb531c-8e96-443d-ba1d-1a9e04ba2da3/ascreenshot_74f1b3c1c1b84517ae51881a050df73a_text_export.jpeg)
+![Create New Project form](/img/projects-ga/projects-02-create-dialog.jpg)
 
 ### Step 3: Enter Project Name
 
 Click the **"Project Name"** field and enter a name for your project.
 
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/83bf0612-2b19-4b28-ae02-bdb122dca4fa/ascreenshot_16ca328a71f04a79bb9641ab9c1ed6fe_text_export.jpeg)
+![Project name and description entered for Documentation Assistant](/img/projects-ga/projects-03-project-name.jpg)
 
 ### Step 4: Select a Team
 
 Choose which team this project belongs to. Projects are scoped to teams, so you can only access models and features available to that team.
 
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/653c2f1e-5140-49b8-962f-a2b112f4834c/ascreenshot_7861310ad77d4859adcae789a9d51bd0_text_export.jpeg)
+![Product Engineering in the Team selector](/img/projects-ga/projects-04-select-team.jpg)
 
 ### Step 5: Configure Model Access
 
 Select which models this project has access to. Available models are scoped to the team's allowed models.
 
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/401a5716-ea16-4744-866a-d0ed6007065d/ascreenshot_a936c3ca417a49b2b603c890dee9d0ea_text_export.jpeg)
+![Allowed Models selector with the All Team Models option](/img/projects-ga/projects-05-model-access.jpg)
 
 ### Step 6: Create Project
 
 Click **"Create Project"** to save your project.
 
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/2f9f9ba1-df0b-4bef-b17c-77dfc38372f7/ascreenshot_933e4c1b119d43beb84161b94b17b764_text_export.jpeg)
+![Documentation Assistant saved as an active project under Product Engineering](/img/projects-ga/projects-06-created.jpg)
 
 ## Use Cases
 
