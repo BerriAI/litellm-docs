@@ -102,7 +102,7 @@ Finish all tools, exit the terminal conversation, and run the handoff command wi
 
 ### My model is missing or rejected
 
-Use the exact model ID your gateway serves. Fresh Codex setup requires `relay onboard-codex --model <gateway-model-id>` rather than an assumed default. Sign in to the app again after your gateway model permissions change.
+Use the exact model ID your gateway serves. Your administrator can set it in Relay’s managed Codex configuration. For manual setup, use the existing `relay onboard-codex --model <gateway-model-id>` command. You do not need to repeat onboarding if Codex already works through your gateway. Sign in to the app again after your gateway model permissions change.
 
 ### I see a certificate error or a different-gateway error
 
