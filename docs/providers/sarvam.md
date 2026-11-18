@@ -98,7 +98,7 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
 
     ```bash
     export SARVAM_API_KEY="your-api-key"
-    export LITELLM_MASTER_KEY="sk-1234"
+    export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
     litellm --config /path/to/config.yaml
     ```
 
@@ -109,10 +109,12 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
     <TabItem value="openai" label="OpenAI Python v1.0.0+">
 
     ```python
+    import os
+
     import openai
 
     client = openai.OpenAI(
-        api_key="sk-1234",                # your LITELLM_MASTER_KEY or a virtual key
+        api_key=os.environ["LITELLM_MASTER_KEY"],  # or a virtual key
         base_url="http://0.0.0.0:4000"    # litellm-proxy-base url
     )
 
