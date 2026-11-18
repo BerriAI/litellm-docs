@@ -316,7 +316,7 @@ LiteLLM supports customizing the following Datadog environment variables
 | `DD_LLMOBS_ML_APP` | Default ml_app name for LLM Observability (Application column). Can be overridden per-request via `metadata.ml_app`. | Falls back to `DD_SERVICE` | ❌ No |
 | `DD_SOURCE` | Source name for your logs | "litellm" | ❌ No |
 | `DD_VERSION` | Version tag for your logs | "unknown" | ❌ No |
-| `DD_TAGS` | Extra `key:value` tags added to every Datadog log and LLM Observability span, separated by commas or by spaces (for example `team:platform,cost_center:engineering`). LiteLLM sends them as written, without the `request_tag:` prefix that per-request tags get. A tag whose key LiteLLM already sets (`env`, `service`, `version`, `HOSTNAME`, `POD_NAME`, and `team` when the request has a team) is skipped, so LiteLLM's value is the only one | None | ❌ No |
+| `DD_TAGS` | Extra `key:value` tags added to every Datadog log and LLM Observability span, separated by commas or by spaces (for example `team:platform,cost_center:engineering`). LiteLLM sends them as written, without the `request_tag:` prefix that per-request tags get. A tag whose key LiteLLM already sets (`env`, `service`, `version`, `HOSTNAME`, `POD_NAME`, and `team` when the request has a team) is skipped, so LiteLLM's value is the only one. On LLM Observability spans the request's own `user`, `key_alias` and `model_group` also replace a `DD_TAGS` value for that key | None | ❌ No |
 | `HOSTNAME` | Hostname tag for your logs | "" | ❌ No |
 | `POD_NAME` | Pod name tag (useful for Kubernetes deployments) | "unknown" | ❌ No |
 
