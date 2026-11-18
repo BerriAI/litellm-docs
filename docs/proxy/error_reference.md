@@ -133,7 +133,7 @@ The `/anthropic/` routes are a pass-through, so a provider error there is Anthro
 
 So a gateway rate limit returns 429 with `error.type` set to `rate_limit_error`. On `/v1/messages` and the `/claude_code_gateway` routes it has no `error.litellm_error_type`, and its message starts with `Rate limit exceeded for`. On the `/anthropic/` routes it has `error.litellm_error_type` set to `throttling_error`, and its message starts with `litellm.RateLimitError:`. The 429 header rules under [Response headers](#response-headers) and [Is it the gateway or the provider?](#is-it-the-gateway-or-the-provider) do not apply here, so tell the two apart the way this section does for any error. A provider's 429 names the provider in `error.message`, or on the `/anthropic/` routes comes with a `request-id` header, and a gateway 429 has neither
 
-An unhandled exception inside the gateway returns `{"type": "error", "error": {"type": "api_error", "message": "Internal server error"}}` on these routes, and unparseable JSON returns 400 with `error.type` set to `invalid_request_error` and no `error.litellm_error_type`
+An unexpected exception raised outside the Messages handler returns 500 with `{"type": "error", "error": {"type": "api_error", "message": "Internal server error"}}` on these routes, plus `request_id` when the client sent `x-request-id`. One raised inside the handler on `/v1/messages`, count_tokens, and the `/claude_code_gateway` routes carries its own message instead, as described above. Unparseable JSON returns 400 with `error.type` set to `invalid_request_error` and no `error.litellm_error_type`
 
 ## Response headers
 
@@ -385,6 +385,8 @@ data: [DONE]
 A `post_call` guardrail that blocks a streamed response sends an OpenAI `data: {"error": ...}` frame and `data: [DONE]` on these routes too. The status is 400, or 200 when keepalive pings have already opened the response
 
 On the `/anthropic/` routes, a failure after the stream has started sends no error event. The gateway closes the connection, so the stream stops early, and curl reports `transfer closed with outstanding read data remaining`
+
+The 500 with no provider name, the `data:` line with no event name, and the OpenAI frame for a guardrail block are known gaps in the gateway, so a later release can change them. Build on the checks below, which work both now and after a fix, and not on the exact frames
 
 Check every SSE payload for an `error` key before treating it as a chunk, which catches the OpenAI frame, the Anthropic `error` event, and the `data:` line with no event name. On the Anthropic Messages routes, also treat a stream that ends without a `message_stop` event as a failure. A client that only inspects the HTTP status will record a mid-stream failure as a success with a truncated completion
 
