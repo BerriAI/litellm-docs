@@ -52,10 +52,19 @@
   margin-bottom: 16px;
 }
 
-.title {
+.titleBlock {
   flex: 1;
   min-width: 0;
+}
+
+.title {
   margin-bottom: 0 !important;
+}
+
+.releaseDate {
+  margin: 8px 0 0;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.95rem;
 }
 
 .copyBtnRow {

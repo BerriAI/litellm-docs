@@ -2,7 +2,7 @@
 title: "LiteLLM v1.88.5 - Vertex Batch Uploads & Stream Cost Recovery"
 description: "Streams OpenAI to Vertex batch JSONL uploads instead of buffering them in memory. Also recovers cost for interrupted Anthropic streams."
 slug: "v1-88-5"
-date: 2026-06-25T00:00:17
+date: 2026-06-24T23:56:54
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

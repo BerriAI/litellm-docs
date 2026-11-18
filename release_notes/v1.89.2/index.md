@@ -2,7 +2,7 @@
 title: "LiteLLM v1.89.2 - Cost Tracking & Model-List Fixes"
 description: "Fixes cost tracking for non-string service_tier values and /v1/models listing for team and BYOK setups. Adds an opt-in healthy_only filter."
 slug: "v1-89-2"
-date: 2026-06-17T19:22:38
+date: 2026-06-18T02:25:59
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

@@ -2,7 +2,7 @@
 title: "LiteLLM v1.84.5 - Azure AD, Batch Auth & Passthrough Backports"
 description: "Fixes Azure AD token refresh, batch and video model routing, and Vertex Claude effort handling for models such as Haiku 4.5."
 slug: "v1-84-5"
-date: 2026-06-03T20:44:41
+date: 2026-06-04T03:52:02
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
