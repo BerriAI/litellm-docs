@@ -39,22 +39,22 @@ The live table is at https://api.topxai.xyz/pricing and as JSON at `GET https://
 
 | Model | Input | Output | Notes |
 |-------|-------|--------|-------|
-| `topxai/claude-sonnet-5-5` | $1 | $5 | 1M context; prompt caching through `anthropic/` (see Notes) |
-| `topxai/claude-opus-5-5` | $2 | $10 | 1M context; prompt caching through `anthropic/` (see Notes) |
-| `topxai/claude-fable-5-2` | $4 | $20 | 1M context; prompt caching through `anthropic/` (see Notes) |
-| `topxai/gpt-6.1-terra` | $0.50 | $2.50 | from 272,001 input tokens the whole request bills at $1 / $3.75; also on `/responses` |
-| `topxai/gpt-6.2-sol` | $1 | $5 | from 272,001 input tokens the whole request bills at $2 / $7.50; also on `/responses` |
-| `topxai/gpt-6.2-astra` | $4 | $20 | from 272,001 input tokens the whole request bills at $8 / $30; also on `/responses` |
-| `topxai/grok-4.7` | $1 | $3 | from 200,000 input tokens the whole request bills at $2 / $6; also on `/responses` |
+| `topxai/claude-sonnet-5-5` | $1.60 | $8 | 1M context; prompt caching through `anthropic/` (see Notes) |
+| `topxai/claude-opus-5-5` | $3.20 | $16 | 1M context; prompt caching through `anthropic/` (see Notes) |
+| `topxai/claude-fable-5-2` | $6.40 | $32 | 1M context; prompt caching through `anthropic/` (see Notes) |
+| `topxai/gpt-6.1-terra` | $0.80 | $4 | from 272,001 input tokens the whole request bills at $1.60 / $6; also on `/responses` |
+| `topxai/gpt-6.2-sol` | $1.60 | $8 | from 272,001 input tokens the whole request bills at $3.20 / $12; also on `/responses` |
+| `topxai/gpt-6.2-astra` | $6.40 | $32 | from 272,001 input tokens the whole request bills at $12.80 / $48; also on `/responses` |
+| `topxai/grok-4.7` | $1.60 | $4.80 | from 200,000 input tokens the whole request bills at $3.20 / $9.60; also on `/responses` |
 | `topxai/kimi-k3.1-pro` | $0.50 | $5 | 1,048,576 context; 131,072 output; private deployment; also on `/responses` |
 | `topxai/deepseek-flash-Abliterated` | $0.42 | $1.50 | 1,048,576 context; 131,072 output; private deployment; also on `/responses` |
 | `topxai/deepseek-flash-fast` | $0.02 | $0.16 | 1,048,576 context; 262,144 output; DeepSeek V4.1 Flash on standard weights, private deployment; also on `/responses` |
 | `topxai/GLM-5.3-Abliterated` | $3 | $6 | text only; a fine-tuned GLM-5.3 served from a private deployment, not Z.ai's API |
 | `topxai/GLM-5.3-Flash-Abliterated` | $0.36 | $1.50 | 1,048,576 context; 131,072 output; text and images; private deployment; also on `/responses` |
 
-A key on TopxAI's Auto route sends each request to the lowest-priced line that serves the model. For Claude, GPT and Grok that is normally the shared pool at 50% of the provider's list price. Keys pinned to their official line pay 90% of list instead. The GLM, Kimi and DeepSeek models are private deployments with their own fixed prices, rather than the original providers' APIs.
+A key on TopxAI's Auto route bills each request on its model's route. Claude, GPT and Grok each have one route at 80% of the provider's list price in every lane, long-context tiers included. The GLM, Kimi and DeepSeek models are private deployments with their own fixed prices, rather than the original providers' APIs.
 
-Cost tracking in LiteLLM uses the Auto-route prices above. For a key pinned to an official Claude, GPT or Grok line, set that line's prices as described in [Custom Pricing](../proxy/custom_pricing). The DeepSeek models do not use the original DeepSeek model's peak and off-peak schedule.
+Cost tracking in LiteLLM uses the Auto-route prices above; a key created for the model's route pays the same prices ([routes and prices](https://api.topxai.xyz/docs/routes-and-the-auto-route)). The DeepSeek models do not use the original DeepSeek model's peak and off-peak schedule.
 
 Cache reads cost $0.30 per million tokens on Kimi, $0.105 on DeepSeek Abliterated, $0.004 on DeepSeek Flash Fast, $0.45 on GLM-5.3-Abliterated and $0.075 on GLM-5.3-Flash-Abliterated. These five publish no cache-write price; caching is automatic. The cost map also includes the published Claude, GPT and Grok cache prices, including Claude's one-hour writes.
 
@@ -172,5 +172,5 @@ curl http://localhost:4000/v1/chat/completions \
 
 - The current Claude models accept automatic tool selection or `tool_choice="none"`. They reject `required` and forced named-tool calls with HTTP 400. For structured output, use a JSON Schema response format and validate the result in your application; Claude accepts a subset of JSON Schema. See the [structured-output guide](https://api.topxai.xyz/docs/use-topxai-with-langchain).
 - The endpoint table above lists the native TopxAI transports used by this provider. LiteLLM's generated endpoint matrix also marks protocol bridges to Chat Completions; those flags do not mean TopxAI exposes those additional endpoints directly.
-- Claude models are also served on TopxAI's Anthropic Messages endpoint; use `model="anthropic/claude-sonnet-5-5"` with `api_base="https://api.topxai.xyz"` and your TopxAI key as `api_key` when you want the Messages request shape with `cache_control` breakpoints. LiteLLM prices those calls at Anthropic's list price, twice the shared-pool price, unless you set TopxAI's prices through [Custom Pricing](../proxy/custom_pricing).
+- Claude models are also served on TopxAI's Anthropic Messages endpoint; use `model="anthropic/claude-sonnet-5-5"` with `api_base="https://api.topxai.xyz"` and your TopxAI key as `api_key` when you want the Messages request shape with `cache_control` breakpoints. LiteLLM prices those calls at Anthropic's list price, 25% above TopxAI's Claude price, unless you set TopxAI's prices through [Custom Pricing](../proxy/custom_pricing).
 - Image generation (`gpt-image-2.6-sunburst`, `gpt-image-2.6-flare`), video generation and TypeSafe's Jev (`/v1/systemone`) are outside the `topxai/` route; see the [API reference](https://api.topxai.xyz/docs/api-reference).
