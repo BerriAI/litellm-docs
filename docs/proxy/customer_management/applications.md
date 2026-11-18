@@ -69,7 +69,7 @@ curl -X PUT "$LITELLM_BASE_URL/management/v1/apps/definition" \
 | From no application | Gateway switch on (default) | Created, `200` | `200` |
 | From no application | Gateway switch off | `403`, nothing created | `200` |
 
-A request with no customer headers is not affected by either switch. A request that sends an organization alias that does not exist together with a member that does is refused as well, so a member is never charged to an organization the request did not name.
+A request with no customer headers is not affected by either switch. With a switch off, a request that sends an organization alias that does not exist together with a member that does is refused as well, so it is not charged to the member's existing organization.
 
 ## Give an application its own surcharge
 
