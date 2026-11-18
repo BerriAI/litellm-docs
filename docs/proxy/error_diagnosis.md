@@ -17,6 +17,8 @@ For the full error payload schema, the status code and error type reference, and
 | `VertexAIException` | Google Vertex AI |
 | No provider name | LiteLLM AI Gateway |
 
+On the Anthropic Messages routes, an error with no provider name can still come from the provider. A provider error on the `/anthropic/` routes is Anthropic's own body, and a streamed request whose provider times out or drops the connection gets a message that names no provider. See [Errors on the Anthropic Messages routes](/docs/proxy/error_reference#errors-on-the-anthropic-messages-routes) and [Streaming errors](/docs/proxy/error_reference#streaming-errors)
+
 ## Examples
 
 ### Provider Error (from AWS Bedrock)

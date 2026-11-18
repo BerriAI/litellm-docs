@@ -23,10 +23,32 @@ function getTracing(config) {
   return tracing;
 }
 
+function gatewaySecrets(config) {
+  return [config.apiKey, config.cfAccessClientId, config.cfAccessClientSecret,
+    config.botApiKey, config.botServiceToken, config.botGateway?.cfAccessClientId,
+    config.botGateway?.cfAccessClientSecret, ...(config.websiteGatewaySecrets || [])].filter(Boolean);
+}
+
+function docsSecrets(config) {
+  const access = config.tracing?.cloudflareAccess;
+  return [...gatewaySecrets(config), ...[config.tracing?.key, config.botTracingKey, access?.clientId, access?.clientSecret].filter(Boolean)];
+}
+
+function traceHeaders({key, cloudflareAccess}) {
+  const headers = {Authorization: `Bearer ${key}`};
+  if (cloudflareAccess) {
+    const {clientId, clientSecret} = cloudflareAccess;
+    if (!clientId?.trim() || !clientSecret?.trim()) throw new Error('Invalid Lens Cloudflare Access configuration');
+    headers['CF-Access-Client-Id'] = clientId;
+    headers['CF-Access-Client-Secret'] = clientSecret;
+  }
+  return headers;
+}
+
 function createTracing(config) {
   const endpoint = new URL(config.tracing.endpoint);
   if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || endpoint.search || endpoint.hash ||
-      config.tracing.key === config.apiKey ||
+      gatewaySecrets(config).includes(config.tracing.key) ||
       (config.tracing.protocol && config.tracing.protocol !== 'http/protobuf')) {
     throw new Error('Invalid tracing configuration');
   }
@@ -36,7 +58,7 @@ function createTracing(config) {
   const {resourceFromAttributes} = require('@opentelemetry/resources');
   const exporter = new OTLPTraceExporter({
     url: endpoint.href,
-    headers: {Authorization: `Bearer ${config.tracing.key}`},
+    headers: traceHeaders(config.tracing),
     timeoutMillis: 2000,
   });
   const listeners = new Set();
@@ -68,7 +90,7 @@ function createTracing(config) {
   });
   const tracer = provider.getTracer(AGENT_NAME);
   const active = new AsyncLocalStorage();
-  const secrets = [config.apiKey, config.tracing.key].filter(Boolean);
+  const secrets = docsSecrets(config);
   const clean = value => typeof value === 'string'
     ? secrets.reduce((text, secret) => text.replaceAll(secret, '[REDACTED]'), value)
     : Array.isArray(value) ? value.map(clean) : value;
@@ -143,4 +165,4 @@ function createTracing(config) {
   };
 }
 
-module.exports = {AGENT_NAME, getTracing};
+module.exports = {AGENT_NAME, getTracing, docsSecrets, gatewaySecrets, traceHeaders};

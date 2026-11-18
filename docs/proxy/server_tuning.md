@@ -220,6 +220,15 @@ retry-after: 1
 {"error":{"message":"Worker at capacity: 64 in-flight, 64 queued requests. Retry later.","type":"overloaded_error","code":"503"}}
 ```
 
+On `/v1/messages` and the other routes listed in [Errors on the Anthropic Messages routes](/docs/proxy/error_reference#errors-on-the-anthropic-messages-routes), the same rejection keeps its status and `retry-after` header and uses Anthropic's error body instead. <SinceVersion v="1.110.0" />
+
+```
+HTTP/1.1 503 Service Unavailable
+retry-after: 1
+
+{"type":"error","error":{"type":"overloaded_error","message":"Worker at capacity: 64 in-flight, 64 queued requests. Retry later."}}
+```
+
 A slot is held for the whole response, so a streaming completion counts as one in-flight request until its last chunk is sent, and a client disconnect (queued or in flight) releases the slot immediately. The probe and metrics paths (`/health/liveliness`, `/health/liveness`, `/health/readiness`, `/health/readiness/details`, `/health/backlog`, `/health/drain`, `/metrics`) bypass the gate, so an overloaded worker still answers its liveness probe quickly while a wedged process does not. Rejections happen before authentication, so they are not attributed to a key in spend logs. The limits are read on the first request and need a restart to change.
 
 The cap is per worker process and works the same on uvicorn and Granian. A pod started with `--num_workers 4` and `max_in_flight_requests_per_worker: 64` admits up to 256 concurrent requests, and a deployment of N replicas admits N times that, so size it from the per-worker throughput you measured rather than the deployment total. It is a good fit with an HPA: replicas that are already saturated shed load with `503`s instead of accumulating latency while new replicas come up. It complements `global_max_parallel_requests`, which is a deployment-wide limit coordinated through Redis: use the global limit to bound total load on your providers and the per-worker limit to keep any single event loop from drowning without depending on Redis.
