@@ -239,6 +239,8 @@ For Fast mode, use `model="openai/gpt-6.1-sol"` and `service_tier="priority"`, o
 
 Use `model_info.service_tiers: ["priority"]` to offer `/fast`. For Astra or GPT-6.1 Sol, use `["priority", "ultrafast"]` to offer both `/fast` and `/ultrafast`. Codex CLI 0.159 or newer also needs `model_catalog_url` pointed at your gateway's `/v1/models` endpoint and `[features] api_key_model_discovery = true`. Follow the [Codex model catalog setup](../../proxy/client_setup/codex_cli.md#model-catalog-and-service-tiers), select your gateway model, then choose a mode.
 
+Users who start Codex with `lite codex` skip both catalog settings, since it writes the gateway's models, with their service tiers and display names, to a catalog file Codex reads on every launch. See [Models and service tiers with `lite codex`](../../proxy/client_setup/codex_cli.md#lite-codex) for the version it needs.
+
 For a model where users toggle modes on and off, omit the deployment's `litellm_params.service_tier` and keep `model_info.service_tiers`. Otherwise, a client that stops sending a tier still inherits the deployment's default. Advertising a tier does not grant OpenAI access to it.
 
 ## Verify and troubleshoot
