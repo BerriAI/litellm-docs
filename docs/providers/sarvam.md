@@ -159,7 +159,7 @@ print(response.choices[0].message.reasoning_content)
 
 - Images must be sent as base64 data URIs; remote `http(s)` URLs are rejected.
 - Beta models require beta access and are not listed above.
-- Some `/v2` requests to `sarvam-105b` stall without an answer, while the same requests on `/v1` answer. Either pin `api_base: https://api.sarvam.ai/v1` on that model, or set `timeout` a little above your longest expected response together with `num_retries`, so LiteLLM retries a stalled call instead of waiting for the 600 second default. Each stalled attempt still waits the full `timeout` before the retry starts:
+- Some `/v2` requests to `sarvam-105b` stall without an answer, while the same requests on `/v1` answer. Either pin `api_base: https://api.sarvam.ai/v1` on that model, or set `timeout` a little above your longest expected response together with `num_retries`, so LiteLLM retries a stalled call instead of waiting for its default timeout, which is 600 seconds on the SDK and 6000 seconds on the proxy. Each stalled attempt still waits the full `timeout` before the retry starts:
 
     ```yaml
     model_list:
