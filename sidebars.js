@@ -395,6 +395,7 @@ const sidebars = {
       className: "sidebar-rail",
       items: [
         { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
+        { type: "doc", id: "proxy/sync_models_github", label: "Auto Sync New Models" },
         { type: "doc", id: "proxy/quick_start", label: "CLI Quickstart" },
         { type: "doc", id: "benchmarks", label: "Benchmarks" },
         { type: "html", value: "Set up", className: "sidebar-group-label", defaultStyle: true },
@@ -680,6 +681,7 @@ const sidebars = {
               items: [
                 "proxy/customers",
                 "proxy/customer_management/track-customer-spend",
+                "proxy/customer_management/jwt-customer-identity",
                 "proxy/customer_management/api_reference",
               ],
             },
@@ -696,7 +698,6 @@ const sidebars = {
             "proxy/provider_margins",
             "proxy/provider_discounts",
             "proxy/off_peak_pricing",
-            "proxy/sync_models_github",
             "tutorials/vertex_ai_pay_go",
             "proxy/spend_logs_deletion",
             "proxy/token_redaction_spend_logs",
