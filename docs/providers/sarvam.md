@@ -3,7 +3,7 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-LiteLLM supports Sarvam's OpenAI-compatible `/v2` API, including Sarvam 105B and the open-weight models served on Sarvam infrastructure (GLM, Gemma, and DeepSeek). <SinceVersion v="1.112.0" />
+LiteLLM supports Sarvam's OpenAI-compatible chat API, including Sarvam 105B and the open-weight models served on Sarvam infrastructure (GLM, Gemma, and DeepSeek). <SinceVersion v="1.112.0" />
 
 ## Supported models
 
@@ -19,7 +19,7 @@ LiteLLM supports Sarvam's OpenAI-compatible `/v2` API, including Sarvam 105B and
 
 USD values are converted from Sarvam's INR rates at ₹94 per USD. `sarvam-105b`, `sarvam-105b-conversations`, and `deepseekv4.1-flash-1017` show Sarvam's introductory rates, which apply [through the end of 2026](https://docs.sarvam.ai/api/getting-started/pricing). See [Sarvam Token Factory pricing](https://www.sarvam.ai/token-factory/pricing) for the current INR rates.
 
-LiteLLM calls `https://api.sarvam.ai/v2` by default. Sarvam's `/v1` API serves only `sarvam-105b` and `sarvam-105b-conversations`, so remove any `api_base` that points at `https://api.sarvam.ai/v1` from the other models. Keeping `/v1` on those two models still works, and on `sarvam-105b` it avoids the `/v2` stalls described under [Limitations](#limitations).
+LiteLLM sends `sarvam-105b` and `sarvam-105b-conversations` to `https://api.sarvam.ai/v1`, the API they used before, and every other model to `https://api.sarvam.ai/v2`. Sarvam's `/v1` API serves only those two models, so remove any `api_base` that points at `https://api.sarvam.ai/v1` from the other models.
 
 The legacy `sarvam-m` model is not served on `/v2`. If you are upgrading from `sarvam/sarvam-m`, switch to `sarvam/sarvam-105b`.
 
@@ -159,7 +159,7 @@ print(response.choices[0].message.reasoning_content)
 
 - Images must be sent as base64 data URIs; remote `http(s)` URLs are rejected.
 - Beta models require beta access and are not listed above.
-- Some `/v2` requests to `sarvam-105b` stall without an answer, while the same requests on `/v1` answer. Either pin `api_base: https://api.sarvam.ai/v1` on that model, or set `timeout` a little above your longest expected response together with `num_retries`, so LiteLLM retries a stalled call instead of waiting for its default timeout, which is 600 seconds on the SDK and 6000 seconds on the proxy. Each stalled attempt still waits the full `timeout` before the retry starts:
+- Some `/v2` requests to `sarvam-105b` stall without an answer, so LiteLLM keeps `sarvam-105b` and `sarvam-105b-conversations` on `/v1`. If you point either model at `/v2` with `api_base`, also set `timeout` a little above your longest expected response together with `num_retries`, so LiteLLM retries a stalled call instead of waiting for its default timeout, which is 600 seconds on the SDK and 6000 seconds on the proxy. Each stalled attempt still waits the full `timeout` before the retry starts:
 
     ```yaml
     model_list:
@@ -167,6 +167,7 @@ print(response.choices[0].message.reasoning_content)
         litellm_params:
           model: sarvam/sarvam-105b
           api_key: os.environ/SARVAM_API_KEY
+          api_base: https://api.sarvam.ai/v2
           timeout: 120
           num_retries: 2
     ```
