@@ -54,7 +54,7 @@ Customer-facing changes come first. Test, CI and internal changes are listed at 
 
 :::danger Breaking Changes
 
-Changes from [`v1.110.0`](https://github.com/BerriAI/litellm/releases/tag/v1.110.0), the latest stable release, that may need action when upgrading.
+Changes from [`v1.110.0`](/release_notes/v1.110.0/v1-110-0), the latest stable release, that may need action when upgrading.
 
 - **Packaging**: the Docker image now runs as non-root by default, and we consolidated to one image (no more `litellm-database` or `litellm-non_root`) and one Helm chart, `helm/litellm` - [PR #43332](https://github.com/BerriAI/litellm/pull/43332), [PR #43330](https://github.com/BerriAI/litellm/pull/43330)
 - **Vertex AI**: client-supplied `vertex_location` and `vertex_project` are rejected unless the admin opts in - [PR #47028](https://github.com/BerriAI/litellm/pull/47028)
@@ -897,10 +897,11 @@ PRs by ownership area (total: 525)
 - [@collieai-dev](https://github.com/collieai-dev) made their first contribution in [PR #49224](https://github.com/BerriAI/litellm/pull/49224)
 - [@giladk1221](https://github.com/giladk1221) made their first contribution in [PR #50883](https://github.com/BerriAI/litellm/pull/50883)
 - [@hktitof](https://github.com/hktitof) made their first contribution in [PR #40376](https://github.com/BerriAI/litellm/pull/40376)
+- [@Jeongho0805](https://github.com/Jeongho0805) made their first contribution in [PR #50880](https://github.com/BerriAI/litellm/pull/50880)
 - [@kaizen-38](https://github.com/kaizen-38) made their first contribution in [PR #51318](https://github.com/BerriAI/litellm/pull/51318)
 - [@kenneth-berri](https://github.com/kenneth-berri) made their first contribution in [PR #50764](https://github.com/BerriAI/litellm/pull/50764)
 - [@kirti22jain](https://github.com/kirti22jain) made their first contribution in [PR #51608](https://github.com/BerriAI/litellm/pull/51608)
-- [@maciej-berri](https://github.com/maciej-berri) made their first contribution in [PR #51440](https://github.com/BerriAI/litellm/pull/51440)
+- [@maciej-berri](https://github.com/maciej-berri) made their first contribution in [PR #51446](https://github.com/BerriAI/litellm/pull/51446)
 - [@mishdotdev](https://github.com/mishdotdev) made their first contribution in [PR #50642](https://github.com/BerriAI/litellm/pull/50642)
 - [@nurlanmnn](https://github.com/nurlanmnn) made their first contribution in [PR #50979](https://github.com/BerriAI/litellm/pull/50979)
 - [@princejain756](https://github.com/princejain756) made their first contribution in [PR #50657](https://github.com/BerriAI/litellm/pull/50657)
