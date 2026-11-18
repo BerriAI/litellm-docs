@@ -147,7 +147,7 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
 
 ## Reasoning
 
-Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning, so LiteLLM rejects `reasoning_effort` on it unless you set `drop_params`. On `gemma4`, reasoning is off by default and only runs when `reasoning_effort` is set. On `/v1`, `sarvam-105b` accepts only `low`, `medium`, or `high`, and Sarvam rejects `reasoning_effort="none"` with a 400 error. To turn reasoning off on `sarvam-105b`, point it at `https://api.sarvam.ai/v2` with `api_base`. Calls there often stall, so follow the timeout advice under Limitations:
+Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning, so LiteLLM rejects `reasoning_effort` on it unless you set `drop_params`. On `gemma4`, reasoning is off by default and only runs when `reasoning_effort` is set. On `/v1`, `sarvam-105b` accepts only `low`, `medium`, or `high`, and Sarvam rejects `reasoning_effort="none"` with a 400 error. To turn reasoning off on `sarvam-105b`, point it at `https://api.sarvam.ai/v2` with `api_base`. Calls there often stall, so follow the timeout advice under Limitations. This call asks `gemma4` to reason:
 
 ```python
 response = completion(
