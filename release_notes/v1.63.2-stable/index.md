@@ -2,7 +2,7 @@
 title: "LiteLLM v1.63.2-stable"
 description: "Adds /openai/ passthrough for Assistants, Bedrock Claude tool and response_format fixes and PDF input flags for Bedrock Claude."
 slug: v1.63.2-stable
-date: 2025-03-08T10:00:00
+date: 2025-03-09T03:12:26
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

@@ -18,8 +18,6 @@ hide_table_of_contents: false
 
 import Image from '@theme/IdealImage';
 
-# v1.59.8-stable
-
 
 
 :::info

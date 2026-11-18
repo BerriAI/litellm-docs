@@ -2,7 +2,7 @@
 title: "LiteLLM v1.78.5-stable - Native OCR Support"
 description: "Adds a native /v1/ocr endpoint for Mistral OCR and Azure AI OCR, plus Claude Haiku 4.5 and GPT-5-Codex support."
 slug: "v1-78-5"
-date: 2025-10-18T10:00:00
+date: 2025-10-26T01:06:34
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

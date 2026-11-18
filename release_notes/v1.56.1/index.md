@@ -18,8 +18,6 @@ hide_table_of_contents: false
 
 import Image from '@theme/IdealImage';
 
-# v1.56.1
-
 `key management`, `budgets/rate limits`, `logging`, `guardrails`
 
 :::info

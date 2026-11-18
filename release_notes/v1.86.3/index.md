@@ -2,7 +2,7 @@
 title: "LiteLLM v1.86.3 - Gemini 3.5 Flash Day-0 & Pending Line Backports"
 description: "Adds day-0 Gemini 3.5 Flash on Vertex AI and Google AI Studio. Stops duplicate Claude Code traces and seeds Redis spend counters with SET NX."
 slug: "v1-86-3"
-date: 2026-06-02T17:31:21
+date: 2026-06-03T01:21:17
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

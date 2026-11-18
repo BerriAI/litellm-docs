@@ -2,7 +2,7 @@
 title: "LiteLLM v1.74.9-stable - Auto-Router"
 description: "Adds Auto-Router that routes requests by content, model-level guardrails, MCP header propagation and Recraft image generation."
 slug: "v1-74-9"
-date: 2025-07-27T10:00:00
+date: 2025-08-01T21:40:07
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

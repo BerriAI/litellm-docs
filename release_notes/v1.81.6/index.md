@@ -2,7 +2,7 @@
 title: "LiteLLM [Preview] v1.81.6 - Logs v2 with Tool Call Tracing"
 description: "Redesigns the logs view with tool call tracing, a side panel and error message search in this preview release."
 slug: "v1-81-6"
-date: 2026-01-31T00:00:00
+date: 2026-02-01T04:02:23
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

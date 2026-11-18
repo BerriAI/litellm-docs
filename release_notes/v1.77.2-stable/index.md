@@ -2,7 +2,7 @@
 title: "LiteLLM v1.77.2-stable - Bedrock Batches API"
 description: "Adds Bedrock batch inference jobs through the unified batch API and tiered cost tracking for Dashscope Qwen models."
 slug: "v1-77-2"
-date: 2025-09-13T10:00:00
+date: 2025-09-20T16:35:03
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

@@ -132,6 +132,17 @@ export function PageActions({rawMarkdownB64, permalink, hasMarkdownUrl}) {
   );
 }
 
+const releaseDateFormat = new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'});
+
+function ReleaseDate({date}) {
+  const iso = new Date(date).toISOString();
+  return (
+    <p className={styles.releaseDate}>
+      Released <time dateTime={iso}>{releaseDateFormat.format(new Date(iso))}</time>
+    </p>
+  );
+}
+
 function useSyntheticTitle() {
   const {metadata, frontMatter, contentTitle} = useDoc();
   const shouldRender = !frontMatter.hide_title && typeof contentTitle === 'undefined';
@@ -148,7 +159,8 @@ export default function DocItemContent({children}) {
     <PageActions rawMarkdownB64={frontMatter.rawMarkdownB64} permalink={metadata.permalink} hasMarkdownUrl={isMainDocs} />
   );
   const rawMarkdownB64 = frontMatter.rawMarkdownB64;
-  const showRustMigrationBanner = activePlugin?.pluginId === 'release-notes';
+  const isReleaseNote = activePlugin?.pluginId === 'release-notes';
+  const releaseDate = isReleaseNote && frontMatter.date ? <ReleaseDate date={frontMatter.date} /> : null;
 
   return (
     <div className={clsx(ThemeClassNames.docs.docMarkdown, 'markdown')}>
@@ -161,7 +173,7 @@ export default function DocItemContent({children}) {
           />
         </Head>
       )}
-      {showRustMigrationBanner && (
+      {isReleaseNote && (
         <Link className={styles.rustMigrationBanner} to="/rust-migration">
           <span className={styles.rustMigrationContent}>
             <strong>LiteLLM is moving to Rust <span aria-hidden="true">🦀</span></strong>
@@ -172,15 +184,21 @@ export default function DocItemContent({children}) {
       )}
       {syntheticTitle ? (
         <header className={styles.titleRow}>
-          <Heading as="h1" className={styles.title}>{syntheticTitle}</Heading>
+          <div className={styles.titleBlock}>
+            <Heading as="h1" className={styles.title}>{syntheticTitle}</Heading>
+            {releaseDate}
+          </div>
           {rawMarkdownB64 && actions}
         </header>
       ) : (
-        rawMarkdownB64 && (
-          <div className={styles.copyBtnRow}>
-            {actions}
-          </div>
-        )
+        <>
+          {releaseDate}
+          {rawMarkdownB64 && (
+            <div className={styles.copyBtnRow}>
+              {actions}
+            </div>
+          )}
+        </>
       )}
       <MDXContent>{children}</MDXContent>
     </div>

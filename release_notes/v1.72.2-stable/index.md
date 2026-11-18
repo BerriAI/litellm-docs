@@ -2,7 +2,7 @@
 title: "LiteLLM v1.72.2-stable"
 description: "Cuts /v1/messages proxy overhead to 50ms at 250 RPS, adds zero-spillover multi-instance rate limits and UI audit logs."
 slug: "v1-72-2-stable"
-date: 2025-06-07T10:00:00
+date: 2025-06-12T00:47:01
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

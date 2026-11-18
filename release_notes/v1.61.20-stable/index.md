@@ -2,7 +2,7 @@
 title: "LiteLLM v1.61.20-stable"
 description: "Adds Claude 3.7 Sonnet thinking and reasoning_content support across Anthropic, Bedrock, Vertex AI and OpenRouter. Also adds GPT-4.5 preview cost tracking."
 slug: v1.61.20-stable
-date: 2025-03-01T10:00:00
+date: 2025-03-02T00:36:49
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -17,8 +17,6 @@ hide_table_of_contents: false
 ---
 
 import Image from '@theme/IdealImage';
-
-# v1.61.20-stable
 
 
 These are the changes since `v1.61.13-stable`.

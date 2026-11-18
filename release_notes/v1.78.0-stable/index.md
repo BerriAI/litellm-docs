@@ -2,7 +2,7 @@
 title: "LiteLLM v1.78.0-stable - MCP Gateway: Control Tool Access by Team, Key"
 description: "Adds per-team and per-key MCP tool access control, GPT-5 Pro and EnkryptAI guardrails. Lowers p99 latency by 70%."
 slug: "v1-78-0"
-date: 2025-10-11T10:00:00
+date: 2025-10-25T18:30:23
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

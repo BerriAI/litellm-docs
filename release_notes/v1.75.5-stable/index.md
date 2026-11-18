@@ -2,7 +2,7 @@
 title: "LiteLLM v1.75.5-stable - Redis latency improvements"
 description: "Cuts Redis P99 latency by 50%, adds Responses API session management with images and adds Oracle Cloud Infrastructure and Digital Ocean Gradient AI."
 slug: "v1-75-5"
-date: 2025-08-10T10:00:00
+date: 2025-08-17T21:42:33
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

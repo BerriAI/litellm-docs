@@ -2,7 +2,7 @@
 title: "LiteLLM v1.74.0-stable"
 description: "Adds namespaced MCP servers on the MCP Gateway, team and key logging in the UI, Azure Content Safety guardrails and GitHub Copilot as a provider."
 slug: "v1-74-0-stable"
-date: 2025-07-05T10:00:00
+date: 2025-07-10T22:38:26
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
