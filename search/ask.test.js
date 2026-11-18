@@ -10,6 +10,8 @@ const {createHandler, allowAI} = require('./server');
 const {createAskHandler} = require('./api');
 const {MODEL, FALLBACKS} = require('./gateway');
 const {readConfig, isContentUrl} = require('./runtime');
+const {getTracing, traceHeaders} = require('./tracing');
+const {waitForReceipt} = require('./verify-trace');
 
 const docs = [
   {id: 'lens', title: 'LiteLLM Lens', heading: 'Prerequisites', url: '/docs/proxy/lens', text: 'Install PostgreSQL and ClickHouse before starting Lens.'},
@@ -380,6 +382,37 @@ test('100 authenticated bot questions from one worker bypass website quotas with
       assert.equal(result.body.sources[0].id, 1);
     }
   }, {config: {...config, botServiceToken: 'service-token', botApiKey: 'bot-key'}, fetchImpl});
+});
+
+test('Lens requires an explicit opt-in and both Cloudflare credentials for Access', async t => {
+  const env = {
+    CF_ACCESS_CLIENT_ID: 'docs-client-id', CF_ACCESS_CLIENT_SECRET: 'docs-client-secret',
+    LITELLM_TRACING_KEY: 'docs-trace-key', OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: 'https://lens.example.com/v1/traces',
+  };
+  assert.deepEqual(traceHeaders(readConfig(env).tracing), {Authorization: 'Bearer docs-trace-key'});
+  env.LENS_USE_DOCS_CLOUDFLARE_ACCESS = 'true';
+  const {tracing} = readConfig(env);
+  const headers = {
+    Authorization: 'Bearer docs-trace-key',
+    'CF-Access-Client-Id': 'docs-client-id',
+    'CF-Access-Client-Secret': 'docs-client-secret',
+  };
+  assert.deepEqual(traceHeaders(tracing), headers);
+  const record = {trace_id: 'trace-id', span_ids: ['span-id']};
+  const fetch = t.mock.method(globalThis, 'fetch', async (url, request) => {
+    assert.equal(url, 'https://lens.example.com/v1/traces/receipt');
+    assert.deepEqual(request.headers, {'Content-Type': 'application/json', ...headers});
+    assert.equal(request.redirect, 'error');
+    assert.deepEqual(JSON.parse(request.body), record);
+    return Response.json({received: true});
+  });
+  assert.deepEqual(await waitForReceipt(tracing, record), {received: true});
+  delete env.CF_ACCESS_CLIENT_SECRET;
+  const partial = readConfig(env);
+  t.mock.method(console, 'warn', () => {});
+  assert.equal(getTracing(partial).enabled, false);
+  await assert.rejects(waitForReceipt(partial.tracing, record), /Invalid Lens Cloudflare Access configuration/);
+  assert.equal(fetch.mock.callCount(), 1);
 });
 
 test('bot tracing uses its dedicated key and keeps website tracing and agent names unchanged', async t => {

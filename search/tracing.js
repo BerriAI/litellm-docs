@@ -30,7 +30,19 @@ function gatewaySecrets(config) {
 }
 
 function docsSecrets(config) {
-  return [...gatewaySecrets(config), ...[config.tracing?.key, config.botTracingKey].filter(Boolean)];
+  const access = config.tracing?.cloudflareAccess;
+  return [...gatewaySecrets(config), ...[config.tracing?.key, config.botTracingKey, access?.clientId, access?.clientSecret].filter(Boolean)];
+}
+
+function traceHeaders({key, cloudflareAccess}) {
+  const headers = {Authorization: `Bearer ${key}`};
+  if (cloudflareAccess) {
+    const {clientId, clientSecret} = cloudflareAccess;
+    if (!clientId?.trim() || !clientSecret?.trim()) throw new Error('Invalid Lens Cloudflare Access configuration');
+    headers['CF-Access-Client-Id'] = clientId;
+    headers['CF-Access-Client-Secret'] = clientSecret;
+  }
+  return headers;
 }
 
 function createTracing(config) {
@@ -46,7 +58,7 @@ function createTracing(config) {
   const {resourceFromAttributes} = require('@opentelemetry/resources');
   const exporter = new OTLPTraceExporter({
     url: endpoint.href,
-    headers: {Authorization: `Bearer ${config.tracing.key}`},
+    headers: traceHeaders(config.tracing),
     timeoutMillis: 2000,
   });
   const listeners = new Set();
@@ -153,4 +165,4 @@ function createTracing(config) {
   };
 }
 
-module.exports = {AGENT_NAME, getTracing, docsSecrets, gatewaySecrets};
+module.exports = {AGENT_NAME, getTracing, docsSecrets, gatewaySecrets, traceHeaders};

@@ -3,23 +3,28 @@ const path = require('node:path');
 const {setTimeout: delay} = require('node:timers/promises');
 const {answerQuestion} = require('./answer');
 const {readConfig, loadCorpus} = require('./runtime');
-const {AGENT_NAME, getTracing} = require('./tracing');
+const {AGENT_NAME, getTracing, traceHeaders} = require('./tracing');
 
-async function waitForReceipt(endpoint, key, record) {
+async function waitForReceipt(tracingConfig, record) {
+  const endpoint = new URL(tracingConfig.endpoint);
+  if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) {
+    throw new Error('Invalid Lens receipt endpoint.');
+  }
+  const headers = {'Content-Type': 'application/json', ...traceHeaders(tracingConfig)};
   const deadline = Date.now() + 60000;
   let lastStatus = 'no response';
   for (let attempt = 1; attempt <= 30 && Date.now() < deadline; attempt++) {
     let retryAfter = 1000;
     try {
-      const response = await fetch(`${endpoint.replace(/\/$/, '')}/receipt`, {
+      const response = await fetch(`${endpoint.href.replace(/\/$/, '')}/receipt`, {
         method: 'POST', redirect: 'error',
-        headers: {'Content-Type': 'application/json', Authorization: `Bearer ${key}`},
+        headers,
         body: JSON.stringify({trace_id: record.trace_id, span_ids: record.span_ids}),
         signal: AbortSignal.timeout(Math.max(1, Math.min(5000, deadline - Date.now()))),
       });
       lastStatus = `HTTP ${response.status}`;
       if (response.status === 401 || response.status === 403) {
-        throw new Error('Lens rejected the dedicated tracing key or its permissions. Receipt verification stopped.');
+        throw new Error('Lens receipt authentication failed. Check Cloudflare Access and the dedicated tracing key.');
       }
       if (response.ok) {
         const receipt = await response.json();
@@ -85,7 +90,7 @@ async function main() {
     await fs.mkdir(path.dirname(file), {recursive: true});
     await fs.writeFile(file, JSON.stringify(record, null, 2) + '\n', {mode: 0o600});
     console.log(JSON.stringify({agent: record.agent, trace_id, span_ids: record.span_ids, received: false}));
-    await waitForReceipt(config.tracing.endpoint, config.tracing.key, record);
+    await waitForReceipt(config.tracing, record);
     record.received = true;
     record.verified_at = new Date().toISOString();
     if (process.env.LENS_UI_URL) {
