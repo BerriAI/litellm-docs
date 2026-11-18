@@ -1,7 +1,7 @@
 ---
 title: "CoralBricks API with LiteLLM AI Gateway"
 sidebar_label: "CoralBricks"
-description: "Run GLM-5.3 Fast and DeepSeek V4.1 Flash Fast on CoralBricks from the Python SDK or AI Gateway, on chat, Responses and Messages routes with cost tracking."
+description: "Run DeepSeek V4.1 Flash on CoralBricks in Value, Standard and Fast tiers from the Python SDK or AI Gateway, on chat, Responses and Messages routes with cost tracking."
 ---
 
 import Tabs from '@theme/Tabs';
@@ -13,7 +13,7 @@ import TabItem from '@theme/TabItem';
 
 | Property | Details |
 |-------|-------|
-| Description | CoralBricks serves open-weight DeepSeek models in FP4 over an OpenAI-compatible API |
+| Description | CoralBricks serves the open-weight [DeepSeek V4.1 Flash](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017) model in three price and speed tiers over an OpenAI-compatible API |
 | Provider Route on LiteLLM | `coralbricks/` |
 | Link to Provider Doc | [CoralBricks](https://www.coralbricks.ai) |
 | Default Base URL | `https://inference.coralbricks.ai/v1` |
@@ -32,13 +32,15 @@ os.environ["CORALBRICKS_API_BASE"] = "https://inference.coralbricks.ai/v1"  # op
 
 ## Models
 
-| Model | Input / 1M tokens | Output / 1M tokens | Cache write / 1M tokens | Cache read / 1M tokens |
-|-------|-------------------|--------------------|-------------------------|------------------------|
-| `coralbricks/deepseek-v4.1-flash-fast` | $0.01 | $1.20 | $0.09 | $0 |
+| Model | Tier | Input / 1M tokens | Cached input / 1M tokens | Output / 1M tokens |
+|-------|------|-------------------|--------------------------|--------------------|
+| `coralbricks/deepseek-v4.1-flash-value` | Value, the lowest-price tier | $0.005 | $0.003 | $0.57 |
+| `coralbricks/deepseek-v4.1-flash` | Standard, the default tier | $0.19 | $0.008 | $0.60 |
+| `coralbricks/deepseek-v4.1-flash-fast` | Fast, the fastest tier | $0.45 | $0.009 | $1.80 |
 
-Every model takes up to 1,048,576 input tokens and supports tool calling, reasoning, and prompt caching. Pricing follows the [CoralBricks pricing page](https://www.coralbricks.ai/pricing): cache writes are billed at the cache write rate and cached reads are free. If your contract prices differ, set `input_cost_per_token` / `output_cost_per_token` on the deployment and those override the cost map
+All three tiers run DeepSeek V4.1 Flash with a 1,048,576-token context window and up to 393,216 output tokens. They take text and image input, and support streaming, tool calling, structured output, reasoning, and prompt caching. Pricing follows the [CoralBricks pricing page](https://www.coralbricks.ai/pricing). Cache writes carry no surcharge, so written tokens bill at the input rate, and cached reads bill at the cached input rate. If your contract prices differ, set `input_cost_per_token` / `output_cost_per_token` on the deployment and those override the cost map
 
-CoralBricks still accepts the older `deepseek-v4.1-flash-fast-fp4` name as a deprecated alias, but LiteLLM prices only the current names above, so use those in new deployments
+CoralBricks still accepts the older `deepseek-v4.1-flash-fast-fp4` name as a deprecated alias of `deepseek-v4.1-flash-fast`, and LiteLLM prices it the same as the Fast tier. Use the names in the table in new deployments
 
 ## Usage - LiteLLM Python SDK
 
@@ -101,7 +103,7 @@ Add CoralBricks to your LiteLLM Proxy configuration:
 model_list:
   - model_name: deepseek-v4.1-flash
     litellm_params:
-      model: coralbricks/deepseek-v4.1-flash-fast
+      model: coralbricks/deepseek-v4.1-flash
       api_key: os.environ/CORALBRICKS_API_KEY
 
 general_settings:
@@ -189,7 +191,7 @@ curl http://localhost:4000/v1/messages \
 
 ## Cost Tracking
 
-The `coralbricks/` models are registered in LiteLLM's model cost map, so per-request spend is computed automatically on all three endpoints, returned in the `x-litellm-response-cost` response header, and recorded in spend logs under provider `coralbricks`. Cache writes and cached reads are tracked from the usage CoralBricks returns, so a repeated prompt is billed at the free cached read rate for its cached prefix
+The `coralbricks/` models are registered in LiteLLM's model cost map, so per-request spend is computed automatically on all three endpoints, returned in the `x-litellm-response-cost` response header, and recorded in spend logs under provider `coralbricks`. Cache writes and cached reads are tracked from the usage CoralBricks returns, so a repeated prompt is billed at the cached input rate for its cached prefix
 
 ## Custom Endpoints
 
@@ -199,7 +201,7 @@ Set `CORALBRICKS_API_BASE` or pass `api_base` explicitly to route through a diff
 model_list:
   - model_name: deepseek-v4.1-flash
     litellm_params:
-      model: coralbricks/deepseek-v4.1-flash-fast
+      model: coralbricks/deepseek-v4.1-flash
       api_base: https://your-coralbricks-endpoint/v1
       api_key: os.environ/CORALBRICKS_API_KEY
 ```
