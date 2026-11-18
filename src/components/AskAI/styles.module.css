@@ -32,13 +32,28 @@
 .answer table {display:block;max-width:100%;overflow:auto}
 .citation {display:inline-flex;align-items:center;justify-content:center;min-width:14px;margin:0 2px;padding:0 3px;border-radius:2px;background:var(--ai-tint);color:var(--ai-accent-ink);font-size:10px;font-weight:600;line-height:15px;text-decoration:none;vertical-align:super}
 .citation:hover {color:var(--ai-accent-ink);text-decoration:underline}
-.sources {display:flex;flex-wrap:wrap;gap:6px}
-.sources a {display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:2px 8px 2px 4px;border:1px solid var(--ai-border);border-radius:var(--lite-radius-xs,4px);background:var(--ai-bg);color:var(--ai-muted);font-size:12px;line-height:18px;text-decoration:none}
-.sources a:hover {border-color:var(--aurora-accent-line,var(--ai-border));background:var(--ai-tint);color:var(--ai-accent-ink);text-decoration:none}
+.responseTools {display:flex;align-items:flex-start;gap:16px;color:var(--ai-muted);font-size:12px}
+/* The docs theme applies important card styles to every details element. */
+.panel .sourceDetails {flex:1;min-width:0;font-size:12px;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:var(--ai-muted)!important}
+.panel .sourceDetails summary {width:fit-content;padding:4px 0;cursor:pointer;color:inherit!important;font-weight:400!important}
+.panel .sourceDetails summary:hover {color:var(--ai-accent-ink)!important}
+.sourceDetails summary:focus-visible {outline:2px solid var(--ai-accent);outline-offset:2px;border-radius:2px}
+.sources {display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.sources a {display:flex;align-items:flex-start;gap:6px;max-width:100%;padding:4px 0;color:var(--ai-muted);font-size:12px;line-height:18px;text-decoration:none}
+.sources a:hover {color:var(--ai-accent-ink);text-decoration:underline}
 .sources b {display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;min-width:16px;height:16px;border-radius:2px;background:var(--ai-tint);color:var(--ai-accent-ink);font-size:10px;font-weight:600}
-.sources span {overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sources span {min-width:0;overflow-wrap:anywhere}
 .sources i {font-style:normal;opacity:.75}
 .thinking {display:block;margin:4px 0 0;color:var(--ai-muted);font-size:13px}
+.copyResponse {display:inline-flex;align-items:center;gap:5px;flex-shrink:0;padding:4px 0;border:0;background:none;color:var(--ai-muted);font:inherit}
+.copyResponse:hover {color:var(--ai-accent-ink)}
+.researchProgress {color:var(--ai-muted)}
+.progressStatus {display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.elapsed {flex-shrink:0;font-size:11px;font-variant-numeric:tabular-nums}
+.searchQueries {margin:6px 0 0;font-size:12px;overflow-wrap:anywhere}
+.researchPages {display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.researchPages a {color:var(--ai-muted);overflow-wrap:anywhere}
+.researchPages a:hover {color:var(--ai-accent-ink)}
 .error {margin-top:16px;padding:10px 12px;border:1px solid var(--ai-border);border-radius:var(--lite-radius-md,10px);color:var(--ai-text)}
 .error p {margin:0}
 .error button {margin-top:6px;padding:0;border:0;background:none;color:var(--ai-accent-ink);font-size:13px;font-weight:600}

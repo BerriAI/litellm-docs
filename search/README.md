@@ -170,7 +170,9 @@ The model has no privileged actions or access to secrets, but its answers can st
 
 ## Streaming
 
-The browser requests `Accept: text/event-stream`. The API sends brief progress statuses during research, source metadata before the answer, and `answer-delta` events only for the final generation. It never sends raw tool results to the browser. A terminal `done` event contains the same answer text and its cited sources. An `error` event or a connection ending without `done` offers Retry. There is no automatic answer rewrite or stream reset.
+The browser requests `Accept: text/event-stream`. Research statuses include the actual search queries and unique pages read. The panel shows elapsed time until the first answer text and lets readers expand the list of pages. The API sends source metadata before the answer and `answer-delta` events only for the final generation; it never sends raw passages or model reasoning. A terminal `done` event contains the same answer text and its cited sources. An `error` event or a connection ending without `done` offers Retry. There is no automatic answer rewrite or stream reset.
+
+Each completed response has a **Copy** button that copies its Markdown. Its **N sources** control expands the cited links, with the same source numbers used in the answer. **Copy conversation** in the header copies all completed turns.
 
 Stop or New chat cancels upstream work. Closing the Ask AI panel lets the current answer finish. The panel saves all completed turns in IndexedDB and restores them after a reload, with no turn-count cap. Session storage holds only the tab's conversation ID. Existing session-storage conversations migrate automatically; browsers without IndexedDB fall back to session storage.
 

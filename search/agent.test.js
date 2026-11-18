@@ -92,7 +92,8 @@ test('search results do not become citations until the agent reads them; unrelat
 });
 
 test('tools reject undiscovered IDs, arbitrary URLs, malformed arguments and oversized batches', async () => {
-  const tool = createDocumentationTools({...corpus});
+  const events = [];
+  const tool = createDocumentationTools({...corpus, onEvent: (event, data) => events.push({event, data})});
   for (const call of [
     toolCall('a', 'read_docs', {passage_ids: ['decisions']}),
     toolCall('b', 'read_docs', {passage_ids: ['https://private.example/secret']}),
@@ -101,6 +102,28 @@ test('tools reject undiscovered IDs, arbitrary URLs, malformed arguments and ove
     {id: 'e', function: {name: 'search_docs', arguments: '{'}},
   ]) assert.ok((await tool.execute(call)).error);
   assert.equal(tool.sources.size, 0);
+  assert.deepEqual(events, []);
+});
+
+test('progress reports actual queries and unique pages read without exposing passages or unread links', async () => {
+  const parts = [
+    {...docs[1], links: [{title: 'Unread page', url: '/docs/unread'}]},
+    {...docs[1], id: 'example', url: '/docs/decisions#request', heading: 'Request', text: 'Full request example.'},
+    docs[3],
+  ];
+  const events = [];
+  const tool = createDocumentationTools({index: createIndex(parts), documents: new Map(parts.map(doc => [doc.id, doc])),
+    onEvent: (event, data) => events.push({event, data})});
+  const queries = ['decision vllm', 'Pi AI'];
+  await tool.execute(toolCall('s', 'search_docs', {queries}));
+  assert.deepEqual(events, [{event: 'status', data: {message: 'Searching documentation…', queries}}]);
+  await tool.execute(toolCall('r1', 'read_docs', {passage_ids: ['decisions']}));
+  const firstPage = {title: docs[1].title, url: '/docs/decisions'};
+  assert.deepEqual(events.at(-1), {event: 'status', data: {message: 'Reading documentation…', pages: [firstPage]}});
+  await tool.execute(toolCall('r2', 'read_docs', {passage_ids: ['example', 'pi']}));
+  assert.deepEqual(events.at(-1).data.pages, [firstPage, {title: docs[3].title, url: docs[3].url}]);
+  assert.deepEqual(events[1].data.pages, [firstPage]);
+  assert.equal(tool.passages.size, 3);
 });
 
 test('repeated tool requests stop at the round limit and get a final answer without tools', async () => {

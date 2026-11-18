@@ -19,7 +19,7 @@ const noop = () => {};
 const AskAIContext = createContext({
   open: false, setOpen: noop, openPanel: noop, closePanel: noop, toggle: noop, ask: noop, stop: noop, newChat: noop,
   copyConversation: noop, retry: noop, turns: [], asking: false, pendingQuestion: '', streamedAnswer: '',
-  streamedSources: [], progress: '', error: '', failedQuestion: '', draft: '', setDraft: noop, copied: false,
+  streamedSources: [], progress: {message: ''}, error: '', failedQuestion: '', draft: '', setDraft: noop, copied: false,
   focusRequest: 0,
 });
 
@@ -41,7 +41,7 @@ export function AskAIProvider({children}) {
   const [error, setError] = useState('');
   const [streamedAnswer, setStreamedAnswer] = useState('');
   const [streamedSources, setStreamedSources] = useState([]);
-  const [progress, setProgress] = useState('Searching documentation…');
+  const [progress, setProgress] = useState({message: 'Searching documentation…'});
   const [copied, setCopied] = useState(false);
   const controller = useRef(null), turnsRef = useRef([]), askingRef = useRef(false);
   const restoration = useRef(null), panelTouched = useRef(false);
@@ -104,14 +104,15 @@ export function AskAIProvider({children}) {
     controller.current?.abort(); controller.current = pending;
     askingRef.current = true;
     setAsking(true); setPendingQuestion(question); setDraft(''); setError(''); setFailedQuestion('');
-    setStreamedAnswer(''); setStreamedSources([]); setProgress('Searching documentation…');
+    setStreamedAnswer(''); setStreamedSources([]); setProgress({message: 'Searching documentation…', startedAt: Date.now()});
     const history = turnsRef.current.map(({question, answer}) => ({question, answer}));
     try {
       const response = await fetch(askUrl, {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'text/event-stream'},
         body: JSON.stringify({question, history}), signal: pending.signal});
       const data = await readAnswer(response, (event, data) => {
         if (pending.signal.aborted) return;
-        if (event === 'status') setProgress(data.message);
+        if (event === 'status') setProgress(previous => ({...previous, message: data.message,
+          queries: data.queries || [], pages: data.pages || previous.pages}));
         if (event === 'answer-delta') setStreamedAnswer(previous => previous + data.text);
         if (event === 'sources') setStreamedSources(data.sources);
       }, pending.signal);

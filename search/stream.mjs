@@ -1,3 +1,5 @@
+import {isContentUrl} from './content.js';
+
 // SSE framing shared by the upstream gateway reader and the browser client.
 // A network chunk can end anywhere, including inside a UTF-8 character or CRLF.
 export async function* readEvents(body, signal) {
@@ -60,7 +62,10 @@ export async function readAnswer(response, onEvent, signal) {
     }
     if ((frame.event === 'answer-delta' && typeof data.text !== 'string') ||
       (frame.event === 'sources' && !Array.isArray(data.sources)) ||
-      (frame.event === 'status' && typeof data.message !== 'string')) throw new Error('Invalid answer response. Please retry.');
+      (frame.event === 'status' && (typeof data.message !== 'string' ||
+        (data.queries !== undefined && (!Array.isArray(data.queries) || data.queries.some(query => typeof query !== 'string'))) ||
+        (data.pages !== undefined && (!Array.isArray(data.pages) || data.pages.some(page =>
+          !page || typeof page.title !== 'string' || !isContentUrl(page.url))))))) throw new Error('Invalid answer response. Please retry.');
     await onEvent(frame.event, data);
   }
   throw new Error('The answer was interrupted. Please retry.');
