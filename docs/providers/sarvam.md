@@ -17,6 +17,8 @@ LiteLLM supports Sarvam's OpenAI-compatible chat API, including Sarvam 105B and 
 | `sarvam/deepseekv4.1-flash-1017` | 1M | 1M | Text, image | $0.15 / $0.59 |
 | `sarvam/deepseekv4.1-flash-1017-interactive` | 1M | 1M | Text, image | $0.27 / $1.12 |
 
+Except on `sarvam-105b-conversations`, Max output is the whole context window, which the prompt and `max_tokens` share. Sarvam rejects a request whose prompt tokens plus `max_tokens` exceed the context.
+
 USD values are converted from Sarvam's INR rates at ₹94 per USD. `sarvam-105b`, `sarvam-105b-conversations`, and `deepseekv4.1-flash-1017` show Sarvam's introductory rates, which apply [through the end of 2026](https://docs.sarvam.ai/api/getting-started/pricing). See [Sarvam Token Factory pricing](https://www.sarvam.ai/token-factory/pricing) for the current INR rates.
 
 LiteLLM sends `sarvam-105b` and `sarvam-105b-conversations` to `https://api.sarvam.ai/v1`, the API they used before, and every other model to `https://api.sarvam.ai/v2`. Sarvam's `/v1` API serves only those two models, so remove any `api_base` that points at `https://api.sarvam.ai/v1` from the other models.
@@ -137,14 +139,13 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
 
 ## Reasoning
 
-Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning. On `gemma4`, reasoning is off by default and only runs when `reasoning_effort` is set. On `/v1`, `sarvam-105b` and `sarvam-105b-conversations` accept only `low`, `medium`, or `high`, and Sarvam rejects `reasoning_effort="none"` with a 400 error. To turn reasoning off on those two models, point them at `https://api.sarvam.ai/v2` with `api_base` and follow the timeout advice under Limitations. LiteLLM forwards `reasoning_effort` to Sarvam only when you also pass it in `allowed_openai_params`. Without it, LiteLLM drops `reasoning_effort` without an error:
+Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning, so LiteLLM rejects `reasoning_effort` on it unless you set `drop_params`. On `gemma4`, reasoning is off by default and only runs when `reasoning_effort` is set. On `/v1`, `sarvam-105b` accepts only `low`, `medium`, or `high`, and Sarvam rejects `reasoning_effort="none"` with a 400 error. To turn reasoning off on `sarvam-105b`, point it at `https://api.sarvam.ai/v2` with `api_base` and follow the timeout advice under Limitations:
 
 ```python
 response = completion(
     model="sarvam/gemma4",
     messages=[{"role": "user", "content": "Is 221 a prime number?"}],
     reasoning_effort="low",
-    allowed_openai_params=["reasoning_effort"],
 )
 print(response.choices[0].message.reasoning_content)
 ```
