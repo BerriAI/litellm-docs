@@ -564,6 +564,7 @@ router_settings:
 | allowed_fails_policy | object | `null` | Specifies the number of allowed failures for different error types before cooling down a deployment. [More information here](reliability) |
 | default_max_parallel_requests | Optional[int] | `null` (no limit) | The default maximum number of parallel requests for a deployment. |
 | default_priority | (Optional[int]) | `null` | The priority a `/chat/completions`, `/completions` or `/queue/chat/completions` request is queued at when it sends no `priority`. Lower numbers are served first. Default is None, so only requests that send a `priority` are queued. |
+| dynamic_queue | Optional[dict] | `null` (off) | <SinceVersion v="1.111.0" /> Opt-in congestion priority queue for asynchronous, non-streaming chat completions. Requires `enabled: true`, `default_priority`, router Redis, and an explicit `max_waiting` integer from 1 to 64 per deployment. There is no default queue size. `queue_timeout` defaults to 30 seconds of cumulative queue waiting. Fixed upstream statuses 429 and 529 mark congestion. Queue grants use request priority and FIFO ties. Redis coordination failure resumes ordinary routing. Streaming, text completions, synchronous calls and other endpoints retain their existing behavior. |
 | polling_interval | (Optional[float]) | `0.03` (seconds) | frequency of polling queue. Only for '.scheduler_acompletion()'. Default is 3ms. |
 | max_fallbacks | Optional[int] | `5` | The maximum number of fallbacks to try before exiting the call. |
 | default_litellm_params | Optional[dict] | `null` | The default litellm parameters to add to all requests (e.g. `temperature`, `max_tokens`). |
@@ -606,6 +607,33 @@ router_settings:
 | routing_groups | Optional[List[RoutingGroup]] | `null` | List of model groups that each apply their own routing strategy to a subset of models. Each group has a `group_name`, `models` (list of model names matched against the request's model), `routing_strategy`, and optional `routing_strategy_args`. |
 | plugins | Optional[List[RoutingPlugin]] | `null` | [SDK-only arg] Pipeline of routing plugins that run before the routing decision is made. Each plugin implements `async def run(context: RoutingContext) -> RoutingContext`, reading/narrowing `candidate_models` and attaching `signals` for the next plugin (or the final routing decision) to read. A plugin narrowing candidates to zero raises rather than falling back to the unfiltered pool. |
 
+
+#### Congestion priority queues
+
+`dynamic_queue` supports asynchronous, non-streaming chat completions only. Streaming, text completions, synchronous calls and other endpoints keep their existing behavior, including when this setting is enabled. Workers share one Redis queue per configured deployment ID. Deployments from the same provider do not automatically share a queue.
+
+```yaml
+router_settings:
+  redis_host: os.environ/REDIS_HOST
+  redis_port: os.environ/REDIS_PORT
+  default_priority: 5
+  dynamic_queue:
+    enabled: true
+    max_waiting: 8
+    queue_timeout: 30
+```
+
+`max_waiting: 8` is an example, not a default or a capacity recommendation. When enabled, `max_waiting` must be an integer from 1 to 64. The same operator-set limit applies separately to every deployment queue. API callers cannot override it. A full queue does not evict an existing waiter when a higher-priority request arrives.
+
+Upstream 429 and 529 responses mark a deployment congested. These trigger statuses are fixed. The queue applies after ordinary routing selects an eligible deployment. It does not alter deployment selection, make cooling deployments eligible, replace retry backoff, or change fallback policy.
+
+Applications set the existing request `priority`. Lower values receive queue grants first, with FIFO ordering for ties. Provider arrival and completion order can differ because requests proceed concurrently. Enabling the feature requires `default_priority`, which applies to requests without an explicit priority. Caller-owned credentials retain their existing routing behavior. The queue uses caller-supplied priorities and does not reserve waiting slots per tenant.
+
+Queue overflow returns 503. Exhausting `queue_timeout`, the cumulative queue wait across the request's attempts, returns 408. These queue rejections end the request without another retry or fallback. A selected deployment can therefore time out even when another deployment could serve the request. Ordinary retry sleeping is separate from queue waiting and does not consume `queue_timeout`. Provider retry delays and the request's total deadline still apply.
+
+When Redis coordination fails or a queue operation times out, requests resume ordinary routing and retries with their remaining budgets. Priority ordering is best-effort during that period. Ordinary cooldown and rate-limit behavior still apply. The existing Redis circuit breaker can delay recovery after Redis becomes available again.
+
+Size for the total number of waiting requests across deployments and workers. Ten full queues with `max_waiting: 64` mean 640 waiting requests. The per-deployment cap does not bound aggregate proxy CPU use. Test both waiting and simultaneous recovery under the intended workload, watching proxy CPU, healthy-request latency and Redis latency. Benchmark results are not universal capacity guarantees.
 
 ### environment variables - Reference
 
@@ -1380,6 +1408,7 @@ router_settings:
 | LITELLM_MODE | Operating mode for LiteLLM (e.g., production, development)
 | LITELLM_NON_ROOT | Flag to run LiteLLM in non-root mode for enhanced security in Docker containers
 | LITELLM_OFFLINE_MODE | Set to `true` to stop every request LiteLLM makes on its own, such as fetching the model cost map, Anthropic beta headers, auto router presets, policy templates, blog posts and the latest release, the breached password check and Hugging Face tokenizer downloads. Bundled copies are used instead. Requests to providers and other destinations you configure are unaffected. Default is `false`. See [Outbound requests and offline mode](./outbound_requests).
+| LITELLM_PREFIX_BLOCK_HASHES_SECRET | <SinceVersion v="1.111.0" /> Dedicated HMAC secret for prompt-prefix block hash IDs when the `prefix_block_hashes` callback is enabled, with hashing skipped when unset and no fallback to the salt or master key. See [Prefix Block Hash IDs](./prefix_block_hashes.md).
 | LITELLM_RATE_LIMIT_WINDOW_SIZE | Rate limit window size for LiteLLM. Default is 60
 | LITELLM_REASONING_AUTO_SUMMARY | If set to "true", automatically enables detailed reasoning summaries (`summary: "detailed"`) for reasoning models across all translation paths (Anthropic adapter, Responses API, etc.). Default is "false"
 | LITELLM_SALT_KEY | Salt key for encryption in LiteLLM

@@ -264,6 +264,49 @@ Uploaded private keys are encrypted in the credential database and held in proce
 
 The default host is `github.com`. `github_copilot_host` also accepts the provider's existing `SUBDOMAIN.ghe.com` host format. GitHub Enterprise Server and arbitrary token or model URLs are rejected. Live validation for this feature used github.com. Confirm availability of App-authenticated Copilot in your data-residency deployment before rollout.
 
+## Custom GitHub App for device login
+
+Set `GITHUB_COPILOT_CLIENT_ID` to your own GitHub App's client ID when your organization does not allow the default Copilot sign-in app. Copilot only serves a custom App's logins when the App has the **Copilot Requests** organization permission set to **Read-only**. Without it, every model call fails, even models that work in your editor.
+
+**1. Open your organization's GitHub Apps page** at `https://github.com/organizations/<your-org>/settings/apps` and click **Edit** on the App.
+
+<div className="docs-screenshot">
+  <Image img={require('../../img/github_copilot_custom_app_step1.png')} alt="Click Edit on the GitHub App" />
+</div>
+
+**2. Click Permissions & events.**
+
+<div className="docs-screenshot">
+  <Image img={require('../../img/github_copilot_custom_app_step2.png')} alt="Open Permissions and events" />
+</div>
+
+**3. Expand Organization permissions and set Copilot Requests to Access: Read-only.**
+
+<div className="docs-screenshot">
+  <Image img={require('../../img/github_copilot_custom_app_step3.png')} alt="Set Copilot Requests to Read-only" />
+</div>
+
+**4. Click Save changes.**
+
+<div className="docs-screenshot">
+  <Image img={require('../../img/github_copilot_custom_app_step4.png')} alt="Click Save changes" />
+</div>
+
+**5. Accept the new permission on the installation.** GitHub asks the organization owner to approve it on the App's installation. Requests keep failing until they approve.
+
+Copilot also checks which client sent the request. For a custom App, send `copilot-integration-id: copilot-developer-cli`. On versions that still send `vscode-chat`, add it to each GitHub Copilot model:
+
+```yaml keep-model-ids
+model_list:
+  - model_name: claude-sonnet
+    litellm_params:
+      model: github_copilot/claude-sonnet-5
+      extra_headers:
+        copilot-integration-id: copilot-developer-cli
+```
+
+LiteLLM keeps a Copilot session for up to 24 hours on versions that store it in `api-key.json`. To use the new permission right away, delete that file next to the `access-token` file. Some models, such as `claude-opus-4.8`, are not offered to custom Apps at all.
+
 ## Supported endpoints and models
 
 Use the `github_copilot/` prefix when configuring a model. Requests to the gateway use the public model name

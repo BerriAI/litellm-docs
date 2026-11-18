@@ -1,10 +1,10 @@
 ---
-title: Track customer spend
-sidebar_label: Track customer spend
+title: Set customer budgets and read usage
+sidebar_label: Set budgets and read usage
 description: Import customers, pass their identity with LLM requests, and fetch usage and budgets for your product.
 ---
 
-# Track customer spend
+# Set customer budgets and read usage
 
 :::info
 
@@ -14,15 +14,14 @@ Without a LiteLLM Enterprise license, Customer Management is free for up to 5 cu
 
 Use one application API key for your customers. Pass the customer's organization alias and member ID with each request. LiteLLM resolves the member's team and organization, checks their budgets, and records spend, tokens, and requests at all three levels.
 
-Set up budget notifications, then import Acme, its Support team, and two members. Send a request for Alice and fetch usage and budgets to display in your product.
+<SinceVersion v="1.111.0" />
+
+Start with [Customer Management](../customers.md) to track your first request. Use this guide to create a customer with budgets before sending traffic, add teams and members, and read usage from your backend. Webhook notifications are optional.
 
 ![Customer Management usage for Acme, with $0.14 spend, one request, and 120 tokens](../../../static/img/customer_portal/usage-overview.jpg)
 
 *Local Customer Management after one controlled-provider request, with usage read from the accounting ledger.*
 
-{/* keep-version-note: This guide distinguishes the verified main-branch API from pending changes. A published release containing the complete integration has not been verified. */}
-
-Use a build containing the customer hierarchy APIs, identity headers, usage routes, and database migrations on `main`. Check `/openapi.json` for `/management/v1/customer_members`. Preview requirements appear beside the steps that need them; see the [availability reference](./api_reference.md#availability) for the required changes.
 
 ## Free tier limits
 
@@ -48,55 +47,7 @@ Make these values available in your application's environment and the terminal w
 
 Keep keys on your server. Your backend authenticates the customer and selects the identity headers from that customer's session before it calls LiteLLM. It also authorizes customer access before it returns usage to your product.
 
-## 1. Set up budget webhooks
-
-Customer budget webhooks are on `main` through [customer budget webhook support](https://github.com/BerriAI/litellm/pull/51579) and the [customer budget alert fix](https://github.com/BerriAI/litellm/pull/51645). Use a build containing both changes for the recurring-budget and member events below. Prepare a POST endpoint in your product that accepts JSON and returns a successful `2xx` response within 10 seconds. The gateway must be able to reach it.
-
-Replace the example endpoint below with your receiver URL. Add this configuration before importing customers or sending requests, then restart the gateway:
-
-```yaml title="config.yaml, additions to your existing configuration"
-general_settings:
-  use_spend_logs_ledger: true
-
-litellm_settings:
-  callbacks: [customer_budget_webhook]
-
-callback_settings:
-  customer_budget_webhook:
-    endpoint: https://billing.example.com/litellm/customer-budget
-    headers:
-      X-Source: litellm
-```
-
-Merge these entries with your existing configuration. If you already have callbacks, add `customer_budget_webhook` to that list. For values supplied through your secret store, use `CUSTOMER_BUDGET_WEBHOOK_URL` and `CUSTOMER_BUDGET_WEBHOOK_HEADERS`; see [configuration precedence](./api_reference.md#customer-budget-events).
-
-After a positive spend update commits, LiteLLM checks the affected organization, team, and member. Spend at or above `soft_budget` produces `soft_budget_crossed`; spend at or above `max_budget` produces `budget_crossed`. One update can produce both events at several levels. Free requests and requests rejected before inference do not produce a customer budget spend event.
-
-```json title="Example event for Alice's $40 soft threshold"
-{
-  "event": "soft_budget_crossed",
-  "scope": "customer_member",
-  "entity_id": "acme-alice",
-  "customer_org_id": "org-acme",
-  "customer_org_alias": "Acme",
-  "customer_team_id": null,
-  "customer_team_alias": null,
-  "customer_member_id": "acme-alice",
-  "customer_member_alias": "Alice",
-  "spend": 41.25,
-  "budget": 40,
-  "period": "2026-12-13T12:00:00+00:00",
-  "timestamp": "2026-11-13T12:00:00Z"
-}
-```
-
-`budget` is the triggering threshold. `period` is the recorded next reset timestamp, or `"lifetime"` if no reset is recorded. Route the event with `customer_org_id` to update the customer's balance in your product. A member budget covers that member across teams, so member events contain the organization and member IDs; the team fields are `null`.
-
-Return a successful `2xx` response within 10 seconds. Delivery is best effort: a cache claim suppresses the same event, scope, entity, and period until the budget reset, including after failure. Lifetime budgets use a cache claim with a 100-year TTL. Cross-worker deduplication needs shared Redis; a local fallback can produce duplicates. The HTTP client retries a connection error once, but there is no durable retry queue or schedule for timeouts or unsuccessful HTTP responses. Reconcile through the usage APIs to recover missed events.
-
-Verify delivery in [step 4](#4-check-budgets-and-webhook-delivery), after the customer and SDK examples are ready.
-
-## 2. Import a customer
+## 1. Import a customer {#2-import-a-customer}
 
 Create the organization first, then its team and members. Use IDs from your application, or save the IDs LiteLLM returns when you omit them.
 
@@ -178,18 +129,9 @@ curl --request POST "$LITELLM_BASE_URL/management/v1/customer_members" \
 
 Expect `201` for each member. Read `effective_budget` in the response to verify the inherited $50 cap. Use `budget_id` to select another template or `budget_override` to customize a member. The current API rejects the old `budget_template_id` field.
 
-### Add an email (preview)
+### Use an email as a member ID {#add-an-email-preview}
 
-The `email` field requires [#51617](https://github.com/BerriAI/litellm/pull/51617). On a build containing that change, add Alice's email:
-
-```bash title="PATCH /management/v1/customer_members/acme-alice"
-curl --request PATCH "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
-  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
-  --header "Content-Type: application/json" \
-  --data '{
-    "email": "alice@acme.example"
-  }'
-```
+You can use an email string as `customer_member_id` if it is a stable, gateway-wide unique ID in your application. LiteLLM treats it as an ID; v1.111 has no separate member `email` field or `x-litellm-customer-member-email` lookup. Use an application-owned ID if the email can change.
 
 ### Repeat an import
 
@@ -211,9 +153,9 @@ curl --request PATCH "$LITELLM_BASE_URL/management/v1/customer_members/acme-alic
   }'
 ```
 
-Use the same create, retrieve, and update flow for organizations and teams. Native upserts and automatic organization creation remain under review in [#51607](https://github.com/BerriAI/litellm/pull/51607).
+Use the same create, retrieve, and update flow for organizations and teams. For repeatable organization and member imports, use the [upsert endpoints](./api_reference.md#retry-a-customer-import).
 
-## 3. Send a request for Alice
+## 2. Send a request for Alice {#3-send-a-request-for-alice}
 
 Use your existing application key and pass Alice's identity in request headers:
 
@@ -240,7 +182,6 @@ client = OpenAI(
 raw_response = client.responses.with_raw_response.create(
     model=os.environ["LITELLM_MODEL"],
     input="Write a short welcome message.",
-    max_output_tokens=128,
     extra_headers={
         "x-litellm-customer-org-alias": "Acme",
         "x-litellm-customer-member-id": "acme-alice",
@@ -282,9 +223,144 @@ Select the customer's headers for each authenticated request. Do not change a sh
 
 An existing member ID can resolve its parents without the organization header. With an existing organization alias and a new member ID, LiteLLM registers the member under `org-acme:default` and assigns the organization's default member template. An alias alone attributes usage to the organization.
 
-With [#51617](https://github.com/BerriAI/litellm/pull/51617), replace the member-ID header with `x-litellm-customer-member-email: alice@acme.example`; keep the organization alias header. An email string in the member-ID header is an ID, not an email lookup.
+For first-request registration and team selection, see [inference identity headers](./api_reference.md#attribute-inference-requests).
 
-## 4. Check budgets and webhook delivery
+To send customer identity in a JWT instead of headers, see [customer identity from JWT claims](./jwt-customer-identity.md).
+
+## 3. Fetch usage for your product {#5-fetch-usage-for-your-product}
+
+The organization aggregated endpoint returns complete spend, token, and request totals for the date range, without pagination. It accepts up to 100 customer organization IDs.
+
+```bash title="Complete Acme usage"
+curl --get "$LITELLM_BASE_URL/management/v1/customer_organizations/daily/activity/aggregated" \
+  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  --data-urlencode "customer_org_ids=org-acme" \
+  --data-urlencode "start_date=$START_DATE" \
+  --data-urlencode "end_date=$END_DATE"
+```
+
+Read the response's top-level metadata:
+
+```json title="Usage response excerpt from the local example"
+{
+  "metadata": {
+    "total_spend": 0.14,
+    "total_tokens": 120,
+    "total_api_requests": 1
+  }
+}
+```
+
+Dates are inclusive UTC days, with at most a 400-day difference between start and end. `total_spend` is cost in USD. You can use it in your product's pricing or chargeback calculation; this API does not create invoices or collect payment. The key breakdown shows the top key, while totals include every key.
+
+### Team and member usage
+
+```bash title="Support team usage, first page"
+curl --get "$LITELLM_BASE_URL/management/v1/customer_teams/daily/activity" \
+  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  --data-urlencode "customer_team_ids=acme-support" \
+  --data-urlencode "start_date=$START_DATE" \
+  --data-urlencode "end_date=$END_DATE" \
+  --data-urlencode "page=1" \
+  --data-urlencode "page_size=100"
+```
+
+```bash title="Alice's usage, first page"
+curl --get "$LITELLM_BASE_URL/management/v1/customer_members/daily/activity" \
+  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  --data-urlencode "customer_member_ids=acme-alice" \
+  --data-urlencode "start_date=$START_DATE" \
+  --data-urlencode "end_date=$END_DATE" \
+  --data-urlencode "page=1" \
+  --data-urlencode "page_size=100"
+```
+
+These endpoints paginate stored rows. Follow `metadata.has_more` and increment `page` until it is `false`. Sum each page's totals once; the same date can occur on several pages. See the [pagination contract](./api_reference.md#usage-pagination). Do not add organization, team, and member totals together: they include the same requests.
+
+Accounting runs in the background. If usage has not appeared after a successful request, check accounting completion, the UTC dates, and the identity headers. Zero-cost models can report requests and tokens with $0 spend.
+
+## 4. Fetch budgets and caps {#6-fetch-budgets-and-caps}
+
+Retrieve Acme's running budget spend and organization cap:
+
+```bash title="Organization budget"
+curl "$LITELLM_BASE_URL/management/v1/customer_organizations/org-acme" \
+  --header "Authorization: Bearer $LITELLM_ADMIN_KEY"
+```
+
+Retrieve the Support team's running spend and cap:
+
+```bash title="Team budget"
+curl "$LITELLM_BASE_URL/management/v1/customer_teams/acme-support" \
+  --header "Authorization: Bearer $LITELLM_ADMIN_KEY"
+```
+
+Retrieve Alice's inherited budget and active overrides:
+
+```bash title="Member budget"
+curl "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
+  --header "Authorization: Bearer $LITELLM_ADMIN_KEY"
+```
+
+Read `budget.max_budget` for an organization and `effective_budget.max_budget` for a team or member. The same objects contain `rpm_limit`, `tpm_limit`, model limits, and allowed models. A team or member's effective budget combines its template with active overrides; an expired override no longer applies.
+
+`spend` is the current budget counter, `budget_usage` lists the current counter and `reset_at` of each budget window, and `budget_reset_at` records the next reset. Usage reads report historical spend by UTC day for the dates you select. A reset sets the counters back without erasing that history. Budgets reset on the separately configured [budget reset timezone](../budget_reset_and_tz.md), so a window boundary need not line up with a UTC day. To resolve a member's parents in your product, read its `parent_org_id` and `parent_team_ids`. The first team is its default team.
+
+Open **Customer Management → Customers**, select **Acme**, and choose **Select Time Range** to include your requests. The usage page shows spend, requests, tokens, and the member caps. Choose **Teams** in **Break down by** to inspect Support.
+
+![Acme member usage showing Alice and Bob and their configured budgets](../../../static/img/customer_portal/member-caps.jpg)
+
+*Actual customer records and accounting data in the local Customer Management. Alice's controlled-provider request records $0.14 and 120 tokens.*
+
+## Set up budget webhooks (optional) {#1-set-up-budget-webhooks}
+
+Skip this section if you do not need budget notifications. Prepare a POST endpoint in your product that accepts JSON and returns a successful `2xx` response within 10 seconds. The gateway must be able to reach it.
+
+Replace the example endpoint below with your receiver URL. Add this configuration before testing webhook delivery, then restart the gateway:
+
+```yaml title="config.yaml, additions to your existing configuration"
+general_settings:
+  use_spend_logs_ledger: true
+
+litellm_settings:
+  callbacks: [customer_budget_webhook]
+
+callback_settings:
+  customer_budget_webhook:
+    endpoint: https://billing.example.com/litellm/customer-budget
+    headers:
+      X-Source: litellm
+```
+
+Merge these entries with your existing configuration. If you already have callbacks, add `customer_budget_webhook` to that list. For values supplied through your secret store, use `CUSTOMER_BUDGET_WEBHOOK_URL` and `CUSTOMER_BUDGET_WEBHOOK_HEADERS`; see [configuration precedence](./api_reference.md#customer-budget-events).
+
+After a positive spend update commits, LiteLLM checks the affected organization, team, and member. Spend at or above `soft_budget` produces `soft_budget_crossed`; spend at or above `max_budget` produces `budget_crossed`. One update can produce both events at several levels. Free requests and requests rejected before inference do not produce a customer budget spend event.
+
+```json title="Example event for Alice's $40 soft threshold"
+{
+  "event": "soft_budget_crossed",
+  "scope": "customer_member",
+  "entity_id": "acme-alice",
+  "customer_org_id": "org-acme",
+  "customer_org_alias": "Acme",
+  "customer_team_id": null,
+  "customer_team_alias": null,
+  "customer_member_id": "acme-alice",
+  "customer_member_alias": "Alice",
+  "spend": 41.25,
+  "budget": 40,
+  "period": "2026-12-13T12:00:00+00:00",
+  "timestamp": "2026-11-13T12:00:00Z"
+}
+```
+
+`budget` is the triggering threshold. `period` is the recorded next reset timestamp, or `"lifetime"` if no reset is recorded. Route the event with `customer_org_id` to update the customer's balance in your product. A member budget covers that member across teams, so member events contain the organization and member IDs; the team fields are `null`.
+
+Return a successful `2xx` response within 10 seconds. Delivery is best effort: a cache claim suppresses the same event, scope, entity, and period until the budget reset, including after failure. Lifetime budgets use a cache claim with a 100-year TTL. Cross-worker deduplication needs shared Redis; a local fallback can produce duplicates. The HTTP client retries a connection error once, but there is no durable retry queue or schedule for timeouts or unsuccessful HTTP responses. Reconcile through the usage APIs to recover missed events.
+
+Verify delivery with the [webhook test](#verify-webhook-delivery), after the customer and SDK examples are ready.
+
+## Check budgets and webhook delivery {#4-check-budgets-and-webhook-delivery}
 
 Create a separate customer with a zero budget to check rejection without changing Acme's settings:
 
@@ -301,7 +377,7 @@ curl --request POST "$LITELLM_BASE_URL/management/v1/customer_organizations" \
   }'
 ```
 
-Use the `client` from step 3 with the same application key and model, and this customer's alias:
+Use the `client` from [Send a request for Alice](#3-send-a-request-for-alice) with the same application key and model, and this customer's alias:
 
 ```python
 from openai import APIStatusError
@@ -310,7 +386,6 @@ try:
     response = client.responses.create(
         model=os.environ["LITELLM_MODEL"],
         input="Budget check",
-        max_output_tokens=128,
         extra_headers={"x-litellm-customer-org-alias": "Budget check"},
     )
     print("Request succeeded:", response.id)
@@ -320,7 +395,9 @@ except APIStatusError as error:
 
 Expect `422` and a budget error naming `customer_org=org-budget-check`, before a provider request. A deployment can change this status to `429`; see [Handle a budget refusal in your client](#handle-a-budget-refusal-in-your-client).
 
-Use a positive-cost model to test the webhook. Set the test cap to $1 and the soft threshold to $0, then rerun the same SDK call. The request succeeds and incurs the model's normal cost. Zero-cost requests do not produce a spend event.
+### Verify webhook delivery
+
+Skip this test if you did not configure [budget webhooks](#1-set-up-budget-webhooks). Use a positive-cost model to test the webhook. Set the test cap to $1 and the soft threshold to $0, then rerun the same SDK call. The request succeeds and incurs the model's normal cost. Zero-cost requests do not produce a spend event.
 
 ```bash title="Allow the test request and trigger a soft-budget alert"
 curl --request PATCH "$LITELLM_BASE_URL/management/v1/customer_organizations/org-budget-check" \
@@ -363,7 +440,7 @@ curl --request PATCH "$LITELLM_BASE_URL/management/v1/customer_organizations/org
   }'
 ```
 
-The first exhausted scope rejects a request: organization, then team, then member. Fresh customer spend counters across workers are on `main` through [#51568](https://github.com/BerriAI/litellm/pull/51568). Use a build containing that change; older builds can admit requests against cached spend until refresh. Allow for requests already in flight and background accounting when you show balances.
+The first exhausted scope rejects a request: organization, then team, then member. Allow for requests already in flight and background accounting when you show balances.
 
 ### Handle a budget refusal in your client
 
@@ -431,7 +508,6 @@ try:
     client.chat.completions.create(
         model=os.environ["LITELLM_MODEL"],
         messages=[{"role": "user", "content": "Budget check"}],
-        max_tokens=16,
         extra_headers={"x-litellm-customer-org-alias": "Budget check"},
     )
 except APIStatusError as error:
@@ -441,7 +517,7 @@ except APIStatusError as error:
         raise
 ```
 
-The Anthropic SDK exposes the whole response body, so read the nested `error` object. Run `pip install anthropic` first.
+The Anthropic SDK exposes the whole response body, so read the nested `error` object. Run `pip install anthropic` first. Anthropic requires `max_tokens`; set `LITELLM_MODEL_MAX_OUTPUT_TOKENS` to the native output limit documented for your configured model.
 
 ```python title="Detect a budget refusal with the Anthropic SDK"
 import os
@@ -463,8 +539,8 @@ def is_budget_refusal(error: APIStatusError) -> bool:
 try:
     client.messages.create(
         model=os.environ["LITELLM_MODEL"],
+        max_tokens=int(os.environ["LITELLM_MODEL_MAX_OUTPUT_TOKENS"]),
         messages=[{"role": "user", "content": "Budget check"}],
-        max_tokens=16,
         extra_headers={"x-litellm-customer-org-alias": "Budget check"},
     )
 except APIStatusError as error:
@@ -478,92 +554,7 @@ Retrying straight away does not help: the request is refused before it reaches a
 
 Both SDKs retry `429` twice by default, with backoff, before your code sees the exception. With the default `422` the refusal reaches your `except` block after one request. With a configured `429` the check above still identifies the refusal, but only after the SDK has sent the request three times. To avoid those extra requests, keep the default `422`, or pass `max_retries=0` to the client, or use `client.with_options(max_retries=0)` for one call, and retry in your own code only when the error is not a budget refusal.
 
-## 5. Fetch usage for your product
-
-The organization aggregated endpoint returns complete spend, token, and request totals for the date range, without pagination. It accepts up to 100 customer organization IDs.
-
-```bash title="Complete Acme usage"
-curl --get "$LITELLM_BASE_URL/management/v1/customer_organizations/daily/activity/aggregated" \
-  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
-  --data-urlencode "customer_org_ids=org-acme" \
-  --data-urlencode "start_date=$START_DATE" \
-  --data-urlencode "end_date=$END_DATE"
-```
-
-Read the response's top-level metadata:
-
-```json title="Usage response excerpt from the local example"
-{
-  "metadata": {
-    "total_spend": 0.14,
-    "total_tokens": 120,
-    "total_api_requests": 1
-  }
-}
-```
-
-Dates are inclusive UTC days, with at most a 400-day difference between start and end. `total_spend` is cost in USD. You can use it in your product's pricing or chargeback calculation; this API does not create invoices or collect payment. The key breakdown shows the top key, while totals include every key.
-
-### Team and member usage
-
-```bash title="Support team usage, first page"
-curl --get "$LITELLM_BASE_URL/management/v1/customer_teams/daily/activity" \
-  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
-  --data-urlencode "customer_team_ids=acme-support" \
-  --data-urlencode "start_date=$START_DATE" \
-  --data-urlencode "end_date=$END_DATE" \
-  --data-urlencode "page=1" \
-  --data-urlencode "page_size=100"
-```
-
-```bash title="Alice's usage, first page"
-curl --get "$LITELLM_BASE_URL/management/v1/customer_members/daily/activity" \
-  --header "Authorization: Bearer $LITELLM_ADMIN_KEY" \
-  --data-urlencode "customer_member_ids=acme-alice" \
-  --data-urlencode "start_date=$START_DATE" \
-  --data-urlencode "end_date=$END_DATE" \
-  --data-urlencode "page=1" \
-  --data-urlencode "page_size=100"
-```
-
-These endpoints paginate stored rows. Follow `metadata.has_more` and increment `page` until it is `false`. Sum each page's totals once; the same date can occur on several pages. See the [pagination contract](./api_reference.md#usage-pagination). Do not add organization, team, and member totals together: they include the same requests.
-
-Accounting runs in the background. If usage has not appeared after a successful request, check accounting completion, the UTC dates, and the identity headers. Zero-cost models can report requests and tokens with $0 spend.
-
-## 6. Fetch budgets and caps
-
-Retrieve Acme's running budget spend and organization cap:
-
-```bash title="Organization budget"
-curl "$LITELLM_BASE_URL/management/v1/customer_organizations/org-acme" \
-  --header "Authorization: Bearer $LITELLM_ADMIN_KEY"
-```
-
-Retrieve the Support team's running spend and cap:
-
-```bash title="Team budget"
-curl "$LITELLM_BASE_URL/management/v1/customer_teams/acme-support" \
-  --header "Authorization: Bearer $LITELLM_ADMIN_KEY"
-```
-
-Retrieve Alice's inherited budget and active overrides:
-
-```bash title="Member budget"
-curl "$LITELLM_BASE_URL/management/v1/customer_members/acme-alice" \
-  --header "Authorization: Bearer $LITELLM_ADMIN_KEY"
-```
-
-Read `budget.max_budget` for an organization and `effective_budget.max_budget` for a team or member. The same objects contain `rpm_limit`, `tpm_limit`, model limits, and allowed models. A team or member's effective budget combines its template with active overrides; an expired override no longer applies.
-
-`spend` is the current budget counter, `budget_usage` lists the current counter and `reset_at` of each budget window, and `budget_reset_at` records the next reset. Usage reads report historical spend by UTC day for the dates you select. A reset sets the counters back without erasing that history. Budgets reset on the separately configured [budget reset timezone](../budget_reset_and_tz.md), so a window boundary need not line up with a UTC day. To resolve a member's parents in your product, read its `parent_org_id` and `parent_team_ids`. The first team is its default team.
-
-Open **Customer Management → Customers**, select **Acme**, and choose **Select Time Range** to include your requests. The usage page shows spend, requests, tokens, and the member caps. Choose **Teams** in **Break down by** to inspect Support.
-
-![Acme member usage showing Alice and Bob and their configured budgets](../../../static/img/customer_portal/member-caps.jpg)
-
-*Actual customer records and accounting data in the local Customer Management. Alice's controlled-provider request records $0.14 and 120 tokens.*
-
-## 7. Debug a request in spend logs
+## Debug a request in spend logs {#7-debug-a-request-in-spend-logs}
 
 Use the `x-litellm-call-id` printed by the Responses SDK. Make that value available as `LITELLM_CALL_ID` in the environment where you run curl.
 
@@ -575,7 +566,7 @@ curl --get "$LITELLM_BASE_URL/spend/logs/v2" \
   --data-urlencode "end_date=$END_DATE 23:59:59"
 ```
 
-This API requires a date range even with a request ID. Customer identity fields require [#51596](https://github.com/BerriAI/litellm/pull/51596). Check the saved metadata to verify Alice → Support → Acme:
+This API requires a date range even with a request ID. Check the saved metadata to verify Alice → Support → Acme:
 
 ```json title="Saved customer identity excerpt"
 {
@@ -596,7 +587,7 @@ Open `/ui/logs/?log_id=<x-litellm-call-id>`. In the request details, check **Cus
 
 ![Spend log request details with Acme, Support, Alice, $0.14 cost, and 120 tokens](../../../static/img/customer_portal/spend-log-customer.jpg)
 
-*Actual saved request in the local gateway, using a controlled provider and the accounting ledger. The Customer section requires #51596.*
+*Actual saved request in the local gateway, using a controlled provider and the accounting ledger.*
 
 The log API has no customer organization, team, or member filter. `user_id`, `team_id`, and `end_user` refer to separate LiteLLM entities. Find an individual request by its call ID and use the customer usage APIs for customer totals.
 
@@ -604,7 +595,7 @@ The log API has no customer organization, team, or member filter. `user_id`, `te
 
 A team budget is one counter for the whole team: every member's spend draws down the same amount. A member template is a set of limits that each assigned member inherits with its own counter, so three members on a $10 template can spend $10 each. Use a team budget to cap a group's total and a template to give each person an allowance. You can combine both.
 
-The examples below continue from [step 2](#2-import-a-customer) and use `org-acme`. They need `jq` to read an ID from a response. The `effective_budget` values shown were returned by a build of `main`; the spend figures in the prose are illustrations.
+The examples below continue from [Import a customer](#2-import-a-customer) and use `org-acme`. They need `jq` to read an ID from a response. The `effective_budget` responses come from a local gateway; the spend figures in the prose are illustrations.
 
 ### One shared team budget
 
@@ -775,9 +766,9 @@ Each `budget_limits` entry accepts `"1mo"` for a monthly window or `"12mo"` for 
 
 A request must pass every limit that applies to it: the organization's budget, the budget of the team the request resolves to, and the member's effective budget, including each of its windows. Each limit is compared with its own counter, so the smallest number does not decide the outcome alone. Erin can be refused at $15 of personal spend because Research has reached $100, and Frank can be refused at his $20 monthly window while Acme and Sales have room. LiteLLM checks the organization first, then the team, then the member, and the error names the first exhausted scope.
 
-## Fail-open handling (pending)
+## Unresolved customer identities {#fail-open-handling-pending}
 
-Fail-open identity handling remains under review in [#51604](https://github.com/BerriAI/litellm/pull/51604). Main rejects identities it cannot resolve or register, and identities that conflict. A validated configuration that preserves asserted customer IDs in logs is required before this guide can provide a setup.
+If LiteLLM cannot register an unknown organization or member, it logs a warning and continues without tracking that customer level. It still tracks any resolved levels and enforces the request's other authentication, model, budget, and rate limits. A conflicting organization, member, or team identity returns `403`. Verify usage after setup rather than treating a successful model response as proof of attribution. See [identity handling](./api_reference.md#attribute-inference-requests).
 
 ## Troubleshooting
 
@@ -785,8 +776,8 @@ Fail-open identity handling remains under review in [#51604](https://github.com/
 | --- | --- |
 | `409` during import | Retrieve the existing ID, verify its parent, then patch mutable fields. |
 | `422` during member creation | Use `parent_team_ids` and `budget_id`. Supply a template or override if the organization has no default template. |
-| `401` on inference | Check the organization alias and member ID. A new member needs an existing organization alias and default template for registration. |
+| `401` on inference | Check the application key and gateway authentication. |
 | `403` on inference | Confirm that the organization alias matches the member's organization. |
 | Budget `422`, or `429` when configured | Confirm it is a [budget refusal](#handle-a-budget-refusal-in-your-client), then read organization, team, and member spend and caps to find the first exhausted scope. |
 | `429` without a budget error type | Check the scope's RPM, TPM, and model limits. |
-| Missing customer IDs in logs | Check whether your build includes #51596. |
+| Missing customer usage or IDs in logs | Check the identity headers, registration warnings, free-tier capacity, and accounting completion. |

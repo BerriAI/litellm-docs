@@ -3,13 +3,14 @@ import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
 
 # Virtual Keys
+
+For customer and end-user spend tracking from v1.111, start with [Customer Management](./customers.md). You can use one application key across customers and pass customer identity headers with each request.
 Track Spend, and control model access via virtual keys for the proxy
 
 :::info
 
 - [UI to Generate, Edit, Delete Keys (with SSO)](https://docs.litellm.ai/docs/proxy/ui)
 - [Deploy LiteLLM Proxy with Key Management](https://docs.litellm.ai/docs/proxy/deploy/helm#valuesyaml)
-- [Dockerfile.database for LiteLLM Proxy + Key Management](https://github.com/BerriAI/litellm/blob/main/docker/Dockerfile.database)
 
 
 :::

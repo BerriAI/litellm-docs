@@ -12,6 +12,7 @@ Run replicas across availability zones to handle instance failures and upgrades.
 
 | Topic | Use it for |
 | --- | --- |
+| [L7 proxy with LiteLLM](./haproxy.md) | Buffer traffic bursts, bound per-pod concurrency, and scale gateway replicas. |
 | [Blue/Green](./blue_green.md) | Test a complete replacement deployment, then switch traffic. |
 | [Canary](./canary.md) | Send a small share of requests to a new version before you promote it. |
 | [Multi-Region](../../multi_region.md) | Run regional gateways with a shared database and regional Redis. |

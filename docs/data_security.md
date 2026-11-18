@@ -36,7 +36,7 @@ For security inquiries, please contact us at support@berri.ai
 
 We value the security community's role in protecting our systems and users.
 
-The canonical vulnerability disclosure policy lives in [`security.md` in the LiteLLM repository](https://github.com/BerriAI/litellm/blob/main/security.md), which includes information about our bug bounty.
+The canonical vulnerability disclosure policy lives in [`SECURITY.md` in the LiteLLM repository](https://github.com/BerriAI/litellm/blob/main/.github/SECURITY.md), which includes information about our bug bounty.
 
 The preferred way to report a vulnerability is the [LiteLLM vulnerability disclosure form](https://security.litellm.ai/vdp). Reports submitted through the form go to the LiteLLM program on HackerOne and are triaged there, and you do not need a HackerOne account to submit one. Please do not open a draft GitHub Security Advisory (GHSA) to report a vulnerability to us. If you cannot use the form, emailing [support@berri.ai](mailto:support@berri.ai) with the same details works in a pinch, though may be triaged more slowly.
 

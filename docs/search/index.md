@@ -1,13 +1,13 @@
 ---
 title: "Web Search APIs for AI Agents in LiteLLM"
 sidebar_label: "Overview"
-description: "Use one search() call in the Python SDK or /v1/search on the AI Gateway to query 19 web search APIs for AI agents, with cost tracking and per-key access."
+description: "Use one search() call in the Python SDK or /v1/search on the AI Gateway to query 20 web search APIs for AI agents, with cost tracking and per-key access."
 ---
 # Overview
 
 | Feature | Supported | 
 |---------|-----------|
-| Supported Providers | `perplexity`, `tavily`, `parallel_ai`, `exa_ai`, `brave`, `google_pse`, `dataforseo`, `firecrawl`, `searxng`, `linkup`, `duckduckgo`, `searchapi`, `serper`, `you_com`, `apiserpent`, `agentcore`, `nimble`, `bing_grounding`, `deepseek` |
+| Supported Providers | `perplexity`, `tavily`, `parallel_ai`, `exa_ai`, `brave`, `google_pse`, `dataforseo`, `firecrawl`, `searxng`, `linkup`, `duckduckgo`, `searchapi`, `serper`, `you_com`, `apiserpent`, `agentcore`, `nimble`, `bing_grounding`, `deepseek`, `webiq` |
 | Cost Tracking | ✅ |
 | Logging | ✅ |
 | Load Balancing | ❌ |

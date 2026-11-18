@@ -1,10 +1,22 @@
+---
+title: Legacy customer usage dashboard
+description: View spend and logs for the supported legacy end-user tracking APIs.
+unlisted: true
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Customer Usage
+# Legacy customer usage dashboard
 
-Track and visualize end-user spend directly in the dashboard. Monitor customer-level usage analytics, spend logs, and activity metrics to understand how your customers are using your LLM services.
+:::info Recommended for new integrations
+
+Use [Customer Management](./customers.md), available from v1.111, for new customer and end-user tracking. This page covers the supported legacy **Usage → Customer Usage** dashboard and `/customer/*` APIs.
+
+:::
+
+Track and visualize legacy end-user spend in the dashboard. Monitor customer-level usage analytics, spend logs, and activity metrics to understand how your customers are using your LLM services.
 
 <SinceVersion v="1.80.8-stable" />
 
