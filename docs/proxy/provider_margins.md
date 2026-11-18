@@ -142,19 +142,7 @@ The margin will be automatically applied to all cost calculations for the config
 
 ## Surcharge on Customer Requests
 
-Use the `customer` key to add a percentage only to requests made for a customer organization, that is, requests that carry `x-litellm-customer-org-alias` or `x-litellm-customer-member-id`. Requests with no customer are not surcharged, so internal traffic keeps its normal cost. Set it on the Cost Tracking page by choosing Customer requests as the provider, or in config.
-
-```yaml
-litellm_settings:
-  cost_margin_config:
-    customer: 0.02   # 2% on every request made for a customer
-```
-
-The value is a fraction between 0 and 10, and a fixed amount is not supported for this key. It is applied on top of any provider or global margin. A request with a base cost of $1.00 and a 2% customer surcharge is billed at $1.02.
-
-The surcharge is part of spend. Key, team, user, customer organization and customer member spend all include it, and customer budgets are enforced against it. The response reports the billed cost in `x-litellm-response-cost` and the cost before the surcharge in `x-litellm-response-cost-original`.
-
-Each request also records the surcharge on its own, so the cost before the surcharge stays exact after the percentage changes. The spend log stores `customer_margin_percent` and `customer_margin_amount` under `metadata.cost_breakdown`, and the customer daily activity endpoints return `total_customer_margin_spend` next to `total_spend`. The customer usage page shows Spend with Base cost and Surcharge under it.
+The `customer` key adds a percentage only to requests made for a customer organization. See [Add a surcharge to customer requests](./customer_management/customer-surcharge.md).
 
 ## How Margins Work
 
