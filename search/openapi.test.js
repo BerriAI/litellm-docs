@@ -8,7 +8,6 @@ const {contentPage} = require('./content');
 const {createIndex, loadIndex, search} = require('./engine');
 const {createDocumentationTools} = require('./tools');
 const {createReranker} = require('./rerank');
-const {getTracing} = require('./tracing');
 const {buildSearchIndex} = require('../plugins/docs-search');
 const {loadRerankCorpus} = require('./runtime');
 
@@ -75,7 +74,7 @@ test('shared search keeps Swagger operations separate through serialization and 
   assert.equal(contentPage(operation), operation);
   assert.equal(search(index, 'reset key spend')[0].url, operation);
   assert.equal(search(index, 'inspect reset')[0].url, inspection);
-  const tool = createDocumentationTools({index, documents: new Map(documents.map(doc => [doc.id, doc])), tracing: getTracing({})});
+  const tool = createDocumentationTools({index, documents: new Map(documents.map(doc => [doc.id, doc]))});
   const found = await tool.execute(call('search_docs', {queries: ['reset key spend']}));
   const hit = found.results[0].matches.find(match => match.url === operation);
   const read = await tool.execute(call('read_docs', {passage_ids: [hit.passages[0].passage_id]}));

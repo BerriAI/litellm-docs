@@ -383,31 +383,119 @@ test('100 authenticated bot questions from one worker bypass website quotas with
   }, {config: {...config, botServiceToken: 'service-token', botApiKey: 'bot-key'}, fetchImpl});
 });
 
-test('bot tracing uses its dedicated key and keeps website tracing and agent names unchanged', async t => {
-  const {createHmac} = require('node:crypto');
-  const {OTLPTraceExporter} = require('@opentelemetry/exporter-trace-otlp-proto');
-  const {AGENT_NAME} = require('./tracing');
-  const spans = [];
-  t.mock.method(OTLPTraceExporter.prototype, 'export', (batch, callback) => {spans.push(...batch); callback({code: 0});});
-  const traced = {...config, botServiceToken: 'service-token', botApiKey: 'bot-key',
-    botTracingKey: readConfig({DOCS_BOT_TRACING_KEY: 'bot-tracing-key'}).botTracingKey,
-    tracing: {key: 'website-tracing-key', endpoint: 'https://lens.example.com/v1/traces'}};
+test('website and bot follow-ups ignore legacy trace references and export no trace context', async () => {
+  const legacyTrace = `${'a'.repeat(32)}.${'b'.repeat(16)}.${'c'.repeat(43)}`;
+  const settings = readConfig({LITELLM_PROXY_API_BASE: config.baseUrl, LITELLM_PROXY_API_KEY: config.apiKey,
+    DOCS_AI_PUBLIC_ENABLED: 'true', DOCS_BOT_SERVICE_TOKEN: 'service-token', DOCS_BOT_AI_API_KEY: 'bot-key',
+    DOCS_BOT_AI_BASE_URL: config.baseUrl, DOCS_BOT_TRACING_KEY: 'unused-bot-tracing-key',
+    LITELLM_TRACING_KEY: 'unused-website-tracing-key', OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: 'https://traces.example.com/v1/traces'});
+  assert.equal(settings.tracing, undefined);
+  assert.equal(settings.botTracingKey, undefined);
   for (const service of [false, true]) {
     await withServer(async origin => {
-      const response = await fetch(origin + (service ? '/api/docs/bot-ask' : '/api/docs/ask'),
-        post('Lens', {headers: {'Content-Type': 'application/json', Authorization: 'Bearer service-token'}}));
+      const response = await fetch(origin + (service ? '/api/docs/bot-ask' : '/api/docs/ask'), {
+        method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer service-token'},
+        body: JSON.stringify({question: 'Lens', history: [{question: 'How do I set it up?', answer: 'Use the docs.'}], traceContext: legacyTrace}),
+      });
       assert.equal(response.status, 200);
-      const [traceId, spanId, signature] = response.headers.get('x-docs-trace-context').split('.');
-      const key = service ? traced.botTracingKey : traced.tracing.key;
-      assert.equal(signature, createHmac('sha256', key).update(`${AGENT_NAME}:conversation:v1:${traceId}.${spanId}`).digest('base64url'));
-      const root = spans.find(span => span.spanContext().spanId === spanId);
-      assert.equal(root.attributes['gen_ai.agent.name'], AGENT_NAME);
-      assert.equal(root.attributes['docs.search.surface'], service ? 'slack' : undefined);
-      const answer = await response.text();
-      assert.ok(!answer.includes(key));
-    }, {config: traced, fetchImpl: modelSteps([accepted, readLens, ready, citedAnswer], body => {
-      assert.ok(!JSON.stringify(body).includes('tracing-key'));
+      assert.equal(response.headers.get('x-docs-trace-context'), null);
+      assert.equal((await response.json()).answer, citedAnswer);
+    }, {config: settings, fetchImpl: modelSteps([accepted, readLens, ready, citedAnswer], body => {
+      assert.ok(!JSON.stringify(body).includes(legacyTrace));
+      assert.ok(!JSON.stringify(body).includes('unused-'));
     }).fetch});
   }
-  assert.equal(traced.tracing.key, 'website-tracing-key');
+});
+
+
+test('gateway cutover selects endpoint and key together and keeps Access credentials server-side', () => {
+  const legacy = {DOCS_AI_BASE_URL: 'https://old-gateway.example.com/v1', DOCS_AI_API_KEY: 'old-example-key'};
+  const env = {...legacy, LITELLM_PROXY_API_BASE: 'https://gateway.example.com/v1', LITELLM_PROXY_API_KEY: 'new-example-key',
+    CF_ACCESS_CLIENT_ID: 'example-client-id', CF_ACCESS_CLIENT_SECRET: 'example-client-secret'};
+  const current = readConfig(env);
+  assert.equal(current.baseUrl, env.LITELLM_PROXY_API_BASE);
+  assert.equal(current.apiKey, env.LITELLM_PROXY_API_KEY);
+  assert.equal(current.cfAccessClientId, env.CF_ACCESS_CLIENT_ID);
+  assert.equal(current.cfAccessClientSecret, env.CF_ACCESS_CLIENT_SECRET);
+  assert.equal(current.publicAIEnabled, false);
+  assert.equal(readConfig({...legacy, LITELLM_PROXY_API_BASE: env.LITELLM_PROXY_API_BASE}).apiKey, undefined);
+  assert.equal(readConfig({...legacy, LITELLM_PROXY_API_KEY: env.LITELLM_PROXY_API_KEY}).baseUrl, undefined);
+  assert.equal(readConfig({DOCS_AI_API_KEY: 'old-example-key', CF_ACCESS_CLIENT_ID: 'example-client-id'}).baseUrl, undefined);
+  assert.equal(readConfig(legacy).baseUrl, legacy.DOCS_AI_BASE_URL);
+  assert.equal(readConfig(legacy).apiKey, legacy.DOCS_AI_API_KEY);
+});
+
+test('website gateway cutover preserves the authenticated bot connection', async () => {
+  const env = {DOCS_AI_BASE_URL: 'https://old-gateway.example.com/v1', DOCS_AI_API_KEY: 'old-website-key',
+    DOCS_BOT_AI_API_KEY: 'existing-bot-key', DOCS_BOT_SERVICE_TOKEN: 'example-bot-service-token',
+    LITELLM_PROXY_API_BASE: 'https://gateway.example.com/v1', LITELLM_PROXY_API_KEY: 'new-website-key',
+    CF_ACCESS_CLIENT_ID: 'website-client-id', CF_ACCESS_CLIENT_SECRET: 'website-client-secret'};
+  const upstream = modelSteps([accepted, readLens, ready, citedAnswer], (_body, request, url) => {
+    assert.equal(url, env.DOCS_AI_BASE_URL + '/chat/completions');
+    assert.equal(request.headers.Authorization, 'Bearer existing-bot-key');
+    assert.equal(request.headers['CF-Access-Client-Id'], undefined);
+    assert.equal(request.headers['CF-Access-Client-Secret'], undefined);
+  });
+  await withServer(async origin => {
+    const response = await fetch(origin + '/api/docs/bot-ask', post('How do I set up Lens?', {
+      headers: {'Content-Type': 'application/json', Authorization: 'Bearer example-bot-service-token'},
+    }));
+    assert.equal(response.status, 200);
+    assert.ok((await response.text()).includes('ClickHouse'));
+  }, {config: readConfig(env, config), fetchImpl: upstream.fetch});
+  assert.equal(upstream.calls, 4);
+});
+
+test('bot gateway and Access credentials can move independently of the website', async () => {
+  const env = {LITELLM_PROXY_API_BASE: 'https://gateway.example.com/v1', LITELLM_PROXY_API_KEY: 'website-key',
+    CF_ACCESS_CLIENT_ID: 'website-client-id', CF_ACCESS_CLIENT_SECRET: 'website-client-secret',
+    DOCS_BOT_AI_BASE_URL: 'https://bot-gateway.example.com/v1', DOCS_BOT_AI_API_KEY: 'bot-key',
+    DOCS_BOT_CF_ACCESS_CLIENT_ID: 'bot-client-id', DOCS_BOT_CF_ACCESS_CLIENT_SECRET: 'bot-client-secret',
+    DOCS_BOT_SERVICE_TOKEN: 'example-bot-service-token', DOCS_AI_PUBLIC_ENABLED: 'true'};
+  for (const service of [false, true]) {
+    const upstream = modelSteps([accepted, readLens, ready, citedAnswer], (_body, request, url) => {
+      assert.equal(url, (service ? env.DOCS_BOT_AI_BASE_URL : env.LITELLM_PROXY_API_BASE) + '/chat/completions');
+      assert.equal(request.headers.Authorization, `Bearer ${service ? 'bot-key' : 'website-key'}`);
+      assert.equal(request.headers['CF-Access-Client-Id'], service ? 'bot-client-id' : 'website-client-id');
+      assert.equal(request.headers['CF-Access-Client-Secret'], service ? 'bot-client-secret' : 'website-client-secret');
+    });
+    await withServer(async origin => {
+      const response = await fetch(origin + (service ? '/api/docs/bot-ask' : '/api/docs/ask'), post('How do I set up Lens?', {
+        headers: {'Content-Type': 'application/json', ...(service ? {Authorization: 'Bearer example-bot-service-token'} : {})},
+      }));
+      assert.equal(response.status, 200);
+      assert.ok((await response.text()).includes('ClickHouse'));
+    }, {config: readConfig(env, config), fetchImpl: upstream.fetch});
+  }
+  for (const missing of ['DOCS_BOT_AI_BASE_URL', 'DOCS_BOT_CF_ACCESS_CLIENT_SECRET']) {
+    await withServer(async origin => {
+      const response = await fetch(origin + '/api/docs/bot-ask', post('How do I set up Lens?', {
+        headers: {'Content-Type': 'application/json', Authorization: 'Bearer example-bot-service-token'},
+      }));
+      assert.equal(response.status, 502);
+    }, {config: readConfig({...env, [missing]: undefined}, config), fetchImpl: async () => assert.fail('Invalid bot configuration must not call a model')});
+  }
+});
+
+test('the real Ask AI route forwards only configured Access headers, including for the bot', async () => {
+  const cf = {cfAccessClientId: 'example-client-id', cfAccessClientSecret: 'example-client-secret'};
+  for (const service of [false, true]) {
+    const upstream = modelSteps([accepted, readLens, ready, citedAnswer], (body, request) => {
+      assert.equal(request.headers['CF-Access-Client-Id'], cf.cfAccessClientId);
+      assert.equal(request.headers['CF-Access-Client-Secret'], cf.cfAccessClientSecret);
+      assert.equal(request.headers.Authorization, `Bearer ${service ? 'dedicated-bot-key' : config.apiKey}`);
+      for (const secret of Object.values(cf)) assert.ok(!JSON.stringify(body).includes(secret));
+    });
+    await withServer(async origin => {
+      const response = await fetch(origin + (service ? '/api/docs/bot-ask' : '/api/docs/ask'), post('How do I set up Lens?', {
+        headers: {'Content-Type': 'application/json', 'CF-Access-Client-Id': 'attacker-id', 'CF-Access-Client-Secret': 'attacker-secret',
+          ...(service ? {Authorization: 'Bearer example-bot-service-token'} : {})},
+      }));
+      assert.equal(response.status, 200);
+      const result = await response.text();
+      assert.ok(result.includes('ClickHouse'));
+      for (const secret of Object.values(cf)) assert.ok(!result.includes(secret));
+    }, {config: {...config, ...cf, botApiKey: 'dedicated-bot-key', botServiceToken: 'example-bot-service-token'}, fetchImpl: upstream.fetch});
+    assert.equal(upstream.calls, 4);
+  }
 });

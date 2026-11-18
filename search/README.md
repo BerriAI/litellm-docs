@@ -37,7 +37,7 @@ npm run build
 cp .env.example .env.local
 ```
 
-Document search works without a model credential. To try Ask AI, set `DOCS_AI_API_KEY` in `.env.local` to a LiteLLM virtual key that can call these gateway aliases:
+Document search works without a model credential. To try Ask AI, set `LITELLM_PROXY_API_BASE` to your gateway HTTPS base URL and `LITELLM_PROXY_API_KEY` to a dedicated LiteLLM virtual key in `.env.local`. Use the existing gateway aliases:
 
 ```text
 anthropic/claude-haiku-5-5
@@ -45,7 +45,7 @@ openai/gpt-6-luna
 openai/gpt-6.1-sol
 ```
 
-The default gateway is `https://gateway.litellm-sandbox.ai`. Set `DOCS_AI_BASE_URL` only when using another HTTPS gateway. Start the local server:
+For a gateway protected by Cloudflare Access, also set `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET`. These credentials authorize the server's network access; the virtual key still controls its model access and spending. Start the local server:
 
 ```bash
 npm run search:serve
@@ -61,7 +61,27 @@ The server reads `.env.local`; the build and browser do not read the AI credenti
 
 The same-origin `/api/docs/search` function bundles only `build/search-index.json` and loads it once per function instance. `/api/docs/ask` bundles `build/search-*.json` for its research tools. Vercel uses `npm run build` and the `build` output directory. No separate API service or retrieval database is needed.
 
-In the docs project's **Settings > Environment Variables**, add `DOCS_AI_API_KEY` as a server secret and set `DOCS_AI_PUBLIC_ENABLED=true` for the intended environment, then redeploy. The production origin defaults to `https://docs.litellm.ai`. For a preview or another domain, set `DOCS_ORIGIN` to that exact origin too. Without the public enable flag, Ask AI returns 503 while document search still works
+In the docs project's **Settings > Environment Variables**, configure these server-only variables for the intended environment. Use the existing models and a dedicated virtual key restricted to the aliases above, with gateway budget and rate limits. Do not use a master key or provider credential.
+
+| Variable | Value |
+| --- | --- |
+| `LITELLM_PROXY_API_BASE` | The actual HTTPS inference base URL, such as `https://gateway.example.com/v1`. The server appends `/chat/completions`. |
+| `LITELLM_PROXY_API_KEY` | The dedicated Docs AI virtual key. Store it as a sensitive variable. |
+| `CF_ACCESS_CLIENT_ID` | The Cloudflare Access service-token client ID. Store it as a sensitive variable. |
+| `CF_ACCESS_CLIENT_SECRET` | The matching service-token secret. Store it as a sensitive variable. |
+| `DOCS_CHAT_PROVIDER` | `internal` to build the website with the gateway-backed Ask AI UI, including when `INKEEP_API_KEY` is still configured. |
+| `DOCS_AI_PUBLIC_ENABLED` | `true` to enable Ask AI for this deployment. |
+| `DOCS_ORIGIN` | The exact site origin. Production defaults to `https://docs.litellm.ai`; set it for a preview or another domain. |
+
+The gateway's Cloudflare Access policy must accept the service token with **Service Auth**. Configure the models and key through the gateway's private management access if needed; Cloudflare service credentials do not grant management access. Keep the real endpoint and credentials in deployment configuration, outside source control, build settings, browser code, and PR text.
+
+The endpoint and key switch together when either `LITELLM_PROXY_*` variable is set. Configure both: a partial switch does not reuse the previous endpoint or key. Existing `DOCS_AI_BASE_URL` and `DOCS_AI_API_KEY` settings remain supported when neither new variable is set. Cloudflare credentials require both token fields and an explicit base URL; incomplete credentials fail before a request. Gateways without Cloudflare can omit both token fields.
+
+The website cutover preserves the authenticated bot's existing gateway and dedicated `DOCS_BOT_AI_API_KEY`. Keep existing `DOCS_AI_BASE_URL` and `DOCS_BOT_*` values when adding the website variables. To move the bot separately, follow the [bot service configuration](#slack-bot-service-route).
+
+Set `DOCS_CHAT_PROVIDER=internal` before rebuilding; otherwise an existing `INKEEP_API_KEY` keeps the Inkeep UI active. Redeploy after setting the variables. Without the public enable flag, Ask AI returns 503 while document search still works. Before production activation, use a branch-specific preview and restricted preview credentials, set its exact `DOCS_ORIGIN`, and run the checks below. Do not expose production secrets to every preview branch.
+
+After the gateway-backed website passes the checks below, remove its legacy `DOCS_AI_API_KEY` and, if no Inkeep fallback is needed, `INKEEP_API_KEY`. Keep `DOCS_BOT_SERVICE_TOKEN` and `DOCS_BOT_AI_API_KEY` for Slack. After deploying this version, remove unused Lens variables: `DOCS_BOT_TRACING_KEY`, `LITELLM_TRACING_KEY`, `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`, `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL`, `OTEL_EXPORTER_OTLP_PROTOCOL`, and `LENS_UI_URL`.
 
 Keyword search is available without model credentials or an enable flag. `POST /api/docs/search` accepts `{query, type}`, with a query of 1 to 500 characters and an optional `all`, `docs`, `blog`, or `release` filter. It returns up to 100 results, uses `Cache-Control: no-store`, and makes no model calls. The existing engine preserves ranking, snippets, filters, typo handling, and chronological browsing. The endpoint limits request bodies to 16 KB and four concurrent requests per instance. The old Jev request-rate allowance does not apply to keyword searches. The Jev comparison remains available only through `npm run search:lab`.
 
@@ -69,40 +89,15 @@ Verify that typing produces a 200 response from `/api/docs/search` and no browse
 
 Before enabling public Ask AI access, use a dedicated virtual key restricted to the needed aliases above, with a budget and RPM/TPM limits enforced by the gateway. Set shared per-client limits on `/api/docs/ask` in the Vercel Firewall as well. The service limits 10 questions per socket IP per minute, 60 total per minute, and four concurrent questions per instance. These process-local limits reset on restart and do not cap spending across serverless instances. It deliberately ignores caller-provided forwarded IP headers. Origin checks are browser protections, not authentication; direct HTTP clients can call a public endpoint
 
-After deploying, repeat the two local example questions through the public UI. If Ask AI returns 503, check the secret, enable flag, and bundled index. A 403 indicates an origin mismatch. A 502 indicates a gateway failure or an invalid model response; check gateway logs without exposing those details in browser errors. A 429 means a request or concurrency limit was reached
+After deploying, repeat the two local example questions through the public UI and try a follow-up. Check that answers stream to completion with working citations. Browser network requests must go to `/api/docs/ask` on the docs origin and contain no gateway or Cloudflare credentials. Confirm the requests and model usage in the gateway's private logs. Check that an unauthenticated request to the inference host is rejected by Cloudflare, and that management routes remain unavailable through its public route.
+
+A 503 means the enable flag, key, or bundled index is missing. A 403 from the docs API indicates an origin mismatch. A 502 means the gateway configuration, Cloudflare authentication, model access, or model response failed; inspect private logs without copying secrets into diagnostics. A 429 means a request or concurrency limit was reached. To disable Ask AI during recovery, set `DOCS_AI_PUBLIC_ENABLED=false` and redeploy; keyword search remains available.
 
 For another host, run `npm run search:serve` with `HOST=0.0.0.0`, `PORT`, `DOCS_ORIGIN`, and the same server secrets and enable flags behind HTTPS. Route `/api/docs/ask` and `/api/docs/search` to it on the docs origin, and deploy the site and index together.
 
-## Record Ask AI traces in Lens
-
-To connect an existing Lens installation, copy a dedicated key from **Lens Home → Tracing key** into this project's ignored `.env.local`. Add the tracing endpoint shown by Lens and its UI address:
-
-```dotenv
-LITELLM_TRACING_KEY=your-dedicated-lens-tracing-key
-OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=https://your-lens.example.com/v1/traces
-OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-LENS_UI_URL=https://your-lens.example.com/ui/
-```
-
-The exporter constructs `Authorization: Bearer ...` from `LITELLM_TRACING_KEY`. Keep `DOCS_AI_API_KEY` and the model gateway configuration unchanged; model and Lens admin keys cannot replace the tracing key. Lens and ClickHouse are sufficient for trace storage, with no analysis provider or gateway tracing integration required
-
-Restart `npm run search:serve`, then ask a question. Lens records the agent as `litellm-docs-search`. Follow-up questions share the conversation's trace, with each question's searches, passage reads, and answer nested beneath it. Select **Clear** to start a new conversation and trace. The browser carries a signed trace reference between requests, so follow-ups stay together across Vercel instances. It contains no credentials and is never passed to the model
-
-Traces contain questions, prompt context, retrieved document references, answers, model names, timing, and token usage. Rejected completions retain their request ID, finish reason, reasoning usage, and a safe error description. A `GatewayResponseTruncated` span means the provider stopped at its completion limit. The exporter excludes request headers and redacts the configured model and tracing credentials. Tracing is optional and exporter failures do not fail the answer
-
-To run a real conversation and verify storage of all its exported spans in one trace:
-
-```bash
-npm run search:verify-trace -- "How do I use my Codex subscription with LiteLLM?" "How do I log in?"
-```
-
-This uses the existing model credentials and makes the normal research and answer calls for each quoted question. It flushes the exporter, requires one shared trace, records actual exported trace and span IDs in `.cache-loader/docs-trace-receipt.json`, and checks Lens's receipt endpoint with the same tracing key. Only `received: true` confirms delivery. Authentication errors stop verification; other receipt checks are bounded to 30 attempts and 60 seconds. Open the printed trace URL after confirmation
-
-For Vercel, add the same tracing environment variables as server secrets and redeploy. OpenTelemetry runs only in the API function. Each question flushes its spans before the function returns, with a bounded export timeout
-
 ## Ask AI conversation API
 
-`POST /api/docs/ask` accepts a non-empty `question` and an optional `history` array in chronological order. Each history entry contains a non-empty `question` and an optional non-empty `answer`. Question-only callers remain supported. The browser sends every completed question and answer, and the trace verification command uses the same history format.
+`POST /api/docs/ask` accepts a non-empty `question` and an optional `history` array in chronological order. Each history entry contains a non-empty `question` and an optional non-empty `answer`. Question-only callers remain supported. The browser sends every completed question and answer.
 
 ```json
 {
@@ -167,11 +162,11 @@ Ask AI receives source types, dates, and versions. It is instructed to use curre
 
 Ask AI uses matching public docs to interpret short topics and follow-ups, then generates an answer with citations. It has no scope classifier or output-verdict gate. General questions can receive an answer without sources; LiteLLM-specific guidance is instructed to use retrieved evidence. Citation numbers and URLs are validated against read passages and their indexed first-party links. Source numbers stay stable during streaming and completion; an invalid citation reports an error without regenerating the answer. The renderer disables HTML and images and permits only the returned citation links
 
-The API accepts a non-empty question, previous turns as `{question, answer?}` objects, and an optional signed trace reference. It does not impose application limits on question length, history length, or request body size. It rejects extra fields, caller-controlled roles, model settings, fallback overrides, tools, URLs as configuration, and caller-supplied documents. Prior questions, answers and retrieved docs are untrusted reference material. The model never receives the API key or access to environment variables, arbitrary network requests, or private files. Its tools only search and read the public corpus
+The API accepts a non-empty question, previous turns as `{question, answer?}` objects, and accepts but ignores legacy signed trace references. It does not impose application limits on question length, history length, or request body size. It rejects extra fields, caller-controlled roles, model settings, fallback overrides, tools, URLs as configuration, and caller-supplied documents. Prior questions, answers and retrieved docs are untrusted reference material. The model never receives the API key or access to environment variables, arbitrary network requests, or private files. Its tools only search and read the public corpus
 
 Each question permits up to eight research rounds and one final answer call, with up to three provider attempts per call through native fallbacks. The prompt does not require a particular number of searches. Reads have no character, passage, or linked-destination cap. Provider context limits still apply; exceeding them fails the request instead of silently dropping page content. Hosting payload limits and execution deadlines still apply. The public endpoint also bounds request rates and concurrent work. Redirects are disabled, errors are generic, and client disconnects cancel upstream requests. Static serving denies dotfiles, traversal, and symlinks outside the build directory
 
-The model has no privileged actions or access to secrets, but its answers can still be wrong or influenced by malicious text. Topic restrictions are not a security boundary. A public endpoint can also be used to consume its budget. Model restrictions, gateway spending limits, shared ingress rate limits, and monitoring remain necessary. When Lens tracing is enabled, questions and answers are exported to Lens; otherwise the service does not store or log them. Gateway retention follows its own configuration
+The model has no privileged actions or access to secrets, but its answers can still be wrong or influenced by malicious text. Topic restrictions are not a security boundary. A public endpoint can also be used to consume its budget. Model restrictions, gateway spending limits, shared ingress rate limits, and monitoring remain necessary. The service does not export traces or store or log questions and answers. Gateway retention follows its own configuration
 
 ## Streaming
 
@@ -188,14 +183,16 @@ Clients without the streaming Accept header retain the JSON response contract. A
 
 ## Slack bot service route
 
-`POST /api/docs/bot-ask` runs the same Ask AI engine, corpus, full-page research tools, models, fallbacks, answer generation, citations, streaming protocol and trace propagation as `/api/docs/ask`. It is intended for the [LiteLLM Docs Slack worker](https://github.com/BerriAI/litellm-docs-bot).
+`POST /api/docs/bot-ask` runs the same Ask AI engine, corpus, full-page research tools, models, fallbacks, answer generation, citations, streaming protocol as `/api/docs/ask`. It is intended for the [LiteLLM Docs Slack worker](https://github.com/BerriAI/litellm-docs-bot).
 
 Website Ask AI and Slack final answers use a say-it style: one short, plain-English explanation, the smallest useful code example when relevant, and supporting documentation citations. They expand when the user asks or essential permissions, prerequisites, or caveats require it. This is a writing instruction, not an output-token limit. Research and evidence remain complete. Callers cannot supply a prompt or style override.
 
-Configure `DOCS_BOT_SERVICE_TOKEN` with a random service secret and `DOCS_BOT_AI_API_KEY` with a dedicated LiteLLM virtual key, then redeploy the docs service. The virtual key uses the existing `DOCS_AI_BASE_URL`; permit the same fixed model aliases and set the team's spending budget and capacity allocation on that key. The worker sends `Authorization: Bearer <DOCS_BOT_SERVICE_TOKEN>` and the existing `{question, history?, traceContext?}` request body. Keep both secrets server-side. The model key is never sent to the worker and never falls back to `DOCS_AI_API_KEY`.
+Configure `DOCS_BOT_SERVICE_TOKEN` with a random service secret and `DOCS_BOT_AI_API_KEY` with a dedicated LiteLLM virtual key, then redeploy the docs service. The bot uses `DOCS_BOT_AI_BASE_URL` when set, otherwise the existing `DOCS_AI_BASE_URL` or default gateway. Website `LITELLM_PROXY_*` and Cloudflare variables do not change its connection. Permit the same fixed model aliases and set the team's spending budget and capacity allocation on the bot key. The worker sends `Authorization: Bearer <DOCS_BOT_SERVICE_TOKEN>` and the existing `{question, history?, traceContext?}` request body. Keep both secrets server-side. The model key is never sent to the worker and never falls back to the website key.
+
+To use Cloudflare Access for the bot, set its HTTPS `DOCS_BOT_AI_BASE_URL`, dedicated `DOCS_BOT_AI_API_KEY`, and both `DOCS_BOT_CF_ACCESS_CLIENT_ID` and `DOCS_BOT_CF_ACCESS_CLIENT_SECRET`. Keep these values server-side. Incomplete Access configuration fails before a model request. Existing bots that do not use Cloudflare need no new variables for the website cutover.
 
 The bot route does not require `DOCS_AI_PUBLIC_ENABLED` and has no public per-IP, per-minute or four-request concurrency restriction. Authentication is mandatory, including on localhost. It retains body-read and answer deadlines, origin checks, client-disconnect cancellation, generic failures, the provider context-window error, and `Cache-Control: no-store`. The worker queues work and controls concurrency; its dedicated gateway key and hosting platform enforce the deployed capacity and budget.
 
 Both Vercel and `npm run search:serve` expose the route. Vercel bundles the same build-generated index and documents into its function; a warm function instance reuses that corpus across requests. The Slack worker never loads an index. Missing either bot secret returns 503; an incorrect bearer credential returns 401. An authenticated empty JSON object returns 400 without calling a model, which the worker uses as a configuration preflight.
 
-To record bot requests with a dedicated Lens ingestion key, set `DOCS_BOT_TRACING_KEY` in the docs hosting environment and redeploy. It overrides `LITELLM_TRACING_KEY` only for the authenticated bot route and uses the existing `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` and HTTP/protobuf exporter. Without the override, the bot retains the existing docs tracing configuration. The agent name remains `litellm-docs-search`; bot root spans include `docs.search.surface=slack`. Search, full-page reads, model calls, usage and complete answers use the existing instrumentation. The worker saves the signed trace reference per conversation so follow-ups join the same trace. No tracing SDK or Lens ingestion key is needed in the Slack worker.
+Legacy workers can still send `traceContext`; the service ignores it and returns no trace header. Follow-up history continues to work without tracing.
