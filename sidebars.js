@@ -395,7 +395,7 @@ const sidebars = {
       className: "sidebar-rail",
       items: [
         { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
-        { type: "doc", id: "proxy/sync_models_github", label: "Auto Sync New Models (Day-0 Launches)" },
+        { type: "doc", id: "proxy/sync_models_github", label: "Auto Sync New Models" },
         { type: "doc", id: "proxy/quick_start", label: "CLI Quickstart" },
         { type: "doc", id: "benchmarks", label: "Benchmarks" },
         { type: "html", value: "Set up", className: "sidebar-group-label", defaultStyle: true },
