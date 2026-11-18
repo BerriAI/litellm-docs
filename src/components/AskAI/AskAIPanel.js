@@ -55,27 +55,6 @@ function ResponseTools({answer, sources}) {
   </div>;
 }
 
-function ResearchProgress({progress}) {
-  const {message, queries = [], pages = [], startedAt} = progress;
-  const secondsElapsed = () => Math.floor((Date.now() - startedAt) / 1000);
-  const [elapsed, setElapsed] = useState(secondsElapsed);
-  useEffect(() => {
-    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 1000);
-    return () => clearInterval(timer);
-  }, [startedAt]);
-  return <div className={styles.researchProgress}>
-    <div className={styles.progressStatus}>
-      <p role="status" className={styles.thinking}>{message}</p>
-      <span className={styles.elapsed} aria-hidden="true">{elapsed}s</span>
-    </div>
-    {queries.length > 0 && <p className={styles.searchQueries}>{queries.map(query => `“${query}”`).join(' · ')}</p>}
-    {pages.length > 0 && <details className={styles.sourceDetails}>
-      <summary>{pages.length} {pages.length === 1 ? 'page' : 'pages'} read</summary>
-      <div className={styles.researchPages}>{pages.map(page => <a key={page.url} href={page.url}>{page.title}</a>)}</div>
-    </details>}
-  </div>;
-}
-
 export default function AskAIPanel() {
   const {open, closePanel, ask, stop, newChat, retry, copyConversation, turns, asking, pendingQuestion, streamedAnswer,
     streamedSources, progress, error, draft, setDraft, copied, focusRequest} = useAskAI();
@@ -133,7 +112,7 @@ export default function AskAIPanel() {
         <p className={styles.user}>{pendingQuestion}</p>
         {streamedAnswer
           ? <div className={styles.answer} aria-busy="true"><Answer answer={streamedAnswer} sources={streamedSources}/><span role="status" className={styles.thinking}>Writing answer…</span></div>
-          : <ResearchProgress progress={progress}/>}
+          : <p role="status" className={styles.thinking}>{progress}</p>}
       </article>}
       {error && <div role="alert" className={styles.error}><p>{error}</p><button type="button" onClick={retry}>Retry question</button></div>}
     </div>

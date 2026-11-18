@@ -20,7 +20,7 @@ const metadata = ({title, heading, url, type = 'docs', date = '', version = '', 
   ({title, heading, url, type, date, version, category});
 
 function createDocumentationTools({index, documents, signal, onEvent = async () => {}}) {
-  const discovered = new Set(), sources = new Map(), pages = new Map(), passages = new Map(), readPages = new Map();
+  const discovered = new Set(), sources = new Map(), pages = new Map(), passages = new Map();
   for (const doc of documents.values()) {
     const path = contentPage(doc.url);
     if (!pages.has(path)) pages.set(path, []);
@@ -39,7 +39,7 @@ function createDocumentationTools({index, documents, signal, onEvent = async () 
           args.queries.some(q => typeof q !== 'string' || !q.trim() || q.length > 160) || (args.intent !== undefined && !intents.includes(args.intent))) {
           return {error: 'Provide 1 to 3 queries, each 1 to 160 characters, and a valid optional intent.'};
         }
-        await onEvent('status', {message: 'Searching documentation…', queries: args.queries});
+        await onEvent('status', {message: 'Searching documentation…'});
         // These searches are synchronous and local. Keep query provenance; no automatic
         // whole-page expansion or protected top result can crowd out another topic.
         result = {results: args.queries.map(query => {
@@ -68,6 +68,7 @@ function createDocumentationTools({index, documents, signal, onEvent = async () 
       } else if (name === 'read_docs') {
         if (!fieldsAre(args, ['passage_ids']) || !Array.isArray(args.passage_ids) || args.passage_ids.length < 1 || args.passage_ids.length > 32 ||
           args.passage_ids.some(id => typeof id !== 'string' || !discovered.has(id))) return {error: 'Read 1 to 32 passage_ids returned by search_docs.'};
+        await onEvent('status', {message: 'Reading relevant documentation…'});
         result = {passages: [], unavailable: []};
         // Read every passage on each selected page, including prerequisites and examples.
         const selected = new Set([...args.passage_ids, ...args.passage_ids.flatMap(id => {
@@ -77,8 +78,6 @@ function createDocumentationTools({index, documents, signal, onEvent = async () 
         for (const id of selected) {
           const doc = documents.get(id);
           if (!doc) {result.unavailable.push(id); continue;}
-          const url = contentPage(doc.url);
-          readPages.set(url, {title: doc.title, url});
           if (!sources.has(id)) {
             sources.set(id, {id: sources.size + 1, ...metadata(doc)});
           }
@@ -95,7 +94,6 @@ function createDocumentationTools({index, documents, signal, onEvent = async () 
             ...(links.length ? {links} : {})});
         }
         for (const passage of result.passages) passages.set(passage.source, passage);
-        await onEvent('status', {message: 'Reading documentation…', pages: [...readPages.values()]});
       } else return {error: 'Unknown documentation tool.'};
       return result;
     },

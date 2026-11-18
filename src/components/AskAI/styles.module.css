@@ -47,13 +47,6 @@
 .thinking {display:block;margin:4px 0 0;color:var(--ai-muted);font-size:13px}
 .copyResponse {display:inline-flex;align-items:center;gap:5px;flex-shrink:0;padding:4px 0;border:0;background:none;color:var(--ai-muted);font:inherit}
 .copyResponse:hover {color:var(--ai-accent-ink)}
-.researchProgress {color:var(--ai-muted)}
-.progressStatus {display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-.elapsed {flex-shrink:0;font-size:11px;font-variant-numeric:tabular-nums}
-.searchQueries {margin:6px 0 0;font-size:12px;overflow-wrap:anywhere}
-.researchPages {display:flex;flex-direction:column;gap:6px;margin-top:6px}
-.researchPages a {color:var(--ai-muted);overflow-wrap:anywhere}
-.researchPages a:hover {color:var(--ai-accent-ink)}
 .error {margin-top:16px;padding:10px 12px;border:1px solid var(--ai-border);border-radius:var(--lite-radius-md,10px);color:var(--ai-text)}
 .error p {margin:0}
 .error button {margin-top:6px;padding:0;border:0;background:none;color:var(--ai-accent-ink);font-size:13px;font-weight:600}
