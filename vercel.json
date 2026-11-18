@@ -75,6 +75,16 @@
   ],
   "redirects": [
     {
+      "source": "/docs/liteagents",
+      "destination": "/docs/harness",
+      "permanent": true
+    },
+    {
+      "source": "/docs/liteagents.md",
+      "destination": "/docs/harness.md",
+      "permanent": true
+    },
+    {
       "source": "/docs/proxy/lens/coding_agents",
       "destination": "/docs/proxy/lens/coding-agents",
       "permanent": true

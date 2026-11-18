@@ -139,7 +139,7 @@ const sidebars = {
         { type: "doc", id: "langchain/langchain", label: "LangChain with LiteLLM", customProps: { icon: "/img/integrations/langchain.png" } },
         { type: "ref", id: "projects/openai-agents", customProps: { icon: "/img/integrations/openai.png" } },
         { type: "doc", id: "tutorials/instructor", label: "Instructor with LiteLLM" },
-        { type: "link", label: "Agent Harnesses (litellm.agent)", href: "/docs/harness", className: "sidebar-xlink" },
+        { type: "link", label: "Agents in the LiteLLM SDK", href: "/docs/harness", className: "sidebar-xlink" },
       ]
     },
     {
@@ -1146,7 +1146,7 @@ const sidebars = {
         // Styled by the "litellm.harness docs" block in src/css/custom.css.
         {
           type: "category",
-          label: "Agent Harnesses",
+          label: "Agents",
           className: "harness-sidebar",
           items: [
             {
@@ -1376,7 +1376,6 @@ const sidebars = {
       ],
     },
     { type: "html", value: "Developer Tools", className: "sidebar-caption", defaultStyle: true },
-    { type: "doc", id: "liteagents", label: "liteagents SDK", className: "top-level-doc-item sidebar-beta" },
     {
       type: "category",
       label: "lite CLI",
