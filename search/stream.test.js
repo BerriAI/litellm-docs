@@ -4,8 +4,6 @@ const http = require('node:http');
 const {createModelCaller} = require('./gateway');
 const {createAskHandler} = require('./api');
 const {createIndex} = require('./engine');
-const {getTracing} = require('./tracing');
-const {OTLPTraceExporter} = require('@opentelemetry/exporter-trace-otlp-proto');
 
 const config = {apiKey: 'stream-test-secret', baseUrl: 'https://gateway.example.com', publicAIEnabled: true, origin: 'https://docs.example.com'};
 const encoder = new TextEncoder();
@@ -130,19 +128,9 @@ test('malformed browser events produce a retryable error', async () => {
   }
 });
 
-test('an interrupted upstream stream retains safe partial text in its trace', async t => {
-  const spans = [];
-  t.mock.method(OTLPTraceExporter.prototype, 'export', (batch, callback) => {spans.push(...batch); callback({code: 0});});
-  const traced = {...config, tracing: {key: 'stream-tracing-test-secret', endpoint: 'https://tracing.example.com/v1/traces'}};
-  const tracing = getTracing(traced);
-  try {
-    const call = createModelCaller({config: traced, fetchImpl: async () => streamResponse(frame(chunk({content: 'Partial answer'})))});
-    await assert.rejects(call.turn([], {onDelta() {}}), {name: 'GatewayStreamInterrupted'});
-    await tracing.flush();
-    assert.equal(spans[0].attributes['output.value'], 'Partial answer');
-    assert.equal(spans[0].attributes['gen_ai.response.id'], 'stream-id');
-    assert.equal(spans[0].attributes['error.type'], 'GatewayStreamInterrupted');
-  } finally {await tracing.shutdown();}
+test('an interrupted upstream stream cannot become a completed answer', async () => {
+  const call = createModelCaller({config, fetchImpl: async () => streamResponse(frame(chunk({content: 'Partial answer'})))});
+  await assert.rejects(call.turn([], {onDelta() {}}), {name: 'GatewayStreamInterrupted'});
 });
 
 test('streaming API finishes with validated sources and a done event', async () => {

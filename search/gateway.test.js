@@ -1,8 +1,6 @@
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const {createModelCaller} = require('./gateway');
-const {getTracing} = require('./tracing');
-const {OTLPTraceExporter} = require('@opentelemetry/exporter-trace-otlp-proto');
 
 const config = {baseUrl: 'https://gateway.example.com', apiKey: 'model-test-secret'};
 const completion = (finish_reason, content, extra = {}) => Response.json({
@@ -10,38 +8,20 @@ const completion = (finish_reason, content, extra = {}) => Response.json({
   choices: [{finish_reason, message: {content}}],
 });
 
-test('provider truncation retains the request ID, usage, finish reason, and safe error without app token caps', async t => {
-  const spans = [];
-  t.mock.method(OTLPTraceExporter.prototype, 'export', (batch, callback) => {spans.push(...batch); callback({code: 0});});
-  const traced = {...config, tracing: {key: 'tracing-test-secret', endpoint: 'https://tracing.example.com/v1/traces'}};
-  const tracing = getTracing(traced), requests = [];
-  const call = createModelCaller({config: traced, fetchImpl: async (_url, request) => {
+test('provider truncation fails without application token caps or retries', async () => {
+  const requests = [];
+  const call = createModelCaller({config, fetchImpl: async (_url, request) => {
     requests.push(request);
-    return completion('length', 'Incomplete answer', {
-      usage: {prompt_tokens: 6768, completion_tokens: 1800, completion_tokens_details: {reasoning_tokens: 1277}},
-    });
+    return completion('length', 'Incomplete answer');
   }});
-  try {
-    await assert.rejects(call('Instructions', {question: 'Question'}, 25000, 'answer'), {name: 'GatewayResponseTruncated'});
-    assert.equal(requests.length, 1);
-    const body = JSON.parse(requests[0].body);
-    for (const options of [body, ...body.fallbacks]) {
-      assert.equal(options.max_tokens, undefined);
-      assert.equal(options.max_completion_tokens, undefined);
-    }
-    await tracing.flush();
-    assert.equal(spans.length, 1);
-    assert.equal(spans[0].attributes['gen_ai.response.id'], 'completion-test');
-    assert.equal(spans[0].attributes['gen_ai.response.model'], 'actual-model');
-    assert.equal(spans[0].attributes['gen_ai.usage.output_tokens'], 1800);
-    assert.equal(spans[0].attributes['gen_ai.usage.reasoning.output_tokens'], 1277);
-    assert.deepEqual(spans[0].attributes['gen_ai.response.finish_reasons'], ['length']);
-    assert.equal(spans[0].attributes['output.value'], 'Incomplete answer');
-    assert.equal(spans[0].attributes['error.type'], 'GatewayResponseTruncated');
-    assert.equal(spans[0].status.message, 'Gateway response reached its token limit');
-    assert.equal(spans[0].attributes['gen_ai.request.max_tokens'], undefined);
-    assert.equal(spans[0].status.code, 2);
-  } finally { await tracing.shutdown(); }
+  await assert.rejects(call('Instructions', {question: 'Question'}, 25000),
+    {name: 'GatewayResponseTruncated', message: 'Gateway response reached its token limit'});
+  assert.equal(requests.length, 1);
+  const body = JSON.parse(requests[0].body);
+  for (const options of [body, ...body.fallbacks]) {
+    assert.equal(options.max_tokens, undefined);
+    assert.equal(options.max_completion_tokens, undefined);
+  }
 });
 
 test('large successful completions have no answer character or response byte cap', async () => {
@@ -62,36 +42,26 @@ test('reasoning-only truncation remains a diagnosed error', async () => {
   await assert.rejects(call('Instructions', {}, 10000), {name: 'GatewayResponseTruncated'});
 });
 
-test('cancelled and invalid responses do not trigger completion retries or capture unsafe content', async t => {
-  const spans = [];
-  t.mock.method(OTLPTraceExporter.prototype, 'export', (batch, callback) => {spans.push(...batch); callback({code: 0});});
-  const traced = {...config, tracing: {key: 'another-tracing-secret', endpoint: 'https://tracing.example.com/v1/traces'}};
-  const tracing = getTracing(traced);
-  try {
-    for (const response of [
-      () => completion('length', config.apiKey),
-      () => completion('stop', ''),
-      () => new Response('bad gateway', {status: 502}),
-      () => new Response('invalid json'),
-      () => {throw new Error(`fetch failed with ${config.apiKey}`);},
-    ]) {
-      let calls = 0;
-      const call = createModelCaller({config: traced, fetchImpl: async () => {calls++; return response();}});
-      await assert.rejects(call('Instructions', {}, 25000));
-      assert.equal(calls, 1);
-    }
-    const controller = new AbortController();
+test('cancelled and invalid responses do not trigger completion retries', async () => {
+  for (const response of [
+    () => completion('length', config.apiKey),
+    () => completion('stop', ''),
+    () => new Response('bad gateway', {status: 502}),
+    () => new Response('invalid json'),
+    () => {throw new Error(`fetch failed with ${config.apiKey}`);},
+  ]) {
     let calls = 0;
-    const cancelled = createModelCaller({config: traced, signal: controller.signal, fetchImpl: async () => {
-      calls++; controller.abort(); return completion('length', 'Partial');
-    }});
-    await assert.rejects(cancelled('Instructions', {}, 25000));
+    const call = createModelCaller({config, fetchImpl: async () => {calls++; return response();}});
+    await assert.rejects(call('Instructions', {}, 25000));
     assert.equal(calls, 1);
-    await tracing.flush();
-    assert.ok(!JSON.stringify(spans.map(span => ({attributes: span.attributes, status: span.status}))).includes(config.apiKey));
-    assert.equal(spans[0].attributes['output.value'], undefined);
-    assert.equal(spans[4].status.message, 'Error');
-  } finally { await tracing.shutdown(); }
+  }
+  const controller = new AbortController();
+  let calls = 0;
+  const cancelled = createModelCaller({config, signal: controller.signal, fetchImpl: async () => {
+    calls++; controller.abort(); return completion('length', 'Partial');
+  }});
+  await assert.rejects(cancelled('Instructions', {}, 25000));
+  assert.equal(calls, 1);
 });
 
 const cloudflare = {cfAccessClientId: 'example-client-id', cfAccessClientSecret: 'example-client-secret'};
@@ -153,26 +123,19 @@ test('Cloudflare denial and login responses stay generic and never retry another
   }
 });
 
-test('Access credentials cannot leak through completions, split stream deltas, or trace attributes', async t => {
-  const spans = [];
-  t.mock.method(OTLPTraceExporter.prototype, 'export', (batch, callback) => {spans.push(...batch); callback({code: 0});});
-  const traced = {...config, ...cloudflare, tracing: {key: 'example-cf-tracing-key', endpoint: 'https://traces.example.com/v1/traces'}};
-  const tracing = getTracing(traced);
-  try {
-    for (const secret of Object.values(cloudflare)) {
-      const call = createModelCaller({config: traced, fetchImpl: async () => completion('stop', secret, {id: secret, model: secret})});
-      await assert.rejects(call('Instructions', {}, 25000), {name: 'GatewayInvalidResponse'});
-      const chunks = [secret.slice(0, 5), secret.slice(5)];
-      const stream = chunks.map(content => `data: ${JSON.stringify({id: secret, model: secret, choices: [{index: 0, delta: {content}}]})}\n\n`).join('') +
-        `data: ${JSON.stringify({choices: [{index: 0, delta: {}, finish_reason: 'stop'}]})}\n\ndata: [DONE]\n\n`;
-      const deltas = [];
-      const streamed = createModelCaller({config: traced, fetchImpl: async () => new Response(stream, {headers: {'Content-Type': 'text/event-stream'}})});
-      await assert.rejects(streamed('Instructions', {}, 25000, 'answer', delta => deltas.push(delta)), {name: 'GatewayInvalidResponse'});
-      assert.equal(deltas.join(''), '');
-    }
-    await tracing.flush();
-    assert.ok(spans.length >= 4);
-    const exported = JSON.stringify(spans.map(span => ({attributes: span.attributes, status: span.status})));
-    for (const secret of Object.values(cloudflare)) assert.ok(!exported.includes(secret));
-  } finally {await tracing.shutdown();}
+test('gateway credentials cannot leak through completions or split stream deltas', async () => {
+  const protectedConfig = {...config, ...cloudflare};
+  for (const secret of [config.apiKey, ...Object.values(cloudflare)]) {
+    const call = createModelCaller({config: protectedConfig,
+      fetchImpl: async () => completion('stop', secret, {id: secret, model: secret})});
+    await assert.rejects(call('Instructions', {}, 25000), {name: 'GatewayInvalidResponse'});
+    const chunks = [secret.slice(0, 5), secret.slice(5)];
+    const stream = chunks.map(content => `data: ${JSON.stringify({id: secret, model: secret, choices: [{index: 0, delta: {content}}]})}\n\n`).join('') +
+      `data: ${JSON.stringify({choices: [{index: 0, delta: {}, finish_reason: 'stop'}]})}\n\ndata: [DONE]\n\n`;
+    const deltas = [];
+    const streamed = createModelCaller({config: protectedConfig,
+      fetchImpl: async () => new Response(stream, {headers: {'Content-Type': 'text/event-stream'}})});
+    await assert.rejects(streamed('Instructions', {}, 25000, delta => deltas.push(delta)), {name: 'GatewayInvalidResponse'});
+    assert.equal(deltas.join(''), '');
+  }
 });
