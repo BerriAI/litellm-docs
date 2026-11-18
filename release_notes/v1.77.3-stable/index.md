@@ -2,7 +2,7 @@
 title: "LiteLLM v1.77.3-stable - Priority Based Rate Limiting"
 description: "Adds priority quota reservation for TPM and RPM capacity per key and a 550 RPS performance gain in request processing."
 slug: "v1-77-3"
-date: 2025-09-27T18:17:59
+date: 2025-09-21T10:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

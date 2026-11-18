@@ -2,7 +2,7 @@
 title: "LiteLLM v1.57.8-stable"
 description: "Adds Hashicorp secret manager support, alert integrations and Prometheus improvements. Also updates Mistral Large, Cohere command-r7b and Voyage pricing."
 slug: v1.57.8-stable
-date: 2025-01-13T07:32:07
+date: 2025-01-11T10:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

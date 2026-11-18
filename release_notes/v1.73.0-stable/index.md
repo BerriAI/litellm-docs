@@ -2,7 +2,7 @@
 title: "LiteLLM v1.73.0-stable - Set default team for new users"
 description: "Adds a default team for new users, Passthrough Endpoints v2 with custom cost tracking and a model health check dashboard."
 slug: "v1-73-0-stable"
-date: 2025-06-26T23:07:26
+date: 2025-06-21T10:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

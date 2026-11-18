@@ -191,14 +191,11 @@ export default function DocItemContent({children}) {
           {rawMarkdownB64 && actions}
         </header>
       ) : (
-        <>
-          {releaseDate}
-          {rawMarkdownB64 && (
-            <div className={styles.copyBtnRow}>
-              {actions}
-            </div>
-          )}
-        </>
+        rawMarkdownB64 && (
+          <div className={styles.copyBtnRow}>
+            {actions}
+          </div>
+        )
       )}
       <MDXContent>{children}</MDXContent>
     </div>

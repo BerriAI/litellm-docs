@@ -2,7 +2,7 @@
 title: "LiteLLM v1.72.0-stable"
 description: "Adds vector store permissions per key, team and organization, sliding window rate limits, aiohttp transport by default and Bedrock Agents."
 slug: "v1-72-0-stable"
-date: 2025-06-07T04:51:51
+date: 2025-05-31T10:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

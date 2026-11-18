@@ -2,7 +2,7 @@
 title: "LiteLLM v1.74.7-stable"
 description: "Adds Vector Stores for Vertex RAG Engine, PG Vector and Azure OpenAI, bulk user edits in the UI and Moonshot AI and Vercel v0."
 slug: "v1-74-7"
-date: 2025-07-25T02:32:14
+date: 2025-07-19T10:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

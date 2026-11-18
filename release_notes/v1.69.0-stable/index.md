@@ -2,7 +2,7 @@
 title: "LiteLLM v1.69.0-stable - Loadbalance Batch API Models"
 description: "Adds load balancing across Azure batch deployments, Email Invites 2.0 with Resend support, the Nscale provider and Bedrock /v1/messages."
 slug: v1.69.0-stable
-date: 2025-05-11T02:24:45
+date: 2025-05-10T10:00:00
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
