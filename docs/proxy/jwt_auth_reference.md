@@ -95,7 +95,7 @@ All settings below go under `general_settings.litellm_jwtauth`. Identity claim f
 | `org_id_jwt_field` | A LiteLLM organization ID. |
 | `org_alias_jwt_field` | An existing organization's unique `organization_alias`. |
 | `end_user_id_jwt_field` | An end-user ID for customer spend attribution. The verified claim takes precedence over a customer ID supplied in request headers or body. |
-| `customer_org_alias_jwt_field`, `customer_member_id_jwt_field`, `customer_team_id_jwt_field` | Customer Management organization alias, member ID, and optional customer-team selection. Available globally and per issuer. When any of them is mapped, JWT requests ignore the customer headers. See [customer identity through JWT claims](./customer_management/track-customer-spend.md#send-customer-identity-through-jwt-claims). |
+| `customer_org_alias_jwt_field`, `customer_member_id_jwt_field`, `customer_team_id_jwt_field` | Customer Management organization alias, member ID, and optional customer-team selection. Available globally and per issuer. When any of them is mapped, JWT requests ignore the customer headers. See [customer identity through JWT claims](./customer_management/jwt-customer-identity.md). |
 | `agent_id_jwt_field` | A registered agent's ID or name. See [registered agents](#bind-jwts-to-registered-agents). |
 
 ```yaml
