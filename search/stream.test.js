@@ -128,6 +128,29 @@ test('malformed browser events produce a retryable error', async () => {
   }
 });
 
+test('browser accepts legacy and detailed progress, and rejects malformed metadata and unsafe page links', async () => {
+  const {readAnswer} = await import('./stream.mjs');
+  const statuses = [
+    {message: 'Searching documentation…'},
+    {message: 'Searching documentation…', queries: ['Redis caching', 'cache TTL']},
+    {message: 'Reading documentation…', pages: [{title: 'Caching', url: '/docs/proxy/caching'}]},
+  ];
+  const events = [];
+  const frames = statuses.map(data => `event: status\ndata: ${JSON.stringify(data)}\n\n`).join('');
+  await readAnswer(streamResponse(frames + 'event: done\ndata: {"answer":"Done","sources":[]}\n\n'),
+    (event, data) => events.push({event, data}));
+  assert.deepEqual(events, statuses.map(data => ({event: 'status', data})));
+  const invalid = [
+    {queries: 'query'}, {queries: [null]}, {pages: {}}, {pages: [null]},
+    {pages: [{title: 7, url: '/docs/test'}]},
+    ...['javascript:alert(1)', '//example.com/docs/test', '/docs/../../private', '/docs/%2e%2e/private', '/settings'].map(url => ({pages: [{title: 'Invalid', url}]})),
+  ];
+  for (const fields of invalid) {
+    await assert.rejects(readAnswer(streamResponse(`event: status\ndata: ${JSON.stringify({message: 'Reading documentation…', ...fields})}\n\n`),
+      () => assert.fail('Invalid progress delivered')), /Invalid answer response/);
+  }
+});
+
 test('an interrupted upstream stream cannot become a completed answer', async () => {
   const call = createModelCaller({config, fetchImpl: async () => streamResponse(frame(chunk({content: 'Partial answer'})))});
   await assert.rejects(call.turn([], {onDelta() {}}), {name: 'GatewayStreamInterrupted'});
@@ -155,6 +178,8 @@ test('streaming API finishes with validated sources and a done event', async () 
     assert.ok(!events.some(({event}) => event === 'answer-start'));
     assert.ok(!JSON.stringify(events).includes('Private preamble'));
     assert.ok(!JSON.stringify(events).includes('passage_ids'));
+    assert.ok(events.some(({event, data}) => event === 'status' && data.queries?.[0] === 'Test'));
+    assert.ok(events.some(({event, data}) => event === 'status' && data.pages?.[0].url === '/docs/test'));
     assert.equal(result.answer, 'Test guidance [1]');
     assert.equal(result.sources[0].url, '/docs/test');
     assert.ok(events.some(({event}) => event === 'sources'));

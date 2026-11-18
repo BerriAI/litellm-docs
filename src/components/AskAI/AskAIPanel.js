@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {SquarePen, Copy, Check, Send, Square} from 'lucide-react';
@@ -29,6 +29,50 @@ function Sources({sources}) {
         <b>{source.id}</b><span>{source.title}{source.heading && <i> · {source.heading}</i>}</span>
       </a>;
     })}
+  </div>;
+}
+
+function ResponseTools({answer, sources}) {
+  const [copyState, setCopyState] = useState('ready');
+  const timer = useRef(null);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  async function copy() {
+    clearTimeout(timer.current);
+    try {await navigator.clipboard.writeText(answer); setCopyState('copied');}
+    catch {setCopyState('failed');}
+    timer.current = setTimeout(() => setCopyState('ready'), 2500);
+  }
+  const label = copyState === 'copied' ? 'Response copied' : copyState === 'failed' ? 'Copy failed; try again' : 'Copy response';
+  return <div className={styles.responseTools}>
+    {sources.length > 0 && <details className={styles.sourceDetails}>
+      <summary>{sources.length} {sources.length === 1 ? 'source' : 'sources'}</summary>
+      <Sources sources={sources}/>
+    </details>}
+    <button type="button" className={styles.copyResponse} onClick={copy} aria-label={label} title={label}>
+      {copyState === 'copied' ? <Check size={14}/> : <Copy size={14}/>}
+      <span aria-live="polite">{copyState === 'copied' ? 'Copied' : copyState === 'failed' ? 'Try again' : 'Copy'}</span>
+    </button>
+  </div>;
+}
+
+function ResearchProgress({progress}) {
+  const {message, queries = [], pages = [], startedAt} = progress;
+  const secondsElapsed = () => Math.floor((Date.now() - startedAt) / 1000);
+  const [elapsed, setElapsed] = useState(secondsElapsed);
+  useEffect(() => {
+    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+    return () => clearInterval(timer);
+  }, [startedAt]);
+  return <div className={styles.researchProgress}>
+    <div className={styles.progressStatus}>
+      <p role="status" className={styles.thinking}>{message}</p>
+      <span className={styles.elapsed} aria-hidden="true">{elapsed}s</span>
+    </div>
+    {queries.length > 0 && <p className={styles.searchQueries}>{queries.map(query => `“${query}”`).join(' · ')}</p>}
+    {pages.length > 0 && <details className={styles.sourceDetails}>
+      <summary>{pages.length} {pages.length === 1 ? 'page' : 'pages'} read</summary>
+      <div className={styles.researchPages}>{pages.map(page => <a key={page.url} href={page.url}>{page.title}</a>)}</div>
+    </details>}
   </div>;
 }
 
@@ -83,13 +127,13 @@ export default function AskAIPanel() {
       {turns.map((turn, i) => <article className={styles.turn} key={i} ref={i === turns.length - 1 && !asking ? latestTurn : undefined}>
         <p className={styles.user}>{turn.question}</p>
         <div className={styles.answer}><Answer {...turn}/></div>
-        <Sources sources={turn.sources}/>
+        <ResponseTools answer={turn.answer} sources={turn.sources}/>
       </article>)}
       {asking && <article className={styles.turn} ref={latestTurn}>
         <p className={styles.user}>{pendingQuestion}</p>
         {streamedAnswer
           ? <div className={styles.answer} aria-busy="true"><Answer answer={streamedAnswer} sources={streamedSources}/><span role="status" className={styles.thinking}>Writing answer…</span></div>
-          : <p role="status" className={styles.thinking}>{progress}</p>}
+          : <ResearchProgress progress={progress}/>}
       </article>}
       {error && <div role="alert" className={styles.error}><p>{error}</p><button type="button" onClick={retry}>Retry question</button></div>}
     </div>
@@ -102,7 +146,7 @@ export default function AskAIPanel() {
           onChange={event => setDraft(event.target.value)}
           onKeyDown={event => {if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {event.preventDefault(); submit();}}}/>
         {asking
-          ? <button type="button" onClick={stop} aria-label="Stop answer"><Square size={15} fill="currentColor"/></button>
+          ? <button type="button" onClick={event => {event.preventDefault(); stop();}} aria-label="Stop answer"><Square size={15} fill="currentColor"/></button>
           : <button type="submit" disabled={!draft.trim()} aria-label="Send message"><Send size={17}/></button>}
       </form>
       <p className={styles.note}>AI can make mistakes. Check the sources.</p>
