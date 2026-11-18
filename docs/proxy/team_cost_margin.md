@@ -6,6 +6,8 @@ description: Add a percentage surcharge to every request a team makes, so tracke
 
 # Team cost margin
 
+<SinceVersion v="1.112.0" />
+
 To charge a team more than the provider cost, set `cost_margin_percent` on the team. Every request the team makes is then tracked at cost plus that percentage. Only a proxy admin can set or change it, and the value must be between 0 and 1000.
 
 ```bash
