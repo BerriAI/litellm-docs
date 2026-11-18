@@ -6,6 +6,8 @@ description: Add a percentage to every request made for a customer, and read bil
 
 # Add a surcharge to customer requests
 
+<SinceVersion v="1.112.0" />
+
 A surcharge is a percentage that LiteLLM adds to the cost of every request made for a customer organization. Use it to charge customers for the cost of running the platform on top of what the model provider charges. Requests with no customer are not surcharged, so internal traffic keeps its normal cost.
 
 ## Which requests are surcharged
