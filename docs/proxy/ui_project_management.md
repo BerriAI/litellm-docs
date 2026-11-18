@@ -32,37 +32,37 @@ Projects appear in the Admin UI sidebar under Access Control for Proxy Admins, O
 
 Click **"Projects"** in the sidebar.
 
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/889e2e55-af7a-42f1-90d5-8bba8efaa986/ascreenshot_c42e33e2226c4e8b8e8ea83a7c8955e4_text_export.jpeg)
+![Projects under Access Control in the Admin UI sidebar](/img/projects-ga/projects-01-navigation.jpg)
 
 ### Step 2: Create a New Project
 
 Click **"Create Project"**.
 
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/8ecb531c-8e96-443d-ba1d-1a9e04ba2da3/ascreenshot_74f1b3c1c1b84517ae51881a050df73a_text_export.jpeg)
+![Create New Project form](/img/projects-ga/projects-02-create-dialog.jpg)
 
 ### Step 3: Enter Project Name
 
 Click the **"Project Name"** field and enter a name for your project.
 
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/83bf0612-2b19-4b28-ae02-bdb122dca4fa/ascreenshot_16ca328a71f04a79bb9641ab9c1ed6fe_text_export.jpeg)
+![Project name and description entered for Documentation Assistant](/img/projects-ga/projects-03-project-name.jpg)
 
 ### Step 4: Select a Team
 
 Choose which team this project belongs to. Projects are scoped to teams, so you can only access models and features available to that team.
 
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/653c2f1e-5140-49b8-962f-a2b112f4834c/ascreenshot_7861310ad77d4859adcae789a9d51bd0_text_export.jpeg)
+![Product Engineering in the Team selector](/img/projects-ga/projects-04-select-team.jpg)
 
 ### Step 5: Configure Model Access
 
 Select which models this project has access to. Available models are scoped to the team's allowed models.
 
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/401a5716-ea16-4744-866a-d0ed6007065d/ascreenshot_a936c3ca417a49b2b603c890dee9d0ea_text_export.jpeg)
+![Allowed Models selector with the All Team Models option](/img/projects-ga/projects-05-model-access.jpg)
 
 ### Step 6: Create Project
 
 Click **"Create Project"** to save your project.
 
-![](https://colony-recorder.s3.amazonaws.com/files/2026-03-01/2f9f9ba1-df0b-4bef-b17c-77dfc38372f7/ascreenshot_933e4c1b119d43beb84161b94b17b764_text_export.jpeg)
+![Documentation Assistant saved as an active project under Product Engineering](/img/projects-ga/projects-06-created.jpg)
 
 ## Use Cases
 
