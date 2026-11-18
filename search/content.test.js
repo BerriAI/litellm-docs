@@ -119,6 +119,27 @@ test('SDK scope follows the Python SDK subtree and includes the standalone LiteA
     ['/docs/python_sdk', '/docs/response_api', '/docs/harness', '/docs/liteagents']);
 });
 
+test('SDK scope includes shared completion guides and the Requests & Responses subtree, not proxy guides', () => {
+  const docs = [
+    ['completion/stream', '/docs/completion/stream'],
+    ['completion/function_call', '/docs/completion/function_call'],
+    ['reasoning_content', '/docs/reasoning_content'],
+    ['proxy/user_keys', '/docs/proxy/user_keys'],
+  ].map(([id, permalink]) => ({id, permalink, title: id, sidebar: 'tutorialSidebar'}));
+  const pages = collectPages({
+    'docusaurus-plugin-content-docs': {default: {loadedVersions: [{docs, sidebars: {tutorialSidebar: [
+      {type: 'category', link: {type: 'generated-index', slug: '/guides/core_request_response_patterns'}, items: [
+        {type: 'doc', id: 'completion/stream'}, {type: 'doc', id: 'reasoning_content'},
+      ]},
+      {type: 'category', link: {type: 'generated-index', slug: '/guides/tools_integrations'}, items: [
+        {type: 'doc', id: 'completion/function_call'}, {type: 'doc', id: 'proxy/user_keys'},
+      ]},
+    ]}}]}},
+  });
+  assert.deepEqual([...pages].filter(([, metadata]) => metadata.sdk).map(([url]) => url),
+    ['/docs/completion/stream', '/docs/completion/function_call', '/docs/reasoning_content']);
+});
+
 test('archive growth leaves docs scores unchanged and source filters survive serialization', () => {
   const docs = [passage('/docs/routing', 'Request routing'), passage('/docs/routing-config', 'Routing configuration')];
   const archive = Array.from({length: 80}, (_, i) => passage(`/blog/routing-${i}`, 'Request routing benchmark', {type: 'blog', date: '2025-01-02'}));

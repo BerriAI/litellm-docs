@@ -75,8 +75,6 @@ function extractSections(html, url, metadata = {}) {
 
 function sdkDocIds(sidebars) {
   const ids = new Set(['liteagents']);
-  const sdk = sidebars?.tutorialSidebar?.find(item => item.type === 'category' &&
-    item.link?.type === 'doc' && item.link.id === 'python_sdk');
   function visit(item) {
     if (item.type === 'doc') ids.add(item.id);
     if (item.type === 'category') {
@@ -84,7 +82,12 @@ function sdkDocIds(sidebars) {
       item.items.forEach(visit);
     }
   }
-  if (sdk) visit(sdk);
+  for (const item of sidebars?.tutorialSidebar || []) {
+    if (item.type !== 'category') continue;
+    const {link} = item;
+    if ((link?.type === 'doc' && link.id === 'python_sdk') ||
+        (link?.type === 'generated-index' && link.slug === '/guides/core_request_response_patterns')) visit(item);
+  }
   return ids;
 }
 
@@ -107,7 +110,7 @@ function collectPages(allContent) {
   for (const instance of Object.values(allContent['docusaurus-plugin-content-docs'] || {})) {
     for (const version of instance.loadedVersions || []) {
       const sdkIds = sdkDocIds(version.sidebars);
-      for (const doc of version.docs || []) add(doc, sdkIds.has(doc.id));
+      for (const doc of version.docs || []) add(doc, sdkIds.has(doc.id) || doc.id?.startsWith('completion/'));
     }
   }
   for (const instance of Object.values(allContent['docusaurus-plugin-content-blog'] || {})) {

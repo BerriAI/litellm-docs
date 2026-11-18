@@ -202,7 +202,7 @@ export default function SearchBar() {
               <div className={styles.filters} role="group" aria-label="Content type">
                 {Object.entries({all: 'All', docs: 'Docs', sdk: 'SDK docs', blog: 'Blog', release: 'Releases'}).map(([type, label]) =>
                   <button key={type} type="button" aria-pressed={contentType === type} onClick={() => setContentType(type)}>{label}</button>)}
-                <small role="status">{loading ? 'Searching...' : results[0]?.matchType === 'typo' ? 'Closest matches' : `${results.length} results`}</small>
+                <small role="status">{loading ? 'Searching...' : results[0]?.matchType === 'typo' ? 'Closest matches' : `${results.length} result${results.length === 1 ? '' : 's'}`}</small>
               </div>
               <div className={styles.results} id="docs-search-results" role="listbox" aria-label="Matching documentation" aria-busy={loading} data-query={resolvedQuery}>{loading
                 ? Array.from({length: 5}, (_, i) => <div key={i} className={`${styles.result} ${styles.skeleton}`} aria-hidden="true">
