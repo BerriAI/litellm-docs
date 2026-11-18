@@ -1,7 +1,7 @@
 ---
 title: "Sarvam AI API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "Sarvam.ai"
-description: "Send chat requests to Sarvam AI text models such as sarvam-m with the sarvam/ prefix, then serve them to OpenAI clients and curl through the AI Gateway."
+description: "Send chat requests to Sarvam 105B and the GLM, Gemma, and DeepSeek models Sarvam serves with the sarvam/ prefix, then serve them to OpenAI clients and curl through the AI Gateway."
 ---
 
 # Sarvam.ai
@@ -9,7 +9,7 @@ description: "Send chat requests to Sarvam AI text models such as sarvam-m with 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-LiteLLM supports Sarvam's OpenAI-compatible chat API, including Sarvam 105B and the open-weight models served on Sarvam infrastructure (GLM, Gemma, and DeepSeek). <SinceVersion v="1.112.0" />
+LiteLLM supports Sarvam's OpenAI-compatible chat API, including Sarvam 105B and the open-weight models served on Sarvam infrastructure (GLM, Gemma, and DeepSeek).
 
 ## Supported models
 
@@ -27,7 +27,7 @@ Except on `sarvam-105b-conversations`, Max output is the whole context window, w
 
 USD values are converted from Sarvam's INR rates at ₹94 per USD. `sarvam-105b`, `sarvam-105b-conversations`, and `deepseekv4.1-flash-1017` show Sarvam's introductory rates, which apply [through the end of 2026](https://docs.sarvam.ai/api/getting-started/pricing). See [Sarvam Token Factory pricing](https://www.sarvam.ai/token-factory/pricing) for the current INR rates.
 
-LiteLLM sends `sarvam-105b` and `sarvam-105b-conversations` to `https://api.sarvam.ai/v1`, the API they used before, and every other model to `https://api.sarvam.ai/v2`. Sarvam's `/v1` API serves only those two models, so remove any `api_base` that points at `https://api.sarvam.ai/v1` from the other models.
+LiteLLM sends `sarvam-105b` and `sarvam-105b-conversations` to `https://api.sarvam.ai/v1`, the API they used before, and every other model to `https://api.sarvam.ai/v2`. Sarvam's `/v1` API serves only those two models, so remove any `api_base` that points at `https://api.sarvam.ai/v1` from the other models. <SinceVersion v="1.112.0" />
 
 The legacy `sarvam-m` model is not served on `/v2`. If you are upgrading from `sarvam/sarvam-m`, switch to `sarvam/sarvam-105b`.
 
@@ -89,11 +89,16 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
         litellm_params:
           model: sarvam/sarvam-105b  # add sarvam/ prefix to route as Sarvam provider
           api_key: os.environ/SARVAM_API_KEY
+
+    general_settings:
+      master_key: os.environ/LITELLM_MASTER_KEY
     ```
 
 2. **Start the proxy:**
 
     ```bash
+    export SARVAM_API_KEY="your-api-key"
+    export LITELLM_MASTER_KEY="sk-1234"
     litellm --config /path/to/config.yaml
     ```
 
@@ -107,8 +112,8 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
     import openai
 
     client = openai.OpenAI(
-        api_key="sk-<your-litellm-api-key>",             # pass litellm proxy key, if you're using virtual keys
-        base_url="http://0.0.0.0:4000" # litellm-proxy-base url
+        api_key="sk-1234",                # your LITELLM_MASTER_KEY or a virtual key
+        base_url="http://0.0.0.0:4000"    # litellm-proxy-base url
     )
 
     response = client.chat.completions.create(
@@ -119,6 +124,7 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
                 "content": "what llm are you"
             }
         ],
+        max_tokens=1024,
     )
 
     print(response)
@@ -129,7 +135,7 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
 
     ```shell
     curl --location 'http://0.0.0.0:4000/chat/completions' \
-        --header "Authorization: Bearer $LITELLM_API_KEY" \
+        --header "Authorization: Bearer $LITELLM_MASTER_KEY" \
         --header 'Content-Type: application/json' \
         --data '{
         "model": "sarvam-105b",
@@ -138,7 +144,8 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
             "role": "user",
             "content": "what llm are you"
             }
-        ]
+        ],
+        "max_tokens": 1024
     }'
     ```
     </TabItem>
@@ -147,7 +154,7 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
 
 ## Reasoning
 
-Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning, so LiteLLM rejects `reasoning_effort` on it unless you set `drop_params`. On `gemma4`, reasoning is off by default and only runs when `reasoning_effort` is set. On `/v1`, `sarvam-105b` accepts only `low`, `medium`, or `high`, and Sarvam rejects `reasoning_effort="none"` with a 400 error. To turn reasoning off on `sarvam-105b`, point it at `https://api.sarvam.ai/v2` with `api_base`. Calls there often stall, so follow the timeout advice under Limitations. This call asks `gemma4` to reason:
+Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning, so LiteLLM rejects `reasoning_effort` on it unless you set `drop_params`. On `gemma4`, reasoning is off by default and only runs when `reasoning_effort` is set. Some models accept only some levels, so LiteLLM rounds any other level up to the next level the model accepts, or down to its strongest level. `sarvam-105b` accepts `low`, `medium`, or `high`, so `minimal` is sent as `low` and `xhigh` or `max` as `high`. `glm5.3` and `glm5.3-flash` accept `low`, `high`, or `max`, so `medium` is sent as `high`. LiteLLM never changes `reasoning_effort="none"`. On `sarvam-105b`, `glm5.3`, and `glm5.3-flash`, Sarvam rejects it with a 400 error, and LiteLLM drops it instead when you set `drop_params`, so reasoning stays on. To turn reasoning off on `sarvam-105b`, point it at `https://api.sarvam.ai/v2` with `api_base` and leave `drop_params` off. Some calls there stall, so follow the timeout advice under Limitations. This call asks `gemma4` to reason:
 
 ```python
 response = completion(
