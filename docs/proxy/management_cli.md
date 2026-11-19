@@ -181,7 +181,7 @@ lite logout             # clear the keychain entry and the token file, and revok
   lite models add {{openai_large}} \
     --param api_key=sk-123 \
     --param max_tokens=2048
-  lite models update <model-id> -p max_tokens=4096
+  lite models update <model-id> -p api_key=sk-456
   lite models delete <model-id>
   ```
 

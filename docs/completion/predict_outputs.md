@@ -20,7 +20,9 @@ import TabItem from '@theme/TabItem';
 
 In this example we want to refactor a piece of C# code, and convert the Username property to Email instead:
 ```python keep-model-ids
+import os
 import litellm
+
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 code = """
 /// <summary>
@@ -85,6 +87,15 @@ litellm --config config.yaml
 
 ```python keep-model-ids
 from openai import OpenAI
+
+code = """
+public class User
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Username { get; set; }
+}
+"""
 
 client = OpenAI(
     api_key="LITELLM_PROXY_KEY", # sk-<your-litellm-api-key>

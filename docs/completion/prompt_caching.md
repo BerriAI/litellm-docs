@@ -187,7 +187,7 @@ for _ in range(2):
 print("response=", response)
 print("response.usage=", response.usage)
 
-assert "prompt_tokens_details" in response.usage
+assert response.usage.prompt_tokens_details is not None
 assert response.usage.prompt_tokens_details.cached_tokens > 0
 ```
 
