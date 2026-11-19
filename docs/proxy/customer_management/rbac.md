@@ -28,7 +28,7 @@ A user's applications are the union of three sources: the grants on the user, th
 
 Find the application's id with `GET /management/v1/apps`, then put it in `object_permission.apps` on a team, a user or an organization. Only a proxy admin can add, change or remove these ids.
 
-To grant a team, update the team. In the Admin UI, edit the team and pick the applications under Customer Management Apps.
+To grant a team, update the team. In the Admin UI, open Customer Management, go to Internal Access, pick the team and select the applications its members can view.
 
 ```bash
 curl -X POST "$LITELLM_BASE_URL/team/update" \
