@@ -1,13 +1,13 @@
 ---
 title: "Web Search APIs for AI Agents in LiteLLM"
 sidebar_label: "Overview"
-description: "Use one search() call in the Python SDK or /v1/search on the AI Gateway to query 20 web search APIs for AI agents, with cost tracking and per-key access."
+description: "Use one search() call in the Python SDK or /v1/search on the AI Gateway to query 21 web search APIs for AI agents, with cost tracking and per-key access."
 ---
 # Overview
 
 | Feature | Supported | 
 |---------|-----------|
-| Supported Providers | `perplexity`, `tavily`, `parallel_ai`, `exa_ai`, `brave`, `google_pse`, `dataforseo`, `firecrawl`, `searxng`, `linkup`, `duckduckgo`, `searchapi`, `serper`, `you_com`, `apiserpent`, `agentcore`, `nimble`, `bing_grounding`, `deepseek`, `webiq` |
+| Supported Providers | `perplexity`, `tavily`, `parallel_ai`, `exa_ai`, `brave`, `google_pse`, `dataforseo`, `firecrawl`, `searxng`, `linkup`, `duckduckgo`, `searchapi`, `serper`, `you_com`, `apiserpent`, `agentcore`, `nimble`, `bing_grounding`, `deepseek`, `webiq`, `seltz` |
 | Cost Tracking | ✅ |
 | Logging | ✅ |
 | Load Balancing | ❌ |
@@ -283,7 +283,7 @@ See the [official Perplexity Search documentation](https://docs.perplexity.ai/ap
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `query` | string or array | Yes | Search query. Can be a single string or array of strings |
-| `search_provider` | string | Yes (SDK) | The search provider to use: `"perplexity"`, `"tavily"`, `"parallel_ai"`, `"exa_ai"`, `"brave"`, `"google_pse"`, `"dataforseo"`, `"firecrawl"`, `"searxng"`, `"linkup"`, `"duckduckgo"`, `"searchapi"`, `"serper"`, or `"you_com"` or `"apiserpent"` or `"agentcore"` or `"bing_grounding"` or `"deepseek"` |
+| `search_provider` | string | Yes (SDK) | The search provider to use: `"perplexity"`, `"tavily"`, `"parallel_ai"`, `"exa_ai"`, `"brave"`, `"google_pse"`, `"dataforseo"`, `"firecrawl"`, `"searxng"`, `"linkup"`, `"duckduckgo"`, `"searchapi"`, `"serper"`, or `"you_com"` or `"apiserpent"` or `"agentcore"` or `"bing_grounding"` or `"deepseek"` or `"seltz"` |
 | `search_tool_name` | string | Yes (Proxy) | Name of the search tool configured in `config.yaml` |
 | `max_results` | integer | No | Maximum number of results to return (1-20). Default: 10 |
 | `search_domain_filter` | array | No | List of domains to filter results (max 20 domains) |
@@ -364,5 +364,6 @@ Provider-specific fields depend on what the upstream returns. See [Tavily's resp
 | Nimble | `NIMBLE_API_KEY` | `nimble` |
 | DeepSeek | `DEEPSEEK_API_KEY` | `deepseek` |
 | Grounding with Bing (Microsoft Foundry) | `BING_GROUNDING_PROJECT_ENDPOINT`, `BING_GROUNDING_MODEL` (required), `api_key` or `BING_GROUNDING_TOKEN` or azure-identity | `bing_grounding` |
+| Seltz | `SELTZ_API_KEY` | `seltz` |
 
 See the individual provider documentation for detailed setup instructions and provider-specific parameters.

@@ -1582,6 +1582,7 @@ const sidebars = {
             "search/bing_grounding",
             "search/deepseek",
             "search/webiq",
+            "search/seltz",
           ]
         },
         "skills",

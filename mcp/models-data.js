@@ -105,7 +105,7 @@ const DISPLAY_NAMES = dict(Object.entries({
   replicate: 'Replicate', runwayml: 'RunwayML', s3_vectors: 'AWS S3 Vectors', sagemaker: 'AWS - Sagemaker',
   sagemaker_chat: 'Sagemaker Chat', sail: 'Sail', sambanova: 'Sambanova', sap: 'SAP Generative AI Hub',
   sarvam: 'Sarvam', scaledown: 'ScaleDown', scaleway: 'Scaleway', 'scx-ai': 'SCX.ai', searchapi: 'SearchAPI',
-  searxng: 'SearXNG', serper: 'Serper', snowflake: 'Snowflake', soniox: 'Soniox', stability: 'Stability AI',
+  searxng: 'SearXNG', seltz: 'Seltz', serper: 'Serper', snowflake: 'Snowflake', soniox: 'Soniox', stability: 'Stability AI',
   strands_decider: 'Strands Decider', streamlake: 'StreamLake', synthetic: 'Synthetic', tavily: 'Tavily',
   tencent: 'Tencent TokenHub', tensormesh: 'Tensormesh', 'text-completion-codestral': 'Text Completion Codestral',
   'text-completion-openai': 'Text Completion OpenAI', tinyfish: 'TinyFish', together_ai: 'Together AI',
