@@ -11,9 +11,9 @@ import TabItem from '@theme/TabItem';
 
 Send a model call to Lens and open it in **Traces**. These steps work with standalone Lens and with Lens inside the LiteLLM dashboard.
 
-You need a running Lens service, Python {{python_version}}, and a model key. If Lens is not ready, follow [Set up Lens](./deployment.md) first. The example makes one model call, which can incur a provider charge.
+You need a running Lens service. If Lens is not ready, follow [Set up Lens](./deployment.md) first. The Python example below also needs Python {{python_version}} and a model key. It makes one model call, which can incur a provider charge.
 
-If you already have an agent, you can instead follow its [framework guide](#connect-your-existing-agent) and keep its existing model settings.
+For coding agents, skip the Python example and use the exact [Claude Code](./coding-agents.md#claude-code) or [Codex](./coding-agents.md#codex) setup. Generate the tracing key below, keep your existing model login, then open **Traces** in Lens. For other agents, use the [framework guide](#connect-your-existing-agent).
 
 ## 1. Get a tracing key and endpoint {#connect-your-agent}
 
