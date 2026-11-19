@@ -16,7 +16,7 @@ This guide also connects an **existing Lens deployment**, including one hosted o
 You need access to the environment settings for both services. Connect only a gateway that belongs to the same trusted workspace: its administrators have administrator access in Lens.
 
 :::info Gateway version
-These steps require the independent Lens adapter and UI, merged into LiteLLM in [PR #45529](https://github.com/BerriAI/litellm/pull/45529). The published `v1.106.0-dev.3` release predates that change. Use a gateway build that includes it. Until such a build is deployed, you can use Lens through its standalone URL. See [Releases and images](./releases.md).
+Use LiteLLM v1.108.0 or later. This version includes the independent Lens adapter and UI from [PR #45529](https://github.com/BerriAI/litellm/pull/45529). {/* keep-version-note: The minimum gateway release is the subject of this note. */}
 :::
 
 ## 1. Get the Lens address
@@ -72,7 +72,7 @@ Open your Lens service in the Render dashboard. Select **Environment**, add the 
 </TabItem>
 <TabItem value="compose" label="Docker Compose">
 
-Add the two variables to `deploy/lens/.env` in your Lens checkout. From the repository root, apply them:
+Add the two variables to `deploy/lens/.env` in your extracted Lens bundle. From the `lens-0.1.0` directory, apply them:
 
 ```sh
 docker compose -f deploy/lens/compose.yaml up -d --wait

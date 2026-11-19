@@ -75,7 +75,7 @@ The gateway forwards telemetry through a bounded asynchronous queue. If Lens is 
 
 ## Troubleshooting
 
-From a source Compose installation:
+From the extracted Compose bundle directory:
 
 ```sh
 docker compose -f deploy/lens/compose.yaml ps

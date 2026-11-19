@@ -6,21 +6,28 @@ slug: "/proxy/lens/deployment/local"
 
 # Start standalone Lens
 
-Run Lens on your computer to inspect agent traces. You need Git, Docker, and Docker Compose v2. Docker must be running. You do not need a LiteLLM gateway, PostgreSQL, or a model provider key to start Lens.
+Run Lens on your computer or server to inspect agent traces. You need Docker with Docker Compose v2, and Docker must be running. You do not need Git, a LiteLLM gateway, PostgreSQL, or a model provider key.
 
-This quickstart builds Lens from the [source repository](https://github.com/BerriAI/lens). The first build can take several minutes. See [Releases and images](./releases.md) for published artifact availability.
+The [v0.1.0 release bundle](https://github.com/BerriAI/lens/releases/tag/v0.1.0) pulls the published image by digest. No image build is required.
 
 ## 1. Start Lens
 
 Run these commands in a terminal:
 
 ```sh
-git clone https://github.com/BerriAI/lens.git
-cd lens
-./deploy/lens/start
+curl -fLO https://github.com/BerriAI/lens/releases/download/v0.1.0/lens-install-0.1.0.tar.gz
+tar xzf lens-install-0.1.0.tar.gz
+cd lens-0.1.0
+./start
 ```
 
-The script builds Lens, generates credentials in `deploy/lens/.env`, and starts Lens with ClickHouse. Wait for `Lens is ready at http://localhost:4318/ui/`.
+The script pulls Lens, generates credentials in `deploy/lens/.env`, and starts Lens with ClickHouse. Wait for `Lens is ready at http://localhost:4318/ui/`.
+
+Check readiness:
+
+```sh
+curl --fail http://localhost:4318/health/ready
+```
 
 The script keeps existing credentials and stored data when you run it again. Keep the environment file private.
 
@@ -44,13 +51,13 @@ You can inspect traces before configuring an analysis model. When you want Lens 
 
 ## Stop and restart
 
-From the Lens repository root, stop the services while keeping their data:
+From the extracted `lens-0.1.0` directory, stop the services while keeping their data:
 
 ```sh
 docker compose -f deploy/lens/compose.yaml down
 ```
 
-Start them again with `./deploy/lens/start`. Keep `deploy/lens/.env` and the ClickHouse volume. Adding `--volumes` to the stop command deletes stored Lens data.
+Start them again with `./start`. Keep `deploy/lens/.env` and the ClickHouse volume. Adding `--volumes` to the stop command deletes stored Lens data.
 
 If startup fails, check Docker and the service logs:
 
