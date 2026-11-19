@@ -1,6 +1,41 @@
 [
   {
     "folders": [
+      "v1.108.12"
+    ],
+    "title": "LiteLLM v1.108.12 (LTS) fixes GPT-6.2 caching and Foundry model routers",
+    "points": [
+      "GPT-6.2 caches system prompts on `/v1/chat/completions` and `/v1/messages` requests that set `store: false`, so repeated prompts cost less.",
+      "`azure_ai/model_router` entries on a Foundry `/openai/v1` base work on `/v1/responses` and `/v1/responses/compact` and record the routed model's cost.",
+      "The `tool_policy` guardrail applies to tool names longer than 64 characters on `/v1/messages`, and Vertex batch files with one `json_schema` row answer every row."
+    ]
+  },
+  {
+    "folders": [
+      "v1.106.11",
+      "v1.111.0rc2",
+      "v1.110.1"
+    ],
+    "title": "LiteLLM v1.110.1, v1.111.0rc2 and v1.106.11 fix GPT-6.2 prompt caching",
+    "points": [
+      "GPT-6.2 caches system prompts on `/v1/chat/completions` and `/v1/messages` requests that set `store: false`, so repeated prompts cost less.",
+      "Stored requests and `previous_response_id` follow-ups keep the system prompt in `instructions`, so follow-up turns do not send the prompt twice.",
+      "On v1.110.1 the UI image runs on slim nginx without `curl`, so change exec probes on that image to `wget`."
+    ]
+  },
+  {
+    "folders": [
+      "v1.109.2"
+    ],
+    "title": "LiteLLM v1.109.2 adds Gemini batches and fixes OOM on 429 retries",
+    "points": [
+      "Gemini batches run on `/v1/batches`, with output download through `/v1/files` and spend tracking.",
+      "The proxy refuses blocked and over-limit keys before it reads the request body, and SSO login works again behind TLS termination.",
+      "The UI image runs on slim nginx without `curl`, so change exec probes on that image to `wget`."
+    ]
+  },
+  {
+    "folders": [
       "v1.110.0"
     ],
     "title": "LiteLLM v1.110.0 adds the Agent Skills Hub and a Rust-only router",
@@ -179,27 +214,6 @@
       "Keyless workload identity OpenAI deployments no longer answer 401 on image edits, audio, files, batches and the other routes beyond chat.",
       "Transcription cost is correct for some FLAC files that could push a key over its budget.",
       "`ollama_chat/` streams give each parallel tool call its own index, and `/v1/messages` honors a deployment's `additional_drop_params`."
-    ]
-  },
-  {
-    "folders": [
-      "v1.108.4"
-    ],
-    "title": "LiteLLM v1.108.4 (LTS) fixes Bedrock pass-through guardrails and video polls",
-    "points": [
-      "The `/bedrock` pass-through routes enforce the model's `guardrailConfig`, and it replaces any guardrail the caller sends.",
-      "Video status and content polls keep their model, so per-model keys work and each poll reaches the account that created the video.",
-      "A base SDK install no longer fails with `No module named 'mcp'` when `completion()`, `responses()` or `messages` get a tool."
-    ]
-  },
-  {
-    "folders": [
-      "v1.108.3"
-    ],
-    "title": "LiteLLM v1.108.3 (LTS) fixes Bedrock api_base and large MCP tool results",
-    "points": [
-      "Bedrock deployments with `api_base: \"\"` serve requests again, and no longer return 500 or 400.",
-      "MCP tool results over 1 MiB no longer fail with `SSE stream ended without a response`, and model-level `post_call` guardrails check each response once."
     ]
   }
 ]
