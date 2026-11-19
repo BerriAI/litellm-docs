@@ -491,6 +491,7 @@ const config = {
           },
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
+          { href: 'https://www.litellm.ai/course', label: 'Learn', position: 'left' },
           { to: '/rust-migration', label: 'Rust', position: 'left' },
           {
             href: 'https://github.com/BerriAI/litellm',
