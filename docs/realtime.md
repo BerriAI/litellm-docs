@@ -224,12 +224,14 @@ model_list:
       model: azure/gpt-realtime-2.1
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
-      realtime_protocol: GA # or beta
+      realtime_protocol: GA
 ```
 
 ```bash
-export LITELLM_AZURE_REALTIME_PROTOCOL=GA # or beta
+export LITELLM_AZURE_REALTIME_PROTOCOL=GA
 ```
+
+`beta` is the other value. Azure closes a `gpt-realtime-2.1` session on the beta endpoint with `realtime_beta_access_required`, so pin `GA` for it.
 
 ## Guardrails
 

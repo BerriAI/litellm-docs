@@ -78,9 +78,8 @@ async def test_proxy():
     
     async with websockets.connect(
         url,
-        extra_headers={
+        additional_headers={
             "Authorization": "Bearer sk-<your-litellm-api-key>",  # Your LiteLLM proxy key
-            "OpenAI-Beta": "realtime=v1"
         }
     ) as ws:
         # First event from the server is session.created
@@ -127,7 +126,6 @@ const url = "ws://0.0.0.0:4000/v1/realtime?model=grok-voice-agent";
 const ws = new WebSocket(url, {
     headers: {
         "Authorization": "Bearer sk-<your-litellm-api-key>",
-        "OpenAI-Beta": "realtime=v1",
     },
 });
 

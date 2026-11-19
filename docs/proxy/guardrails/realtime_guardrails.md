@@ -115,9 +115,14 @@ ws.onopen = () => {
   ws.send(JSON.stringify({
     type: "session.update",
     session: {
-      modalities: ["audio", "text"],
-      input_audio_transcription: { model: "gpt-transcribe" },
-      turn_detection: { type: "server_vad" },
+      type: "realtime",
+      output_modalities: ["audio"],
+      audio: {
+        input: {
+          transcription: { model: "gpt-transcribe" },
+          turn_detection: { type: "server_vad" },
+        },
+      },
     },
   }))
 }
@@ -148,9 +153,14 @@ async def main():
         await ws.send(json.dumps({
             "type": "session.update",
             "session": {
-                "modalities": ["audio", "text"],
-                "input_audio_transcription": {"model": "gpt-transcribe"},
-                "turn_detection": {"type": "server_vad"},
+                "type": "realtime",
+                "output_modalities": ["audio"],
+                "audio": {
+                    "input": {
+                        "transcription": {"model": "gpt-transcribe"},
+                        "turn_detection": {"type": "server_vad"},
+                    },
+                },
             },
         }))
 

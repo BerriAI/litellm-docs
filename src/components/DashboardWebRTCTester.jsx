@@ -16,7 +16,7 @@ export default function WebRTCTester() {
   const [activeTab, setActiveTab] = useState('logs');
   const [proxyUrl, setProxyUrl] = useState('http://localhost:4000');
   const [apiKey, setApiKey] = useState('sk-<your-litellm-api-key>');
-  const [model, setModel] = useState('gpt-realtime');
+  const [model, setModel] = useState('gpt-4o-realtime-preview');
   const [status, setStatus] = useState('idle');
   const [flowStep, setFlowStep] = useState(0);
   const [tokenPreview, setTokenPreview] = useState('—');

@@ -196,11 +196,7 @@ model_list:
 
 ### OpenAI Models with Dated Versions
 
-`base_model` is also useful when OpenAI returns a dated model name in the response that differs from your configured model name.
-
-**Example**: You configure custom pricing for `gpt-5.5`, but OpenAI returns `gpt-5.5-2026-04-23` in the response. Since LiteLLM uses the response model name for pricing lookup, your custom pricing won't be applied.
-
-**Solution** ✅: Set `base_model` to the key you want LiteLLM to use for pricing lookup.
+OpenAI returns a dated model name in the response, such as `gpt-5.5-2026-04-23` for `gpt-5.5`. Custom prices on the deployment still apply to those responses, since LiteLLM prices a deployment with custom pricing from its own `model_info`, not from the response's model name. You don't need `base_model` for this.
 
 ```yaml
 model_list:
@@ -209,7 +205,6 @@ model_list:
       model: openai/gpt-5.5
       api_key: os.environ/OPENAI_API_KEY
     model_info:
-      base_model: gpt-5.5  # Used for pricing lookup
       input_cost_per_token: 0.0000006
       output_cost_per_token: 0.0000024
 ```
