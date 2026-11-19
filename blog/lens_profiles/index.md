@@ -26,13 +26,13 @@ Lens samples an agent's runs, extracts the intent of each request, and groups si
 
 **You don't need to label every run or design a taxonomy from scratch.** Review the discovered categories and activate classification for new runs, with optional historical backfill. As your agent takes on new work, rediscover categories to keep the view relevant.
 
-## See where your agent spends its time
+## See which tasks dominate your traffic
 
-The breakdown shows which tasks users rely on most. The similarity map lets you explore related requests and inspect the work within each category. Together, they turn a stream of traces into a picture of how your agent is used.
+The similarity map groups sampled runs by task, so you can explore related requests and inspect the work within each category. The legend puts those clusters in context: it shows each category's total run count alongside the number plotted on the map.
 
 <WorkloadMap />
 
-In the illustrative workload shown here, debugging tests accounts for **32% of 24,000 runs**. Feature implementation contributes another 24%. That tells you where improvements would reach the most users, and which tasks deserve substantial representation in your evals.
+The screenshot shows **300 sampled runs from a workload of 24,000 runs**. The debugging cluster contains 96 sampled runs; its legend entry reports **7,680 total debugging runs**, or 32% of the workload. Feature implementation accounts for another 5,760 runs. Those totals help you prioritize improvements and choose which tasks deserve substantial representation in your evals.
 
 ## Find the tasks that drive spend
 
@@ -40,17 +40,17 @@ Lens attributes costs from gateway spend records to the tasks behind your agent'
 
 <CostAttribution />
 
-**Prioritize the work with the largest opportunity.** In this example, debugging represents 32% of runs but approximately 54% of spend. That makes it a strong candidate for investigation: inspect the model calls, examine the agent's approach, and test whether another deployment can handle representative cases at a lower cost.
+**Prioritize the work with the largest opportunity.** With **Spend** selected, debugging leads the breakdown at **$4,285.44 across 7,680 runs**. That is approximately 54% of the $7,970.40 total shown above, despite representing 32% of runs. Inspect those model calls and test whether another deployment can handle representative cases at a lower cost.
 
 You can move from a budget question to the specific work behind it, with task-level costs drawn from the same gateway records used to track model spend.
 
 ## Compare models on the tasks that matter
 
-The task-by-deployment matrix shows request volume, average request cost, and p95 latency for each task and model combination. Switch between views to see where traffic is concentrated, where costs differ, and where latency deserves attention.
+The **Avg cost** view below pairs each task's average request cost with the number of observed requests for each deployment. Lens also provides **Requests** and **p95 latency** views, so you can compare traffic volume, cost, and responsiveness at the task level.
 
 <CapabilityMatrix />
 
-A configuration-generation task may have a different cost and latency profile from debugging a failing test. This view helps you choose **which model comparisons are worth running for each task**, rather than making one decision for the entire agent.
+In the debugging row, the dashboard displays an average request cost of **$0.01 on haiku-production** and **$0.05 on sonnet-production**, alongside 34,560 and 80,640 observed requests. Use these task-specific differences to choose **which model comparisons are worth running**, then evaluate representative cases before changing deployments.
 
 Open a profile to inspect its model breakdown and recent runs. **Investigate these runs** prepares an investigation scoped to the selected profile, so you can examine the behavior behind a costly or slow workload.
 
