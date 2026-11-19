@@ -79,7 +79,7 @@ function createAskHandler({index, documents, config, fetchImpl, now = Date.now, 
     if (now() - windowStart >= 60000) {clients.clear(); globalCount = 0; windowStart = now();}
     const client = req.socket.remoteAddress || 'unknown';
     const count = clients.get(client) || 0;
-    if (!service && (count >= 10 || globalCount >= 60 || active >= 4)) {
+    if (!service && (count >= 50 || globalCount >= 300 || active >= 20)) {
       return send(res, 429, {error: 'Too many questions. Please try again in a minute.'}, {'Retry-After': '60'});
     }
     if (!service) {clients.set(client, count + 1); globalCount += 1;}

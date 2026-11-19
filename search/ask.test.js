@@ -225,7 +225,7 @@ test('API limits attempts despite spoofed forwarding headers, and recovers after
   let now = 0;
   await withServer(async origin => {
     const url = origin + '/api/docs/ask';
-    for (let i = 0; i < 10; i++) assert.equal((await fetch(url, post())).status, 200);
+    for (let i = 0; i < 50; i++) assert.equal((await fetch(url, post())).status, 200);
     const blocked = await fetch(url, post('Lens', {headers: {'Content-Type': 'application/json', 'X-Forwarded-For': '1.2.3.4', 'X-Real-IP': '5.6.7.8'}}));
     assert.equal(blocked.status, 429);
     assert.equal(blocked.headers.get('retry-after'), '60');
@@ -233,15 +233,37 @@ test('API limits attempts despite spoofed forwarding headers, and recovers after
     assert.equal((await fetch(url, post())).status, 200);
   }, {now: () => now, fetchImpl: async (_url, request) => modelSteps(['A helpful answer.']).fetch(_url, request)});
 });
+test('API bounds total attempts across clients and resets after a minute', async () => {
+  const {EventEmitter} = require('node:events');
+  let now = 0;
+  const handler = createAskHandler({index, documents, config, now: () => now, fetchImpl: neverFetch});
+  async function attempt(client) {
+    const req = {method: 'POST', headers: {'content-type': 'application/json'}, socket: {remoteAddress: client}, body: {}};
+    const res = new EventEmitter();
+    let status;
+    res.writeHead = value => {status = value;};
+    res.end = () => {res.writableEnded = true;};
+    await handler(req, res);
+    return status;
+  }
+  // Invalid attempts count too, without making any model calls.
+  for (let i = 0; i < 300; i++) assert.equal(await attempt(`client-${i}`), 400);
+  assert.equal(await attempt('new-client'), 429);
+  now = 60000;
+  assert.equal(await attempt('new-client'), 400);
+});
 test('API bounds concurrent requests and releases slots after failures', async () => {
   const pending = [];
+  let released = false;
   await withServer(async origin => {
-    const waiting = Array.from({length: 4}, () => fetch(origin + '/api/docs/ask', post()));
-    while (pending.length < 4) await new Promise(resolve => setTimeout(resolve, 5));
+    const waiting = Array.from({length: 20}, () => fetch(origin + '/api/docs/ask', post()));
+    while (pending.length < 20) await new Promise(resolve => setTimeout(resolve, 5));
     assert.equal((await fetch(origin + '/api/docs/ask', post())).status, 429);
     pending.forEach(reject => reject(new Error('unavailable')));
     assert.ok((await Promise.all(waiting)).every(response => response.status === 502));
-  }, {fetchImpl: () => new Promise((_, reject) => pending.push(reject))});
+    released = true;
+    assert.equal((await fetch(origin + '/api/docs/ask', post())).status, 200);
+  }, {fetchImpl: (...args) => released ? modelSteps(['A helpful answer.']).fetch(...args) : new Promise((_, reject) => pending.push(reject))});
 });
 test('gateway failures and missing credentials return generic errors without secrets', async () => {
   await withServer(async origin => {
