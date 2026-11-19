@@ -13,6 +13,8 @@ LiteLLM supports Sarvam's OpenAI-compatible chat API, including Sarvam 105B and 
 
 ## Supported models
 
+<SinceVersion v="1.112.0" />
+
 | Model | Context | Max output | Input | USD per 1M in / out |
 | --- | --- | --- | --- | --- |
 | `sarvam/sarvam-105b` | 128K | 128K | Text | $0.11 / $0.27 |
@@ -27,9 +29,9 @@ Except on `sarvam-105b-conversations`, Max output is the whole context window, w
 
 USD values are converted from Sarvam's INR rates at ₹94 per USD. `sarvam-105b`, `sarvam-105b-conversations`, and `deepseekv4.1-flash-1017` show Sarvam's introductory rates, which apply [through the end of 2026](https://docs.sarvam.ai/api/getting-started/pricing). See [Sarvam Token Factory pricing](https://www.sarvam.ai/token-factory/pricing) for the current INR rates.
 
-LiteLLM sends `sarvam-105b` and `sarvam-105b-conversations` to `https://api.sarvam.ai/v1`, the API they used before, and every other model to `https://api.sarvam.ai/v2`. Sarvam's `/v1` API serves only those two models, so remove any `api_base` that points at `https://api.sarvam.ai/v1` from the other models. <SinceVersion v="1.112.0" />
+LiteLLM sends `sarvam-105b` and `sarvam-105b-conversations` to `https://api.sarvam.ai/v1`, the API they used before, and every other model to `https://api.sarvam.ai/v2`. Sarvam's `/v1` API serves only those two models, so remove any `api_base` that points at `https://api.sarvam.ai/v1` from the other models. Before v1.112.0, LiteLLM sends every `sarvam/` model to `/v1`, so only `sarvam-105b` and `sarvam-105b-conversations` work on older versions.
 
-The legacy `sarvam-m` model is not served on `/v2`. If you are upgrading from `sarvam/sarvam-m`, switch to `sarvam/sarvam-105b`.
+Sarvam retired the legacy `sarvam-m` model on both `/v1` and `/v2`. If you are upgrading from `sarvam/sarvam-m`, switch to `sarvam/sarvam-105b`.
 
 On `/v1`, `sarvam-105b-conversations` returns at most 8,192 output tokens, and Sarvam rejects a larger `max_tokens` with a 400 error.
 
@@ -70,12 +72,7 @@ response = responses(
 print(response.output_text)
 ```
 
-LiteLLM sends Responses API calls to Sarvam's chat completions endpoint, because Sarvam does not store conversations. On the proxy, `previous_response_id` works when the proxy is connected to a database and stores prompts:
-
-```yaml
-general_settings:
-  store_prompts_in_spend_logs: true
-```
+LiteLLM sends Responses API calls to Sarvam's chat completions endpoint, because Sarvam does not store conversations. To continue a conversation with `previous_response_id` on the proxy, see [Session Management](../response_api.md#session-management).
 
 ## Usage with LiteLLM Proxy Server
 
@@ -99,10 +96,17 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
     ```bash
     export SARVAM_API_KEY="your-api-key"
     export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+    echo "$LITELLM_MASTER_KEY"
     litellm --config /path/to/config.yaml
     ```
 
 3. **Send a request to LiteLLM Proxy Server:**
+
+    The proxy keeps running in the first terminal. In a new terminal, set the key that step 2 printed:
+
+    ```bash
+    export LITELLM_MASTER_KEY="paste-the-key-from-step-2"
+    ```
 
     <Tabs>
 
@@ -156,7 +160,7 @@ Here's how to call a Sarvam.ai model with the LiteLLM Proxy Server.
 
 ## Reasoning
 
-Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning, so LiteLLM rejects `reasoning_effort` on it unless you set `drop_params`. On `gemma4`, reasoning is off by default and only runs when `reasoning_effort` is set. Some models accept only some levels, so LiteLLM rounds any other level up to the next level the model accepts, or down to its strongest level. `sarvam-105b` accepts `low`, `medium`, or `high`, so `minimal` is sent as `low` and `xhigh` or `max` as `high`. `glm5.3` and `glm5.3-flash` accept `low`, `high`, or `max`, so `medium` is sent as `high`. LiteLLM never changes `reasoning_effort="none"`. On `sarvam-105b`, `glm5.3`, and `glm5.3-flash`, Sarvam rejects it with a 400 error, and LiteLLM drops it instead when you set `drop_params`, so reasoning stays on. To turn reasoning off on `sarvam-105b`, point it at `https://api.sarvam.ai/v2` with `api_base` and leave `drop_params` off. Some calls there stall, so follow the timeout advice under Limitations. This call asks `gemma4` to reason:
+Most models return reasoning in `reasoning_content`. Reasoning tokens count toward `max_tokens` and are billed as output. `sarvam-105b-conversations` does not return reasoning, so LiteLLM rejects `reasoning_effort` on it unless you set `drop_params`. On `gemma4`, reasoning is off by default and only runs when `reasoning_effort` is set. Some models accept only some levels. Since v1.112.0, LiteLLM rounds any other level up to the next level the model accepts, or down to its strongest level. `sarvam-105b` accepts `low`, `medium`, or `high`, so `minimal` is sent as `low` and `xhigh` or `max` as `high`. `glm5.3` and `glm5.3-flash` accept `low`, `high`, or `max`, so `medium` is sent as `high`. LiteLLM never changes `reasoning_effort="none"`. On `sarvam-105b`, `glm5.3`, and `glm5.3-flash`, Sarvam rejects it with a 400 error, and LiteLLM drops it instead when you set `drop_params`, so reasoning stays on. To turn reasoning off on `sarvam-105b`, point it at `https://api.sarvam.ai/v2` with `api_base` and leave `drop_params` off. Some calls there stall, so follow the timeout advice under Limitations. This call asks `gemma4` to reason:
 
 ```python
 response = completion(
