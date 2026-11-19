@@ -8,6 +8,8 @@ slug: "/proxy/lens/deployment/storage"
 
 The standalone Lens starter and Helm chart include ClickHouse with Keeper and generate private credentials. Use this page when supplying external storage or secrets. The [Lens Helm guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#use-existing-clickhouse) owns the complete storage requirements
 
+The bundled ClickHouse needs a provisioner and default StorageClass, or an explicit `clickhouse.storageClassName`. On EKS, install the [EBS CSI driver add-on](https://docs.aws.amazon.com/eks/latest/userguide/ebs-csi.html) and configure a class such as `gp3` first. A Pending volume prevents ClickHouse from starting. The gateway's PostgreSQL is separate and is not supplied by either chart. See the [two-namespace setup](./kubernetes.md#existing-deployment)
+
 ## ClickHouse connection {#clickhouse-connection}
 
 Use the ClickHouse HTTP(S) endpoint, with special characters in credentials URL-encoded:
@@ -49,6 +51,8 @@ adminTokenSecret:
 ```
 
 Connecting a gateway also requires the [service and signing credentials](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#connect-a-gateway). Reuse the same values on both services, with at least 32 characters each. These credentials are separate from the administrator token, agent tracing keys and model provider keys
+
+When Lens and LiteLLM use different namespaces, provision `lens-connection` with matching `gateway-secret` and `service-token` keys in both. The gateway also needs its own master key and PostgreSQL credentials in its namespace
 
 Preserve existing secrets across upgrades. An old enrolled-worker token belongs to the previous gateway control plane and does not authorize the new standalone runtime
 
