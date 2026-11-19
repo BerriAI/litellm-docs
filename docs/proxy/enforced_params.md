@@ -5,6 +5,8 @@ description: Require request fields globally, per virtual key, or for service ac
 
 # Enforced required params
 
+<SinceVersion v="1.53.5" />
+
 Reject requests that omit required fields, such as `user` or `metadata.generation_name`, before they reach the model provider. Use this to require attribution metadata from applications.
 
 <EnterpriseFeature />
