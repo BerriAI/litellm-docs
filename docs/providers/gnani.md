@@ -116,9 +116,9 @@ Both models support find-and-replace. Pass `enable_substitution=True` and a `sub
 
 ## Limitations
 
-This integration covers REST transcription. Prisma REST has no word timestamps, speaker diarization or streaming. OpenAI `prompt` and `temperature` have no equivalent here.
+This integration covers REST transcription. Prisma REST has no word timestamps, speaker diarization or streaming. OpenAI `prompt`, `temperature`, `timestamp_granularities` and `stream=True` have no equivalent here, so LiteLLM returns a 400 for them. To drop them instead, pass `drop_params=True` in the SDK or set `drop_params: true` under `litellm_settings` on the proxy.
 
-Gnani has no published per-second rate in the LiteLLM model cost map, so spend shows as zero until you set your contracted rate as `input_cost_per_second` in the deployment's `litellm_params`. LiteLLM multiplies it by the length of the uploaded recording.
+Gnani has no published per-second rate in the LiteLLM model cost map, so spend shows as zero until you set your contracted rate as `input_cost_per_second` in the deployment's `litellm_params`. LiteLLM multiplies it by the length of the uploaded recording. LiteLLM cannot read the length of AAC and M4A uploads, so those requests still bill zero.
 
 ```yaml
 model_list:
