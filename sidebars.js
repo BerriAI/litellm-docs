@@ -682,6 +682,7 @@ const sidebars = {
                 "proxy/customers",
                 "proxy/customer_management/track-customer-spend",
                 "proxy/customer_management/applications",
+                "proxy/customer_management/rbac",
                 "proxy/customer_management/customer-surcharge",
                 "proxy/customer_management/jwt-customer-identity",
                 "proxy/customer_management/api_reference",
