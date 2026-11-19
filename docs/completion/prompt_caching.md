@@ -105,7 +105,6 @@ for _ in range(2):
                 ],
             },
         ],
-        max_tokens=10,
     )
 
 print("response=", response)
@@ -183,7 +182,6 @@ for _ in range(2):
                 ],
             },
         ],
-        max_tokens=10,
     )
 
 print("response=", response)

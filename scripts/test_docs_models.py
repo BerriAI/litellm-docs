@@ -105,7 +105,9 @@ class ModelDefaultsTests(unittest.TestCase):
         for role in ("openai_small", "openai_large", "chatgpt", "chatgpt_small"):
             for line in ("temperature=0.7,", '"temperature": 0', "temperature: 0.2", "--temperature 0.9",
                          "lite models update <model-id> -p temperature=0.7", '"top_p": 0.9',
-                         "presence_penalty=0.5", "frequency_penalty: -0.5"):
+                         "presence_penalty=0.5", "frequency_penalty: -0.5", '"temperature": "0.7"', "temperature=.7",
+                         "logit_bias={12481: 100},", '"prediction": {"type": "content"},', 'stop=["\\n"],',
+                         "stop: ['END']"):
                 with self.subTest(role=role, line=line):
                     errors = self.errors(f'```text\nmodel = "{{{{{role}}}}}"\n{line}\n```\n')
                     self.assertEqual([(e[0], e[2]) for e in errors], [("sampling-param", 3)])
@@ -116,6 +118,9 @@ class ModelDefaultsTests(unittest.TestCase):
             '```python\nchat = ChatOpenAI(model="{{openai_small}}", reasoning_effort="low")\n```\n',
             '```python\nmodel = "{{openai_small}}"\nweather = json.dumps({"temperature": "72"})\n```\n',
             '```python\nmodel = "{{openai_small}}"\nresult = {"temperature": 15, "condition": "sunny"}\n```\n',
+            '```python\nmodel = "{{openai_small}}"\nstop=None\n```\n',
+            '```json\n{"model": "{{openai_small}}", "finish_reason": "stop"}\n```\n',
+            '```python\nmodel = "{{openai_small}}"\nstop_sequences=["END"]\n```\n',
             '```yaml\nmodel: ollama/mistral\ntemperature: 0.2\n```\n',
             '```yaml keep-model-ids\n- model: {{openai_small}}\n- model: gpt-5.4-mini\n  temperature: 0.2\n```\n',
         ):
@@ -124,7 +129,8 @@ class ModelDefaultsTests(unittest.TestCase):
 
     def test_legacy_langchain_chat_openai_on_openai_placeholders_is_rejected(self):
         for imp in ("from langchain.chat_models import ChatOpenAI",
-                    "from langchain_community.chat_models import ChatOpenAI"):
+                    "from langchain_community.chat_models import ChatOpenAI",
+                    "from langchain.chat_models.openai import ChatOpenAI"):
             with self.subTest(imp=imp):
                 errors = self.errors(f'```python\n{imp}\nchat = ChatOpenAI(model="{{{{openai_small}}}}")\n```\n')
                 self.assertEqual([(e[0], e[2]) for e in errors], [("sampling-param", 2)])

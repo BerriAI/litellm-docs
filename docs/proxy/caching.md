@@ -59,6 +59,9 @@ model_list:
 litellm_settings:
   set_verbose: True
   cache: True # set cache responses to True, litellm defaults to using a redis cache
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
 ### Step 2: Add Redis credentials to .env
@@ -92,6 +95,7 @@ Send the same request twice:
 ```shell
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
      "model": "{{openai_small}}",
      "messages": [{"role": "user", "content": "write a poem about litellm!"}]
@@ -99,6 +103,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
      "model": "{{openai_small}}",
      "messages": [{"role": "user", "content": "write a poem about litellm!"}]
@@ -113,6 +118,7 @@ Send the same request twice:
 ```shell
 curl http://0.0.0.0:4000/v1/responses \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
      "model": "{{openai_small}}",
      "input": "write a poem about litellm!"
@@ -120,6 +126,7 @@ curl http://0.0.0.0:4000/v1/responses \
 
 curl http://0.0.0.0:4000/v1/responses \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -d '{
      "model": "{{openai_small}}",
      "input": "write a poem about litellm!"
@@ -134,6 +141,7 @@ Send the same request twice:
 ```shell
 curl --location 'http://0.0.0.0:4000/embeddings' \
   --header 'Content-Type: application/json' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --data ' {
   "model": "text-embedding-ada-002",
   "input": ["write a litellm poem"]
@@ -141,6 +149,7 @@ curl --location 'http://0.0.0.0:4000/embeddings' \
 
 curl --location 'http://0.0.0.0:4000/embeddings' \
   --header 'Content-Type: application/json' \
+  --header "Authorization: Bearer $LITELLM_API_KEY" \
   --data ' {
   "model": "text-embedding-ada-002",
   "input": ["write a litellm poem"]

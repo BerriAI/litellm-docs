@@ -482,7 +482,6 @@ response = responses(
         {"type": "fetch_url"}
     ],
     instructions="Use web_search to find relevant information and fetch_url to retrieve detailed content from sources. Provide citations for all claims.",
-    max_output_tokens=1000,
 )
 
 print(f"Response ID: {response.id}")

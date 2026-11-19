@@ -485,18 +485,18 @@ LiteLLM will use the model specified by the client, ignoring the prompt's model.
 
 Client params are merged with prompt params, with prompt params taking precedence:
 ```python
-# Prompt returns: {"temperature": 0.7, "max_tokens": 500}
-# Client sends: {"temperature": 0.9, "top_p": 0.95}
-# Final params: {"temperature": 0.7, "max_tokens": 500, "top_p": 0.95}
+# Prompt returns: {"max_tokens": 500, "reasoning_effort": "low"}
+# Client sends: {"max_tokens": 1000, "seed": 7}
+# Final params: {"max_tokens": 500, "reasoning_effort": "low", "seed": 7}
 ```
 
 **With `ignore_prompt_manager_optional_params: true`:**
 
 Only client params are used:
 ```python
-# Prompt returns: {"temperature": 0.7, "max_tokens": 500}
-# Client sends: {"temperature": 0.9, "top_p": 0.95}
-# Final params: {"temperature": 0.9, "top_p": 0.95}
+# Prompt returns: {"max_tokens": 500, "reasoning_effort": "low"}
+# Client sends: {"max_tokens": 1000, "seed": 7}
+# Final params: {"max_tokens": 1000, "seed": 7}
 ```
 
 ## Security Considerations

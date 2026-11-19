@@ -270,7 +270,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 ### Chat Completions
 
 - Start an interactive streaming chat session with a model on the proxy server. Omit the model to pick one interactively.
-- `lite chat` sends a temperature of 0.7 unless you pass `--temperature`, and {{openai_large}} only accepts 1, so the examples pass `--temperature 1`.
+- `lite chat` sends a temperature of 0.7 unless you pass `--temperature`, and reasoning models that only accept 1 reject it, so the examples pass `--temperature 1`.
 - Example:
 
   ```bash
