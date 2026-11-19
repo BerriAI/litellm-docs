@@ -70,6 +70,8 @@ curl -L -X POST 'http://localhost:4000/key/service-account/generate' \
 
 ## Example - require `user` param for all service account requests
 
+For global and per-key requirements with a complete proxy setup, see [Enforced required params](./enforced_params.md).
+
 
 ### 1. Set settings for Service Accounts
 

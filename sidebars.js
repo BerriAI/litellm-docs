@@ -864,6 +864,7 @@ const sidebars = {
             { type: "doc", id: "proxy/identity_provisioning", label: "Provision users, teams, and keys" },
             { type: "doc", id: "tutorials/scim_litellm", label: "Provision with SCIM", className: "sidebar-enterprise" },
             "proxy/service_accounts",
+            { type: "doc", id: "proxy/enforced_params", className: "sidebar-enterprise" },
             "proxy/master_key_rotations",
           ],
         },
