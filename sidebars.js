@@ -689,6 +689,7 @@ const sidebars = {
               ],
             },
             "proxy/model_cost_map",
+            "proxy/model_updates_feed",
             { type: "doc", id: "fallback_generalizations", label: "Fallback generalizations" },
             "proxy/request_tags",
             "proxy/billing",
