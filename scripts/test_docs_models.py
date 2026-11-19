@@ -101,6 +101,27 @@ class ModelDefaultsTests(unittest.TestCase):
     def test_provider_facts_outside_fences_stay_literal(self):
         self.assertEqual(self.errors('| Model |\n| --- |\n| `gpt-5.4-mini` |\n'), [])
 
+    def test_sampling_params_on_openai_placeholders_are_rejected(self):
+        for role in ("openai_small", "openai_large", "chatgpt", "chatgpt_small"):
+            for line in ("temperature=0.7,", '"temperature": 0', "temperature: 0.2", "--temperature 0.9",
+                         "lite models update <model-id> -p temperature=0.7", '"top_p": 0.9',
+                         "presence_penalty=0.5", "frequency_penalty: -0.5"):
+                with self.subTest(role=role, line=line):
+                    errors = self.errors(f'```text\nmodel = "{{{{{role}}}}}"\n{line}\n```\n')
+                    self.assertEqual([(e[0], e[2]) for e in errors], [("sampling-param", 3)])
+
+    def test_sampling_params_reasoning_models_accept_pass(self):
+        for block in (
+            '```python\nchat = ChatOpenAI(model="{{openai_small}}", temperature=1)\n```\n',
+            '```python\nchat = ChatOpenAI(model="{{openai_small}}", reasoning_effort="low")\n```\n',
+            '```python\nmodel = "{{openai_small}}"\nweather = json.dumps({"temperature": "72"})\n```\n',
+            '```python\nmodel = "{{openai_small}}"\nresult = {"temperature": 15, "condition": "sunny"}\n```\n',
+            '```yaml\nmodel: ollama/mistral\ntemperature: 0.2\n```\n',
+            '```yaml keep-model-ids\n- model: {{openai_small}}\n- model: gpt-5.4-mini\n  temperature: 0.2\n```\n',
+        ):
+            with self.subTest(block=block):
+                self.assertEqual(self.errors(block), [])
+
     def test_substitution_uses_defaults_not_history(self):
         self.assertEqual(checks.substitute_models("chatgpt/{{chatgpt}}"), "chatgpt/" + checks.ROLE_TO_ID["chatgpt"])
         self.assertEqual(checks.substitute_models("gpt-5.4-mini {{user_input}}"), "gpt-5.4-mini {{user_input}}")

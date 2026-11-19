@@ -181,7 +181,7 @@ lite logout             # clear the keychain entry and the token file, and revok
   lite models add {{openai_large}} \
     --param api_key=sk-123 \
     --param max_tokens=2048
-  lite models update <model-id> -p temperature=0.7
+  lite models update <model-id> -p max_tokens=4096
   lite models delete <model-id>
   ```
 
@@ -274,7 +274,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 
   ```bash
   lite chat {{openai_large}}
-  lite chat {{openai_large}} --temperature 0.9 --system "You are a helpful coding assistant"
+  lite chat {{openai_large}} --system "You are a helpful coding assistant"
   ```
 
   [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/chat%2Fcompletions)

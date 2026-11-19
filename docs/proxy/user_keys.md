@@ -209,7 +209,6 @@ os.environ["OPENAI_API_KEY"] = "anything"
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model = "{{openai_small}}",
-    temperature=0.1,
     extra_body={
         "metadata": {
             "generation_name": "ishaan-generation-langchain-client",
@@ -957,7 +956,7 @@ Don't answer the question yet.
 {{~/user}}
 
 {{#assistant~}}
-{{gen 'expert_names' temperature=0 max_tokens=300}}
+{{gen 'expert_names' max_tokens=300}}
 {{~/assistant}}
 ''', llm=gpt4)
 

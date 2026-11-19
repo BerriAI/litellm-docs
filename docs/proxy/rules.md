@@ -36,8 +36,7 @@ curl --location 'http://0.0.0.0:4000/v1/chat/completions' \
 --data '{
   "model": "{{openai_small}}",
   "messages": [{"role":"user","content":"What llm are you?"}],
-  "temperature": 0.7,
-  "max_tokens": 10,
+  "max_tokens": 10
 }'
 ```
 ---

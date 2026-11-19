@@ -90,7 +90,6 @@ prompts:
           content: "Hello {{name}}! How can I help you with {{topic}}?"
           metadata:
             model: "{{openai_large}}"
-            temperature: 0.7
             max_tokens: 150
 ```
 
@@ -105,7 +104,6 @@ prompts:
       dotprompt_content: |
         ---
         model: {{openai_large}}
-        temperature: 0.7
         ---
         System: You are a helpful assistant.
         
@@ -233,7 +231,6 @@ A GET endpoint at `/beta/litellm_prompt_management` that returns:
   ],
   "prompt_template_model": "{{openai_large}}",
   "prompt_template_optional_params": {
-    "temperature": 0.7,
     "max_tokens": 500
   }
 }
@@ -279,7 +276,6 @@ prompts:
           content: "You are a {{personality}} assistant. User: {{message}}"
           metadata:
             model: "{{openai_large}}"
-            temperature: 0.8
 
 litellm_settings:
   global_prompt_directory: "./prompts"

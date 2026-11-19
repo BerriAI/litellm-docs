@@ -166,8 +166,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
         "content": "good morning good sir"
         }
     ],
-    "user": "ishaan-app",
-    "temperature": 0.2
+    "user": "ishaan-app"
     }'
 ```
 

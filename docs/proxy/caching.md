@@ -94,16 +94,14 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
      "model": "{{openai_small}}",
-     "messages": [{"role": "user", "content": "write a poem about litellm!"}],
-     "temperature": 0.7
+     "messages": [{"role": "user", "content": "write a poem about litellm!"}]
    }'
 
 curl http://0.0.0.0:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
      "model": "{{openai_small}}",
-     "messages": [{"role": "user", "content": "write a poem about litellm!"}],
-     "temperature": 0.7
+     "messages": [{"role": "user", "content": "write a poem about litellm!"}]
    }'
 ```
 

@@ -132,7 +132,6 @@ os.environ["OPENAI_API_KEY"] = "anything"
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model = "{{openai_small}}",
-    temperature=0.1,
     extra_body={
         "user": "my_customer_id"  # whatever your customer id is
     }

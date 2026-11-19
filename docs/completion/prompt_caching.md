@@ -105,7 +105,6 @@ for _ in range(2):
                 ],
             },
         ],
-        temperature=0.2,
         max_tokens=10,
     )
 
@@ -184,7 +183,6 @@ for _ in range(2):
                 ],
             },
         ],
-        temperature=0.2,
         max_tokens=10,
     )
 

@@ -131,7 +131,6 @@ os.environ["OPENAI_API_KEY"] = "sk-tXL0wt5-lOOVK9sfY2UacA" # Team's Key
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model = "{{openai_large}}",
-    temperature=0.1,
 )
 
 messages = [
@@ -251,7 +250,6 @@ For:
   chat = ChatOpenAI(
       openai_api_base="http://0.0.0.0:4000",
       model = "{{openai_large}}",
-      temperature=0.1,
       extra_body={
           "user": "my_customer_id"  # whatever your customer id is
       }

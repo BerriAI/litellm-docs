@@ -659,7 +659,6 @@ from langchain.schema import HumanMessage, SystemMessage
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model = "{{openai_small}}",
-    temperature=0.1,
     extra_body={
         "metadata": {
             "tags": ["model-anthropic-claude-v2.1", "app-ishaan-prod"]
@@ -1319,7 +1318,6 @@ from langchain.schema import HumanMessage, SystemMessage
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model = "{{openai_small}}",
-    temperature=0.1,
     extra_body={
         "metadata": {
             "spend_logs_metadata": {

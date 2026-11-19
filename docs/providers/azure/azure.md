@@ -169,8 +169,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "{{openai_small}}",
-    temperature=0.1
+    model = "{{openai_small}}"
 )
 
 messages = [

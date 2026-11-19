@@ -53,7 +53,7 @@ async def get_prompt(prompt_id: str):
             {"role": "user", "content": "Help me with {task}"}
         ],
         "prompt_template_model": "{{openai_large}}",
-        "prompt_template_optional_params": {"temperature": 0.7}
+        "prompt_template_optional_params": {"max_tokens": 500}
     }
 ```
 
@@ -112,9 +112,7 @@ GET /beta/litellm_prompt_management?prompt_id=hello-world-prompt-2bac&project_na
   ],
   "prompt_template_model": "{{openai_large}}",
   "prompt_template_optional_params": {
-    "temperature": 0.7,
-    "max_tokens": 500,
-    "top_p": 0.9
+    "max_tokens": 500
   }
 }
 ```
@@ -271,7 +269,6 @@ PROMPTS = {
         ],
         "prompt_template_model": "{{openai_large}}",
         "prompt_template_optional_params": {
-            "temperature": 0.7,
             "max_tokens": 500
         }
     },
@@ -289,7 +286,6 @@ PROMPTS = {
         ],
         "prompt_template_model": "{{openai_large}}",
         "prompt_template_optional_params": {
-            "temperature": 0.3,
             "max_tokens": 1000
         }
     }
@@ -409,7 +405,6 @@ Expected response:
   ],
   "prompt_template_model": "{{openai_large}}",
   "prompt_template_optional_params": {
-    "temperature": 0.7,
     "max_tokens": 500
   }
 }
