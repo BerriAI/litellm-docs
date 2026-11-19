@@ -22,13 +22,13 @@
  */
 export const announcements = [
   {
-    id: 'october_townhall_2026',
-    // Ends when the town hall ends: 23 October 2026, 8:30 AM PT.
-    expiresAt: '2026-10-23T15:30:00Z',
+    id: 'townhall_2026_12_03',
+    // Ends when the town hall ends: 3 December 2026, 8:30 AM PT (UTC-8).
+    expiresAt: '2026-12-03T16:30:00Z',
     html:
-      '<a class="announcement-link" href="https://forms.gle/F8tTYR8rfjKBA4D67" target="_blank" rel="noopener noreferrer">' +
-      '<strong>LiteLLM October Town Hall.</strong> Friday, Oct 23 at 7:30 AM PT. ' +
-      'Product updates, roadmap and Q&amp;A. Register now &rarr;</a>',
+      '<a class="announcement-link" href="https://docs.google.com/forms/d/e/1FAIpQLScDOu3EEE3r9KJRsTFKGMK-xloRqA6ZXZ0hdO7JtXFjSmk8_A/viewform" target="_blank" rel="noopener noreferrer">' +
+      '<strong>LiteLLM Town Hall.</strong> Thursday, Dec 3 at 7:30 AM PT. ' +
+      'Product, stability, security and Q&amp;A. Register now &rarr;</a>',
   },
   {
     id: 'decisions_api_2026_10',
