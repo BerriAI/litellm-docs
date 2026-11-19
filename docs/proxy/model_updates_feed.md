@@ -5,6 +5,8 @@ description: Follow new models, price changes and deprecations from models.litel
 
 # Subscribe to Model and Price Updates
 
+{/* keep-version-note */}
+
 [models.litellm.ai](https://models.litellm.ai/) publishes RSS feeds built from the [model cost map](./model_cost_map), so you can follow new models, price changes and deprecations in Slack or any RSS reader instead of checking the site. All feeds are public and need no account or key.
 
 | Feed | URL | What it posts |
