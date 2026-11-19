@@ -47,7 +47,7 @@ model_list:
     model_info:
       mode: realtime
 
-  # Optional: Add fallback to OpenAI
+  # Optional: load-balance sessions with OpenAI
   - model_name: grok-voice-agent
     litellm_params:
       model: openai/gpt-realtime-2.1
