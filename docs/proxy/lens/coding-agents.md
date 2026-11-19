@@ -1,23 +1,17 @@
 ---
 title: Trace coding agent sessions
-description: Configure Claude Code or opencode to send sessions to Lens, then open the recorded activity in Traces.
+description: Configure Claude Code or Codex to send sessions to Lens, then open the recorded activity in Traces.
 ---
 
 import AgentPrompt from '@site/src/components/Conversion/AgentPrompt';
 
 # Trace coding agent sessions
 
-Send your [Claude Code](#claude-code), [opencode](#opencode), or [Codex](#codex) activity to Lens. Configure telemetry in the same terminal where you start the agent. Your model login and model endpoint stay unchanged.
+Send your [Claude Code](#claude-code) or [Codex](#codex) activity to Lens. Your model login and model endpoint stay unchanged.
 
 You need a running Lens installation and a dedicated Lens tracing key. If you are starting from scratch, follow the [Lens deployment guide](./deployment/local.md). Your existing Claude Code or Codex model login continues to work.
 
 Open `http://localhost:4318/ui/` for the local quickstart, or select **Lens** in your LiteLLM dashboard. [Generate a tracing key](./first-trace.md#connect-your-agent) and copy the full **Traces endpoint**, including `/v1/traces`. Ask your administrator if you cannot create a key. The examples use local Lens; replace the address with your endpoint and keep any `/lens-ingest` prefix. A tracing key uploads telemetry, not model requests. Keep it private.
-
-:::note Lens version
-
-Lens 0.1.0 groups Claude Code sessions. Session grouping for other harnesses, including opencode, and the custom `lens.session.attribute` setting require **the next release after 0.1.0 / main** ([change](https://github.com/BerriAI/lens/pull/138)). On 0.1.0, opencode exports arrive as separate traces rather than one trace per session.
-
-:::
 
 ## Claude Code
 
@@ -88,50 +82,44 @@ For persistent configuration, add these variables to the `env` object in your us
 
 </details>
 
-## opencode
-
-Verified with opencode **1.19.6**. Merge this into your project's `opencode.json`, preserving existing settings:
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "experimental": {
-    "openTelemetry": true
-  }
-}
-```
-
-In the terminal where you start opencode, set the **base URL**, without `/v1/traces`. This version uses the generic OTLP endpoint and headers, not just the trace-specific variables:
-
-```bash
-export LENS_TRACING_KEY="<paste your Lens tracing key>"
-export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318"
-export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer $LENS_TRACING_KEY"
-export OTEL_RESOURCE_ATTRIBUTES="lens.session.capture=true,gen_ai.agent.name=opencode"
-opencode
-```
-
-Complete a prompt, leave opencode open while its exporter flushes, then open **Traces** in Lens and filter by **opencode**. Its AI SDK spans carry `session.id`. On Lens main, spans with that ID join one session trace. Internal opencode spans without a session ID can still appear as separate traces. On 0.1.0, inspect the individual traces instead.
-
-These exports can include prompts, model replies and source content. Use a Lens deployment where you intend to store them.
-
-For a non-interactive check, run `opencode serve --port 4096` with the same environment and config, then run `opencode run --attach http://127.0.0.1:4096 "Reply with exactly: Lens telemetry check."` in another terminal. Keep the server open until the traces arrive; a short-lived `opencode run` can exit before its final export.
-
-On Lens main, `lens.session.capture=true` works for any harness that exports a nonempty span-level `session.id`. If yours uses another span attribute, append `lens.session.attribute=your.attribute` to `OTEL_RESOURCE_ATTRIBUTES`. The default is `session.id`. These settings do not create a session ID when the agent does not export one.
-
 ## Codex
 
-Use the [BerriAI Codex integration on GitHub](https://github.com/BerriAI/litellm-lens-codex-integration). This public preview supports local Codex desktop and CLI sessions. Automatic setup currently supports macOS and requires Python 3.11 or later. {/* keep-python-version: Codex integration prerequisite */}
+Use the [BerriAI Codex integration](https://github.com/BerriAI/litellm-lens-codex-integration) for local Codex desktop and CLI sessions. Automatic setup currently supports **macOS** and requires Python 3.11 or later and a Codex version with plugin support. Run setup on the computer where Codex runs. {/* keep-python-version: Codex integration prerequisite */}
 
 Copy this prompt into your coding agent to have it install and configure the integration, or follow the manual steps below.
 
 <AgentPrompt id="lens-codex" />
 
-1. Follow **[From Terminal (recommended)](https://github.com/BerriAI/litellm-lens-codex-integration#from-terminal-recommended)** in the installation guide. The same installer works for desktop and CLI.
-2. At **Lens ingestion URL**, paste the full **Traces endpoint** from the dashboard. The installer accepts that endpoint and keeps `/lens-ingest` when present. Enter your **Lens tracing key** at the hidden prompt, choose an **agent name**, and confirm to start recording.
-3. **Start a new Codex chat and complete a turn.** Open **Lens > Traces** and find the agent name you chose.
+In Terminal, install the plugin. The same plugin serves desktop and CLI:
 
-Each chat has one trace, updated after completed or interrupted turns. Reopening a chat continues its trace. Only activity after setup is recorded.
+```bash
+codex plugin marketplace add BerriAI/litellm-lens-codex-integration
+codex plugin add litellm-lens@berriai-lens
+```
+
+Start a **new Codex chat** and send:
+
+```text
+Use lens-setup to connect my Codex chats to LiteLLM Lens.
+```
+
+In the private Terminal setup window, enter these values:
+
+| Setup field | Local Lens value |
+| --- | --- |
+| Lens ingestion URL | `http://localhost:4318/v1/traces`, or the full endpoint copied from Lens |
+| Lens tracing key | The dedicated tracing key, entered at the hidden prompt |
+| Agent name | `codex` |
+
+Confirm recording, then start **another new chat** so its hooks load. For a CLI check, run this from your project:
+
+```bash
+codex exec "Reply with exactly: Lens Codex telemetry check."
+```
+
+Open **Traces** in standalone Lens or **Lens > Traces** in LiteLLM, filter by **codex**, and open the chat trace in **Conversation**. Do not paste your tracing key into a Codex prompt or use it as your model key. The plugin handles telemetry; do not copy the Claude Code environment variables into Codex or enable a second exporter for the same recording.
+
+CLI capture was checked with Codex **0.170.0** and plugin **0.4.0**. Each chat has one trace, updated after completed or interrupted turns. Reopening a chat continues its trace. The plugin supplies the chat-level trace ID, so this grouping works on both Lens **0.1.0** and **main**, without `lens.session.capture` or `lens.session.attribute`. Only activity after setup is recorded.
 
 The plugin reads visible transcript items for newly recorded turns, including commentary, repeated messages, tool outcomes, model changes, and subagents. Completed transcript turns can be recovered when a completion hook is missing. See the [coverage and privacy details](https://github.com/BerriAI/litellm-lens-codex-integration#what-youll-see) for its limits. To pause recording, ask Codex: `Use lens-setup to pause recording.`
 
