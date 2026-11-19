@@ -8,7 +8,7 @@ Use a decision model to classify requests for LiteLLM Auto Router. Your classifi
 
 For a screenshot walkthrough and the full tuning reference, see [Customize your classifier](./optimize_classifier.md#connect-a-self-hosted-classifier). That guide also covers using a self-hosted OpenAI-compatible LLM as a judge instead of a System One classifier.
 
-**Any decision model in your `model_list` can be the classifier**, including self-hosted [Strands Decider](../providers/strands_decider.md) and [vLLM](#vllm), and hosted [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/). Name its deployment with `deployment_name`, as shown in [Use a deployed decision model](#use-a-deployed-decision-model), or pick it under **Decisions Model** in the dashboard. Laya, Bespoke Nimble, Jev and Databricks `ai_decide` also keep their own `provider` configurations, described after that section. All of them use `classifier_type: oss_classifier` with `opensource_classifier_config`.
+**Any decision model in your `model_list` can be the classifier**, including self-hosted [Strands Decider](../providers/strands_decider.md) and [vLLM](#vllm), and hosted [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/). Name its deployment with `deployment_name`, as shown in [Use a deployed decision model](#use-a-deployed-decision-model), or pick it under **Decisions Model** in the dashboard. Laya, Bespoke Nimble, Jev, Nace Drex and Databricks `ai_decide` also keep their own `provider` configurations, described after that section. All of them use `classifier_type: oss_classifier` with `opensource_classifier_config`.
 
 ## What you host
 
@@ -132,13 +132,14 @@ On Ollama, Bespoke Nimble connects through [`provider: bespoke`](#nimble-self-ho
 | [Laya](https://github.com/NandhaKishorM/laya) | Self-hosted | `english`, `multilingual` or `typed-decisions` | `laya` |
 | [Bespoke Nimble](https://github.com/bespokelabsai/nimble) | Self-hosted System One server | `nimble-latest`, `nimble` (Ollama) or `bespokelabs/Bespoke-Nimble-9B` | `bespoke` |
 | [Jev](https://docs.typesafe.ai/) | TypeSafe's hosted API | `jev-latest` | `jev` |
+| [Nace Drex](https://console.nace.ai/docs/drex/guides/drex-max) | Nace's hosted API | `drex-max`, `drex-max-v1.1` or `drex-latest` | `nace` |
 | [Databricks `ai_decide`](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide) | An AI Function on your Databricks workspace (Beta) | `ai_decide` | `databricks` |
 
-All four use the System One decision protocol. LiteLLM sends a `choice` question describing your tiers to `POST /v1/systemone`, or to `POST /api/2.0/ai-functions/ai-decide` for Databricks. Set `api_base` to the server's base URL without `/v1/systemone`; an endpoint that only exposes `/v1/evaluate` or chat completions is not sufficient.
+All five use the System One decision protocol. LiteLLM sends a `choice` question describing your tiers to `POST /v1/systemone`, or to `POST /api/2.0/ai-functions/ai-decide` for Databricks. Set `api_base` to the server's base URL without `/v1/systemone`; an endpoint that only exposes `/v1/evaluate` or chat completions is not sufficient.
 
 :::info Availability
 
-The configuration names in this guide and Laya support require a gateway build containing [backend #43626](https://github.com/BerriAI/litellm/pull/43626). The **OSS Classifier** dashboard selector also requires [UI #43768](https://github.com/BerriAI/litellm/pull/43768). Both changes are merged; use a gateway build that includes them. Bespoke Nimble support requires [Nimble #44246](https://github.com/BerriAI/litellm/pull/44246).
+The configuration names in this guide and Laya support require a gateway build containing [backend #43626](https://github.com/BerriAI/litellm/pull/43626). The **OSS Classifier** dashboard selector also requires [UI #43768](https://github.com/BerriAI/litellm/pull/43768). Both changes are merged; use a gateway build that includes them. Bespoke Nimble support requires [Nimble #44246](https://github.com/BerriAI/litellm/pull/44246). `provider: nace` targets <SinceVersion v="1.110.0" /> through [PR #48426](https://github.com/BerriAI/litellm/pull/48426), which is still open. Until it ships, use a build with that PR.
 
 Databricks serving endpoints require [BerriAI/litellm#45200](https://github.com/BerriAI/litellm/pull/45200), and the `ai_decide` AI Function requires [BerriAI/litellm#45722](https://github.com/BerriAI/litellm/pull/45722).
 
@@ -215,6 +216,23 @@ opensource_classifier_config:
 `provider: jev` uses the TypeSafe transport and environment variables. `TYPESAFE_API_BASE` is optional and defaults to `https://api.typesafe.ai`.
 
 For a router-specific endpoint, supply both `api_base` and its matching `api_key` inside `opensource_classifier_config`. An explicit endpoint does not inherit the TypeSafe environment key. The model, timeout, instructions and circuit-breaker fields follow the [Jev reference](/docs/proxy/auto_routing#jev-classifier), whose examples retain the names supported by released builds.
+
+### Nace: hosted Drex API {#nace-hosted-drex-api}
+
+<SinceVersion v="1.110.0" />
+
+This configuration is unreleased; see [PR #48426](https://github.com/BerriAI/litellm/pull/48426).
+
+Set `NACE_API_KEY` in the gateway's environment and name the model. `drex-max` is not what `drex-latest` points to, and the `model` field has no Nace default, so a `provider: nace` block without `model` is rejected. Use this classifier block in the [complete router configuration](#configure-the-router):
+
+```yaml
+opensource_classifier_config:
+  provider: nace
+  model: drex-max
+  timeout_ms: 3000
+```
+
+`provider: nace` sends the tier question to `POST /v1/systemone` on `NACE_API_BASE`, which defaults to `https://console.nace.ai`, and prices the call from the `nace/drex-max` cost map row. A router-specific `api_base` requires its matching `api_key`, so the environment key only goes to the Nace host. See the [Nace provider page](../providers/nace.md) for the models and prices.
 
 ### Databricks: the ai_decide AI Function {#databricks-ai-decide}
 
@@ -295,7 +313,7 @@ Start LiteLLM after setting the classifier connection variables and your complet
 litellm --config config.yaml
 ```
 
-In **Models + Endpoints → Auto Router**, open the create or edit form and use **Test Routing** to inspect the chosen tier and model without calling the completion model. A successful fallback does not prove the classifier worked: inspect the routing cause and classifier model. A decision-model result uses `cause: jev_classifier` for every decision model. Laya reports a classifier model such as `laya/english`; Nimble reports `bespoke/<model>`, using the model returned by the server when available; Databricks reports `databricks/ai_decide`.
+In **Models + Endpoints → Auto Router**, open the create or edit form and use **Test Routing** to inspect the chosen tier and model without calling the completion model. A successful fallback does not prove the classifier worked: inspect the routing cause and classifier model. A decision-model result uses `cause: jev_classifier` for every decision model. Laya reports a classifier model such as `laya/english`; Nimble reports `bespoke/<model>`, using the model returned by the server when available; Databricks reports `databricks/ai_decide`; Nace reports `nace/drex-max`.
 
 Use a LiteLLM virtual key with access to `decision-router` to make a completion:
 
