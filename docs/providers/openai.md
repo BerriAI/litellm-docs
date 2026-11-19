@@ -996,7 +996,7 @@ Supported models:
 
 | Model Name                | Function Call                                                          |
 |---------------------------|-----------------------------------------------------------------|
-| `gpt-transcribe` | `response = completion(model="gpt-transcribe", file=audio_file)` |
+| `gpt-transcribe` | `response = transcription(model="gpt-transcribe", file=audio_file)` |
 
 <Tabs>
 <TabItem value="sdk" label="SDK">

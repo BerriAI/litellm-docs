@@ -196,7 +196,7 @@ LiteLLM checks and bills Live sessions on the WebSocket route only. WebRTC sessi
 
 Azure exposes two realtime upstreams. The GA endpoint (`/openai/v1/realtime?model=<deployment>`) speaks the GA event schema (`session.type`, `output_modalities`, nested `audio`), and the older beta endpoint (`/openai/realtime?api-version=2024-10-01-preview&deployment=<deployment>`) speaks the beta schema (`modalities`, `voice`, flat audio formats). Sending a GA-shaped `session.update` to the beta endpoint fails with `Unknown parameter: 'session.type'`
 
-LiteLLM picks the upstream from the client connection. A client that sends the `OpenAI-Beta: realtime=v1` header (the openai SDK's `client.beta.realtime.connect`) is bridged to the beta endpoint. A client without that header (the openai SDK's `client.realtime.connect`, and most voice agent frameworks) is bridged to the GA endpoint. Transcription sessions (`intent=transcription`) always use GA
+LiteLLM picks the upstream from the client connection. A client that sends the `OpenAI-Beta: realtime=v1` header (the openai SDK's `client.beta.realtime.connect`) is bridged to the beta endpoint. A client without that header (the openai SDK's `client.realtime.connect`, and most voice agent frameworks) is bridged to the GA endpoint. Transcription sessions (`intent=transcription`) always use GA, and so do models that Azure serves only on GA, such as `gpt-realtime-2.1`, where LiteLLM bridges a beta client's events to the GA endpoint
 
 ```python
 import os
@@ -231,7 +231,7 @@ model_list:
 export LITELLM_AZURE_REALTIME_PROTOCOL=GA
 ```
 
-`beta` is the other value. Azure closes a `gpt-realtime-2.1` session on the beta endpoint with `realtime_beta_access_required`, so pin `GA` for it.
+`beta` is the other value. Azure closes a `gpt-realtime-2.1` session on the beta endpoint with `realtime_beta_access_required`, so don't pin `beta` for it.
 
 ## Guardrails
 
