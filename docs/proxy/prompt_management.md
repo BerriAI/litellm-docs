@@ -115,7 +115,7 @@ Create `.prompt` files in your prompt directory:
 ```yaml nolint
 # prompts/hello.prompt
 ---
-model: gpt-5.6-terra
+model: gpt-5.4-mini
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -151,7 +151,7 @@ Your BitBucket repository should contain `.prompt` files:
 ```yaml nolint
 # prompts/my_bitbucket_prompt.prompt
 ---
-model: gpt-5.6-terra
+model: gpt-5.4-mini
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -186,7 +186,7 @@ Your GitLab repository should contain `.prompt` files:
 ```yaml nolint
 # prompts/my_gitlab_prompt.prompt
 ---
-model: gpt-5.6-terra
+model: gpt-5.4-mini
 temperature: 0.7
 ---
 System: You are a helpful assistant.
