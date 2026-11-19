@@ -19,6 +19,10 @@ A managed vector store is a mapping, stored in `config.yaml` or in the LiteLLM d
 
 Registering does not create anything on the provider. To create a new store upstream, use [`POST /v1/vector_stores`](./create.md) instead.
 
+## Search fallbacks
+
+[Define vector store fallbacks](../completion/knowledgebase.md#define-vector-store-fallbacks) in `config.yaml` to route searches to backup stores. This feature is config-only: management API and Admin UI registrations still support ordinary search, but cannot configure or serve as fallback targets.
+
 ## Register a vector store
 
 <Tabs>

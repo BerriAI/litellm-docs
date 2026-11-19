@@ -220,6 +220,8 @@ Use this to allow developers to **create** and **search** vector stores using th
 
 This is for the proxy only.
 
+[YAML-configured fallbacks](../completion/knowledgebase.md#define-vector-store-fallbacks) support `POST /milvus/v2/vectordb/entities/search` across Milvus stores with the same physical collection name. Hybrid search and writes do not fail over.
+
 ### Admin Flow
 
 #### 1. Add the vector store to LiteLLM

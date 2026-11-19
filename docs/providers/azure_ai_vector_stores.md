@@ -176,6 +176,10 @@ curl -X POST 'http://0.0.0.0:4000/v1/vector_stores/my-vector-index/search' \
 </TabItem>
 </Tabs>
 
+## Search service fallbacks
+
+For resilience across Azure AI Search services, [define vector store fallbacks](../completion/knowledgebase.md#define-vector-store-fallbacks) in YAML. Search service failover is separate from embedding model-group routing. It supports unified search and the native Azure search routes, while writes retain their existing routing without fallback.
+
 ## Required Parameters
 
 | Parameter | Type | Description |

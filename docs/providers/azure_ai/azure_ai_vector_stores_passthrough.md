@@ -10,6 +10,10 @@ Use this to allow developers to **create** and **search** vector stores using th
 
 This is for the proxy only. 
 
+## Search fallbacks
+
+[Configure fallback stores in YAML](../../completion/knowledgebase.md#define-vector-store-fallbacks) to fail over `POST /azure_ai/indexes/{name}/docs/search` and `GET /azure_ai/indexes/{name}/docs`. `/azure/` and `/azure_ai/` use the same handler and both support fallbacks. Keep one LiteLLM index registration pointing to the primary; each backup must contain the same physical index name used by the request. Writes and index lifecycle operations do not fail over.
+
 ## Admin Flow
 
 ### 1. Add the vector store to LiteLLM 
