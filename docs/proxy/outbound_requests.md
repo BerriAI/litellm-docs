@@ -15,6 +15,8 @@ Set it as an environment variable on every proxy instance. It can't be set in `c
 
 Only `true` turns it on, in any letter case. Any other value, such as `1` or `yes`, leaves it off.
 
+Offline mode freezes the model cost map at the copy bundled with your LiteLLM version, so newer models are missing until you upgrade. To keep the map current without opening general egress, see [Air-gapped and egress-restricted deployments](./custom_model_cost_map#air-gapped-and-egress-restricted-deployments).
+
 ## Requests offline mode stops
 
 | What | Host | When | With offline mode on | Per-feature switch |
