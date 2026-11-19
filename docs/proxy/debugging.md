@@ -89,6 +89,48 @@ INFO:     127.0.0.1:56155 - "POST /chat/completions HTTP/1.1" 200 OK
 ```
 
 
+## Anthropic stream diagnostics
+
+For native Anthropic Messages streams, set `LITELLM_ANTHROPIC_STREAM_DIAGNOSTICS` to record bounded timing and event summaries. It defaults to `off`. This setting requires a proxy build that includes [LiteLLM PR #47549](https://github.com/BerriAI/litellm/pull/47549).
+
+```bash showLineNumbers
+export LITELLM_ANTHROPIC_STREAM_DIAGNOSTICS="slow"
+export LITELLM_LOG="INFO"
+```
+
+Summaries use the `anthropic_stream_summary` log prefix at `INFO` level, including in `errors` mode. A logger configured for `WARNING` or `ERROR` hides them. Detailed debug logging is not required.
+
+| Mode | Summaries emitted |
+|------|-------------------|
+| `off` | None. This is the default. Unrecognized values also disable diagnostics. |
+| `errors` | Streams with an incomplete observed lifecycle, a provider error, a transport error, or consumer closure. |
+| `slow` | The same streams as `errors`, plus completed streams with a content gap of at least 30 seconds or a completed ASGI body send that takes at least 1 second. |
+| `all` | Every observed stream, including normal completions. |
+
+A content gap is time without a nonempty text, thinking, or tool-input delta. It includes the wait before the first content and the wait from the last content until the stream ends. Heartbeats do not reset this timer. The thresholds are fixed.
+
+### Compare stream stages
+
+| `stage` | Observation point |
+|---------|-------------------|
+| `provider_read` | Bytes read from one upstream provider attempt. |
+| `router_emit` | Bytes emitted by the routed stream, including retry and fallback handling. |
+| `http_send` | Body bytes handed to the ASGI server after its `send` call completes. Also records response-header send timing, send attempts, failures, and maximum send duration. |
+
+Each observer emits at most one summary when it ends, rather than one log per chunk or heartbeat. Retries can produce additional `provider_read` summaries. A request does not necessarily produce all three stages, for example if it fails before streaming starts.
+
+Use `call_id`, an available `upstream_request_id`, and `message_id` to correlate summaries. Compare `first_text_ms`, `text_deltas`, `thinking_deltas`, `tool_deltas`, `max_content_gap_ms`, and send timings to identify where content was observed or delayed. `null` means the event was not observed. The `pings` counter counts JSON ping events, not SSE comment lines.
+
+Elapsed timing fields are relative to each observer's creation, not the start of the HTTP request. They are not end-to-end time to first token. Use `started_at_unix_ms` to align records, and compare monotonic timestamps only within the same clock domain. A successful ASGI send means the server accepted the bytes. It does not prove the client received or parsed them. These summaries do not identify which downstream proxy or network hop delayed delivery.
+
+### Log size and privacy
+
+Summaries contain counters, timings, allowlisted event names, and validated identifiers. They exclude prompts, response text, thinking text, tool arguments, credentials, raw headers, and exception text. Diagnostics retain at most 64 KiB of an unfinished frame per observer and skip larger frames for parsing. This limit does not truncate the forwarded response.
+
+`empty_data_frames` counts empty data-bearing SSE events, which some JSON-based SDKs cannot parse. Comment-only heartbeats do not increment it. This diagnostic does not remove empty events from the forwarded response.
+
+`unparsed_frames` can include valid frames that exceed the diagnostic parsing limit. An incomplete diagnostic summary alone therefore does not prove malformed provider JSON. Use the summary with request logs and upstream evidence to confirm the cause. Restore `off` after troubleshooting, or use `errors` or `slow` to limit summary volume.
+
 ## JSON LOGS
 
 Set `JSON_LOGS="True"` in your env:
