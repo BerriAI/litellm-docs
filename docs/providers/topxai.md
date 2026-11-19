@@ -48,8 +48,8 @@ The live table is at https://api.topxai.xyz/pricing and as JSON at `GET https://
 | `topxai/gpt-6.2-sol` | $1.60 | $8 | from 272,001 input tokens the whole request bills at $3.20 / $12; also on `/responses` |
 | `topxai/gpt-6.2-astra` | $6.40 | $32 | from 272,001 input tokens the whole request bills at $12.80 / $48; also on `/responses` |
 | `topxai/grok-4.7` | $1.60 | $4.80 | from 200,000 input tokens the whole request bills at $3.20 / $9.60; also on `/responses` |
-| `topxai/kimi-k3.1-pro` | $0.50 | $5 | 1,048,576 context; 131,072 output; private deployment; also on `/responses` |
-| `topxai/deepseek-flash-Abliterated` | $0.42 | $1.50 | 1,048,576 context; 131,072 output; private deployment; also on `/responses` |
+| `topxai/kimi-k3.1-pro-Abliterated` | $3.25 | $6.50 | 1,048,576 context; 131,072 output; private deployment; also on `/responses` |
+| `topxai/deepseek-flash-Abliterated` | $0.36 | $1.35 | 1,048,576 context; 131,072 output; private deployment; also on `/responses` |
 | `topxai/deepseek-flash-fast` | $0.02 | $0.16 | 1,048,576 context; 262,144 output; DeepSeek V4.1 Flash on standard weights, private deployment; also on `/responses` |
 | `topxai/GLM-5.3-Abliterated` | $3 | $6 | text only; a fine-tuned GLM-5.3 served from a private deployment, not Z.ai's API |
 | `topxai/GLM-5.3-Flash-Abliterated` | $0.36 | $1.50 | 1,048,576 context; 131,072 output; text and images; private deployment; also on `/responses` |
@@ -58,11 +58,11 @@ A key on TopxAI's Auto route bills each request on its model's route. Claude, GP
 
 Cost tracking in LiteLLM uses the Auto-route prices above; a key created for the model's route pays the same prices ([routes and prices](https://api.topxai.xyz/docs/routes-and-the-auto-route)). The DeepSeek models do not use the original DeepSeek model's peak and off-peak schedule.
 
-Cache reads cost $0.30 per million tokens on Kimi, $0.105 on DeepSeek Abliterated, $0.004 on DeepSeek Flash Fast, $0.45 on GLM-5.3-Abliterated and $0.075 on GLM-5.3-Flash-Abliterated. These five publish no cache-write price; caching is automatic. The cost map also includes the published Claude, GPT and Grok cache prices, including Claude's one-hour writes.
+Cache reads cost $0.325 per million tokens on Kimi, $0.075 on DeepSeek Abliterated, $0.004 on DeepSeek Flash Fast, $0.45 on GLM-5.3-Abliterated and $0.075 on GLM-5.3-Flash-Abliterated. These five publish no cache-write price; caching is automatic. The cost map also includes the published Claude, GPT and Grok cache prices, including Claude's one-hour writes.
 
-Kimi K3.1 Pro always reasons, with `low`, `high` and `max` efforts and `low` as the default. Send images as base64 data URIs. Kimi does not fetch public image URLs. To select one function, pass a `tool_choice` object with `type="function"` and the name in `function.name`. Kimi ignores `tool_choice="none"`, `tool_choice="required"` and the `json_schema` response format. For JSON output, use `json_object` and validate the result in your application. See the [Kimi model guide](https://api.topxai.xyz/docs/kimi-k3-1-pro).
+kimi-k3.1-pro-Abliterated is Kimi K3.1 Pro with the refusal alignment removed (it replaced `kimi-k3.1-pro` on November 19, 2026). It always reasons, with `low`, `high` and `max` efforts and `low` as the default. Send images as base64 data URIs; it refuses public image URLs. `tool_choice="required"`, a named function and the `json_schema` response format work; `tool_choice="none"` returns an empty answer, so leave the tools out instead. Requests to the four Abliterated models start with a short TopxAI deployment note of about 190 tokens, billed as input. See the [Kimi model guide](https://api.topxai.xyz/docs/kimi-k3-1-pro-abliterated).
 
-`kimi-k3`, `deepseek-flash`, `deepseek-v4-pro` and `claude-fable-5-1` are retired; Claude Fable 5.2 replaced Fable 5.1 on November 10, 2026. On November 18, `gpt-6.2-astra` replaced `gpt-6-astra` and `gpt-6.2-sol` replaced `gpt-6.1-sol`. Select a current model explicitly. TopxAI rejects retired IDs with HTTP 403 and does not alias them to a replacement.
+`kimi-k3.1-pro`, `kimi-k3`, `deepseek-flash`, `deepseek-v4-pro` and `claude-fable-5-1` are retired; Claude Fable 5.2 replaced Fable 5.1 on November 10, 2026. On November 18, `gpt-6.2-astra` replaced `gpt-6-astra` and `gpt-6.2-sol` replaced `gpt-6.1-sol`. Select a current model explicitly. TopxAI rejects retired IDs with HTTP 403 and does not alias them to a replacement.
 
 ## Usage - LiteLLM Python SDK
 
@@ -94,7 +94,7 @@ for chunk in stream:
 
 ### Responses API
 
-The GPT models, `grok-4.7`, `kimi-k3.1-pro`, both DeepSeek models and `GLM-5.3-Flash-Abliterated` are also served on `/v1/responses`. For the GLM, Kimi and DeepSeek models, supply the conversation in `input` and set `store=False`; server-side conversation persistence has not been verified.
+The GPT models, `grok-4.7`, `kimi-k3.1-pro-Abliterated`, both DeepSeek models and `GLM-5.3-Flash-Abliterated` are also served on `/v1/responses`. For the GLM, Kimi and DeepSeek models, supply the conversation in `input` and set `store=False`; server-side conversation persistence has not been verified.
 
 ```python keep-model-ids showLineNumbers title="TopxAI Responses API"
 import litellm
@@ -121,9 +121,9 @@ model_list:
     litellm_params:
       model: topxai/gpt-6.2-sol
       api_key: os.environ/TOPXAI_API_KEY
-  - model_name: topxai/kimi-k3.1-pro
+  - model_name: topxai/kimi-k3.1-pro-Abliterated
     litellm_params:
-      model: topxai/kimi-k3.1-pro
+      model: topxai/kimi-k3.1-pro-Abliterated
       api_key: os.environ/TOPXAI_API_KEY
 ```
 
