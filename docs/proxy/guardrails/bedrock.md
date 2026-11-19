@@ -341,6 +341,36 @@ My email is [EMAIL] and my phone number is [PHONE_NUMBER]
 
 This helps protect sensitive information while still allowing the model to understand the context of the request.
 
+## Only scan new input text in a session
+
+Set `only_scan_new_messages: true` on a block-only Bedrock guardrail to avoid rescanning unchanged conversation history. The setting defaults to `false` and applies to request text. Use the full input scan for policies that need to evaluate new text together with earlier conversation context. Enable only one of `only_scan_new_messages` and `experimental_use_latest_role_message_only` per guardrail.
+
+Give each conversation a unique session ID and send the same `x-litellm-session-id` header on each turn. On the first request, LiteLLM sends all text selected for scanning to Bedrock. When the scan passes, LiteLLM stores a SHA-256 hash for each text segment under the guardrail name and session ID. On later turns, new or edited text goes to Bedrock. If every text segment matches a cached hash, LiteLLM skips the Bedrock text scan. The model still receives the conversation history.
+
+For example, if the first turn contains a system prompt and a user question, Bedrock scans both. If the next turn repeats those texts and adds an assistant reply and a follow-up question, Bedrock scans the reply and follow-up.
+
+```yaml title="config.yaml"
+guardrails:
+  - guardrail_name: bedrock-input
+    litellm_params:
+      guardrail: bedrock
+      mode: pre_call
+      guardrailIdentifier: os.environ/BEDROCK_GUARDRAIL_ID
+      guardrailVersion: "DRAFT"
+      aws_region_name: os.environ/AWS_REGION
+      only_scan_new_messages: true
+      default_on: true
+
+general_settings:
+  coordination_redis:
+    host: os.environ/VALKEY_HOST
+    port: 6379
+```
+
+The optional `coordination_redis` block points each LiteLLM worker or replica at the same Valkey or Redis instance. Without a shared cache, workers keep their scan history in memory. For authentication and TLS settings, see [Redis and Valkey Cache](../caching_redis.md).
+
+Cache writes use a TTL of 24 hours by default. Set `GUARDRAIL_SCANNED_MESSAGES_CACHE_TTL_SECONDS` to change it. If the request has no session ID or LiteLLM has no cached scan history for the session, Bedrock scans all the selected text. Masking configurations use the regular scan path so LiteLLM can apply redactions.
+
 ## Experimental: Only Send Latest User Message
 
 When you're chaining long conversations through Bedrock guardrails, you can opt into a lighter, experimental behavior by setting `experimental_use_latest_role_message_only: true` in the guardrail's `litellm_params`. When enabled, LiteLLM only sends the most recent `user` message (or assistant output during post-call checks) to Bedrock, which:

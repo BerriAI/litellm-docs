@@ -292,6 +292,8 @@ router_settings:
 
 With response caching disabled and no `coordination_redis` block, the coordination client is built from the `REDIS_*` environment variables alone, so `REDIS_MAX_CONNECTIONS` is the way to size its pool
 
+Bedrock guardrails also use the coordination cache to [remember previously scanned request text across workers](./guardrails/bedrock.md#only-scan-new-input-text-in-a-session).
+
 ## Redis socket_timeout
 
 The proxy cache client waits at most `socket_timeout` seconds for each Redis command before it raises a timeout. The default is **5.0 s**, set by `RedisCache.__init__` in `litellm/caching/redis_cache.py`. Set it with `cache_params.socket_timeout`; the value is passed to the Redis client as is and applies to every topology (standalone, `REDIS_URL`, cluster and Sentinel):
