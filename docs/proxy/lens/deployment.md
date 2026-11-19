@@ -35,6 +35,10 @@ Agents send traces directly to Lens with a tracing key. Investigations send sele
 
 Already set up? [Send your first trace](./first-trace.md).
 
+## Record coding agent sessions
+
+After Lens starts, generate a tracing key and follow the exact [Claude Code](./coding-agents.md#claude-code) or [opencode](./coding-agents.md#opencode) setup. Keep your existing model login. Open **Traces** in Lens to find your sessions; no Python example or LiteLLM gateway is required.
+
 ## Use Lens inside LiteLLM {#configure-an-existing-proxy}
 
 A gateway administrator [connects Lens](./deployment/litellm.md) once. Users then open **Lens** in the sidebar with their existing session. If Lens already runs, keep its address, storage and credentials. You do not need a second copy.

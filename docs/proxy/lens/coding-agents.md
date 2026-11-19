@@ -1,19 +1,23 @@
 ---
 title: Trace coding agent sessions
-description: Send your personal Claude Code and Codex sessions to LiteLLM Lens.
+description: Configure Claude Code or opencode to send sessions to Lens, then open the recorded activity in Traces.
 ---
 
 import AgentPrompt from '@site/src/components/Conversion/AgentPrompt';
 
 # Trace coding agent sessions
 
-For optional help from your coding agent, [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) has prompts for an existing LiteLLM deployment, standalone Lens, and external ClickHouse. The agent should inspect the installed version before applying this guide
-
-Send your personal Claude Code or Codex sessions to [LiteLLM Lens](./index.md) to inspect their recorded activity. Choose your agent below.
+Send your [Claude Code](#claude-code), [opencode](#opencode), or [Codex](#codex) activity to Lens. Configure telemetry in the same terminal where you start the agent. Your model login and model endpoint stay unchanged.
 
 You need a running Lens installation and a dedicated Lens tracing key. If you are starting from scratch, follow the [Lens deployment guide](./deployment/local.md). Your existing Claude Code or Codex model login continues to work.
 
-In standalone Lens, open **Traces** and click **Connect project** if the setup panel is not already open. In a gateway-bundled release, open **Lens > Traces** and click **Connect project**. Under **Connection details**, copy the full **Traces endpoint**, including `/v1/traces`, and click **Generate tracing key**. Ask your administrator for a tracing key if you cannot create one. Keep any `/lens-ingest` prefix in the URL. These settings affect telemetry; your model URL and model credentials stay separate.
+Open `http://localhost:4318/ui/` for the local quickstart, or select **Lens** in your LiteLLM dashboard. [Generate a tracing key](./first-trace.md#connect-your-agent) and copy the full **Traces endpoint**, including `/v1/traces`. Ask your administrator if you cannot create a key. The examples use local Lens; replace the address with your endpoint and keep any `/lens-ingest` prefix. A tracing key uploads telemetry, not model requests. Keep it private.
+
+:::note Lens version
+
+Lens 0.1.0 groups Claude Code sessions. Session grouping for other harnesses, including opencode, and the custom `lens.session.attribute` setting require **the next release after 0.1.0 / main** ([change](https://github.com/BerriAI/lens/pull/138)). On 0.1.0, opencode exports arrive as separate traces rather than one trace per session.
+
+:::
 
 ## Claude Code
 
@@ -23,19 +27,20 @@ Copy this prompt into your coding agent to have it configure this machine, or fo
 
 <AgentPrompt id="lens-claude-code" />
 
-This setup requires the Lens service with its `/v1/logs` ingestion route. Use a current Claude Code version with assistant response logging support.
+Verified with Claude Code **2.1.328** and Lens **0.1.0**. Keep `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1`: the telemetry enable flag alone does not enable its beta trace exporter.
 
 In the terminal where you run `claude`, paste the endpoint and tracing key in the first two lines, then run the block. The logs URL uses the same address with `/v1/logs` in place of `/v1/traces`:
 
 ```bash
 export LENS_TRACING_KEY="<paste your Lens tracing key>"
-export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="<paste the full Traces endpoint>"
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://localhost:4318/v1/traces"
 export OTEL_EXPORTER_OTLP_TRACES_HEADERS="Authorization=Bearer $LENS_TRACING_KEY"
 export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT="${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT%/v1/traces}/v1/logs"
 export OTEL_EXPORTER_OTLP_LOGS_HEADERS="Authorization=Bearer $LENS_TRACING_KEY"
 
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1
+export OTEL_METRICS_INCLUDE_SESSION_ID=true
 export OTEL_TRACES_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL="http/protobuf"
 export OTEL_METRICS_EXPORTER=none
@@ -48,14 +53,19 @@ export OTEL_LOG_ASSISTANT_RESPONSES=1
 export OTEL_LOG_TOOL_DETAILS=1
 export OTEL_LOG_TOOL_CONTENT=1
 
-claude
+claude -p "Reply with exactly: Lens telemetry check."
 ```
 
 The content flags include prompts, assistant replies, tool arguments, and supported tool outputs, which can contain source code or secrets. Enable them only for a Lens deployment where you intend to store that content.
 
-Complete a prompt that uses a tool, then open **Lens > Traces**, select **claude-code**, and switch the trace to **Conversation**. You should see your prompt, commentary, tool activity, and final reply. Child agents appear in expandable branches. Background title generation and suggested prompts are excluded from the conversation.
+Open **Traces** in standalone Lens or **Lens > Traces** in LiteLLM. Filter by **claude-code**, open the session trace, and select **Conversation** to see the prompt and reply. Run `claude` without `-p` for interactive sessions. New turns in the same session update its trace.
 
 `lens.session.capture=true` groups turns with the same Claude session ID into one trace, including resumed sessions and background-agent replies. Original trace IDs remain in span attributes. Omit this resource attribute to retain Claude's separate traces per interaction. If you already set `OTEL_RESOURCE_ATTRIBUTES`, append these values instead of replacing your existing attributes.
+
+Do not set `OTEL_METRICS_INCLUDE_SESSION_ID=false`. Despite its name, this removes `session.id` from Claude's traces too and prevents session grouping.
+
+<details>
+<summary>Additional Claude Code content and persistent settings</summary>
 
 Assistant replies use a separate telemetry stream from trace spans. Keep both exporters enabled. The allowlisted detailed-tracing endpoint is not required. See Claude Code's [monitoring reference](https://code.claude.com/docs/en/monitoring-usage) for the beta exporter's coverage and content limits.
 
@@ -75,6 +85,39 @@ The conversation below includes a deliberately failed command. With the optional
 ![Claude Code conversation showing a failed command and its captured output](/img/lens-coding-agents/claude-after.jpg)
 
 For persistent configuration, add these variables to the `env` object in your user-level `~/.claude/settings.json`, preserving existing settings. Repository-level settings cannot enable telemetry or choose its destination. Managed settings may override your local destination.
+
+</details>
+
+## opencode
+
+Verified with opencode **1.19.6**. Merge this into your project's `opencode.json`, preserving existing settings:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "experimental": {
+    "openTelemetry": true
+  }
+}
+```
+
+In the terminal where you start opencode, set the **base URL**, without `/v1/traces`. This version uses the generic OTLP endpoint and headers, not just the trace-specific variables:
+
+```bash
+export LENS_TRACING_KEY="<paste your Lens tracing key>"
+export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318"
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer $LENS_TRACING_KEY"
+export OTEL_RESOURCE_ATTRIBUTES="lens.session.capture=true,gen_ai.agent.name=opencode"
+opencode
+```
+
+Complete a prompt, leave opencode open while its exporter flushes, then open **Traces** in Lens and filter by **opencode**. Its AI SDK spans carry `session.id`. On Lens main, spans with that ID join one session trace. Internal opencode spans without a session ID can still appear as separate traces. On 0.1.0, inspect the individual traces instead.
+
+These exports can include prompts, model replies and source content. Use a Lens deployment where you intend to store them.
+
+For a non-interactive check, run `opencode serve --port 4096` with the same environment and config, then run `opencode run --attach http://127.0.0.1:4096 "Reply with exactly: Lens telemetry check."` in another terminal. Keep the server open until the traces arrive; a short-lived `opencode run` can exit before its final export.
+
+On Lens main, `lens.session.capture=true` works for any harness that exports a nonempty span-level `session.id`. If yours uses another span attribute, append `lens.session.attribute=your.attribute` to `OTEL_RESOURCE_ATTRIBUTES`. The default is `session.id`. These settings do not create a session ID when the agent does not export one.
 
 ## Codex
 
