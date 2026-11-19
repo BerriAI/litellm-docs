@@ -101,7 +101,7 @@ general_settings:
 
 **Max Budget Alerts**: Automatically triggered when a key reaches a specified percentage of its maximum budget (default: 80%). These alerts warn you when you're approaching budget exhaustion.
 
-Both alert types send a maximum of one email per 24-hour period to prevent spam.
+Each configured percentage has its own 24-hour suppression window. Fixed-dollar alerts have a separate suppression window.
 
 #### Per-key thresholds and recipients
 
@@ -127,7 +127,48 @@ With the key above, spend of $50 emails the owner, $75 emails the owner and fina
 
 Configuring `max_budget_alert_emails` on a key replaces the default 80% alert for that key. To change thresholds on an existing key, send the same `metadata` block to `/key/update`.
 
-There is no UI field for this yet, so set it through `/key/generate` or `/key/update`.
+Configure these thresholds in the key create/edit form, or through `/key/generate` or `/key/update`.
+
+#### Team budget thresholds and recipients
+
+<SinceVersion v="1.112.0" />
+
+<EnterpriseFeature>Email budget alerts require an enterprise license.</EnterpriseFeature>
+
+For alerts on a team's combined spend, use `metadata.max_budget_alert_emails`, the same field and percentage-to-recipient format as keys. Configure a positive `max_budget` on the team and at least one recipient for each threshold. Alerts use total team spend across all its keys, including service-account keys.
+
+```shell showLineNumbers
+curl -X POST 'http://0.0.0.0:4000/team/update' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "team_id": "my-team",
+    "max_budget": 1000,
+    "metadata": {
+      "max_budget_alert_emails": {
+        "50": ["finance@your-company.com"],
+        "75": ["finance@your-company.com"],
+        "90": ["finance@your-company.com"]
+      }
+    }
+  }'
+```
+
+Include any other metadata you need to retain when you use `/team/update`. `/team/new` also accepts this configuration. In the Admin UI, open **Teams**, select the team, then choose **Settings > Edit Settings**. Set **Max Budget (USD)** to a positive amount and use **Team Budget Alerts** to add percentages and recipients. Save the changes. The legacy dollar controls and their deprecation note are grouped separately under **Legacy dollar alerts (deprecated)**.
+
+The example makes alerts eligible at $500, $750, and $900 of combined team spend. The next inference authorization checks recorded team spend; this is not an immediate notification when a spend update arrives. A request can trigger more than one level if recorded spend has crossed several. Team eligibility and MCP grantor lookups do not trigger these percentage emails. Only configured recipients receive team alerts; a key owner's email is not added. Teams without this configuration receive no new percentage alerts, and `default_key_max_budget_alert_emails` does not apply to teams.
+
+Each percentage has a separate cache claim scoped to the team ID for `EMAIL_BUDGET_ALERT_TTL` (24 hours). Multiple keys and key rotation do not create additional claims for the same team threshold. Different teams and a key's own budget have separate claims, even if their recipients match. This is time-based suppression, not a once-per-month guarantee. Budget resets do not clear the claims, and an alert can repeat while spend remains above a threshold after its claim expires. Existing hard-budget enforcement is unchanged.
+
+Existing hard-budget checks and their Slack, Microsoft Teams, or webhook notifications are unchanged. The percentage-to-recipient map configures email alerts only.
+
+New team configurations reject percentages outside the whole-number range 1 to 100, noncanonical percentage keys such as `"050"`, missing recipients, and a missing or nonpositive `max_budget`. Removing or setting `max_budget` to zero while percentage alerts remain configured is rejected. Remove the alerts in the same update if you want to remove the maximum budget. To remove percentage alerts, remove `max_budget_alert_emails` from the team's metadata while preserving other metadata.
+
+##### Legacy fixed-dollar team alerts
+
+Fixed-dollar team email alerts using `soft_budget` and `metadata.soft_budget_alerting_emails` are deprecated in favor of percentage alerts. Existing configurations continue to work and remain editable. There is no automatic conversion or removal in this change.
+
+If both configurations are present, they send independently. Before migrating, enable `email` in `general_settings.alerting`, as required for percentage alerts. Legacy team dollar alerts can send without that global setting. To migrate explicitly, configure the desired percentages and recipients, then remove `soft_budget_alerting_emails` from the team's metadata to stop the legacy email. A $750 alert on a $1,000 budget corresponds to 75% today, but increasing `max_budget` to $2,000 moves the percentage alert to $1,500. Review that behavior before converting. Teams with no maximum budget can continue to use their existing fixed-dollar alerts.
 
 #### Team member budget thresholds and recipients
 
