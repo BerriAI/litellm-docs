@@ -74,7 +74,8 @@ const sdpRes = await fetch("http://proxy:4000/v1/realtime/calls", {
 });
 await pc.setRemoteDescription({ type: "answer", sdp: await sdpRes.text() });
 
-dc.send(JSON.stringify({ type: "session.update", session: { type: "realtime", instructions: "..." } }));
+dc.onopen = () =>
+  dc.send(JSON.stringify({ type: "session.update", session: { type: "realtime", instructions: "..." } }));
 ```
 
 ## FAQ

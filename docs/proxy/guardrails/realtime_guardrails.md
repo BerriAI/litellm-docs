@@ -105,6 +105,8 @@ Connect your client to the proxy instead of directly to OpenAI:
 <TabItem value="js" label="JavaScript">
 
 ```javascript
+const WebSocket = require("ws")
+
 const ws = new WebSocket(
   "ws://localhost:4000/v1/realtime?model=openai/gpt-realtime-2.1",
   [],
