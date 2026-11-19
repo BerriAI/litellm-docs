@@ -16,10 +16,6 @@ Search a vector store for relevant chunks based on a query and file attributes f
 
 For **retrieve, list, update, and delete** over HTTP (including `custom_llm_provider` / `model` routing), see [Create vector store](./create.md#vector-store-management-and-routing-on-the-proxy).
 
-## Fallbacks
-
-The proxy supports [YAML-configured vector store fallbacks](../completion/knowledgebase.md#define-vector-store-fallbacks) for `POST /v1/vector_stores/{id}/search`, with cooldown and serving-store response headers. The primary and backups must all be registered in config; API/UI-created database stores do not support fallback routing yet.
-
 ## Usage
 
 ### LiteLLM Python SDK
@@ -394,6 +390,10 @@ A structured data store returns each record under `attributes.structData`.
 
 </TabItem>
 </Tabs>
+
+## Fallbacks
+
+The proxy supports [YAML-configured vector store fallbacks](../completion/knowledgebase.md#define-vector-store-fallbacks) for `POST /v1/vector_stores/{id}/search`, with cooldown and serving-store response headers. The primary and backups must all be registered in config; API/UI-created database stores do not support fallback routing yet.
 
 ## Setting Up Vector Stores
 

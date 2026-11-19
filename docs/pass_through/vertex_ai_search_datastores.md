@@ -14,8 +14,6 @@ This page is the raw Google API through the proxy. If you want to query the data
 - Configure credentials once on the proxy, use everywhere.
 - If the datastore id in the URL is registered as a [managed vector store](../vector_stores/managed_vector_stores.md), LiteLLM resolves its project and credentials from the registration automatically.
 
-[YAML-configured vector store fallbacks](../completion/knowledgebase.md#define-vector-store-fallbacks) also support native datastore `:search` requests. Targets must be `vertex_ai/search_api` datastores; engine routes and writes do not fail over.
-
 ## Quick Start
 
 **Step 1. Set credentials**
@@ -87,3 +85,7 @@ for result in response.json().get("results", []):
     data = result["document"]["derivedStructData"]
     print(f"{data['title']}: {data['link']}")
 ```
+
+## Search fallbacks
+
+[YAML-configured vector store fallbacks](../completion/knowledgebase.md#define-vector-store-fallbacks) also support native datastore `:search` requests. Targets must be `vertex_ai/search_api` datastores; engine routes and writes do not fail over.

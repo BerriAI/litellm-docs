@@ -15,8 +15,6 @@ Each search embeds the query with the model you registered, runs a [k-NN query](
 
 Vector store search is available <SinceVersion v="1.109.0" />. [Filters](#filters), [hybrid search](#hybrid-search) and the [pass-through](#pass-through-with-per-key-index-permissions) are available <SinceVersion v="1.111.0" />.
 
-For backup search clusters, [define vector store fallbacks](../completion/knowledgebase.md#define-vector-store-fallbacks) in YAML. Both unified search and native `GET`/`POST /opensearch/{name}/_search` support fallback. Native backups must use the same provider/API type and physical index name; writes do not fail over.
-
 ## Quick Start
 
 You need three things:
@@ -398,6 +396,10 @@ helpers.bulk(writer, [{"_index": "docs", "_source": {"text": "Returns need a rec
 reader = client(READ_KEY)
 reader.search(index="docs", body={"query": {"match": {"text": "refunds"}}, "_source": ["text"]})
 ```
+
+### Search fallbacks
+
+For backup search clusters, [define vector store fallbacks](../completion/knowledgebase.md#define-vector-store-fallbacks) in YAML. Both unified search and native `GET`/`POST /opensearch/{name}/_search` support fallback. Native backups must use the same provider/API type and physical index name; writes do not fail over.
 
 ### What each permission allows
 
