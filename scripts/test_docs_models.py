@@ -122,6 +122,19 @@ class ModelDefaultsTests(unittest.TestCase):
             with self.subTest(block=block):
                 self.assertEqual(self.errors(block), [])
 
+    def test_legacy_langchain_chat_openai_on_openai_placeholders_is_rejected(self):
+        for imp in ("from langchain.chat_models import ChatOpenAI",
+                    "from langchain_community.chat_models import ChatOpenAI"):
+            with self.subTest(imp=imp):
+                errors = self.errors(f'```python\n{imp}\nchat = ChatOpenAI(model="{{{{openai_small}}}}")\n```\n')
+                self.assertEqual([(e[0], e[2]) for e in errors], [("sampling-param", 2)])
+        for block in (
+            '```python\nfrom langchain_openai import ChatOpenAI\nchat = ChatOpenAI(model="{{openai_small}}")\n```\n',
+            '```python\nfrom langchain.chat_models import ChatOpenAI\nchat = ChatOpenAI(model="llama3")\n```\n',
+        ):
+            with self.subTest(block=block):
+                self.assertEqual(self.errors(block), [])
+
     def test_substitution_uses_defaults_not_history(self):
         self.assertEqual(checks.substitute_models("chatgpt/{{chatgpt}}"), "chatgpt/" + checks.ROLE_TO_ID["chatgpt"])
         self.assertEqual(checks.substitute_models("gpt-5.4-mini {{user_input}}"), "gpt-5.4-mini {{user_input}}")

@@ -270,11 +270,12 @@ lite logout             # clear the keychain entry and the token file, and revok
 ### Chat Completions
 
 - Start an interactive streaming chat session with a model on the proxy server. Omit the model to pick one interactively.
+- `lite chat` sends a temperature of 0.7 unless you pass `--temperature`, and {{openai_large}} only accepts 1, so the examples pass `--temperature 1`.
 - Example:
 
   ```bash
-  lite chat {{openai_large}}
-  lite chat {{openai_large}} --system "You are a helpful coding assistant"
+  lite chat {{openai_large}} --temperature 1
+  lite chat {{openai_large}} --temperature 1 --system "You are a helpful coding assistant"
   ```
 
   [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/chat%2Fcompletions)
@@ -348,6 +349,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 
    ```bash
    lite chat {{openai_large}} \
+     --temperature 1 \
      --system "You are a helpful coding assistant"
    ```
 

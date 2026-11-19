@@ -18,7 +18,7 @@ Every check here is deterministic and fails the build:
   model-literal       a fenced block hardcodes a current/historical default or a chatgpt/ model instead of its {{role}} placeholder
   python-literal      a Python version is written out (python3.12, python:3.12-slim, python=3.12, Python 3.12+) instead of {{python_version}} or {{python_min_version}}
   model-role-unknown  a {{placeholder}} that looks like a docs-models.json role but is not one, which the build would print literally
-  sampling-param      a fenced block with an OpenAI or ChatGPT placeholder sets temperature other than 1, top_p, presence_penalty or frequency_penalty, which those roles' reasoning models answer with a 400
+  sampling-param      a fenced block with an OpenAI or ChatGPT placeholder sets temperature other than 1, top_p, presence_penalty or frequency_penalty, or imports the legacy LangChain ChatOpenAI that sends temperature 0.7 by default, which those roles' reasoning models answer with a 400
   version-note        a hand-written "available in v1.85.0" note instead of the <SinceVersion /> badge
   version-missing     with --base, a docs page or docs/proxy/config_settings.md row added since that ref without the badge
   card-missing        a blog post tagged `day 0 support` without card_title or card_summary frontmatter (the Admin UI Home cards read them from the RSS feed)
@@ -492,6 +492,8 @@ def check_page(page, site, page_cache):
                     err("model-literal", start + offset + 1, model_literal_message(m.group(0)))
         if "keep-model-ids" not in meta_tokens and any(OPENAI_ROLE_RE.search(l) for l in buf):
             for offset, l in enumerate(buf):
+                if LEGACY_CHAT_OPENAI_RE.search(l):
+                    err("sampling-param", start + offset + 1, LEGACY_CHAT_OPENAI_MESSAGE)
                 for m in SAMPLING_PARAM_RE.finditer(l):
                     if rejected_by_reasoning_models(m.group(1), float(m.group(2))):
                         err("sampling-param", start + offset + 1, sampling_param_message(m.group(0)))
@@ -652,6 +654,11 @@ MODEL_LITERAL_RE = re.compile(
 OPENAI_ROLE_RE = re.compile(r"\{\{\s*(?:openai_small|openai_large|chatgpt|chatgpt_small)\s*\}\}")
 SAMPLING_PARAM_RE = re.compile(
     r"""(?<![A-Za-z0-9_])["']?(temperature|top_p|presence_penalty|frequency_penalty)["']?\s*[:= ]\s*(-?\d+(?:\.\d+)?)(?![\d.])"""
+)
+LEGACY_CHAT_OPENAI_RE = re.compile(r"from langchain(?:_community)?\.chat_models import .*\bChatOpenAI\b")
+LEGACY_CHAT_OPENAI_MESSAGE = (
+    "the legacy LangChain ChatOpenAI sends temperature 0.7 by default, which {{openai_small}} and {{openai_large}} "
+    "answer with a 400; import ChatOpenAI from langchain_openai instead"
 )
 # python3.12, python-3.12, python:3.12-slim, python=3.12 (conda), python@3.12 (homebrew) and Python 3.12+;
 # `python3 -m venv` and wheel tags such as cp312 are not versions.
