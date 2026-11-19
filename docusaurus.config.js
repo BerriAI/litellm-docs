@@ -435,7 +435,7 @@ const config = {
       // rendered; it holds the evergreen entry so the config still reads true.
       // Bump `id` to resurface the bar for readers who dismissed the last one.
       announcementBar: {
-        id: 'townhall_dec_3_2026_decisions_api',
+        id: 'customer_portal_nov_20_townhall_dec_3_2026',
         content:
           '<a class="announcement-link" href="/docs/decisions"><strong>Decisions API is here.</strong> Call Gemini Decision 1, Jev, Clef or any decision model through one /v1/decisions endpoint. &rarr;</a>',
         isCloseable: true,
