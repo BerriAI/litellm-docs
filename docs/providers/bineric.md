@@ -3,6 +3,8 @@ import TabItem from '@theme/TabItem';
 
 # Bineric
 
+<SinceVersion v="1.112.0" />
+
 ## Overview
 
 | Property | Details |
