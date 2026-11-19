@@ -14,6 +14,7 @@ export default {
   'providers/xai': 'xai.svg',
   'providers/deepseek': 'deepseek.svg',
   'providers/groq': 'groq.svg',
+  'providers/gmi': 'gmi.svg',
   'providers/ollama': 'ollama.svg',
   'providers/vllm': 'vllm.png',
   'providers/lm_studio': 'lmstudio.svg',
