@@ -114,7 +114,7 @@ litellm --config /path/to/config.yaml
 Use this when you want to limit the file size for requests sent to `audio/transcriptions`
 
 ```yaml
-- model_name: whisper
+- model_name: gpt-transcribe
   litellm_params:
     model: gpt-transcribe
     api_key: sk-*******
@@ -128,7 +128,7 @@ Make a test Request with a valid file
 curl --location 'http://localhost:4000/v1/audio/transcriptions' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'file=@"/Users/ishaanjaffer/Github/litellm/tests/gettysburg.wav"' \
---form 'model="whisper"'
+--form 'model="gpt-transcribe"'
 ```
 
 

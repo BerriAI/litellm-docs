@@ -55,7 +55,7 @@ const r = await fetch("http://proxy:4000/v1/realtime/client_secrets", {
   headers: { "Authorization": "Bearer sk-litellm-key", "Content-Type": "application/json" },
   body: JSON.stringify({ model: "gpt-realtime" }),
 });
-const token = (await r.json()).client_secret.value;
+const token = (await r.json()).value;
 
 const pc = new RTCPeerConnection();
 const audio = document.createElement("audio");
@@ -74,7 +74,7 @@ const sdpRes = await fetch("http://proxy:4000/v1/realtime/calls", {
 });
 await pc.setRemoteDescription({ type: "answer", sdp: await sdpRes.text() });
 
-dc.send(JSON.stringify({ type: "session.update", session: { instructions: "..." } }));
+dc.send(JSON.stringify({ type: "session.update", session: { type: "realtime", instructions: "..." } }));
 ```
 
 ## FAQ

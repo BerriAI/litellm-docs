@@ -161,6 +161,7 @@ litellm --config config.yaml
 
 ```python
 import base64
+import requests
 from openai import OpenAI
 
 client = OpenAI(

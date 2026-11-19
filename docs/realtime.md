@@ -88,11 +88,10 @@ Run this script using node - `node test.js`
 const WebSocket = require("ws");
 
 const url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-realtime";
-// const url = "wss://my-azure-endpoint.openai.azure.com/openai/realtime?api-version=2024-10-01-preview&deployment=gpt-realtime-2.1";
+// const url = "wss://my-azure-endpoint.openai.azure.com/openai/v1/realtime?model=gpt-realtime-2.1";
 const ws = new WebSocket(url, {
     headers: {
         "api-key": `sk-<your-litellm-api-key>`,
-        "OpenAI-Beta": "realtime=v1",
     },
 });
 
@@ -101,7 +100,7 @@ ws.on("open", function open() {
     ws.send(JSON.stringify({
         type: "response.create",
         response: {
-            modalities: ["text"],
+            output_modalities: ["text"],
             instructions: "Please assist the user.",
         }
     }));
@@ -225,11 +224,11 @@ model_list:
       model: azure/gpt-realtime-2.1
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
-      realtime_protocol: beta # or GA
+      realtime_protocol: GA # or beta
 ```
 
 ```bash
-export LITELLM_AZURE_REALTIME_PROTOCOL=beta # or GA
+export LITELLM_AZURE_REALTIME_PROTOCOL=GA # or beta
 ```
 
 ## Guardrails

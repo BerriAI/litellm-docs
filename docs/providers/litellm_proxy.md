@@ -152,6 +152,7 @@ import litellm
 
 response = litellm.speech(
     model="litellm_proxy/tts-1-1106",
+    voice="alloy",
     input="Hello world",
     api_base="your-litellm-proxy-url",
     api_key="your-litellm-proxy-api-key"
