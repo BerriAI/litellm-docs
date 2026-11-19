@@ -6,6 +6,8 @@ description: Give users, teams and organizations read-only access to specific ap
 
 # Customer Management RBAC
 
+<SinceVersion v="1.112.0" />
+
 A proxy admin sees and manages everything in Customer Management. Anyone else sees nothing there until a proxy admin grants them an [application](./applications.md). A grant gives read-only access to that application, its customer organizations and members, and its usage. An application owner sees their own application, and a proxy admin sees all of them.
 
 Grants reuse the object permissions that already control access to MCP servers, agents and vector stores. An application grant is one more list on that record, `object_permission.apps`, which holds application ids. There is no separate grant table or grant API to learn, and anything that already manages users, teams or organizations, such as Terraform or SSO team sync, can manage these grants too.
