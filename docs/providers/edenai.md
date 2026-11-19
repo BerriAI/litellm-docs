@@ -221,7 +221,7 @@ import litellm
 os.environ["EDENAI_API_KEY"] = ""  # your Eden AI API key
 
 speech = litellm.speech(
-    model="edenai/openai/tts-1",
+    model="edenai/openai/tts-1-1106",
     input="Hello, how are you?",
     voice="alloy",
     response_format="mp3",
@@ -230,7 +230,7 @@ speech.stream_to_file("hello.mp3")
 
 with open("hello.mp3", "rb") as audio:
     transcript = litellm.transcription(
-        model="edenai/openai/whisper-1",
+        model="edenai/groq/whisper-large-v3-turbo",
         file=audio,
         language="en",
     )
@@ -312,13 +312,13 @@ model_list:
     litellm_params:
       model: edenai/openai/text-embedding-3-small
       api_key: os.environ/EDENAI_API_KEY
-  - model_name: whisper-1
+  - model_name: whisper-large-v3-turbo
     litellm_params:
-      model: edenai/openai/whisper-1
+      model: edenai/groq/whisper-large-v3-turbo
       api_key: os.environ/EDENAI_API_KEY
-  - model_name: tts-1
+  - model_name: tts-1-1106
     litellm_params:
-      model: edenai/openai/tts-1
+      model: edenai/openai/tts-1-1106
       api_key: os.environ/EDENAI_API_KEY
   - model_name: gpt-image-1-mini
     litellm_params:
@@ -426,12 +426,12 @@ curl http://localhost:4000/v1/embeddings \
 curl http://localhost:4000/v1/audio/speech \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-proxy-api-key" \
-  -d '{"model": "tts-1", "input": "Hello, how are you?", "voice": "alloy"}' \
+  -d '{"model": "tts-1-1106", "input": "Hello, how are you?", "voice": "alloy"}' \
   --output hello.mp3
 
 curl http://localhost:4000/v1/audio/transcriptions \
   -H "Authorization: Bearer your-proxy-api-key" \
-  -F model=whisper-1 \
+  -F model=whisper-large-v3-turbo \
   -F file=@hello.mp3
 
 curl http://localhost:4000/v1/images/generations \

@@ -14,7 +14,7 @@ Guard voice conversations in the [Realtime API](/docs/realtime) by intercepting 
 
 The Realtime API is a long-lived WebSocket session. Unlike `/chat/completions` where a guardrail runs once per HTTP request, a voice session has many turns, and each one needs to be checked individually.
 
-LiteLLM intercepts each turn at the transcription event, after Whisper converts speech to text but before the LLM generates a response:
+LiteLLM intercepts each turn at the transcription event, after the transcription model converts speech to text but before the LLM generates a response:
 
 ```
 User speaks into mic
@@ -27,7 +27,7 @@ User speaks into mic
          ▼
 ┌───────────────────┐
 │     OpenAI        │
-│  VAD → Whisper    │  detects speech end, transcribes
+│  VAD → transcribe │  detects speech end, transcribes
 └────────┬──────────┘
          │
          │  conversation.item.input_audio_transcription.completed
@@ -65,9 +65,9 @@ Add a guardrail with `mode: realtime_input_transcription` to your proxy config:
 
 ```yaml
 model_list:
-  - model_name: openai/gpt-4o-realtime-preview
+  - model_name: openai/gpt-realtime-2.1
     litellm_params:
-      model: openai/gpt-4o-realtime-preview
+      model: openai/gpt-realtime-2.1
       api_key: os.environ/OPENAI_API_KEY
 
 guardrails:
@@ -106,7 +106,7 @@ Connect your client to the proxy instead of directly to OpenAI:
 
 ```javascript
 const ws = new WebSocket(
-  "ws://localhost:4000/v1/realtime?model=openai/gpt-4o-realtime-preview",
+  "ws://localhost:4000/v1/realtime?model=openai/gpt-realtime-2.1",
   [],
   { headers: { Authorization: "Bearer sk-<your-litellm-api-key>" } }
 )
@@ -116,7 +116,7 @@ ws.onopen = () => {
     type: "session.update",
     session: {
       modalities: ["audio", "text"],
-      input_audio_transcription: { model: "whisper-1" },
+      input_audio_transcription: { model: "gpt-transcribe" },
       turn_detection: { type: "server_vad" },
     },
   }))
@@ -124,7 +124,7 @@ ws.onopen = () => {
 
 ws.onmessage = (e) => {
   const event = JSON.parse(e.data)
-  if (event.type === "response.audio.delta") {
+  if (event.type === "response.output_audio.delta") {
     // play audio...
   }
 }
@@ -140,7 +140,7 @@ import websockets
 
 async def main():
     async with websockets.connect(
-        "ws://localhost:4000/v1/realtime?model=openai/gpt-4o-realtime-preview",
+        "ws://localhost:4000/v1/realtime?model=openai/gpt-realtime-2.1",
         additional_headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},
     ) as ws:
         await ws.recv()  # session.created
@@ -149,7 +149,7 @@ async def main():
             "type": "session.update",
             "session": {
                 "modalities": ["audio", "text"],
-                "input_audio_transcription": {"model": "whisper-1"},
+                "input_audio_transcription": {"model": "gpt-transcribe"},
                 "turn_detection": {"type": "server_vad"},
             },
         }))

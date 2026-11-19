@@ -50,7 +50,7 @@ model_list:
   # Optional: Add fallback to OpenAI
   - model_name: grok-voice-agent
     litellm_params:
-      model: openai/gpt-4o-realtime-preview-2024-10-01
+      model: openai/gpt-realtime-2.1
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       mode: realtime
@@ -178,7 +178,7 @@ xAI's Grok Voice Agent has some differences from OpenAI's Realtime API:
 | Feature | xAI | OpenAI | LiteLLM Handling |
 |---------|-----|--------|------------------|
 | WebSocket URL | `wss://api.x.ai/v1/realtime` | `wss://api.openai.com/v1/realtime` | ✅ Auto-configured |
-| Model | `grok-voice-latest` | `gpt-4o-realtime-preview` | ✅ Via model prefix |
+| Model | `grok-voice-latest` | `gpt-realtime-2.1` | ✅ Via model prefix |
 | Audio Format | PCM (8-48kHz), μ-law, A-law | PCM16 24kHz mono | ✅ Compatible |
 
 LiteLLM auto-configures the xAI endpoint, sets the authentication headers (it does not send the `OpenAI-Beta` header to xAI), and manages the WebSocket connection. Beyond that there is nothing xAI-specific to handle: the Voice Agent API is OpenAI-compatible and emits `session.created` on connect, just like OpenAI. Audio responses stream as `response.output_audio.delta`, with the matching transcript on `response.output_audio_transcript.delta`.

@@ -29,15 +29,15 @@ Browser                  LiteLLM Proxy              OpenAI/Azure
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-realtime
+  - model_name: gpt-realtime
     litellm_params:
-      model: openai/gpt-4o-realtime-preview-2024-12-17
+      model: openai/gpt-realtime-2.1
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       mode: realtime
 ```
 
-**Azure:** `model: azure/gpt-4o-realtime-preview`, `api_key`, `api_base`.
+**Azure:** `model: azure/gpt-realtime-2.1`, `api_key`, `api_base`.
 
 ```bash
 litellm --config /path/to/config.yaml
@@ -53,7 +53,7 @@ litellm --config /path/to/config.yaml
 const r = await fetch("http://proxy:4000/v1/realtime/client_secrets", {
   method: "POST",
   headers: { "Authorization": "Bearer sk-litellm-key", "Content-Type": "application/json" },
-  body: JSON.stringify({ model: "gpt-4o-realtime" }),
+  body: JSON.stringify({ model: "gpt-realtime" }),
 });
 const token = (await r.json()).client_secret.value;
 

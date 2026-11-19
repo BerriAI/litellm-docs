@@ -44,7 +44,7 @@ print(f"response: {response}")
 model_list:
 - model_name: whisper
   litellm_params:
-    model: whisper-1
+    model: gpt-transcribe
     api_key: os.environ/OPENAI_API_KEY
   model_info:
     mode: audio_transcription
@@ -59,7 +59,7 @@ general_settings:
 model_list:
 - model_name: whisper
   litellm_params:
-    model: whisper-1
+    model: gpt-transcribe
     api_key: os.environ/OPENAI_API_KEY
   model_info:
     mode: audio_transcription
@@ -144,7 +144,7 @@ curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'file=@"gettysburg.wav"' \
 --form 'model="groq/whisper-large-v3"' \
---form 'fallbacks[]="openai/whisper-1"'
+--form 'fallbacks[]="openai/gpt-transcribe"'
 ```
 
 </TabItem>
@@ -162,7 +162,7 @@ transcript = client.audio.transcriptions.create(
     model="groq/whisper-large-v3",
     file=audio_file,
     extra_body={
-        "fallbacks": ["openai/whisper-1"]
+        "fallbacks": ["openai/gpt-transcribe"]
     }
 )
 ```

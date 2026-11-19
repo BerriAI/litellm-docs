@@ -138,7 +138,7 @@ with open("your-image.png", "rb") as f:
 import litellm
 
 response = litellm.transcription(
-    model="litellm_proxy/whisper-1",
+    model="litellm_proxy/gpt-transcribe",
     file="your-audio-file",
     api_base="your-litellm-proxy-url",
     api_key="your-litellm-proxy-api-key"
@@ -151,7 +151,7 @@ response = litellm.transcription(
 import litellm
 
 response = litellm.speech(
-    model="litellm_proxy/tts-1",
+    model="litellm_proxy/tts-1-1106",
     input="Hello world",
     api_base="your-litellm-proxy-url",
     api_key="your-litellm-proxy-api-key"

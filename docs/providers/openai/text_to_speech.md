@@ -20,7 +20,7 @@ import TabItem from '@theme/TabItem';
 | Fallbacks | ✅ | Works between supported models |
 | Loadbalancing | ✅ | Works between supported models |
 | Guardrails | ✅ | Applies to input text |
-| Supported Models | tts-1, tts-1-hd, gpt-4o-mini-tts | |
+| Supported Models | tts-1-1106, tts-1-hd-1106 | |
 
 ## **LiteLLM Python SDK Usage**
 ### Quick Start 
@@ -34,7 +34,7 @@ os.environ["OPENAI_API_KEY"] = "sk-.."
 
 speech_file_path = Path(__file__).parent / "speech.mp3"
 response = speech(
-        model="openai/tts-1",
+        model="openai/tts-1-1106",
         voice="alloy",
         input="the quick brown fox jumped over the lazy dogs",
     )
@@ -53,7 +53,7 @@ os.environ["OPENAI_API_KEY"] = "sk-.."
 async def test_async_speech(): 
     speech_file_path = Path(__file__).parent / "speech.mp3"
     response = await aspeech(
-            model="openai/tts-1",
+            model="openai/tts-1-1106",
             voice="alloy",
             input="the quick brown fox jumped over the lazy dogs",
             api_base=None,
@@ -79,7 +79,7 @@ curl http://0.0.0.0:4000/v1/audio/speech \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "tts-1",
+    "model": "tts-1-1106",
     "input": "The quick brown fox jumped over the lazy dog.",
     "voice": "alloy"
   }' \
@@ -89,9 +89,9 @@ curl http://0.0.0.0:4000/v1/audio/speech \
 **Setup**
 
 ```bash
-- model_name: tts
+- model_name: tts-1-1106
   litellm_params:
-    model: openai/tts-1
+    model: openai/tts-1-1106
     api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -105,9 +105,8 @@ litellm --config /path/to/config.yaml
 
 | Model | Example |
 |-------|-------------|
-| tts-1 | speech(model="tts-1", voice="alloy", input="Hello, world!") |
-| tts-1-hd | speech(model="tts-1-hd", voice="alloy", input="Hello, world!") |
-| gpt-4o-mini-tts | speech(model="gpt-4o-mini-tts", voice="alloy", input="Hello, world!") |
+| tts-1-1106 | speech(model="tts-1-1106", voice="alloy", input="Hello, world!") |
+| tts-1-hd-1106 | speech(model="tts-1-hd-1106", voice="alloy", input="Hello, world!") |
 
 
 ## Enterprise LiteLLM Proxy - Set Max Request File Size
@@ -117,7 +116,7 @@ Use this when you want to limit the file size for requests sent to `audio/transc
 ```yaml
 - model_name: whisper
   litellm_params:
-    model: whisper-1
+    model: gpt-transcribe
     api_key: sk-*******
     max_file_size_mb: 0.00001 # max file size in MB  (Set this intentionally very small for testing)
   model_info:
