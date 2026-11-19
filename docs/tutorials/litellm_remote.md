@@ -60,17 +60,17 @@ Open an existing Codex conversation from Sessions and send a message. The connec
 
 ### Claude Code
 
-An existing terminal conversation needs a one-time handoff. Finish its current turn and any pending tools on the Mac. Run `/status` in Claude Code and note the session UUID, then run `/exit`.
+An existing terminal conversation needs a one-time handoff. Finish its current turn and any pending tools on the Mac, then run `/exit`.
 
-In another terminal, hand over that saved conversation. Replace the placeholder with its UUID.
+In your terminal, open the handoff picker.
 
 ```bash
-relay remote handoff <session-uuid>
+relay remote handoff
 ```
 
-Keep the connector running and open the conversation on your phone. It resumes the saved context. An in-flight tool or unsaved process state does not move to the phone.
+Choose the conversation by its title, project, and last-updated time. You do not need to find or copy a UUID. Keep the connector running and open the conversation on your phone. It resumes the saved context. An in-flight tool or unsaved process state does not move to the phone.
 
-To return to the terminal, stop the current turn, stop the connector with Ctrl+C, and run `claude --resume <session-uuid>`. Do not run two writers against the same Claude conversation.
+To return to the terminal, stop the current turn, stop the connector with Ctrl+C, and run `claude --resume` to choose the conversation. Do not run two writers against the same Claude conversation.
 
 ## Start a new session
 
@@ -98,7 +98,7 @@ Check that `relay remote connect` is still running, the Mac is awake, and both d
 
 ### My Claude conversation is read-only
 
-Finish all tools, exit the terminal conversation, and run the handoff command with its original UUID. A terminal conversation that has not been handed over cannot accept phone messages.
+Finish all tools, exit the terminal conversation, and run `relay remote handoff` to choose it. A terminal conversation that has not been handed over cannot accept phone messages.
 
 ### My model is missing or rejected
 
