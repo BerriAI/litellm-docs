@@ -121,6 +121,10 @@ A document in the store is untrusted input: it can carry an instruction aimed at
 
 A guardrail that fails while scanning the retrieved context fails the request too, rather than injecting the context unscanned
 
+## Search fallbacks
+
+[Define vector store fallbacks](../completion/knowledgebase.md#define-vector-store-fallbacks) in `config.yaml` to route searches to backup stores. This feature is config-only: management API and Admin UI registrations still support ordinary search, but cannot configure or serve as fallback targets.
+
 ## Management API reference
 
 All endpoints require a LiteLLM key (`Authorization: Bearer ...`). Access can be restricted with `general_settings.disable_vector_stores_for_internal_users` and `allow_vector_stores_for_team_admins`; proxy admins always have access.

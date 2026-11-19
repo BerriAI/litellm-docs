@@ -391,6 +391,10 @@ A structured data store returns each record under `attributes.structData`.
 </TabItem>
 </Tabs>
 
+## Fallbacks
+
+The proxy supports [YAML-configured vector store fallbacks](../completion/knowledgebase.md#define-vector-store-fallbacks) for `POST /v1/vector_stores/{id}/search`, with cooldown and serving-store response headers. The primary and backups must all be registered in config; API/UI-created database stores do not support fallback routing yet.
+
 ## Setting Up Vector Stores
 
 To search a store that already exists on a provider, register it with LiteLLM first via `config.yaml`, `POST /vector_store/new`, or the Admin UI; see [Managed Vector Stores](./managed_vector_stores.md). For provider-specific configuration, see the [Vector Store Configuration Guide](../completion/knowledgebase.md):
