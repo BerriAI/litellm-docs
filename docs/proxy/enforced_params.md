@@ -11,8 +11,6 @@ Reject requests that omit required fields, such as `user` or `metadata.generatio
 
 An active enterprise license is required. Set `LITELLM_LICENSE` in the proxy environment.
 
-The examples below were verified with a live OpenAI model on LiteLLM 1.112.0 at source commit `3e0bcc508eb1444d1d96c4f628cdb810f42b132a`.
-
 ## Require fields for all keys
 
 ### 1. Configure the proxy
