@@ -12,7 +12,7 @@ hide_table_of_contents: false
 
 ## TLDR
 
-Overnight on November 17, OpenAI changed GPT-6.2 (Sol and Astra) so that a system prompt sent in the Responses API `instructions` field is no longer prompt cached. LiteLLM puts the system prompt there when it sends `/v1/chat/completions` or `/v1/messages` traffic to OpenAI's Responses API, so those GPT-6.2 requests started paying full price for the system prompt on every call. Requests kept working, the only sign was cached tokens dropping to 0. We are shipping fixes so GPT-6.2 caches the system prompt again.
+Overnight on November 17, OpenAI changed GPT-6.2 (Sol and Astra) so that a system prompt sent in the Responses API `instructions` field is no longer prompt cached. LiteLLM puts the system prompt there when it sends `/v1/chat/completions` or `/v1/messages` traffic to OpenAI's Responses API, so those GPT-6.2 requests started paying full price for the system prompt on every call. Requests kept working, the only sign was cached tokens dropping to 0. We are proactively shipping fixes so GPT-6.2 caches the system prompt again, and backporting them to 5 release lines (1.106, 1.108 LTS, 1.109, 1.110 and the 1.111 RC).
 
 ## Action items
 
