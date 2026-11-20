@@ -23,15 +23,13 @@ Before setup, turn on **Demo data** at the top right of Lens to explore sample t
 
 ## Get started
 
-Lens runs on its own. With Git and Docker, three commands start it:
+Lens runs on its own. Start Docker, then run this in an empty folder:
 
 ```sh
-git clone https://github.com/BerriAI/lens.git
-cd lens
-docker compose up --wait
+curl -fsSLO https://raw.githubusercontent.com/BerriAI/lens/main/deploy/lens/compose.yaml && docker compose up --wait
 ```
 
-Open [http://localhost:4318/ui/](http://localhost:4318/ui/) and sign in with `LENS_ADMIN_TOKEN` from `deploy/lens/.env`. You do not need a LiteLLM gateway, Kubernetes, or a model provider key. The [standalone quickstart](./deployment/local.md) covers sign-in and the first trace.
+Open [http://localhost:4318/ui/](http://localhost:4318/ui/) and sign in with `LENS_ADMIN_TOKEN` from the `.env` file it creates. You do not need a LiteLLM gateway, Kubernetes, or a model provider key. The [standalone quickstart](./deployment/local.md) covers sign-in and the first trace.
 
 If your team already runs Lens, [send your first trace](./first-trace.md). Choose your framework, give the agent a name, and run the example.
 
