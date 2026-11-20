@@ -1,12 +1,12 @@
 ---
 slug: gpt-6-2-instructions-caching-incident
-title: "Incident Report: GPT-6.2 Stopped Caching System Prompts Sent Through LiteLLM"
+title: "GPT-6.2 Stopped Caching System Prompts Sent Through LiteLLM"
 date: 2026-11-19T10:00:00
 authors:
   - ryan
   - ishaan-alt
   - krrish
-tags: [incident-report, openai, caching, cost]
+tags: [openai, caching, cost]
 hide_table_of_contents: false
 ---
 
