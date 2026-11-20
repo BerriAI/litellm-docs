@@ -27,9 +27,9 @@ Supported Providers:
 
 ```yaml
 model_list:
-  - model_name: openai-gpt-4o-realtime-audio
+  - model_name: openai-gpt-realtime
     litellm_params:
-      model: openai/gpt-4o-realtime-preview-2024-10-01
+      model: openai/gpt-realtime-2.1
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       mode: realtime
@@ -39,23 +39,17 @@ model_list:
 
 ```yaml
 model_list:
-  - model_name: azure-gpt-4o-realtime-audio
-    litellm_params:
-      model: azure/gpt-4o-realtime-preview
-      api_key: os.environ/AZURE_SWEDEN_API_KEY
-      api_base: os.environ/AZURE_SWEDEN_API_BASE
-
   - model_name: azure-gpt-realtime
     litellm_params:
-      model: azure/gpt-realtime
+      model: azure/gpt-realtime-2.1
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
     model_info:
       mode: realtime
 
-  - model_name: openai-gpt-4o-realtime-audio
+  - model_name: openai-gpt-realtime
     litellm_params:
-      model: openai/gpt-4o-realtime-preview-2024-10-01
+      model: openai/gpt-realtime-2.1
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -93,12 +87,11 @@ Run this script using node - `node test.js`
 // test.js
 const WebSocket = require("ws");
 
-const url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio";
-// const url = "wss://my-azure-endpoint.openai.azure.com/openai/realtime?api-version=2024-10-01-preview&deployment=gpt-4o-realtime-preview";
+const url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-realtime";
+// const url = "wss://my-azure-endpoint.openai.azure.com/openai/v1/realtime?model=gpt-realtime-2.1";
 const ws = new WebSocket(url, {
     headers: {
         "api-key": `sk-<your-litellm-api-key>`,
-        "OpenAI-Beta": "realtime=v1",
     },
 });
 
@@ -107,7 +100,7 @@ ws.on("open", function open() {
     ws.send(JSON.stringify({
         type: "response.create",
         response: {
-            modalities: ["text"],
+            output_modalities: ["text"],
             instructions: "Please assist the user.",
         }
     }));
@@ -205,6 +198,8 @@ Azure exposes two realtime upstreams. The GA endpoint (`/openai/v1/realtime?mode
 
 LiteLLM picks the upstream from the client connection. A client that sends the `OpenAI-Beta: realtime=v1` header (the openai SDK's `client.beta.realtime.connect`) is bridged to the beta endpoint. A client without that header (the openai SDK's `client.realtime.connect`, and most voice agent frameworks) is bridged to the GA endpoint. Transcription sessions (`intent=transcription`) always use GA
 
+<SinceVersion v="1.110.0" /> Models that Azure serves only on GA, such as `gpt-realtime-2.1`, use GA too, and LiteLLM bridges a beta client's events to the GA endpoint. LiteLLM recognizes these models by the deployment name in `model`, or by `base_model` when the deployment has a custom name. A deployment like `azure/my-realtime-prod` that runs `gpt-realtime-2.1` needs `base_model: azure/gpt-realtime-2.1` or `realtime_protocol: GA` in its `litellm_params`. Without either, LiteLLM sends a beta client to the beta endpoint, and Azure closes the session with `realtime_beta_access_required`
+
 ```python
 import os
 
@@ -228,15 +223,17 @@ To pin one protocol regardless of what the client sends, set `realtime_protocol`
 model_list:
   - model_name: azure-gpt-realtime
     litellm_params:
-      model: azure/gpt-realtime
+      model: azure/gpt-realtime-2.1
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
-      realtime_protocol: beta # or GA
+      realtime_protocol: GA
 ```
 
 ```bash
-export LITELLM_AZURE_REALTIME_PROTOCOL=beta # or GA
+export LITELLM_AZURE_REALTIME_PROTOCOL=GA
 ```
+
+`beta` is the other value. Azure closes a `gpt-realtime-2.1` session on the beta endpoint with `realtime_beta_access_required`, so don't pin `beta` for it.
 
 ## Guardrails
 
@@ -258,7 +255,7 @@ Useful for testing guardrails without modifying key/team config.
 const WebSocket = require("ws");
 
 const guardrails = ["your-guardrail-name"]; // comma-separated list
-const url = `ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio&guardrails=${guardrails.join(",")}`;
+const url = `ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-realtime&guardrails=${guardrails.join(",")}`;
 
 const ws = new WebSocket(url, {
     headers: {
@@ -291,7 +288,7 @@ import asyncio
 import websockets
 
 async def main():
-    url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio&guardrails=your-guardrail-name"
+    url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-realtime&guardrails=your-guardrail-name"
     async with websockets.connect(
         url,
         additional_headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},

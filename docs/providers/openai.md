@@ -1,7 +1,7 @@
 ---
 title: "OpenAI API with LiteLLM: Python SDK and Gateway"
 sidebar_label: "OpenAI"
-description: "Call GPT-5, GPT-4.1 and o-series models with reasoning effort, web search, vision, PDF input and the Responses API bridge, and transcribe audio with Whisper."
+description: "Call GPT-5, GPT-4.1 and o-series models with reasoning effort, web search, vision, PDF input and the Responses API bridge, and transcribe audio with gpt-transcribe."
 ---
 
 import Tabs from '@theme/Tabs';
@@ -996,9 +996,7 @@ Supported models:
 
 | Model Name                | Function Call                                                          |
 |---------------------------|-----------------------------------------------------------------|
-| `whisper-1`    | `response = completion(model="whisper-1", file=audio_file)`     |
-| `gpt-4o-transcribe` | `response = completion(model="gpt-4o-transcribe", file=audio_file)` |
-| `gpt-4o-mini-transcribe` | `response = completion(model="gpt-4o-mini-transcribe", file=audio_file)` |
+| `gpt-transcribe` | `response = transcription(model="gpt-transcribe", file=audio_file)` |
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -1011,7 +1009,7 @@ import os
 os.environ["OPENAI_API_KEY"] = ""
 audio_file = open("/path/to/audio.mp3", "rb")
 
-response = transcription(model="gpt-4o-transcribe", file=audio_file)
+response = transcription(model="gpt-transcribe", file=audio_file)
 
 print(f"response: {response}")
 ```
@@ -1023,9 +1021,9 @@ print(f"response: {response}")
 
 ```yaml
 model_list:
-- model_name: gpt-4o-transcribe
+- model_name: gpt-transcribe
   litellm_params:
-    model: gpt-4o-transcribe
+    model: gpt-transcribe
     api_key: os.environ/OPENAI_API_KEY
   model_info:
     mode: audio_transcription
@@ -1046,7 +1044,7 @@ litellm --config config.yaml
 curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'file=@"/Users/krrishdholakia/Downloads/gettysburg.wav"' \
---form 'model="gpt-4o-transcribe"'
+--form 'model="gpt-transcribe"'
 ```
 
 
