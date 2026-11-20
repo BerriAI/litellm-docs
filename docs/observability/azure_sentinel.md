@@ -71,6 +71,8 @@ AZURE_SENTINEL_CLIENT_SECRET="your-client-secret"                    # Client se
 
 **Note**: `AZURE_SENTINEL_ENDPOINT` can be either the DCR's logs ingestion endpoint (DCR Overview page) or the logs ingestion URI of a Data Collection Endpoint (DCE) linked to your DCR (DCE Overview page). Both look like `https://<name>.{region}-1.ingest.monitor.azure.com`. The [Logs Ingestion API](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/logs-ingestion-api-overview#endpoint) accepts either one, so use the DCE URI if a Microsoft Sentinel connector gave you one.
 
+A DCR created for direct ingestion (`"kind": "Direct"`) has its own logs ingestion endpoint, shown on the DCR Overview page and in the DCR JSON view under `properties.endpoints.logsIngestion`. To use a DCE instead, open **Monitor** → **Data Collection Endpoints**, select the DCE your DCR is linked to (the DCR's `dataCollectionEndpointId`), and copy **Logs Ingestion** from its Overview page. You need a DCE when the workspace uses private link or the DCR has no logs ingestion endpoint of its own, which is the case for DCRs created before March 31, 2024 or without `"kind": "Direct"`. The DCE, DCR and Log Analytics workspace must be in the same region.
+
 **Step 4**: Start the proxy and make a test request
 
 Start proxy
@@ -219,7 +221,7 @@ Follow this step-by-step guide to set up Azure Sentinel with LiteLLM.
 
 ![](https://ajeuwbhvhr.cloudimg.io/https://colony-recorder.s3.amazonaws.com/files/2025-12-17/cd0ad69a-4d95-4b6a-9533-7720908ba809/ascreenshot.jpeg?tl_px=1160,92&br_px=2618,907&force_format=jpeg&q=100&width=1120.0&wat=1&wat_opacity=0.7&wat_gravity=northwest&wat_url=https://colony-recorder.s3.us-west-1.amazonaws.com/images/watermarks/FB923C_standard.png&wat_pad=530,277)
 
-3. Copy the **Logs Ingestion Endpoint** URL
+3. Copy the **Logs Ingestion Endpoint** URL. If you would rather send through the Data Collection Endpoint you selected in Step 3, copy **Logs Ingestion** from that DCE's Overview page under **Monitor** → **Data Collection Endpoints**. Either URL works as `AZURE_SENTINEL_ENDPOINT`.
 
 ![](https://ajeuwbhvhr.cloudimg.io/https://colony-recorder.s3.amazonaws.com/files/2025-12-17/3d3752ed-08ea-4490-8c98-a97d33947ea7/ascreenshot.jpeg?tl_px=1160,464&br_px=2618,1279&force_format=jpeg&q=100&width=1120.0&wat=1&wat_opacity=0.7&wat_gravity=northwest&wat_url=https://colony-recorder.s3.us-west-1.amazonaws.com/images/watermarks/FB923C_standard.png&wat_pad=532,277)
 
