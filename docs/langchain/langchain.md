@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 ## Pre-Requisites
 ```shell
-!uv add litellm langchain
+!uv add litellm langchain "langchain-openai>=0.3.0"
 ```
 ## Quick Start
 
