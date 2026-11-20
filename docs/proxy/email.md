@@ -154,21 +154,21 @@ curl -X POST 'http://0.0.0.0:4000/team/update' \
   }'
 ```
 
-Include any other metadata you need to retain when you use `/team/update`. `/team/new` also accepts this configuration. In the Admin UI, open **Teams**, select the team, then choose **Settings > Edit Settings**. Set **Max Budget (USD)** to a positive amount and use **Team Budget Alerts** to add percentages and recipients. Save the changes. The legacy dollar controls and their deprecation note are grouped separately under **Legacy dollar alerts (deprecated)**.
+When you use `/team/update`, include any other metadata you want to keep. `/team/new` accepts the same configuration. In the Admin UI, open **Teams**, select the team, choose **Settings > Edit Settings**, set a positive **Max Budget (USD)**, and add percentages and recipients under **Team Budget Alerts**. Legacy dollar controls are under **Legacy dollar alerts (deprecated)**.
 
-The example makes alerts eligible at $500, $750, and $900 of combined team spend. The next inference authorization checks recorded team spend; this is not an immediate notification when a spend update arrives. A request can trigger more than one level if recorded spend has crossed several. Team eligibility and MCP grantor lookups do not trigger these percentage emails. Only configured recipients receive team alerts; a key owner's email is not added. Teams without this configuration receive no new percentage alerts, and `default_key_max_budget_alert_emails` does not apply to teams.
+In this example, alerts become eligible at $500, $750, and $900 of combined team spend. Recorded team spend is checked on the next inference request, so one request can send several levels at once. Non-inference checks, such as team eligibility and MCP grantor lookups, do not send these emails. Only the configured recipients are emailed; key owners are not added, and `default_key_max_budget_alert_emails` does not apply to teams.
 
-Each percentage has a separate cache claim scoped to the team ID for `EMAIL_BUDGET_ALERT_TTL` (24 hours). Multiple keys and key rotation do not create additional claims for the same team threshold. Different teams and a key's own budget have separate claims, even if their recipients match. This is time-based suppression, not a once-per-month guarantee. Budget resets do not clear the claims, and an alert can repeat while spend remains above a threshold after its claim expires. Existing hard-budget enforcement is unchanged.
+Each percentage sends at most once per team every `EMAIL_BUDGET_ALERT_TTL` (24 hours), however many keys the team has or rotates through. Key budget alerts are tracked separately. Budget resets do not clear this window, so an alert can repeat a day later while spend stays above its threshold.
 
-Existing hard-budget checks and their Slack, Microsoft Teams, or webhook notifications are unchanged. The percentage-to-recipient map configures email alerts only.
+These alerts are email only. Hard-budget enforcement and its Slack, Microsoft Teams, and webhook notifications are unchanged.
 
-New team configurations reject percentages outside the whole-number range 1 to 100, noncanonical percentage keys such as `"050"`, missing recipients, and a missing or nonpositive `max_budget`. Removing or setting `max_budget` to zero while percentage alerts remain configured is rejected. Remove the alerts in the same update if you want to remove the maximum budget. To remove percentage alerts, remove `max_budget_alert_emails` from the team's metadata while preserving other metadata.
+Team create and update requests are rejected if a percentage is not a plain whole number from 1 to 100 (for example, `"050"` is rejected), a percentage has no recipients, or `max_budget` is missing or not positive. To remove `max_budget`, remove the alerts in the same update. To turn off percentage alerts, remove `max_budget_alert_emails` from the team's metadata.
 
 ##### Legacy fixed-dollar team alerts
 
-Fixed-dollar team email alerts using `soft_budget` and `metadata.soft_budget_alerting_emails` are deprecated in favor of percentage alerts. Existing configurations continue to work and remain editable. There is no automatic conversion or removal in this change.
+Fixed-dollar team alerts (`soft_budget` with `metadata.soft_budget_alerting_emails`) are deprecated in favor of percentage alerts. They still work and remain editable, and nothing is converted automatically.
 
-If both configurations are present, they send independently. Before migrating, enable `email` in `general_settings.alerting`, as required for percentage alerts. Legacy team dollar alerts can send without that global setting. To migrate explicitly, configure the desired percentages and recipients, then remove `soft_budget_alerting_emails` from the team's metadata to stop the legacy email. A $750 alert on a $1,000 budget corresponds to 75% today, but increasing `max_budget` to $2,000 moves the percentage alert to $1,500. Review that behavior before converting. Teams with no maximum budget can continue to use their existing fixed-dollar alerts.
+If both are configured, both send. Percentage alerts require `email` in `general_settings.alerting` and legacy alerts do not, so enable it before you migrate. To migrate, add the percentages and recipients, then remove `soft_budget_alerting_emails` from the team's metadata. Percentage alerts follow `max_budget`: a 75% alert fires at $750 on a $1,000 budget, but at $1,500 if the budget becomes $2,000. Teams without a maximum budget can keep using fixed-dollar alerts.
 
 #### Team member budget thresholds and recipients
 
