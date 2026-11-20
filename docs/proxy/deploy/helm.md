@@ -116,7 +116,6 @@ backend:
 
 ```bash
 helm upgrade --install litellm oci://ghcr.io/berriai/litellm/chart/litellm \
-  --version 1.0.0 \
   --namespace litellm --values values.yaml \
   --wait --timeout 30m
 ```

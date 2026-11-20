@@ -21,9 +21,9 @@ npm ci
 npm run dev
 ```
 
-The first start builds Lens, generates private credentials in `deploy/lens/.env`, starts Lens and ClickHouse, and starts the UI at [http://127.0.0.1:3100/ui/](http://127.0.0.1:3100/ui/). Sign in using `LENS_ADMIN_TOKEN` from that file. Read it locally and keep it out of shared logs. UI changes reload automatically, and the development server forwards API requests to the Lens container
+The first start builds Lens, which compiles the Rust backend and takes about 22 minutes. It then generates private credentials in `deploy/lens/.env`, starts Lens and ClickHouse, and starts the UI at [http://127.0.0.1:3100/ui/](http://127.0.0.1:3100/ui/). Sign in by pasting the `LENS_ADMIN_TOKEN` value from that file into the **Setup token** field. Read it locally and keep it out of shared logs. UI changes reload automatically, and the development server forwards API requests to the Lens container
 
-Open **Traces**, click **Connect project**, select your framework and create a tracing key. Run your agent with the generated configuration, then use **Check for traces** and open the matching run. Provider configuration is only needed when you enable investigations or Signals
+Open **Home** and choose **Set up with your coding agent** or **Set up manually** to create a tracing key. Run your agent with the generated configuration. Home offers **Open trace** when the run arrives; the empty **Traces** page also has **Check for traces**. Provider configuration is only needed when you enable investigations or Signals
 
 If port 4318 is occupied, use `LENS_PORT=4320 LENS_DEV_API_URL=http://127.0.0.1:4320 npm run dev`. The UI uses port 3100, so stop any previous preview using that port first
 

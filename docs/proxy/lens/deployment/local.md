@@ -26,7 +26,7 @@ You need Docker with Docker Compose 2.24 or newer, and Docker must be running. Y
 
 ## See traces
 
-Turn on **Demo data** in the top right to look around. To record your own agent, follow [Send your first trace](../first-trace.md).
+Turn on **Demo data** in the top right. Lens opens **Traces** with sample runs to look around. To record your own agent, follow [Send your first trace](../first-trace.md).
 
 ![Lens Traces page with Demo data turned on, listing sample support agent runs.](/img/lens/quickstart-demo-traces.webp)
 
