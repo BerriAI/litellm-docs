@@ -12,7 +12,15 @@ Start Docker, then run this in an empty folder:
 curl -fsSLO https://raw.githubusercontent.com/BerriAI/lens/main/deploy/lens/compose.yaml && docker compose up --wait
 ```
 
-The command returns when Lens is ready, in under a minute. You need Docker with Docker Compose 2.24 or newer, and Docker must be running. You do not need Git, LiteLLM, Kubernetes, PostgreSQL, or a model key.
+The command returns when Lens is ready, in under a minute. Then print your sign-in token, open [http://localhost:4318/ui/](http://localhost:4318/ui/), and paste the token into the **Setup token** field:
+
+```sh
+grep LENS_ADMIN_TOKEN .env
+```
+
+To look around without a token, select **Explore demo data** on the sign-in page.
+
+You need Docker with Docker Compose 2.24 or newer, and Docker must be running. You do not need Git, LiteLLM, Kubernetes, PostgreSQL, or a model key.
 
 ## 1. Start
 
@@ -27,7 +35,13 @@ Lens generates its own credentials on the first start and saves them in `.env` b
 
 ## 2. Sign in
 
-Open [http://localhost:4318/ui/](http://localhost:4318/ui/) and paste the `LENS_ADMIN_TOKEN` value from `.env`.
+In the same folder, print the token that Lens generated:
+
+```sh
+grep LENS_ADMIN_TOKEN .env
+```
+
+Open [http://localhost:4318/ui/](http://localhost:4318/ui/), paste the value after `LENS_ADMIN_TOKEN=` into the **Setup token** field, and select **Sign in**. To skip the token, select **Explore demo data** on the same page. It opens Lens with sample data only.
 
 ![Lens sign-in page with a field for the setup token.](/img/lens/quickstart-signin.webp)
 
