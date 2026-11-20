@@ -1,6 +1,6 @@
 ---
 slug: gpt-6-2-instructions-caching-incident
-title: "GPT-6.2 Stopped Caching System Prompts Sent Through LiteLLM"
+title: "Cost Update: OpenAI’s GPT-6.2 caching change may increase input costs"
 date: 2026-11-19T10:00:00
 authors:
   - ryan
