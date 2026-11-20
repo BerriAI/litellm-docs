@@ -351,7 +351,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/decisions' \
 }'
 ```
 
-The answer has the same shape as the answer to a text-only request.
+The answer has the same shape as the answer to a text-only request. The [`hide-secrets`](./proxy/guardrails/secret_detection.md) guardrail also checks the strings inside `data`, and it redacts a secret it finds there before the request goes to the provider.
 
 Other providers return a 400 that names `input_json` before the provider is called. With `drop_params` on, LiteLLM drops the `input_json` parts and sends the rest. A request that has no input left after the drop still gets a 400. `data` that is not an object or an array of objects gets a 400 even with `drop_params` on.
 
