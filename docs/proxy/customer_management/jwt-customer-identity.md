@@ -67,6 +67,17 @@ curl https://your-proxy.example.com/v1/chat/completions \
 
 LiteLLM records the app's team and the customer organization and member on the same spend log entry.
 
+### Require selected customer headers
+
+Set `general_settings.required_customer_headers` to the actual header names you want callers to send. For example, add this to the configuration above to require both headers:
+
+```yaml
+general_settings:
+  required_customer_headers: [X-Tenant-ID, X-User-ID]
+```
+
+Use `[X-Tenant-ID]` to require only the organization header, or `[X-User-ID]` to require only the member header. Omit the setting or use `[]` to keep headers optional. For authenticated inference requests, LiteLLM returns HTTP 403 when any listed header is missing or blank. Header names are case-insensitive. A JWT does not substitute for a required header, and this setting does not change whether LiteLLM reads customer identity from claims or headers.
+
 :::warning
 Customer headers are not signed by the JWT. Use them only with trusted callers or an ingress that strips incoming identity headers and sets them from verified identity. Use signed customer claims if untrusted clients can reach the proxy directly.
 :::
