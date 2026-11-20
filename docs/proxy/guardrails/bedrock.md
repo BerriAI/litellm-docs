@@ -391,9 +391,9 @@ guardrails:
 
 `scan_tool_calls_as_text: true` scans the name and arguments of every tool call. Tool calls in the request history are scanned as input in `pre_call` mode, and tool calls the model generates are scanned as output in `post_call` mode, for streaming and non-streaming responses. LiteLLM decodes the JSON arguments before the scan, so escaped characters cannot hide text from the policy. Arguments nested too deeply to scan are blocked with a 400. A request or response with tool calls costs one extra ApplyGuardrail call.
 
-`scan_tool_descriptions_as_text: true` scans the `description` of each tool in the request as input in `pre_call` mode, which catches prompt injections planted in a tool definition. It costs one ApplyGuardrail call per tool that has a description.
+`scan_tool_descriptions_as_text: true` scans the `description` of each tool in the request as input in `pre_call` mode, together with the descriptions of its parameters at any depth, which catches prompt injections planted in a tool definition. It costs one ApplyGuardrail call per tool that has at least one description.
 
-Both scans only block. When Bedrock blocks the text, the request or response fails with the same error as any other Bedrock block. When a policy masks instead of blocking, LiteLLM discards the masked text and forwards the tool call unchanged, because a rewrite can leave the arguments as invalid JSON. Set the policy action to `BLOCK` for content that must not reach the model or the client inside a tool call.
+When Bedrock blocks the text, either scan fails the request or response with the same error as any other Bedrock block. The two scans differ when a policy masks instead of blocking. The tool-call scan only blocks. LiteLLM discards the masked text and forwards the tool call unchanged, because a rewrite can leave the arguments as invalid JSON, so set the policy action to `BLOCK` for content that must not reach the model or the client inside a tool call. The tool-description scan replaces each description with the masked text Bedrock returns, so the model sees the masked description.
 
 LiteLLM refuses to load a Bedrock guardrail that sets either option together with `mode: during_call` or `experimental_use_latest_role_message_only: true`, since those paths do not run the scans.
 
