@@ -103,7 +103,7 @@ Set `stream: true` in the request body, or `stream=True` in the SDK, to forward 
 
 ## Voices
 
-The OpenAI voice names `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer`, `verse`, `marin` and `cedar` map to voices in Gradium's catalog. Any other value is sent to Gradium as a raw voice ID, so you can pass the ID of any Gradium voice, including a custom or cloned one, as `voice`. A request without a voice answers 400.
+The OpenAI voice names `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer`, `verse`, `marin` and `cedar` map to English voices in Gradium's catalog, picked to match the OpenAI voice's gender. Any other value is sent to Gradium as a raw voice ID, so you can pass the ID of any Gradium voice, including a voice in another language or a custom or cloned one, as `voice`. For French text, pick a French voice from Gradium's voice library and pass its ID. A request without a voice answers 400.
 
 ## Response formats
 
@@ -117,15 +117,35 @@ Gradium's own format names are also accepted and sent as is. These are `ulaw_800
 
 ## Unsupported parameters
 
-Gradium has no mp3, aac or flac encoder, so those formats answer 400 instead of returning audio with a misleading format. `speed` and `instructions` have no equivalent on Gradium's endpoint, so they answer 400 as well.
+Gradium has no mp3, aac or flac encoder, so those formats answer 400 instead of returning audio with a misleading format. `instructions`, and any `speed` other than OpenAI's default of `1.0`, have no equivalent on Gradium's endpoint, so they answer 400 as well. To change the speaking pace, use Gradium's own `padding_bonus` setting, described below.
 
 Set [`drop_params`](../completion/drop_params.md) to drop these instead. A dropped format falls back to wav. You can set it on the call (`drop_params=True` in the SDK, or `"drop_params": true` in the request body), on the deployment (`drop_params: true` under `litellm_params`), or for every model (`litellm.drop_params = True`, or `drop_params: true` under `litellm_settings` in the proxy config).
+
+## Gradium settings
+
+Send Gradium's `json_config` in the request body and LiteLLM forwards it to Gradium unchanged. For example, `padding_bonus` sets the pace. A negative value speaks faster and a positive value speaks slower, as described in [Gradium's voice settings](https://docs.gradium.ai/guides/voice-settings).
+
+```bash showLineNumbers title="Speak faster"
+curl http://localhost:4000/v1/audio/speech \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gradium-tts",
+    "input": "the quick brown fox jumped over the lazy dogs",
+    "voice": "alloy",
+    "response_format": "wav",
+    "json_config": {"padding_bonus": -2.0}
+  }' \
+  --output speech.wav
+```
+
+In the SDK, pass `json_config={"padding_bonus": -2.0}` to `litellm.speech`. With the OpenAI client, pass it in `extra_body`.
 
 ## Cost tracking
 
 Gradium bills 1 credit per input character, spaces included, and LiteLLM bills the same character count. The cost map prices `gradium/default` and `gradium/gradium-tts-beta` at the add-on credit rate of the XS plan, $7 per 100k credits, which is $0.00007 per character.
 
-Larger plans are cheaper per credit, and Pro Voice Clone voices bill 1.2 credits per character. For either case, set `input_cost_per_character` on the deployment with [custom pricing](../proxy/custom_pricing.md). For example, a Pro Voice Clone voice at the XS rate costs 1.2 × $0.00007 = $0.000084 per character:
+Larger plans are cheaper per credit, and Pro Voice Clone voices bill 1.2 credits per character. For either case, set `input_cost_per_character` on the deployment with [custom pricing](../proxy/custom_pricing.md). Gradium's response does not say which kind of voice it used, so LiteLLM bills a clone voice at the deployment's price. Send clone voices to their own deployment. For example, a Pro Voice Clone voice at the XS rate costs 1.2 × $0.00007 = $0.000084 per character:
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
