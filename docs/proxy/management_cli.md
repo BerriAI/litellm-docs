@@ -178,10 +178,8 @@ lite logout             # clear the keychain entry and the token file, and revok
 
   ```bash
   lite models list
-  lite models add {{openai_large}} \
-    --param api_key=sk-123 \
-    --param max_tokens=2048
-  lite models update <model-id> -p temperature=0.7
+  lite models add {{openai_large}} --param model=openai/{{openai_large}} --param api_key=sk-123
+  lite models update <model-id> -p api_key=sk-456 -i id=<model-id>
   lite models delete <model-id>
   ```
 
@@ -270,11 +268,12 @@ lite logout             # clear the keychain entry and the token file, and revok
 ### Chat Completions
 
 - Start an interactive streaming chat session with a model on the proxy server. Omit the model to pick one interactively.
+- `lite chat` sends a temperature of 0.7 unless you pass `--temperature`, and reasoning models that only accept 1 reject it, so the examples pass `--temperature 1`.
 - Example:
 
   ```bash
-  lite chat {{openai_large}}
-  lite chat {{openai_large}} --temperature 0.9 --system "You are a helpful coding assistant"
+  lite chat {{openai_large}} --temperature 1
+  lite chat {{openai_large}} --temperature 1 --system "You are a helpful coding assistant"
   ```
 
   [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/chat%2Fcompletions)
@@ -321,9 +320,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 2. **Add a new model:**
 
    ```bash
-   lite models add {{openai_large}} \
-     --param api_key=sk-123 \
-     --param max_tokens=2048
+   lite models add {{openai_large}} --param model=openai/{{openai_large}} --param api_key=sk-123
    ```
 
 3. **Create a credential:**
@@ -348,6 +345,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 
    ```bash
    lite chat {{openai_large}} \
+     --temperature 1 \
      --system "You are a helpful coding assistant"
    ```
 

@@ -674,20 +674,8 @@ const sidebars = {
           label: "Spend Tracking",
           items: [
             "proxy/cost_tracking",
-            {
-              type: "category",
-              label: "Customer Management",
-              link: {type: "doc", id: "proxy/customers"},
-              items: [
-                "proxy/customers",
-                "proxy/customer_management/track-customer-spend",
-                "proxy/customer_management/applications",
-                "proxy/customer_management/customer-surcharge",
-                "proxy/customer_management/jwt-customer-identity",
-                "proxy/customer_management/api_reference",
-              ],
-            },
             "proxy/model_cost_map",
+            "proxy/model_updates_feed",
             { type: "doc", id: "fallback_generalizations", label: "Fallback generalizations" },
             "proxy/request_tags",
             "proxy/billing",
@@ -712,7 +700,6 @@ const sidebars = {
             "proxy/users",
             "proxy/team_budgets",
             { type: "doc", id: "proxy/project_management", className: "sidebar-enterprise" },
-            {type: "link", label: "Customer Management", href: "/docs/proxy/customers"},
 
             { type: "doc", id: "proxy/ui_team_soft_budget_alerts", className: "sidebar-enterprise" },
             "proxy/tag_budgets",
@@ -906,7 +893,6 @@ const sidebars = {
               type: "category",
               label: "Observability: Usage",
               items: [
-                {type: "link", label: "Customer Management", href: "/docs/proxy/customers"},
                 "proxy/endpoint_activity",
               ]
             },
@@ -1078,6 +1064,21 @@ const sidebars = {
         { type: "link", label: "Prompt Cache Routing", href: "/docs/tutorials/claude_code_prompt_cache_routing", className: "sidebar-xlink" },
       ],
     },
+    require('./docs/proxy/lens/sidebar'),
+    {
+      type: "category",
+      label: "Customer Management",
+      link: {type: "doc", id: "proxy/customers"},
+      items: [
+        "proxy/customers",
+        "proxy/customer_management/track-customer-spend",
+        "proxy/customer_management/applications",
+        "proxy/customer_management/rbac",
+        "proxy/customer_management/customer-surcharge",
+        "proxy/customer_management/jwt-customer-identity",
+        "proxy/customer_management/api_reference",
+      ],
+    },
     {
       type: "category",
       label: "Python SDK",
@@ -1231,7 +1232,6 @@ const sidebars = {
         "exception_mapping",
       ],
     },
-    require('./docs/proxy/lens/sidebar'),
     { type: "html", value: "Features", className: "sidebar-caption", defaultStyle: true },
     { type: "doc", id: "guides/index", className: "top-level-doc-item" },
     { type: "doc", id: "subscriptions", className: "top-level-doc-item" },

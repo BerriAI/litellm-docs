@@ -53,7 +53,7 @@ async def get_prompt(prompt_id: str):
             {"role": "user", "content": "Help me with {task}"}
         ],
         "prompt_template_model": "{{openai_large}}",
-        "prompt_template_optional_params": {"temperature": 0.7}
+        "prompt_template_optional_params": {"max_tokens": 500}
     }
 ```
 
@@ -112,9 +112,7 @@ GET /beta/litellm_prompt_management?prompt_id=hello-world-prompt-2bac&project_na
   ],
   "prompt_template_model": "{{openai_large}}",
   "prompt_template_optional_params": {
-    "temperature": 0.7,
-    "max_tokens": 500,
-    "top_p": 0.9
+    "max_tokens": 500
   }
 }
 ```
@@ -271,7 +269,6 @@ PROMPTS = {
         ],
         "prompt_template_model": "{{openai_large}}",
         "prompt_template_optional_params": {
-            "temperature": 0.7,
             "max_tokens": 500
         }
     },
@@ -289,7 +286,6 @@ PROMPTS = {
         ],
         "prompt_template_model": "{{openai_large}}",
         "prompt_template_optional_params": {
-            "temperature": 0.3,
             "max_tokens": 1000
         }
     }
@@ -409,7 +405,6 @@ Expected response:
   ],
   "prompt_template_model": "{{openai_large}}",
   "prompt_template_optional_params": {
-    "temperature": 0.7,
     "max_tokens": 500
   }
 }
@@ -490,18 +485,18 @@ LiteLLM will use the model specified by the client, ignoring the prompt's model.
 
 Client params are merged with prompt params, with prompt params taking precedence:
 ```python
-# Prompt returns: {"temperature": 0.7, "max_tokens": 500}
-# Client sends: {"temperature": 0.9, "top_p": 0.95}
-# Final params: {"temperature": 0.7, "max_tokens": 500, "top_p": 0.95}
+# Prompt returns: {"max_tokens": 500, "reasoning_effort": "low"}
+# Client sends: {"max_tokens": 1000, "seed": 7}
+# Final params: {"max_tokens": 500, "reasoning_effort": "low", "seed": 7}
 ```
 
 **With `ignore_prompt_manager_optional_params: true`:**
 
 Only client params are used:
 ```python
-# Prompt returns: {"temperature": 0.7, "max_tokens": 500}
-# Client sends: {"temperature": 0.9, "top_p": 0.95}
-# Final params: {"temperature": 0.9, "top_p": 0.95}
+# Prompt returns: {"max_tokens": 500, "reasoning_effort": "low"}
+# Client sends: {"max_tokens": 1000, "seed": 7}
+# Final params: {"max_tokens": 1000, "seed": 7}
 ```
 
 ## Security Considerations

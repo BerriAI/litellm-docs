@@ -23,11 +23,23 @@ Before setup, turn on **Demo data** at the top right of Lens to explore sample t
 
 ## Get started
 
+Lens runs on its own. With Git and Docker, three commands start it:
+
+```sh
+git clone https://github.com/BerriAI/lens.git
+cd lens
+./deploy/lens/start
+```
+
+Open [http://localhost:4318/ui/](http://localhost:4318/ui/) and sign in with `LENS_ADMIN_TOKEN` from `deploy/lens/.env`. You do not need a LiteLLM gateway, Kubernetes, or a model provider key. The [standalone quickstart](./deployment/local.md) covers sign-in and the first trace.
+
 If your team already runs Lens, [send your first trace](./first-trace.md). Choose your framework, give the agent a name, and run the example.
 
-You can [deploy Lens on its own](./deployment/local.md) or [add it to your LiteLLM dashboard](./deployment/litellm.md). If Lens already runs, [connect that deployment to your gateway](./deployment/litellm.md#1-get-the-lens-address). Each guide ends with a connection check and a first trace.
+For a team, deploy Lens on [a server](./deployment/server.md) or [Kubernetes](./deployment/kubernetes.md), or [add it to your LiteLLM dashboard](./deployment/litellm.md). If Lens already runs, [connect that deployment to your gateway](./deployment/litellm.md#1-get-the-lens-address). Each guide ends with a connection check and a first trace.
 
-Use the [coding agent guide](./coding-agents.md) to record personal Claude Code or Codex sessions. Once traces are available, [run an investigation](./investigations.md) or use the [API reference](./api.md).
+**See your coding agent sessions:** start Lens, generate a tracing key, then follow the [Claude Code](./coding-agents.md#claude-code) or [Codex](./coding-agents.md#codex) setup. Open **Traces** to see the recorded activity.
+
+Once traces are available, [run an investigation](./investigations.md) or use the [API reference](./api.md).
 
 Use [Model optimizations](./model-optimizations.md) to compare models on live traffic or a saved dataset. Choose Live, Shadow, or Offline and inspect quality, cost, latency, and individual answers.
 

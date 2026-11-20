@@ -8,6 +8,7 @@ const {createIndex} = require('./engine');
 const {answerQuestion} = require('./answer');
 const {createHandler, allowAI} = require('./server');
 const {createAskHandler} = require('./api');
+const {MAX_BYTES, MAX_QUESTION} = require('./admission');
 const {MODEL, FALLBACKS} = require('./gateway');
 const {readConfig, isContentUrl} = require('./runtime');
 const {getTracing, traceHeaders} = require('./tracing');
@@ -168,8 +169,8 @@ test('API validates conversation text and forbids caller-controlled roles, model
     assert.equal((await fetch(origin + '/api/docs/ask', post('', {body: JSON.stringify(body)}))).status, 400);
   }, {fetchImpl: neverFetch});
 });
-test('API accepts Vercel parsed objects and JSON strings without an app body-size cap', async () => {
-  const large = {question: 'x'.repeat(17000), history: Array.from({length: 6}, (_, i) => ({question: `Question ${i}`, answer: 'Answer '.repeat(1000)}))};
+test('API accepts Vercel parsed objects and JSON strings within the public input limits', async () => {
+  const large = {question: 'x'.repeat(MAX_QUESTION), history: Array.from({length: 6}, (_, i) => ({question: `Question ${i}`, answer: 'Answer '.repeat(1000)}))};
   for (const [body, status] of [[{question: 'Lens'}, 200], [large, 200], [JSON.stringify(large), 200], [{question: 'Lens', tools: []}, 400]]) {
     const handler = createAskHandler({index, documents, config, fetchImpl: modelSteps([accepted, readLens, citedAnswer]).fetch});
     const server = http.createServer((req, res) => {req.body = body; return handler(req, res);});
@@ -179,7 +180,7 @@ test('API accepts Vercel parsed objects and JSON strings without an app body-siz
   }
 });
 test('large and chunked API requests preserve every character and conversation turn through research and answering', async () => {
-  const body = {question: 'Long configuration and logs: ü🙂\n'.repeat(1000),
+  const body = {question: 'Long configuration and logs: ü🙂\n'.repeat(400),
     history: Array.from({length: 8}, (_, i) => ({question: `Question ${i}: ` + 'Earlier context. '.repeat(100),
       answer: `Answer ${i}: ` + 'Previous explanation. '.repeat(100)}))};
   for (const chunked of [false, true]) {
@@ -199,6 +200,26 @@ test('large and chunked API requests preserve every character and conversation t
       assert.equal(upstream.calls, 3);
     }, {fetchImpl: upstream.fetch});
   }
+});
+test('public oversized questions and chunked histories return 413 without inference, and a fresh question still works', async () => {
+  let calls = 0;
+  await withServer(async origin => {
+    const url = origin + '/api/docs/ask';
+    const tooLong = await fetch(url, post('x'.repeat(MAX_QUESTION + 1)));
+    assert.equal(tooLong.status, 413);
+    assert.match((await tooLong.json()).error, /16,000/);
+    const bytes = Buffer.from(JSON.stringify({question: 'Next?', history: [{question: 'Earlier?', answer: 'x'.repeat(MAX_BYTES)}]}));
+    const payload = new ReadableStream({start(controller) {
+      for (let i = 0; i < bytes.length; i += 1021) controller.enqueue(bytes.subarray(i, i + 1021));
+      controller.close();
+    }});
+    const tooLarge = await fetch(url, post('', {body: payload, duplex: 'half'}));
+    assert.equal(tooLarge.status, 413);
+    assert.match((await tooLarge.json()).error, /new conversation/);
+    assert.equal(calls, 0);
+    assert.equal((await fetch(url, post('Lens'))).status, 200);
+    assert.equal(calls, 1);
+  }, {fetchImpl: (...args) => {calls++; return modelSteps(['A helpful answer.']).fetch(...args);}});
 });
 test('real provider context limits produce a useful error without leaking details or silently shortening history', async () => {
   for (const streaming of [false, true]) {
@@ -221,16 +242,22 @@ test('real provider context limits produce a useful error without leaking detail
     }});
   }
 });
-test('API limits attempts despite spoofed forwarding headers, and recovers after the window', async () => {
-  let now = 0;
+test('API limits a signed visitor despite spoofed forwarding headers, and recovers after the window', async () => {
+  let now = 1800000000000;
   await withServer(async origin => {
     const url = origin + '/api/docs/ask';
-    for (let i = 0; i < 50; i++) assert.equal((await fetch(url, post())).status, 200);
-    const blocked = await fetch(url, post('Lens', {headers: {'Content-Type': 'application/json', 'X-Forwarded-For': '1.2.3.4', 'X-Real-IP': '5.6.7.8'}}));
+    const first = await fetch(url, post());
+    assert.equal(first.status, 200);
+    const cookie = first.headers.get('set-cookie').split(';')[0];
+    const headers = {'Content-Type': 'application/json', Cookie: cookie};
+    for (let i = 1; i < 20; i++) assert.equal((await fetch(url, post('Lens', {headers}))).status, 200);
+    const blocked = await fetch(url, post('Lens', {headers: {...headers, 'X-Forwarded-For': '1.2.3.4', 'X-Real-IP': '5.6.7.8'}}));
     assert.equal(blocked.status, 429);
     assert.equal(blocked.headers.get('retry-after'), '60');
-    now = 60000;
+    // Another browser behind the same connection retains its own allowance.
     assert.equal((await fetch(url, post())).status, 200);
+    now += 60000;
+    assert.equal((await fetch(url, post('Lens', {headers}))).status, 200);
   }, {now: () => now, fetchImpl: async (_url, request) => modelSteps(['A helpful answer.']).fetch(_url, request)});
 });
 test('API bounds total attempts across clients and resets after a minute', async () => {
@@ -350,7 +377,7 @@ test('bot route requires its service credential and dedicated model key, indepen
 
 test('website and bot share say-it final answers, research, full evidence, models and citations', async () => {
   const requests = [], results = [];
-  const body = {question: 'Lens? ' + 'Full question. '.repeat(2000),
+  const body = {question: 'Lens? ' + 'Full question. '.repeat(1000),
     history: Array.from({length: 25}, (_, i) => ({question: `Earlier ${i}`, answer: 'Complete answer. '.repeat(100)}))};
   for (const service of [false, true]) {
     const calls = [];
@@ -373,6 +400,9 @@ test('website and bot share say-it final answers, research, full evidence, model
   assert.deepEqual(JSON.parse(web.messages[1].content).history, body.history);
   assert.match(JSON.stringify(web.messages[0]), /Response style \(say-it\)/);
   assert.match(JSON.stringify(bot.messages[0]), /Response style \(say-it\)/);
+  for (const request of requests.flat()) {
+    assert.match(request.messages[0].content[0].text, /You are LiteLLM's documentation assistant/);
+  }
   for (const request of requests[0]) assert.match(JSON.stringify(request.messages[0]), /Response style \(say-it\)/);
   assert.match(JSON.stringify(bot.messages[0]), /smallest useful working code example/);
   assert.match(JSON.stringify(bot.messages[0]), /Preserve essential permissions/);
@@ -472,6 +502,18 @@ test('bot tracing uses its dedicated key and keeps website tracing and agent nam
       assert.equal(followUp.status, 200);
       assert.equal(followUp.headers.get('x-docs-trace-context'), traceContext);
       await followUp.text();
+      const conversationSpans = spans.filter(span => span.spanContext().traceId === traceId);
+      const userMessages = conversationSpans.filter(span => span.name === 'user message');
+      assert.equal(userMessages.length, 2);
+      assert.equal(userMessages[1].attributes['input.value'], 'What about the gateway?');
+      assert.ok(userMessages.every(span => span.attributes['lens.capture.source'] === 'session_transcript'));
+      const assistantMessages = conversationSpans.filter(span => span.name === 'assistant message');
+      assert.equal(assistantMessages.length, 2);
+      assert.ok(assistantMessages.every(span => span.attributes['output.value'] === citedAnswer));
+      const modelSpans = conversationSpans.filter(span => span.attributes['openinference.span.kind'] === 'LLM');
+      assert.ok(modelSpans.length > 0);
+      assert.ok(modelSpans.every(span => span.attributes['lens.capture.messages_separate'] === true));
+      assert.ok(modelSpans.every(span => JSON.parse(span.attributes['input.value']).length >= 2));
       assert.ok(spans.filter(span => span.spanContext().traceId === traceId)
         .some(span => span.attributes['input.value'] === 'What about the gateway?'));
       const attributes = JSON.stringify(spans.map(span => span.attributes));

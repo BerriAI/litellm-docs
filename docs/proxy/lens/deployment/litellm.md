@@ -16,7 +16,7 @@ This guide also connects an **existing Lens deployment**, including one hosted o
 You need access to the environment settings for both services. Connect only a gateway that belongs to the same trusted workspace: its administrators have administrator access in Lens.
 
 :::info Gateway version
-These steps require the independent Lens adapter and UI, merged into LiteLLM in [PR #45529](https://github.com/BerriAI/litellm/pull/45529). The published `v1.106.0-dev.3` release predates that change. Use a gateway build that includes it. Until such a build is deployed, you can use Lens through its standalone URL. See [Releases and images](./releases.md).
+Use LiteLLM v1.108.0 or later. This version includes the independent Lens adapter and UI from [PR #45529](https://github.com/BerriAI/litellm/pull/45529). {/* keep-version-note: The minimum gateway release is the subject of this note. */}
 :::
 
 ## 1. Get the Lens address
@@ -72,7 +72,7 @@ Open your Lens service in the Render dashboard. Select **Environment**, add the 
 </TabItem>
 <TabItem value="compose" label="Docker Compose">
 
-Add the two variables to `deploy/lens/.env` in your Lens checkout. From the repository root, apply them:
+Add the two variables to `deploy/lens/.env` in your extracted Lens bundle. From the `lens-0.1.0` directory, apply them:
 
 ```sh
 docker compose -f deploy/lens/compose.yaml up -d --wait
@@ -81,7 +81,7 @@ docker compose -f deploy/lens/compose.yaml up -d --wait
 </TabItem>
 <TabItem value="other" label="Helm or another platform">
 
-For Helm, use the [Lens chart's gateway settings](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#connect-a-gateway) to reference both secrets. For another platform, add the two variables to the Lens service through its environment settings, then redeploy it.
+For Helm, use the [two-namespace example](./kubernetes.md#existing-deployment). Create a matching `lens-connection` Secret in both the Lens and gateway namespaces. The Lens chart uses `gateway.enabled`, `gateway.secretName` and `serviceTokenSecret.name`; the gateway chart uses `lens.enabled`, `lens.gatewaySecret.name` and `lens.serviceTokenSecret.name`. It does not install Lens or PostgreSQL. For another platform, add the two variables through the Lens service's environment settings, then redeploy it.
 
 </TabItem>
 </Tabs>
@@ -103,6 +103,8 @@ Use your Lens URL and the same two secrets from step 2. Neither URL ends in `/ui
 
 `LITELLM_LENS_URL` is the address the gateway calls. `LITELLM_LENS_PUBLIC_URL` is the address shown to agent exporters. They can be the same HTTPS URL. If you use a private address for the first value, the second must still be reachable by your agents.
 
+For Kubernetes, use the private Lens Service address for the gateway connection and a reachable HTTPS origin for exporters. The [Helm setup](./kubernetes.md) uses namespace and release variables, existing managed PostgreSQL and file-backed Secrets. Port-forward is only an initial health check.
+
 Merge this block into the gateway's existing `config.yaml`. Preserve its model list and other settings:
 
 ```yaml
@@ -112,7 +114,30 @@ general_settings:
       type: lens
 ```
 
-Apply the change through your normal gateway deployment. For Compose, follow [the Compose steps](./docker-compose.md#2-apply-the-gateway-settings). For Helm, use [external Lens mode](./kubernetes.md#existing-deployment). Helm supplies the four environment variables from the chart values and Secret references.
+Apply the change through your normal gateway deployment. For Helm, use [external Lens mode](./kubernetes.md#existing-deployment). Helm supplies the four environment variables from the chart values and Secret references.
+
+### Docker Compose
+
+In your gateway's Compose directory, save the four variables above in `lens-gateway.env`. Keep it out of Git and restrict access with `chmod 600 lens-gateway.env`. On a shared Docker network, the private `LITELLM_LENS_URL` can be `http://lens:4318`; keep the public URL reachable by agents. See [Docker networking](./configuration.md#docker-network).
+
+Add the file to the existing gateway service, preserving its other `env_file` entries:
+
+```yaml
+services:
+  litellm:
+    env_file:
+      - lens-gateway.env
+```
+
+Explicit `environment` entries override `env_file`; update any existing definitions of the four variables so they agree. For a split deployment, add the file to both gateway and backend/API services. Keep your existing database, volumes and model configuration.
+
+Recreate the gateway to load the settings. Replace `litellm` with your service name (`docker compose config --services` lists them), and include the backend service if separate:
+
+```sh
+docker compose up -d --no-deps litellm
+```
+
+Keep your usual Compose file and project flags. This restarts the selected services and can interrupt requests. Continue with the connection check below.
 
 ## 5. Open Lens in the gateway
 

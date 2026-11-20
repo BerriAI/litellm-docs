@@ -654,7 +654,7 @@ Don't answer the question yet.
 {{~/user}}
 
 {{#assistant~}}
-{{gen 'expert_names' temperature=0 max_tokens=300}}
+{{gen 'expert_names' max_tokens=300}}
 {{~/assistant}}
 ''', llm=gpt4)
 

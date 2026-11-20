@@ -10,7 +10,7 @@ function gatewayError(name, message) {
   return error;
 }
 
-function createModelCaller({config, signal, fetchImpl = fetch}) {
+function createModelCaller({config, signal, fetchImpl = fetch, messagesSeparate = false}) {
   const {createToolAnswerReader, parseToolAnswer} = require('./tool-answer');
   const cloudflareConfigured = config.cfAccessClientId !== undefined || config.cfAccessClientSecret !== undefined;
   const validCredential = value => typeof value === 'string' && /^[\x21-\x7e]+$/.test(value);
@@ -38,6 +38,7 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
     return tracing.span(`chat ${stage}`, {
       'openinference.span.kind': 'LLM', 'gen_ai.operation.name': 'chat',
       'gen_ai.request.model': MODEL, 'docs.search.stage': stage,
+      'lens.capture.messages_separate': messagesSeparate,
     }, async span => {
       span.setAttribute('input.value', JSON.stringify(messages));
       span.setAttribute('input.mime_type', 'application/json');

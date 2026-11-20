@@ -195,13 +195,8 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 <TabItem value="langchain" label="Langchain">
 
 ```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 import os 
 
 os.environ["OPENAI_API_KEY"] = "anything"
@@ -209,7 +204,6 @@ os.environ["OPENAI_API_KEY"] = "anything"
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model = "{{openai_small}}",
-    temperature=0.1,
     extra_body={
         "metadata": {
             "generation_name": "ishaan-generation-langchain-client",
@@ -228,7 +222,7 @@ messages = [
         content="test from litellm. tell me why it's amazing in 1 sentence"
     ),
 ]
-response = chat(messages)
+response = chat.invoke(messages)
 
 print(response)
 ```
@@ -957,7 +951,7 @@ Don't answer the question yet.
 {{~/user}}
 
 {{#assistant~}}
-{{gen 'expert_names' temperature=0 max_tokens=300}}
+{{gen 'expert_names' max_tokens=300}}
 {{~/assistant}}
 ''', llm=gpt4)
 

@@ -238,6 +238,32 @@ litellm_settings:
     # default_in_redis_ttl: Optional[float], default is None. time in seconds.
 ```
 
+## Keep embeddings from evicting rate limits and spend
+
+The response cache stores embeddings per input item, so one batched `/embeddings` request with N inputs writes N keys, each holding a full vector. A batch job over unique texts gets almost no cache hits, yet it can fill Redis. Once Redis reaches `maxmemory`, a `volatile-lru` policy evicts any key with a TTL, including rate limit counters, spend and budget state, and auth cache entries that share the instance. A shorter `ttl` does not prevent this, because a burst of unique embeddings fills memory before the keys expire.
+
+To stop caching embeddings and keep every other call type cached, set `excluded_call_types` as described in [Exclude call types from caching](./caching_controls.md#exclude-call-types-from-caching). `excluded_call_types` is merged on LiteLLM `main` in [PR #52902](https://github.com/BerriAI/litellm/pull/52902) and is not in a tagged release yet. On earlier versions, list every call type you want cached in `supported_call_types` and leave out `embedding` and `aembedding`.
+
+To keep caching embeddings, give the response cache its own Redis instance. A different `namespace` or database number on the same instance does not isolate memory, because `maxmemory` and eviction apply to the whole instance. Point `general_settings.coordination_redis`, which holds rate limits, spend tracking and pod locks, and the router Redis in `router_settings` at a different instance from `cache_params`:
+
+```yaml
+litellm_settings:
+  cache: true
+  cache_params:
+    type: redis
+    host: cache-redis
+    port: 6379
+
+general_settings:
+  coordination_redis:
+    host: coordination-redis
+    port: 6379
+
+router_settings:
+  redis_host: coordination-redis
+  redis_port: 6379
+```
+
 ## SSL
 
 just set `REDIS_SSL="True"` in your .env, and LiteLLM will pick this up.
@@ -291,6 +317,8 @@ router_settings:
 ```
 
 With response caching disabled and no `coordination_redis` block, the coordination client is built from the `REDIS_*` environment variables alone, so `REDIS_MAX_CONNECTIONS` is the way to size its pool
+
+Bedrock guardrails also use the coordination cache to [remember previously scanned request text across workers](./guardrails/bedrock.md#only-scan-new-input-text-in-a-session).
 
 ## Redis socket_timeout
 

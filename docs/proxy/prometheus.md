@@ -149,9 +149,9 @@ Each detail counter is **sparse**: it is only incremented when the provider repo
 |--------------------------------------------------|----------------------------------------------------------------------|----------------------------------------------------|
 | `litellm_input_cached_tokens_metric`             | `prompt_tokens_details.cached_tokens`                                | OpenAI prompt cache, Anthropic `cache_read_input_tokens`, DeepSeek `prompt_cache_hit_tokens` |
 | `litellm_input_cache_creation_tokens_metric`     | `prompt_tokens_details.cache_creation_tokens`                        | Anthropic `cache_creation_input_tokens` (prompt cache writes) |
-| `litellm_input_audio_tokens_metric`              | `prompt_tokens_details.audio_tokens`                                 | OpenAI `gpt-4o-audio-*`, Gemini audio inputs       |
+| `litellm_input_audio_tokens_metric`              | `prompt_tokens_details.audio_tokens`                                 | OpenAI `gpt-audio-1.5`, Gemini audio inputs        |
 | `litellm_output_reasoning_tokens_metric`         | `completion_tokens_details.reasoning_tokens`                         | OpenAI `o1-*` / `o3-*`, Anthropic extended thinking |
-| `litellm_output_audio_tokens_metric`             | `completion_tokens_details.audio_tokens`                             | OpenAI `gpt-4o-audio-*` audio outputs              |
+| `litellm_output_audio_tokens_metric`             | `completion_tokens_details.audio_tokens`                             | OpenAI `gpt-audio-1.5` audio outputs               |
 
 Example PromQL, cache-hit ratio for a model group:
 

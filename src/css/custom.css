@@ -945,10 +945,6 @@ video {
   }
 }
 
-/* Hide theme toggle in mobile sidebar (slide-out drawer) */
-.navbar-sidebar .navbar-sidebar__brand [class*="toggle"] {
-  display: none !important;
-}
 
 /* =========================================
    BASH / SHELL CODE BLOCKS
@@ -2775,4 +2771,80 @@ html[class*='docs-doc-id-harness/'] .breadcrumbs {
   display: inline-flex;
   vertical-align: middle;
   margin-right: 8px;
+}
+
+@media (max-width: 996px) {
+  .navbar__colormode-mobile {
+    display: none;
+  }
+
+  .navbar__inner {
+    gap: 4px;
+  }
+
+  .navbar__brand-col {
+    gap: 4px;
+    min-width: 0;
+    margin-right: auto;
+  }
+
+  .navbar__brand-col .navbar__brand {
+    margin: 0;
+    padding: 0;
+  }
+
+  .navbar__toggle {
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .navbar__right-col {
+    gap: 0;
+  }
+
+  .navbar [class*='navbarSearchContainer'] > button,
+  .navbar [data-ask-ai-trigger] {
+    width: 40px;
+    height: 44px;
+    border: 0;
+    background: transparent;
+  }
+
+  .navbar-sidebar {
+    width: min(360px, calc(100vw - 24px));
+    height: 100dvh;
+  }
+
+  .navbar-sidebar .menu__link {
+    min-height: 44px;
+  }
+
+  .navbar-sidebar__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar__brand-col .navbar__title {
+    display: none;
+  }
+}
+
+@media (max-width: 374px) {
+  .navbar__brand-col .navbar__logo {
+    height: 14px;
+  }
+
+  .navbar {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
 }
