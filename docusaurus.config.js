@@ -91,6 +91,7 @@ const config = {
           {from: '/docs/proxy/jwt_auth_arch', to: '/docs/proxy/access_management/jwt_permissions#beta-control-access-with-oidc-roles'},
           {from: ['/docs/oidc', '/docs/oidcz'], to: '/docs/proxy/model_management#workload-identity-credentials'},
           {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
+          {from: '/docs/proxy/lens/deployment/docker', to: '/docs/proxy/lens/deployment/configuration#other-container-platforms'},
           {from: '/docs/proxy/lens/deployment/docker-compose', to: '/docs/proxy/lens/deployment/litellm#docker-compose'},
           {from: '/docs/proxy/rust_gateway', to: '/rust-migration'},
           {from: '/docs/proxy/deploy/iap/cloudflare', to: '/docs/proxy/deploy/iap/overview#cloudflare'},

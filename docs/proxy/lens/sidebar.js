@@ -14,7 +14,6 @@ module.exports = {
         'proxy/lens/deployment/litellm',
         'proxy/lens/deployment/kubernetes',
         'proxy/lens/deployment/server',
-        'proxy/lens/deployment/docker',
         'proxy/lens/deployment/storage',
         'proxy/lens/deployment/configuration',
         'proxy/lens/deployment/releases',
