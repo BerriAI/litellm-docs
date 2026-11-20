@@ -60,7 +60,7 @@ Set the following environment variables with your Azure credentials:
 # Required: Data Collection Rule (DCR) configuration
 AZURE_SENTINEL_DCR_IMMUTABLE_ID="dcr-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"  # DCR Immutable ID from Azure portal
 AZURE_SENTINEL_STREAM_NAME="Custom-LiteLLM_CL_CL"                    # Stream name from your DCR
-AZURE_SENTINEL_ENDPOINT="https://your-endpoint.eastus-1.ingest.monitor.azure.com"  # DCE or DCR logs ingestion endpoint
+AZURE_SENTINEL_ENDPOINT="https://your-dcr-endpoint.eastus-1.ingest.monitor.azure.com"  # DCR logs ingestion endpoint or DCE logs ingestion URI
 
 # Required: OAuth2 Authentication (App Registration)
 AZURE_SENTINEL_TENANT_ID="your-tenant-id"                            # Azure Tenant ID
@@ -69,7 +69,7 @@ AZURE_SENTINEL_CLIENT_SECRET="your-client-secret"                    # Client se
 
 ```
 
-**Note**: `AZURE_SENTINEL_ENDPOINT` can be either a Data Collection Endpoint (DCE) or the DCR's own logs ingestion endpoint. The [Logs Ingestion API](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/logs-ingestion-api-overview#endpoint) accepts both with the same URI, `{endpoint}/dataCollectionRules/{dcrImmutableId}/streams/{streamName}`, and LiteLLM builds that URI from whichever one you set. Both look like `https://{name}.{region}-1.ingest.monitor.azure.com`.
+**Note**: `AZURE_SENTINEL_ENDPOINT` can be either the DCR's logs ingestion endpoint (DCR Overview page) or the logs ingestion URI of a Data Collection Endpoint (DCE) linked to your DCR (DCE Overview page). Both look like `https://<name>.{region}-1.ingest.monitor.azure.com`. The [Logs Ingestion API](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/logs-ingestion-api-overview#endpoint) accepts either one, so use the DCE URI if a Microsoft Sentinel connector gave you one.
 
 A DCR created for direct ingestion (`"kind": "Direct"`) has its own logs ingestion endpoint, shown on the DCR Overview page and in the DCR JSON view under `properties.endpoints.logsIngestion`. To use a DCE instead, open **Monitor** → **Data Collection Endpoints**, select the DCE your DCR is linked to (the DCR's `dataCollectionEndpointId`), and copy **Logs Ingestion** from its Overview page. You need a DCE when the workspace uses private link or the DCR has no logs ingestion endpoint of its own, which is the case for DCRs created before March 31, 2024 or without `"kind": "Direct"`. The DCE, DCR and Log Analytics workspace must be in the same region.
 
@@ -122,7 +122,7 @@ You should see following logs in Azure Workspace.
 | Environment Variable | Description | Default Value | Required |
 |---------------------|-------------|---------------|----------|
 | `AZURE_SENTINEL_DCR_IMMUTABLE_ID` | Data Collection Rule (DCR) Immutable ID | None | ✅ Yes |
-| `AZURE_SENTINEL_ENDPOINT` | Data Collection Endpoint (DCE) or DCR logs ingestion endpoint URL | None | ✅ Yes |
+| `AZURE_SENTINEL_ENDPOINT` | DCR logs ingestion endpoint or DCE logs ingestion URI | None | ✅ Yes |
 | `AZURE_SENTINEL_STREAM_NAME` | Stream name from DCR (e.g., "Custom-LiteLLM_CL_CL") | "Custom-LiteLLM" | ❌ No |
 | `AZURE_SENTINEL_TENANT_ID` | Azure Tenant ID for OAuth2 authentication | None (falls back to `AZURE_TENANT_ID`) | ✅ Yes |
 | `AZURE_SENTINEL_CLIENT_ID` | Application (client) ID for OAuth2 authentication | None (falls back to `AZURE_CLIENT_ID`) | ✅ Yes |
@@ -145,7 +145,7 @@ Azure Government uses its own Entra authority and its own Azure Monitor audience
 The Azure Sentinel integration uses the [Azure Monitor Logs Ingestion API](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/logs-ingestion-api-overview) to send logs to your Log Analytics workspace. The integration:
 
 - Authenticates using OAuth2 client credentials flow with your app registration
-- Sends logs to the Logs Ingestion API through your DCE or DCR logs ingestion endpoint
+- Sends logs to your Data Collection Rule (DCR) through its logs ingestion endpoint or a linked Data Collection Endpoint (DCE)
 - Batches logs for efficient transmission
 - Sends logs in the [StandardLoggingPayload](../proxy/logging_spec) format
 - Automatically handles both success and failure events

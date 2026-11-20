@@ -47,11 +47,12 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 
 | Provider or feature | Release |
 |---------------------|---------|
-| [Gemini Decision 1](./providers/gemini.md#decisions) | On main through [LiteLLM #51220](https://github.com/BerriAI/litellm/pull/51220), not yet in a release |
+| [Gemini Decision 1](./providers/gemini.md#decisions) | `v1.111.0-rc.1` |
 | vLLM, Microsoft Foundry, OpenRouter spend from `usage.cost` | `v1.104.3` |
 | Databricks serving endpoints, image input on Cloudflare Clef, [audio and video input](#audio-and-video-input) on Cloudflare Clef-omni, TypeSafe images and box questions | `v1.106.0` |
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
 | A deployment's own [`supports_audio_input` and `supports_video_input`](#audio-and-video-on-other-deployments) values, and clip requests going only to the group deployments that take clips | `v1.110.0` |
+| [JSON input](#json-input) on OpenAI | `v1.112.0-rc.1`, and `v1.108.14` on the 1.108.x LTS line |
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -60,6 +61,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | Virtual keys, budgets, rate limits | Yes | Normal proxy key auth |
 | Load balancing, fallbacks | Yes | Goes through the router like `/chat/completions` |
 | Image input | OpenAI, Gemini, Cloudflare Clef and TypeSafe | TypeSafe needs the `TypeSafe-Danger-Zone-Images: true` header. Other providers return a 400, or drop the images under `drop_params` |
+| JSON input | OpenAI | `azure/` deployments send the parts on as OpenAI does. Other providers, Microsoft Foundry included, return a 400 that names `input_json`, or drop the parts under `drop_params` |
 | Audio and video input | Gemini Decision 1 and Cloudflare Clef-omni | Other models return a 400, or drop the clips under `drop_params`, unless a [deployment flag](#audio-and-video-on-other-deployments) turns clips on. `openai/` and `azure/` deployments refuse clips whatever the flag says |
 | Streaming | No | |
 
@@ -198,7 +200,7 @@ Changing `"model"` to `"jev"` sends the same questions to TypeSafe and returns t
 | Field | Type | Description |
 |-------|------|-------------|
 | `model` | string | A proxy model name, or `<provider>/<model>` in the SDK |
-| `input` | string or array | A string, or messages shaped like `{"type": "message", "role": "user", "content": ...}`. `content` is a string or a list of `input_text` and `input_image` parts |
+| `input` | string or array | A string, or messages shaped like `{"type": "message", "role": "user", "content": ...}`. `content` is a string or a list of `input_text`, `input_image` and [`input_json`](#json-input) parts |
 | `questions` | array | 1 to 128 questions. Answers come back in the same order |
 | `safety_identifier` | string, optional | A stable ID for your end user. Sent to OpenAI. Other providers return a 400, or drop it under `drop_params` |
 | `audio` | array, optional | Up to 4 audio clips, with the rules in [Audio and video input](#audio-and-video-input) |
@@ -322,6 +324,38 @@ Other providers do not take images, and TypeSafe takes them only with the images
 ```
 
 With `drop_params: true` in `litellm_settings` or on the deployment, LiteLLM drops the images and sends only the text. A request that has no text left after the drop still gets a 400.
+
+### JSON input
+
+OpenAI models take `input_json` parts in user messages. `data` is an object or an array of objects, and LiteLLM sends it to the provider as it is, next to the message's other parts. An `input_json` part in a developer or system message gets a 400, even with `drop_params` on.
+
+```bash showLineNumbers
+curl -X POST 'http://0.0.0.0:4000/v1/decisions' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{
+  "model": "luna",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {"type": "input_text", "text": "Evaluate the ticket using the order evidence."},
+        {"type": "input_json", "data": {"ticket": {"body": "Please refund the duplicate charge."}, "order": {"charges": [49, 49]}}}
+      ]
+    }
+  ],
+  "questions": [
+    {"type": "predicate", "name": "duplicate_charge", "instructions": "Does the ticket describe a duplicate charge supported by the order?"}
+  ]
+}'
+```
+
+The answer has the same shape as the answer to a text-only request. The [`hide-secrets`](./proxy/guardrails/secret_detection.md) guardrail also checks the keys and string values inside `data`, reading each value together with its key, and it replaces each secret it finds with `[REDACTED]` before the request goes to the provider. A redacted key that would clash with another key in the same object gets a number, such as `[REDACTED] (2)`, so no value is lost. The [LLM Shield Proxy](./proxy/guardrails/llm_shield_proxy.md) guardrail swaps personal data in the keys, string values, and numbers inside `data` for stand-in values, and a number it swaps is sent as a string. Other guardrails that read message text, such as banned keywords, OpenAI moderation and Azure Content Safety, read `data` as JSON text. Cisco AI Defense cannot rewrite `data`, so when it asks to redact a request that carries `input_json`, the gateway blocks the request with a 400, also in monitor mode.
+
+Other providers return a 400 that names `input_json` before the provider is called. With `drop_params` on, LiteLLM drops the `input_json` parts and sends the rest. A request that has no input left after the drop still gets a 400. `data` that is not an object or an array of objects gets a 400 even with `drop_params` on.
+
+In a load-balanced group, a request with `input_json` parts goes only to the deployments that take them, and requests without them still use every deployment. With `drop_params` on, a deployment that does not take JSON stays in the pick and drops the JSON parts, as long as it keeps some input. A deployment that would have no input left after it drops the JSON parts and any images or developer and system messages it does not take is skipped. So a request whose user message holds only `input_json` parts goes only to the deployments that take JSON. When no deployment in the group can take the request, it gets the 400 that names `input_json`, and then the group's [fallbacks](./proxy/reliability.md) run, if it has any. Without `drop_params`, when every deployment that takes JSON is cooling down, the request gets the same 400, and on the 1.108.x LTS line it gets the router's 429 cooldown error instead. With `drop_params` on, a deployment that does not take JSON can answer it then from the rest of the input. To keep JSON requests on deployments that read the JSON, put those deployments in a model group of their own and send JSON requests to that group.
 
 ## /v1/systemone
 
