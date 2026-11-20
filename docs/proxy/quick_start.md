@@ -7,6 +7,12 @@ import NavigationCards from '@site/src/components/NavigationCards';
 
 Setup LiteLLM Proxy quickly via CLI. 
 
+:::tip
+
+Looking for a CLI to point coding agents at the gateway? Use the [LiteLLM Proxy CLI (`lite`)](./management_cli.md).
+
+:::
+
 LiteLLM Server (LLM Gateway) manages:
 
 * **Unified Interface**: Calling 100+ LLMs [Huggingface/Bedrock/TogetherAI/etc.](/docs/proxy/quick_start#supported-llms) in the OpenAI `ChatCompletions` & `Completions` format
