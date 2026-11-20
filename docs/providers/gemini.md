@@ -425,7 +425,7 @@ print(response.service_tier)  # "priority" when Vertex served the request at Pri
 
 The response reports the tier that served the request in `service_tier`. The Gemini API reads it from the `x-gemini-service-tier` response header and maps `"standard"` to `"default"`. Vertex AI reads it from `usageMetadata.trafficType`, where `ON_DEMAND` is `"default"`, `ON_DEMAND_PRIORITY` is `"priority"` and `ON_DEMAND_FLEX` is `"flex"`. A request Provisioned Throughput served has no `service_tier`.
 
-Vertex AI batch jobs run on the batch tier, so a `service_tier` that names a tier on a Vertex batch request row answers `400`, or is dropped under `drop_params`.
+Vertex AI batch jobs run on the batch tier, so `"priority"` or `"flex"` on a Vertex batch request row answers `400`, or is dropped under `drop_params`. `"standard"`, `"default"` and `"auto"` upload with no tier.
 
 
 ## Long outputs
