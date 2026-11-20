@@ -2035,6 +2035,7 @@ const providersSidebar = {
     "providers/synthetic",
     "providers/tencent",
     "providers/tensormesh",
+    "providers/thegrid",
     "providers/togetherai",
     "providers/topaz",
     "providers/v0",
