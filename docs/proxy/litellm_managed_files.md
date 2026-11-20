@@ -49,7 +49,7 @@ litellm_settings:
   require_managed_files: true
 ```
 
-When enabled, every upload must include `target_model_names`; do not use the `model` parameter. Uploads without `target_model_names`, or with `model`, return `400`. The setting applies to admins and non-admins. Raw provider file IDs are rejected on file operations, even if LiteLLM recorded them before strict mode was enabled. To migrate a raw file, upload its source again with `target_model_names` and use the unified ID returned by that upload. LiteLLM does not convert existing IDs.
+When enabled, every upload must include `target_model_names`; do not use the `model` parameter. Uploads without `target_model_names`, or with `model`, return `400`. The setting applies to admins and non-admins. Raw provider IDs and previously returned model-encoded IDs are rejected on file operations, even if LiteLLM recorded them before strict mode was enabled. To migrate either kind of file, upload its source again with `target_model_names` and use the unified ID returned by that upload. LiteLLM does not convert existing IDs.
 
 ```python
 # String (comma-separated for multiple models)
