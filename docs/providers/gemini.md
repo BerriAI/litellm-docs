@@ -57,7 +57,7 @@ response = completion(
 
 ## Decisions {#decisions}
 
-Gemini Decision 1 answers yes/no, choice and rubric score questions through LiteLLM's [`/v1/decisions` and `/v1/systemone`](../decisions.md) routes <SinceVersion v="1.111.0-rc.1" />
+Gemini Decision 1 answers yes/no, choice and rubric score questions through LiteLLM's [`/v1/decisions` and `/v1/systemone`](../decisions.md) routes <SinceVersion v="1.111.0" />, first in `v1.111.0-rc.1`
 
 Set `GEMINI_API_KEY` in the proxy environment and add this deployment to `config.yaml`
 
