@@ -33,7 +33,7 @@ Create the `litellm` namespace and these Secrets before installation:
 <Tabs queryString="install">
 <TabItem value="argocd" label="Argo CD" default>
 
-Set the database and Redis hosts. Add [ingress values](#ingress) for your controller.
+Set the database and Redis hosts. Add [ingress values](#ingress) for your controller. `targetRevision` is the chart version, which matches a [LiteLLM release](https://github.com/BerriAI/litellm/releases); replace it with the release you want to run.
 
 ```yaml title="application.yaml"
 apiVersion: argoproj.io/v1alpha1
@@ -46,7 +46,7 @@ spec:
   source:
     repoURL: ghcr.io/berriai/litellm/chart
     chart: litellm
-    targetRevision: "1.0.0"
+    targetRevision: "1.110.2"
     helm:
       valuesObject:
         image:
