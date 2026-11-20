@@ -351,7 +351,7 @@ curl -X POST 'http://0.0.0.0:4000/v1/decisions' \
 }'
 ```
 
-The answer has the same shape as the answer to a text-only request. The [`hide-secrets`](./proxy/guardrails/secret_detection.md) guardrail also checks the string values inside `data`, with their keys, and it redacts a secret it finds in a value before the request goes to the provider. Keys are sent as they are.
+The answer has the same shape as the answer to a text-only request. The [`hide-secrets`](./proxy/guardrails/secret_detection.md) guardrail also checks the keys and string values inside `data`, reading each value together with its key, and it replaces each secret it finds with `[REDACTED]` before the request goes to the provider. A redacted key that would clash with another key in the same object gets a number, such as `[REDACTED] (2)`, so no value is lost. The [LLM Shield Proxy](./proxy/guardrails/llm_shield_proxy.md) guardrail swaps personal data in the keys, string values, and numbers inside `data` for stand-in values, and a number it swaps is sent as a string.
 
 Other providers return a 400 that names `input_json` before the provider is called. With `drop_params` on, LiteLLM drops the `input_json` parts and sends the rest. A request that has no input left after the drop still gets a 400. `data` that is not an object or an array of objects gets a 400 even with `drop_params` on.
 
