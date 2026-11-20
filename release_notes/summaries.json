@@ -1,6 +1,40 @@
 [
   {
     "folders": [
+      "v1.110.2",
+      "v1.111.0rc3"
+    ],
+    "title": "LiteLLM v1.110.2 and v1.111.0rc3 fix Responses stream restarts",
+    "points": [
+      "Responses streams stop retrying once output reached the client and stop restarting on a fallback after reasoning output.",
+      "GPT-6.2 caches system prompts on stored requests, and `temperature=1` works again on Claude models that removed sampling params.",
+      "On v1.111.0rc3, failed calls free large request bodies without waiting for a full GC, and SSO login works behind TLS termination."
+    ]
+  },
+  {
+    "folders": [
+      "v1.109.3",
+      "v1.106.12"
+    ],
+    "title": "LiteLLM v1.109.3 and v1.106.12 fix GPT-6.2 caching on stored requests",
+    "points": [
+      "GPT-6.2 caches system prompts on `/v1/chat/completions` and `/v1/messages` when `store` is on or unset, not only with `store: false`.",
+      "`/key/info` stops a key with no user from reading other userless keys, and both lines move to a newer Wolfi base image."
+    ]
+  },
+  {
+    "folders": [
+      "v1.108.13"
+    ],
+    "title": "LiteLLM v1.108.13 (LTS) fixes Unix-socket Postgres boot and GPT-6.2 caching",
+    "points": [
+      "Proxies on a Unix-socket Postgres such as Cloud SQL boot again, since the migration lock keeps the socket path from `?host=`.",
+      "GPT-6.2 caches system prompts on stored requests, and Claude Code's rotating billing header no longer breaks prompt caching on non-Anthropic models.",
+      "`/key/info` stops a key with no user from reading other userless keys, and JWT key mappings without `jwt_issuer` apply right away."
+    ]
+  },
+  {
+    "folders": [
       "v1.108.12"
     ],
     "title": "LiteLLM v1.108.12 (LTS) fixes GPT-6.2 caching and Foundry model routers",
@@ -180,40 +214,6 @@
     "points": [
       "Transcription cost is correct for some FLAC files that could push a key over its budget.",
       "Per-second transcriptions bill the `usage.seconds` that the provider reports, so spend matches the provider invoice and unmeasured files no longer log $0."
-    ]
-  },
-  {
-    "folders": [
-      "v1.104.9",
-      "v1.103.11"
-    ],
-    "title": "LiteLLM v1.104.9 and v1.103.11 speed up request lookups in the Logs view",
-    "points": [
-      "After migrations, the proxy builds the spend log indexes that some installs lack, so request lookups in the Logs view stay fast on large tables.",
-      "On v1.103.11, replicas that boot together against one database start up more reliably while a peer runs or recovers migrations."
-    ]
-  },
-  {
-    "folders": [
-      "v1.109.0"
-    ],
-    "title": "LiteLLM v1.109.0 adds 11 providers, Codex tool search and daily limits",
-    "points": [
-      "LiteLLM adds 11 providers, including ai&, StreamLake, OpenInfer and BigModel, among 311 new model catalog entries.",
-      "Codex discovers MCP tools through tool search, and deployments accept `rpd` and `tpd` daily limits.",
-      "Streams that stall, abort or end without a finish reason now fail visibly, so retries, cooldowns and fallbacks apply to them.",
-      "Claude models missing from the cost map now default to `max_tokens: 128000`, and `DEFAULT_ANTHROPIC_CHAT_MAX_TOKENS=4096` keeps the old value."
-    ]
-  },
-  {
-    "folders": [
-      "v1.108.5"
-    ],
-    "title": "LiteLLM v1.108.5 (LTS) fixes workload identity on OpenAI routes and transcription cost",
-    "points": [
-      "Keyless workload identity OpenAI deployments no longer answer 401 on image edits, audio, files, batches and the other routes beyond chat.",
-      "Transcription cost is correct for some FLAC files that could push a key over its budget.",
-      "`ollama_chat/` streams give each parallel tool call its own index, and `/v1/messages` honors a deployment's `additional_drop_params`."
     ]
   }
 ]
