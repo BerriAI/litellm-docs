@@ -82,10 +82,15 @@ see [Redis socket_timeout](./caching_redis.md#redis-socket_timeout).
 ### Step 3: Run proxy with config
 
 ```shell
+$ export OPENAI_API_KEY="sk-..."
+$ export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 32)"
+$ printf 'Local proxy key: %s\n' "$LITELLM_MASTER_KEY"
 $ litellm --config /path/to/config.yaml
 ```
 
 ### Step 4: Test it
+
+In another terminal, set `LITELLM_API_KEY` to the key printed above, then send the requests below.
 
 <Tabs>
 <TabItem value="chat_completions" label="/chat/completions">
