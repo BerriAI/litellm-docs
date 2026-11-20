@@ -52,7 +52,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | Databricks serving endpoints, image input on Cloudflare Clef, [audio and video input](#audio-and-video-input) on Cloudflare Clef-omni, TypeSafe images and box questions | `v1.106.0` |
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
 | A deployment's own [`supports_audio_input` and `supports_video_input`](#audio-and-video-on-other-deployments) values, and clip requests going only to the group deployments that take clips | `v1.110.0` |
-| [JSON input](#json-input) on OpenAI | `v1.112.0-rc.1`, and `v1.108.13` on the 1.108.x LTS line |
+| [JSON input](#json-input) on OpenAI | `v1.112.0-rc.1`, and `v1.108.14` on the 1.108.x LTS line |
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -61,7 +61,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | Virtual keys, budgets, rate limits | Yes | Normal proxy key auth |
 | Load balancing, fallbacks | Yes | Goes through the router like `/chat/completions` |
 | Image input | OpenAI, Gemini, Cloudflare Clef and TypeSafe | TypeSafe needs the `TypeSafe-Danger-Zone-Images: true` header. Other providers return a 400, or drop the images under `drop_params` |
-| JSON input | OpenAI | Other providers, Microsoft Foundry included, return a 400 that names `input_json`, or drop the parts under `drop_params` |
+| JSON input | OpenAI | `azure/` deployments send the parts on as OpenAI does. Other providers, Microsoft Foundry included, return a 400 that names `input_json`, or drop the parts under `drop_params` |
 | Audio and video input | Gemini Decision 1 and Cloudflare Clef-omni | Other models return a 400, or drop the clips under `drop_params`, unless a [deployment flag](#audio-and-video-on-other-deployments) turns clips on. `openai/` and `azure/` deployments refuse clips whatever the flag says |
 | Streaming | No | |
 
@@ -351,11 +351,11 @@ curl -X POST 'http://0.0.0.0:4000/v1/decisions' \
 }'
 ```
 
-The answer has the same shape as the answer to a text-only request. The [`hide-secrets`](./proxy/guardrails/secret_detection.md) guardrail also checks the strings inside `data`, and it redacts a secret it finds there before the request goes to the provider.
+The answer has the same shape as the answer to a text-only request. The [`hide-secrets`](./proxy/guardrails/secret_detection.md) guardrail also checks the string values inside `data`, with their keys, and it redacts a secret it finds in a value before the request goes to the provider. Keys are sent as they are.
 
 Other providers return a 400 that names `input_json` before the provider is called. With `drop_params` on, LiteLLM drops the `input_json` parts and sends the rest. A request that has no input left after the drop still gets a 400. `data` that is not an object or an array of objects gets a 400 even with `drop_params` on.
 
-In a load-balanced group, a request with `input_json` parts goes only to the deployments that take them, and requests without them still use every deployment. With `drop_params` on, a deployment that does not take JSON stays in the pick and drops the JSON parts, as long as it keeps some input. A deployment that would have no input left after it drops the JSON parts and any images or developer and system messages it does not take is skipped. So a request whose user message holds only `input_json` parts goes only to the deployments that take JSON. When no deployment in the group can take the request, it gets the 400 that names `input_json`, and then the group's [fallbacks](./proxy/reliability.md) run, if it has any. The same happens when every deployment that takes JSON is cooling down.
+In a load-balanced group, a request with `input_json` parts goes only to the deployments that take them, and requests without them still use every deployment. With `drop_params` on, a deployment that does not take JSON stays in the pick and drops the JSON parts, as long as it keeps some input. A deployment that would have no input left after it drops the JSON parts and any images or developer and system messages it does not take is skipped. So a request whose user message holds only `input_json` parts goes only to the deployments that take JSON. When no deployment in the group can take the request, it gets the 400 that names `input_json`, and then the group's [fallbacks](./proxy/reliability.md) run, if it has any. When every deployment that takes JSON is cooling down, the request gets the same 400. On the 1.108.x LTS line it gets the router's 429 cooldown error instead.
 
 ## /v1/systemone
 
