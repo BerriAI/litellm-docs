@@ -7,6 +7,7 @@ authors:
   - ishaan-alt
   - krrish
 tags: [incident-report, openai, caching, cost]
+description: "OpenAI stopped caching the instructions field on GPT-6.2, so system prompts sent through LiteLLM were billed at full price. Upgrade to the fixed version for your release line."
 hide_table_of_contents: false
 ---
 
@@ -20,15 +21,15 @@ On November 17, OpenAI released a breaking change that stopped caching the `inst
 
 | Release line | Upgrade to |
 |---|---|
-| 1.111 RC | `v1.111.0-rc.2` or later |
-| 1.110 stable | `v1.110.1` or later |
-| 1.109 stable | `v1.109.2` or later |
-| 1.108 LTS | `v1.108.12` or later |
-| 1.106 stable | `v1.106.11` or later |
+| 1.108 LTS | `v1.108.13` or later |
+| 1.111 RC | `v1.111.0rc3` or later |
+| 1.110 stable | `v1.110.2` or later |
+| 1.109 stable | `v1.109.3` or later |
+| 1.106 stable | `v1.106.12` or later |
 
 {/* truncate */}
 
-## Summary
+## Am I affected?
 
 You were affected if you sent GPT-6.2 traffic through LiteLLM in one of these ways.
 
