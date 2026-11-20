@@ -79,7 +79,7 @@ The gateway forwards telemetry through a bounded asynchronous queue. If Lens is 
 
 On a fresh Helm install, a few Lens restarts with `Error: Storage(Storage(Transport))` are expected while ClickHouse starts. If they continue after ClickHouse is Ready, check its Service, credentials and logs. If ClickHouse stays Pending, inspect its PVC and StorageClass with `kubectl --namespace "$LENS_NAMESPACE" describe pvc`, using the namespace from your Helm setup. Do not treat a persistent failure as normal startup
 
-If a start fails, check Docker and the service logs from the `lens` checkout or the extracted Compose bundle directory. The last command checks readiness:
+If a start fails, check Docker and the service logs from the extracted Compose bundle directory. In a folder that holds only the downloaded `compose.yaml`, leave out `-f deploy/lens/compose.yaml`. The last command checks readiness:
 
 ```sh
 docker info

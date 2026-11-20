@@ -29,7 +29,7 @@ Agents send traces directly to Lens with a tracing key. Investigations send sele
 
 | Your starting point | Follow this guide |
 | --- | --- |
-| Docker on one machine or server | [Clone the repository and run Docker Compose](./deployment/local.md) |
+| Docker on one machine or server | [Download one Compose file and run it](./deployment/local.md) |
 | Kubernetes | [Install the Helm chart](./deployment/kubernetes.md) |
 | Add to an existing LiteLLM gateway | [Connect Lens to LiteLLM](./deployment/litellm.md) |
 
@@ -45,7 +45,7 @@ A gateway administrator [connects Lens](./deployment/litellm.md) once. Users the
 
 ## Use Lens on its own
 
-Clone the [Lens repository](https://github.com/BerriAI/lens) and run `docker compose up --wait`. It starts Lens and ClickHouse from the published image. Sign in with the generated admin token. A LiteLLM gateway and PostgreSQL are not required.
+Download the [Lens Compose file](https://github.com/BerriAI/lens/blob/main/deploy/lens/compose.yaml) and run `docker compose up --wait`. It starts Lens and ClickHouse from the published image. Sign in with the generated admin token. A LiteLLM gateway and PostgreSQL are not required.
 
 Follow the [quickstart](./deployment/local.md). You can inspect traces without an analysis model. Add an [analysis model](https://github.com/BerriAI/lens/blob/main/docs/analysis.md) when you want to run investigations.
 
