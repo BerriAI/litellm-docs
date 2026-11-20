@@ -21,7 +21,7 @@ The `bineric` provider needs a LiteLLM build that contains [LiteLLM #51621](http
 
 ## EU hosting
 
-Most Bineric models run in EU data centres, and some run in the US, such as the Gemini models. `GET https://api.bineric.com/v1/models` lists every model with a `hosting` field of `EU` or `US`, along with its context length and price per million tokens. It needs no key, so check it when your data has to stay in the EU.
+Most Bineric models run in EU data centres. A few run in the US, such as GPT-OSS and Llama 3.3 70B, and a few are marked `Global`, such as Gemini 2.5 Flash and Gemini 3.1 Pro. `GET https://api.bineric.com/v1/models` lists every model with a `hosting` field of `EU`, `US` or `Global`, along with its context length and price per million tokens. It needs no key, so check it when your data has to stay in the EU.
 
 ## Available models (selection)
 
