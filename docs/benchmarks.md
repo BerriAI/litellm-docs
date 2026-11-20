@@ -100,15 +100,14 @@ Performance test results for LiteLLM Gateway.
 
 ## Per-pod benchmarks {#per-pod-streaming-benchmarks}
 
-One four-worker pod on **AWS c7a.2xlarge** sustained **100 RPS with zero failures** in this short-response test, with **43 ms regular and 48 ms streaming p99 gateway overhead**. Traffic was 80% regular and 20% streaming.
+Plan for approximately **100 combined RPS per four-worker pod on AWS c7a.2xlarge** for this short-response workload. The five-minute virtual-key run completed **30,000 requests with zero failures**, with 80% regular and 20% streaming traffic.
 
-| Combined RPS per pod | Regular overhead p99 | Streaming overhead p99 |
-|---|---:|---:|
-| 20 | 16 ms | 14 ms |
-| 100 | 43 ms | 48 ms |
-| 200 | 451 ms | 450 ms |
+| Request type | Gateway overhead p99 |
+|---|---:|
+| Regular | 36 ms |
+| Streaming | 38 ms |
 
-All cases had zero request failures. The 200-RPS case exceeded a 100-ms p99 overhead target. Overhead uses `x-litellm-overhead-duration-ms`; it does not measure the full streaming lifetime.
+Streaming time to first token p99 was 256 ms, including the mock provider's 200-ms initial delay. Gateway overhead uses `x-litellm-overhead-duration-ms` and does not measure the full streaming lifetime.
 
 ### Methodology
 
@@ -116,6 +115,6 @@ All cases had zero request failures. The 200-RPS case exceeded a 100-ms p99 over
 |---|---|
 | Version and machine | LiteLLM v1.110.0; November 19, 2026; dedicated c7a.2xlarge node, 8 vCPUs and 16 GiB RAM, AWS EKS `us-west-1a` |
 | Pod | Four workers; gateway requests 4 vCPUs and 8 GiB RAM, with limits of 8 vCPUs and 8 GiB; collector and metrics sidecars |
-| Workload | In-cluster Locust FastHttpUser; small unique prompts, `max_tokens: 64`; 80% regular / 20% streaming; a separate network mock waits 200 ms and returns 37 content chunks, 15 ms apart for streams |
-| Pacing and duration | Random startup offsets remain in effect after Locust pacing starts; offered arrivals checked in 100-ms bins. Each case uses 30 seconds of warmup and two minutes of measurement |
-| Services and scope | PostgreSQL, Redis and mock provider on a separate node in the same Availability Zone; Master-key auth, PgBouncer, collector, prompt storage, spend tracking and Prometheus enabled. Direct Kubernetes Service traffic; no service mesh or custom callbacks |
+| Workload | Small unique prompts, `max_tokens: 64`; a separate network mock waits 200 ms and returns 37 content chunks, 15 ms apart for streams |
+| Load and duration | In-cluster Locust FastHttpUser with stored virtual-key auth; 30 seconds of warmup and five minutes of measurement. Random startup offsets remain in effect after pacing starts; offered arrivals checked in 100-ms bins; complete streams verified |
+| Services and scope | PostgreSQL, Redis and mock provider on a separate node in the same Availability Zone; PgBouncer, collector, prompt storage, spend tracking and Prometheus enabled. Direct Kubernetes Service traffic; no service mesh or custom callbacks |
