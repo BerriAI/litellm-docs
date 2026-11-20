@@ -109,7 +109,7 @@ print(result.text)
 
 ## Parameters and response
 
-On v3.0, omit `language` for automatic detection or supply one to four comma-separated hints such as `en`, `hi-IN` or `hi,en`. On v2.5, pass exactly one language such as `hi` or `en-IN`. LiteLLM sends a two-letter code as its Indian locale, so `hi` becomes `hi-IN`, and fixes the case of a region code, so `hi-in` becomes `hi-IN`. Other `gnani/` model names, such as a newer Prisma release, use the v3.0 parameters.
+On v3.0, omit `language` for automatic detection or supply one to four comma-separated hints such as `en`, `hi-IN` or `hi,en`. On v2.5, pass exactly one language such as `hi` or `en-IN`. Gnani's own `language_code` field also works and takes priority over `language`. LiteLLM sends a two-letter code as its Indian locale, so `hi` becomes `hi-IN`, and fixes the case of a region code, so `hi-in` becomes `hi-IN`. Other `gnani/` model names, such as a newer Prisma release, use the v3.0 parameters.
 
 Both models return JSON with a `text` field. When Gnani reports them, the response also has `language` (the detected language code), `request_id`, and `truncated`, which is `true` when Gnani transcribed only part of the audio. A successful silent clip can return an empty string.
 
@@ -117,13 +117,40 @@ Both models accept `format=transcribe` for conventional number formatting and `f
 
 Prisma v3.0 accepts up to 200 `keyterms`, a `topic` of up to 1,600 characters, `previous_text` (it uses the last 600 characters), and one to four `speaker_names`. On v3.0, LiteLLM sends OpenAI's `prompt` as `previous_text` unless you also pass `previous_text`. For word boosting on v2.5, pass `bias_list=["Prisma"]` and `bias_score=1.5`. For digits in the target script on v2.5, use `format="transcribe"` and `itn_native_numerals=True`. See the [Prisma v3.0 model guide](https://docs.gnani.ai/api/STT/models/prisma-v3) and the [Prisma v2.5 model guide](https://docs.gnani.ai/api/STT/models/prisma-v2-5).
 
-Both models support find-and-replace. Pass `enable_substitution=True` and a `substitution_map` of up to ten rules, for example `[{"patterns": ["maths"], "replacement": "mathematics"}]`. Gnani validates audio and context limits and LiteLLM returns its errors to the caller.
+Both models support find-and-replace. Pass `enable_substitution=True` and a `substitution_map` of up to ten rules, for example `[{"patterns": ["maths"], "replacement": "mathematics"}]`. Gnani validates audio and context limits and LiteLLM returns its errors to the caller. LiteLLM sends other options it does not know, such as an option Gnani adds later, to Gnani as form fields.
 
 ## Limitations
 
 This integration covers REST transcription. Prisma REST has no word timestamps, speaker diarization or streaming. OpenAI `temperature`, `timestamp_granularities`, `chunking_strategy`, `include`, `known_speaker_names`, `known_speaker_references` and `stream=True` have no equivalent here, and neither does `prompt` on v2.5, so LiteLLM returns a 400 for them. It also returns a 400 for a Gnani option the chosen model does not accept, such as `topic` on v2.5. To drop them instead, pass `drop_params=True` in the SDK or set `drop_params: true` under `litellm_settings` on the proxy.
 
-Gnani runs one request at a time per API key and answers a second overlapping request with a 429. The proxy retries a 429 twice by default, so a few overlapping requests still succeed. For more parallel traffic, raise `num_retries` under `router_settings`, or add one deployment per Gnani key under the same `model_name` so the proxy spreads requests across keys.
+Gnani runs one request at a time per account and answers an overlapping request with a 429, so more keys on the same account add no capacity. The proxy retries a 429 twice by default, which covered three overlapping requests in testing. For more parallel traffic, raise `num_retries` under `router_settings`. The SDK functions `litellm.transcription` and `litellm.atranscription` do not retry, so SDK code that sends overlapping requests should call `atranscription` on a `litellm.Router` with `num_retries` set.
+
+```python
+import asyncio
+import os
+
+import litellm
+
+router = litellm.Router(
+    model_list=[
+        {
+            "model_name": "gnani-prisma-v3",
+            "litellm_params": {"model": "gnani/prisma-v3.0", "api_key": os.environ["GNANI_API_KEY"]},
+        }
+    ],
+    num_retries=4,
+)
+
+
+async def main() -> None:
+    results = await asyncio.gather(
+        *(router.atranscription(model="gnani-prisma-v3", file=open("lecture.wav", "rb")) for _ in range(3))
+    )
+    print([result.text for result in results])
+
+
+asyncio.run(main())
+```
 
 Gnani has no published per-second rate in the LiteLLM model cost map, so spend shows as zero until you set your contracted rate as `input_cost_per_second` in the deployment's `litellm_params`. LiteLLM multiplies it by the length of the uploaded recording. LiteLLM cannot read the length of AAC and M4A uploads or of OGG files that hold FLAC audio, so those requests still bill zero.
 
