@@ -607,6 +607,12 @@
       "chat"
     ]
   },
+  "providers/meragpt": {
+    "prefix": "meragpt",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/meta": {
     "prefix": "meta",
     "capabilities": [
