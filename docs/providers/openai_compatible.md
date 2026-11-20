@@ -65,7 +65,33 @@ response = litellm.embedding(
 print(response)
 ```
 
+## TokenSail example
 
+[TokenSail](https://tokensail.ai) provides an OpenAI-compatible gateway for DeepSeek, Qwen, GLM and Kimi model families, with USD billing. Use the `openai/` routing prefix and the versioned API base, without an endpoint suffix:
+
+```python
+import os
+from litellm import completion, embedding
+
+api_base = "https://api.tokensail.ai/v1"
+api_key = os.environ["TOKENSAIL_API_KEY"]
+
+response = completion(
+    model="openai/deepseek-v4-pro",
+    api_base=api_base,
+    api_key=api_key,
+    messages=[{"role": "user", "content": "ping"}],
+)
+
+vectors = embedding(
+    model="openai/text-embedding-v4",
+    api_base=api_base,
+    api_key=api_key,
+    input=["hello"],
+)
+```
+
+Use exact model IDs from the [TokenSail catalog](https://tokensail.ai/models). The SDK adds `/chat/completions` or `/embeddings`; do not add those paths to `api_base`. Pricing is on the [pricing page](https://tokensail.ai/pricing-compare); tool calling works against the gateway but is not exercised through LiteLLM's own tool-call path here.
 
 ## Usage with LiteLLM Proxy Server
 
