@@ -9,43 +9,22 @@ slug: "/proxy/lens/deployment/local"
 Start Docker, then run this in an empty folder:
 
 ```sh
-curl -fsSLO https://raw.githubusercontent.com/BerriAI/lens/main/deploy/lens/compose.yaml && docker compose up --wait
+curl -fsSLO https://raw.githubusercontent.com/BerriAI/lens/main/deploy/lens/compose.yaml && docker compose up --wait && docker compose logs -n1 credentials
 ```
 
-The command returns when Lens is ready, in under a minute. Then print your sign-in token, open [http://localhost:4318/ui/](http://localhost:4318/ui/), and paste the token into the **Setup token** field:
+It finishes in under a minute and prints the address to open and your setup token:
 
-```sh
-grep LENS_ADMIN_TOKEN .env
+```
+credentials-1  | Open http://localhost:4318/ui/ and paste this setup token: <your token>
 ```
 
-To look around without a token, select **Explore demo data** on the sign-in page.
-
-You need Docker with Docker Compose 2.24 or newer, and Docker must be running. You do not need Git, LiteLLM, Kubernetes, PostgreSQL, or a model key.
-
-## 1. Start
-
-The line above is these two steps. The first downloads one [Compose file](https://github.com/BerriAI/lens/blob/main/deploy/lens/compose.yaml), and the second starts Lens and ClickHouse from published images:
-
-```sh
-curl -fsSLO https://raw.githubusercontent.com/BerriAI/lens/main/deploy/lens/compose.yaml
-docker compose up --wait
-```
-
-Lens generates its own credentials on the first start and saves them in `.env` beside the Compose file.
-
-## 2. Sign in
-
-In the same folder, print the token that Lens generated:
-
-```sh
-grep LENS_ADMIN_TOKEN .env
-```
-
-Open [http://localhost:4318/ui/](http://localhost:4318/ui/), paste the value after `LENS_ADMIN_TOKEN=` into the **Setup token** field, and select **Sign in**. To skip the token, select **Explore demo data** on the same page. It opens Lens with sample data only.
+Open [http://localhost:4318/ui/](http://localhost:4318/ui/), paste the token into the **Setup token** field, and select **Sign in**. To look around without a token, select **Explore demo data** on the same page.
 
 ![Lens sign-in page with a field for the setup token.](/img/lens/quickstart-signin.webp)
 
-## 3. See traces
+You need Docker with Docker Compose 2.24 or newer, and Docker must be running. You do not need Git, LiteLLM, Kubernetes, PostgreSQL, or a model key. The command downloads one [Compose file](https://github.com/BerriAI/lens/blob/main/deploy/lens/compose.yaml) and starts Lens and ClickHouse from published images. Lens generates its credentials on the first start and saves them in `.env` beside that file, where the token is `LENS_ADMIN_TOKEN`.
+
+## See traces
 
 Turn on **Demo data** in the top right to look around. To record your own agent, follow [Send your first trace](../first-trace.md).
 
