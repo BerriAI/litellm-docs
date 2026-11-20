@@ -75,6 +75,14 @@ Multiple Lens replicas can share one supported ClickHouse server. Keeper coordin
 
 The gateway forwards telemetry through a bounded asynchronous queue. If Lens is unavailable, ordinary gateway inference continues, while telemetry may be delayed or dropped after retry or queue limits. Agent exporters have their own retry behavior. Verify outage behavior for your selected deployment and exporter
 
+## Other container platforms {#other-container-platforms}
+
+On a managed container platform, run the published image from [Releases and images](./releases.md#container-images) and supply `LENS_ADMIN_TOKEN`, `LENS_PUBLIC_URL` and the [ClickHouse connection](./storage.md#external-clickhouse) through the platform's private configuration. Use the release's [Compose configuration](https://github.com/BerriAI/lens/blob/main/deploy/lens/compose.yaml) as the reference for resource and sandbox settings
+
+Keep the image's non-root user, read-only filesystem, bounded temporary space, dropped capabilities and sandbox settings. Investigations need native Linux with the capabilities of the [calculation sandbox](https://github.com/BerriAI/lens/blob/main/docs/sandbox.md)
+
+Lens listens on port 4318. Use `/health/live` for process health and `/health/ready` for readiness
+
 ## Troubleshooting
 
 On a fresh Helm install, a few Lens restarts with `Error: Storage(Storage(Transport))` are expected while ClickHouse starts. If they continue after ClickHouse is Ready, check its Service, credentials and logs. If ClickHouse stays Pending, inspect its PVC and StorageClass with `kubectl --namespace "$LENS_NAMESPACE" describe pvc`, using the namespace from your Helm setup. Do not treat a persistent failure as normal startup
