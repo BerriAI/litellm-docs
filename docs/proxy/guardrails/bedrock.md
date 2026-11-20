@@ -373,6 +373,8 @@ Cache writes use a TTL of 24 hours by default. Set `GUARDRAIL_SCANNED_MESSAGES_C
 
 ## Scan tool calls and tool descriptions as text
 
+<SinceVersion v="1.112.0" />
+
 The Bedrock ApplyGuardrail API has no content type for tool calls or tool definitions, so by default a Bedrock guardrail checks message text and tool results only. Two opt-in settings send the rest to Bedrock as text. Both default to off and work on `/v1/chat/completions`, `/v1/messages` and `/v1/responses`.
 
 ```yaml title="config.yaml"
