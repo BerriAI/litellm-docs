@@ -47,7 +47,7 @@ curl --fail https://lens.example.com/health/ready
 
 ## Sign in
 
-Open `https://lens.example.com/ui/` and sign in with the generated admin token:
+Open `https://lens.example.com/ui/` and paste the generated admin token into the **Setup token** field. Read the token with:
 
 ```sh
 kubectl --namespace lens get secret lens-admin \

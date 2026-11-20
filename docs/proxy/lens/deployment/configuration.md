@@ -19,7 +19,7 @@ Use the [Lens installation guide](https://github.com/BerriAI/lens/blob/main/depl
 | Gateway service and signing credentials | Authenticate the optional internal connection and delegated identity |
 | LiteLLM user or model key | Access the gateway under its existing authentication and model rules |
 
-The standalone starter creates its admin token and database password in `deploy/lens/.env`. A standalone tracing installation needs those credentials and a tracing key. Investigations, Signals and eval judging require their corresponding provider configuration. Gateway connection secrets are needed only when connecting LiteLLM
+The standalone starter creates its admin token and database password in `deploy/lens/.env`. The [quickstart](./local.md) writes them to `.env` beside the downloaded `compose.yaml`. A standalone tracing installation needs those credentials and a tracing key. Investigations, Signals and eval judging require their corresponding provider configuration. Gateway connection secrets are needed only when connecting LiteLLM
 
 Keep deployment secrets private and retain them with your recovery materials. The gateway keeps its own database and encryption keys; those are separate from Lens's ClickHouse storage
 
@@ -87,13 +87,20 @@ Lens listens on port 4318. Use `/health/live` for process health and `/health/re
 
 On a fresh Helm install, a few Lens restarts with `Error: Storage(Storage(Transport))` are expected while ClickHouse starts. If they continue after ClickHouse is Ready, check its Service, credentials and logs. If ClickHouse stays Pending, inspect its PVC and StorageClass with `kubectl --namespace "$LENS_NAMESPACE" describe pvc`, using the namespace from your Helm setup. Do not treat a persistent failure as normal startup
 
-If a start fails, check Docker and the service logs from the extracted Compose bundle directory. In a folder that holds only the downloaded `compose.yaml`, leave out `-f deploy/lens/compose.yaml`. The last command checks readiness:
+If a start fails, check Docker and the service logs. After the [quickstart](./local.md), run these from the folder that holds the downloaded `compose.yaml`. The last command checks readiness:
 
 ```sh
 docker info
+docker compose ps
+docker compose logs --tail=100 lens clickhouse
+curl --fail http://localhost:4318/health/ready
+```
+
+From the extracted release bundle or a Lens checkout, name the Compose file:
+
+```sh
 docker compose -f deploy/lens/compose.yaml ps
 docker compose -f deploy/lens/compose.yaml logs --tail=100 lens clickhouse
-curl --fail http://localhost:4318/health/ready
 ```
 
 | What you see | What to check |
