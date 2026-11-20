@@ -98,32 +98,24 @@ Performance test results for LiteLLM Gateway.
 | Duration | Not recorded |
 | Measurement | Requests per second and median request latency |
 
-## Per-pod streaming benchmarks {#per-pod-streaming-benchmarks}
+## Per-pod benchmarks {#per-pod-streaming-benchmarks}
 
-**One pod with four workers sustained approximately 20 streaming RPS with zero failures across 23,544 measured requests.** Each case used a fixed 20-RPS target; these results do not establish maximum per-pod capacity.
+One four-worker pod on **AWS c7a.2xlarge** sustained **100 RPS with zero failures** in this short-response test, with **43 ms regular and 48 ms streaming p99 gateway overhead**. Traffic was 80% regular and 20% streaming.
 
-| Gateway node | Content chunks per response | Measured RPS per pod | Gateway overhead p99, ms | Time to first token p99, ms |
-|---|---:|---:|---:|---:|
-| c7a.2xlarge | 37 | 20.31 | 151 | 422 |
-| c7a.2xlarge | 82 | 20.11 | 84 | 347 |
-| c7a.2xlarge | 165 | 19.98 | 153 | 397 |
-| c7i.2xlarge | 37 | 20.31 | 166 | 439 |
-| c7i.2xlarge | 82 | 20.12 | 120 | 415 |
-| c7i.2xlarge | 165 | 19.91 | 245 | 473 |
-| c8i.2xlarge | 37 | 20.31 | 167 | 452 |
-| c8i.2xlarge | 82 | 20.14 | 98 | 384 |
-| c8i.2xlarge | 165 | 19.92 | 167 | 443 |
+| Combined RPS per pod | Regular overhead p99 | Streaming overhead p99 |
+|---|---:|---:|
+| 20 | 16 ms | 14 ms |
+| 100 | 43 ms | 48 ms |
+| 200 | 451 ms | 450 ms |
 
-Gateway overhead comes from `x-litellm-overhead-duration-ms` and does not measure the full streaming lifetime. Time to first token is measured by the client and includes the mock provider's 200 ms delay. Content chunks are not tokenizer token counts.
+All cases had zero request failures. The 200-RPS case exceeded a 100-ms p99 overhead target. Overhead uses `x-litellm-overhead-duration-ms`; it does not measure the full streaming lifetime.
 
 ### Methodology
 
 | Setting | Configuration |
 |---|---|
-| Version and date | LiteLLM v1.110.0, tested November 19, 2026 |
-| Gateway pod | Four workers; gateway container requests 4 vCPUs and 8 GiB RAM, with limits of 8 vCPUs and 8 GiB. Separate collector and Prometheus metrics containers |
-| Machines | AWS EKS, `us-west-1a`; dedicated on-demand gateway node with 8 vCPUs and 16 GiB RAM. c7a has 8 physical cores; c7i and c8i have 4 physical cores with two threads each |
-| Requests | `POST /v1/chat/completions`, `stream: true`; small prompts with random IDs to avoid cache reuse. Mock returns 37, 82, or 165 content chunks after a 200 ms initial delay, with 15 ms between chunks |
-| Load and duration | In-cluster Locust FastHttpUser, 80 clients, 20 target RPS. Each case has 20 seconds of warmup and 130 seconds of measurement; complete streams and expected chunk counts are verified |
-| Supporting services | Mock provider, PostgreSQL and Redis on a separate c7i.2xlarge node in the same Availability Zone. PgBouncer, spend logs, prompt storage and Prometheus enabled |
-| Network and scope | Direct Kubernetes Service traffic; no load balancer, service mesh, custom auth/logging callbacks or Datadog. One run per machine and response length; c8a was not tested |
+| Version and machine | LiteLLM v1.110.0; November 19, 2026; dedicated c7a.2xlarge node, 8 vCPUs and 16 GiB RAM, AWS EKS `us-west-1a` |
+| Pod | Four workers; gateway requests 4 vCPUs and 8 GiB RAM, with limits of 8 vCPUs and 8 GiB; collector and metrics sidecars |
+| Workload | In-cluster Locust FastHttpUser; small unique prompts, `max_tokens: 64`; 80% regular / 20% streaming; a separate network mock waits 200 ms and returns 37 content chunks, 15 ms apart for streams |
+| Pacing and duration | Random startup offsets remain in effect after Locust pacing starts; offered arrivals checked in 100-ms bins. Each case uses 30 seconds of warmup and two minutes of measurement |
+| Services and scope | PostgreSQL, Redis and mock provider on a separate node in the same Availability Zone; Master-key auth, PgBouncer, collector, prompt storage, spend tracking and Prometheus enabled. Direct Kubernetes Service traffic; no service mesh or custom callbacks |
