@@ -45,7 +45,7 @@
     "new-shared-helm": "/docs/proxy/lens/deployment/kubernetes#new-deployment",
     "new-shared-docker": "/docs/proxy/lens/deployment/server",
     "using-helm": "/docs/proxy/lens/deployment/kubernetes#existing-deployment",
-    "using-compose": "/docs/proxy/lens/deployment/docker-compose",
+    "using-compose": "/docs/proxy/lens/deployment/litellm#docker-compose",
     "using-docker": "/docs/proxy/lens/deployment/docker",
     "existing-storage-and-secrets": "/docs/proxy/lens/deployment/storage",
     "upgrade-litellm-and-the-worker": "/docs/proxy/lens/deployment/upgrades",
