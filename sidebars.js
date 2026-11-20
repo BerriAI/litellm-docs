@@ -1533,6 +1533,7 @@ const sidebars = {
             "pass_through/openai_passthrough",
             "pass_through/tinyfish",
             "pass_through/transcribe",
+            "pass_through/tripo",
             "pass_through/typesafe",
             "proxy/passthrough_managed_ids",
             {
