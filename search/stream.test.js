@@ -140,6 +140,7 @@ test('an interrupted upstream stream retains safe partial text in its trace', as
     await assert.rejects(call.turn([], {onDelta() {}}), {name: 'GatewayStreamInterrupted'});
     await tracing.flush();
     assert.equal(spans[0].attributes['output.value'], 'Partial answer');
+    assert.equal(spans[0].attributes['lens.capture.messages_separate'], false);
     assert.equal(spans[0].attributes['gen_ai.response.id'], 'stream-id');
     assert.equal(spans[0].attributes['error.type'], 'GatewayStreamInterrupted');
   } finally {await tracing.shutdown();}

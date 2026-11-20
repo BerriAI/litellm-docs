@@ -502,6 +502,18 @@ test('bot tracing uses its dedicated key and keeps website tracing and agent nam
       assert.equal(followUp.status, 200);
       assert.equal(followUp.headers.get('x-docs-trace-context'), traceContext);
       await followUp.text();
+      const conversationSpans = spans.filter(span => span.spanContext().traceId === traceId);
+      const userMessages = conversationSpans.filter(span => span.name === 'user message');
+      assert.equal(userMessages.length, 2);
+      assert.equal(userMessages[1].attributes['input.value'], 'What about the gateway?');
+      assert.ok(userMessages.every(span => span.attributes['lens.capture.source'] === 'session_transcript'));
+      const assistantMessages = conversationSpans.filter(span => span.name === 'assistant message');
+      assert.equal(assistantMessages.length, 2);
+      assert.ok(assistantMessages.every(span => span.attributes['output.value'] === citedAnswer));
+      const modelSpans = conversationSpans.filter(span => span.attributes['openinference.span.kind'] === 'LLM');
+      assert.ok(modelSpans.length > 0);
+      assert.ok(modelSpans.every(span => span.attributes['lens.capture.messages_separate'] === true));
+      assert.ok(modelSpans.every(span => JSON.parse(span.attributes['input.value']).length >= 2));
       assert.ok(spans.filter(span => span.spanContext().traceId === traceId)
         .some(span => span.attributes['input.value'] === 'What about the gateway?'));
       const attributes = JSON.stringify(spans.map(span => span.attributes));
