@@ -354,6 +354,22 @@ litellm_settings:
       # /chat/completions, /completions, /embeddings, /audio/transcriptions, /v1/responses
 ```
 
+### Exclude call types from caching
+
+`excluded_call_types` is merged on LiteLLM `main` in [PR #52902](https://github.com/BerriAI/litellm/pull/52902) and is not in a tagged release yet.
+
+`excluded_call_types` removes call types from `supported_call_types`, or from the default list when `supported_call_types` is not set, and leaves every other call type cached as before. List both `embedding` and `aembedding`, since `/embeddings` on the proxy runs as `aembedding` and the SDK `embedding()` call runs as `embedding`.
+
+```yaml
+litellm_settings:
+  cache: True
+  cache_params:
+    type: redis
+    excluded_call_types: ["embedding", "aembedding"]
+```
+
+An excluded call type skips cache reads as well as writes, so entries cached before the exclusion are no longer served. The setting does not delete existing entries; their existing expiration and eviction rules still apply. An unset or empty `excluded_call_types` changes nothing, and `supported_call_types: []` or `null` still caches nothing. Embeddings stay cached by default. See [Keep embeddings from evicting rate limits and spend](./caching_redis.md#keep-embeddings-from-evicting-rate-limits-and-spend) for when to use this.
+
 ## Set cache for proxy, but not on the actual llm api call
 
 Use this if you just want to enable features like rate limiting, and loadbalancing across multiple

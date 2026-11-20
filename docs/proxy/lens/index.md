@@ -27,7 +27,9 @@ If your team already runs Lens, [send your first trace](./first-trace.md). Choos
 
 You can [deploy Lens on its own](./deployment/local.md) or [add it to your LiteLLM dashboard](./deployment/litellm.md). If Lens already runs, [connect that deployment to your gateway](./deployment/litellm.md#1-get-the-lens-address). Each guide ends with a connection check and a first trace.
 
-Use the [coding agent guide](./coding-agents.md) to record personal Claude Code or Codex sessions. Once traces are available, [run an investigation](./investigations.md) or use the [API reference](./api.md).
+**See your coding agent sessions:** start Lens, generate a tracing key, then follow the [Claude Code](./coding-agents.md#claude-code) or [Codex](./coding-agents.md#codex) setup. Open **Traces** to see the recorded activity.
+
+Once traces are available, [run an investigation](./investigations.md) or use the [API reference](./api.md).
 
 Use [Model optimizations](./model-optimizations.md) to compare models on live traffic or a saved dataset. Choose Live, Shadow, or Offline and inspect quality, cost, latency, and individual answers.
 

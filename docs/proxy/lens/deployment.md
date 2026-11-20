@@ -23,34 +23,29 @@ flowchart LR
   lens -- "selected trace content" --> provider["Analysis model provider"]
 ```
 
-Lens is one service. It serves the UI and API and runs investigations in background workers. It stores traces, LiteLLM spend records, and investigation results in ClickHouse. Every Lens replica shares that ClickHouse state, so you can run more than one.
-
-Agents send OpenTelemetry traces directly to Lens with a tracing key. Traces do not pass through LiteLLM. When you use Lens inside LiteLLM, the dashboard and the LiteLLM trace and investigation routes call Lens on the user's behalf. LiteLLM authenticates those calls with `LITELLM_LENS_SERVICE_TOKEN`, signs the user's identity with `LENS_GATEWAY_SECRET`, and sends its spend records so each run can show its cost.
-
-Investigations send only the selected trace content to the analysis model you configure. Everything else stays on your infrastructure. Standalone Lens needs only Lens and ClickHouse.
+Agents send traces directly to Lens with a tracing key. Investigations send selected trace content to your analysis model. The release bundle and Helm chart include both Lens and ClickHouse.
 
 ## Choose your starting point {#new-deployment}
 
 | Your starting point | Follow this guide |
 | --- | --- |
-| You use LiteLLM and want Lens in its sidebar | [Add Lens to LiteLLM](./deployment/litellm.md) |
-| You already run Lens and want to connect it to a gateway | [Connect your existing Lens deployment](./deployment/litellm.md#1-get-the-lens-address) |
-| You want to run Lens without a gateway | [Start standalone Lens](./deployment/local.md) |
-| Your team has already set up Lens | [Send your first trace](./first-trace.md) |
+| Docker on one machine or server | [Install the release bundle](./deployment/local.md) |
+| Kubernetes | [Install the Helm chart](./deployment/kubernetes.md) |
+| Add to an existing LiteLLM gateway | [Connect Lens to LiteLLM](./deployment/litellm.md) |
 
-For a persistent standalone deployment, use [Docker Compose on a server](./deployment/server.md) or [Kubernetes](./deployment/kubernetes.md). The local quickstart builds from source. See [Releases and images](./deployment/releases.md) for the release status.
+Already set up? [Send your first trace](./first-trace.md).
+
+## Record coding agent sessions
+
+After Lens starts, generate a tracing key and follow the exact [Claude Code](./coding-agents.md#claude-code) or [Codex](./coding-agents.md#codex) setup. Keep your existing model login. Open **Traces** in Lens to find your sessions; no Python example or LiteLLM gateway is required.
 
 ## Use Lens inside LiteLLM {#configure-an-existing-proxy}
 
-A gateway administrator configures the connection once. Users then open **Lens** in the LiteLLM sidebar and use their existing LiteLLM session. They do not enter the standalone Lens admin token. LiteLLM supplies their identity and access scope to Lens.
-
-If Lens is not configured, the dashboard shows its setup page. Connecting the service does not instrument your agents. After the connection is ready, send a trace from an agent.
-
-Follow [Add Lens to LiteLLM](./deployment/litellm.md). If Lens already runs, use its current address, storage, and credentials. You do not need to install a second copy or move its data.
+A gateway administrator [connects Lens](./deployment/litellm.md) once. Users then open **Lens** in the sidebar with their existing session. If Lens already runs, keep its address, storage and credentials. You do not need a second copy.
 
 ## Use Lens on its own
 
-One command, `./deploy/lens/start`, starts Lens and ClickHouse together. Then sign in at the Lens URL with its admin token. A LiteLLM gateway and PostgreSQL are not required. You can record and inspect traces before you configure an analysis model.
+The release bundle starts Lens and ClickHouse with `./start`. Sign in with its generated admin token. A LiteLLM gateway and PostgreSQL are not required.
 
 Follow the [standalone quickstart](./deployment/local.md). Add an [analysis model](https://github.com/BerriAI/lens/blob/main/docs/analysis.md) when you want to run investigations.
 

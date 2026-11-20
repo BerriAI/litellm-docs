@@ -6,9 +6,9 @@ slug: "/proxy/lens/deployment/docker"
 
 # Lens containers
 
-Lens's runtime image contains its Rust API, background processing, static UI and calculation sandbox. It requires ClickHouse with KeeperMap and its own administrator credential. Use the [source Compose quickstart](./local.md) for the shortest complete container installation, or the [source Helm chart](./kubernetes.md) in Kubernetes
+Deploy the published image `ghcr.io/berriai/lens:0.1.0`. It contains the API, workers, UI and calculation sandbox. For a complete installation with ClickHouse, use the [Compose bundle](./local.md) or [Helm chart](./kubernetes.md). Neither requires an image build
 
-For a managed container platform, use the current [runtime Dockerfile](https://github.com/BerriAI/lens/blob/main/deploy/runtime/Dockerfile) and [Compose configuration](https://github.com/BerriAI/lens/blob/main/deploy/lens/compose.yaml) as the deployment reference. [Build from source](./development.md#try-backend-changes) produces a local image; independently published artifacts are still being qualified
+For a managed container platform, use the [release Compose configuration](https://github.com/BerriAI/lens/blob/v0.1.0/deploy/lens/compose.yaml) as the reference for resource and sandbox settings
 
 ## Configure Lens {#2-configure-lens}
 

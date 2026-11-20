@@ -6,28 +6,22 @@ slug: "/proxy/lens/deployment/kubernetes"
 
 # Kubernetes
 
-The [Lens Helm chart](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md) deploys the complete Lens UI, Rust API and background processing with ClickHouse and Keeper. This source installation uses the public Lens repository and requires a Kubernetes cluster, Helm, kubectl and a storage class for the persistent volume. Standalone Lens does not require a gateway or PostgreSQL
-
-For help from your coding agent, use [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) and specify Helm
+The Lens Helm chart deploys Lens with ClickHouse and Keeper. You need a Kubernetes cluster, Helm, kubectl and a default storage class for the persistent volume. Standalone Lens does not require a gateway or PostgreSQL
 
 ## New deployment {#new-deployment}
 
-Until an independent release is published, build the source image and push it to a registry your cluster can read. Use a native builder matching the cluster nodes' Linux architecture. From a fresh clone of [BerriAI/lens](https://github.com/BerriAI/lens), replace the example registry and team:
+Install the published v0.1.0 chart. It pulls the public Lens image by digest, with no build or registry credentials:
 
 ```sh
-LENS_IMAGE_REPOSITORY=registry.example.com/your-team/lens
-LENS_IMAGE_TAG=$(git rev-parse HEAD)
-docker build --build-arg LENS_VERSION="$LENS_IMAGE_TAG" -f deploy/runtime/Dockerfile \
-  -t "$LENS_IMAGE_REPOSITORY:$LENS_IMAGE_TAG" .
-docker push "$LENS_IMAGE_REPOSITORY:$LENS_IMAGE_TAG"
-helm upgrade --install lens ./helm/lens --namespace lens --create-namespace \
-  --set image.repository="$LENS_IMAGE_REPOSITORY" --set image.tag="$LENS_IMAGE_TAG"
+helm install lens oci://ghcr.io/berriai/charts/lens \
+  --version 0.1.0 --namespace lens --create-namespace --wait --timeout 5m
 kubectl --namespace lens port-forward service/lens 4318:4318
 ```
 
-Configure image-pull credentials if your registry is private. Open `http://localhost:4318/ui/`. Obtain the generated login credential locally:
+Keep port-forward running and open `http://localhost:4318/ui/`. In another terminal, check readiness and obtain the generated login credential:
 
 ```sh
+curl --fail http://localhost:4318/health/ready
 kubectl --namespace lens get secret lens-admin \
   -o jsonpath='{.data.admin-token}' | base64 --decode
 ```
@@ -51,7 +45,7 @@ Use your Kubernetes secret manager to create `lens-connection` in the **gateway 
 | `service-token` | `LITELLM_LENS_SERVICE_TOKEN` |
 | `gateway-secret` | `LENS_GATEWAY_SECRET` |
 
-For a manual setup, save each value in a separate private file named `service-token` and `gateway-secret`. Do not include a trailing newline. Set your namespace and create the Secret:
+For a manual setup, save each value in a private file named `service-token` and `gateway-secret`, without a trailing newline:
 
 ```sh
 export GATEWAY_NAMESPACE="YOUR_GATEWAY_NAMESPACE"
@@ -60,7 +54,7 @@ kubectl --namespace "$GATEWAY_NAMESPACE" create secret generic lens-connection \
   --from-file=gateway-secret=./gateway-secret
 ```
 
-If this Secret already exists, reuse it after confirming the values match Lens. Keep the files out of Git. For GitOps, declare the Secret through your existing secret-management controller.
+Reuse an existing matching Secret. Keep the files out of Git. For GitOps, use your secret-management controller.
 
 ### 2. Add the Lens values
 
@@ -97,7 +91,7 @@ If your deployment supplies `config.yaml` from an external ConfigMap instead, ad
 
 ### 3. Apply and check
 
-Set `GATEWAY_RELEASE` to your existing Helm release name. Set `GATEWAY_CHART` to your [OCI chart](../../deploy/helm.md#install-the-chart). Replace `YOUR_ORG` with your registry namespace. Set `GATEWAY_CHART_VERSION` to the chart version you use. You can inspect the installed release with:
+Use your existing release name, namespace and [chart](../../deploy/helm.md#install-the-chart). Inspect the installed release with:
 
 ```sh
 helm list --namespace "$GATEWAY_NAMESPACE"

@@ -397,6 +397,10 @@ reader = client(READ_KEY)
 reader.search(index="docs", body={"query": {"match": {"text": "refunds"}}, "_source": ["text"]})
 ```
 
+### Search fallbacks
+
+For backup search clusters, [define vector store fallbacks](../completion/knowledgebase.md#define-vector-store-fallbacks) in YAML. Both unified search and native `GET`/`POST /opensearch/{name}/_search` support fallback. Native backups must use the same provider/API type and physical index name; writes do not fail over.
+
 ### What each permission allows
 
 | Permission | Method | API |

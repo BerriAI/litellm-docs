@@ -435,7 +435,7 @@ const config = {
       // rendered; it holds the evergreen entry so the config still reads true.
       // Bump `id` to resurface the bar for readers who dismissed the last one.
       announcementBar: {
-        id: 'decisions_api_gemini_2026_11',
+        id: 'customer_portal_nov_20_townhall_dec_3_2026',
         content:
           '<a class="announcement-link" href="/docs/decisions"><strong>Decisions API is here.</strong> Call Gemini Decision 1, Jev, Clef or any decision model through one /v1/decisions endpoint. &rarr;</a>',
         isCloseable: true,
@@ -491,6 +491,7 @@ const config = {
           },
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
+          { href: 'https://www.litellm.ai/course', label: 'Learn', position: 'left' },
           { to: '/rust-migration', label: 'Rust', position: 'left' },
           {
             href: 'https://github.com/BerriAI/litellm',
