@@ -26,7 +26,7 @@ Open Lens through the place you intend to use it:
 
 On Lens Home, expand **Tracing key** and select **Generate tracing key**. If your Lens version shows the tracing setup panel instead, use **Generate tracing key** there. If the button is unavailable, ask your Lens or gateway administrator for a dedicated tracing key.
 
-Copy the key into your local environment. Copy the full trace endpoint from **Set up manually** or **Connection details** in the setup panel. It ends in `/v1/traces`. For the local quickstart, it is `http://localhost:4318/v1/traces`.
+Copy the key into your local environment. Copy the full trace endpoint from **Set up manually** or **Connection details** in the setup panel. It ends in `/v1/traces`. For the local quickstart, it is `http://localhost:4318/v1/traces`. An agent in another container or on another machine needs an address it can reach, not its own `localhost`.
 
 The tracing key uploads telemetry. It does not call models or read traces. Keep it separate from your model key and admin token.
 

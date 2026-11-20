@@ -28,7 +28,7 @@ Lens runs on its own. With Git and Docker, three commands start it:
 ```sh
 git clone https://github.com/BerriAI/lens.git
 cd lens
-./deploy/lens/start
+docker compose up --wait
 ```
 
 Open [http://localhost:4318/ui/](http://localhost:4318/ui/) and sign in with `LENS_ADMIN_TOKEN` from `deploy/lens/.env`. You do not need a LiteLLM gateway, Kubernetes, or a model provider key. The [standalone quickstart](./deployment/local.md) covers sign-in and the first trace.
