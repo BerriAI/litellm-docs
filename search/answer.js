@@ -25,10 +25,18 @@ async function answerQuestion(options) {
       'input.value': options.question,
       'input.mime_type': 'text/plain',
     }, async span => {
+      await tracing.span('user message', {
+        'openinference.span.kind': 'CHAIN', 'lens.capture.source': 'session_transcript',
+        'input.value': options.question, 'input.mime_type': 'text/plain',
+      }, async () => {});
       const result = await generateAnswer(options);
       if (result.status >= 400) span.setError('DocsAIUnavailable');
       span.setAttribute('output.value', result.body.answer || result.body.error);
       span.setAttribute('output.mime_type', 'text/plain');
+      if (result.body.answer) await tracing.span('assistant message', {
+        'openinference.span.kind': 'CHAIN', 'lens.capture.source': 'session_transcript',
+        'output.value': result.body.answer, 'output.mime_type': 'text/plain',
+      }, async () => {});
       return result;
     }));
   } finally {
@@ -40,7 +48,7 @@ async function answerQuestion(options) {
 async function generateAnswer({question, history = [], index, documents, config, signal, fetchImpl = fetch, onEvent}) {
   if (!config.apiKey) return {status: 503, body: {error: 'Ask AI is not configured yet. Document search is still available.'}};
   const {mapCitations} = await import('./citations.mjs');
-  const tracing = getTracing(config), callModel = createModelCaller({config, signal, fetchImpl});
+  const tracing = getTracing(config), callModel = createModelCaller({config, signal, fetchImpl, messagesSeparate: true});
   const emit = async (event, data) => {signal?.throwIfAborted(); await onEvent?.(event, data);};
   const documentation = createDocumentationTools({index, documents, tracing, signal, onEvent: emit});
   const conversation = history.map(({question, answer}) => ({question, ...(answer === undefined ? {} : {answer})}));
