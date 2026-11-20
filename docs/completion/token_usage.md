@@ -1,19 +1,92 @@
 # Completion Token Usage & Cost
 By default LiteLLM returns token usage in all completion requests ([See here](https://litellm.readthedocs.io/en/latest/output/))
 
-LiteLLM returns `response_cost` in all calls. 
+## Response cost
+
+LiteLLM returns its computed cost as a USD float in `usage.cost` on every response, for both the SDK and proxy. This covers chat completions, the Responses API, and Anthropic Messages, with and without streaming. No flag or opt-in header is required. The value is the same bill as the proxy's `x-litellm-response-cost` header, when present, and the cost recorded in the spend log.
+
+### Chat completions
 
 ```python
-from litellm import completion 
+import litellm
 
 response = litellm.completion(
-            model="{{openai_small}}",
-            messages=[{"role": "user", "content": "Hey, how's it going?"}],
-            mock_response="Hello world",
-        )
-
-print(response._hidden_params["response_cost"])
+    model="{{openai_small}}",
+    messages=[{"role": "user", "content": "Hello"}],
+)
+print(response.usage.cost)
 ```
+
+For streaming chat completions, request usage and read the cost from the final usage chunk.
+
+```python
+import litellm
+
+stream = litellm.completion(
+    model="{{openai_small}}",
+    messages=[{"role": "user", "content": "Hello"}],
+    stream=True,
+    stream_options={"include_usage": True},
+)
+for chunk in stream:
+    if getattr(chunk, "usage", None) is not None:
+        print(chunk.usage.cost)
+```
+
+### Responses API and Anthropic Messages
+
+Responses API objects expose `response.usage.cost`. Anthropic Messages returns a dictionary, so use `response["usage"]["cost"]`.
+
+```python
+import asyncio
+import litellm
+
+async def main():
+    response = await litellm.aresponses(
+        model="{{openai_small}}",
+        input="Hello",
+    )
+    print(response.usage.cost)
+
+    message = await litellm.anthropic.messages.acreate(
+        model="anthropic/claude-sonnet-5-5",
+        max_tokens=64,
+        messages=[{"role": "user", "content": "Hello"}],
+    )
+    print(message["usage"]["cost"])
+
+asyncio.run(main())
+```
+
+With streaming, the Responses API carries the cost in `response.completed.response.usage.cost`. Anthropic Messages carries it in the final `message_delta` frame's `usage.cost`, for native and adapter-backed requests.
+
+SDK response objects still expose `_hidden_params["response_cost"]` for compatibility, but prefer the public `usage.cost` field.
+
+### Proxy
+
+The JSON response body includes the same field. For a proxy with a configured `claude` model alias:
+
+```bash
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "claude", "messages": [{"role": "user", "content": "Reply only OK"}], "max_tokens": 64}'
+```
+
+Example response body excerpt:
+
+```json
+{
+  "usage": {
+    "prompt_tokens": 14,
+    "completion_tokens": 4,
+    "total_tokens": 18,
+    "cost": 0.000068
+  }
+}
+```
+
+## Token and cost helpers
 
 LiteLLM also exposes some helper functions:
 
