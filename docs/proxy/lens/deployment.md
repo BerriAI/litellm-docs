@@ -47,7 +47,7 @@ A gateway administrator [connects Lens](./deployment/litellm.md) once. Users the
 
 Clone the [Lens repository](https://github.com/BerriAI/lens) and run `docker compose up --wait`. It starts Lens and ClickHouse from the published image. Sign in with the generated admin token. A LiteLLM gateway and PostgreSQL are not required.
 
-Follow the [standalone quickstart](./deployment/local.md). Add an [analysis model](https://github.com/BerriAI/lens/blob/main/docs/analysis.md) when you want to run investigations.
+Follow the [quickstart](./deployment/local.md). You can inspect traces without an analysis model. Add an [analysis model](https://github.com/BerriAI/lens/blob/main/docs/analysis.md) when you want to run investigations.
 
 ## Check your first result {#check-the-installation}
 

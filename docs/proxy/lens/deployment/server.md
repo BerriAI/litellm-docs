@@ -6,7 +6,16 @@ slug: "/proxy/lens/deployment/server"
 
 # Docker Compose on a server
 
-Install Docker with Compose v2, then run the [release bundle](./local.md#release-bundle) on your server. It downloads Lens v0.1.0 and starts Lens and ClickHouse without Git or an image build. Keep the extracted bundle, environment file and persistent volume
+Install Docker with Compose v2, then run the [v0.1.0 release bundle](https://github.com/BerriAI/lens/releases/tag/v0.1.0) on your server. It needs no Git, pulls the published image by digest, and can be [verified](./releases.md#verify-a-release) before you run it:
+
+```sh
+curl -fLO https://github.com/BerriAI/lens/releases/download/v0.1.0/lens-install-0.1.0.tar.gz
+tar xzf lens-install-0.1.0.tar.gz
+cd lens-0.1.0
+./start
+```
+
+The script generates credentials in `deploy/lens/.env` and starts Lens with ClickHouse. Sign in at `/ui/` with `LENS_ADMIN_TOKEN` from that file. Stop with `docker compose -f deploy/lens/compose.yaml down` and restart with `./start`. Keep the extracted bundle, environment file and persistent volume
 
 For help configuring an existing deployment, use [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md). To connect the Lens service to an existing gateway, use [Add Lens to LiteLLM](./litellm.md#docker-compose)
 

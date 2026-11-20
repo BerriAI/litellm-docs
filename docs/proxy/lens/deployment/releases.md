@@ -8,7 +8,7 @@ slug: "/proxy/lens/deployment/releases"
 
 The current release is [Lens v0.1.0](https://github.com/BerriAI/lens/releases/tag/v0.1.0). All artifacts are public and require no registry credentials.
 
-The [Compose bundle](https://github.com/BerriAI/lens/releases/download/v0.1.0/lens-install-0.1.0.tar.gz) starts Lens and ClickHouse without a build. Follow the [quickstart](./local.md).
+The [Compose bundle](https://github.com/BerriAI/lens/releases/download/v0.1.0/lens-install-0.1.0.tar.gz) starts Lens and ClickHouse without a build or a Git checkout. Follow [Docker Compose on a server](./server.md) to install it. To try Lens on your own machine, the [quickstart](./local.md) is shorter.
 
 ## Container images {#container-images}
 
