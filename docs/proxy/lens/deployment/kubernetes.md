@@ -16,7 +16,6 @@ The chart installs Lens with its own ClickHouse on a persistent volume and gener
 
 ```sh
 helm upgrade --install lens oci://ghcr.io/berriai/charts/lens \
-  --version 0.1.0 \
   --namespace lens --create-namespace \
   --wait --timeout 10m
 ```
@@ -33,7 +32,7 @@ Save these overrides as `values.yaml`. Replace the hostname, the ingress class o
 publicUrl: https://lens.example.com
 ingress:
   enabled: true
-  className: nginx
+  className: <your-ingress-class>
   host: lens.example.com
   tls:
     - secretName: lens-tls
@@ -79,4 +78,6 @@ See the [complete values.yaml](https://github.com/BerriAI/lens/blob/main/helm/le
 
 ## Upgrade
 
-[Back up ClickHouse](./storage.md) first. Change `--version` and run the install command again with the same values file. Helm reuses the generated credentials and the ClickHouse volume
+[Back up ClickHouse](./storage.md) first. Run the install command again with the same values file. Helm installs the newest released chart and reuses the generated credentials and the ClickHouse volume
+
+To stay on one chart version, add `--version` with a version from [Releases and images](./releases.md) to the install command
