@@ -6,7 +6,7 @@ slug: "/proxy/lens/deployment/local"
 
 # Start standalone Lens
 
-Run Lens on your computer or server to inspect agent traces. You need Git and Docker with Docker Compose v2, and Docker must be running. You do not need a LiteLLM gateway, PostgreSQL, or a model provider key.
+Run Lens on your computer or server to inspect agent traces. You need Git and Docker with Docker Compose 2.24 or newer, and Docker must be running. You do not need a LiteLLM gateway, PostgreSQL, or a model provider key.
 
 ## 1. Start Lens
 
@@ -15,10 +15,10 @@ Run these commands in a terminal:
 ```sh
 git clone https://github.com/BerriAI/lens.git
 cd lens
-./deploy/lens/start
+docker compose up --wait
 ```
 
-The script pulls the published Lens image, generates credentials in `deploy/lens/.env`, and starts Lens with ClickHouse. Nothing is compiled, so the first start takes about a minute. Wait for `Lens is ready at http://localhost:4318/ui/`.
+Docker Compose pulls the published Lens image, generates credentials in `deploy/lens/.env`, and starts Lens with ClickHouse. Nothing is compiled, so the first start takes under a minute. The command returns when Lens is ready.
 
 Check readiness:
 
@@ -26,7 +26,7 @@ Check readiness:
 curl --fail http://localhost:4318/health/ready
 ```
 
-The script keeps existing credentials and stored data when you run it again. Keep the environment file private.
+Docker Compose keeps existing credentials and stored data when you run the command again. Keep the environment file private.
 
 ## 2. Sign in
 
@@ -51,10 +51,10 @@ You can inspect traces before configuring an analysis model. When you want Lens 
 From the `lens` directory, stop the services while keeping their data:
 
 ```sh
-docker compose -f deploy/lens/compose.yaml down
+docker compose down
 ```
 
-Start them again with `./deploy/lens/start`. Keep `deploy/lens/.env` and the ClickHouse volume. Adding `--volumes` to the stop command deletes stored Lens data.
+Start them again with `docker compose up --wait`. Keep `deploy/lens/.env` and the ClickHouse volume. Adding `--volumes` to the stop command deletes stored Lens data.
 
 ## Install a pinned release instead {#release-bundle}
 
@@ -67,7 +67,7 @@ cd lens-0.1.0
 ./start
 ```
 
-Sign-in, the trace endpoint and the stop commands are the same. Run them from the extracted `lens-0.1.0` directory and restart with `./start`.
+Sign-in and the trace endpoint are the same. From the extracted `lens-0.1.0` directory, stop with `docker compose -f deploy/lens/compose.yaml down` and restart with `./start`.
 
 ## Fix a failed start
 
