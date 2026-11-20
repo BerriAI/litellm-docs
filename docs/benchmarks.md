@@ -100,14 +100,13 @@ Performance test results for LiteLLM Gateway.
 
 ## Per-pod benchmarks {#per-pod-streaming-benchmarks}
 
-Plan for approximately **100 combined RPS per four-worker pod on AWS c7a.2xlarge** for latency headroom with this short-response workload. Four runs on the same pod and node completed **195,000 measured requests with zero failures**, with 80% regular and 20% streaming traffic.
+Plan for approximately **100 combined RPS per four-worker pod on AWS c7a.2xlarge** for latency headroom with this short-response workload. Three runs on the same pod and node completed **134,992 measured requests with zero failures**, with 80% regular and 20% streaming traffic.
 
 | Combined RPS per pod | Regular overhead p99 | Streaming overhead p99 |
 |---|---:|---:|
 | 100 | 47 ms | 45 ms |
 | 150 | 91 ms | 93 ms |
 | 200 | 651 ms | 645 ms |
-| 200 (repeat) | 502 ms | 496 ms |
 
 P99 overhead was near the 100-ms target at 150 RPS and exceeded it at 200 RPS. At 100 RPS, p99 time to first token was 264 ms, including the mock provider's 200-ms delay.
 
@@ -116,9 +115,9 @@ P99 overhead was near the 100-ms target at 150 RPS and exceeded it at 200 RPS. A
 | Setting | Configuration |
 |---|---|
 | Version and machine | LiteLLM v1.110.0; November 20, 2026 (UTC); dedicated c7a.2xlarge node, 8 vCPUs and 16 GiB RAM, AWS EKS `us-west-1a` |
-| Pod | Same pod and node across all four runs; four workers; gateway requests 4 vCPUs and 8 GiB RAM, with limits of 8 vCPUs and 8 GiB; collector and metrics sidecars |
+| Pod | Same pod and node across all three runs; four workers; gateway requests 4 vCPUs and 8 GiB RAM, with limits of 8 vCPUs and 8 GiB; collector and metrics sidecars |
 | Authentication | Same stored LiteLLM virtual key for all load requests; master key used only to create it before testing |
 | Workload | 80% regular / 20% streaming; small unique prompts, `max_tokens: 64`; a separate network mock waits 200 ms and returns 37 content chunks, 15 ms apart for streams |
-| Load and duration | In-cluster Locust FastHttpUser; 100, 150, 200 and 200 RPS repeat; 60 seconds of warmup and five minutes of measurement per run. Startup offsets remain in effect after pacing starts; offered arrivals checked in 100-ms bins; complete streams verified |
+| Load and duration | In-cluster Locust FastHttpUser; 100, 150 and 200 RPS; 60 seconds of warmup and five minutes of measurement per run. Startup offsets remain in effect after pacing starts; offered arrivals checked in 100-ms bins; complete streams verified |
 | Measurement | Gateway overhead uses the `x-litellm-overhead-duration-ms` response header and excludes the full streaming duration |
 | Services and scope | PostgreSQL, Redis and mock provider on a separate node in the same Availability Zone; PgBouncer, collector, prompt storage, spend tracking and Prometheus enabled. Direct Kubernetes Service traffic |
