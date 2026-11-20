@@ -178,9 +178,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 
   ```bash
   lite models list
-  lite models add {{openai_large}} \
-    --param api_key=sk-123 \
-    --param max_tokens=2048
+  lite models add {{openai_large}} --param api_key=sk-123
   lite models update <model-id> -p api_key=sk-456
   lite models delete <model-id>
   ```
@@ -322,9 +320,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 2. **Add a new model:**
 
    ```bash
-   lite models add {{openai_large}} \
-     --param api_key=sk-123 \
-     --param max_tokens=2048
+   lite models add {{openai_large}} --param api_key=sk-123
    ```
 
 3. **Create a credential:**
