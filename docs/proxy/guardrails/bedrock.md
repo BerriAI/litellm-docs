@@ -371,6 +371,34 @@ The optional `coordination_redis` block points each LiteLLM worker or replica at
 
 Cache writes use a TTL of 24 hours by default. Set `GUARDRAIL_SCANNED_MESSAGES_CACHE_TTL_SECONDS` to change it. If the request has no session ID or LiteLLM has no cached scan history for the session, Bedrock scans all the selected text. Masking configurations use the regular scan path so LiteLLM can apply redactions.
 
+## Scan tool calls and tool descriptions as text
+
+<SinceVersion v="1.112.0" />
+
+The Bedrock ApplyGuardrail API has no content type for tool calls or tool definitions, so by default a Bedrock guardrail checks message text and tool results only. Two opt-in settings send the rest to Bedrock as text. Both default to off and work on `/v1/chat/completions`, `/v1/messages` and `/v1/responses`.
+
+```yaml title="config.yaml"
+guardrails:
+  - guardrail_name: bedrock-tool-text
+    litellm_params:
+      guardrail: bedrock
+      mode: [pre_call, post_call]
+      guardrailIdentifier: os.environ/BEDROCK_GUARDRAIL_ID
+      guardrailVersion: "DRAFT"
+      aws_region_name: os.environ/AWS_REGION
+      scan_tool_calls_as_text: true          # tool-call names and arguments
+      scan_tool_descriptions_as_text: true   # tool descriptions in the request
+      default_on: true
+```
+
+`scan_tool_calls_as_text: true` scans the name and arguments of every tool call. Tool calls in the request history are scanned as input in `pre_call` mode, and tool calls the model generates are scanned as output in `post_call` mode, for streaming and non-streaming responses. LiteLLM decodes the JSON arguments before the scan, so escaped characters cannot hide text from the policy. Arguments nested too deeply to scan are blocked with a 400. A request or response with tool calls costs one extra ApplyGuardrail call.
+
+`scan_tool_descriptions_as_text: true` scans the `description` of each tool in the request as input in `pre_call` mode, together with the descriptions of its parameters at any depth, which catches prompt injections planted in a tool definition. It costs one ApplyGuardrail call per tool that has at least one description.
+
+When Bedrock blocks the text, either scan fails the request or response with the same error as any other Bedrock block. The two scans differ when a policy masks instead of blocking. The tool-call scan blocks a tool call the policy masks, with the same error, and never rewrites the arguments, because a rewrite can leave them as invalid JSON. The tool-description scan replaces each description with the masked text Bedrock returns, so the model sees the masked description.
+
+LiteLLM refuses to load a Bedrock guardrail that sets either option together with `mode: during_call` or `experimental_use_latest_role_message_only: true`, since those paths do not run the scans.
+
 ## Experimental: Only Send Latest User Message
 
 When you're chaining long conversations through Bedrock guardrails, you can opt into a lighter, experimental behavior by setting `experimental_use_latest_role_message_only: true` in the guardrail's `litellm_params`. When enabled, LiteLLM only sends the most recent `user` message (or assistant output during post-call checks) to Bedrock, which:
