@@ -109,7 +109,7 @@ Plan for approximately **100 combined RPS per four-worker pod on AWS c7a.2xlarge
 | 200 | 651 ms | 645 ms |
 | 200 (repeat) | 502 ms | 496 ms |
 
-At 150 RPS, p99 overhead approached the 100-ms target; both 200-RPS runs exceeded it. Gateway overhead uses `x-litellm-overhead-duration-ms` and does not measure the full streaming lifetime. At 100 RPS, streaming time to first token p99 was 264 ms, including the mock provider's 200-ms initial delay.
+P99 overhead was near the 100-ms target at 150 RPS and exceeded it at 200 RPS. At 100 RPS, p99 time to first token was 264 ms, including the mock provider's 200-ms delay.
 
 ### Methodology
 
@@ -120,4 +120,5 @@ At 150 RPS, p99 overhead approached the 100-ms target; both 200-RPS runs exceede
 | Authentication | Same stored LiteLLM virtual key for all load requests; master key used only to create it before testing |
 | Workload | 80% regular / 20% streaming; small unique prompts, `max_tokens: 64`; a separate network mock waits 200 ms and returns 37 content chunks, 15 ms apart for streams |
 | Load and duration | In-cluster Locust FastHttpUser; 100, 150, 200 and 200 RPS repeat; 60 seconds of warmup and five minutes of measurement per run. Startup offsets remain in effect after pacing starts; offered arrivals checked in 100-ms bins; complete streams verified |
-| Services and scope | PostgreSQL, Redis and mock provider on a separate node in the same Availability Zone; PgBouncer, collector, prompt storage, spend tracking and Prometheus enabled. Direct Kubernetes Service traffic; no service mesh, Datadog or custom auth/logging callbacks |
+| Measurement | Gateway overhead uses the `x-litellm-overhead-duration-ms` response header and excludes the full streaming duration |
+| Services and scope | PostgreSQL, Redis and mock provider on a separate node in the same Availability Zone; PgBouncer, collector, prompt storage, spend tracking and Prometheus enabled. Direct Kubernetes Service traffic |
