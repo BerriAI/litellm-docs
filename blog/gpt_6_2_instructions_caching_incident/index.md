@@ -35,8 +35,6 @@ You were affected if you sent GPT-6.2 traffic through LiteLLM in one of these wa
 - `/v1/chat/completions` to a GPT-6.2 deployment that uses the Responses API, such as the `openai/responses/` prefix, `chatgpt/` or Bedrock Mantle GPT-6.2
 - `/v1/messages` to GPT-6.2, for example from Claude Code or another Anthropic-format client
 
-You were not affected if you called `/v1/responses` directly, used GPT-6.2 through OpenAI's Chat Completions API, used GPT-6.1 or earlier, or used a non-OpenAI provider.
-
 ## Root cause
 
 The Responses API accepts a system prompt in two places, the top-level `instructions` field or a message at the start of `input`. Up to GPT-6.1 both were cached the same way, so LiteLLM used `instructions`.
