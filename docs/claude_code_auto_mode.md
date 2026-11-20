@@ -11,7 +11,17 @@ Claude Code's auto mode runs tool calls without asking the user first. When `ANT
 
 With `safeguards_classifier_model` set, the proxy asks a deployment from your `model_list` to judge each tool call and returns the verdicts the same way the Anthropic API does, so auto mode stays on server review when Claude Code is pointed at an open model.
 
-<SinceVersion v="1.107.0" />
+<SinceVersion v="1.108.0" />
+
+The [v1.108.0 release](/release_notes/v1.108.0/v1-108-0) is the first stable release with the classifier, after v1.107.0-dev.2. Use v1.109.0 or later for the stream preservation fixes described below.
+
+## Routes and versions
+
+Claude on Anthropic, Bedrock InvokeModel, Bedrock Mantle, Vertex AI, and Azure Foundry uses the provider's own safeguards and needs no classifier setting. The setting is for backends without that support, including non-Claude chat completions and Responses bridges, Azure OpenAI, and `bedrock/converse/` models, Claude included. Native routes normally skip proxy classification when the model name contains `claude`, unless the provider configuration marks safeguards unsupported.
+
+For auto router tiers that can select a non-Claude model, configure the classifier and give every calling key and team access to it. A session needs verdicts on every route it can reach, not just its first model.
+
+The [v1.109.0 stream fix](https://github.com/BerriAI/litellm/pull/46096) preserves existing `safeguard_results` when LiteLLM builds a stream from a complete response, including web search interception and mid-stream fallback. It needs no configuration, but it does not generate missing verdicts for a non-Claude backend. Those routes still need `general_settings.safeguards_classifier_model`.
 
 | Model behind `/v1/messages` | Who answers `safeguards` |
 |---|---|
@@ -22,7 +32,7 @@ With `safeguards_classifier_model` set, the proxy asks a deployment from your `m
 | `azure_ai/` Claude | LiteLLM forwards to Foundry's own `/v1/messages` and does not classify |
 | `bedrock/converse/` models, Claude included | LiteLLM classifier |
 | Fireworks, Gemini, and other chat completions providers | LiteLLM classifier |
-| `openai/` models | LiteLLM classifier |
+| `openai/` and Azure OpenAI models | LiteLLM classifier |
 | DeepSeek and other providers with their own `/v1/messages` | LiteLLM classifier |
 
 The LiteLLM classifier answers for every non-Claude model, whichever way the proxy reaches it: the chat completions translation, the Responses API bridge that `openai/` deployments use, or a provider's own Anthropic-compatible `/v1/messages`, such as DeepSeek's. It also answers for Claude models behind `bedrock/converse/`, since that route goes through the chat completions translation. Claude models that LiteLLM forwards to a provider's own `/v1/messages` are left to that provider, and when any provider returns its own `safeguard_results`, the proxy keeps them and skips the classifier call.
