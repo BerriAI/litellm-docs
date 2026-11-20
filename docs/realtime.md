@@ -196,7 +196,9 @@ LiteLLM checks and bills Live sessions on the WebSocket route only. WebRTC sessi
 
 Azure exposes two realtime upstreams. The GA endpoint (`/openai/v1/realtime?model=<deployment>`) speaks the GA event schema (`session.type`, `output_modalities`, nested `audio`), and the older beta endpoint (`/openai/realtime?api-version=2024-10-01-preview&deployment=<deployment>`) speaks the beta schema (`modalities`, `voice`, flat audio formats). Sending a GA-shaped `session.update` to the beta endpoint fails with `Unknown parameter: 'session.type'`
 
-LiteLLM picks the upstream from the client connection. A client that sends the `OpenAI-Beta: realtime=v1` header (the openai SDK's `client.beta.realtime.connect`) is bridged to the beta endpoint. A client without that header (the openai SDK's `client.realtime.connect`, and most voice agent frameworks) is bridged to the GA endpoint. Transcription sessions (`intent=transcription`) always use GA, and so do models that Azure serves only on GA, such as `gpt-realtime-2.1`, where LiteLLM bridges a beta client's events to the GA endpoint
+LiteLLM picks the upstream from the client connection. A client that sends the `OpenAI-Beta: realtime=v1` header (the openai SDK's `client.beta.realtime.connect`) is bridged to the beta endpoint. A client without that header (the openai SDK's `client.realtime.connect`, and most voice agent frameworks) is bridged to the GA endpoint. Transcription sessions (`intent=transcription`) always use GA
+
+<SinceVersion v="1.110.0" /> Models that Azure serves only on GA, such as `gpt-realtime-2.1`, use GA too, and LiteLLM bridges a beta client's events to the GA endpoint. LiteLLM recognizes these models by the deployment name in `model`, or by `base_model` when the deployment has a custom name. A deployment like `azure/my-realtime-prod` that runs `gpt-realtime-2.1` needs `base_model: azure/gpt-realtime-2.1` or `realtime_protocol: GA` in its `litellm_params`. Without either, LiteLLM sends a beta client to the beta endpoint, and Azure closes the session with `realtime_beta_access_required`
 
 ```python
 import os
