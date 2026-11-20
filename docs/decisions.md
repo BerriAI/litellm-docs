@@ -52,7 +52,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | Databricks serving endpoints, image input on Cloudflare Clef, [audio and video input](#audio-and-video-input) on Cloudflare Clef-omni, TypeSafe images and box questions | `v1.106.0` |
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
 | A deployment's own [`supports_audio_input` and `supports_video_input`](#audio-and-video-on-other-deployments) values, and clip requests going only to the group deployments that take clips | `v1.110.0` |
-| [JSON input](#json-input) on OpenAI and Azure OpenAI | On main through [LiteLLM #52805](https://github.com/BerriAI/litellm/pull/52805) and on the 1.108.x LTS line through [LiteLLM #52807](https://github.com/BerriAI/litellm/pull/52807), not yet in a release |
+| [JSON input](#json-input) on OpenAI and Azure OpenAI | `v1.112.0-rc.1`, and `v1.108.13` on the 1.108.x LTS line |
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
