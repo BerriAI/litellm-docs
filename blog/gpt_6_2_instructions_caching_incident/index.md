@@ -11,8 +11,6 @@ description: "OpenAI stopped caching the instructions field on GPT-6.2, so syste
 hide_table_of_contents: false
 ---
 
-## TLDR
-
 On November 17, OpenAI released a breaking change that stopped caching the `instructions` field on GPT-6.2, which is where LiteLLM puts your system prompt when it forwards `/v1/chat/completions` and `/v1/messages` requests to OpenAI. Requests still worked, but GPT-6.2 users paid full price for their system prompt on every call. We are proactively shipping a fix and backporting it to 5 release lines.
 
 ## Action items
