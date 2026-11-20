@@ -158,6 +158,8 @@ $ litellm --config /path/to/config.yaml
 ```
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data ' {
     "model": "{{openai_small}}",
     "messages": [
@@ -166,8 +168,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
         "content": "good morning good sir"
         }
     ],
-    "user": "ishaan-app",
-    "temperature": 0.2
+    "user": "ishaan-app"
     }'
 ```
 

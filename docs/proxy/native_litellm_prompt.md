@@ -22,7 +22,7 @@ Create `prompts/hello.prompt`:
 
 ```yaml nolint
 ---
-model: gpt-5.6-terra
+model: gpt-5.4-mini
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -54,7 +54,7 @@ Create `prompts/hello.prompt` in your BitBucket repository:
 
 ```yaml nolint
 ---
-model: gpt-5.6-terra
+model: gpt-5.4-mini
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -98,7 +98,7 @@ Create `prompts/hello.prompt` in your gitlab repository:
 
 ```yaml nolint
 ---
-model: gpt-5.6-terra
+model: gpt-5.4-mini
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -142,7 +142,7 @@ Create `prompts/hello.prompt`:
 
 ```yaml nolint
 ---
-model: gpt-5.6-terra
+model: gpt-5.4-mini
 temperature: 0.7
 ---
 System: You are a helpful assistant.
@@ -205,7 +205,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 ```yaml nolint
 ---
-model: gpt-5.6-terra                    # Model to use
+model: gpt-5.4-mini                     # Model to use
 temperature: 0.7                # Optional parameters
 max_tokens: 1000
 input:
@@ -223,7 +223,7 @@ User: {{user_message}}
 
 ```yaml nolint
 ---
-model: gpt-5.6-terra
+model: gpt-5.4-mini
 temperature: 0.3
 ---
 System: You are a helpful coding assistant.

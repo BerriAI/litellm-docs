@@ -7,6 +7,7 @@ import TabItem from '@theme/TabItem';
 |-------|-------|
 | Description | Use this when most of the output of the LLM is known ahead of time. For instance, if you are asking the model to rewrite some text or code with only minor changes, you can reduce your latency significantly by using Predicted Outputs, passing in the existing content as your prediction. |
 | Supported providers | `openai` |
+| Supported models | OpenAI models that support Predicted Outputs, such as gpt-4.1-mini. Reasoning models such as {{openai_small}} answer 400 to `prediction` |
 | Link to OpenAI doc on Predicted Outputs | [Predicted Outputs ↗](https://platform.openai.com/docs/guides/latency-optimization#use-predicted-outputs) |
 | Supported from LiteLLM Version | <SinceVersion v="1.52.0" /> |
 
@@ -18,8 +19,10 @@ import TabItem from '@theme/TabItem';
 <TabItem label="LiteLLM Python SDK" value="Python">
 
 In this example we want to refactor a piece of C# code, and convert the Username property to Email instead:
-```python
+```python keep-model-ids
+import os
 import litellm
+
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 code = """
 /// <summary>
@@ -45,7 +48,7 @@ public class User
 """
 
 completion = litellm.completion(
-    model="{{openai_small}}",
+    model="gpt-4.1-mini",
     messages=[
         {
             "role": "user",
@@ -64,11 +67,11 @@ print(completion)
 
 1. Define models on config.yaml
 
-```yaml
+```yaml keep-model-ids
 model_list:
-  - model_name: {{openai_small}} # OpenAI {{openai_small}}
+  - model_name: gpt-4.1-mini
     litellm_params:
-      model: openai/{{openai_small}}
+      model: openai/gpt-4.1-mini
       api_key: os.environ/OPENAI_API_KEY 
 
 ```
@@ -82,8 +85,17 @@ litellm --config config.yaml
 3. Test it using the OpenAI Python SDK
 
 
-```python
+```python keep-model-ids
 from openai import OpenAI
+
+code = """
+public class User
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Username { get; set; }
+}
+"""
 
 client = OpenAI(
     api_key="LITELLM_PROXY_KEY", # sk-<your-litellm-api-key>
@@ -91,7 +103,7 @@ client = OpenAI(
 )
 
 completion = client.chat.completions.create(
-    model="{{openai_small}}",
+    model="gpt-4.1-mini",
     messages=[
         {
             "role": "user",

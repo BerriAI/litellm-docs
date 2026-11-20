@@ -212,7 +212,7 @@ policies:
       add:
         - strict_content_filter
     condition:
-      model: "gpt-5.6.*"  # regex - matches {{openai_small}}, {{openai_large}}
+      model: "({{openai_small}}|{{openai_large}})"  # regex - matches {{openai_small}} or {{openai_large}}
 
   bedrock-compliance:
     guardrails:
