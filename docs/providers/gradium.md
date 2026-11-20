@@ -145,15 +145,4 @@ In the SDK, pass `json_config={"padding_bonus": -2.0}` to `litellm.speech`. With
 
 Gradium bills 1 credit per input character, spaces included, and LiteLLM bills the same character count. The cost map prices `gradium/default` and `gradium/gradium-tts-beta` at the add-on credit rate of the XS plan, $7 per 100k credits, which is $0.00007 per character.
 
-Larger plans are cheaper per credit, and Pro Voice Clone voices bill 1.2 credits per character. For either case, set `input_cost_per_character` on the deployment with [custom pricing](../proxy/custom_pricing.md). Gradium's response does not say which kind of voice it used, so LiteLLM bills a clone voice at the deployment's price. Send clone voices to their own deployment. For example, a Pro Voice Clone voice at the XS rate costs 1.2 × $0.00007 = $0.000084 per character:
-
-```yaml showLineNumbers title="config.yaml"
-model_list:
-  - model_name: gradium-tts-clone
-    litellm_params:
-      model: gradium/default
-      api_key: os.environ/GRADIUM_API_KEY
-      api_base: https://us.api.gradium.ai
-    model_info:
-      input_cost_per_character: 0.000084
-```
+Larger plans are cheaper per credit, and Pro Voice Clone voices bill 1.2 credits per character. LiteLLM bills both at the XS rate for now, because a deployment's `input_cost_per_character` does not yet change the cost of speech calls. Gradium's response also does not say which kind of voice it used, so LiteLLM cannot tell a clone voice from a catalog voice.
