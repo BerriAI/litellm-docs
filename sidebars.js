@@ -2016,6 +2016,7 @@ const providersSidebar = {
     "providers/qwencloud",
     "providers/ragflow",
     "providers/recraft",
+    "providers/redrouter",
     "providers/refuseless",
     "providers/reka",
     "providers/replicate",
