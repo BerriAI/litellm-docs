@@ -2,6 +2,8 @@
 
 Apply percentage-based or fixed-amount margins to specific providers or globally. This is useful for enterprises that need to add operational overhead costs to bill internal consumers.
 
+To add a surcharge for one team instead, see [team cost margin](./team_cost_margin.md).
+
 ## When to Use This Feature
 
 If your Generative AI platform involves various operational and architectural overheads, along with infrastructure costs, you may need the capability to apply an additional fee or margin to the total LLM costs. 
