@@ -5,7 +5,7 @@ import Image from '@theme/IdealImage';
 # [BETA] LiteLLM Managed Files
 
 - Reuse the same file across different providers.
-- Prevent users from seeing files they don't have access to on `list` and `retrieve` calls. 
+- Track proxy-uploaded files and enforce ownership checks for managed file operations.
 
 <EnterpriseFeature free />
 
@@ -37,19 +37,19 @@ general_settings:
   database_url: "postgresql://<user>:<password>@<host>:<port>/<dbname>" # alternatively use the env var - DATABASE_URL
 
 litellm_settings:
-  require_managed_files: true # optional - reject POST /v1/files without target_model_names
+  require_managed_files: false # default; set true to require managed uploads
 ```
 
-#### (Optional) Enforce managed files on upload
+#### (Optional) Require managed file IDs
 
-By default, `POST /v1/files` falls back to the classic provider file path when `target_model_names` is omitted. Set `require_managed_files: true` under `litellm_settings` to require managed files on every upload.
+`require_managed_files` defaults to `false`. With the default, LiteLLM records ownership for new plain-provider and model-routed uploads without changing their existing response IDs. Plain uploads return the provider ID; model-routed uploads return the model-encoded ID. Set `require_managed_files: true` under `litellm_settings` to require managed uploads.
 
 ```yaml
 litellm_settings:
   require_managed_files: true
 ```
 
-When enabled, uploads without `target_model_names` return `400`. Existing managed-file behavior is unchanged when `target_model_names` is provided.
+When enabled, every upload must include `target_model_names`; do not use the `model` parameter. Uploads without `target_model_names`, or with `model`, return `400`. The setting applies to admins and non-admins. Raw provider file IDs are rejected on file operations, even if LiteLLM recorded them before strict mode was enabled. To migrate a raw file, upload its source again with `target_model_names` and use the unified ID returned by that upload. LiteLLM does not convert existing IDs.
 
 ```python
 # String (comma-separated for multiple models)
@@ -57,6 +57,21 @@ extra_body={"target_model_names": "{{openai_small}}-openai, {{gemini_flash}}"}
 
 # List (OpenAI Python SDK sends this as target_model_names[] in multipart form)
 extra_body={"target_model_names": ["{{openai_small}}-openai"]}
+```
+
+For example, re-upload a batch file and use the returned managed ID:
+
+```bash
+FILE_ID=$(curl -sS "$LITELLM_BASE_URL/v1/files" \
+  -H "Authorization: Bearer $USER_KEY" \
+  -F "purpose=batch" \
+  -F "file=@batch.jsonl" \
+  -F "target_model_names=my-openai-alias" | jq -r '.id')
+
+curl -sS -H "Authorization: Bearer $USER_KEY" \
+  "$LITELLM_BASE_URL/v1/files?target_model_names=my-openai-alias"
+curl -sS -H "Authorization: Bearer $USER_KEY" \
+  "$LITELLM_BASE_URL/v1/files/$FILE_ID/content"
 ```
 
 ### 2. Start proxy
@@ -237,7 +252,21 @@ print(completion.choices[0].message)
 
 ## File Permissions
 
-Prevent users from seeing files they don't have access to on `list` and `retrieve` calls. 
+With `require_managed_files: false`, non-admin provider-account lists contain only files with an ownership record matching the caller's user or team. Older files and files uploaded directly to a provider that lack an ownership record are omitted from these lists. A known raw ID for an untracked file is still passed through with the default setting, so list filtering does not enforce access to legacy files. Proxy admins bypass the LiteLLM ownership filter.
+
+Upload, list, and read a plain provider file while `require_managed_files` is false:
+
+```bash
+FILE_ID=$(curl -sS "$LITELLM_BASE_URL/v1/files?provider=openai" \
+  -H "Authorization: Bearer $USER_KEY" \
+  -F "purpose=batch" \
+  -F "file=@batch.jsonl" | jq -r '.id')
+
+curl -sS -H "Authorization: Bearer $USER_KEY" \
+  "$LITELLM_BASE_URL/v1/files?provider=openai"
+curl -sS -H "Authorization: Bearer $USER_KEY" \
+  "$LITELLM_BASE_URL/v1/files/$FILE_ID/content?provider=openai"
+```
 
 ### 1. Setup config.yaml
 
@@ -421,9 +450,9 @@ LiteLLM stores a mapping of the litellm file id to the model-specific file id in
 
 When a file is deleted, LiteLLM deletes the mapping from the postgres DB, and the files on each provider.
 
-**4. Can a user call a file id that was created by another user?**
+**4. Can a user call a file ID that was created by another user?**
 
-No, as of `v1.71.2` users can only view/edit/delete files they have created.
+For tracked proxy uploads, access follows the recorded user and team ownership. With the default `require_managed_files: false`, an untracked raw provider ID is still passed through if the caller knows it. Set `require_managed_files: true` to reject raw IDs for all callers and use managed file IDs.
 
 
 
