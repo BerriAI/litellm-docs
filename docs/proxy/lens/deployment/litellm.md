@@ -9,15 +9,9 @@ import TabItem from '@theme/TabItem';
 
 # Add Lens to LiteLLM
 
-Connect a Lens service to your gateway so users can open **Lens** in the LiteLLM sidebar. They use their existing LiteLLM session. The standalone Lens URL remains available.
+Traffic you send through the gateway shows up in Lens as traces with cost when your app or agent has the OpenTelemetry (OTel) environment variables set. Follow the [app tracing](../first-trace.md) or [coding-agent setup](../coding-agents.md). Lens also opens from the LiteLLM sidebar with your LiteLLM login.
 
-This guide also connects an **existing Lens deployment**, including one hosted on Render. Keep its data, ClickHouse settings, admin token, and tracing keys.
-
-You need access to the environment settings for both services. Connect only a gateway that belongs to the same trusted workspace: its administrators have administrator access in Lens.
-
-:::info Gateway version
-Use LiteLLM v1.108.0 or later. This version includes the independent Lens adapter and UI from [PR #45529](https://github.com/BerriAI/litellm/pull/45529). {/* keep-version-note: The minimum gateway release is the subject of this note. */}
-:::
+You need LiteLLM v1.108.0 or later, a running Lens, and access to the environment settings of both. Gateway admins become Lens admins, so connect only a gateway you trust. {/* keep-version-note: The minimum gateway release is the subject of this note. */}
 
 ## 1. Get the Lens address
 
