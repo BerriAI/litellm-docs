@@ -396,17 +396,36 @@ The model still thinks and `usage.completion_tokens_details.reasoning_tokens` is
 
 ## Usage - `service_tier`
 
-LiteLLM propagates OpenAI's `service_tier` parameter to Gemini, and also extracts it from the response headers (`x-gemini-service-tier`) into `model_response.service_tier`.
+LiteLLM maps OpenAI's `service_tier` parameter to the Gemini API (`gemini/`) and to Vertex AI (`vertex_ai/`). The Gemini API takes the tier as the `serviceTier` body field. Vertex AI answers `400` to that field, so LiteLLM sends a Vertex tier as the `X-Vertex-AI-LLM-Shared-Request-Type` header instead <SinceVersion v="1.112.0" />.
 
-| OpenAI `service_tier` | Gemini `service_tier` | Notes |
-| --------------------- | --------------------- | ----- |
-| `"auto"`              | `"priority"`          | LiteLLM maps OpenAI's `"auto"` to Gemini's `"priority"` tier, as `priority` will fall back on Gemini. |
-| `"flex"`              | `"flex"`              | Direct mapping. |
-| `"priority"`          | `"priority"`          | Direct mapping. |
-| `"default"`           | `"standard"`          | LiteLLM maps `"default"` to `"standard"`. |
-| Any other value       | Passed as-is (lowercased) | Values are case-insensitive and normalized to lowercase. |
+| OpenAI `service_tier` | `gemini/` sends | `vertex_ai/` sends |
+| --------------------- | --------------- | ------------------ |
+| `"auto"` | `serviceTier: "priority"` | No tier, so Vertex uses its standard routing |
+| `"priority"` | `serviceTier: "priority"` | `X-Vertex-AI-LLM-Shared-Request-Type: priority` |
+| `"flex"` | `serviceTier: "flex"` | `X-Vertex-AI-LLM-Shared-Request-Type: flex` |
+| `"standard"` or `"standard_only"` | `serviceTier: "standard"` | No tier |
+| `"default"` or `"unspecified"` | No tier | No tier |
+| Any other value, such as `"scale"` | `400`, or dropped under [`drop_params`](../completion/drop_params) | `400`, or dropped under `drop_params` |
 
-On the response, LiteLLM maps `"standard"` back to `"default"` for the Gemini API.
+Values are case-insensitive and may carry Google's `SERVICE_TIER_` prefix, so `"SERVICE_TIER_PRIORITY"` works the same as `"priority"`.
+
+On Vertex AI, the shared request type header alone uses any Provisioned Throughput quota first and then falls back to Priority or Flex PayGo. To skip Provisioned Throughput, also send `X-Vertex-AI-LLM-Request-Type: shared` in `extra_headers`. A header you send yourself wins over the one LiteLLM builds from `service_tier`. See [Vertex AI PayGo and Priority](../tutorials/vertex_ai_pay_go.md).
+
+```python
+import litellm
+
+response = litellm.completion(
+    model="vertex_ai/gemini-2.5-flash",
+    messages=[{"role": "user", "content": "Hello"}],
+    service_tier="priority",
+)
+
+print(response.service_tier)  # "priority" when Vertex served the request at Priority PayGo
+```
+
+The response reports the tier that served the request in `service_tier`. The Gemini API reads it from the `x-gemini-service-tier` response header and maps `"standard"` to `"default"`. Vertex AI reads it from `usageMetadata.trafficType`, where `ON_DEMAND` is `"default"`, `ON_DEMAND_PRIORITY` is `"priority"` and `ON_DEMAND_FLEX` is `"flex"`. A request Provisioned Throughput served has no `service_tier`.
+
+Vertex AI batch jobs run on the batch tier, so a `service_tier` that names a tier on a Vertex batch request row answers `400`, or is dropped under `drop_params`.
 
 
 ## Long outputs
