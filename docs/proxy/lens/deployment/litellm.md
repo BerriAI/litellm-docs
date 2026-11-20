@@ -75,7 +75,29 @@ docker compose -f deploy/lens/compose.yaml up -d --wait
 </TabItem>
 <TabItem value="other" label="Helm or another platform">
 
-For Helm, use the [two-namespace example](./kubernetes.md#existing-deployment). Create a matching `lens-connection` Secret in both the Lens and gateway namespaces. The Lens chart uses `gateway.enabled`, `gateway.secretName` and `serviceTokenSecret.name`; the gateway chart uses `lens.enabled`, `lens.gatewaySecret.name` and `lens.serviceTokenSecret.name`. It does not install Lens or PostgreSQL. For another platform, add the two variables through the Lens service's environment settings, then redeploy it.
+**Helm.** Create one Secret with both values in the Lens namespace and in the gateway namespace. A Secret reference cannot cross namespaces:
+
+```sh
+SERVICE_TOKEN=$(openssl rand -hex 32)
+GATEWAY_SECRET=$(openssl rand -hex 32)
+for namespace in lens litellm; do
+  kubectl --namespace "$namespace" create secret generic lens-connection \
+    --from-literal=service-token="$SERVICE_TOKEN" \
+    --from-literal=gateway-secret="$GATEWAY_SECRET"
+done
+```
+
+Add these values to the Lens `values.yaml` and run its [install command](./kubernetes.md#new-deployment) again:
+
+```yaml title="values.yaml"
+gateway:
+  enabled: true
+  secretName: lens-connection
+serviceTokenSecret:
+  name: lens-connection
+```
+
+**Another platform.** Add the two variables through the Lens service's environment settings, then redeploy it
 
 </TabItem>
 </Tabs>
@@ -97,7 +119,7 @@ Use your Lens URL and the same two secrets from step 2. Neither URL ends in `/ui
 
 `LITELLM_LENS_URL` is the address the gateway calls. `LITELLM_LENS_PUBLIC_URL` is the address shown to agent exporters. They can be the same HTTPS URL. If you use a private address for the first value, the second must still be reachable by your agents.
 
-For Kubernetes, use the private Lens Service address for the gateway connection and a reachable HTTPS origin for exporters. The [Helm setup](./kubernetes.md) uses namespace and release variables, existing managed PostgreSQL and file-backed Secrets. Port-forward is only an initial health check.
+For Kubernetes, use the private Lens Service address for the gateway connection and a reachable HTTPS origin for exporters
 
 Merge this block into the gateway's existing `config.yaml`. Preserve its model list and other settings:
 
@@ -108,7 +130,31 @@ general_settings:
       type: lens
 ```
 
-Apply the change through your normal gateway deployment. For Helm, use [external Lens mode](./kubernetes.md#existing-deployment). Helm supplies the four environment variables from the chart values and Secret references.
+Apply the change through your normal gateway deployment
+
+### Helm
+
+The [LiteLLM chart](../../deploy/helm.md) sets the four variables from its values. Add these to the gateway's `values.yaml`, keep its other settings, and upgrade the release. The chart does not install Lens:
+
+```yaml title="values.yaml"
+lens:
+  enabled: true
+  url: http://lens.lens.svc.cluster.local:4318
+  publicUrl: https://lens.example.com
+  gatewaySecret:
+    name: lens-connection
+  serviceTokenSecret:
+    name: lens-connection
+gateway:
+  config:
+    proxy_config:
+      general_settings:
+        tracing:
+          store:
+            type: lens
+```
+
+`lens.url` is the private Service address, `http://<release>.<namespace>.svc.cluster.local:4318`. `lens.publicUrl` is the Lens ingress address
 
 ### Docker Compose
 

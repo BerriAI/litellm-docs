@@ -31,13 +31,13 @@ An optional separate ingestion address uses `LITELLM_LENS_PUBLIC_URL` on Lens, o
 
 The gateway separately uses `LITELLM_LENS_URL` for its private connection and `LITELLM_LENS_PUBLIC_URL` for the tracing address shown to users. Verify reachability from the actual gateway, browser and agent networks
 
-For Kubernetes, use reachable HTTPS origins for Lens `publicUrl` and gateway `lens.publicUrl`, with ingress, DNS and TLS configured. Gateway `lens.url` uses the private Lens Service address across namespaces. The [Helm setup](./kubernetes.md) derives that address from your release and namespace variables. Port-forward is only an initial health check, not the published endpoint
+For Kubernetes, use reachable HTTPS origins for Lens `publicUrl` and gateway `lens.publicUrl`, with ingress, DNS and TLS configured. Gateway `lens.url` uses the private Lens Service address across namespaces. Port-forward is only an initial health check, not the published endpoint
 
 ## Use an ingress with Helm {#dedicated-ingress}
 
-The independent Lens chart uses `publicUrl`, optional `ingestionUrl` and `ingress` at the top level. Its ingress can serve the standalone UI and API. Configure the hostname, TLS and ingress controller using the [Lens Helm guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md)
+The independent Lens chart uses `publicUrl`, optional `ingestionUrl` and `ingress` at the top level. Its ingress can serve the standalone UI and API. Configure the hostname, TLS and ingress controller as shown in [Expose Lens](./kubernetes.md#ingress)
 
-The LiteLLM chart connects to an independent Lens deployment through `lens.enabled`, `lens.url`, `lens.publicUrl`, and Secret references. See [Connect an existing LiteLLM deployment](./kubernetes.md#existing-deployment). The chart does not accept `lensWorker` or deploy Lens and ClickHouse.
+The LiteLLM chart connects to an independent Lens deployment through `lens.enabled`, `lens.url`, `lens.publicUrl`, and Secret references. See [Add Lens to LiteLLM](./litellm.md#helm). The chart does not accept `lensWorker` or deploy Lens and ClickHouse.
 
 ## Connect Docker networks {#docker-network}
 
