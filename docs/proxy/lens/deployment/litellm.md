@@ -114,7 +114,30 @@ general_settings:
       type: lens
 ```
 
-Apply the change through your normal gateway deployment. For Compose, follow [the Compose steps](./docker-compose.md#2-apply-the-gateway-settings). For Helm, use [external Lens mode](./kubernetes.md#existing-deployment). Helm supplies the four environment variables from the chart values and Secret references.
+Apply the change through your normal gateway deployment. For Helm, use [external Lens mode](./kubernetes.md#existing-deployment). Helm supplies the four environment variables from the chart values and Secret references.
+
+### Docker Compose
+
+In your gateway's Compose directory, save the four variables above in `lens-gateway.env`. Keep it out of Git and restrict access with `chmod 600 lens-gateway.env`. On a shared Docker network, the private `LITELLM_LENS_URL` can be `http://lens:4318`; keep the public URL reachable by agents. See [Docker networking](./configuration.md#docker-network).
+
+Add the file to the existing gateway service, preserving its other `env_file` entries:
+
+```yaml
+services:
+  litellm:
+    env_file:
+      - lens-gateway.env
+```
+
+Explicit `environment` entries override `env_file`; update any existing definitions of the four variables so they agree. For a split deployment, add the file to both gateway and backend/API services. Keep your existing database, volumes and model configuration.
+
+Recreate the gateway to load the settings. Replace `litellm` with your service name (`docker compose config --services` lists them), and include the backend service if separate:
+
+```sh
+docker compose up -d --no-deps litellm
+```
+
+Keep your usual Compose file and project flags. This restarts the selected services and can interrupt requests. Continue with the connection check below.
 
 ## 5. Open Lens in the gateway
 
