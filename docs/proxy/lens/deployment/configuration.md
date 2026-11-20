@@ -31,6 +31,8 @@ An optional separate ingestion address uses `LITELLM_LENS_PUBLIC_URL` on Lens, o
 
 The gateway separately uses `LITELLM_LENS_URL` for its private connection and `LITELLM_LENS_PUBLIC_URL` for the tracing address shown to users. Verify reachability from the actual gateway, browser and agent networks
 
+For Kubernetes, use reachable HTTPS origins for Lens `publicUrl` and gateway `lens.publicUrl`, with ingress, DNS and TLS configured. Gateway `lens.url` uses the private Lens Service address across namespaces. The [Helm setup](./kubernetes.md) derives that address from your release and namespace variables. Port-forward is only an initial health check, not the published endpoint
+
 ## Use an ingress with Helm {#dedicated-ingress}
 
 The independent Lens chart uses `publicUrl`, optional `ingestionUrl` and `ingress` at the top level. Its ingress can serve the standalone UI and API. Configure the hostname, TLS and ingress controller using the [Lens Helm guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md)
@@ -74,6 +76,8 @@ Multiple Lens replicas can share one supported ClickHouse server. Keeper coordin
 The gateway forwards telemetry through a bounded asynchronous queue. If Lens is unavailable, ordinary gateway inference continues, while telemetry may be delayed or dropped after retry or queue limits. Agent exporters have their own retry behavior. Verify outage behavior for your selected deployment and exporter
 
 ## Troubleshooting
+
+On a fresh Helm install, a few Lens restarts with `Error: Storage(Storage(Transport))` are expected while ClickHouse starts. If they continue after ClickHouse is Ready, check its Service, credentials and logs. If ClickHouse stays Pending, inspect its PVC and StorageClass with `kubectl --namespace "$LENS_NAMESPACE" describe pvc`, using the namespace from your Helm setup. Do not treat a persistent failure as normal startup
 
 From the extracted Compose bundle directory:
 

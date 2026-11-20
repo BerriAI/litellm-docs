@@ -1,129 +1,187 @@
 ---
 title: "Kubernetes"
-description: "Deploy independent Lens with its own Helm chart and optional LiteLLM connection."
+description: "Install Lens and connect LiteLLM with pinned Helm charts, existing PostgreSQL and Kubernetes Secrets."
 slug: "/proxy/lens/deployment/kubernetes"
 ---
 
 # Kubernetes
 
-The Lens Helm chart deploys Lens with ClickHouse and Keeper. You need a Kubernetes cluster, Helm, kubectl and a default storage class for the persistent volume. Standalone Lens does not require a gateway or PostgreSQL
+Use Helm and kubectl with your cluster. The cluster needs a default StorageClass; set `clickhouse.storageClassName` in the Lens values otherwise.
 
-## New deployment {#new-deployment}
+Lens includes persistent ClickHouse storage with Keeper and does not use PostgreSQL. The separate LiteLLM gateway chart **does not bundle PostgreSQL or Lens**, by design. Use an existing managed PostgreSQL database reachable from the gateway and migration pods, with permission to create and migrate the LiteLLM schema. The published gateway chart uses `lens.*`, not the removed `lensWorker.*` settings.
 
-Install the published v0.1.0 chart. It pulls the public Lens image by digest, with no build or registry credentials:
+## Prepare the deployment
 
-```sh
-helm install lens oci://ghcr.io/berriai/charts/lens \
-  --version 0.1.0 --namespace lens --create-namespace --wait --timeout 5m
-kubectl --namespace lens port-forward service/lens 4318:4318
-```
-
-Keep port-forward running and open `http://localhost:4318/ui/`. In another terminal, check readiness and obtain the generated login credential:
+Set your namespaces, release names, DNS hostnames and installed ingress controller's class. Choose the gateway chart's `ingress.controller` mode for that controller from `helm show values`. Keep the chart versions pinned:
 
 ```sh
-curl --fail http://localhost:4318/health/ready
-kubectl --namespace lens get secret lens-admin \
-  -o jsonpath='{.data.admin-token}' | base64 --decode
+export LENS_NAMESPACE="<lens-namespace>" GATEWAY_NAMESPACE="<gateway-namespace>"
+export LENS_RELEASE="<lens-release>" GATEWAY_RELEASE="<gateway-release>"
+export LENS_VERSION="0.1.0" GATEWAY_VERSION="1.111.0-rc.2"
+export LENS_HOST="<lens-hostname>" GATEWAY_HOST="<gateway-hostname>"
+export INGRESS_CLASS="<ingress-class>" GATEWAY_INGRESS_CONTROLLER="<chart-controller-mode>"
+export DB_HOST="<postgres-hostname>" DB_NAME="<database-name>"
+export SECRET_DIR="<private-directory-outside-your-repository>"
+kubectl create namespace "$LENS_NAMESPACE"
+kubectl create namespace "$GATEWAY_NAMESPACE"
 ```
 
-Keep that credential private. Helm reuses generated credentials on upgrades, and uninstall retains credentials and the ClickHouse volume. Before exposing Lens to agents, configure `publicUrl`, HTTPS ingress and a reachable ingestion address using the [Helm guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md)
+Use existing namespaces when available. For an existing gateway, keep its release, database, keys and model configuration, and merge the Lens settings into its complete values file. For standalone Lens, omit `gateway` and `serviceTokenSecret` from the Lens values and skip the gateway steps.
 
-For [external ClickHouse](./storage.md#external-clickhouse), provide a stable endpoint reaching one server with KeeperMap. Multiple Lens replicas may share that server. Multi-server load balancing and automatic failover to a different ClickHouse server are outside the supported topology
+### Provision Secrets
 
-## Connect an existing LiteLLM deployment {#existing-deployment}
+Use your secret manager to provision Secrets directly, or export credentials to files in `$SECRET_DIR` with directory mode `0700` and file mode `0600`. Files must contain only the value, without a trailing newline. Export PostgreSQL credentials as `db-username` and `db-password`, and its trusted CA bundle as `db-ca.crt`. Keep passwords out of values files, command arguments and shell history. Disable shell tracing.
 
-Connect the LiteLLM chart to Lens running in its own release or on a platform such as Render. This connects the gateway to Lens without deploying another Lens or ClickHouse instance.
-
-First complete [steps 1–3 of Add Lens to LiteLLM](./litellm.md#1-get-the-lens-address). The gateway must have the adapter and UI described in that guide. Keep your release name, namespace, and model configuration. These values target the current [LiteLLM chart](../../deploy/helm.md). Migrate older chart values before upgrading.
-
-### 1. Store the connection secrets
-
-Use your Kubernetes secret manager to create `lens-connection` in the **gateway namespace** with these keys:
-
-| Secret key | Value from Lens |
-| --- | --- |
-| `service-token` | `LITELLM_LENS_SERVICE_TOKEN` |
-| `gateway-secret` | `LENS_GATEWAY_SECRET` |
-
-For a manual setup, save each value in a private file named `service-token` and `gateway-secret`, without a trailing newline:
+For a **new installation only**, generate the Lens admin token, gateway master key and two distinct connection credentials into that directory. Reuse existing credentials on upgrades:
 
 ```sh
-export GATEWAY_NAMESPACE="YOUR_GATEWAY_NAMESPACE"
-kubectl --namespace "$GATEWAY_NAMESPACE" create secret generic lens-connection \
-  --from-file=service-token=./service-token \
-  --from-file=gateway-secret=./gateway-secret
+umask 077
+openssl rand -hex 32 | tr -d '\n' > "$SECRET_DIR/admin-token"
+openssl rand -hex 32 | tr -d '\n' > "$SECRET_DIR/service-token"
+openssl rand -hex 32 | tr -d '\n' > "$SECRET_DIR/gateway-secret"
+{ printf 'sk-'; openssl rand -hex 32 | tr -d '\n'; } > "$SECRET_DIR/master-key"
+kubectl --namespace "$LENS_NAMESPACE" create secret generic lens-admin \
+  --from-file=admin-token="$SECRET_DIR/admin-token"
+for namespace in "$LENS_NAMESPACE" "$GATEWAY_NAMESPACE"; do
+  kubectl --namespace "$namespace" create secret generic lens-connection \
+    --from-file=service-token="$SECRET_DIR/service-token" \
+    --from-file=gateway-secret="$SECRET_DIR/gateway-secret"
+done
+kubectl --namespace "$GATEWAY_NAMESPACE" create secret generic gateway-master-key \
+  --from-file=master-key="$SECRET_DIR/master-key"
+kubectl --namespace "$GATEWAY_NAMESPACE" create secret generic gateway-db \
+  --from-file=username="$SECRET_DIR/db-username" \
+  --from-file=password="$SECRET_DIR/db-password"
+kubectl --namespace "$GATEWAY_NAMESPACE" create secret generic gateway-db-ca \
+  --from-file=ca.crt="$SECRET_DIR/db-ca.crt"
 ```
 
-Reuse an existing matching Secret. Keep the files out of Git. For GitOps, use your secret-management controller.
+The matching `lens-connection` Secret must exist in **both namespaces** because Kubernetes Secret references cannot cross namespaces. Retain these credentials in your secret manager and recovery materials.
 
-### 2. Add the Lens values
+Provision DNS, ingress routing and TLS certificates for both public hostnames before team access. Supply `lens.crt` / `lens.key` and `gateway.crt` / `gateway.key` from your certificate manager, or create TLS Secrets from files:
 
-Save this as `lens-connection.yaml`, using the address of your existing Lens service:
-
-```yaml
-lens:
-  enabled: true
-  url: https://lens.example.com
-  publicUrl: https://lens.example.com
-  serviceTokenSecret:
-    name: lens-connection
-    key: service-token
-  gatewaySecret:
-    name: lens-connection
-    key: gateway-secret
+```sh
+kubectl --namespace "$LENS_NAMESPACE" create secret tls lens-tls \
+  --cert="$SECRET_DIR/lens.crt" --key="$SECRET_DIR/lens.key"
+kubectl --namespace "$GATEWAY_NAMESPACE" create secret tls gateway-tls \
+  --cert="$SECRET_DIR/gateway.crt" --key="$SECRET_DIR/gateway.key"
 ```
 
-The gateway must be able to reach `url`. Agent exporters must be able to reach `publicUrl`. Neither address includes `/ui/` or `/v1/traces`.
+## Install Lens {#new-deployment}
 
-Add the tracing store setting in the same file:
+Create `lens-values.yaml`. The shell expands your non-secret deployment variables:
 
-```yaml
+```sh
+cat > lens-values.yaml <<EOF
+fullnameOverride: ${LENS_RELEASE}
+publicUrl: https://${LENS_HOST}
+adminTokenSecret: {name: lens-admin, key: admin-token}
 gateway:
+  enabled: true
+  secretName: lens-connection
+  secretKey: gateway-secret
+serviceTokenSecret: {name: lens-connection, key: service-token}
+clickhouse:
+  storage: 20Gi
+ingress:
+  enabled: true
+  className: ${INGRESS_CLASS}
+  host: ${LENS_HOST}
+  tls:
+    - secretName: lens-tls
+      hosts: [${LENS_HOST}]
+EOF
+helm upgrade --install "$LENS_RELEASE" oci://ghcr.io/berriai/charts/lens \
+  --version "$LENS_VERSION" --namespace "$LENS_NAMESPACE" \
+  -f lens-values.yaml --wait --timeout 10m
+```
+
+Size `clickhouse.storage` for traffic and retention, and review `retentionDays`, `resources` and `clickhouse.resources` for your workload. The chart sets CPU/memory requests and memory limits by default. Review gateway `gateway.resources`, its sidecar resources and `migrationJob.resources` separately. The values below are starting allocations, not production sizing guarantees. Preserve persistent volumes and [back up ClickHouse payloads and Keeper state together](./storage.md) before upgrades.
+
+## Connect a LiteLLM gateway {#existing-deployment}
+
+Create `gateway-values.yaml`. Both the gateway and migration Job mount the database CA; `verify-full` verifies the PostgreSQL hostname and certificate:
+
+```sh
+cat > gateway-values.yaml <<EOF
+fullnameOverride: ${GATEWAY_RELEASE}
+monolith: {enabled: true}
+masterKey: {secretName: gateway-master-key, secretKey: master-key}
+database:
+  writer:
+    host: ${DB_HOST}
+    dbname: ${DB_NAME}
+    passwordSecret: {name: gateway-db, usernameKey: username, passwordKey: password}
+    sslMode: verify-full
+    sslRootCert: /etc/postgresql-ca/ca.crt
+gateway:
+  resources:
+    requests: {cpu: 500m, memory: 1Gi}
+    limits: {cpu: "2", memory: 4Gi}
+  volumes:
+    - {name: db-ca, secret: {secretName: gateway-db-ca}}
+  volumeMounts:
+    - {name: db-ca, mountPath: /etc/postgresql-ca, readOnly: true}
   config:
     proxy_config:
       general_settings:
         tracing:
-          store:
-            type: lens
+          store: {type: lens}
+migrationJob:
+  resources:
+    requests: {cpu: 250m, memory: 512Mi}
+    limits: {cpu: "1", memory: 2Gi}
+  volumes:
+    - {name: db-ca, secret: {secretName: gateway-db-ca}}
+  volumeMounts:
+    - {name: db-ca, mountPath: /etc/postgresql-ca, readOnly: true}
+lens:
+  enabled: true
+  url: http://${LENS_RELEASE}.${LENS_NAMESPACE}.svc.cluster.local:4318
+  publicUrl: https://${LENS_HOST}
+  gatewaySecret: {name: lens-connection, key: gateway-secret}
+  serviceTokenSecret: {name: lens-connection, key: service-token}
+ingress:
+  enabled: true
+  className: ${INGRESS_CLASS}
+  controller: ${GATEWAY_INGRESS_CONTROLLER}
+  host: ${GATEWAY_HOST}
+  tls:
+    - secretName: gateway-tls
+      hosts: [${GATEWAY_HOST}]
+EOF
+helm upgrade --install "$GATEWAY_RELEASE" oci://ghcr.io/berriai/litellm/chart/litellm \
+  --version "$GATEWAY_VERSION" --namespace "$GATEWAY_NAMESPACE" \
+  -f gateway-values.yaml --wait --timeout 10m
 ```
 
-If your deployment supplies `config.yaml` from an external ConfigMap instead, add `general_settings.tracing.store.type: lens` to that file through its existing owner.
-
-### 3. Apply and check
-
-Use your existing release name, namespace and [chart](../../deploy/helm.md#install-the-chart). Inspect the installed release with:
-
-```sh
-helm list --namespace "$GATEWAY_NAMESPACE"
-```
-
-Merge these settings with your complete values file. Then apply both:
-
-```sh
-export GATEWAY_RELEASE="YOUR_GATEWAY_RELEASE"
-export GATEWAY_CHART="oci://ghcr.io/YOUR_ORG/charts/litellm"
-export GATEWAY_CHART_VERSION="1.0.0"
-helm upgrade "$GATEWAY_RELEASE" "$GATEWAY_CHART" \
-  --version "$GATEWAY_CHART_VERSION" \
-  --namespace "$GATEWAY_NAMESPACE" \
-  -f gateway-values.yaml -f lens-connection.yaml --wait
-```
-
-This rolls the gateway pods to load the connection settings. For GitOps, commit the values and Secret references through your normal review and sync process instead.
-
-Sign in to LiteLLM, select **Lens**, and complete [the connection check](./litellm.md#5-open-lens-in-the-gateway). Then [send your first trace](../first-trace.md).
-
-If an older gateway Helm release owns Lens, transfer ownership before you upgrade. The current chart does not deploy Lens or ClickHouse. Use the [ownership-transfer guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#select-versions-independently) to preserve its resources and storage first.
+Lens `publicUrl` is its browser-facing HTTPS origin. Gateway `lens.publicUrl` is the address shown to agent exporters. Gateway `lens.url` is the private service address, using cluster DNS across namespaces, never `localhost`. None includes `/ui/` or `/v1/traces`. The public addresses require working ingress, DNS and TLS; port-forward is only a first check.
 
 ## Check the installation
 
-For the standalone example:
+Helm waits for readiness, including the gateway's database migration. On first start, Lens can restart a few times with `Error: Storage(Storage(Transport))` while ClickHouse initializes. Wait for ClickHouse and Lens to become Ready. Persistent failures need [storage and startup diagnostics](./configuration.md#troubleshooting).
+
+For an initial check, run each port-forward in a separate terminal with the same variables:
 
 ```sh
-kubectl get pods,services,pvc --namespace lens
-kubectl logs --namespace lens deployment/lens --tail=100
+kubectl --namespace "$LENS_NAMESPACE" port-forward service/"$LENS_RELEASE" 4318:4318
 ```
 
-Complete the [first-trace flow](../deployment.md#check-the-installation) in standalone Lens or the embedded gateway page, using an endpoint reachable by the agent. Open a stored trace after restarting Lens and verify a bounded investigation when analysis is configured
+```sh
+kubectl --namespace "$GATEWAY_NAMESPACE" port-forward service/"$GATEWAY_RELEASE" 4000:4000
+```
 
-Keep ClickHouse data and Keeper state in the same recovery plan. The [backup guide](https://github.com/BerriAI/lens/blob/main/docs/backup.md) describes the required recovery boundary; its Compose helper does not manage Kubernetes backups. Use your cluster's snapshot and restore procedure and verify records after a restore
+Then check readiness and the authenticated gateway-to-Lens connection without putting the master key in curl's arguments:
+
+```sh
+curl --fail http://localhost:4318/health/ready
+curl --fail http://localhost:4000/health/readiness
+{ printf 'Authorization: Bearer '; cat "$SECRET_DIR/master-key"; printf '\n'; } | \
+  curl --fail --header @- http://localhost:4000/lens/service
+```
+
+Expect `connected: true`, `storage_ready: true` and `credentials_ready: true`. Stop the tunnels after this check. Open `https://$GATEWAY_HOST/ui/`, sign in with the gateway administrator credential and select **Lens**. Standalone Lens is at `https://$LENS_HOST/ui/` and uses the Lens admin token. Follow [Send your first trace](../first-trace.md) to verify stored data through the published endpoint.
+
+## Upgrade
+
+Back up both databases, retain your Secrets and review the target release's notes. Change the pinned `LENS_VERSION` or `GATEWAY_VERSION`, review changes with `helm template` using the retained values file, then rerun that release's `helm upgrade --install` command and the readiness/connection checks. Do not regenerate credentials or delete persistent volumes as part of an upgrade.

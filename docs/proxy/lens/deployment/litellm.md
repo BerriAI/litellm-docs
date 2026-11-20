@@ -81,7 +81,7 @@ docker compose -f deploy/lens/compose.yaml up -d --wait
 </TabItem>
 <TabItem value="other" label="Helm or another platform">
 
-For Helm, use the [Lens chart's gateway settings](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#connect-a-gateway) to reference both secrets. For another platform, add the two variables to the Lens service through its environment settings, then redeploy it.
+For Helm, use the [two-namespace example](./kubernetes.md#existing-deployment). Create a matching `lens-connection` Secret in both the Lens and gateway namespaces. The Lens chart uses `gateway.enabled`, `gateway.secretName` and `serviceTokenSecret.name`; the gateway chart uses `lens.enabled`, `lens.gatewaySecret.name` and `lens.serviceTokenSecret.name`. It does not install Lens or PostgreSQL. For another platform, add the two variables through the Lens service's environment settings, then redeploy it.
 
 </TabItem>
 </Tabs>
@@ -102,6 +102,8 @@ LENS_GATEWAY_SECRET=YOUR_SIGNING_SECRET
 Use your Lens URL and the same two secrets from step 2. Neither URL ends in `/ui/` or `/v1/traces`.
 
 `LITELLM_LENS_URL` is the address the gateway calls. `LITELLM_LENS_PUBLIC_URL` is the address shown to agent exporters. They can be the same HTTPS URL. If you use a private address for the first value, the second must still be reachable by your agents.
+
+For Kubernetes, use the private Lens Service address for the gateway connection and a reachable HTTPS origin for exporters. The [Helm setup](./kubernetes.md) uses namespace and release variables, existing managed PostgreSQL and file-backed Secrets. Port-forward is only an initial health check.
 
 Merge this block into the gateway's existing `config.yaml`. Preserve its model list and other settings:
 
