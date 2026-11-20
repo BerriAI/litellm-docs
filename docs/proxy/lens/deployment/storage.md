@@ -8,7 +8,7 @@ slug: "/proxy/lens/deployment/storage"
 
 The standalone Lens starter and Helm chart include ClickHouse with Keeper and generate private credentials. Use this page when supplying external storage or secrets. The [Lens Helm guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md#use-existing-clickhouse) owns the complete storage requirements
 
-The bundled ClickHouse needs a provisioner and default StorageClass, or an explicit `clickhouse.storageClassName`. On EKS, install the [EBS CSI driver add-on](https://docs.aws.amazon.com/eks/latest/userguide/ebs-csi.html) and configure a class such as `gp3` first. A Pending volume prevents ClickHouse from starting. The gateway's PostgreSQL is separate and is not supplied by either chart. See the [two-namespace setup](./kubernetes.md#existing-deployment)
+For Kubernetes storage prerequisites and sizing, see the [Helm setup](./kubernetes.md). A Pending volume prevents ClickHouse from starting. The gateway's managed PostgreSQL is separate and is not supplied by either chart
 
 ## ClickHouse connection {#clickhouse-connection}
 

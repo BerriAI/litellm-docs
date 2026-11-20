@@ -31,7 +31,7 @@ An optional separate ingestion address uses `LITELLM_LENS_PUBLIC_URL` on Lens, o
 
 The gateway separately uses `LITELLM_LENS_URL` for its private connection and `LITELLM_LENS_PUBLIC_URL` for the tracing address shown to users. Verify reachability from the actual gateway, browser and agent networks
 
-For Kubernetes port-forward only, set Lens `publicUrl` and gateway `lens.publicUrl` to `http://localhost:4318`. Set gateway `lens.url` to `http://lens.lens.svc.cluster.local:4318` for Lens in namespace `lens`. The localhost address works only on the computer with the open tunnel. Use reachable HTTPS URLs for remote browsers and agents
+For Kubernetes, use reachable HTTPS origins for Lens `publicUrl` and gateway `lens.publicUrl`, with ingress, DNS and TLS configured. Gateway `lens.url` uses the private Lens Service address across namespaces. The [Helm setup](./kubernetes.md) derives that address from your release and namespace variables. Port-forward is only an initial health check, not the published endpoint
 
 ## Use an ingress with Helm {#dedicated-ingress}
 
@@ -77,7 +77,7 @@ The gateway forwards telemetry through a bounded asynchronous queue. If Lens is 
 
 ## Troubleshooting
 
-On a fresh Helm install, a few Lens restarts with `Error: Storage(Storage(Transport))` are expected while ClickHouse starts. If they continue after ClickHouse is Ready, check its Service, credentials and logs. If ClickHouse stays Pending, inspect its PVC and StorageClass with `kubectl --namespace lens describe pvc`. Do not treat a persistent failure as normal startup
+On a fresh Helm install, a few Lens restarts with `Error: Storage(Storage(Transport))` are expected while ClickHouse starts. If they continue after ClickHouse is Ready, check its Service, credentials and logs. If ClickHouse stays Pending, inspect its PVC and StorageClass with `kubectl --namespace "$LENS_NAMESPACE" describe pvc`, using the namespace from your Helm setup. Do not treat a persistent failure as normal startup
 
 From the extracted Compose bundle directory:
 

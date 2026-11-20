@@ -103,7 +103,7 @@ Use your Lens URL and the same two secrets from step 2. Neither URL ends in `/ui
 
 `LITELLM_LENS_URL` is the address the gateway calls. `LITELLM_LENS_PUBLIC_URL` is the address shown to agent exporters. They can be the same HTTPS URL. If you use a private address for the first value, the second must still be reachable by your agents.
 
-With Kubernetes port-forward only, use `http://lens.lens.svc.cluster.local:4318` for the gateway connection to Lens in namespace `lens`, and `http://localhost:4318` for the exporter address on your computer. Keep the Lens tunnel open. That localhost address does not work for agents on other machines. See the [complete Helm example](./kubernetes.md#existing-deployment), including the gateway's PostgreSQL and master key prerequisites.
+For Kubernetes, use the private Lens Service address for the gateway connection and a reachable HTTPS origin for exporters. The [Helm setup](./kubernetes.md) uses namespace and release variables, existing managed PostgreSQL and file-backed Secrets. Port-forward is only an initial health check.
 
 Merge this block into the gateway's existing `config.yaml`. Preserve its model list and other settings:
 
