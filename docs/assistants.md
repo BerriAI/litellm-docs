@@ -296,7 +296,7 @@ curl -X POST 'http://0.0.0.0:4000/threads/{thread_id}/runs' \
 </TabItem>
 </Tabs>
 
-## [Proxy API Reference](https://docs.litellm.ai/api-reference/#/assistants)
+## [Proxy API Reference](https://docs.litellm.ai/api-reference/#tag/assistants)
 
 
 ## Azure OpenAI

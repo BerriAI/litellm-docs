@@ -14,7 +14,8 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const {search} = require('../search/engine');
 const {loadRuntimeIndex} = require('../search/runtime-index');
-const {dereference, referencedDefinitions, methods} = require('../search/openapi');
+const {dereference, referencedDefinitions, operationUrl, methods} = require('../search/openapi');
+const {isOperationUrl} = require('../search/content');
 
 const SITE = 'https://docs.litellm.ai';
 const MAX_TEXT = 40000;
@@ -51,7 +52,7 @@ function parseDocUrl(input) {
     return {error: 'Not a valid URL or path.'};
   }
   if (url.origin !== SITE) return {error: `Only ${SITE} pages can be read.`};
-  if (url.pathname === '/api-reference/' && url.hash.startsWith('#/')) return {api: url.pathname + url.hash};
+  if (isOperationUrl(url.pathname + url.hash)) return {api: url.pathname + url.hash};
   let pathname = url.pathname;
   try {
     pathname = decodeURI(pathname);
@@ -104,7 +105,7 @@ function createDocsTools({buildDir = defaultBuildDir(), readFile = fs.readFile} 
       for (const [method, operation] of Object.entries(item)) {
         if (!methods.has(method) || !operation?.operationId) continue;
         const tag = operation.tags?.[0] || 'default';
-        list.push({route, method, operation, item, url: `/api-reference/#/${encodeURIComponent(tag)}/${encodeURIComponent(operation.operationId)}`});
+        list.push({route, method, operation, item, url: operationUrl(tag, operation.operationId)});
       }
     }
     return {api, list};
@@ -294,13 +295,13 @@ function createDocsTools({buildDir = defaultBuildDir(), readFile = fs.readFile} 
     description:
       'Read one LiteLLM AI Gateway (proxy) HTTP endpoint from its OpenAPI spec: method and path, description, ' +
       'parameters, request body, responses and referenced schemas. Pass "POST /v1/chat/completions", a path ' +
-      '(all methods), an operationId, or an /api-reference/#/... URL from search_litellm_docs.',
+      '(all methods), an operationId, or an API reference URL from search_litellm_docs.',
     inputSchema: {
       type: 'object',
       additionalProperties: false,
       required: ['endpoint'],
       properties: {
-        endpoint: {type: 'string', minLength: 1, maxLength: 300, description: 'For example "POST /v1/chat/completions", "/key/generate", an operationId, or an /api-reference/#/... URL.'},
+        endpoint: {type: 'string', minLength: 1, maxLength: 300, description: 'For example "POST /v1/chat/completions", "/key/generate", an operationId, or an API reference URL.'},
         offset: {type: 'integer', minimum: 0, maximum: 10000000, description: 'Character offset to continue from, as given in a previous response.'},
       },
     },
@@ -310,7 +311,13 @@ function createDocsTools({buildDir = defaultBuildDir(), readFile = fs.readFile} 
       let wanted = endpoint.trim();
       try {
         const u = new URL(wanted, SITE + '/');
-        if (u.origin === SITE && u.pathname === '/api-reference/') wanted = u.pathname + u.hash;
+        if (u.origin === SITE && u.pathname === '/api-reference/') {
+          wanted = u.pathname + u.hash;
+          if (u.hash.startsWith('#/')) {
+            const [tag, id] = u.hash.slice(2).split('/').map(decodeURIComponent);
+            if (id) wanted = operationUrl(tag, id);
+          }
+        }
       } catch {
         // not a URL
       }

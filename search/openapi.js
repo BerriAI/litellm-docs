@@ -1,4 +1,6 @@
 const methods = new Set(['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace']);
+const anchorSlug = value => encodeURIComponent(value).replaceAll('~', '%7E').replaceAll('%', '~');
+const operationUrl = (tag, id) => `/api-reference/#tag/${anchorSlug(tag)}/${anchorSlug(id)}`;
 
 function resolveReference(spec, ref) {
   if (!ref.startsWith('#/')) throw new Error(`Search requires a bundled OpenAPI reference: ${ref}`);
@@ -53,7 +55,7 @@ function extractOpenAPI(spec) {
       if (!methods.has(method)) continue;
       if (!operation.operationId) throw new Error(`Missing OpenAPI operationId: ${method} ${path}`);
       const tag = operation.tags?.[0] || 'default';
-      const url = `/api-reference/#/${encodeURIComponent(tag)}/${encodeURIComponent(operation.operationId)}`;
+      const url = operationUrl(tag, operation.operationId);
       if (structure[url]) throw new Error(`Duplicate OpenAPI operation URL: ${url}`);
       const title = `${method.toUpperCase()} ${path}`;
       const summary = operation.summary || title;
@@ -101,4 +103,4 @@ function extractOpenAPI(spec) {
   return {documents, structure};
 }
 
-module.exports = {extractOpenAPI, operationStructure, dereference, referencedDefinitions, methods};
+module.exports = {extractOpenAPI, operationStructure, operationUrl, dereference, referencedDefinitions, methods};

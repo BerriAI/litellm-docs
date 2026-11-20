@@ -913,7 +913,7 @@ callback_settings:
 
 ## Which routes are traced
 
-High-frequency, non-LLM routes are **excluded by default** so they don't flood your traces: health checks (`/health*`), the Prometheus scrape (`/metrics`), and static UI/docs assets (`/ui`, `/docs`, `/redoc`, `/_next`, `/openapi.json`, favicons, …).
+High-frequency, non-LLM routes are **excluded by default** so they don't flood your traces: health checks (`/health*`), the Prometheus scrape (`/metrics`), and static UI/docs assets (`/ui`, `/docs`, `/scalar`, `/_next`, `/openapi.json`, favicons, …).
 
 To change the set, use the standard OpenTelemetry env var (comma-separated paths, substring-matched):
 
