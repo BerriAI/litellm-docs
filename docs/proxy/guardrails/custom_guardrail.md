@@ -173,6 +173,10 @@ To filter or block streaming content in real-time, use `async_post_call_streamin
 
 Built-in guardrails that implement `apply_guardrail` (for example [Bedrock](./bedrock#streaming)) take the opposite default on streams: LiteLLM buffers every chunk until the assembled response passes moderation, so a block lands before any content reaches the client. Set `streaming_buffer_until_moderated: false` together with `streaming_end_of_stream_only: true` on such a guardrail to get the audit-only behavior described above, with no added time-to-first-token.
 
+When the whole stream is buffered (`streaming_buffer_until_moderated: true` without `streaming_buffer_release_on_scan`), the text and tool-call rewrites your `apply_guardrail` returns are written into the held chunks, so the client receives the masked output on `/v1/chat/completions`, `/v1/messages`, `/v1/responses` and `/v1/completions`. A rewrite that adds or drops a tool call cannot be written back, so it is discarded with a warning and the original chunks are sent.
+
+A guardrail with `mask_response_content: true` always holds the whole stream on those four routes, even with `streaming_buffer_until_moderated: false` or `streaming_buffer_release_on_scan: true`, because any chunk sent before the end-of-stream scan would reach the client unmasked. Expect time-to-first-token to equal the full generation time for those guardrails. `streaming_transform_mode: incremental_diff` keeps its own behavior on `/v1/chat/completions`.
+
 :::
 
 <details>
