@@ -720,6 +720,12 @@
       "audio"
     ]
   },
+  "providers/pareto": {
+    "prefix": "pareto",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/perplexity": {
     "prefix": "perplexity",
     "capabilities": [
