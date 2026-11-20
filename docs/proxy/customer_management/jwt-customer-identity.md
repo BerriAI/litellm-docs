@@ -78,6 +78,8 @@ general_settings:
 
 Use `[X-Tenant-ID]` to require only the organization header, or `[X-User-ID]` to require only the member header. Omit the setting or use `[]` to keep headers optional. For authenticated inference requests, LiteLLM returns HTTP 403 when any listed header is missing or blank. Header names are case-insensitive. A JWT does not substitute for a required header, and this setting does not change whether LiteLLM reads customer identity from claims or headers.
 
+When Rust-first forwarding is enabled (`LITELLM_RUST_FIRST=true`), the Rust gateway can serve `POST /v1/messages` requests authenticated with the master key without checking these headers. Keep Rust-first forwarding off if you rely on this setting.
+
 :::warning
 Customer headers are not signed by the JWT. Use them only with trusted callers or an ingress that strips incoming identity headers and sets them from verified identity. Use signed customer claims if untrusted clients can reach the proxy directly.
 :::
