@@ -1,20 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import styles from './styles.module.css';
 
-const LENS_LOGO = `██▄         ██████████▄ ██▄     ██▄   ████████▄
-███         ███▀▀▀▀▀▀▀▀ ████▄   ███ ██▄▀▀▀▀▀▀▀▀
-███         ████████▄   ███▀██▄ ███  ▀██████▄
-███         ███▀▀▀▀▀▀   ███  ▀█████    ▀▀▀▀▀██▄
-██████████▄ ██████████▄ ███    ▀███ ████████▄▀▀
- ▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀  ▀▀      ▀▀  ▀▀▀▀▀▀▀▀`;
-const LOGO_LINES = LENS_LOGO.split('\n');
-const LOGO_WIDTH = Math.max(...LOGO_LINES.map(line => line.length)) * 6;
-const LOGO_PATH = LOGO_LINES.flatMap((line, row) => Array.from(line, (cell, column) => {
-  if (cell === ' ') return '';
-  const height = cell === '█' ? 10 : 5;
-  const top = row * 10 + (cell === '▄' ? 5 : 0);
-  return `M${column * 6},${top}h6v${height}h-6z`;
-})).join('');
 const COMMAND = 'lens show';
 const RESULTS = [
   {
@@ -362,13 +348,21 @@ export default function LaunchHero() {
   return (
     <header className={styles.hero} data-full-width>
       <div className={styles.heroContent}>
-        <h1><span className={styles.screenReaderOnly}>Lens CLI</span><span className={styles.brandRow} aria-hidden="true"><svg className={styles.asciiHeading} viewBox={`0 0 ${LOGO_WIDTH} 60`}><path d={LOGO_PATH} fill="currentColor" /></svg><span className={styles.cliLabel}>CLI</span></span></h1>
+        <h1>Lens CLI</h1>
         <p className={styles.tagline}>Evaluate models, harnesses, and custom agents on your own tasks.</p>
-        <a className={styles.cta} href="https://github.com/BerriAI/lens">Get started with Lens</a>
+        <GetStartedCta />
         <NativeCliPreview />
         <p className={styles.byline}>Private preview <span aria-hidden="true">·</span> November 21, 2026 <span aria-hidden="true">·</span> Ishaan Jaffer</p>
       </div>
     </header>
+  );
+}
+
+export function GetStartedCta() {
+  return (
+    <div className={styles.ctaRow}>
+      <a className={styles.cta} href="https://github.com/BerriAI/lens">Get started with Lens</a>
+    </div>
   );
 }
 
