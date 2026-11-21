@@ -72,5 +72,3 @@ Run through your Lens-enabled gateway, then open **Lens > Traces** to inspect ca
 <ReportFigure src="/img/lens/overview-traces.webp" alt="The Lens Traces UI shows captured agent runs with inputs, duration, costs, and findings.">
 Lens UI shown with sample data, separate from the CLI run above.
 </ReportFigure>
-
-Follow the [Lens CLI walkthrough](/docs/proxy/lens/cli) to connect your agents, define the checks, and evaluate a local task set or a dataset from your gateway.

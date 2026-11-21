@@ -1,16 +1,9 @@
 :global(body):has(.hero) {
-  --ifm-background-color: #000;
-  --ifm-background-surface-color: #111;
-  --ifm-font-color-base: #ededed;
-  --ifm-heading-color: #fff;
-  --ifm-navbar-background-color: #000;
-  --ifm-navbar-link-color: #ededed;
-  --ifm-color-primary: #d5b4ef;
-  --ifm-link-color: #f3e6ff;
-  --ifm-menu-color: #ededed;
-  --ifm-color-emphasis-200: #292929;
-  --ifm-table-stripe-background: #0a0a0a;
   background: #000;
+}
+
+:global(html[data-theme='light']) :global(body):has(.hero) :global(.navbar) {
+  --aurora-nav-bg: #fff;
 }
 
 :global(body):has(.hero) :global(.footer) {
@@ -21,12 +14,20 @@
 }
 
 :global(article):has(.hero) {
+  --ifm-background-color: #000;
+  --ifm-background-surface-color: #111;
+  --ifm-heading-color: #fff;
+  --ifm-color-primary: #d5b4ef;
+  --ifm-link-color: #f3e6ff;
+  --ifm-color-emphasis-200: #292929;
+  --ifm-table-stripe-background: #0a0a0a;
   padding-bottom: 128px;
   color: #ededed;
   background: #000;
 }
 
-:global(article):has(.hero) > :global(.markdown) {
+:global(html[data-theme]) :global(article):has(.hero) > :global(.markdown) {
+  color: #ededed;
   font-size: 18px;
   line-height: 1.56;
   letter-spacing: -0.012em;
@@ -71,6 +72,25 @@
   color: #e6e6e6 !important;
 }
 
+:global(article):has(.hero) :global(.theme-code-block) {
+  margin-block: 32px;
+  border: 1px solid #292929;
+  border-radius: 12px;
+  background: #101010;
+  box-shadow: none;
+}
+
+:global(article):has(.hero) :global(.theme-code-block) pre {
+  margin: 0;
+  border: 0;
+}
+
+:global(html[data-theme]) :global(article):has(.hero) pre code {
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
 :global(article):has(.hero) :global(.token) {
   color: #e6e6e6 !important;
 }
@@ -107,7 +127,7 @@
   align-items: center;
   justify-content: center;
   min-height: calc(100svh - var(--ifm-navbar-height));
-  padding: 48px 24px 44px;
+  padding: 56px 24px 44px;
   overflow: hidden;
   isolation: isolate;
   text-align: center;
@@ -121,8 +141,8 @@
 }
 
 .hero h1 {
-  margin: 0 0 28px !important;
-  color: #d68bff !important;
+  margin: 0 0 24px !important;
+  color: #c69be9 !important;
   font-size: inherit !important;
   font-weight: 400 !important;
   line-height: 1 !important;
@@ -130,43 +150,41 @@
 }
 
 .brandRow {
-  display: inline-flex;
+  display: inline-grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 18px clamp(12px, 3vw, 46px);
+  gap: clamp(16px, 3vw, 32px);
+  width: min(720px, 100%);
   max-width: 100%;
 }
 
 .asciiHeading {
   display: block;
-  color: #d68bff;
-  font-family: var(--ifm-font-family-monospace);
-  font-size: clamp(8.5px, 2.4vw, 32px);
-  font-weight: 400;
-  line-height: 1.05;
-  letter-spacing: 0;
-  white-space: pre;
-  font-variant-ligatures: none;
+  width: 100%;
+  height: auto;
+  color: #c69be9;
 }
 
 .cliLabel {
-  color: #d68bff;
+  align-self: end;
+  padding-bottom: 0.14em;
+  color: #c69be9;
   font-family: var(--ifm-font-family-monospace);
-  font-size: clamp(30px, 7.6vw, 104px);
-  font-weight: 500;
+  font-size: clamp(28px, 4.2vw, 52px);
+  font-weight: 400;
   line-height: 1;
   letter-spacing: -0.065em;
 }
 
 .hero .tagline {
-  max-width: 860px;
+  max-width: 620px;
   margin: 0 auto;
-  color: #fff;
-  font-size: clamp(22px, 2.1vw, 30px);
+  color: #d5d0da;
+  font-size: clamp(20px, 2vw, 25px);
   font-weight: 400;
-  line-height: 1.13;
-  letter-spacing: -0.035em;
+  line-height: 1.4;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
 }
 
 .hero .cta,
@@ -174,13 +192,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 54px;
-  margin-top: 28px;
-  padding: 14px 26px;
+  min-width: 280px;
+  min-height: 60px;
+  margin-top: 24px;
+  padding: 18px 32px;
   border-radius: 999px;
   background: #fff;
   color: #000 !important;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 500;
   line-height: 1.25;
   text-decoration: none !important;
@@ -202,13 +221,15 @@
 
 .cliPreview {
   width: min(1200px, 100%);
-  margin: 42px auto 0;
+  margin: 36px auto 0;
   text-align: left;
 }
 
 .terminal {
   padding: 24px 28px 18px;
-  background: #080808;
+  border: 1px solid #29222f;
+  border-radius: 14px;
+  background: #0b090e;
   color: #dedbe3;
   font-family: var(--ifm-font-family-monospace);
   font-size: 14px;
@@ -230,7 +251,7 @@
 .recommendation strong { color: #e7c6ff; font-weight: 600; }
 .recommendation small { color: #a3ddae; font-size: 12px; }
 .reportGrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; }
-.terminal h3 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid #3b2c44; color: #dedbe3; font-family: inherit; font-size: 15px; font-weight: 500; letter-spacing: 0; }
+:global(html[data-theme]) :global(article):has(.hero) .terminal h3 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid #3b2c44; color: #dedbe3; font-family: inherit; font-size: 15px; font-weight: 500; letter-spacing: 0; }
 .terminal h3 > span { color: #d38aff; }
 .terminal h3 small { margin-left: auto; color: #817a88; font-size: 11px; }
 .results { min-width: 0; }
@@ -356,9 +377,11 @@
     font-size: 28px;
   }
 
-  .hero { padding: 40px 20px 36px; }
+  .hero { padding: 36px 20px; }
   .hero h1 { margin-bottom: 24px !important; }
-  .hero .tagline { max-width: 440px; font-size: 24px; }
+  .brandRow { width: min(430px, 100%); }
+  .cliLabel { font-size: clamp(28px, 6vw, 38px); }
+  .hero .tagline { max-width: 400px; font-size: 21px; }
   .hero .cta { margin-top: 32px; }
   .cliPreview { width: calc(100% + 24px); margin: 32px -12px 0; }
   .terminal { padding: 20px 14px 16px; font-size: 11px; }
@@ -371,7 +394,7 @@
   :global(article):has(.hero) .terminal .rankTable { font-size: 12px; }
   :global(article):has(.hero) .terminal .rankTable :is(th, td) { padding: 9px 6px; }
   :global(article):has(.hero) .terminal .rankTable th { font-size: 10px; }
-  .terminal h3 { font-size: 13px; }
+  :global(html[data-theme]) :global(article):has(.hero) .terminal h3 { font-size: 13px; }
   .terminalFooter { gap: 10px; font-size: 9px; }
   .terminalFooter > span:last-child { text-align: right; }
   .replayCaption { padding-inline: 4px; font-size: 11px; }
