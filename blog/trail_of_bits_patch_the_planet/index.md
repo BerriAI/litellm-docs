@@ -21,11 +21,9 @@ You will see a lot of advisories from us over the next three to four weeks. This
 
 This year we built a security function at LiteLLM. The first priority was everything around the code: the release pipeline, identity and access, and detection. We launched a managed vulnerability disclosure program with HackerOne and stood up a [private registry](/blog/litellm-private-registry) for embargoed fixes. We are adding a security engineer and a detection engineer to the team.
 
-The next step was the application itself, which is where Trail of Bits came in.
+The next step was the application itself. If you work in security, you already know of Trail of Bits. If you don't: they are one of the most respected security research firms in the world. Patch the Planet is their initiative in partnership with OpenAI for open-source software. It pairs AI-driven vulnerability discovery with Trail of Bits' researchers, who reproduce, validate and prioritize what the models find.
 
-If you work in security, you already know of Trail of Bits. If you don't: they are one of the most respected security research firms in the world. They write tools and handbooks that much of the industry relies on, and their name carries real weight with security teams. Patch the Planet is their initiative with OpenAI for open-source software. It pairs AI-driven vulnerability discovery with Trail of Bits' researchers, who reproduce, validate and prioritize what the models find.
-
-For a company of about sixteen people, being accepted into the program and having security engineers of that caliber working on our code is a big deal. And on a personal note, the folks at Trail of Bits were an absolute delight to work with. If you are eligible, I highly recommend applying.
+Being accepted into the program and having security engineers of that caliber working on our code is a big deal. And on a personal note, the folks at Trail of Bits were an absolute delight to work with. If you are eligible, I highly recommend applying.
 
 One of the most impressive things about a Patch the Planet engagement is that they propose fixes for the vulnerabilities they identify. Most of the vulnerabilities in this engagement, whether Trail of Bits identified them or a researcher reported them, came back to us with a candidate patch, and together those patches touch nearly every part of the codebase.
 
