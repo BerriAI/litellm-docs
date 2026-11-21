@@ -30,12 +30,14 @@ This page helps you pick the route for your model, run a first session, and find
 
 Voice models fall into four families. Each family has its own route on the proxy, and a model from one family does not run on another family's route.
 
-| You want to | Model | Route on the proxy | Providers | Guide |
-| --- | --- | --- | --- | --- |
-| Hold a voice conversation with turns and tools | `gpt-realtime-2.1` and other Realtime models | `WS /v1/realtime` | OpenAI, Azure, xAI, Gemini, Vertex AI, Bedrock | [Realtime](/docs/realtime) |
-| Hold a full-duplex voice conversation | `gpt-live-1` | `WS /v1/live/sessions` | OpenAI | [GPT-Live](/docs/live_sessions) |
-| Turn live speech into text | `gpt-live-transcribe` | `WS /v1/realtime?intent=transcription` | OpenAI, Azure | [Live transcription](/docs/realtime#live-transcription-with-gpt-live-transcribe) |
-| Translate live speech | `gpt-realtime-translate` | `WS /v1/realtime/translations` | OpenAI, Azure | [Realtime translation](/docs/realtime_translation) |
+| You want to | Model | Route on the proxy | Providers |
+| --- | --- | --- | --- |
+| [Hold a voice conversation with turns and tools](/docs/realtime) | `gpt-realtime-2.1` and other Realtime models | `WS /v1/realtime` | OpenAI, Azure, xAI, Gemini, Vertex AI, Bedrock |
+| [Hold a full-duplex voice conversation](/docs/live_sessions) | `gpt-live-1` | `WS /v1/live/sessions` | OpenAI |
+| [Turn live speech into text](/docs/realtime#live-transcription-with-gpt-live-transcribe) | `gpt-live-transcribe` | `WS /v1/realtime?intent=transcription` | OpenAI, Azure |
+| [Translate live speech](/docs/realtime_translation) | `gpt-realtime-translate` | `WS /v1/realtime/translations` | OpenAI, Azure |
+
+Each task links to its setup guide.
 
 `gpt-live-transcribe` has "live" in its name, but it runs on the Realtime route. Send `gpt-live-1` to `/v1/live/sessions` only.
 
@@ -92,7 +94,8 @@ This example starts a Realtime session on OpenAI and prints the model's reply as
     async def main() -> None:
         headers = {"Authorization": f"Bearer {os.environ['LITELLM_API_KEY']}"}
         async with websockets.connect(URL, additional_headers=headers) as ws:
-            await ws.send(json.dumps({"type": "session.update", "session": {"type": "realtime", "output_modalities": ["text"]}}))
+            session = {"type": "realtime", "output_modalities": ["text"]}
+            await ws.send(json.dumps({"type": "session.update", "session": session}))
             await ws.send(
                 json.dumps(
                     {
