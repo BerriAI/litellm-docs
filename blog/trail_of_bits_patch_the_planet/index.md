@@ -11,7 +11,7 @@ hide_table_of_contents: false
 
 I am very excited to report that LiteLLM was selected for [Patch the Planet](https://trailofbits.com/patch-the-planet/), the open-source hardening program run by [Trail of Bits](https://www.trailofbits.com/), and that this engagement has recently concluded. They worked directly in our codebase, finding vulnerabilities and writing fixes for them. Their work covers a combination of issues they identified and reports from independent security researchers that they took on as part of the same work.
 
-Fixes are beginning to ship, and we expect every fix to be available within the next week or two. Most ship in public releases, each with an advisory. The most severe, including several rated critical, will first go to our [private registry](/blog/litellm-private-registry-access) under embargo, and their public release and advisory follow two weeks later.
+Fixes are beginning to ship, and we expect to get through them within the next week or two. Most ship in public releases, each with an advisory. The most severe, including several rated critical, will first go to our [private registry](/blog/litellm-private-registry-access) under embargo, and their public release and advisory follow two weeks later.
 
 Over the next three to four weeks you will see more advisories from us than in any comparable period. This post covers the context behind them, how the fixes reach you, and what to do.
 
