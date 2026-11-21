@@ -53,6 +53,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
 | A deployment's own [`supports_audio_input` and `supports_video_input`](#audio-and-video-on-other-deployments) values, and clip requests going only to the group deployments that take clips | `v1.110.0` |
 | [JSON input](#json-input) on OpenAI | `v1.112.0-rc.1`, and `v1.108.14` on the 1.108.x LTS line |
+| [Ollama image input](#ollama-decision-models) | Unreleased, requires a build containing [LiteLLM #53083](https://github.com/BerriAI/litellm/pull/53083) |
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -60,7 +61,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | Logging | Yes | Works across all integrations |
 | Virtual keys, budgets, rate limits | Yes | Normal proxy key auth |
 | Load balancing, fallbacks | Yes | Goes through the router like `/chat/completions` |
-| Image input | OpenAI, Gemini, Cloudflare Clef and TypeSafe | TypeSafe needs the `TypeSafe-Danger-Zone-Images: true` header. Other providers return a 400, or drop the images under `drop_params` |
+| Image input | OpenAI, Gemini, Cloudflare Clef, TypeSafe and [Ollama (unreleased)](#ollama-decision-models) | TypeSafe needs the `TypeSafe-Danger-Zone-Images: true` header. Other providers return a 400, or drop the images under `drop_params` |
 | JSON input | OpenAI | `azure/` deployments send the parts on as OpenAI does. Other providers, Microsoft Foundry included, return a 400 that names `input_json`, or drop the parts under `drop_params` |
 | Audio and video input | Gemini Decision 1 and Cloudflare Clef-omni | Other models return a 400, or drop the clips under `drop_params`, unless a [deployment flag](#audio-and-video-on-other-deployments) turns clips on. `openai/` and `azure/` deployments refuse clips whatever the flag says |
 | Streaming | No | |
@@ -80,6 +81,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | [Databricks `ai_decide`](./providers/databricks.md#decisions-ai_decide) | `databricks/ai_decide` | `DATABRICKS_API_KEY` or `DATABRICKS_TOKEN`, `DATABRICKS_API_BASE` required | `/v1/systemone` | No |
 | [Microsoft Foundry](https://ai.azure.com/catalog/models/Microsoft-Decision-1) | `azure_ai/<deployment>` with `base_model: azure_ai/Microsoft-Decision-1` | `AZURE_AI_API_KEY`, `AZURE_AI_API_BASE` required | `/v1/systemone` | No |
 | [Strands Decider](./providers/strands_decider.md) (self-hosted) | `strands_decider/strands-decider-2B-hobson-v19` | `STRANDS_DECIDER_API_BASE` required, `STRANDS_DECIDER_API_KEY` optional | `/v1/systemone` | No |
+| [Ollama](#ollama-decision-models) (self-hosted) | `ollama/clef:27b-q4_K_M` | `OLLAMA_API_BASE` or `api_base`, `OLLAMA_API_KEY` optional | `/v1/systemone` | [Unreleased](#ollama-decision-models) |
 | [vLLM](https://docs.vllm.ai/en/latest/serving/online_serving/structured_decisions.html) (self-hosted) | `hosted_vllm/Qwen/Qwen3-0.6B` | `HOSTED_VLLM_API_BASE` or `api_base` required, `HOSTED_VLLM_API_KEY` optional | `/v1/systemone` | No |
 | [Laya](https://github.com/NandhaKishorM/laya) (self-hosted) | `laya/english`, `laya/multilingual` or `laya/typed-decisions` | `api_base` or `LAYA_API_BASE` required, `LAYA_API_KEY` optional | `/v1/systemone` | No |
 | [Bespoke Nimble](https://github.com/bespokelabsai/nimble) (self-hosted) | `bespoke/nimble` on Ollama, else `bespoke/nimble-latest` or `bespoke/bespokelabs/Bespoke-Nimble-9B` | `api_base` or `BESPOKE_API_BASE` required, `BESPOKE_API_KEY` optional | `/v1/systemone` | No |
@@ -106,6 +108,23 @@ model_list:
 ```
 
 [Strands Decider](./providers/strands_decider.md) has no default host, so set `STRANDS_DECIDER_API_BASE` or pass `api_base`. vLLM needs v0.32.0 or later, which includes [vllm-project/vllm#59299](https://github.com/vllm-project/vllm/pull/59299), and answers `choice`, `noul` and `score` questions as described in vLLM's [Structured Decisions](https://github.com/vllm-project/vllm/blob/v0.32.0/docs/serving/online_serving/structured_decisions.md) docs. It serves the model architectures listed in its [`READ_STRATEGIES`](https://github.com/vllm-project/vllm/blob/v0.32.0/vllm/entrypoints/generate/structured_decisions/strategies.py#L812), Qwen3 and Qwen3.5 among them. To use vLLM as the Auto Router classifier, see [vLLM](./auto_router/decision_classifiers.md#vllm)
+
+### Ollama decision models
+
+Ollama image input is unreleased and requires a build containing [LiteLLM #53083](https://github.com/BerriAI/litellm/pull/53083). Your Ollama server must serve an image-capable decision model, such as `clef:27b-q4_K_M`, on its native `/v1/systemone` endpoint
+
+```yaml showLineNumbers keep-model-ids
+model_list:
+  - model_name: ollama-clef
+    litellm_params:
+      model: ollama/clef:27b-q4_K_M
+      api_base: os.environ/OLLAMA_API_BASE
+      api_key: os.environ/OLLAMA_API_KEY
+```
+
+Set `OLLAMA_API_BASE` to your Ollama server's base URL. Omit `api_key` when the server does not require authentication
+
+Use `ollama-clef` as the model in either request format. `/v1/systemone` accepts image URLs, data URLs and `{"content_type": "image/png", "base64": ...}` entries in `images`. `/v1/decisions` accepts URL or data URL `input_image` parts as shown in [Image input](#image-input). Omit OpenAI-only fields such as `safety_identifier` and `detail` in that example. LiteLLM converts the images to the raw base64 strings Ollama expects; the TypeSafe images header is not needed. Remote downloads follow LiteLLM's image URL policy and download limit
 
 ### Self-hosted Laya and Nimble
 
@@ -221,7 +240,7 @@ A question the model will not answer comes back as `{"type": "refusal", "name": 
 
 ### Image input
 
-OpenAI, Gemini, Cloudflare Clef and TypeSafe models take `input_image` parts, TypeSafe only with the [images header](#typesafe-images-box-questions-and-long-context). `image_url` is an image URL or a data URL, and `detail` is optional and only used by OpenAI.
+OpenAI, Gemini, Cloudflare Clef and TypeSafe models take `input_image` parts, TypeSafe only with the [images header](#typesafe-images-box-questions-and-long-context). [Ollama image input](#ollama-decision-models) is available in unreleased builds containing LiteLLM #53083. `image_url` is an image URL or a data URL, and `detail` is optional and only used by OpenAI.
 
 ```bash showLineNumbers
 curl -X POST 'http://0.0.0.0:4000/v1/decisions' \
