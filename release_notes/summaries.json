@@ -1,6 +1,16 @@
 [
   {
     "folders": [
+      "v1.108.14"
+    ],
+    "title": "LiteLLM v1.108.14 (LTS) fixes Claude tool search on Responses follow-ups",
+    "points": [
+      "Claude's tool search stays on `/v1/responses` follow-up turns, also with `store: false`, so Anthropic no longer answers 400.",
+      "`/v1/decisions` accepts OpenAI `input_json` content parts, so a body that OpenAI accepts directly also works through the proxy."
+    ]
+  },
+  {
+    "folders": [
       "v1.110.2",
       "v1.111.0rc3"
     ],
@@ -204,16 +214,6 @@
     "points": [
       "GitHub Copilot per-user credentials work on GHE.com tenants with the optional `github_copilot_host` field.",
       "Per-user Copilot connect no longer fails with `no Copilot access found` when `GITHUB_COPILOT_CLIENT_ID` is set."
-    ]
-  },
-  {
-    "folders": [
-      "v1.106.8"
-    ],
-    "title": "LiteLLM v1.106.8 fixes transcription cost for some FLAC files",
-    "points": [
-      "Transcription cost is correct for some FLAC files that could push a key over its budget.",
-      "Per-second transcriptions bill the `usage.seconds` that the provider reports, so spend matches the provider invoice and unmeasured files no longer log $0."
     ]
   }
 ]
