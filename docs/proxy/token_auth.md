@@ -42,9 +42,19 @@ export JWT_AUDIENCE="litellm-proxy"
 
 `JWT_ISSUER` must exactly match the token's `iss` claim. `JWT_AUDIENCE` must match the token's `aud` claim, or one of its values when `aud` is a list. Configure your identity provider to issue access tokens for that audience.
 
+You can set the signing keys and audience in `config.yaml` instead, under `litellm_jwtauth` <SinceVersion v="1.112.0" />. Each value set there takes precedence over its environment variable and can be an `os.environ/` reference. The proxy refuses to start when either value is empty, or is an `os.environ/` reference to an unset variable.
+
+```yaml title="config.yaml"
+general_settings:
+  enable_jwt_auth: true
+  litellm_jwtauth:
+    public_key_url: https://login.microsoftonline.com/<tenant_id>/discovery/v2.0/keys
+    audience: <client_id>
+```
+
 :::important
 
-Issuer and audience validation are disabled individually when `JWT_ISSUER` or `JWT_AUDIENCE` is unset. Set both so a valid signature alone is not enough to authenticate a token issued for another application.
+Issuer and audience validation are disabled individually when `JWT_ISSUER` is unset, or when neither `JWT_AUDIENCE` nor `litellm_jwtauth.audience` is set. Set both so a valid signature alone is not enough to authenticate a token issued for another application.
 
 :::
 
@@ -91,6 +101,8 @@ Replace `my-model` with a model name from your proxy configuration that the call
 | `JWT_PUBLIC_KEY_URL` | Provider JWKS endpoint or OIDC discovery URL. |
 | `JWT_ISSUER` | Expected `iss` claim. Leaving it unset disables the issuer check. |
 | `JWT_AUDIENCE` | Expected `aud` claim or one of its values. Leaving it unset disables the audience check. |
+| `general_settings.litellm_jwtauth.public_key_url` | Same as `JWT_PUBLIC_KEY_URL`, and used instead of it when both are set. |
+| `general_settings.litellm_jwtauth.audience` | Same as `JWT_AUDIENCE`, and used instead of it when both are set. |
 | `general_settings.enable_jwt_auth` | Enables JWT authentication. |
 
 See the [JWT configuration reference](./jwt_auth_reference.md) for multiple providers, supported tokens, identity claim mappings, and key caching.
