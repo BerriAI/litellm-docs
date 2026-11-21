@@ -8,12 +8,14 @@ image: /img/lens/cli/launch.webp
 tags: [lens, engineering]
 hide_table_of_contents: true
 custom_hero: true
-draft: true
+draft: false
 ---
 
-import LaunchHero, {PreviewNote, ReportFigure} from './Launch';
+import LaunchHero, {GetStartedCta, PreviewNote, ReportFigure} from './Launch';
 
 <LaunchHero />
+
+<GetStartedCta />
 
 Before, you had to write the eval loop, create temporary workspaces and collect the results in a spreadsheet. Then you changed the model or harness and repeated the work.
 
@@ -72,3 +74,5 @@ Run through your Lens-enabled gateway, then open **Lens > Traces** to inspect ca
 <ReportFigure src="/img/lens/overview-traces.webp" alt="The Lens Traces UI shows captured agent runs with inputs, duration, costs, and findings.">
 Lens UI shown with sample data, separate from the CLI run above.
 </ReportFigure>
+
+<GetStartedCta />

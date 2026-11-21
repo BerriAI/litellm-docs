@@ -140,40 +140,15 @@
   margin: 0 auto;
 }
 
-.hero h1 {
+:global(article):has(.hero) .hero h1 {
   margin: 0 0 24px !important;
   color: #c69be9 !important;
-  font-size: inherit !important;
+  font-family: var(--ifm-font-family-base);
+  font-size: clamp(80px, 14vw, 190px) !important;
   font-weight: 400 !important;
-  line-height: 1 !important;
-  letter-spacing: 0;
-}
-
-.brandRow {
-  display: inline-grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: clamp(16px, 3vw, 32px);
-  width: min(720px, 100%);
-  max-width: 100%;
-}
-
-.asciiHeading {
-  display: block;
-  width: 100%;
-  height: auto;
-  color: #c69be9;
-}
-
-.cliLabel {
-  align-self: end;
-  padding-bottom: 0.14em;
-  color: #c69be9;
-  font-family: var(--ifm-font-family-monospace);
-  font-size: clamp(28px, 4.2vw, 52px);
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: -0.065em;
+  line-height: 0.94 !important;
+  letter-spacing: -0.075em;
+  white-space: nowrap;
 }
 
 .hero .tagline {
@@ -187,14 +162,19 @@
   text-wrap: balance;
 }
 
-.hero .cta,
-.hero .cta:hover {
+.ctaRow {
+  display: flex;
+  justify-content: center;
+  margin: 24px auto 0;
+}
+
+.cta,
+.cta:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 280px;
   min-height: 60px;
-  margin-top: 24px;
   padding: 18px 32px;
   border-radius: 999px;
   background: #fff;
@@ -206,8 +186,8 @@
   transition: background 150ms ease;
 }
 
-.hero .cta:hover { background: #ddd; }
-.hero .cta:focus-visible { outline: 2px solid #d5b4ef; outline-offset: 5px; }
+.cta:hover { background: #ddd; }
+.cta:focus-visible { outline: 2px solid #d5b4ef; outline-offset: 5px; }
 
 .hero .byline {
   margin: 22px 0 0;
@@ -318,19 +298,7 @@
   :global(article):has(.hero) .terminal .rankTable { font-size: 13px; }
 }
 
-.screenReaderOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.hero + p { margin-top: 72px !important; }
+.hero + .ctaRow { margin-top: 0; margin-bottom: 72px; }
 
 .preview {
   margin-block: 36px 64px;
@@ -378,11 +346,9 @@
   }
 
   .hero { padding: 36px 20px; }
-  .hero h1 { margin-bottom: 24px !important; }
-  .brandRow { width: min(430px, 100%); }
-  .cliLabel { font-size: clamp(28px, 6vw, 38px); }
+  :global(article):has(.hero) .hero h1 { margin-bottom: 24px !important; font-size: clamp(72px, 18vw, 96px) !important; }
   .hero .tagline { max-width: 400px; font-size: 21px; }
-  .hero .cta { margin-top: 32px; }
+  .ctaRow { margin-top: 32px; }
   .cliPreview { width: calc(100% + 24px); margin: 32px -12px 0; }
   .terminal { padding: 20px 14px 16px; font-size: 11px; }
   .reportMeta { display: block; font-size: 10px; }
@@ -408,6 +374,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero .cta, .savedReport, :global(article):has(.hero) .terminal .rankTable tr { transition: none; }
+  .cta, .savedReport, :global(article):has(.hero) .terminal .rankTable tr { transition: none; }
   .cliPreview .cursor { animation: none; }
 }
