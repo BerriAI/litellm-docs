@@ -9,49 +9,52 @@ tags: [security]
 hide_table_of_contents: false
 ---
 
-I am very excited to report that LiteLLM was selected for [Patch the Planet](https://trailofbits.com/patch-the-planet/), the open-source hardening program run by [Trail of Bits](https://www.trailofbits.com/), and that this engagement has recently concluded. They worked directly in our codebase, finding vulnerabilities and writing fixes for them. Their work covers a combination of issues they identified and reports from independent security researchers that they took on as part of the same work.
+We're thrilled to share that LiteLLM was selected for [Patch the Planet](https://trailofbits.com/patch-the-planet/), the open-source security hardening program run by [Trail of Bits](https://www.trailofbits.com/) in partnership with Open AI. The engagement has now concluded, and over the next three to four weeks we will be shipping a series of security fixes and publishing the corresponding security advisories.
 
-Fixes are beginning to ship, and we expect to get through them within the next week or two. Most ship in public releases, each with an advisory. The most severe, including several rated critical, will first go to our [private registry](/blog/litellm-private-registry-access) under embargo, and their public release and advisory follow two weeks later.
+Trail of Bits worked within our codebase, identifying and triaging vulnerabilities, and proposing remediation patches. Their work covers a combination of issues they discovered as well as reports from independent security researchers.
 
-Over the next three to four weeks you will see more advisories from us than in any comparable period. This post covers the context behind them, how the fixes reach you, and what to do.
+Fixes are now beginning to ship, and we expect to get through them within the next week or two. Most will ship in public releases accompanied by a security advisory. The most severe vulnerabilities will first go out to our [private registry](/blog/litellm-private-registry-access) under embargo, with public releases and advisories following two weeks later.
+
+This post covers the context behind the advisories, how the fixes will reach you, and what you should do.
+
 
 {/* truncate */}
 
 ## What's happening
 
-This year we built a security function at LiteLLM. The first priority was everything around the code: the release pipeline, identity and access, and detection. We launched a managed vulnerability disclosure program with HackerOne and stood up a [private registry](/blog/litellm-private-registry) for embargoed fixes. We are adding a security engineer and a detection engineer to the team.
+Over the course of this year, we have made a lot of investments in strengthening LiteLLM's security posture. Much of our attention has been focused on areas surrounding the codebase: the release pipeline, identity and access, internal policies and procedures, and monitoring and detection. We've partnered with HackerOne for a managed vulnerability disclosure program. We built out a private registry to enable embargoed releases for high-risk vulnerabilities. We now have LTS releases of LiteLLM to decouple resolving vulnerabilities from pulling in new features.
 
-The next step was the application itself, and that is where Trail of Bits came in. If you work in security, you already know of Trail of Bits. If you don't: they are one of the most respected security research firms in the world. Patch the Planet is their initiative in partnership with OpenAI for open-source software. It pairs AI-driven vulnerability discovery with Trail of Bits' researchers, who reproduce, validate and prioritize what the models find.
+We are also investing in the codebase itself, and this is where Trail of Bits came in.
 
-Being accepted into the program and having security engineers of that caliber working on our code is a big deal. And on a personal note, the folks at Trail of Bits were an absolute delight to work with. If you are eligible, I highly recommend applying.
+Trail of Bits is one of the most highly respected security research firms today. In conjunction with OpenAI, they run an initiative called Patch the Planet, which combines frontier-model AI-driven vulnerability discovery with experienced security researchers who reproduce, validate, prioritize, and propose fixes for the findings.
 
-One of the most impressive things about a Patch the Planet engagement is that they propose fixes for the vulnerabilities they identify. Most of the vulnerabilities in this engagement, whether Trail of Bits identified them or a researcher reported them, came back to us with a candidate patch, and together those patches touch nearly every part of the codebase.
+LiteLLM had the privilege of being selected for this initiative, joining prominent OSS projects like sqlite, python golang, wordpress, curl, rsync, and others. Our experience working with Trail of Bits was immensely positive. I would strongly encourage maintainers of open source projects to apply.
 
-Shipping the patches is, of course, up to us. An outside reviewer cannot know every way our customers use LiteLLM, so we test every proposed change thoroughly for regressions and rework it where needed.
+Of course, getting a patch is different from shipping it. LiteLLM is used in many different ways by our customers, and an external reviewer can't anticipate every use case. We still need to test each change carefully for regressions and adapt the patches where necessary.
+
 
 ## Contextualizing advisory counts
 
-Each of these advisories is a weakness removed from the product. A quiet advisory feed doesn't say much about a piece of software: sometimes the code is sound, but it can also mean that nobody with the skill and the time has looked closely enough. Bugs exist whether or not anyone finds them, and we cannot express enough how grateful we are to Trail of Bits for helping us get these found and fixed.
+Over the coming weeks and as a result of this work, we will be publishing more advisories than in any comparable period.
+
+A quiet advisory feed is not evidence of secure software, and some of the most hardened software projects in the world publish hundreds to thousands of CVEs per year. Each of these advisories represents a weakness removed from the product.
 
 This high volume of upcoming advisories leaves us in a significantly better place.
 
+
 ## How the fixes will ship
 
-Most fixes ship in regular public releases and patches. When a fix is public, we publish a GitHub Security Advisory on [BerriAI/litellm](https://github.com/BerriAI/litellm/security/advisories) and request a CVE. The first of these land this week.
+Most fixes will ship in regular public releases and patches. When a fix is released, we will publish a GitHub Security Advisory on our [advisory feed](https://github.com/BerriAI/litellm/security/advisories) and request a CVE. The first of these should land in the coming days.
 
-Fixes for the most severe vulnerabilities are published first to the [LiteLLM Private Registry](/blog/litellm-private-registry-access), and the public release and advisory follow two weeks later. We are working directly with our customers to get them onto the patched versions during those two weeks.
+Fixes for the most severe vulnerabilities will be published first to the [LiteLLM Private Registry](/blog/litellm-private-registry-access) under embargo, with public releases and advisories following two weeks later.
 
-We expect every fix to be out, publicly or through the private registry, within the next week or two. Accounting for the embargo period, the last of the public advisories from this effort should land three to four weeks from now.
 
 ## What you should do
 
-If you are pulling from our public registries, please ensure you are on a supported release. Fixes will ship to our [supported release lines](/docs/enterprise/version_support). For the least friction we recommend the [LTS release](/docs/enterprise/lts_pilot), which is the `v1.108.x` line.
+If you are pulling from our public registries, please ensure you are on a supported release. Fixes will ship to our [supported release lines](/docs/enterprise/version_support). For the least friction, we recommend the LTS release, which is the v1.108.x line.
 
-If you receive embargoed fixes through our private registry, please run the LTS line or the latest stable release. Given the size and breadth of these fixes, embargoed builds go only to those two lines; the rest of the supported window receives each fix at its public release.
+If you receive embargoed fixes through our private registry, please run the LTS line or the latest stable release. Given the size and breadth of these fixes, embargoed builds will only be available on those two lines; the rest of the supported versions will receive each fix at its public release.
 
-Subscribe to the [Security Announcements mailing list](https://security.litellm.ai/mailinglist/). This list is reserved for urgent or critical matters only, so it does not replace our [advisory feed on GitHub](https://github.com/BerriAI/litellm/security/advisories). The emails come from security@berri.ai, so please allowlist that address in your spam filters.
+We also recommend that you subscribe to the Security Announcements mailing list, though please note that this list is reserved for urgent or critical matters only, and does not replace our advisory feed. Emails from this list come from `security@berri.ai`, so please allowlist that address in your spam filters.
 
 If you have questions about this work or any advisory that comes out of it, please reach out to security@berri.ai.
-
-Oliver Jensen
-Director of Security, LiteLLM
