@@ -1,3 +1,8 @@
+---
+title: "Airia Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Airia"
+description: "Block prompt injection, jailbreaks and sensitive data with Airia on the LiteLLM AI Gateway, allowing, blocking or redacting prompts and responses."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

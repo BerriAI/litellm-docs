@@ -1,8 +1,10 @@
 ---
-title: Errors
+title: Errors from litellm.agent()
+sidebar_label: Errors
+description: Identify exceptions raised by litellm.agent() and distinguish setup errors from time and turn limits that preserve partial results.
 ---
 
-# Errors
+# Errors from `litellm.agent()`
 
 Setup problems raise an exception. Limits you set, like `timeout` and `max_turns`, end the turn and return a `Result` with a `stop_reason`, so partial work is kept.
 

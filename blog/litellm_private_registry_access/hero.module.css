@@ -1,0 +1,20 @@
+div:has(> .hero) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.hero {
+  width: 100%;
+  background: transparent;
+}
+
+.hero svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+[data-theme='dark'] .hero :global(.registry-logo) {
+  fill: #fff;
+}

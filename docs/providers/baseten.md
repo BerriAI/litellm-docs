@@ -1,3 +1,9 @@
+---
+title: "Baseten API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Baseten"
+description: "Call Baseten Model APIs and dedicated deployments from the Python SDK or AI Gateway, with gpt-oss-120b examples, streaming, -latest aliases and /v1/responses."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

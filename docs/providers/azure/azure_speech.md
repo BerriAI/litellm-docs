@@ -1,3 +1,9 @@
+---
+title: "Azure OpenAI Text to Speech with LiteLLM"
+sidebar_label: "Azure Text to Speech (tts)"
+description: "Run Azure OpenAI text to speech via LiteLLM from the Python SDK or AI Gateway. Use your azure/ deployment name, pick a voice like alloy and set the format."
+---
+
 # Azure Text to Speech (tts)
 
 ## Overview
@@ -37,9 +43,9 @@ response.stream_to_file(speech_file_path)
 
 ```yaml showLineNumbers title="proxy_config.yaml"
 model_list:
-  - model_name: azure/tts-1
+  - model_name: azure/gpt-4o-mini-tts
     litellm_params:
-      model: azure/tts-1
+      model: azure/gpt-4o-mini-tts
       api_base: "os.environ/AZURE_API_BASE_TTS"
       api_key: "os.environ/AZURE_API_KEY_TTS"
       api_version: "os.environ/AZURE_API_VERSION" 
@@ -69,7 +75,6 @@ response = speech(
 
 ## Supported Models
 
-- `tts-1` - Standard quality, optimized for speed
-- `tts-1-hd` - High definition, optimized for quality
+- `gpt-4o-mini-tts` - General purpose text to speech
 
 Use your Azure deployment name: `azure/<your-deployment-name>`

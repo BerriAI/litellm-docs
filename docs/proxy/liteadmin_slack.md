@@ -14,7 +14,7 @@ Use **LiteAdmin** to ask about teams, budgets, models, and spend from a Slack DM
 
 Install the Slack app once, then choose one deployment below. **Enterprise** uses the worker bundled with your gateway and its existing SSO. **Standalone** runs a separate agent service with its own HTTPS address and login configuration
 
-To connect Claude Code or Codex to an MCP endpoint on your Enterprise deployment, see [Deploy LiteAdmin MCP on Enterprise](./liteadmin_mcp_enterprise.md). That guide covers `/admin/mcp` in unified and componentized images; this page configures the Slack agent worker
+To connect Claude Code or Codex to an MCP endpoint on your Enterprise deployment, see [Deploy LiteAdmin MCP on Enterprise](./liteadmin_mcp_enterprise.md). That guide covers `/admin/mcp` in monolith and separate-service deployments. This page configures the Slack agent worker.
 
 ## Before you start
 
@@ -133,7 +133,7 @@ Choose the deployment method you already use for the gateway. Both examples star
 <Tabs groupId="liteadmin-native-deployment">
 <TabItem value="helm" label="Kubernetes / Helm" default>
 
-Use the `helm/litellm-helm` chart from a LiteLLM checkout containing this integration. Keep your existing gateway values, including the Enterprise license, database, and SSO settings
+Use a version of the [LiteLLM chart](./deploy/helm.md) that includes this integration. Keep your existing gateway values, including the Enterprise license, database, and SSO settings
 
 Create a Secret named `liteadmin-slack` in the gateway's namespace through your usual secret-management workflow. It must contain the five settings from **Store the worker's credentials** above. For a manual installation, save only those settings in a private `liteadmin-secrets.env` file, then run:
 
@@ -162,14 +162,13 @@ liteadmin:
   readOnly: true
 ```
 
-Replace the image with a build containing this integration. Set `gatewayUrl` and `model` to your gateway URL and model name. Use `storageClassName` under `liteadmin` if your cluster requires a particular storage class
+Replace the image with a build containing this integration. This shared image also runs the gateway, backend, UI, and migrations. Set `gatewayUrl` and `model` to your gateway URL and model name. Use `storageClassName` under `liteadmin` if your cluster requires a particular storage class
 
 Apply the configuration to your existing release. Replace `litellm` with your release name and `gateway-values.yaml` with the values file you already use:
 
 ```bash
 export LITELLM_RELEASE=litellm
-helm dependency build ./helm/litellm-helm
-helm upgrade "$LITELLM_RELEASE" ./helm/litellm-helm \
+helm upgrade "$LITELLM_RELEASE" ./litellm/deploy/helm/litellm \
   --namespace "$LITELLM_NAMESPACE" \
   -f gateway-values.yaml \
   -f liteadmin-values.yaml
@@ -185,7 +184,7 @@ Gateway autoscaling does not scale the worker. Keep the worker at one replica an
 From a LiteLLM checkout containing this integration, build the image or use a published build that contains it:
 
 ```bash
-docker build -t litellm-native-admin:local .
+docker build -f litellm/deploy/docker/Dockerfile -t litellm-native-admin:local .
 ```
 
 Keep your existing gateway `.env` and Compose configuration, including its license, database, model, and SSO settings. Save the worker settings in a separate private file:
@@ -209,7 +208,8 @@ Start the gateway and worker with the additional Compose file:
 ```bash
 chmod 600 liteadmin.env
 docker compose --env-file .env --env-file liteadmin.env \
-  -f docker-compose.yml -f docker-compose.liteadmin.yml up -d
+  -f litellm/deploy/compose/docker-compose.yml \
+  -f litellm/deploy/compose/docker-compose.liteadmin.yml up -d
 ```
 
 Use Docker Compose v2. Keep worker credentials in `liteadmin.env`; the base gateway configuration loads its own `.env`. The overlay starts the same image with `--admin-agent`, sets the private worker address on the gateway, and creates the `liteadmin_state` volume. It publishes no worker port
@@ -240,7 +240,8 @@ For **Docker Compose**, run the same readiness check inside the worker:
 
 ```bash
 docker compose --env-file .env --env-file liteadmin.env \
-  -f docker-compose.yml -f docker-compose.liteadmin.yml \
+  -f litellm/deploy/compose/docker-compose.yml \
+  -f litellm/deploy/compose/docker-compose.liteadmin.yml \
   exec liteadmin /opt/liteadmin/bin/python -c \
   "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:10000/readyz').read().decode())"
 ```

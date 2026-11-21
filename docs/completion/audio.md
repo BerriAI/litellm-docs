@@ -27,7 +27,7 @@ os.environ["OPENAI_API_KEY"] = "your-api-key"
 
 # openai call
 completion = await litellm.acompletion(
-    model="gpt-4o-audio-preview",
+    model="gpt-audio-1.5",
     modalities=["text", "audio"],
     audio={"voice": "alloy", "format": "wav"},
     messages=[{"role": "user", "content": "Is a golden retriever a good family dog?"}],
@@ -45,9 +45,9 @@ with open("dog.wav", "wb") as f:
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-audio-preview # OpenAI gpt-4o-audio-preview
+  - model_name: gpt-audio-1.5 # OpenAI gpt-audio-1.5
     litellm_params:
-      model: openai/gpt-4o-audio-preview
+      model: openai/gpt-audio-1.5
       api_key: os.environ/OPENAI_API_KEY 
 
 ```
@@ -71,7 +71,7 @@ client = OpenAI(
 )
 
 completion = client.chat.completions.create(
-    model="gpt-4o-audio-preview",
+    model="gpt-audio-1.5",
     modalities=["text", "audio"],
     audio={"voice": "alloy", "format": "wav"},
     messages=[
@@ -114,7 +114,7 @@ wav_data = response.content
 encoded_string = base64.b64encode(wav_data).decode("utf-8")
 
 completion = litellm.completion(
-    model="gpt-4o-audio-preview",
+    model="gpt-audio-1.5",
     modalities=["text", "audio"],
     audio={"voice": "alloy", "format": "wav"},
     messages=[
@@ -143,9 +143,9 @@ print(completion.choices[0].message)
 
 ```yaml
 model_list:
-  - model_name: gpt-4o-audio-preview # OpenAI gpt-4o-audio-preview
+  - model_name: gpt-audio-1.5 # OpenAI gpt-audio-1.5
     litellm_params:
-      model: openai/gpt-4o-audio-preview
+      model: openai/gpt-audio-1.5
       api_key: os.environ/OPENAI_API_KEY 
 
 ```
@@ -161,6 +161,7 @@ litellm --config config.yaml
 
 ```python
 import base64
+import requests
 from openai import OpenAI
 
 client = OpenAI(
@@ -177,7 +178,7 @@ wav_data = response.content
 encoded_string = base64.b64encode(wav_data).decode('utf-8')
 
 completion = client.chat.completions.create(
-    model="gpt-4o-audio-preview",
+    model="gpt-audio-1.5",
     modalities=["text", "audio"],
     audio={"voice": "alloy", "format": "wav"},
     messages=[
@@ -217,8 +218,8 @@ Use `litellm.supports_audio_output(model="")` -> returns `True` if model can gen
 Use `litellm.supports_audio_input(model="")` -> returns `True` if model can accept audio input
 
 ```python
-assert litellm.supports_audio_output(model="gpt-audio") == True
-assert litellm.supports_audio_input(model="gpt-audio") == True
+assert litellm.supports_audio_output(model="gpt-audio-1.5") == True
+assert litellm.supports_audio_input(model="gpt-audio-1.5") == True
 
 assert litellm.supports_audio_output(model="{{openai_small}}") == False
 assert litellm.supports_audio_input(model="{{openai_small}}") == False
@@ -232,9 +233,9 @@ assert litellm.supports_audio_input(model="{{openai_small}}") == False
 
 ```yaml
 model_list:
-  - model_name: gpt-audio # OpenAI gpt-audio
+  - model_name: gpt-audio-1.5 # OpenAI gpt-audio-1.5
     litellm_params:
-      model: openai/gpt-audio
+      model: openai/gpt-audio-1.5
       api_key: os.environ/OPENAI_API_KEY
   - model_name: llava-hf          # Custom OpenAI compatible model
     litellm_params:
@@ -267,7 +268,7 @@ Expected Response (trimmed)
 {
   "data": [
     {
-      "model_name": "gpt-audio",
+      "model_name": "gpt-audio-1.5",
       "model_info": {
         "max_input_tokens": 128000,
         "max_output_tokens": 16384,

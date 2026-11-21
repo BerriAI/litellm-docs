@@ -2,7 +2,7 @@
 title: "LiteLLM [Preview] v1.81.6 - Logs v2 with Tool Call Tracing"
 description: "Redesigns the logs view with tool call tracing, a side panel and error message search in this preview release."
 slug: "v1-81-6"
-date: 2026-01-31T00:00:00
+date: 2026-02-01T04:02:23
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -339,7 +339,7 @@ Developers can access the new Logs View through LiteLLM's UI to inspect tool cal
 
 | Table | Change Type | Description | PR | Migration |
 | ----- | ----------- | ----------- | -- | --------- |
-| `LiteLLM_ManagedVectorStoresTable` | New Columns | Added `team_id` and `user_id` fields for permission management | [PR #19972](https://github.com/BerriAI/litellm/pull/19972) | [Migration](https://github.com/BerriAI/litellm/blob/main/litellm-proxy-extras/litellm_proxy_extras/migrations/20260131150814_add_team_user_to_vector_stores/migration.sql) |
+| `LiteLLM_ManagedVectorStoresTable` | New Columns | Added `team_id` and `user_id` fields for permission management | [PR #19972](https://github.com/BerriAI/litellm/pull/19972) | [Migration](https://github.com/BerriAI/litellm/blob/main/litellm/proxy-extras/litellm_proxy_extras/migrations/20260131150814_add_team_user_to_vector_stores/migration.sql) |
 
 ### Migration Improvements
 
@@ -352,7 +352,7 @@ Developers can access the new Logs View through LiteLLM's UI to inspect tool cal
 ## Documentation Updates
 
 - **[Add Claude Agents SDK x LiteLLM Guide](../../docs/mcp)** - [PR #20036](https://github.com/BerriAI/litellm/pull/20036)
-- **[Add Cookbook: Using Claude Agent SDK + MCPs with LiteLLM](https://github.com/BerriAI/litellm/tree/main/cookbook)** - [PR #20081](https://github.com/BerriAI/litellm/pull/20081)
+- **[Add Cookbook: Using Claude Agent SDK + MCPs with LiteLLM](https://github.com/BerriAI/litellm/tree/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook)** - [PR #20081](https://github.com/BerriAI/litellm/pull/20081)
 - Fix A2A Python SDK URL in documentation - [PR #19832](https://github.com/BerriAI/litellm/pull/19832)
 - **[Add Sarvam usage documentation](../../docs/providers/sarvam)** - [PR #19844](https://github.com/BerriAI/litellm/pull/19844)
 - **[Add supported input formats for embeddings](../../docs/embedding/supported_embedding)** - [PR #20073](https://github.com/BerriAI/litellm/pull/20073)

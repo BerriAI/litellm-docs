@@ -1,3 +1,8 @@
+---
+title: "Gray Swan Cygnal Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Gray Swan Cygnal Guardrail"
+description: "Monitor or block policy violations, jailbreaks and indirect prompt injection with Gray Swan Cygnal on the LiteLLM AI Gateway, including Claude Code traffic."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -99,6 +104,12 @@ Answers that contain only tool calls are scanned too. With `on_flagged_action: b
 The [skip flags](./quick_start#skip-system-messages-in-guardrail-evaluation) limit what is sent. `skip_system_message_in_guardrail` and `skip_tool_message_in_guardrail` drop those messages from the conversation, and `scan_only_tool_results` keeps only tool results and leaves out the request `tools`. The model's answer is always sent. If LiteLLM cannot read the conversation for an endpoint, Cygnal receives the answer alone
 
 With streaming and no `streaming_end_of_stream_only`, each sampled chunk check carries the same conversation, so set `streaming_end_of_stream_only: true` to send it once per response
+
+### When Cygnal does not return a usable score
+
+LiteLLM acts on a Cygnal reply only when it is a JSON object with `error` unset or false and a `violation` number from `0` to `1`. Any other reply counts as a failed check, the same as a timeout or an HTTP error from Cygnal. That covers a reply with `error: true` (even when it also carries a score), a missing or `null` `violation`, a string or boolean score, a score below `0` or above `1`, and `NaN` or infinite values
+
+A failed check follows `fail_open`. With the default `fail_open: true` the request proceeds and LiteLLM logs the guardrail status as `guardrail_failed_to_respond`. With `fail_open: false` the request fails with a 500, or ends with an error event when a streamed `post_call` response has already started
 
 ---
 
@@ -217,6 +228,6 @@ Notes:
 | `optional_params.categories`          | object          | Map of custom category names to descriptions. |
 | `optional_params.policy_id`           | string          | Gray Swan policy identifier. |
 | `guardrail_timeout`                   | number          | Timeout in seconds for the Cygnal request. Defaults to 30. |
-| `fail_open`                           | boolean         | If true, errors contacting Cygnal are logged and the request proceeds; if false, errors propagate. Defaults to true. |
+| `fail_open`                           | boolean         | If true, the request proceeds and the failure is logged when Cygnal errors, times out, or returns a reply without a usable score; if false, the request fails. Defaults to true. See [When Cygnal does not return a usable score](#when-cygnal-does-not-return-a-usable-score). |
 | `streaming_end_of_stream_only`        | boolean         | For streaming `post_call`, only send the final assembled response to Cygnal. Defaults to false. |
 | `default_on`                          | boolean         | Run the guardrail on every request by default. |

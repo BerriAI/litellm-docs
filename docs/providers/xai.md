@@ -1,7 +1,15 @@
+---
+title: "xAI Grok API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "xAI"
+description: "Call xAI Grok 4.5 with low, medium or high reasoning effort, vision input, JSON responses, streaming and the grok-latest alias, and read reasoning tokens."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # xAI
+
+xAI builds the Grok models; LiteLLM calls every xAI model with the `xai/` prefix from the Python SDK or AI Gateway, with streaming, vision and reasoning.
 
 https://docs.x.ai/docs
 

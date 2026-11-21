@@ -48,7 +48,7 @@ model_list:
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: gpt-mini
     litellm_params:
-      model: openai/gpt-5-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
 
 general_settings:

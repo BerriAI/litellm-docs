@@ -82,15 +82,15 @@ The regression went undetected because:
 | #   | Action                                                                                            | Status  | Code                                                                                                                       |
 | --- | ------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
 | 1   | Restore `root_path=server_root_path` in FastAPI app initialization                                | ✅ Done | [`#19790`](https://github.com/BerriAI/litellm/pull/19790) (`5426b3c`)                                                      |
-| 2   | Add unit tests for `get_server_root_path()` and FastAPI app initialization                        | ✅ Done | [`test_server_root_path.py`](https://github.com/BerriAI/litellm/blob/main/tests/proxy_unit_tests/test_server_root_path.py) |
-| 3   | Add CI workflow that builds Docker image and tests UI routing with `SERVER_ROOT_PATH` on every PR | ✅ Done | [`test_server_root_path.yml`](https://github.com/BerriAI/litellm/blob/main/.github/workflows/test_server_root_path.yml)    |
+| 2   | Add unit tests for `get_server_root_path()` and FastAPI app initialization                        | ✅ Done | [`test_server_root_path.py`](https://github.com/BerriAI/litellm/blob/main/tests/unit/proxy/test_server_root_path.py) |
+| 3   | Add CI workflow that builds Docker image and tests UI routing with `SERVER_ROOT_PATH` on every PR | ✅ Done | [`test_server_root_path.yml`](https://github.com/BerriAI/litellm/blob/1a0acaa33bf3abfec5cc939fb2a7a12d41d31de2/.github/workflows/test_server_root_path.yml)    |
 | 4   | Document manual test procedure for `SERVER_ROOT_PATH`                                             | ✅ Done | [Discussion #8495](https://github.com/BerriAI/litellm/discussions/8495)                                                    |
 
 ---
 
 ## CI workflow details
 
-The new [`test_server_root_path.yml`](https://github.com/BerriAI/litellm/blob/main/.github/workflows/test_server_root_path.yml) workflow runs on every PR against `main`. It:
+The new [`test_server_root_path.yml`](https://github.com/BerriAI/litellm/blob/1a0acaa33bf3abfec5cc939fb2a7a12d41d31de2/.github/workflows/test_server_root_path.yml) workflow runs on every PR against `main`. It:
 
 1. Builds the LiteLLM Docker image
 2. Starts a container with `SERVER_ROOT_PATH` set (tests both `/api/v1` and `/llmproxy`)
@@ -124,7 +124,7 @@ This prevents future regressions where changes to `proxy_server.py` accidentally
 | Jan 22, 2026 04:20 | PR [#19467](https://github.com/BerriAI/litellm/pull/19467) merged, removing `root_path=server_root_path`                                                     |
 | Jan 22–26          | Users on nightly builds report UI 404 errors when using `SERVER_ROOT_PATH`                                                                                   |
 | Jan 26, 2026 17:48 | Fix PR [#19790](https://github.com/BerriAI/litellm/pull/19790) merged, restoring `root_path=server_root_path`                                                |
-| Feb 18, 2026       | CI workflow [`test_server_root_path.yml`](https://github.com/BerriAI/litellm/blob/main/.github/workflows/test_server_root_path.yml) added to run on every PR |
+| Feb 18, 2026       | CI workflow [`test_server_root_path.yml`](https://github.com/BerriAI/litellm/blob/1a0acaa33bf3abfec5cc939fb2a7a12d41d31de2/.github/workflows/test_server_root_path.yml) added to run on every PR |
 
 ---
 

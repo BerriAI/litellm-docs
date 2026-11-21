@@ -139,7 +139,7 @@ const sidebars = {
         { type: "doc", id: "langchain/langchain", label: "LangChain with LiteLLM", customProps: { icon: "/img/integrations/langchain.png" } },
         { type: "ref", id: "projects/openai-agents", customProps: { icon: "/img/integrations/openai.png" } },
         { type: "doc", id: "tutorials/instructor", label: "Instructor with LiteLLM" },
-        { type: "link", label: "Agent Harnesses (litellm.agent)", href: "/docs/harness", className: "sidebar-xlink" },
+        { type: "link", label: "Agents in the LiteLLM SDK", href: "/docs/harness", className: "sidebar-xlink" },
       ]
     },
     {
@@ -309,6 +309,7 @@ const sidebars = {
           "proxy/guardrails/alice",
           "proxy/guardrails/llm_shield_proxy",
           { type: "doc", id: "proxy/guardrails/conduct", customProps: { icon: "/img/integrations/conduct.png" } },
+          { type: "doc", id: "proxy/guardrails/collieai", customProps: { icon: "/img/integrations/collieai.png" } },
         ].sort((a, b) => (typeof a === "string" ? a : a.id).localeCompare(typeof b === "string" ? b : b.id)),
       ],
     },
@@ -394,6 +395,7 @@ const sidebars = {
       className: "sidebar-rail",
       items: [
         { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
+        { type: "doc", id: "proxy/sync_models_github", label: "Auto Sync New Models" },
         { type: "doc", id: "proxy/quick_start", label: "CLI Quickstart" },
         { type: "doc", id: "benchmarks", label: "Benchmarks" },
         { type: "html", value: "Set up", className: "sidebar-group-label", defaultStyle: true },
@@ -401,56 +403,88 @@ const sidebars = {
           type: "category",
           label: "Deploy",
           items: [
-            "proxy/deploy",
-            "proxy/prod",
-            "proxy/upgrade_guide",
-            "proxy/health",
+            { type: "doc", id: "proxy/deploy", label: "Overview" },
+            { type: "doc", id: "proxy/deploy/helm", label: "Helm" },
+            { type: "doc", id: "proxy/deploy/terraform", label: "Terraform" },
             {
               type: "category",
               label: "Sizing & Scaling",
               items: [
+                { type: "doc", id: "proxy/deploy/sizing", label: "Overview" },
+                "proxy/deploy/autoscaling",
                 "proxy/redis_requirements",
                 "proxy/db_sizing",
                 "proxy/redis_sizing",
                 "proxy/server_tuning",
                 "proxy/high_throughput",
                 "proxy/db_read_replica",
-                { type: "doc", id: "proxy/multi_region", className: "sidebar-enterprise" },
-                { type: "doc", id: "proxy/global_control_plane", className: "sidebar-enterprise" },
-                "proxy/manifests_to_microservices",
               ],
             },
             {
               type: "category",
-              label: "Secret Managers",
+              label: "Reference Architectures",
               items: [
-                { type: "doc", id: "secret_managers/overview", className: "sidebar-enterprise" },
-                "secret_managers/aws_secret_manager",
-                "secret_managers/aws_kms",
-                "secret_managers/azure_key_vault",
-                "secret_managers/cyberark",
-                "secret_managers/google_secret_manager",
-                "secret_managers/google_kms",
-                "secret_managers/hashicorp_vault",
-                "secret_managers/custom_secret_manager",
+                { type: "doc", id: "proxy/deploy/architecture", label: "Overview" },
+                {
+                  type: "category",
+                  label: "Cloud Deployments",
+                  items: [
+                    { type: "doc", id: "proxy/deploy/cloud/overview", label: "Overview" },
+                    "proxy/deploy/cloud/azure",
+                    "proxy/deploy/cloud/aws",
+                    "proxy/deploy/cloud/gcp",
+                  ],
+                },
+                "proxy/deploy/iap/overview",
+                "proxy/deploy/mtls",
+                {
+                  type: "category",
+                  label: "High Availability",
+                  items: [
+                    { type: "doc", id: "proxy/deploy/ha/overview", label: "Overview" },
+                    "proxy/deploy/ha/haproxy",
+                    "proxy/deploy/ha/blue_green",
+                    "proxy/deploy/ha/canary",
+                    {
+                      type: "category",
+                      label: "Multi-Region Deployment",
+                      items: [
+                        { type: "doc", id: "proxy/multi_region", label: "Overview" },
+                        "proxy/deploy/multi_region/routing",
+                        "proxy/deploy/multi_region/failover",
+                      ],
+                    },
+                  ],
+                },
+                {
+                  type: "category",
+                  label: "Global Control Plane",
+                  className: "sidebar-enterprise",
+                  items: [
+                    { type: "doc", id: "proxy/global_control_plane", label: "Overview" },
+                    "proxy/global_control_plane/architecture",
+                    "proxy/global_control_plane/configuration",
+                    "proxy/global_control_plane/api_reference",
+                    "proxy/global_control_plane/legacy_ui",
+                  ],
+                },
               ],
             },
-            "proxy/security_best_practices",
-            "proxy/fips_mode",
-            "proxy/outbound_requests",
-            "proxy/security_owasp_llm_top10",
-            "proxy/rust_gateway",
+            "proxy/prod",
+            "proxy/upgrade_guide",
+            "proxy/database_migrations",
+            "proxy/health",
           ],
         },
         {
           type: "category",
           label: "Configuration",
           items: [
-            { type: "doc", id: "proxy/configs", label: "Config.yaml" },
-            "proxy/config_settings",
-            "proxy/config_management",
-            "proxy/cli",
-            "guides/security_settings",
+            { type: "doc", id: "proxy/configuration/overview", label: "Overview" },
+            { type: "doc", id: "proxy/configs", label: "YAML" },
+            { type: "doc", id: "proxy/configuration/ui", label: "UI" },
+            { type: "doc", id: "proxy/configuration/api", label: "Management API" },
+            { type: "doc", id: "proxy/configuration/terraform", label: "Terraform" },
           ],
         },
         {
@@ -534,7 +568,10 @@ const sidebars = {
             {
               type: "category",
               label: "Cursor",
-              items: [{ type: "doc", id: "tutorials/cursor_integration", label: "Setup" }],
+              items: [
+                { type: "doc", id: "tutorials/cursor_integration", label: "IDE setup" },
+                { type: "doc", id: "tutorials/cursor_cli_subscription", label: "CLI subscription" },
+              ],
             },
             {
               type: "category",
@@ -638,6 +675,8 @@ const sidebars = {
           items: [
             "proxy/cost_tracking",
             "proxy/model_cost_map",
+            "proxy/model_updates_feed",
+            { type: "doc", id: "fallback_generalizations", label: "Fallback generalizations" },
             "proxy/request_tags",
             "proxy/billing",
             "proxy/custom_pricing",
@@ -649,9 +688,9 @@ const sidebars = {
             "proxy/provider_margins",
             "proxy/provider_discounts",
             "proxy/off_peak_pricing",
-            "proxy/sync_models_github",
             "tutorials/vertex_ai_pay_go",
             "proxy/spend_logs_deletion",
+            "proxy/token_redaction_spend_logs",
           ],
         },
         {
@@ -661,7 +700,6 @@ const sidebars = {
             "proxy/users",
             "proxy/team_budgets",
             { type: "doc", id: "proxy/project_management", className: "sidebar-enterprise" },
-            "proxy/customers",
 
             { type: "doc", id: "proxy/ui_team_soft_budget_alerts", className: "sidebar-enterprise" },
             "proxy/tag_budgets",
@@ -709,6 +747,33 @@ const sidebars = {
         { type: "html", value: "Safety", className: "sidebar-group-label", defaultStyle: true },
         {
           type: "category",
+          label: "Security",
+          items: [
+            { type: "doc", id: "proxy/security/overview", label: "Overview" },
+            "proxy/security_best_practices",
+            "guides/security_settings",
+            "proxy/outbound_requests",
+            "proxy/security_owasp_llm_top10",
+            "proxy/fips_mode",
+            {
+              type: "category",
+              label: "Secret Managers",
+              items: [
+                { type: "doc", id: "secret_managers/overview", className: "sidebar-enterprise" },
+                "secret_managers/aws_secret_manager",
+                "secret_managers/aws_kms",
+                "secret_managers/azure_key_vault",
+                "secret_managers/cyberark",
+                "secret_managers/google_secret_manager",
+                "secret_managers/google_kms",
+                "secret_managers/hashicorp_vault",
+                "secret_managers/custom_secret_manager",
+              ],
+            },
+          ],
+        },
+        {
+          type: "category",
           label: "Guardrails",
           items: [
             "proxy/guardrails/quick_start",
@@ -748,14 +813,33 @@ const sidebars = {
         { type: "html", value: "Observability", className: "sidebar-group-label", defaultStyle: true },
         {
           type: "category",
-          label: "Logging, Alerting, Metrics",
+          label: "Logging & Metrics",
           items: [
             { type: "doc", id: "proxy/dynamic_logging", className: "sidebar-enterprise" },
             "proxy/logging",
             "proxy/logging_spec",
+            "proxy/prefix_block_hashes",
             { type: "doc", id: "proxy/team_logging", className: "sidebar-enterprise" },
             { type: "ref", id: "proxy/audit_logs", label: "Audit Logs", className: "sidebar-enterprise" },
+            { type: "ref", id: "proxy/prometheus", label: "Prometheus Metrics" },
+          ],
+        },
+        {
+          type: "category",
+          label: "Alerting",
+          link: { type: "doc", id: "proxy/alerts/index" },
+          items: [
+            "proxy/alerts/model-deprecations",
+            {
+              type: "category",
+              label: "Performance alerts",
+              className: "sidebar-enterprise",
+              link: { type: "doc", id: "proxy/alerts/performance" },
+              items: ["proxy/alerts/api"],
+            },
+            { type: "ref", id: "proxy/alerting", label: "Slack & Webhooks" },
             "proxy/email",
+            { type: "ref", id: "proxy/pagerduty", label: "PagerDuty", className: "sidebar-enterprise" },
           ],
         },
         { type: "html", value: "Manage", className: "sidebar-group-label", defaultStyle: true },
@@ -809,7 +893,6 @@ const sidebars = {
               type: "category",
               label: "Observability: Usage",
               items: [
-                "proxy/customer_usage",
                 "proxy/endpoint_activity",
               ]
             },
@@ -981,6 +1064,21 @@ const sidebars = {
         { type: "link", label: "Prompt Cache Routing", href: "/docs/tutorials/claude_code_prompt_cache_routing", className: "sidebar-xlink" },
       ],
     },
+    require('./docs/proxy/lens/sidebar'),
+    {
+      type: "category",
+      label: "Customer Management",
+      link: {type: "doc", id: "proxy/customers"},
+      items: [
+        "proxy/customers",
+        "proxy/customer_management/track-customer-spend",
+        "proxy/customer_management/applications",
+        "proxy/customer_management/rbac",
+        "proxy/customer_management/customer-surcharge",
+        "proxy/customer_management/jwt-customer-identity",
+        "proxy/customer_management/api_reference",
+      ],
+    },
     {
       type: "category",
       label: "Python SDK",
@@ -1045,11 +1143,11 @@ const sidebars = {
             },
           ],
         },
-        // litellm.agent(): agent harnesses (Claude Code, Codex, OpenCode, Deep Agents, Tool Loop).
+        // litellm.agent(): agent harnesses (Claude Code, Codex, OpenCode, Pi, Deep Agents, Tool Loop).
         // Styled by the "litellm.harness docs" block in src/css/custom.css.
         {
           type: "category",
-          label: "Agent Harnesses",
+          label: "Agents",
           className: "harness-sidebar",
           items: [
             {
@@ -1072,6 +1170,7 @@ const sidebars = {
                 "harness/claude_code",
                 "harness/codex",
                 "harness/opencode",
+                "harness/pi",
                 "harness/deepagents",
                 "harness/tool_loop",
               ],
@@ -1083,6 +1182,7 @@ const sidebars = {
               collapsible: false,
               items: [
                 "harness/quickstart",
+                "harness/evaluation",
                 "harness/models",
                 "harness/sessions",
                 "harness/events",
@@ -1132,7 +1232,6 @@ const sidebars = {
         "exception_mapping",
       ],
     },
-    require('./docs/proxy/lens/sidebar'),
     { type: "html", value: "Features", className: "sidebar-caption", defaultStyle: true },
     { type: "doc", id: "guides/index", className: "top-level-doc-item" },
     { type: "doc", id: "subscriptions", className: "top-level-doc-item" },
@@ -1237,10 +1336,11 @@ const sidebars = {
       link: {
         type: "generated-index",
         title: "Multimodal",
-        description: "Vision, audio, PDF input, and image generation in chat.",
+        description: "Realtime voice, vision, audio, PDF input, and image generation in chat.",
         slug: "/guides/multimodal_io",
       },
       items: [
+        "voice",
         "completion/vision",
         "completion/audio",
         "completion/document_understanding",
@@ -1278,7 +1378,6 @@ const sidebars = {
       ],
     },
     { type: "html", value: "Developer Tools", className: "sidebar-caption", defaultStyle: true },
-    { type: "doc", id: "liteagents", label: "liteagents SDK", className: "top-level-doc-item sidebar-beta" },
     {
       type: "category",
       label: "lite CLI",
@@ -1303,6 +1402,7 @@ const sidebars = {
           link: {type: "doc", id: "self_hosted_coding_agents/moyai"},
           items: [
             "self_hosted_coding_agents/moyai/setup",
+            "self_hosted_coding_agents/moyai/aws",
             "self_hosted_coding_agents/moyai/architecture",
           ],
         },
@@ -1453,6 +1553,7 @@ const sidebars = {
         },
         "realtime",
         "proxy/realtime_webrtc",
+        "live_sessions",
         "realtime_translation",
         "rerank",
         { type: "ref", id: "response_api" },
@@ -1481,6 +1582,7 @@ const sidebars = {
             "search/nimble",
             "search/bing_grounding",
             "search/deepseek",
+            "search/webiq",
           ]
         },
         "skills",
@@ -1830,6 +1932,7 @@ const providersSidebar = {
     { type: "html", value: "Vector Stores", className: "sidebar-group-label", defaultStyle: true },
     "providers/milvus_vector_stores",
     "providers/mongodb_vector_stores",
+    "providers/opensearch_vector_stores",
     "providers/s3_vectors",
     "providers/valkey_vector_stores",
     "providers/ragflow_vector_store",
@@ -1918,6 +2021,7 @@ const providersSidebar = {
     "providers/refuseless",
     "providers/reka",
     "providers/replicate",
+    "providers/resetdata",
     { type: "category", label: "RunwayML", className: "sidebar-provider", link: { type: "doc", id: "providers/runwayml/images" }, items: [
       "providers/runwayml/videos",
     ] },

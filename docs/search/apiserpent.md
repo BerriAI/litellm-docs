@@ -1,3 +1,8 @@
+---
+title: "APISerpent SERP API with LiteLLM: Setup"
+sidebar_label: "APISerpent Search"
+description: "Add APISerpent SERP results to LiteLLM: call search() in the Python SDK or /v1/search on the AI Gateway, on Google, Bing, Yahoo or DuckDuckGo."
+---
 # APISerpent Search
 
 **Get API Key:** [https://apiserpent.com](https://apiserpent.com)

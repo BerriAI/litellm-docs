@@ -2,7 +2,7 @@
 title: "LiteLLM v1.87.3 - DB Resilience & Passthrough Hardening"
 description: "Adds a disable_budget_reservation setting and returns 5xx on database errors during auth. Also fixes Prisma reconnects."
 slug: "v1-87-3"
-date: 2026-06-13T17:37:18
+date: 2026-06-14T00:57:47
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

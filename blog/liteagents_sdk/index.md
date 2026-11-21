@@ -9,6 +9,10 @@ hide_table_of_contents: true
 image: ./hero.png
 ---
 
+:::info Agents in the LiteLLM SDK
+For new projects, use [`litellm.agent()`](/docs/harness), included in the LiteLLM Python SDK. This launch post describes the separate LiteAgents package. Its source and reference remain in the [LiteAgents repository](https://github.com/BerriAI/liteagents).
+:::
+
 ![LiteAgents: switch harnesses, keep your agent. A ProfileOptions example changes deepagents to claude-sdk while keeping the model, tools, and MCP connections.](./hero.png)
 
 You've built an agent with your own tools, prompts, and model configuration. Now you want to try a different harness on the same task.

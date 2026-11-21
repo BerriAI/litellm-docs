@@ -1,3 +1,8 @@
+---
+title: "Akto Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Akto"
+description: "Add Akto runtime security to the LiteLLM AI Gateway: inspect requests, responses and MCP calls inline, then block or monitor without blocking."
+---
 # Akto
 
 Use [Akto](https://www.akto.io/) as a guardrail provider, enabling runtime security for all LLM traffic routed through the proxy. Akto is purpose-built to secure autonomous and agentic AI systems that inspects every request and response inline, risk-scores interactions, and enforces policy decisions to block harmful actions, data exposure, and unsafe behavior before they can occur.

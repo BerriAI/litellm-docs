@@ -1,3 +1,9 @@
+---
+title: "Milvus Vector Store with LiteLLM"
+sidebar_label: "Milvus - Vector Store"
+description: "Search Milvus as a vector store for RAG via LiteLLM from the Python SDK or AI Gateway, with config.yaml setup and a passthrough API in native Milvus form."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -652,6 +658,10 @@ for i in range(5):
     print(f"Search {i} latency: {round(t1-t0, 4)} seconds")
 ```
 
+#### Search fallbacks
+
+[YAML-configured fallbacks](../completion/knowledgebase.md#define-vector-store-fallbacks) support `POST /milvus/v2/vectordb/entities/search` across Milvus stores with the same physical collection name. Hybrid search and writes do not fail over.
+
 #### Complete Example
 
 Here's a full working example:
@@ -778,4 +788,3 @@ When you search:
 4. Results come back with distance scores
 
 The embedding model can be any model supported by LiteLLM - Azure OpenAI, OpenAI, Bedrock, etc.
-

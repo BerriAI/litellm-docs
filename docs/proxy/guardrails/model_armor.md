@@ -1,3 +1,8 @@
+---
+title: "Google Model Armor Guardrails on LiteLLM Gateway"
+sidebar_label: "Google Cloud Model Armor"
+description: "Apply Google Cloud Model Armor templates on the LiteLLM AI Gateway to sanitize or block prompts and responses, including document and file scanning."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -46,7 +51,29 @@ guardrails:
 - `post_call` Run **after** LLM call, on **output**
 - `pre_mcp_call` Run **before** an MCP tool call, on **input**
 - `during_mcp_call` Run **in parallel** with an MCP tool call, on **input**
+- `post_mcp_call` Run **after** an MCP tool call, on the tool **result**, before the client or model sees it
 - `logging_only` Scan the logged request and completed response without blocking or modifying the client response
+
+#### Scan MCP tool results
+
+Add `post_mcp_call` to scan what an MCP tool returns. LiteLLM sends the text of the tool result, including the string values in `structuredContent`, to the template's `sanitizeModelResponse` endpoint before the result goes back to the MCP client or into the model's context.
+
+```yaml
+guardrails:
+  - guardrail_name: model-armor-mcp-output
+    litellm_params:
+      guardrail: model_armor
+      mode: [post_call, post_mcp_call]
+      template_id: "your-template-id"
+      project_id: "your-project-id"
+      location: "us-central1"
+      mask_response_content: true
+      fail_on_error: true
+```
+
+When Model Armor flags the result, the raw result is not returned. An MCP client on `/mcp` gets a tool result with `isError: true` and the text "Response blocked by Model Armor", `/mcp-rest/tools/call` answers with HTTP 400, and on `/v1/responses` or `/v1/chat/completions` with a `litellm_proxy` MCP tool the model receives a tool failure in place of the result. With `mask_response_content: true`, a result that only matches a de-identify template comes back with Model Armor's sanitized text in place of the sensitive values. A masking hit on a `structuredContent` key or a non-string value cannot be rewritten, so it blocks the result instead. If the Model Armor API errors, `fail_on_error: true` (the default) withholds the result, which shows up as an `isError: true` tool result on `/mcp` and as HTTP 500 on `/mcp-rest/tools/call`, and `fail_on_error: false` returns the result unscanned. With `default_on: false`, the scan runs only for requests that name the guardrail in the request body or carry it on their key or team. Only text is scanned, so images, audio and embedded resources in a tool result pass through as they are.
+
+A tool result too large for Model Armor to fully scan counts as a Model Armor error on `post_mcp_call`, so `fail_on_error` decides whether it is withheld.
 
 #### Observe without blocking
 
@@ -145,7 +172,7 @@ A document larger than Model Armor's 4 MB byte limit does carry bytes but exceed
 - `api_key` - str - Google Cloud service account credentials (optional if using ADC)
 - `api_base` - str - Custom Model Armor API endpoint (optional)
 - `default_on` - bool - Whether to run the guardrail by default. Default is `false`.
-- `mode` - Union[str, list[str]] - Required mode to run the guardrail. Supported values: `pre_call`, `during_call`, `post_call`, `pre_mcp_call`, `during_mcp_call`, and `logging_only`.
+- `mode` - Union[str, list[str]] - Required mode to run the guardrail. Supported values: `pre_call`, `during_call`, `post_call`, `pre_mcp_call`, `during_mcp_call`, `post_mcp_call`, and `logging_only`.
 
 ### Model Armor Specific
 

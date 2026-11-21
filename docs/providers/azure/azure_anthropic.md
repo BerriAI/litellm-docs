@@ -1,3 +1,9 @@
+---
+title: "Claude on Azure Foundry with LiteLLM"
+sidebar_label: "Azure Anthropic (Claude via Azure Foundry)"
+description: "Call Claude models deployed on Azure Foundry through LiteLLM with the azure_ai/ prefix from the Python SDK or AI Gateway, with streaming and tool calling."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

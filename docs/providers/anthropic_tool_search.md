@@ -1,3 +1,9 @@
+---
+title: "Anthropic Tool Search in LiteLLM"
+sidebar_label: "Tool Search"
+description: "Use Claude tool search via LiteLLM to load tools on demand from large catalogs, with regex and BM25 variants on Chat Completions, Messages and Responses."
+---
+
 # Tool Search
 
 Tool search enables Claude to dynamically discover and load tools on-demand from large tool catalogs (10,000+ tools). Instead of loading all tool definitions into the context window upfront, Claude searches your tool catalog and loads only the tools it needs.
@@ -30,7 +36,7 @@ Claude constructs regex patterns to search for tools. Best for exact pattern mat
 
 Claude uses natural language queries to search for tools using the BM25 algorithm. Best for natural language semantic search.
 
-**Note**: BM25 variant is not supported on Bedrock.
+On Amazon Bedrock, both variants work through the Invoke API (`bedrock/invoke/` models), not Converse. Before [PR #52959](https://github.com/BerriAI/litellm/pull/52959), LiteLLM dropped the BM25 tool from Bedrock Chat Completions requests, so upgrade if Claude on Bedrock can't find your deferred tools with BM25.
 
 ---
 
@@ -171,6 +177,40 @@ response = litellm.completion(
             "name": "tool_search_tool_bm25"
         },
         # Your deferred tools...
+    ]
+)
+```
+
+#### Bedrock Example
+
+```python showLineNumbers title="Bedrock Tool Search (Invoke)"
+import litellm
+
+response = litellm.completion(
+    model="bedrock/invoke/global.anthropic.{{anthropic_large}}",
+    messages=[
+        {"role": "user", "content": "Where is my parcel? The tracking number is 1Z999AA10123456784."}
+    ],
+    tools=[
+        {
+            "type": "tool_search_tool_bm25_20251119",
+            "name": "tool_search_tool_bm25"
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "lookup_package_tracking",
+                "description": "Look up the delivery status of a parcel by tracking number",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "tracking_number": {"type": "string"}
+                    },
+                    "required": ["tracking_number"]
+                }
+            },
+            "defer_loading": True
+        }
     ]
 )
 ```

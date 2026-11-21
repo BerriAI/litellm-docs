@@ -1,3 +1,8 @@
+---
+title: "Guardrail Policies for Teams, Keys and Models"
+sidebar_label: "[Beta] Guardrail Policies"
+description: "Group guardrails into policies on the LiteLLM AI Gateway and attach them globally, by model, or by team or key (Enterprise), with inheritance and defaults."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -207,7 +212,7 @@ policies:
       add:
         - strict_content_filter
     condition:
-      model: "gpt-5.6.*"  # regex - matches {{openai_small}}, {{openai_large}}
+      model: "({{openai_small}}|{{openai_large}})"  # regex - matches {{openai_small}} or {{openai_large}}
 
   bedrock-compliance:
     guardrails:

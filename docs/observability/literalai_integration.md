@@ -1,3 +1,8 @@
+---
+title: "Literal AI Logging for LiteLLM: Multi-Step Traces"
+sidebar_label: "Literal AI"
+description: "Log LiteLLM calls to Literal AI from the Python SDK or AI Gateway, with multi-step agent traces via decorators and generations bound to prompts."
+---
 import Image from '@theme/IdealImage';
 
 # Literal AI
@@ -101,7 +106,6 @@ literalai_client.instrument_openai()
 
 settings = {
     "model": "{{openai_small}}", # model you want to send litellm proxy
-    "temperature": 0,
     # ... more settings
 }
 

@@ -1,6 +1,6 @@
 # Error Reference
 
-Every failed request through the LiteLLM AI Gateway returns an OpenAI-compatible JSON error body and an HTTP status code. This page is the reference for reading them: what the payload contains, which errors come from the gateway versus the upstream provider, what each status code and error type means, and what the gateway returns when a fallback chain runs out of targets
+Every failed request through the LiteLLM AI Gateway returns a JSON error body and an HTTP status code. The OpenAI-shaped routes return an OpenAI-compatible body, and the Anthropic Messages routes return Anthropic's error body, described in [Errors on the Anthropic Messages routes](#errors-on-the-anthropic-messages-routes), with the streaming exceptions covered in [Streaming errors](#streaming-errors). This page is the reference for reading them: what the payload contains, which errors come from the gateway versus the upstream provider, what each status code and error type means, and what the gateway returns when a fallback chain runs out of targets
 
 If you only need the quick provider-versus-gateway rule, see [Diagnosing Errors](/docs/proxy/error_diagnosis). For the Python SDK exception classes and the per-provider mapping table, see [Exception Mapping](/docs/exception_mapping)
 
@@ -51,6 +51,90 @@ A malformed body, by contrast, is normalized into the standard envelope. Unparse
 
 :::
 
+## Errors on the Anthropic Messages routes
+
+<SinceVersion v="1.110.0" />
+
+The routes that serve the Anthropic Messages API answer the gateway's own errors in [Anthropic's error shape](https://docs.claude.com/en/api/errors), so the Anthropic SDK and Claude Code read them the same way they read an error from Anthropic. These routes are `/v1/messages`, `/v1/messages/count_tokens`, the same two under `/claude_code_gateway`, and every route under `/anthropic/`. The model list routes (`/v1/models`, `/models`, and `/claude_code_gateway/v1/models`) use this shape only when the request sends an `anthropic-version` header, and without one they keep the OpenAI body. Every other route keeps the OpenAI body described above. [Streaming errors](#streaming-errors) covers how a streamed request on these routes fails
+
+A key with a zero budget that calls `/v1/messages` with an `x-request-id: req-docs-check-1` header gets this body, with the same 422 status it gets on `/v1/chat/completions`:
+
+```json
+{
+  "type": "error",
+  "error": {
+    "type": "invalid_request_error",
+    "message": "Budget has been exceeded! Key=zero-budget (sk-...PO3g) Current cost: 0.0, Max budget: 0.0",
+    "litellm_error_type": "budget_exceeded"
+  },
+  "request_id": "req-docs-check-1"
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `type` | string | Always `"error"` |
+| `error.type` | string | Anthropic's error type for the HTTP status, from the table below |
+| `error.message` | string | The same message the OpenAI-shaped routes return for this error |
+| `error.litellm_error_type` | string | Optional. Set only on errors raised before the Messages handler, to the LiteLLM error type that the OpenAI-shaped routes put in `error.type`, such as `budget_exceeded`, `team_model_access_denied`, or `token_not_found_in_db`. Left out when it would only repeat `error.type` or the default type for the status |
+| `request_id` | string | Optional. The value of the request's `x-request-id` header, present only when the client sent one. It is missing when a streamed request fails after the gateway has called the provider. A provider error on an `/anthropic/` route carries Anthropic's own `request_id` instead, as described below |
+| `error.provider_specific_fields` | object | Optional. The same provider detail the OpenAI-shaped body carries |
+| `error.litellm_call_id` | string | Optional. Set when `general_settings.include_call_id_in_error_body` is on. See [Reporting a problem](#reporting-a-problem) |
+| `error.details` | object | Optional, from v1.111.0. A machine-readable code for [message thread](/docs/anthropic_unified#message-threads-beta) errors, such as `{"error_code": "thread_not_found"}` |
+
+There is no `error.code` or `error.param` on these routes, so read the status from the HTTP status line
+
+:::tip
+
+Code that matches a gateway error type such as `budget_exceeded` in `error.type` must read `error.litellm_error_type` on these routes instead, since `error.type` holds Anthropic's type for the status. The [Gateway error types](#gateway-error-types) table lists the values
+
+One budget refusal has no `error.litellm_error_type`. A budget on a tag that a guardrail adds to the request is checked inside the Messages handler, so it returns 422 with `error.type` set to `api_error`, and its message starts with `Budget has been exceeded! Tag=`
+
+:::
+
+Errors the gateway raises before the request reaches the Messages handler (authentication, model access, budgets, a malformed body, the request size limit, and [admission control](/docs/proxy/server_tuning#per-worker-admission-control)) map their status to `error.type` like this:
+
+| Status | `error.type` |
+|---|---|
+| 400 | `invalid_request_error` |
+| 401 | `authentication_error` |
+| 402 | `billing_error` |
+| 403 | `permission_error` |
+| 404 | `not_found_error` |
+| 409 | `conflict_error` |
+| 413 | `request_too_large` |
+| 429 | `rate_limit_error` |
+| 500 | `api_error` |
+| 503 from admission control | `overloaded_error` |
+| 504 | `timeout_error` |
+| 529 | `overloaded_error` |
+| 408, and any other 5xx | `api_error` |
+| Any other 4xx, such as a 422 budget refusal | `invalid_request_error` |
+
+The `/anthropic/` routes have no Messages handler, so the gateway's own errors there, a rate limit included, use this table and carry `error.litellm_error_type`
+
+On `/v1/messages`, count_tokens, and the `/claude_code_gateway` routes, errors raised while the handler serves the request, such as a gateway rate limit, a provider rejection, a timeout, or an unknown model name, carry Anthropic's type for 400, 401, 403, 404, 413, 429, 500, and 529, and `api_error` for any other status, 402, 409, and 504 included. They carry no `error.litellm_error_type`. A provider error still names the provider in `error.message`, the same way it does on the OpenAI-shaped routes, except on a streamed request whose provider times out or drops the connection, described in [Streaming errors](#streaming-errors):
+
+```json
+{
+  "type": "error",
+  "error": {
+    "type": "invalid_request_error",
+    "message": "litellm.BadRequestError: AnthropicException - {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"max_tokens: 100000000 > 128000, which is the maximum allowed number of output tokens for claude-haiku-5-5\"},\"request_id\":\"req_...\"} ..."
+  }
+}
+```
+
+The `/anthropic/` routes are a pass-through, so a provider error there is Anthropic's own response, passed back unchanged. The gateway's own errors on these routes have no `request-id` response header. A provider error's `error.message` names no provider, and its `request_id` is Anthropic's, the same value as the `request-id` response header, even when the client sent `x-request-id`:
+
+```json
+{"type":"error","error":{"type":"invalid_request_error","message":"max_tokens: 100000000 > 128000, which is the maximum allowed number of output tokens for claude-haiku-5-5"},"request_id":"req_011Ch9u1XnKBcB7mazDjbXH1"}
+```
+
+So a gateway rate limit returns 429 with `error.type` set to `rate_limit_error`. On `/v1/messages` and the `/claude_code_gateway` routes it has no `error.litellm_error_type`, and its message starts with `Rate limit exceeded for`. On the `/anthropic/` routes it has `error.litellm_error_type` set to `throttling_error`, and its message starts with `litellm.RateLimitError:`. The 429 header rules under [Response headers](#response-headers) and [Is it the gateway or the provider?](#is-it-the-gateway-or-the-provider) do not apply here, so tell the two apart the way this section does for any error. A provider's 429 names the provider in `error.message`, or on the `/anthropic/` routes comes with a `request-id` header, and a gateway 429 has neither
+
+An unexpected exception raised outside the Messages handler returns 500 with `{"type": "error", "error": {"type": "api_error", "message": "Internal server error"}}` on these routes, plus `request_id` when the client sent `x-request-id`. One raised inside the handler on `/v1/messages`, count_tokens, and the `/claude_code_gateway` routes carries its own message instead, as described above. Unparseable JSON returns 400 with `error.type` set to `invalid_request_error` and no `error.litellm_error_type`
+
 ## Response headers
 
 The headers on a failed response carry the diagnostic context that the JSON body does not
@@ -60,6 +144,7 @@ The headers on a failed response carry the diagnostic context that the JSON body
 | `x-litellm-call-id` | Any failure after authentication succeeds | The request's correlation id. This is the value to quote in a support ticket and to search for in your logs; it ties the HTTP response to the gateway's log line, the spend-log row, and the OpenTelemetry trace. Absent on authentication failures, which are rejected before a call id is assigned |
 | `retry-after` | Gateway rate limits and router cooldowns | Seconds to wait. See the note below about what its presence implies |
 | `rate_limit_type` | Gateway rate limits | Which dimension was exceeded: `requests`, `tokens`, or `concurrent_requests` |
+| `rate_limited_by` | Gateway rate limits | Which limit was exceeded, as the limiter names it: `api_key`, `team`, `end_user`, `model_per_key`, `model_per_team`, `model_per_end_user`, `model_per_project`, and so on. Read with `rate_limit_type`: `model_per_end_user` plus `tokens` is the customer's `model_tpm_limit` |
 | `reset_at` | Gateway rate limits | UTC timestamp at which the exceeded window resets |
 | `x-litellm-key-rpm-limit`, `x-litellm-key-max-budget`, `x-litellm-key-spend` | Most failures after authentication | The calling key's configured ceilings and current spend, so you can confirm whether the key itself is the constraint |
 | `x-litellm-timeout` | Failures on a request that reached a deployment | The timeout that was in force for the call, in seconds |
@@ -68,7 +153,7 @@ Three families of header appear on successful responses only, so do not build fa
 
 :::tip
 
-`retry-after` is a strong disambiguation signal. The gateway sets it on its own rate limits and cooldowns, and it does not forward the provider's `retry-after` onto an error response. So a 429 that carries `retry-after` is the gateway's limit, and a 429 without it is the provider's
+`retry-after` is a strong disambiguation signal. The gateway sets it on its own rate limits and cooldowns, and on the OpenAI-shaped routes it does not forward the provider's `retry-after` onto an error response. So on those routes a 429 that carries `retry-after` is the gateway's limit, and a 429 without it is the provider's. The `/anthropic/` routes do pass the provider's `retry-after` back, so on the Anthropic Messages routes, use the checks in [Errors on the Anthropic Messages routes](#errors-on-the-anthropic-messages-routes) instead
 
 :::
 
@@ -87,12 +172,12 @@ The presence of a `<Provider>Exception` token means the request left the gateway
 | Signal in the response | Origin |
 |---|---|
 | `message` contains `OpenAIException`, `AnthropicException`, `AzureException`, `BedrockException`, `VertexAIException`, or any other `<Provider>Exception` | Upstream provider |
-| `message` contains no provider name, and `type` is a LiteLLM value such as `budget_exceeded`, `expired_key`, `token_not_found_in_db`, `key_model_access_denied` | LiteLLM gateway |
+| `message` contains no provider name, and `type` (`litellm_error_type` on the Anthropic Messages routes) is a LiteLLM value such as `budget_exceeded`, `expired_key`, `token_not_found_in_db`, `key_model_access_denied` | LiteLLM gateway |
 | `message` starts with `No deployments available for selected model` or `There are no healthy deployments for this model` | LiteLLM gateway (routing) |
-| 429 with a `retry-after`, `rate_limit_type`, or `reset_at` header | LiteLLM gateway (rate limiting) |
-| 429 with no such headers | Upstream provider |
+| 429 with a `retry-after`, `rate_limit_type`, `rate_limited_by`, or `reset_at` header, on the OpenAI-shaped routes | LiteLLM gateway (rate limiting) |
+| 429 with no such headers, on the OpenAI-shaped routes | Upstream provider |
 
-Worked example, gateway origin. The virtual key is capped below its accrued spend, so the request is rejected before any provider is contacted:
+Worked example, gateway origin. The virtual key is capped below its accrued spend, so the request is rejected with HTTP 422 before any provider is contacted:
 
 ```json
 {
@@ -100,12 +185,12 @@ Worked example, gateway origin. The virtual key is capped below its accrued spen
     "message": "Budget has been exceeded! Key=analytics-team (sk-...W8TA) Current cost: 0.06, Max budget: 0.05",
     "type": "budget_exceeded",
     "param": null,
-    "code": "429"
+    "code": "422"
   }
 }
 ```
 
-Worked example, provider origin. The same 429 status, but the message names the provider and the payload carries none of the gateway's rate-limit headers:
+Worked example, provider origin. A 429 whose message names the provider and whose payload carries none of the gateway's rate-limit headers:
 
 ```json
 {
@@ -129,8 +214,8 @@ The gateway returns the status code of the underlying failure rather than collap
 | 403 | Gateway | The key, team, user, or organization is not permitted to use the requested model, tool, or vector store | No |
 | 404 | Either | The requested model or route does not exist | No |
 | 408 | Either | The call exceeded the timeout in force. The message reports both the configured timeout and the elapsed time | Yes, with backoff |
-| 422 | Provider | The provider accepted the shape of the request but could not process its contents | No |
-| 429 | Either | A rate limit or budget was exceeded. See [Which 429 is this?](#which-429-is-this) below | Yes, honoring `retry-after` |
+| 422 | Either | Gateway: a key, team, user, or tag spend cap was reached (`budget_exceeded`). Provider: the provider accepted the shape of the request but could not process its contents | No |
+| 429 | Either | A rate limit was exceeded. See [Which 429 is this?](#which-429-is-this) below | Yes, honoring `retry-after` |
 | 499 | Client | The client disconnected and the upstream call was cancelled | N/A |
 | 500 | Either | Gateway: an unhandled internal error. Provider: a provider-side error, including a network failure reaching the provider, which surfaces as `InternalServerError ... Connection error.` | Yes, with backoff |
 | 503 | Provider | The provider reported itself unavailable or overloaded | Yes, with backoff |
@@ -139,7 +224,7 @@ A note on 500 versus 503. A connection that never reaches the provider (DNS fail
 
 ## Gateway error types
 
-These `error.type` values are produced by the gateway itself. Seeing one of them means no provider was involved in the failure
+These `error.type` values are produced by the gateway itself. Seeing one of them means no provider was involved in the failure. On the [Anthropic Messages routes](#errors-on-the-anthropic-messages-routes), errors raised before the Messages handler carry the same values in `error.litellm_error_type`, except a value that is only its status's default type, such as `invalid_request_error` on a 4xx
 
 | `error.type` | Status | Cause | What to do |
 |---|---|---|---|
@@ -153,12 +238,12 @@ These `error.type` values are produced by the gateway itself. Seeing one of them
 | `key_vector_store_access_denied`, `team_vector_store_access_denied`, `user_vector_store_access_denied`, `org_vector_store_access_denied` | 401 | The caller may not use the requested vector store | Add the store to `object_permission.vector_stores` on the object named by the type |
 | `team_member_permission_error` | 401 | The caller lacks the team-member permission for this management action | Ask a team admin to perform it or to grant the permission |
 | `key_search_tool_access_denied`, `team_search_tool_access_denied`, `user_search_tool_access_denied` | 403 | `search_tool_deny_by_default` is on and the key, team, or user named by the type does not grant the requested search tool | Add the tool to `object_permission.search_tools` on the object named by the type |
-| `budget_exceeded` | 429 | A key, team, user, or per-session spend cap was reached. The message reports current cost and max budget | Raise the budget, or wait for the budget window to reset |
+| `budget_exceeded` | 422 | A key, team, user, or per-session spend cap was reached. The message reports current cost and max budget. Set `litellm_settings.budget_exceeded_status_code: 429` to return 429 instead | Raise the budget, or wait for the budget window to reset |
 | `throttling_error` | 429 | An RPM, TPM, or max-parallel-requests ceiling was exceeded. Also used for provider 429s, so check the headers to tell them apart | Back off using `retry-after` |
 | `invalid_request_error` | 400 | A required parameter is missing or malformed. `error.param` names it | Fix the request body |
 | `bad_request_error` | 400 | Generic gateway-side request rejection | Read the message |
 | `not_found_error` | 404 | The referenced object does not exist | Check the id |
-| `no_db_connection` | 503 | The endpoint needs the database and the gateway cannot reach it | Check `DATABASE_URL` and database health |
+| `no_db_connection` | 400 or 503 | The endpoint needs the database. It is 400 when no database is configured and the caller does not use the master key, and 503 when the configured database is unreachable | Set `DATABASE_URL`, or check database health |
 | `internal_server_error` | 500 | Unhandled gateway exception | Check the gateway logs for the matching `x-litellm-call-id` |
 
 Routing failures do not currently set a distinctive `error.type`; identify them by the message prefix instead
@@ -172,9 +257,9 @@ Routing failures do not currently set a distinctive `error.type`; identify them 
 
 ## Which 429 is this?
 
-429 is the one status the gateway and the providers both use heavily, so it deserves a dedicated check. Work through the response in this order
+429 is the one status the gateway and the providers both use heavily, so it deserves a dedicated check. On the OpenAI-shaped routes, work through the response in this order. On the Anthropic Messages routes, use the checks in [Errors on the Anthropic Messages routes](#errors-on-the-anthropic-messages-routes) instead
 
-A gateway rate limit sets `retry-after`, `rate_limit_type`, and `reset_at`, and its message names the limit that was hit:
+A gateway rate limit sets `retry-after`, `rate_limit_type`, `rate_limited_by`, and `reset_at`. `rate_limited_by` names the limit that was hit (`api_key` below) so you do not have to parse the message, which repeats it in words:
 
 ```json
 {
@@ -187,7 +272,7 @@ A gateway rate limit sets `retry-after`, `rate_limit_type`, and `reset_at`, and 
 }
 ```
 
-A gateway budget cap sets `type` to `budget_exceeded` and reports the spend against the cap. A routing cooldown sets `retry-after` and opens with `No deployments available for selected model`. Anything else with a `<Provider>Exception` in the message is the provider's own throttle, and the gateway has already exhausted its configured retries and fallbacks before returning it
+A gateway budget cap is not a 429 by default: it returns 422 with `type` set to `budget_exceeded`, unless `litellm_settings.budget_exceeded_status_code` is set to 429. A routing cooldown sets `retry-after` and opens with `No deployments available for selected model`. Anything else with a `<Provider>Exception` in the message is the provider's own throttle, and the gateway has already exhausted its configured retries and fallbacks before returning it
 
 From the Python SDK, this classification is available without parsing strings. Every `litellm.RateLimitError` carries a `category` attribute drawn from `RateLimitErrorCategory` and a `rate_limit_type` attribute drawn from `RateLimitType`:
 
@@ -259,7 +344,51 @@ data: {"id":"chatcmpl-...","object":"chat.completion.chunk","choices":[{"index":
 data: {"error": {"message": "litellm.APIConnectionError: APIConnectionError: OpenAIException - The server had an error while processing your request. Sorry about that!", "type": null, "param": null, "code": "500"}}
 ```
 
-Check every SSE payload for an `error` key before treating it as a chunk. A client that only inspects the HTTP status will record a mid-stream failure as a success with a truncated completion
+On `/v1/messages`, count_tokens, and the `/claude_code_gateway` routes, a streamed request that fails before the response opens gets an HTTP error status and the [Anthropic error body](#errors-on-the-anthropic-messages-routes), but not always the status and message that the same request gets without streaming. When the provider times out or drops the connection before its first chunk, the status is 500, `error.type` is `api_error`, and the message names no provider. The same request without streaming gets 408 and a message that names `AnthropicException`:
+
+```
+HTTP/1.1 500 Internal Server Error
+content-type: application/json
+
+{"type":"error","error":{"type":"api_error","message":"Timeout on reading data from socket"}}
+```
+
+Once the response has opened, the status is already 200 and the error arrives as SSE frames. [Keepalive pings](/docs/proxy/timeout#keepalive-pings-for-idle-streaming-connections) can open it before the first chunk, since the gateway sends `: ping` comments while the provider is quiet. When the call to the provider fails, for example because the provider cannot be reached, the stream ends with one Anthropic `error` event and no `data: [DONE]`, which the Anthropic SDK raises as an error:
+
+```
+HTTP/1.1 200 OK
+content-type: text/event-stream; charset=utf-8
+
+: ping
+
+: ping
+
+event: error
+data: {"type": "error", "error": {"type": "api_error", "message": "litellm.Timeout: AnthropicException - litellm.Timeout: Connection timed out. Timeout passed=4.0, time taken=4.003 seconds\n\nLiteLLM: model group 'claude-unreachable' failed with the error above. No fallback was attempted."}}
+```
+
+When the provider opens its own stream and then fails before its first event, the same error body arrives as a `data:` line with no `event:` name, followed by `data: [DONE]`. The Anthropic SDK reads only frames that carry an event name, so it ends the stream with no error and no events:
+
+```
+HTTP/1.1 200 OK
+content-type: text/event-stream; charset=utf-8
+
+: ping
+
+: ping
+
+data: {"type":"error","error":{"type":"api_error","message":"Timeout on reading data from socket"}}
+
+data: [DONE]
+```
+
+A `post_call` guardrail that blocks a streamed response sends an OpenAI `data: {"error": ...}` frame and `data: [DONE]` on these routes too. The status is 400, or 200 when keepalive pings have already opened the response
+
+On the `/anthropic/` routes, a failure after the stream has started sends no error event. The gateway closes the connection, so the stream stops early, and curl reports `transfer closed with outstanding read data remaining`
+
+The 500 with no provider name, the `data:` line with no event name, and the OpenAI frame for a guardrail block are known gaps in the gateway, so a later release can change them. Build on the checks below, which work both now and after a fix, and not on the exact frames
+
+Check every SSE payload for an `error` key before treating it as a chunk, which catches the OpenAI frame, the Anthropic `error` event, and the `data:` line with no event name. On the Anthropic Messages routes, also treat a stream that ends without a `message_stop` event as a failure. A client that only inspects the HTTP status will record a mid-stream failure as a success with a truncated completion
 
 ## Exception reference
 
@@ -276,8 +405,8 @@ The Python SDK raises typed exceptions that inherit from the corresponding OpenA
 | 404 | `NotFoundError` | Raised for unknown model names |
 | 408 | `Timeout` | |
 | 422 | `UnprocessableEntityError` | |
+| 422 | `BudgetExceededError` | Proxy budget caps; carries `current_cost` and `max_budget`. The status comes from `litellm.budget_exceeded_status_code` (default 422) |
 | 429 | `RateLimitError` | Carries `category` and `rate_limit_type` |
-| 429 | `BudgetExceededError` | Proxy budget caps; carries `current_cost` and `max_budget` |
 | 500 | `APIConnectionError` | The base case for any unmapped error |
 | 500 | `APIError` | |
 | 503 | `ServiceUnavailableError` | |
@@ -318,7 +447,7 @@ curl -X POST 'http://localhost:4000/key/generate' \
   -H 'Content-Type: application/json' \
   -d '{"key_alias": "capped", "rpm_limit": 1}'
 
-# 429 budget_exceeded, once accrued spend passes the cap
+# 422 budget_exceeded, once accrued spend passes the cap
 curl -X POST 'http://localhost:4000/key/generate' \
   -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H 'Content-Type: application/json' \

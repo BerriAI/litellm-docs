@@ -1,3 +1,9 @@
+---
+title: "ZeroGPU API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "ZeroGPU"
+description: "Run gpt-oss-120b, GLM-5.3 Flash, Llama 3.1 and other ZeroGPU models with streaming, tool calling, reasoning effort, Messages support and cost tracking."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

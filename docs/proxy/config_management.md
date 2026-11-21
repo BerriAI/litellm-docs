@@ -1,3 +1,7 @@
+---
+displayed_sidebar: tutorialSidebar
+---
+
 # File Management
 
 ## `include` external YAML files in a config.yaml 

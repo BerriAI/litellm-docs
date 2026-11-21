@@ -1,3 +1,8 @@
+---
+title: "Comet Opik Tracing for LiteLLM AI Gateway"
+sidebar_label: "Comet Opik"
+description: "Send LiteLLM traces to Comet Opik from the Python SDK or AI Gateway, with Opik-specific parameters per request and metadata added from API keys."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';

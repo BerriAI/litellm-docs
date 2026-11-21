@@ -2,7 +2,7 @@
 title: "LiteLLM v1.81.9 - Control which MCP Servers are exposed on the Internet"
 description: "Adds public or private visibility for MCP servers with IP access control, Claude Opus 4.6 and A2A agent calls through /chat/completions."
 slug: "v1-81-9"
-date: 2026-02-07T00:00:00
+date: 2026-02-15T01:18:13
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -340,11 +340,11 @@ Let's dive in.
 
 | Table | Change Type | Description | PR | Migration |
 | ----- | ----------- | ----------- | -- | --------- |
-| `LiteLLM_TeamTable` | New Column | Added `allow_team_guardrail_config` boolean field for team-based guardrail isolation | [PR #20318](https://github.com/BerriAI/litellm/pull/20318) | [Migration](https://github.com/BerriAI/litellm/blob/main/litellm-proxy-extras/litellm_proxy_extras/migrations/20260205091235_allow_team_guardrail_config/migration.sql) |
-| `LiteLLM_DeletedTeamTable` | New Column | Added `allow_team_guardrail_config` boolean field | [PR #20318](https://github.com/BerriAI/litellm/pull/20318) | [Migration](https://github.com/BerriAI/litellm/blob/main/litellm-proxy-extras/litellm_proxy_extras/migrations/20260205091235_allow_team_guardrail_config/migration.sql) |
-| `LiteLLM_TeamTable` | New Column | Added `soft_budget` (double precision) for soft budget alerting | [PR #20530](https://github.com/BerriAI/litellm/pull/20530) | [Migration](https://github.com/BerriAI/litellm/blob/main/litellm-proxy-extras/litellm_proxy_extras/migrations/20260205144610_add_soft_budget_to_team_table/migration.sql) |
-| `LiteLLM_DeletedTeamTable` | New Column | Added `soft_budget` (double precision) | [PR #20653](https://github.com/BerriAI/litellm/pull/20653) | [Migration](https://github.com/BerriAI/litellm/blob/main/litellm-proxy-extras/litellm_proxy_extras/migrations/20260207110613_add_soft_budget_to_deleted_teams_table/migration.sql) |
-| `LiteLLM_MCPServerTable` | New Column | Added `available_on_public_internet` boolean for MCP IP-based access control | [PR #20607](https://github.com/BerriAI/litellm/pull/20607) | [Migration](https://github.com/BerriAI/litellm/blob/main/litellm-proxy-extras/litellm_proxy_extras/migrations/20260207093506_add_available_on_public_internet_to_mcp_servers/migration.sql) |
+| `LiteLLM_TeamTable` | New Column | Added `allow_team_guardrail_config` boolean field for team-based guardrail isolation | [PR #20318](https://github.com/BerriAI/litellm/pull/20318) | [Migration](https://github.com/BerriAI/litellm/blob/main/litellm/proxy-extras/litellm_proxy_extras/migrations/20260205091235_allow_team_guardrail_config/migration.sql) |
+| `LiteLLM_DeletedTeamTable` | New Column | Added `allow_team_guardrail_config` boolean field | [PR #20318](https://github.com/BerriAI/litellm/pull/20318) | [Migration](https://github.com/BerriAI/litellm/blob/main/litellm/proxy-extras/litellm_proxy_extras/migrations/20260205091235_allow_team_guardrail_config/migration.sql) |
+| `LiteLLM_TeamTable` | New Column | Added `soft_budget` (double precision) for soft budget alerting | [PR #20530](https://github.com/BerriAI/litellm/pull/20530) | [Migration](https://github.com/BerriAI/litellm/blob/main/litellm/proxy-extras/litellm_proxy_extras/migrations/20260205144610_add_soft_budget_to_team_table/migration.sql) |
+| `LiteLLM_DeletedTeamTable` | New Column | Added `soft_budget` (double precision) | [PR #20653](https://github.com/BerriAI/litellm/pull/20653) | [Migration](https://github.com/BerriAI/litellm/blob/main/litellm/proxy-extras/litellm_proxy_extras/migrations/20260207110613_add_soft_budget_to_deleted_teams_table/migration.sql) |
+| `LiteLLM_MCPServerTable` | New Column | Added `available_on_public_internet` boolean for MCP IP-based access control | [PR #20607](https://github.com/BerriAI/litellm/pull/20607) | [Migration](https://github.com/BerriAI/litellm/blob/main/litellm/proxy-extras/litellm_proxy_extras/migrations/20260207093506_add_available_on_public_internet_to_mcp_servers/migration.sql) |
 
 ---
 

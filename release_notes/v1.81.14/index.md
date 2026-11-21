@@ -2,7 +2,7 @@
 title: "LiteLLM v1.81.14 - New Gateway Level Guardrails & Compliance Playground"
 description: "Adds Guardrail Garden, a Compliance Playground and three built-in guardrails. Adds Claude Sonnet 4.6 on day 0 and cuts latency by up to 13%."
 slug: "v1-81-14"
-date: 2026-02-21T00:00:00
+date: 2026-03-03T22:22:19
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

@@ -1,7 +1,7 @@
 const MODEL = 'openai/gpt-6.1-sol';
 const FALLBACKS = ['anthropic/claude-haiku-5-5', 'openai/gpt-6-luna'];
 const BASE_URL = 'https://gateway.litellm-sandbox.ai';
-const {getTracing} = require('./tracing');
+const {getTracing, docsSecrets} = require('./tracing');
 
 function gatewayError(name, message) {
   const error = new Error(message);
@@ -10,20 +10,35 @@ function gatewayError(name, message) {
   return error;
 }
 
-function createModelCaller({config, signal, fetchImpl = fetch}) {
-  const endpoint = new URL(`${(config.baseUrl || BASE_URL).replace(/\/$/, '')}/chat/completions`);
-  if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) {
-    throw new Error('Invalid gateway configuration');
+function createModelCaller({config, signal, fetchImpl = fetch, messagesSeparate = false}) {
+  const {createToolAnswerReader, parseToolAnswer} = require('./tool-answer');
+  const cloudflareConfigured = config.cfAccessClientId !== undefined || config.cfAccessClientSecret !== undefined;
+  const validCredential = value => typeof value === 'string' && /^[\x21-\x7e]+$/.test(value);
+  let endpoint;
+  try {
+    endpoint = new URL(`${config.baseUrl.replace(/\/$/, '')}/chat/completions`);
+    if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || endpoint.search || endpoint.hash ||
+        !validCredential(config.apiKey) || (cloudflareConfigured &&
+        (!validCredential(config.cfAccessClientId) || !validCredential(config.cfAccessClientSecret)))) throw new Error();
+  } catch {
+    throw gatewayError('GatewayConfigurationError', 'Invalid gateway configuration');
   }
+  const headers = {'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}`,
+    ...(cloudflareConfigured ? {
+      'CF-Access-Client-Id': config.cfAccessClientId,
+      'CF-Access-Client-Secret': config.cfAccessClientSecret,
+    } : {}),
+  };
   const tracing = getTracing(config);
-  const secrets = [config.apiKey, config.tracing?.key].filter(Boolean);
+  const secrets = docsSecrets(config);
   const assertSafe = text => {
     if (secrets.some(secret => text.includes(secret))) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
   };
-  async function turn(messages, {toolDefinitions, toolChoice = 'auto', onDelta, timeout = 25000, stage = 'agent'} = {}) {
+  async function turn(messages, {toolDefinitions, toolChoice = 'auto', onDelta, answerTool, timeout = 25000, stage = 'agent'} = {}) {
     return tracing.span(`chat ${stage}`, {
       'openinference.span.kind': 'LLM', 'gen_ai.operation.name': 'chat',
       'gen_ai.request.model': MODEL, 'docs.search.stage': stage,
+      'lens.capture.messages_separate': messagesSeparate,
     }, async span => {
       span.setAttribute('input.value', JSON.stringify(messages));
       span.setAttribute('input.mime_type', 'application/json');
@@ -32,7 +47,7 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
       requestSignal.throwIfAborted();
       const response = await fetchImpl(endpoint.href, {
         method: 'POST', redirect: 'error', signal: requestSignal,
-        headers: {'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}`},
+        headers,
         body: JSON.stringify({model: MODEL, fallbacks: [
           {model: FALLBACKS[0], reasoning_effort: 'none'},
           {model: FALLBACKS[1], reasoning_effort: 'none'},
@@ -52,7 +67,7 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
         }
         throw gatewayError('GatewayHTTPError', 'Gateway request failed');
       }
-      let result, message, finish, pending = '';
+      let result, message, finish, pending = '', answerReader, answerArgumentsRead = 0;
       const capture = () => {
         record(span, result, message, finish);
         const output = message?.tool_calls?.length ? JSON.stringify(message) : message?.content;
@@ -73,6 +88,7 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
       if (response.headers.get('content-type')?.includes('text/event-stream')) {
         const {readEvents} = await import('./stream.mjs');
         result = {}; message = {role: 'assistant', content: ''};
+        const toolCalls = new Map();
         let completed = false;
         try {
           for await (const frame of readEvents(response.body, requestSignal)) {
@@ -89,9 +105,35 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
             const delta = choice.delta || {};
             if (typeof delta.content === 'string') {
               message.content += delta.content;
-              await deliver(delta.content);
+              if (!answerTool) await deliver(delta.content);
             }
-            if (delta.tool_calls?.length) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
+            if (delta.tool_calls?.length) {
+              if (!answerTool || !Array.isArray(delta.tool_calls)) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
+              for (const part of delta.tool_calls) {
+                if (!Number.isInteger(part.index) || part.index < 0 || part.index > 3) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
+                if (!toolCalls.has(part.index)) toolCalls.set(part.index, {id: '', type: undefined, function: {name: '', arguments: ''}});
+                const call = toolCalls.get(part.index);
+                if (part.type !== undefined) call.type = part.type;
+                for (const [target, field, value] of [[call, 'id', part.id],
+                  [call.function, 'name', part.function?.name], [call.function, 'arguments', part.function?.arguments]]) {
+                  if (value !== undefined) {
+                    if (typeof value !== 'string') throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
+                    target[field] += value;
+                  }
+                }
+              }
+              message.tool_calls = [...toolCalls.entries()].sort(([a], [b]) => a - b).map(([, call]) => call);
+              const writing = message.tool_calls.find(call => call.function.name === answerTool);
+              if (writing) {
+                if (message.tool_calls.length !== 1) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
+                answerReader ||= createToolAnswerReader();
+                let text;
+                try {text = answerReader.push(writing.function.arguments.slice(answerArgumentsRead));}
+                catch {throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');}
+                answerArgumentsRead = writing.function.arguments.length;
+                if (text) await deliver(text);
+              }
+            }
           }
         } finally {
           capture();
@@ -112,8 +154,21 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
           message.tool_calls.some(call => !call.id || call.type !== 'function' || !allowed.has(call.function?.name) || typeof call.function.arguments !== 'string')) {
           throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
         }
+        const writing = answerTool && message.tool_calls.find(call => call.function.name === answerTool);
+        if (writing) {
+          if (message.tool_calls.length !== 1) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
+          let answer;
+          try {answer = answerReader ? answerReader.finish() : parseToolAnswer(writing.function.arguments);}
+          catch {throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');}
+          assertSafe(answer);
+          if (onDelta) {
+            await deliver(answer.slice(answerReader?.emittedLength || 0));
+            if (pending) await onDelta(pending);
+          }
+        }
         return {role: 'assistant', content: message.content || null, tool_calls: message.tool_calls};
       }
+      if (answerTool) throw gatewayError('GatewayInvalidResponse', 'Invalid gateway response');
       if (finish !== 'stop' || typeof message?.content !== 'string' || !message.content.trim()) {
         throw gatewayError('GatewayEmptyResponse', 'Gateway returned no complete answer text');
       }
@@ -125,14 +180,14 @@ function createModelCaller({config, signal, fetchImpl = fetch}) {
     }, {client: true});
   }
   // Non-tool callers retain the same validated completion contract.
-  const call = async (system, data, timeout, stage, onDelta) => {
+  const call = async (system, data, timeout, onDelta) => {
     const {documentation, ...questionData} = data;
     const messages = [
       {role: 'system', content: [{type: 'text', text: system, cache_control: {type: 'ephemeral'}}]},
       ...(documentation ? [{role: 'user', content: [{type: 'text', text: JSON.stringify({documentation}), cache_control: {type: 'ephemeral'}}]}] : []),
       {role: 'user', content: JSON.stringify(questionData)},
     ];
-    return (await turn(messages, {timeout, stage, onDelta})).content;
+    return (await turn(messages, {timeout, onDelta})).content;
   };
   call.turn = turn;
   return call;

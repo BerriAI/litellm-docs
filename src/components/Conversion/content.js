@@ -30,7 +30,7 @@ const PROMPTS = {
     title: 'Run the LiteLLM Gateway locally',
     text: `Help me run the LiteLLM Gateway locally. First read ${DOCS}/docs/proxy/docker_quick_start.md. Then:
 1. Check that Docker Compose v2 is installed and running, and that port 4000 is free.
-2. In a new litellm-gateway directory, download https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml and create .env with LITELLM_MASTER_KEY and LITELLM_SALT_KEY, each "sk-" followed by the output of openssl rand -hex 32, and POSTGRES_PASSWORD set to the output of openssl rand -hex 24. Add .env to .gitignore and never print any of these values.
+2. In a new litellm-gateway directory, download https://github.com/BerriAI/litellm/raw/main/litellm/deploy/docker/docker-compose.quickstart.yml and create .env with LITELLM_MASTER_KEY and LITELLM_SALT_KEY, each "sk-" followed by the output of openssl rand -hex 32, and POSTGRES_PASSWORD set to the output of openssl rand -hex 24. Add .env to .gitignore and never print any of these values.
 3. Run docker compose -f docker-compose.quickstart.yml up -d and poll http://localhost:4000/health/readiness until the database shows as connected.
 4. Ask me which provider and model to add. Add it with POST /model/new using the master key, reading my provider API key from my shell environment without echoing it.
 5. Verify: GET /v1/models lists the model and POST /v1/chat/completions returns a reply.
@@ -109,26 +109,26 @@ If I do not have a license yet, stop and point me to ${SALES_URL}.`,
 2. Add the LiteAdmin MCP server to this client the way the guide shows for it (Claude Code, Claude Desktop, or Codex). Show me the change before writing it.
 3. Verify: list the gateway's models and my teams through the MCP tools, then stop and ask me what to change.`,
   },
-  liteagents: {
-    title: 'Try LiteAgents on one of my agents',
-    text: `Help me try LiteAgents, a preview SDK for switching agent harnesses without rewriting the agent. First read https://github.com/BerriAI/liteagents/blob/main/docs/getting-started.md and the harness-switching recipe at https://github.com/BerriAI/liteagents/blob/main/cookbook/recipes/10_harness_switch.py. Then:
-1. Install the preview release the getting-started guide names, in a separate virtual environment.
-2. Ask me which agent to port and which model to use. If I run a LiteLLM Gateway, point the model at it with a virtual key read from the environment.
-3. Port the agent to a LiteAgents profile, keeping its tools and MCP connections, and run one task.
-4. Change only the harness field to a second harness, run the same task, and show me both results side by side.`,
+  sdk_agents: {
+    title: 'Run an agent with the LiteLLM SDK',
+    text: `Help me run an agent with litellm.agent(), part of the LiteLLM Python SDK. First read ${DOCS}/docs/harness.md, ${DOCS}/docs/harness/quickstart.md and ${DOCS}/docs/harness/supported.md. Then:
+1. Check this project's Python environment and installed harness runtimes. Use the project's package manager to install litellm and the dependencies for the harness I choose.
+2. Ask which task, workspace and model to use. Reuse LITELLM_PROXY_API_BASE and LITELLM_PROXY_API_KEY from the environment when available; never print credentials or save them in code.
+3. Create a small script using litellm.agent(), the Harness enum and an explicit sandbox. Explain the selected sandbox and permissions before running the task. Check agent_capabilities() before adding custom tools or other optional features.
+4. Run the task and show its result, stop reason, usage and cost. Link to agent_session() for follow-up turns and stream=True for live events.`,
   },
 };
 
-const GATEWAY_COMPOSE = `curl -sSLO https://github.com/BerriAI/litellm/raw/main/docker/docker-compose.quickstart.yml
+const GATEWAY_COMPOSE = `curl -sSLO https://github.com/BerriAI/litellm/raw/main/litellm/deploy/docker/docker-compose.quickstart.yml
 printf 'LITELLM_MASTER_KEY=sk-%s\\nLITELLM_SALT_KEY=sk-%s\\nPOSTGRES_PASSWORD=%s\\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" "$(openssl rand -hex 24)" > .env
 docker compose -f docker-compose.quickstart.yml up -d`;
 
 // The one command per system shown in the Quick Start box. The gateway scripts
-// live in the litellm repo: scripts/quickstart.sh and scripts/quickstart.ps1.
+// live in the litellm repo: litellm/scripts/quickstart.sh and litellm/scripts/quickstart.ps1.
 const QUICKSTART = {
   gateway: {
-    mac: 'curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/quickstart.sh | sh',
-    windows: 'irm https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/quickstart.ps1 | iex',
+    mac: 'curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/scripts/quickstart.sh | sh',
+    windows: 'irm https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/scripts/quickstart.ps1 | iex',
   },
   sdk: 'uv add litellm',
 };
@@ -144,13 +144,14 @@ const GATEWAY_DOCKER_RUN = `docker run \\
 const ONE_CLICK = [
   ['Railway', 'https://railway.com/deploy/RhvhdC?referralCode=7mRv9K&utm_medium=integration&utm_source=template&utm_campaign=generic', 'https://railway.com/button.svg'],
   ['Render', 'https://render.com/deploy?repo=https://github.com/BerriAI/litellm', 'https://render.com/images/deploy-to-render-button.svg'],
-  ['AWS', 'https://console.aws.amazon.com/cloudshell/home', '/img/deploy-on-aws.png'],
-  ['GCP', 'https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FBerriAI%2Fterraform-google-litellm&cloudshell_git_branch=v1.105.0&cloudshell_workspace=examples%2Fdefault&cloudshell_tutorial=TUTORIAL.md&cloudshell_image=gcr.io/ds-artifacts-cloudshell/deploystack_custom_image&shellonly=true', '/img/deploy-on-gcp.png'],
+  ['AWS', '/docs/proxy/deploy/terraform#aws', '/img/deploy-on-aws.png'],
+  ['GCP', '/docs/proxy/deploy/terraform#gcp', '/img/deploy-on-gcp.png'],
 ];
 
-const INSTALLER = `curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install.sh | sh`;
+const INSTALLER = `curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/litellm/scripts/install.sh | sh`;
 
-const HELM = `helm install litellm oci://ghcr.io/berriai/litellm-helm -f values.yaml`;
+const HELM = `helm upgrade --install litellm oci://ghcr.io/YOUR_ORG/charts/litellm \\
+  --version 1.0.0 --namespace litellm -f values.yaml --wait --timeout 30m`;
 
 // Install options per path. The first entry is the recommended command and is
 // the only one shown up front; the rest sit under "Other ways to install",
@@ -177,16 +178,16 @@ const INSTALLS = {
       {
         id: 'helm',
         label: 'Helm',
-        when: 'You deploy to Kubernetes. Pair it with a values.yaml from the deploy guide.',
+        when: 'You deploy to Kubernetes. Publish the chart to your OCI registry and prepare values.yaml using the Helm guide. Replace YOUR_ORG with your registry namespace.',
         code: HELM,
-        more: '/docs/proxy/deploy#deploy-with-helm',
+        more: '/docs/proxy/deploy/helm',
       },
       {
         id: 'installer',
         label: 'One-line installer',
         when: 'You want the gateway as a local CLI without Docker (macOS and Linux). It runs from a config file with no database, so there are no virtual keys or admin UI.',
         code: INSTALLER,
-        more: 'https://github.com/BerriAI/litellm/blob/main/scripts/install.sh',
+        more: 'https://github.com/BerriAI/litellm/blob/main/litellm/scripts/install.sh',
         moreLabel: 'Read the script',
       },
     ],
@@ -334,7 +335,7 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
 // it with one small text visual.
 const CARD_GROUPS = [
   {title: 'Tools and agents', ids: ['mcp', 'agents']},
-  {title: 'Models and harnesses', ids: ['autorouter', 'liteagents']},
+  {title: 'Models and agents', ids: ['autorouter', 'sdk_agents']},
   {title: 'Your terminal and your agent', ids: ['tools', 'liteadmin']},
 ];
 
@@ -387,20 +388,24 @@ const PRODUCT_CARDS = [
     prompt: 'autorouter',
   },
   {
-    id: 'liteagents',
-    product: 'LiteAgents (preview)',
-    problem: 'Use a different agent harness and keep your agent code.',
-    text: 'Replace one parameter to move between Deep Agents, Pydantic AI, the Claude Agent SDK, Codex, and OpenCode. Your tools and MCP connections stay the same.',
+    id: 'sdk_agents',
+    product: 'Agents in the LiteLLM SDK',
+    problem: 'Run agents from Python with one API.',
+    text: 'Use litellm.agent() with Claude Code, Codex, OpenCode, Pi, Deep Agents or Tool Loop. Choose a harness and model, stream output, and track cost. Included in the litellm package.',
     visual: {
       type: 'code',
       lang: 'python',
-      code: `ProfileOptions(
-    harness="deepagents",  # or "claude-sdk", "codex", "pydantic-ai"
-    model="my-model",
+      code: `from litellm import agent, Harness, sandbox
+
+result = agent(
+    Harness.CODEX, "Explain this repository.",
+    sandbox=sandbox.local("."),
+    model="litellm_proxy/coder",
+    permissions="read-only",
 )`,
     },
-    to: '/blog/liteagents-sdk',
-    prompt: 'liteagents',
+    to: '/docs/harness',
+    prompt: 'sdk_agents',
   },
   {
     id: 'tools',

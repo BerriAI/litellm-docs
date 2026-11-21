@@ -1,3 +1,9 @@
+---
+title: "GitHub Models API with LiteLLM: Setup"
+sidebar_label: "Github"
+description: "Call GitHub Models such as Llama 3.2 11B Vision and Mixtral from the Python SDK or AI Gateway, with streaming, tool calling and a LangChain client example."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

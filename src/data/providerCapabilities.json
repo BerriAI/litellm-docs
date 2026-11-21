@@ -786,6 +786,13 @@
       "chat"
     ]
   },
+  "providers/resetdata": {
+    "prefix": "resetdata",
+    "capabilities": [
+      "chat",
+      "audio"
+    ]
+  },
   "providers/runwayml/images": {
     "prefix": "runwayml",
     "capabilities": [

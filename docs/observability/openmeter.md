@@ -1,3 +1,8 @@
+---
+title: "OpenMeter Usage Billing for LiteLLM"
+sidebar_label: "OpenMeter"
+description: "Send LiteLLM cost and usage to OpenMeter for usage-based billing from the Python SDK or AI Gateway with the openmeter callback and two environment variables."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

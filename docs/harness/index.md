@@ -1,17 +1,21 @@
 ---
-title: Agents (litellm.agent)
+title: Agents in the LiteLLM SDK
 slug: /harness
 sidebar_label: Overview
-description: Run Claude Code, Codex, OpenCode, Deep Agents and Tool Loop from Python with litellm.agent(), with model calls routed through the LiteLLM AI Gateway.
+description: Run agents from Python with litellm.agent(), included in the LiteLLM SDK. Choose a harness, stream results, and track usage and cost.
 ---
 
-# Agents (`litellm.agent`)
+# Agents in the LiteLLM SDK
+
+Use `litellm.agent()` to run Claude Code, Codex, OpenCode, Pi, Deep Agents or Tool Loop from Python. It is part of the same `litellm` package as `completion()`. Choose the harness and model for each task, stream its output, and read usage and cost from the result.
+
+Start with the [agent quickstart](./quickstart.md) to install the SDK and your chosen harness, then run your first task.
 
 :::info Beta
 `litellm.agent()` is in beta. The API may change between releases.
 :::
 
-Run an agent with `litellm.agent()` to drive Claude Code, Codex, OpenCode, Deep Agents or Tool Loop from Python with one API. Route model calls through the LiteLLM AI Gateway so all five harnesses can share one virtual key, one set of model groups and fallbacks, and one place to see spend
+Route model calls through the LiteLLM AI Gateway to share one virtual key, model groups and fallbacks, and one place to see spend across harnesses.
 
 ```python title="fix_flaky.py"
 import litellm
@@ -35,6 +39,8 @@ The `litellm_proxy/` prefix works the same way it does for `litellm.completion`:
 
 See [Using with LiteLLM AI Gateway](./gateway.md) for the proxy config, virtual keys, which harness to pick, and spend by harness. Without the prefix, the model is called directly through the LiteLLM SDK; see [Models and routing](./models.md#sdk-mode).
 
+To compare harnesses and models on your own tasks, follow [Evaluate agents](./evaluation.md). Define typed tasks and success checks, run independent trials, and compare pass rate, cost and time.
+
 ## Supported harnesses
 
 | Harness | Runtime | Runs in |
@@ -42,6 +48,7 @@ See [Using with LiteLLM AI Gateway](./gateway.md) for the proxy config, virtual 
 | [`Harness.CLAUDE_CODE`](./claude_code.md) | Anthropic's Claude Code CLI | your sandbox |
 | [`Harness.CODEX`](./codex.md) | OpenAI's Codex CLI | your sandbox |
 | [`Harness.OPENCODE`](./opencode.md) | OpenCode CLI | your sandbox |
+| [`Harness.PI`](./pi.md) | Pi coding agent CLI | your sandbox |
 | [`Harness.DEEPAGENTS`](./deepagents.md) | LangChain Deep Agents | your Python process, tools act on your sandbox |
 | [`Harness.TOOL_LOOP`](./tool_loop.md) | LiteLLM tool-calling loop | your Python process, calls your tools |
 

@@ -1,3 +1,9 @@
+---
+title: "Chutes API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Chutes"
+description: "Call LLMs deployed on Chutes, an OpenAI-compatible serving platform, from the Python SDK or AI Gateway, with streaming, temperature, top_p and max_tokens."
+---
+
 # Chutes
 
 ## Overview

@@ -158,6 +158,8 @@ $ litellm --config /path/to/config.yaml
 ```
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data ' {
     "model": "{{openai_small}}",
     "messages": [
@@ -166,8 +168,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
         "content": "good morning good sir"
         }
     ],
-    "user": "ishaan-app",
-    "temperature": 0.2
+    "user": "ishaan-app"
     }'
 ```
 
@@ -182,7 +183,7 @@ Subclass `CustomGuardrail` and define an `async_moderation_hook` function
 - This function runs in parallel to the actual LLM API call. 
 - If your `async_moderation_hook` raises an Exception, we will return that to the user. 
 
-See a complete example with our [Llama Guard content moderation hook](https://github.com/BerriAI/litellm/blob/main/enterprise/enterprise_hooks/llm_guard.py) and the [custom guardrail docs](./guardrails/custom_guardrail.md)
+See a complete example with our [Llama Guard content moderation hook](https://github.com/BerriAI/litellm/blob/main/litellm/enterprise/litellm_enterprise/enterprise_callbacks/llm_guard.py) and the [custom guardrail docs](./guardrails/custom_guardrail.md)
 
 ```python
 from litellm.integrations.custom_guardrail import CustomGuardrail

@@ -2,7 +2,7 @@
 title: "LiteLLM v1.95.0 - Claude Opus 5, MCP Gateway DCR & Rust /v1/messages"
 description: "Adds Claude Opus 5, Gemini 3.6 Flash and SAML 2.0 SSO for the admin UI. Stops enforcing user budgets on team keys."
 slug: "v1-95-0"
-date: 2026-08-01T00:00:00
+date: 2026-08-02T02:51:53
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

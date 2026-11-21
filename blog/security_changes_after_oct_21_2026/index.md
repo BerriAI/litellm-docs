@@ -93,11 +93,11 @@ We will update this table in place as items complete, and say so when they do no
 | 1 | Release approval held only by an account associated only with a specific physical device in our office | Complete | — |
 | 2 | Dedicated GitHub owner accounts, separate from day-to-day accounts; no tokens, OAuth apps, API or `gh` use from any owner account | Complete | — |
 | 3 | GitHub organization audit logs streaming to Splunk, with alerting | Complete | — |
-| 4 | Alert on any token-based activity from an owner account | In progress | Nov 15, 2026 |
-| 5 | Policy: regular users may use agents and tools; regular users may never be owners or admins | In progress | Nov 15, 2026 |
-| 6 | Google Workspace superadministrator roles moved to dedicated admin accounts with associated alerting | Planned | Nov 15, 2026 |
-| 7 | HackerOne managed vulnerability disclosure program with front-line triage live | In progress | Nov 15, 2026 |
-| 8 | LiteLLM Private Registry in use for embargoed vulnerability fixes | In progress | Nov 15, 2026 |
+| 4 | Alert on any token-based activity from an owner account | Complete | Nov 15, 2026 |
+| 5 | Policy: regular users may use agents and tools; regular users may never be owners or admins | Complete | Nov 15, 2026 |
+| 6 | Google Workspace superadministrator roles moved to dedicated admin accounts with associated alerting | Complete | Nov 15, 2026 |
+| 7 | HackerOne managed vulnerability disclosure program with front-line triage live | Complete | Nov 15, 2026 |
+| 8 | LiteLLM Private Registry in use for embargoed vulnerability fixes | Complete | Nov 15, 2026 |
 | 9 | Okta SSO with phishing-resistant MFA for all internal systems, provisioning and deprovisioning (already enforced for all critical systems) | In progress | Nov 30, 2026 |
 | 10 | Secret scanning and push protection on every repository in `BerriAI` and `LiteLLM-Labs` | In progress | Nov 30, 2026 |
 | 11 | Ticketed revocation for every credential exposure; secret-scanning alerts open tickets automatically | Planned | Nov 30, 2026 |

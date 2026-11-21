@@ -1,3 +1,9 @@
+---
+title: "Perplexity Embeddings with LiteLLM"
+sidebar_label: "Perplexity Embeddings"
+description: "Create pplx-embed v1 embeddings with Perplexity's 0.6b and 4b models, then reduce output dimensions or switch to binary encoding, from the SDK or AI Gateway."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,8 @@
+---
+title: "Straiker Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Straiker"
+description: "Block prompt injection, including payloads hidden in tool output, with Straiker on the LiteLLM AI Gateway, inspecting prompts and tool calls."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -146,6 +151,8 @@ Caller identity is taken from LiteLLM's own key, team, and user records, so crea
 | `unreachable_fallback` | `fail_closed` | Behavior when Straiker cannot be reached after retries |
 | `fail_on_error` | `true` | Whether a non-success response from Straiker blocks the call |
 | `max_payload_bytes` | `524288` | Maximum serialized payload size |
+| `stream_mode` | `buffered` | `buffered` or `streaming`. See [Streaming](#streaming) |
+| `hold_tool_calls` | `true` | With `stream_mode: streaming`, hold a tool call until Straiker has checked the response |
 | `custom_headers` | `None` | Additional headers sent to Straiker. `Authorization` cannot be overridden |
 | `metadata` | `None` | Metadata applied to every call. Config values win on a key conflict |
 | `verbose` | `false` | Include the full per-category detection envelope in block responses |
@@ -154,7 +161,39 @@ Caller identity is taken from LiteLLM's own key, team, and user records, so crea
 
 Straiker supports `pre_call` and `post_call`, and both can block. `during_call` is rejected at initialization.
 
-Streaming responses are handled on `post_call`. Straiker always buffers the stream and moderates the assembled response once, so no chunk reaches the client until that check passes and no flagged chunk is released before a block. This is fixed behavior, so the generic `streaming_buffer_until_moderated`, `streaming_end_of_stream_only`, and `streaming_sampling_rate` guardrail settings have no effect on Straiker
+## Streaming
+
+Straiker checks a streamed response on `post_call`. `stream_mode` decides what the client sees before the check finishes.
+
+| `stream_mode` | What the client sees |
+|---|---|
+| `buffered` (default) | Nothing until the whole response passes the check |
+| `streaming` | Text as it arrives. A block ends the stream with the block message, after that text was already sent |
+
+```yaml title="config.yaml"
+guardrails:
+  - guardrail_name: straiker-post
+    litellm_params:
+      guardrail: straiker
+      mode: post_call
+      default_on: true
+      api_key: os.environ/STRAIKER_API_KEY
+      stream_mode: streaming
+```
+
+### Tool calls
+
+A coding agent runs a tool call the moment it receives one. So in `streaming` mode, text still streams live, but a tool call waits for the check and a blocked tool call never reaches the client. Expect a pause in the stream while it waits.
+
+Set `hold_tool_calls: false` to send tool calls as they arrive. A blocked tool call then reaches the client before the stream ends.
+
+On A2A routes the whole stream waits for the check.
+
+The generic `streaming_buffer_until_moderated`, `streaming_end_of_stream_only`, and `streaming_sampling_rate` settings have no effect on Straiker.
+
+## Blocked prompts in logs
+
+Straiker answers a blocked prompt with HTTP 200 and the block message as the reply, so the client shows the reason. Logging callbacks and Prometheus record that request as a failure. The one exception is a streaming `/v1/chat/completions` request, which is recorded as a success.
 
 ## Further reading
 

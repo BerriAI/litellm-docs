@@ -22,19 +22,30 @@
  */
 export const announcements = [
   {
-    id: 'october_townhall_2026',
-    // Ends when the town hall ends: 23 October 2026, 8:30 AM PT.
-    expiresAt: '2026-10-23T15:30:00Z',
+    id: 'customer_portal_event_2026_11_20',
+    // Ends when the event ends: 20 November 2026, 11:00 AM PT (UTC-8).
+    expiresAt: '2026-11-20T19:00:00Z',
     html:
-      '<a class="announcement-link" href="https://forms.gle/F8tTYR8rfjKBA4D67" target="_blank" rel="noopener noreferrer">' +
-      '<strong>LiteLLM October Town Hall.</strong> Friday, Oct 23 at 7:30 AM PT. ' +
-      'Product updates, roadmap and Q&amp;A. Register now &rarr;</a>',
+      '<a class="announcement-link" href="https://www.crowdcast.io/c/w9airc43f37a" target="_blank" rel="noopener noreferrer">' +
+      '<strong>Customer Portal for AI-native companies.</strong> Live on Crowdcast, Friday, Nov 20 at 10:00 AM PT. ' +
+      'Register now &rarr;</a>',
+  },
+  {
+    id: 'townhall_2026_12_03',
+    // Ends when the town hall ends: 3 December 2026, 8:30 AM PT (UTC-8).
+    expiresAt: '2026-12-03T16:30:00Z',
+    html:
+      '<a class="announcement-link" href="https://docs.google.com/forms/d/e/1FAIpQLScDOu3EEE3r9KJRsTFKGMK-xloRqA6ZXZ0hdO7JtXFjSmk8_A/viewform" target="_blank" rel="noopener noreferrer">' +
+      '<strong>LiteLLM Town Hall.</strong> Thursday, Dec 3 at 7:30 AM PT. ' +
+      'Product, stability, security and Q&amp;A. Register now &rarr;</a>',
   },
   {
     id: 'decisions_api_2026_10',
+    // Held back until the town hall ends so the bar shows only the events.
+    startsAt: '2026-12-03T16:30:00Z',
     html:
       '<a class="announcement-link" href="/docs/decisions">' +
-      '<strong>Decisions API is here.</strong> Call Jev, Clef or any decision model ' +
+      '<strong>Decisions API is here.</strong> Call Gemini Decision 1, Jev, Clef or any decision model ' +
       'through one /v1/decisions endpoint. &rarr;</a>',
   },
 ];

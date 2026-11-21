@@ -107,11 +107,11 @@ We've been testing LiteLLM, benchmarked with [AIGatewayBench](https://github.com
 
 _*Overhead is gateway p99 minus direct-to-mock p99 on the same endpoint. Cost is a footprint estimate from measured CPU and peak RSS at 4 vCPU / 16 GB, and excludes token cost._
 
-Beta v0 is live now for testing. It supports /v1/messages for Azure and all /ocr providers today. See the [docs](https://docs.litellm.ai/docs/proxy/rust_gateway). Next up is /v1/messages for Bedrock Invoke, with support for all known Bedrock auth methods: STS, keys, and IAM.
+Beta v0 is live now for testing. It supports /v1/messages for Azure and all /ocr providers today. See the [docs](https://docs.litellm.ai/rust-migration). Next up is /v1/messages for Bedrock Invoke, with support for all known Bedrock auth methods: STS, keys, and IAM.
 
 This is a gradual rollout, one route at a time, each proven in production before the next begins. We're targeting full rollout by December 1st. Same config, same database, same API. There's nothing for you to change.
 
-[Get started.](https://docs.litellm.ai/docs/proxy/rust_gateway)
+[Get started.](https://docs.litellm.ai/rust-migration)
 
 ## Announcing Autorouter V2
 

@@ -1,8 +1,10 @@
 ---
-title: Permissions
+title: Permissions for litellm.agent()
+sidebar_label: Permissions
+description: Choose a permission mode for litellm.agent() and see how harnesses enforce read, write, and command access.
 ---
 
-# Permissions
+# Permissions for `litellm.agent()`
 
 `permissions=` takes a mode, and each harness sets up its permission behavior to match. The default is `"full"`. The sandbox only limits operations that run inside it; Python tools for Deep Agents and Tool Loop run in your process. Pass trusted functions and enforce any additional access rules they need
 

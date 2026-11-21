@@ -24,6 +24,12 @@ For Compose, update `LENS_IMAGE` in the retained `deploy/lens/.env` to the verif
 docker compose -f deploy/lens/compose.yaml up -d --wait
 ```
 
+A [quickstart](./local.md) install keeps `.env` beside the downloaded `compose.yaml`, and that file has no `LENS_IMAGE` line yet. Add one with the verified artifact, such as `LENS_IMAGE=ghcr.io/berriai/lens:0.1.0`, then apply it from that folder:
+
+```sh
+docker compose up -d --wait
+```
+
 For Helm, retain your release name, namespace and values and update the Lens image or chart through the [Lens Helm guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md). Generated credentials are reused by Helm with cluster access; GitOps uses [pre-provisioned secrets](./storage.md#gitops)
 
 Complete the [first-trace check](../deployment.md#check-the-installation), open a previously stored trace and dataset, and run a bounded investigation before resuming schedules. When connected to LiteLLM, also verify ordinary inference and existing user scopes in the embedded page

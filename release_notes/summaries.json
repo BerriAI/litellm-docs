@@ -1,228 +1,219 @@
 [
   {
     "folders": [
-      "v1.108.4"
+      "v1.108.14"
     ],
-    "title": "LiteLLM v1.108.4 (LTS) fixes Bedrock pass-through guardrails and video polls",
+    "title": "LiteLLM v1.108.14 (LTS) fixes Claude tool search on Responses follow-ups",
     "points": [
-      "The `/bedrock` pass-through routes enforce the model's `guardrailConfig`, and it replaces any guardrail the caller sends.",
-      "Video status and content polls keep their model, so per-model keys work and each poll reaches the account that created the video.",
-      "A base SDK install no longer fails with `No module named 'mcp'` when `completion()`, `responses()` or `messages` get a tool."
+      "Claude's tool search stays on `/v1/responses` follow-up turns, also with `store: false`, so Anthropic no longer answers 400.",
+      "`/v1/decisions` accepts OpenAI `input_json` content parts, so a body that OpenAI accepts directly also works through the proxy."
     ]
   },
   {
     "folders": [
-      "v1.108.3"
+      "v1.110.2",
+      "v1.111.0rc3"
     ],
-    "title": "LiteLLM v1.108.3 (LTS) fixes Bedrock api_base and large MCP tool results",
+    "title": "LiteLLM v1.110.2 and v1.111.0rc3 fix Responses stream restarts",
     "points": [
-      "Bedrock deployments with `api_base: \"\"` serve requests again, and no longer return 500 or 400.",
-      "MCP tool results over 1 MiB no longer fail with `SSE stream ended without a response`, and model-level `post_call` guardrails check each response once."
+      "Responses streams stop retrying once output reached the client and stop restarting on a fallback after reasoning output.",
+      "GPT-6.2 caches system prompts on stored requests, and `temperature=1` works again on Claude models that removed sampling params.",
+      "On v1.111.0rc3, failed calls free large request bodies without waiting for a full GC, and SSO login works behind TLS termination."
     ]
   },
   {
     "folders": [
-      "v1.108.2"
+      "v1.109.3",
+      "v1.106.12"
     ],
-    "title": "LiteLLM v1.108.2 (LTS) fixes Bedrock service tiers and Claude PDF input",
+    "title": "LiteLLM v1.109.3 and v1.106.12 fix GPT-6.2 caching on stored requests",
     "points": [
-      "Bedrock Converse honors the `reserved`, `auto` and `standard_only` service tiers and returns 400 for a tier that it does not support.",
-      "Base64 PDFs that you send to Claude as `image_url` work, and `openai/` deployments with an empty `api_key` no longer send `OPENAI_ADMIN_KEY`.",
-      "Groups that accept unmatched tags keep the request after affinity or cooldown filters."
+      "GPT-6.2 caches system prompts on `/v1/chat/completions` and `/v1/messages` when `store` is on or unset, not only with `store: false`.",
+      "`/key/info` stops a key with no user from reading other userless keys, and both lines move to a newer Wolfi base image."
     ]
   },
   {
     "folders": [
-      "v1.108.1"
+      "v1.108.13"
     ],
-    "title": "LiteLLM v1.108.1 (LTS) fixes Bedrock guardrail billing and router cooldowns",
+    "title": "LiteLLM v1.108.13 (LTS) fixes Unix-socket Postgres boot and GPT-6.2 caching",
     "points": [
-      "A string fallback target such as `default_fallbacks: gpt-3.5` stops the proxy at startup, so write it as a list, `default_fallbacks: [\"gpt-3.5\"]`.",
-      "Spend and budgets include native Bedrock guardrail traces and the Gemini audio rates for flex, priority and batch.",
-      "The router keeps the only deployment of a group warm under `allowed_fails`, and evicted SDK clients close their aiohttp sessions."
+      "Proxies on a Unix-socket Postgres such as Cloud SQL boot again, since the migration lock keeps the socket path from `?host=`.",
+      "GPT-6.2 caches system prompts on stored requests, and Claude Code's rotating billing header no longer breaks prompt caching on non-Anthropic models.",
+      "`/key/info` stops a key with no user from reading other userless keys, and JWT key mappings without `jwt_issuer` apply right away."
     ]
   },
   {
     "folders": [
-      "v1.106.7"
+      "v1.108.12"
     ],
-    "title": "LiteLLM v1.106.7 supports custom video providers on /v1/videos",
+    "title": "LiteLLM v1.108.12 (LTS) fixes GPT-6.2 caching and Foundry model routers",
     "points": [
-      "`/v1/videos` serves providers that `custom_provider_map` registers.",
-      "The proxy and its Helm charts no longer package the Lens beta, so remove `lensWorker.enabled` from your Helm values before you upgrade."
+      "GPT-6.2 caches system prompts on `/v1/chat/completions` and `/v1/messages` requests that set `store: false`, so repeated prompts cost less.",
+      "`azure_ai/model_router` entries on a Foundry `/openai/v1` base work on `/v1/responses` and `/v1/responses/compact` and record the routed model's cost.",
+      "The `tool_policy` guardrail applies to tool names longer than 64 characters on `/v1/messages`, and Vertex batch files with one `json_schema` row answer every row."
     ]
   },
   {
     "folders": [
-      "v1.108.0"
+      "v1.106.11",
+      "v1.111.0rc2",
+      "v1.110.1"
     ],
-    "title": "LiteLLM v1.108.0 (LTS) adds Gemini 4 Argon, Microsoft 365 Copilot and OpenAI Live",
+    "title": "LiteLLM v1.110.1, v1.111.0rc2 and v1.106.11 fix GPT-6.2 prompt caching",
     "points": [
-      "LiteLLM adds Gemini 4 Argon, the Microsoft 365 Copilot provider, OpenAI Live sessions on `/v1/live/sessions` and Azure PTU capacity that teams share.",
-      "The proxy count routes return the provider's error instead of a local estimate, and `token_count_framing` in `model_info` restores a local estimate."
+      "GPT-6.2 caches system prompts on `/v1/chat/completions` and `/v1/messages` requests that set `store: false`, so repeated prompts cost less.",
+      "Stored requests and `previous_response_id` follow-ups keep the system prompt in `instructions`, so follow-up turns do not send the prompt twice.",
+      "On v1.110.1 the UI image runs on slim nginx without `curl`, so change exec probes on that image to `wget`."
     ]
   },
   {
     "folders": [
-      "v1.106.6",
-      "v1.105.7"
+      "v1.109.2"
     ],
-    "title": "LiteLLM v1.106.6 and v1.105.7 fix the gzip performance regression",
+    "title": "LiteLLM v1.109.2 adds Gemini batches and fixes OOM on 429 retries",
     "points": [
-      "The proxy gzips only dashboard analytics responses and compresses them on a worker thread, so `Accept-Encoding: gzip` no longer slows down other requests.",
-      "Inference and other endpoints outside the dashboard analytics routes return uncompressed responses, and no setting restores the old gzip behavior."
+      "Gemini batches run on `/v1/batches`, with output download through `/v1/files` and spend tracking.",
+      "The proxy refuses blocked and over-limit keys before it reads the request body, and SSO login works again behind TLS termination.",
+      "The UI image runs on slim nginx without `curl`, so change exec probes on that image to `wget`."
     ]
   },
   {
     "folders": [
-      "v1.106.5",
-      "v1.105.6",
-      "v1.104.8",
-      "v1.103.10"
+      "v1.110.0"
     ],
-    "title": "LiteLLM v1.106.5, v1.105.6, v1.104.8 and v1.103.10 trim failure logs for rejected requests",
+    "title": "LiteLLM v1.110.0 adds the Agent Skills Hub and a Rust-only router",
     "points": [
-      "Failure logs for rejected requests keep only core request fields, `tags` and guardrail details.",
-      "The GCS logger uses the bucket and credentials configured on the proxy."
+      "The router always runs on the Rust core, and a router config that the Rust core declines now stops the proxy at startup.",
+      "Spend goes through the `LiteLLM_SpendLogDelivery` ledger by default, and `general_settings.use_spend_logs_ledger: false` restores the previous spend queues.",
+      "The Agent Skills Hub adds skill upload and import, version history and an admin review queue for member submissions.",
+      "Model and pass-through routes refuse Azure login fields such as `client_id` and `tenant_id` in the request body, so move them into `metadata`."
     ]
   },
   {
     "folders": [
-      "v1.106.4",
-      "v1.105.5",
-      "v1.104.7",
-      "v1.103.9"
+      "v1.111.0rc1"
     ],
-    "title": "LiteLLM v1.106.4, v1.105.5, v1.104.7 and v1.103.9 refresh image base layers",
+    "title": "LiteLLM v1.111.0rc1 adds Customer Management and performance alerts",
     "points": [
-      "Docker images move to newer base images, so image scans stop flagging brotli 1.2.0 and packages the images never install.",
-      "v1.106.4, v1.105.5 and v1.104.7 no longer sometimes exit on startup with an `ImportError` when the remote model cost map is unreachable."
+      "Customer Management adds customer organizations, teams and members, each with its own budgets, rate limits and daily usage in the dashboard.",
+      "Performance alerts flag spend and traffic spikes, slower responses and higher error rates against the previous seven days, and are on by default.",
+      "Claude Fable 5.2 and Mythos 5.2, Gemini 4 Carbon and Hydrogen, and 1,020 new fal.ai and Replicate models join the model catalog.",
+      "The Docker image now runs as non-root, `helm/litellm` is the only chart, and `LITELLM_EMAIL_FALLBACK_LINKS_ANY_USER=true` restores the old SSO email matching."
     ]
   },
   {
     "folders": [
-      "v1.106.3",
-      "v1.105.4",
-      "v1.104.6",
-      "v1.103.8"
+      "v1.108.11"
     ],
-    "title": "LiteLLM v1.106.3, v1.105.4, v1.104.6 and v1.103.8 change the image-signing key",
+    "title": "LiteLLM v1.108.11 (LTS) fixes OOM on 429 retries and SSO behind TLS",
     "points": [
-      "Docker images and Helm charts are signed with the cosign key from commit `e82a3c6`, and the previous key no longer verifies them.",
-      "Every certificate bundle the SDK, proxy and images trust drops the eMudhra root CA.",
-      "v1.104.6 also fixes spend on failed and batch requests, token counts and tool calls on gpt-5.4+ models."
+      "The proxy refuses blocked and over-limit keys before it reads the request body, so clients that retry 429s with large bodies no longer exhaust memory.",
+      "SSO login no longer goes through `/sso/key/generate/` or redirects to `http://` behind TLS termination.",
+      "Team admins get a 403 when they set `os.environ/` values on team models, so a proxy admin sets those values."
     ]
   },
   {
     "folders": [
-      "v1.106.2",
-      "v1.105.3",
-      "v1.103.7"
+      "v1.108.10"
     ],
-    "title": "LiteLLM v1.106.2, v1.105.3 and v1.103.7 fix spend on failed requests and batch cost",
+    "title": "LiteLLM v1.108.10 (LTS) fixes Vertex Claude 4096-token cap and EU o3 spend",
     "points": [
-      "Requests that time out after reaching the provider, client cancellations and each billed retry attempt are priced on their prompt instead of logging $0.",
-      "Completed batches keep their spend through malformed results and temporary accounting failures, and Bedrock inference profiles are priced.",
-      "Azure `gpt-6-astra` with `reasoning_effort: none` and `gpt-5.3-codex` with `minimal` now return 400 unless `drop_params` is on.",
-      "v1.105.3 also lists per-user auth MCP tools in the catalog again."
+      "Versioned Claude models on Vertex AI, such as `claude-*@<version>`, no longer stop at 4096 tokens when the request has no `max_tokens`.",
+      "Deployments with `base_model` set to `azure/eu/o3`, `o4-mini`, `o1` or `o3-mini` record real spend instead of $0.",
+      "Async Codestral chat with a `file` part no longer returns 400."
     ]
   },
   {
     "folders": [
-      "v1.104.5"
+      "v1.108.9"
     ],
-    "title": "LiteLLM v1.104.5 counts Claude tokens on Bedrock Mantle when Bedrock Runtime cannot",
+    "title": "LiteLLM v1.108.9 (LTS) adds Vertex labels and fixes Foundry /openai/v1",
     "points": [
-      "Token counts for newer Claude models on Bedrock come from the Bedrock Mantle endpoint instead of a local estimate that undercounts."
+      "`vertex_request_label_fields` labels Vertex calls with the caller's key, team, org and project.",
+      "Foundry project `/openai/v1` bases no longer return 400, and resource-level `/openai/v1` Responses bases no longer return 404.",
+      "`s3://` image, PDF and video URLs on Bedrock Converse models go to Bedrock as S3 sources instead of returning 500."
     ]
   },
   {
     "folders": [
-      "v1.104.4"
+      "v1.106.10"
     ],
-    "title": "LiteLLM v1.104.4 fixes count_tokens, team batch access and guardrail settings",
+    "title": "LiteLLM v1.106.10 fixes repeated sign-in on Google MCP servers",
     "points": [
-      "Anthropic-format count requests for OpenAI and Gemini models are converted the same way `/v1/messages` inference converts them.",
-      "Team keys can read and cancel their own team's batches and download the finished results.",
-      "The Add Guardrail wizard in the Admin UI lists its providers again."
+      "Google MCP servers no longer ask users to sign in again when the access token expires."
     ]
   },
   {
     "folders": [
-      "v1.106.1"
+      "v1.108.8"
     ],
-    "title": "LiteLLM v1.106.1 fixes count_tokens, MCP tool calls and thinking blocks",
+    "title": "LiteLLM v1.108.8 (LTS) fixes Azure Decisions calls and an MCP sign-in loop",
     "points": [
-      "Bare MCP tool names on a single-server scope now go to that server, so a cold replica no longer returns `Tool not found`.",
-      "Vector stores created through the proxy send only the caller's `metadata` to the provider, so later metadata updates no longer fail with 400.",
-      "Token count responses carry `litellm_count_source`, and Anthropic-format count requests for OpenAI and Gemini models match how `/v1/messages` converts them."
+      "`azure/` deployments no longer return 400 on `/v1/decisions`.",
+      "MCP sign-in no longer loops to `Authentication incomplete` on servers that answer `mcp_all` with detailed scopes."
     ]
   },
   {
     "folders": [
-      "v1.105.2"
+      "v1.108.7"
     ],
-    "title": "LiteLLM v1.105.2 fixes count_tokens, bridged tool calls and thinking blocks",
+    "title": "LiteLLM v1.108.7 (LTS) adds Gemini batches and Bedrock image search",
     "points": [
-      "Chat completions bridged to `/responses` return text and tool calls in one `choices[0]`, so agents that read only `choices[0]` run the tool.",
-      "Signed thinking blocks with empty text stay on `/v1/messages` and chat completion requests, so replayed turns keep their reasoning.",
-      "The `v1.104.4` token count fixes are included, and count responses carry `litellm_count_source`."
+      "`/v1/batches` runs Gemini batches with output download through `/v1/files`, and Bedrock knowledge bases accept image search with `query_image`.",
+      "Azure AI Foundry deployments support gpt-image edits, and Gemini image calls bill text, thinking and Vertex Priority tokens at the correct rates.",
+      "Responses-only fields such as `max_tool_calls` return 400 on providers bridged through chat completions unless you set `drop_params: true`."
     ]
   },
   {
     "folders": [
-      "v1.103.6"
+      "v1.109.1"
     ],
-    "title": "LiteLLM v1.103.6 fixes realtime handshake errors and double spend logs",
+    "title": "LiteLLM v1.109.1 and v1.110.0rc2 refuse Azure login fields in the body",
     "points": [
-      "A refused upstream realtime handshake now sends the client an `error` event and closes with 1008, 1013 or 1011.",
-      "Non-streaming requests of 256 KiB or more on the chat to Responses bridge now log spend once instead of twice.",
-      "This patch has no new database migrations."
+      "Model and pass-through routes refuse `client_id`, `client_secret`, `tenant_id` and Azure login fields in the request body.",
+      "Move `tenant_id`, `client_id`, `client_secret`, `azure_username`, `azure_password` and `azure_scope` request tags into `metadata` before you upgrade."
     ]
   },
   {
     "folders": [
-      "v1.106.0"
+      "v1.108.6"
     ],
-    "title": "LiteLLM v1.106.0 adds Claude Haiku 5.5, a Rust Lens service and MCP rate limits",
+    "title": "LiteLLM v1.108.6 (LTS) fixes negative spend and Gemini image edit cost",
     "points": [
-      "Claude Haiku 5.5 works on day one across Anthropic, Bedrock, Bedrock Mantle, Vertex AI, Azure AI and Perplexity.",
-      "Lens runs as a standalone Rust service, and agents upload traces to it directly with dedicated keys.",
-      "MCP Gateway rate limits now cover every MCP operation, and a new server-level `rpm` caps all callers of one server.",
-      "The caller's LiteLLM key is never forwarded to MCP servers, so each upstream server needs its own static header or OAuth credential."
+      "Key, user and team spend no longer goes negative after a scheduled budget reset on multi-pod deployments.",
+      "Gemini image edits bill by tokens instead of a flat per-image price, and Zscaler AI Guard scans only the latest user message.",
+      "Model and pass-through routes refuse Azure login fields in the request body, so move those request tags into `metadata`."
     ]
   },
   {
     "folders": [
-      "v1.103.5"
+      "v1.106.9"
     ],
-    "title": "LiteLLM v1.103.5 fixes tool calls in chat completions on GPT-5.4 and newer",
+    "title": "LiteLLM v1.106.9 forwards ChatGPT logins and refuses Azure body fields",
     "points": [
-      "Tool calls no longer appear on a separate `choices[1]`, so agents that read only `choices[0]` run them.",
-      "Each tool call in one non-streaming reply now gets its own `index` value instead of 0.",
-      "The fix applies to `/chat/completions` calls with tools on GPT-5.4 and newer and on `responses/` deployments."
+      "Codex and Pi forward their own ChatGPT login through the gateway with a separate key.",
+      "Model and pass-through routes refuse Azure login fields in the request body, so move those request tags into `metadata`."
     ]
   },
   {
     "folders": [
-      "v1.105.1"
+      "v1.107.0rc4"
     ],
-    "title": "LiteLLM v1.105.1 fixes SpendLogs rows and daily model usage writes",
+    "title": "LiteLLM v1.107.0rc4 adds a CLI command to link GitHub Copilot accounts",
     "points": [
-      "The model leaderboard rollup now writes `LiteLLM_DailyModelUsage` in batches, so heavy traffic to one model no longer drops SpendLogs rows.",
-      "Non-streaming requests of 256 KiB or more on the chat to Responses bridge now log spend once instead of twice.",
-      "This patch has no new database migrations and no breaking changes."
+      "`lite credentials connect` links a per-user GitHub Copilot credential from the terminal, so developers without Admin UI access can use Copilot.",
+      "The Docker images ship newer `aiohttp`, `ddtrace`, `pypdf` and other locked dependencies."
     ]
   },
   {
     "folders": [
-      "v1.104.3"
+      "v1.107.0rc3"
     ],
-    "title": "LiteLLM v1.104.3 adds hosted vLLM and Microsoft-Decision-1 to Decisions",
+    "title": "LiteLLM v1.107.0rc3 fixes GitHub Copilot per-user connect and adds GHE.com",
     "points": [
-      "Decisions requests that send `safety_identifier` to a provider other than OpenAI now return 400, so set `drop_params` to `true` to keep the old behavior.",
-      "The `litellm.systemone()` SDK function takes the System One format, and `litellm.decisions()` takes the OpenAI format.",
-      "The `azure_ai/` prefix serves Microsoft-Decision-1, and `hosted_vllm/` is a new Decisions provider that requires `api_base`."
+      "GitHub Copilot per-user credentials work on GHE.com tenants with the optional `github_copilot_host` field.",
+      "Per-user Copilot connect no longer fails with `no Copilot access found` when `GITHUB_COPILOT_CLIENT_ID` is set."
     ]
   }
 ]

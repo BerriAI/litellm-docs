@@ -18,9 +18,9 @@ export const COMPONENTS = [
     id: 'deploy',
     text: 'Deployment',
     work: [
-      {id: 'image', text: 'Gateway binary in the Docker image', size: 2},
-      {id: 'forward', text: 'Forward unserved requests to Python', size: 1},
-      {id: 'dispatch', text: 'Dispatch crate and gap table', size: 3},
+      {id: 'image', text: 'Gateway binary in the Docker image', size: 2, done: 'v1.110.0-rc.1'},
+      {id: 'forward', text: 'Forward unserved requests to Python', size: 1, done: 'v1.110.0-rc.1'},
+      {id: 'dispatch', text: 'Dispatch crate and gap table', size: 3, partial: 'v1.109.0-rc.1'},
       {id: 'plans', text: 'Per model group plans at config load', size: 2},
       {id: 'layers', text: 'Identify, dispatch and admit layers', size: 2},
     ],
@@ -45,12 +45,12 @@ export const COMPONENTS = [
     id: 'messages',
     text: 'Messages translation',
     work: [
-      {id: 'anthropic', size: 2, partial: 'v1.104.0-rc.1'},
+      {id: 'anthropic', size: 2, partial: 'v1.104.0-rc.1', done: 'v1.111.0-rc.1'},
       {id: 'deepseek', size: 0.5, partial: 'v1.107.0-rc.1'},
       {id: 'vertex_ai', size: 0.5, partial: 'v1.107.0-rc.1'},
-      {id: 'bedrock', size: 0.5, partial: 'v1.104.0-rc.1'},
+      {id: 'bedrock', size: 0.5, partial: 'v1.104.0-rc.1', done: 'v1.111.0-rc.1'},
       {id: 'bedrock_mantle', size: 0.5, partial: 'v1.107.0-rc.1'},
-      {id: 'azure_ai', size: 0.5, partial: 'v1.94.0-rc.1'},
+      {id: 'azure_ai', size: 0.5, partial: 'v1.94.0-rc.1', done: 'v1.111.0-rc.1'},
       {id: 'minimax', size: 0.5, partial: 'v1.107.0-rc.1'},
       {id: 'github_copilot', size: 0.5},
       {id: 'tencent', size: 0.5, partial: 'v1.107.0-rc.1'},
@@ -140,20 +140,20 @@ export const COMPONENTS = [
     id: 'features',
     text: 'Python-only request features',
     work: [
-      {id: 'mock', text: 'Mock responses', size: 0.5},
-      {id: 'mcp-tools', text: 'Proxy MCP tools', size: 3},
-      {id: 'caller-client', text: 'Caller HTTP clients', size: 0.5},
+      {id: 'mock', text: 'Mock responses', size: 0.5, partial: 'v1.111.0-rc.1'},
+      {id: 'mcp-tools', text: 'Proxy MCP tools', size: 3, partial: 'v1.111.0-rc.1'},
+      {id: 'caller-client', text: 'Caller HTTP clients', size: 0.5, partial: 'v1.111.0-rc.1'},
       {id: 'timeouts', text: 'Request, stream and phase timeouts', size: 1},
-      {id: 'agentic-loop', text: 'Agentic loop hooks', size: 2},
-      {id: 'tls', text: 'TLS security level and curves', size: 1},
-      {id: 'modify-params', text: 'modify_params rewrites', size: 1},
-      {id: 'cache-control-injection', text: 'Prompt cache breakpoint injection', size: 1},
-      {id: 'workload-identity', text: 'Anthropic workload identity tokens', size: 1},
-      {id: 'thinking-retry', text: 'Thinking signature retry', size: 1},
-      {id: 'stream-cost', text: 'Cost in streamed usage', size: 0.5},
-      {id: 'websearch', text: 'Web search interception', size: 2},
-      {id: 'interceptors', text: 'Messages interceptors', size: 2},
-      {id: 'safeguards', text: 'Safeguards classifier', size: 2},
+      {id: 'agentic-loop', text: 'Agentic loop hooks', size: 2, partial: 'v1.111.0-rc.1'},
+      {id: 'tls', text: 'TLS security level and curves', size: 1, partial: 'v1.111.0-rc.1'},
+      {id: 'modify-params', text: 'modify_params rewrites', size: 1, partial: 'v1.111.0-rc.1'},
+      {id: 'cache-control-injection', text: 'Prompt cache breakpoint injection', size: 1, partial: 'v1.111.0-rc.1'},
+      {id: 'workload-identity', text: 'Anthropic workload identity tokens', size: 1, partial: 'v1.111.0-rc.1'},
+      {id: 'thinking-retry', text: 'Thinking signature retry', size: 1, partial: 'v1.111.0-rc.1'},
+      {id: 'stream-cost', text: 'Cost in streamed usage', size: 0.5, partial: 'v1.111.0-rc.1'},
+      {id: 'websearch', text: 'Web search interception', size: 2, partial: 'v1.111.0-rc.1'},
+      {id: 'interceptors', text: 'Messages interceptors', size: 2, partial: 'v1.111.0-rc.1'},
+      {id: 'safeguards', text: 'Safeguards classifier', size: 2, partial: 'v1.111.0-rc.1'},
       {id: 'drop-params', text: 'drop_params', size: 1, partial: 'v1.104.0-rc.1'},
       {id: 'extra-body', text: 'Extra body fields', size: 0.5},
       {id: 'prompt-management', text: 'Prompt management', size: 2},
@@ -163,7 +163,7 @@ export const COMPONENTS = [
       {id: 'alias-map', text: 'model_alias_map', size: 0.5},
       {id: 'text-format', text: 'text_format parsing', size: 1},
       {id: 'chat-bridge', text: 'Responses through Chat completions', size: 2},
-      {id: 'response-ids', text: 'Deployment and encoded item ids', size: 2},
+      {id: 'response-ids', text: 'Deployment and encoded item ids', size: 2, partial: 'v1.109.0-rc.1'},
       {id: 'input-rewrite', text: 'Responses input rewrites', size: 1},
       {id: 'provider-affinity', text: 'Provider affinity header', size: 1},
       {id: 'managed-ids', text: 'Managed file and vector store ids', size: 2},
@@ -177,10 +177,10 @@ export const COMPONENTS = [
     id: 'db',
     text: 'DB access',
     work: [
-      {id: 'registry', text: 'Query registry and Python codegen', size: 3},
+      {id: 'registry', text: 'Query registry and Python codegen', size: 3, partial: 'v1.109.0-rc.1'},
       {id: 'executor', text: 'Python runtime and PrismaExecutor', size: 2},
       {id: 'ci', text: 'Schema and codegen checks in CI', size: 1},
-      {id: 'gateway-queries', text: 'Key, end user and spend queries', size: 2},
+      {id: 'gateway-queries', text: 'Key, end user and spend queries', size: 2, partial: 'v1.109.0-rc.1'},
     ],
   },
   {
@@ -213,8 +213,8 @@ export const COMPONENTS = [
     id: 'budgets',
     text: 'Budgets and rate limits',
     work: [
-      {id: 'scripts', text: 'Shared rate limit scripts and key naming', size: 3},
-      {id: 'budgets', text: 'Budget checks', size: 2},
+      {id: 'scripts', text: 'Shared rate limit scripts and key naming', size: 3, partial: 'v1.110.0-rc.1'},
+      {id: 'budgets', text: 'Budget checks', size: 2, partial: 'v1.111.0-rc.1'},
     ],
   },
   {
@@ -222,16 +222,16 @@ export const COMPONENTS = [
     text: 'Spend tracking',
     work: [
       {id: 'cost', text: 'Cost calculation', size: 1, done: 'v1.104.0-rc.1'},
-      {id: 'buffer', text: 'Spend writes through the shared Redis buffer', size: 2},
+      {id: 'buffer', text: 'Spend writes through the shared Redis buffer', size: 2, partial: 'v1.110.0-rc.1'},
     ],
   },
   {
     id: 'router',
     text: 'Router',
     work: [
-      {id: 'strategies', text: 'Shared routing strategy crate', size: 3},
-      {id: 'health', text: 'Cooldown and health state', size: 2},
-      {id: 'fallbacks', text: 'Retries and fallbacks', size: 2},
+      {id: 'strategies', text: 'Shared routing strategy crate', size: 3, done: 'v1.110.0-rc.1'},
+      {id: 'health', text: 'Cooldown and health state', size: 2, done: 'v1.110.0-rc.1'},
+      {id: 'fallbacks', text: 'Retries and fallbacks', size: 2, done: 'v1.110.0-rc.1'},
       {id: 'db-models', text: 'Models stored in DB', size: 1},
     ],
   },
@@ -240,9 +240,9 @@ export const COMPONENTS = [
     text: 'Logging and callbacks',
     work: [
       {id: 'logging', text: 'Logging callbacks', size: 1, partial: 'v1.104.0-rc.1'},
-      {id: 'payload', text: 'Shared logging payload', size: 4},
+      {id: 'payload', text: 'Shared logging payload', size: 4, partial: 'v1.111.0-rc.1'},
       {id: 'prometheus', text: 'Prometheus', size: 2},
-      {id: 'exporters', text: 'S3 and other exporters', size: 1},
+      {id: 'exporters', text: 'S3 and other exporters', size: 1, partial: 'v1.111.0-rc.1'},
       {id: 'hooks', text: 'Hook pipeline contract', size: 3, partial: 'v1.105.0-rc.1'},
       {id: 'custom-callbacks', text: 'Custom Python callbacks forwarded to Python', size: 1},
     ],
@@ -332,46 +332,14 @@ export const GOALS: readonly GoalDeclaration[] = [
 // or revise the plan.
 export const PLANS: readonly PlanDeclaration[] = [
   {
-    // Dates and scope from the Rust Migration Depth First Plan's calibration
-    // table. The mapping to catalog items and their percentages is approximate.
+    // Dates and scope from the Rust Migration Depth First Plan's timeline. The
+    // mapping to catalog items and their percentages is approximate.
     // Source: https://app.notion.com/p/40343b8acdab80faaa76fce7ab5922b4
-    id: 'redis-and-foundations',
-    date: '2026-11-01',
-    label: 'Redis + DB',
-    description: 'Model catalog and Redis access, the database query pattern, and routing APIs and strategies. The Rust router core remains in progress.',
-    done: {core: '*'},
-    partial: {db: ['registry', 'executor'], router: ['strategies']},
-  },
-  {
-    id: 'messages-router-cutover',
-    date: '2026-11-08',
-    label: 'Router + deploy',
-    description: 'Messages testing and cutover, Rust server deployment and CLI support, and the Rust router core and cutover.',
-    done: {
-      deploy: '*',
-      messages: ['anthropic', 'bedrock', 'vertex_ai'],
-      router: '*',
-    },
-  },
-  {
-    id: 'config-db-cache',
-    date: '2026-11-14',
-    label: 'Config + cache',
-    description: 'Config loading, database access for the common Messages path, and caching. Callback migration and testing continue.',
-    done: {db: '*', config: '*', cache: ['backends', 'wiring', 'gaps', 'accounting']},
-    partial: {logging: ['payload', 'exporters']},
-  },
-  {
-    id: 'auth-spend-callbacks',
+    id: 'db-spend-logs',
     date: '2026-11-21',
-    label: 'Auth + spend',
-    description: 'Auth and spend logs complete the proxy path, with logging and callbacks ready for the common configuration.',
-    done: {
-      auth: ['key-lookup', 'invalidation', 'authorization'],
-      budgets: '*',
-      spend: '*',
-      logging: ['logging', 'payload', 'hooks', 'custom-callbacks'],
-    },
+    label: 'DB + spend logs',
+    description: 'Database access finishes and spend logs are written from Rust. More Messages providers and cost tracking continue.',
+    done: {db: '*', spend: '*'},
   },
   {
     // Keep the public target after the internal work dates. Do not assign
@@ -380,7 +348,8 @@ export const PLANS: readonly PlanDeclaration[] = [
     date: '2026-12-01',
     route: 'messages',
     label: ['e2e', 'simple'],
-    description: 'Common Messages requests end to end in Rust. The projected percentage is a rough estimate of the broader migration, based on the shared infrastructure needed for this path.',
+    description: 'Common Messages requests end to end in Rust, with config loading and key and JWT auth in the gateway. The projected percentage is a rough estimate of the broader migration, based on the shared infrastructure needed for this path.',
+    done: {config: '*', auth: ['key-lookup', 'authorization', 'jwt']},
   },
 ];
 

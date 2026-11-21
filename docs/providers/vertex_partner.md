@@ -1,3 +1,9 @@
+---
+title: "Vertex AI Partner Models: Claude, DeepSeek, Llama"
+sidebar_label: "Vertex AI - Anthropic, DeepSeek, Model Garden, xAI"
+description: "Call Claude, DeepSeek, Llama, Mistral, Qwen and Grok on Gemini Enterprise Agent Platform (formerly Vertex AI) via LiteLLM with config.yaml setup."
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

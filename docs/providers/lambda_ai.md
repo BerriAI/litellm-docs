@@ -1,3 +1,9 @@
+---
+title: "Lambda AI API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Lambda AI"
+description: "Run Llama 3.1 and 4, DeepSeek R1, Hermes 3 and Qwen Coder on Lambda AI with streaming, Llama 3.2 vision input and function calling via LiteLLM."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
@@ -132,6 +132,26 @@ function CardImage({item, title}) {
   const resolvedLight = useBaseUrl(typeof lightImage === 'string' ? lightImage : '');
   const src = typeof image === 'string' && /^(https?:)?\/\//.test(image) ? image : image ? resolved : null;
   const lightSrc = typeof lightImage === 'string' && /^(https?:)?\/\//.test(lightImage) ? lightImage : lightImage ? resolvedLight : null;
+  // Opt-in looping card video (frontmatter `card_video`), with the still image as poster.
+  // Readers who prefer reduced motion keep the still image.
+  const video = item.content?.metadata?.frontMatter?.card_video;
+  const resolvedVideo = useBaseUrl(typeof video === 'string' ? video : '');
+  const [motionOk, setMotionOk] = useState(false);
+  useEffect(() => {
+    if (!video) return undefined;
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setMotionOk(!query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, [video]);
+  if (video && motionOk) {
+    return (
+      <div className={styles.cover}>
+        <video src={resolvedVideo} poster={src || undefined} autoPlay muted loop playsInline preload="metadata" aria-hidden="true" />
+      </div>
+    );
+  }
   return (
     <div className={styles.cover}>
       {src && lightSrc ? (

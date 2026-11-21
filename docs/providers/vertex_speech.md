@@ -1,3 +1,9 @@
+---
+title: "Vertex AI Text to Speech with LiteLLM"
+sidebar_label: "Vertex AI Text to Speech"
+description: "Run text to speech with Chirp3 HD voices and Gemini TTS on Gemini Enterprise Agent Platform (formerly Vertex AI) via LiteLLM's Python SDK or AI Gateway."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

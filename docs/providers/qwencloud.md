@@ -1,3 +1,9 @@
+---
+title: "QwenCloud API (Qwen) with LiteLLM: Setup"
+sidebar_label: "QwenCloud and Qianwen AI Platform (Qwen models)"
+description: "Call Qwen models on QwenCloud or Qianwen AI Platform via LiteLLM from the Python SDK or AI Gateway: chat, streaming, embeddings, rerank and image output."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -52,7 +52,13 @@ The `description` frontmatter is the snippet under that title in search and answ
 
 Add an entry at the top of `release_notes/summaries.json`, which feeds the changelog at `/release_notes` and its RSS feed, and remove the oldest entry so the file keeps the latest 20. An entry is `{"folders": [...], "title": ..., "points": [...]}`: same-day backports share one entry with all their folders, `title` matches the frontmatter title, and `points` holds 2 to 4 sentences (2 or 3 for a patch). Each point is one sentence of at most 25 words that says what changed and what it means for someone upgrading, with model names, endpoints, settings and numbers in backticks where they are code. Never write a bare label such as "New models on day one". When the release has a breaking change, one point states it and the setting that restores the old behavior. Use only facts from the note.
 
+The `date` frontmatter is the release date. Each release note page shows it under the title as "Released", and the changelog, its RSS feed and the sidebar years read it too. Set it to the UTC time the version first shipped, which is the earlier of its PyPI upload and its GitHub release `published_at`, in the form `2026-11-11T00:53:12`. Never use the day you write the note.
+
 Write titles, descriptions and points in ASD-STE100 Simplified Technical English: active voice, simple present, no "-ing" verb forms except in technical names such as streaming, and no should, would, may or might. Check them with `python3 ~/.claude/skills/simplified-technical-english/scripts/ste_check.py --mode descriptive <file>` when that skill is installed, and fix every error it reports.
+
+## Launch posts: name the release
+
+A blog post that announces a feature must name the first LiteLLM release that ships it and link that release note in the form `Available in the [LiteLLM 1.110.x release](/release_notes/v1.110.0/v1-110-0). Upgrade to v1.110.0 or later to use these features.`, near the top of the post before the `{/* truncate */}` marker. Take the version from the release note that lists the feature's PRs, not from the date. If the feature has not shipped in a stable release yet, name the release candidate or say which upcoming release will include it.
 
 ## Blog and release note authors
 

@@ -1,3 +1,9 @@
+---
+title: "Replicate API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Replicate"
+description: "Call Llama 3, Llama 2 and Mistral on Replicate or your own Replicate deployments, set custom prompt templates, and pass seed, min_tokens and top_k."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

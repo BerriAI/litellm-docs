@@ -1,0 +1,14 @@
+gateway,component,kind,mb_per_open_stream
+LiteLLM Python,parsed request,copy of the request body,3.22
+LiteLLM Python,raw body,copy of the request body,2.85
+LiteLLM Python,json.dumps for logging,copy of the request body,2.45
+LiteLLM Python,outbound bytes,copy of the request body,2.43
+Bifrost,parsed request,copy of the request body,3.59
+Bifrost,re-encoded messages,copy of the request body,1.9
+Bifrost,trace text,copy of the request body,1.89
+Bifrost,trace summary,copy of the request body,1.88
+Bifrost,outbound (SetBody),copy of the request body,1.5
+Bifrost,inbound read,copy of the request body,0.4
+LiteLLM Rust,connection read buffers and per-call state,buffers and per-call state,0.47
+LiteLLM Rust + S3 logs,body kept for the S3 log,copy of the request body,2.45
+LiteLLM Rust + S3 logs,connection read buffers and per-call state,buffers and per-call state,0.47

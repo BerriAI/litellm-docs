@@ -3,7 +3,7 @@ const path = require('node:path');
 const cheerio = require('cheerio');
 const {createIndex, loadIndex} = require('../search/engine');
 const {serializeRuntimeIndex} = require('../search/runtime-index');
-const {contentType, contentPage, versionsIn, isContentUrl} = require('../search/content');
+const {contentType, contentPage, categoryFor, versionsIn, isContentUrl} = require('../search/content');
 const {extractStructure} = require('../search/page-structure');
 const {extractOpenAPI} = require('../search/openapi');
 
@@ -20,7 +20,9 @@ function extractSections(html, url, metadata = {}) {
   const title = metadata.title || article.find('h1').first().text().trim() || $('title').text().replace(/\s*\|.*$/, '').trim();
   const description = metadata.description || $('meta[name="description"]').attr('content') || '';
   const keywords = [metadata.keywords, $('meta[name="keywords"]').attr('content')].filter(Boolean).join(' ');
-  const breadcrumb = $('.breadcrumbs__item').map((_, item) => $(item).text().trim()).get().filter(Boolean).join(' / ');
+  const breadcrumbs = $('.breadcrumbs__item').map((_, item) => $(item).text().trim()).get().filter(Boolean);
+  const breadcrumb = breadcrumbs.join(' / ');
+  const category = metadata.category || (type === 'docs' ? categoryFor(url, breadcrumbs) : undefined);
   const sections = [];
   let heading = '', anchor = '', parts = [], links = new Map();
   function flush() {
@@ -30,7 +32,8 @@ function extractSections(html, url, metadata = {}) {
       for (let offset = 0; offset < text.length; offset += 2600) {
         const chunk = text.slice(offset, offset + 3000);
         sections.push({id: `${url}#${anchor}:${sections.length}`, title, heading, description, keywords, breadcrumb,
-          type, date: metadata.date || '', version: metadata.version || '', category: metadata.category,
+          type, date: metadata.date || '', version: metadata.version || '', category,
+          ...(metadata.sdk ? {sdk: true} : {}),
           url: anchor ? `${url}#${encodeURIComponent(anchor)}` : url,
           text: chunk, snippet: chunk.replace(/\s+/g, ' ').slice(0, 240),
           ...(links.size ? {links: [...links.values()]} : {})});
@@ -70,9 +73,27 @@ function extractSections(html, url, metadata = {}) {
   return sections;
 }
 
+function sdkDocIds(sidebars) {
+  const ids = new Set();
+  function visit(item) {
+    if (item.type === 'doc') ids.add(item.id);
+    if (item.type === 'category') {
+      if (item.link?.type === 'doc') ids.add(item.link.id);
+      item.items.forEach(visit);
+    }
+  }
+  for (const item of sidebars?.tutorialSidebar || []) {
+    if (item.type !== 'category') continue;
+    const {link} = item;
+    if ((link?.type === 'doc' && link.id === 'python_sdk') ||
+        (link?.type === 'generated-index' && link.slug === '/guides/core_request_response_patterns')) visit(item);
+  }
+  return ids;
+}
+
 function collectPages(allContent) {
   const pages = new Map();
-  const add = metadata => {
+  const add = (metadata, sdk = false) => {
     const route = metadata.permalink;
     if (!isContentUrl(route) || metadata.draft || metadata.unlisted || metadata.frontMatter?.draft || metadata.frontMatter?.unlisted) return;
     const type = contentType(route);
@@ -81,12 +102,16 @@ function collectPages(allContent) {
     if (type === 'release' && !version) return;
     const published = metadata.date || metadata.frontMatter?.date;
     pages.set(route, {type, title: metadata.title, description: metadata.description,
+      ...(type === 'docs' && sdk ? {sdk: true} : {}),
       date: published && Number.isFinite(Date.parse(published)) ? new Date(published).toISOString().slice(0, 10) : '',
       version: version || '', category: metadata.sidebar === 'integrationsSidebar' ? 'Integrations' : undefined,
       keywords: [metadata.frontMatter?.keywords, metadata.tags?.map(tag => tag.label)].flat(2).filter(Boolean).join(' ')});
   };
   for (const instance of Object.values(allContent['docusaurus-plugin-content-docs'] || {})) {
-    for (const version of instance.loadedVersions || []) for (const doc of version.docs || []) add(doc);
+    for (const version of instance.loadedVersions || []) {
+      const sdkIds = sdkDocIds(version.sidebars);
+      for (const doc of version.docs || []) add(doc, sdkIds.has(doc.id) || doc.id?.startsWith('completion/'));
+    }
   }
   for (const instance of Object.values(allContent['docusaurus-plugin-content-blog'] || {})) {
     for (const post of instance.blogPosts || []) add(post.metadata);

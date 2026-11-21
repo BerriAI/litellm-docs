@@ -1,8 +1,16 @@
 # Custom Model Cost Map
 
-LiteLLM prices every request from its model cost map, a JSON file mapping each model to per-token rates, context limits, and capabilities. By default the proxy fetches the latest map from GitHub at startup, so pricing for new models arrives without upgrading LiteLLM. When a price is wrong or missing for your deployment (a regional price variant, a negotiated rate, a brand-new tier the default map does not carry yet), you have two ways to correct it: override pricing on the specific deployment in your config, or replace the whole map with your own hosted copy.
+LiteLLM prices every request from its model cost map, a JSON file mapping each model to per-token rates, context limits, and capabilities. By default the proxy fetches the latest map from GitHub at startup, so pricing for new models arrives without upgrading LiteLLM. Air-gapped deployments cannot reach GitHub and need one of the setups in [Air-gapped and egress-restricted deployments](#air-gapped-and-egress-restricted-deployments). When a price is wrong or missing for your deployment (a regional price variant, a negotiated rate, a brand-new tier the default map does not carry yet), you have two ways to correct it: override pricing on the specific deployment in your config, or replace the whole map with your own hosted copy.
 
 Prefer the per-deployment override for a bounded correction. It changes only the deployments you name, survives every upstream map update, needs no file hosting, and has no fallback failure mode. Reach for a full custom map only when the correction spans so many models that per-deployment config stops being maintainable.
+
+## Air-gapped and egress-restricted deployments
+
+The map lives at [model_prices_and_context_window.json](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json) in the LiteLLM repo, and we update it routinely with new models and prices. The proxy downloads it from `raw.githubusercontent.com` at startup, on `POST /reload/model_cost_map`, and on the reload schedule if you set one (for example `POST /schedule/model_cost_map_reload?hours=6`, see [Sync models from GitHub](./sync_models_github)). In an air-gapped deployment that download fails, and LiteLLM falls back to the map bundled with the version you installed. That copy is frozen at release time, so models released after it are missing from the providers list and the model picker in the Admin UI, and requests to them price at $0.
+
+Customers usually handle this in one of three ways. The simplest is to allowlist `https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json` in your egress rules so the download succeeds, and then turn on a reload schedule so new models show up without a restart. If no outbound access is allowed, mirror the file from our repo into an internal repo or bucket on a schedule and point `LITELLM_MODEL_COST_MAP_URL` at the mirror, as described in [Option 2](#option-2-serve-your-own-cost-map). If you only care about a few models, subscribe to the RSS feed at [models.litellm.ai/changelog](https://models.litellm.ai/changelog) (the feed URL is `https://models.litellm.ai/changelog.xml`, and `?providers=` and `?models=` narrow it) and update your mirror or your [per-deployment pricing](#option-1-per-deployment-pricing-overrides-recommended) when a model you use is added or changes price.
+
+Whichever way you choose, check `GET /model/cost_map/source` after the first deploy. It reports `source: "local"` and a `fallback_reason` when the proxy is still running on the bundled copy. To skip the download entirely and use the bundled copy on purpose, set `LITELLM_LOCAL_MODEL_COST_MAP=True` or turn on [offline mode](./outbound_requests).
 
 ## Option 1: per-deployment pricing overrides (recommended)
 
@@ -45,9 +53,11 @@ Point the proxy at your own copy of the map with:
 export LITELLM_MODEL_COST_MAP_URL="https://your-host.example.com/model_prices.json"
 # or read it straight from a private S3 bucket
 export LITELLM_MODEL_COST_MAP_URL="s3://my-bucket/prices/model_prices.json"
+# or from a private Google Cloud Storage bucket
+export LITELLM_MODEL_COST_MAP_URL="gs://my-bucket/prices/model_prices.json"
 ```
 
-The map is fetched at startup with a 5 second timeout, so the variable must be set in the proxy's environment before it starts (a `.env` file, `docker run -e`, or the Kubernetes `env:` block); setting it under `environment_variables` in `config.yaml` is too late. The URL can be HTTP(S) or `s3://`; `file://` paths are not supported. To run fully offline instead, set `LITELLM_LOCAL_MODEL_COST_MAP=True`, which skips the fetch and uses the backup map bundled with the package (`litellm/model_prices_and_context_window_backup.json`), a file you can overwrite in your own image.
+The map is fetched at startup with a 5 second timeout, so the variable must be set in the proxy's environment before it starts (a `.env` file, `docker run -e`, or the Kubernetes `env:` block); setting it under `environment_variables` in `config.yaml` is too late. The URL can be HTTP(S), `s3://` or `gs://`; `file://` paths are not supported. To run fully offline instead, set `LITELLM_LOCAL_MODEL_COST_MAP=True`, which skips the fetch and uses the backup map bundled with the package (`litellm/model_prices_and_context_window_backup.json`), a file you can overwrite in your own image.
 
 ### Reading the map from S3
 
@@ -68,6 +78,16 @@ The identity needs `s3:GetObject` on the object:
 If the bucket is in another AWS account, the bucket's policy must also allow the proxy's role as a principal. If the object is encrypted with a customer managed KMS key, the role also needs `kms:Decrypt` on that key. S3 compatible endpoints such as MinIO are not supported.
 
 S3 errors are not retried. At startup a missing credential, `AccessDenied`, or `NoSuchKey` falls back to the bundled map with the error in `fallback_reason` (for example `Remote fetch failed: S3 NoCredentialsError fetching s3://my-bucket/prices/model_prices.json: Unable to locate credentials`), and a reload keeps the current map, so check `/model/cost_map/source` after the first deploy as described below.
+
+### Reading the map from Google Cloud Storage
+
+With a `gs://bucket/object` URL the proxy reads the object through the Cloud Storage JSON API at startup, on `POST /reload/model_cost_map`, and on the scheduled reload. This needs a LiteLLM version that includes [PR #51108](https://github.com/BerriAI/litellm/pull/51108).
+
+The proxy authenticates with Google application default credentials, looked up in the proxy's process in this order: the service account key file named by `GOOGLE_APPLICATION_CREDENTIALS`, the gcloud application default credentials file, then the metadata server of the GKE pod or GCE instance (GKE Workload Identity, or the instance's attached service account). Like the S3 path, it does not read Vertex or GCS logging credentials from `config.yaml`, and it does not read `GCS_PATH_SERVICE_ACCOUNT`. The identity needs `storage.objects.get` on the object, for example the Storage Object Viewer role (`roles/storage.objectViewer`) granted on the bucket.
+
+HTTP 429 and 5xx responses are retried, and so is a failure to get an access token, because a new GKE pod's metadata server can refuse requests for its first few seconds. At startup the proxy serves the bundled map while that retry runs in the background, then installs the bucket's map. A 401, 403 or 404 is not retried; startup falls back to the bundled map with the status in `fallback_reason` (for example `Remote fetch failed: HTTP 403 from gs://my-bucket/prices/model_prices.json`), and a reload keeps the current map.
+
+When `STORAGE_EMULATOR_HOST` is set, the fetch goes to that emulator instead of `storage.googleapis.com` and sends no credentials, the same as Google's own storage clients. A value without a scheme, such as `localhost:4443`, is read as `http://localhost:4443`. The object name ends at the first `?` or `#`, so object names containing either character, and gsutil's `#generation` suffix, are not supported.
 
 ### Start from the full upstream file
 

@@ -1,8 +1,10 @@
 ---
-title: Events
+title: Streaming events from litellm.agent()
+sidebar_label: Events
+description: Read the normalized events litellm.agent() streams for output, tool calls, approvals, and turn completion.
 ---
 
-# Events
+# Streaming events from `litellm.agent()`
 
 `litellm.agent(..., stream=True)` yields eight kinds of event. Each adapter translates its runtime's native events into these.
 
@@ -52,16 +54,16 @@ That `match` has no `case _`. `Event` is a closed union, so mypy and pyright bot
 
 Built-in tools that do the same thing get the same `name` on every harness, so UI code doesn't need a branch per runtime. `native_name` always has the runtime's original name.
 
-| `name` | Claude Code | Codex | OpenCode | Deep Agents | Tool Loop |
-|---|---|---|---|---|---|
-| `read` | `Read` | | `read` | `read_file` | |
-| `write` | `Write` | | `write` | `write_file` | |
-| `edit` | `Edit` | | `edit` | `edit_file` | |
-| `bash` | `Bash` | command execution | `bash` | `execute` | |
-| `glob` | `Glob` | | `glob` | `glob` | |
-| `grep` | `Grep` | | `grep` | `grep` | |
-| `ls` | `LS` | | `list` | `ls` | |
-| `web_search` | `WebSearch` | web search | `webfetch` | | |
+| `name` | Claude Code | Codex | OpenCode | Pi | Deep Agents | Tool Loop |
+|---|---|---|---| --- |---|---|
+| `read` | `Read` | | `read` | `read` | `read_file` | |
+| `write` | `Write` | | `write` | `write` | `write_file` | |
+| `edit` | `Edit` | | `edit` | `edit` | `edit_file` | |
+| `bash` | `Bash` | command execution | `bash` | `bash`, `powershell` | `execute` | |
+| `glob` | `Glob` | | `glob` | `find` | `glob` | |
+| `grep` | `Grep` | | `grep` | `grep` | `grep` | |
+| `ls` | `LS` | | `list` | `ls` | `ls` | |
+| `web_search` | `WebSearch` | web search | `webfetch` |  | | |
 
 Tools that aren't in this table keep their native name in `name`.
 
