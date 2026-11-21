@@ -224,6 +224,24 @@ curl -sS -X POST http://localhost:4000/mcp-rest/tools/call \
 
 Expect a tool result containing the repository's wiki structure. Omitting `server_id` returns `400 missing_parameter`, even if the tool name is prefixed. Use `{}` for tools without arguments; do not pass `null`
 
+## MCP catalog authorization cache
+
+By default, LiteLLM reads authorization records from the database when it lists MCP tools, resources, or prompts. To opt in to reusing the existing authorization cache, set this general setting to `true`:
+
+```yaml title="config.yaml: enable cached catalog authorization"
+general_settings:
+  mcp_catalog_permission_cache_enabled: true
+```
+
+Omit the setting to keep the default behavior. Set it to `false` to disable cached authorization explicitly:
+
+```yaml title="config.yaml: disable cached catalog authorization"
+general_settings:
+  mcp_catalog_permission_cache_enabled: false
+```
+
+The setting reuses cached authorization records; it does not cache responses from upstream MCP servers. A grant change can remain visible until the applicable cache entry expires or is invalidated. Set `general_settings.user_api_key_cache_ttl` in seconds to tune the management-object cache defaults. Shared Redis entries can have separate TTLs or invalidation rules, so verify those settings too. There is no catalog-specific TTL or single revocation bound. Callers that require fresh policy continue to read it from the database.
+
 ## Related docs
 
 - [MCP Overview](./mcp): adding servers via UI or config.yaml, full field reference
