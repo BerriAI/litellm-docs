@@ -82,7 +82,7 @@ curl https://your-proxy.example.com/team/update \
   -d '{"team_id":"customer-app","metadata":{"required_customer_headers":["X-Tenant-ID"]}}'
 ```
 
-This requirement applies to the team's virtual keys and JWT requests that map to the team through `team_id_jwt_field`. The same metadata works when you create the team with `/team/new`.
+This requirement applies to the team's virtual keys, JWT requests that map to the team through `team_id_jwt_field`, and OAuth2 or trusted OAuth2-proxy requests that resolve to the team. The same metadata works when you create the team with `/team/new`.
 
 Require the user header for one virtual key with `/key/update`:
 
@@ -92,6 +92,8 @@ curl https://your-proxy.example.com/key/update \
   -H "Content-Type: application/json" \
   -d '{"key":"sk-your-virtual-key","metadata":{"required_customer_headers":["X-User-ID"]}}'
 ```
+
+Only proxy administrators can set, change, or clear this policy on teams and keys. Key owners can still edit unrelated fields, but replacement metadata must retain the stored policy. The same protection applies to bulk key updates and key rotation. Only a proxy administrator can move or detach a key from a team with required headers.
 
 The same metadata works with `/key/generate`. Team and key requirements add together. A key in the team above requires both headers if its own metadata requires `X-User-ID`. An empty key list does not remove a team requirement. Teams and keys with no requirement keep headers optional unless the gateway requires them. Merge the field into any existing metadata you want to preserve.
 
@@ -103,6 +105,8 @@ general_settings:
 ```
 
 The gateway-wide list also adds to team and key requirements. Omit a scope's setting or use `[]` to add no requirement at that scope. Team and key metadata also accept `null` for this field. The gateway-wide setting is YAML-only. It cannot be changed through the Admin API or dashboard, and values stored in the database are ignored. The scoped settings use the team and key management APIs; there is no dedicated dashboard control for them.
+
+LiteLLM resolves the authenticated team using the existing auth cache and checks the combined requirements before customer lookup and budget reservation. Custom-auth deployments keep their existing common-checks contract. Enable `custom_auth_run_common_checks` to load stored team policies, or return trusted team metadata from the custom authenticator.
 
 LiteLLM returns HTTP 403 when a required header is missing or blank. Header names are case-insensitive. Health, information, and management routes do not require these headers. A JWT does not substitute for a required header, and the requirement does not change whether LiteLLM reads customer identity from claims or headers. The header names must also match `customer_org_alias_header` and `customer_member_id_header` if you want them to identify the customer.
 
