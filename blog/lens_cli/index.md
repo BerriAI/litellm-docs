@@ -8,7 +8,7 @@ image: /img/lens/cli/launch.webp
 tags: [lens, engineering]
 hide_table_of_contents: true
 custom_hero: true
-draft: true
+draft: false
 ---
 
 import LaunchHero, {GetStartedCta, PreviewNote, ReportFigure} from './Launch';
