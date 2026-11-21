@@ -2006,6 +2006,7 @@ const providersSidebar = {
     "providers/novita",
     { type: "doc", id: "providers/nscale", label: "Nscale (EU Sovereign)" },
     "providers/nvidia_riva",
+    "providers/oathbreaker",
     "providers/oci",
     "providers/openinfer",
     "providers/ovhcloud",
