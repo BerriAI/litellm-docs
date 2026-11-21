@@ -804,27 +804,27 @@ curl -X POST 'http://0.0.0.0:4000/v1/embeddings' \
 </TabItem>
 </Tabs>
 
-## Nebius AI Studio Embedding Models
+## Nebius Token Factory Embedding Models
 
 ### Usage - Embedding
 ```python
 from litellm import embedding
 import os
 
-os.environ['NEBIUS_API_KEY'] = ""
+os.environ["NEBIUS_API_KEY"] = ""
+os.environ["NEBIUS_API_BASE"] = "https://api.tokenfactory.nebius.com/v1"
+
 response = embedding(
-    model="nebius/BAAI/bge-en-icl",
+    model="nebius/Qwen/Qwen3-Embedding-8B",
     input=["Good morning from litellm!"],
 )
 print(response)
 ```
 
 ### Supported Models
-All supported models can be found here: https://studio.nebius.ai/models/embedding
+`GET https://api.tokenfactory.nebius.com/v1/models` returns the embedding models your API key can call. The model catalog at https://tokenfactory.nebius.com/models/catalog also lists models this API does not serve.
 
 | Model Name               | Function Call                                                   |
 |--------------------------|-----------------------------------------------------------------|
-| BAAI/bge-en-icl | `embedding(model="nebius/BAAI/bge-en-icl", input)`              | 
-| BAAI/bge-multilingual-gemma2 | `embedding(model="nebius/BAAI/bge-multilingual-gemma2", input)` | 
-| intfloat/e5-mistral-7b-instruct | `embedding(model="nebius/intfloat/e5-mistral-7b-instruct", input)`      | 
+| Qwen/Qwen3-Embedding-8B | `embedding(model="nebius/Qwen/Qwen3-Embedding-8B", input)`      |
 
