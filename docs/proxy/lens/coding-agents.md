@@ -15,7 +15,43 @@ Open `http://localhost:4318/ui/` for the local quickstart, or select **Lens** in
 
 ## Claude Code
 
-Claude Code needs no Lens plugin or helper. Its built-in [OpenTelemetry exporters](https://code.claude.com/docs/en/monitoring-usage) send trace spans and assistant response logs directly to Lens. Model calls can continue through your Claude subscription or your existing API provider; leave your Claude login and model endpoint unchanged.
+Claude Code needs no Lens plugin or helper. Its built-in [OpenTelemetry exporters](https://code.claude.com/docs/en/monitoring-usage) do the work.
+
+:::warning Telemetry is required
+
+Claude Code's telemetry is off by default, and Lens records Claude Code turns only when you turn it on. Without the settings below, Lens lists the gateway's model calls one by one, with no turn, tool, or subagent steps.
+
+:::
+
+### Through the LiteLLM gateway
+
+If Claude Code already sends its model calls through your LiteLLM gateway, send its telemetry to the same gateway with the same key. The gateway forwards it to Lens, so the machine that runs `claude` needs no Lens address and no Lens tracing key. The gateway must be [connected to Lens](./deployment/litellm.md).
+
+```bash
+export ANTHROPIC_BASE_URL="http://localhost:4000"
+export ANTHROPIC_AUTH_TOKEN="<your LiteLLM key>"
+
+export CLAUDE_CODE_ENABLE_TELEMETRY=1
+export CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1
+export CLAUDE_CODE_PROPAGATE_TRACEPARENT=1
+export OTEL_TRACES_EXPORTER=otlp
+export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="$ANTHROPIC_BASE_URL/v1/traces"
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer $ANTHROPIC_AUTH_TOKEN"
+export OTEL_LOG_USER_PROMPTS=1
+
+claude -p "Reply with exactly: Lens telemetry check."
+```
+
+Every telemetry variable is required. `CLAUDE_CODE_ENABLE_TELEMETRY`, `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA`, and `OTEL_TRACES_EXPORTER` together produce the turn; drop any one and Lens shows only separate `chat <model>` rows. `CLAUDE_CODE_PROPAGATE_TRACEPARENT` puts the turn's trace ID on each model call; without it the turn and its gateway calls land as two unrelated traces. `OTEL_LOG_USER_PROMPTS` includes the text you typed, which otherwise reads `<REDACTED>`, and it stores that text in Lens. The endpoint is your gateway address followed by `/v1/traces`, and the header carries your LiteLLM key.
+
+Do not set `OTEL_LOGS_EXPORTER` on this path. The gateway accepts trace spans only and answers `POST /v1/logs` with `410`.
+
+Open **Lens > Traces** in LiteLLM and filter by **claude-code**. Each turn is one `claude_code.interaction` trace with its model and tool calls nested under it, your prompt, and the gateway's cost. Verified with Claude Code **2.1.330**.
+
+### Directly to Lens
+
+Use this path when Claude Code does not go through a LiteLLM gateway. Model calls can continue through your Claude subscription or your existing API provider; leave your Claude login and model endpoint unchanged. Claude Code sends trace spans and assistant response logs straight to Lens with a Lens tracing key.
 
 Copy this prompt into your coding agent to have it configure this machine, or follow the manual steps below.
 
