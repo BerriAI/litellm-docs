@@ -1552,6 +1552,7 @@ const sidebars = {
         },
         "realtime",
         "proxy/realtime_webrtc",
+        "live_sessions",
         "realtime_translation",
         "rerank",
         { type: "ref", id: "response_api" },
