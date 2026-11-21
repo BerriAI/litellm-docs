@@ -54,7 +54,7 @@ model_list:
       api_base: os.environ/AZURE_API_BASE
 ```
 
-Azure support is in [LiteLLM PR #53238](https://github.com/BerriAI/litellm/pull/53238) and ships in the first release that includes it. Earlier versions answer an Azure deployment with an `error` event that says `OpenAI Live sessions require the openai provider`. LiteLLM sends the `api_key` in the `api-key` header. When the deployment has no key, it sends a Microsoft Entra token as a bearer token, from `azure_ad_token` or the Entra settings you already use for other Azure models.
+<SinceVersion v="1.112.0" /> LiteLLM serves Azure GPT-Live deployments. Earlier versions answer an Azure deployment with an `error` event that says `OpenAI Live sessions require the openai provider`. LiteLLM sends the `api_key` in the `api-key` header. When the deployment has no key, it sends a Microsoft Entra token as a bearer token, from `azure_ad_token` or the Entra settings you already use for other Azure models.
 
 Live sessions support the `openai` and `azure` providers. A session on a deployment of another provider gets an `error` event, and the session closes with code 1011. LiteLLM connects to `/v1/live/sessions` on the host in `api_base` for OpenAI and to `/openai/v1/live/sessions` for Azure. It drops any path in `api_base`, so an `api_base` behind a path prefix does not work.
 
