@@ -193,7 +193,7 @@ The generic `streaming_buffer_until_moderated`, `streaming_end_of_stream_only`, 
 
 ## Blocked prompts in logs
 
-Straiker answers a blocked prompt with HTTP 200 and the block message as the reply, so the client shows the reason. Logging callbacks and Prometheus record that request as a failure.
+Straiker answers a blocked prompt with HTTP 200 and the block message as the reply, so the client shows the reason. Logging callbacks and Prometheus record that request as a failure. The one exception is a streaming `/v1/chat/completions` request, which is recorded as a success.
 
 ## Further reading
 
