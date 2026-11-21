@@ -1,6 +1,17 @@
 [
   {
     "folders": [
+      "v1.108.15"
+    ],
+    "title": "LiteLLM v1.108.15 (LTS) adds ResetData and fixes Cohere v2 chat params",
+    "points": [
+      "ResetData is a new provider, and Groq and Meta transcription now record spend at listed prices instead of $0.",
+      "Cohere v2 chat sends `tool_choice`, `reasoning_effort` and `json_schema` `response_format` to Cohere, and streamed tool calls arrive whole.",
+      "A JSON-configured deployment without an `api_key` now gets a 401, so set the provider's key env var or an `api_key` before you upgrade."
+    ]
+  },
+  {
+    "folders": [
       "v1.108.14"
     ],
     "title": "LiteLLM v1.108.14 (LTS) fixes Claude tool search on Responses follow-ups",
@@ -204,16 +215,6 @@
     "points": [
       "`lite credentials connect` links a per-user GitHub Copilot credential from the terminal, so developers without Admin UI access can use Copilot.",
       "The Docker images ship newer `aiohttp`, `ddtrace`, `pypdf` and other locked dependencies."
-    ]
-  },
-  {
-    "folders": [
-      "v1.107.0rc3"
-    ],
-    "title": "LiteLLM v1.107.0rc3 fixes GitHub Copilot per-user connect and adds GHE.com",
-    "points": [
-      "GitHub Copilot per-user credentials work on GHE.com tenants with the optional `github_copilot_host` field.",
-      "Per-user Copilot connect no longer fails with `no Copilot access found` when `GITHUB_COPILOT_CLIENT_ID` is set."
     ]
   }
 ]
