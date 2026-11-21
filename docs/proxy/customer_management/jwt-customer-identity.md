@@ -69,16 +69,44 @@ LiteLLM records the app's team and the customer organization and member on the s
 
 ### Require selected customer headers
 
-Set `general_settings.required_customer_headers` to the actual header names you want callers to send. For example, add this to the configuration above to require both headers:
+Customer headers are optional unless you require them. Set `required_customer_headers` to the actual header names callers must send. Use `["X-Tenant-ID"]` for the organization header, `["X-User-ID"]` for the member header, or both names for both headers.
+
+For a gateway that serves internal and customer traffic, configure the requirement on a regular LiteLLM team or virtual key through its `metadata`. These are the app's LiteLLM team and key, separate from the customer organization, team, and member used for customer budgets.
+
+Require the tenant header for a LiteLLM team with `/team/update`:
+
+```bash
+curl https://your-proxy.example.com/team/update \
+  -H "Authorization: Bearer ${LITELLM_MASTER_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"team_id":"customer-app","metadata":{"required_customer_headers":["X-Tenant-ID"]}}'
+```
+
+This requirement applies to the team's virtual keys and JWT requests that map to the team through `team_id_jwt_field`. The same metadata works when you create the team with `/team/new`.
+
+Require the user header for one virtual key with `/key/update`:
+
+```bash
+curl https://your-proxy.example.com/key/update \
+  -H "Authorization: Bearer ${LITELLM_MASTER_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"key":"sk-your-virtual-key","metadata":{"required_customer_headers":["X-User-ID"]}}'
+```
+
+The same metadata works with `/key/generate`. Team and key requirements add together. A key in the team above requires both headers if its own metadata requires `X-User-ID`. An empty key list does not remove a team requirement. Teams and keys with no requirement keep headers optional unless the gateway requires them. Merge the field into any existing metadata you want to preserve.
+
+To require headers for every authenticated inference request, set the gateway-wide option in YAML and restart the proxy:
 
 ```yaml
 general_settings:
   required_customer_headers: [X-Tenant-ID, X-User-ID]
 ```
 
-Use `[X-Tenant-ID]` to require only the organization header, or `[X-User-ID]` to require only the member header. Omit the setting or use `[]` to keep headers optional. For authenticated inference requests, LiteLLM returns HTTP 403 when any listed header is missing or blank. Header names are case-insensitive. A JWT does not substitute for a required header, and this setting does not change whether LiteLLM reads customer identity from claims or headers.
+The gateway-wide list also adds to team and key requirements. Omit a scope's setting or use `[]` to add no requirement at that scope. Team and key metadata also accept `null` for this field. The gateway-wide setting is YAML-only. It cannot be changed through the Admin API or dashboard, and values stored in the database are ignored. The scoped settings use the team and key management APIs; there is no dedicated dashboard control for them.
 
-Set this option in the YAML config file and restart the proxy to apply it. You cannot change it through the Admin API or dashboard, and LiteLLM ignores values stored in the database. With Rust-first forwarding enabled (`LITELLM_RUST_FIRST=true`), a nonempty list sends master-key `POST /v1/messages` requests to the Python proxy for header validation. An empty or omitted list leaves Rust-first routing unchanged.
+LiteLLM returns HTTP 403 when a required header is missing or blank. Header names are case-insensitive. Health, information, and management routes do not require these headers. A JWT does not substitute for a required header, and the requirement does not change whether LiteLLM reads customer identity from claims or headers. The header names must also match `customer_org_alias_header` and `customer_member_id_header` if you want them to identify the customer.
+
+With Rust-first forwarding enabled (`LITELLM_RUST_FIRST=true`), a nonempty gateway-wide list sends master-key `POST /v1/messages` requests to the Python proxy for header validation. An empty or omitted gateway-wide list leaves that routing unchanged. Virtual-key and JWT requests already use the Python authentication path, where team and key requirements are checked.
 
 :::warning
 Customer headers are not signed by the JWT. Use them only with trusted callers or an ingress that strips incoming identity headers and sets them from verified identity. Use signed customer claims if untrusted clients can reach the proxy directly.
