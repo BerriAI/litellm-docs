@@ -424,7 +424,7 @@ print(message.content)
 
 
 
-## Proxy Endpoints - [Swagger Docs](https://docs.litellm.ai/api-reference/)
+## Proxy Endpoints - [API reference](https://docs.litellm.ai/api-reference/)
 - POST `/chat/completions` - chat completions endpoint to call 100+ LLMs
 - POST `/completions` - completions endpoint
 - POST `/embeddings` - embedding endpoint for Azure, OpenAI, Huggingface endpoints

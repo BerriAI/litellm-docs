@@ -74,7 +74,6 @@ The `supabase`, `sentry` and `slack` callbacks run `pip install` when their pack
 
 These requests come from the browser of the person using the Admin UI or API docs, not from the proxy:
 
-- **ReDoc.** The `/redoc` page loads its script from `cdn.jsdelivr.net` and fonts from `fonts.googleapis.com`. Set `NO_REDOC=True` to turn off the page.
 - **MCP server icons.** The MCP server catalog and OpenAPI picker in the Admin UI load icons from `cdn.simpleicons.org` and `raw.githubusercontent.com`. When they are blocked, the icons don't show.
 
-The Admin UI and the Swagger page at `/` serve their own scripts and fonts.
+The Admin UI and the API reference at `/` serve their own scripts. The API reference uses system fonts.

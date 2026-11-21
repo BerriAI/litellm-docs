@@ -1,5 +1,5 @@
 const cheerio = require('cheerio');
-const {isContentUrl, contentPage} = require('./content');
+const {isContentUrl, contentPage, isOperationUrl} = require('./content');
 const {operationStructure} = require('./openapi');
 const clean = value => String(value || '').replace(/\s+/g, ' ').trim();
 const unique = values => [...new Map(values.filter(Boolean).map(value => [JSON.stringify(value), value])).values()];
@@ -47,7 +47,7 @@ async function buildStructure(directory) {
   await Promise.all(Array.from({length: 8}, async () => {
     while (next < urls.length) {
       const url = urls[next++];
-      if (url.startsWith('/api-reference/#/')) {pages[url] = operationStructure(grouped.get(url)); continue;}
+      if (isOperationUrl(url)) {pages[url] = operationStructure(grouped.get(url)); continue;}
       try {
         const response = await fetch(`https://docs.litellm.ai${url}`, {signal: AbortSignal.timeout(15000)});
         if (!response.ok) throw new Error(`HTTP ${response.status}`);

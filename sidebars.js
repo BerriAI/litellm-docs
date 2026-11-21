@@ -945,7 +945,7 @@ const sidebars = {
         },
         {
           type: "link",
-          label: "All Endpoints (Swagger)",
+          label: "All Endpoints",
           href: "https://docs.litellm.ai/api-reference/",
         },
         {
