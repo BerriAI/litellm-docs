@@ -20,6 +20,8 @@ keywords:
 
 # Voice and realtime audio
 
+{/* keep-version-note */}
+
 Put LiteLLM between your app and a voice model. Your app connects to the proxy with a LiteLLM virtual key, and the proxy connects to the provider with the provider key. You get one place to control model access, budgets, and spend for voice sessions.
 
 This page helps you pick the route for your model, run a first session, and find the page for each task.
