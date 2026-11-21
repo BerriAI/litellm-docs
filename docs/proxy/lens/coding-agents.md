@@ -9,7 +9,7 @@ import AgentPrompt from '@site/src/components/Conversion/AgentPrompt';
 
 Send your [Claude Code](#claude-code) or [Codex](#codex) activity to Lens. Your model login and model endpoint stay unchanged.
 
-You need a running Lens installation and a dedicated Lens tracing key. If you are starting from scratch, follow the [Lens deployment guide](./deployment/local.md). Your existing Claude Code or Codex model login continues to work.
+You need a running Lens installation. If you are starting from scratch, follow the [Lens deployment guide](./deployment/local.md). Your existing Claude Code or Codex model login continues to work. Codex, and Claude Code with no gateway, also need a dedicated Lens tracing key. Claude Code behind a LiteLLM gateway uses its LiteLLM key and needs no tracing key.
 
 Open `http://localhost:4318/ui/` for the local quickstart, or select **Lens** in your LiteLLM dashboard. [Generate a tracing key](./first-trace.md#connect-your-agent) and copy the full **Traces endpoint**, including `/v1/traces`. Ask your administrator if you cannot create a key. The examples use local Lens; replace the address with your endpoint and keep any `/lens-ingest` prefix. A tracing key uploads telemetry, not model requests. Keep it private.
 
@@ -19,13 +19,26 @@ Claude Code needs no Lens plugin or helper. Its built-in [OpenTelemetry exporter
 
 :::warning Telemetry is required
 
-Claude Code's telemetry is off by default, and Lens records Claude Code turns only when you turn it on. Without the settings below, Lens lists the gateway's model calls one by one, with no turn, tool, or subagent steps.
+Claude Code's telemetry is off by default, and Lens records Claude Code turns only when you turn it on. Without the settings below, Lens shows no turn, tool, or subagent steps.
 
 :::
 
-### Through the LiteLLM gateway
+There are two setups. Pick the one that matches where Claude Code's model calls go, and do not mix them.
 
-If Claude Code already sends its model calls through your LiteLLM gateway, send its telemetry to the same gateway with the same key. The gateway forwards it to Lens, so the machine that runs `claude` needs no Lens address and no Lens tracing key. The gateway must be [connected to Lens](./deployment/litellm.md).
+| | [Lens with LiteLLM](#lens-with-litellm) | [Lens with no gateway](#lens-with-no-gateway) |
+| --- | --- | --- |
+| Model calls go to | your LiteLLM gateway | Anthropic, with your own login or API key |
+| Telemetry goes to | the same gateway, which forwards it to Lens | Lens |
+| Telemetry key | your LiteLLM key | a Lens tracing key |
+| Turn, model calls, tool calls, prompt, reply | yes | yes |
+| Token counts | yes | yes |
+| Cost | yes, from the gateway | no |
+
+If Claude Code's model calls go through a LiteLLM gateway, send its telemetry to that gateway too and never straight to Lens. A turn sent straight to Lens belongs to whoever created the tracing key, so the gateway user it came from cannot see it beside their own model calls.
+
+### Lens with LiteLLM
+
+Claude Code sends its model calls through your LiteLLM gateway, and sends its telemetry to the same gateway with the same key. The gateway forwards it to Lens, so the machine that runs `claude` needs no Lens address and no Lens tracing key. The gateway must be [connected to Lens](./deployment/litellm.md).
 
 ```bash
 export ANTHROPIC_BASE_URL="http://localhost:4000"
@@ -45,19 +58,19 @@ claude -p "Reply with exactly: Lens telemetry check."
 
 Every telemetry variable is required. `CLAUDE_CODE_ENABLE_TELEMETRY`, `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA`, and `OTEL_TRACES_EXPORTER` together produce the turn; drop any one and Lens shows only separate `chat <model>` rows. `CLAUDE_CODE_PROPAGATE_TRACEPARENT` puts the turn's trace ID on each model call; without it the turn and its gateway calls land as two unrelated traces. `OTEL_LOG_USER_PROMPTS` includes the text you typed, which otherwise reads `<REDACTED>`, and it stores that text in Lens. The endpoint is your gateway address followed by `/v1/traces`, and the header carries your LiteLLM key.
 
-Do not set `OTEL_LOGS_EXPORTER` on this path. The gateway accepts trace spans only and answers `POST /v1/logs` with `410`. Do not add `lens.session.capture=true` from the direct setup below either: together with `CLAUDE_CODE_PROPAGATE_TRACEPARENT=1` it splits each turn into two traces, the turn under one trace ID and its gateway calls under another.
+Do not set `OTEL_LOGS_EXPORTER` on this path. The gateway accepts trace spans only and answers `POST /v1/logs` with `410`. Do not add `lens.session.capture=true` from the no-gateway setup below either: together with `CLAUDE_CODE_PROPAGATE_TRACEPARENT=1` it splits each turn into two traces, the turn under one trace ID and its gateway calls under another.
 
 Open **Lens > Traces** in LiteLLM and filter by **claude-code**. Each turn is one `claude_code.interaction` trace with its model and tool calls nested under it, your prompt, and the gateway's cost. Verified with Claude Code **2.1.330**.
 
-### Directly to Lens
+### Lens with no gateway
 
-Use this path when Claude Code does not go through a LiteLLM gateway. Model calls can continue through your Claude subscription or your existing API provider; leave your Claude login and model endpoint unchanged. Claude Code sends trace spans and assistant response logs straight to Lens with a Lens tracing key.
+Use this setup only when Claude Code does not go through a LiteLLM gateway. Model calls continue through your Claude subscription or Anthropic API key; leave your Claude login unchanged. Claude Code sends trace spans and assistant response logs straight to Lens with a Lens tracing key. Lens shows the turn, its model and tool calls, token counts, the prompt, and the reply. It shows no cost, which is recorded only when the model calls go through a LiteLLM gateway.
 
 Copy this prompt into your coding agent to have it configure this machine, or follow the manual steps below.
 
 <AgentPrompt id="lens-claude-code" />
 
-Verified with Claude Code **2.1.328** and Lens **0.1.0**. Keep `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1`: the telemetry enable flag alone does not enable its beta trace exporter.
+Verified with Claude Code **2.1.330**. Keep `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1`: the telemetry enable flag alone does not enable its beta trace exporter.
 
 In the terminal where you run `claude`, paste the endpoint and tracing key in the first two lines, then run the block. The logs URL uses the same address with `/v1/logs` in place of `/v1/traces`:
 
