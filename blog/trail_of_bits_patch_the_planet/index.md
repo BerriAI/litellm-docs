@@ -1,7 +1,7 @@
 ---
 slug: trail-of-bits-patch-the-planet
 title: "Trail of Bits helped harden LiteLLM, fixes are on the way"
-date: 2026-11-23T10:00:00
+date: 2026-11-21T14:00:00
 authors:
   - oliver
 description: "Trail of Bits worked on LiteLLM through Patch the Planet. What is coming, how the fixes and advisories will ship, and what to do."
