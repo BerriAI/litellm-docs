@@ -416,7 +416,7 @@ On Vertex AI, the shared request type header alone uses any Provisioned Throughp
 import litellm
 
 response = litellm.completion(
-    model="vertex_ai/gemini-2.5-flash",
+    model="vertex_ai/gemini-3.8-flash",
     messages=[{"role": "user", "content": "Hello"}],
     service_tier="priority",
 )
