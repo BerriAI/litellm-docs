@@ -404,7 +404,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 
 ## VertexAI Meta Muse API
 
-<SinceVersion v="1.111.0" />
+<SinceVersion v="1.112.0" />
 
 Meta Muse models on Vertex AI use the Meta publisher's Responses API. LiteLLM sends every Muse request to the global endpoint with the bare model ID. Chat Completions (`/chat/completions`) and Anthropic Messages (`/v1/messages`) requests go through LiteLLM's Responses bridge, so all three endpoints work with the same deployment.
 
