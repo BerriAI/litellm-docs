@@ -33,7 +33,7 @@ Voice models fall into four families. Each family has its own route on the proxy
 | You want to | Model | Route on the proxy | Providers |
 | --- | --- | --- | --- |
 | [Hold a voice conversation with turns and tools](/docs/realtime) | `gpt-realtime-2.1` and other Realtime models | `WS /v1/realtime` | OpenAI, Azure, xAI, Gemini, Vertex AI, Bedrock |
-| [Hold a full-duplex voice conversation](/docs/live_sessions) | `gpt-live-1` | `WS /v1/live/sessions` | OpenAI |
+| [Hold a full-duplex voice conversation](/docs/live_sessions) | `gpt-live-1` | `WS /v1/live/sessions` | OpenAI, Azure |
 | [Turn live speech into text](/docs/realtime#live-transcription-with-gpt-live-transcribe) | `gpt-live-transcribe` | `WS /v1/realtime?intent=transcription` | OpenAI, Azure |
 | [Translate live speech](/docs/realtime_translation) | `gpt-realtime-translate` | `WS /v1/realtime/translations` | OpenAI, Azure |
 
@@ -50,7 +50,7 @@ For audio that does not need a live session, use [`/audio/transcriptions`](/docs
 | Your server, such as a phone call or a media stream | WebSocket | Your server holds the LiteLLM key and sends the audio |
 | A microphone in a browser or mobile app | [WebRTC](/docs/proxy/realtime_webrtc) | The browser gets a short-lived token, and audio goes to the provider without passing through the proxy |
 
-WebRTC works for Realtime models, `gpt-live-transcribe`, and `gpt-realtime-translate` on OpenAI and Azure. `gpt-live-1` supports WebSocket only on the proxy.
+WebRTC works for Realtime models, `gpt-live-transcribe`, and `gpt-realtime-translate` on OpenAI and Azure. `gpt-live-1` supports WebSocket only on the proxy. LiteLLM does not record spend for WebRTC calls, so use WebSocket when a call must count against a budget.
 
 ## Run a first session
 

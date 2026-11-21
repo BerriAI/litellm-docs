@@ -1,7 +1,7 @@
 ---
 title: GPT-Live API with gpt-live-1
 sidebar_label: /live/sessions
-description: Run OpenAI GPT-Live voice sessions with gpt-live-1 through the LiteLLM proxy on /v1/live/sessions, with virtual keys, model access, budgets, and spend for each second of audio.
+description: Run GPT-Live voice sessions with gpt-live-1 on OpenAI and Azure through the LiteLLM proxy on /v1/live/sessions, with virtual keys, model access, budgets, and spend for each second of audio.
 keywords:
   [
     GPT-Live,
@@ -43,7 +43,20 @@ model_list:
       api_key: os.environ/OPENAI_API_KEY
 ```
 
-Live sessions support the `openai` provider only. A session on a deployment of another provider, such as `azure/gpt-live-1`, gets an `error` event that says `OpenAI Live sessions require the openai provider`, and the session closes with code 1011. LiteLLM connects to `/v1/live/sessions` on the host in `api_base` and drops any path in it, so an `api_base` behind a path prefix does not work.
+For Azure, point the deployment at your Azure resource:
+
+```yaml
+model_list:
+  - model_name: azure-gpt-live-1
+    litellm_params:
+      model: azure/gpt-live-1
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+```
+
+Azure support is in [LiteLLM PR #53238](https://github.com/BerriAI/litellm/pull/53238) and ships in the first release that includes it. Earlier versions answer an Azure deployment with an `error` event that says `OpenAI Live sessions require the openai provider`. LiteLLM sends the `api_key` in the `api-key` header. When the deployment has no key, it sends a Microsoft Entra token as a bearer token, from `azure_ad_token` or the Entra settings you already use for other Azure models.
+
+Live sessions support the `openai` and `azure` providers. A session on a deployment of another provider gets an `error` event, and the session closes with code 1011. LiteLLM connects to `/v1/live/sessions` on the host in `api_base` for OpenAI and to `/openai/v1/live/sessions` for Azure. It drops any path in `api_base`, so an `api_base` behind a path prefix does not work.
 
 ## Connect
 
