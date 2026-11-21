@@ -4,7 +4,7 @@ Control which model groups can forward client headers to the underlying LLM prov
 
 ## Overview
 
-By default, LiteLLM does not forward client headers to LLM provider APIs for security reasons. However, you can selectively enable header forwarding for specific model groups using the `forward_client_headers_to_llm_api` setting.
+By default, LiteLLM does not forward client headers to LLM provider APIs for security reasons, with one exception. LiteLLM forwards `anthropic-user-profile-id` to Claude models without this setting, see [Request Headers](./request_headers.md). However, you can selectively enable header forwarding for specific model groups using the `forward_client_headers_to_llm_api` setting.
 
 ## How it Works
 
@@ -42,6 +42,7 @@ The following rules determine which headers are forwarded (see [`_get_forwardabl
 | Headers starting with `x-stainless-*` | `x-stainless-lang`, `x-stainless-arch` |  No (causes OpenAI SDK issues) |
 | Standard HTTP headers | `Authorization`, `Content-Type`, `Host` |  No |
 | Other provider headers | `Accept`, `User-Agent` |  No |
+| `anthropic-user-profile-id` on Claude models | `anthropic-user-profile-id: uprof_...` |  Yes, without this setting. A key or team pin replaces it. See [Request Headers](./request_headers.md) |
 
 ### Additional Header Mechanisms
 
@@ -50,7 +51,7 @@ The following rules determine which headers are forwarded (see [`_get_forwardabl
 | **`x-pass-` prefix** | Headers prefixed with `x-pass-` are always forwarded with the prefix stripped, regardless of settings. E.g., `x-pass-anthropic-beta: value` → `anthropic-beta: value`. Works for all pass-through endpoints. | [Source code](https://github.com/litellm/litellm/blob/main/litellm/passthrough/utils.py) |
 | **`openai-organization`** | Forwarded only when `forward_openai_org_id: true` is set in `general_settings`. | [Forward OpenAI Org ID](#enable-globally) |
 | **User information headers** | When `add_user_information_to_llm_headers: true`, LiteLLM adds `x-litellm-user-id`, `x-litellm-org-id`, etc. | [User Information Headers](#user-information-headers-optional) |
-| **Vertex AI pass-through** | Uses a separate, stricter allowlist: only `anthropic-beta` and `content-type`. | [Source code](https://github.com/litellm/litellm/blob/main/litellm/constants.py) |
+| **Vertex AI pass-through** | Uses a separate, stricter allowlist: only `anthropic-beta`, `content-type` and `anthropic-user-profile-id`. | [Source code](https://github.com/litellm/litellm/blob/main/litellm/constants.py) |
 
 ## Configuration
 
