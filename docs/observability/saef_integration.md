@@ -8,7 +8,7 @@ This is community maintained. Please make an issue at https://github.com/guiller
 
 :::
 
-[SAEF](https://github.com/guillermollopis/soma-ai-emission-factors) is an open source Python package that estimates the CO2e and water use of each LLM call from the token counts, the model and the cloud region. The factors are estimates and not measurements. Each result carries the data file and line behind the number. The code is MIT licensed and the data is CC BY 4.0. The method is described in a [paper](https://arxiv.org/abs/2606.10660) accepted for publication in Sustainable Production and Consumption.
+[SAEF](https://github.com/guillermollopis/soma-ai-emission-factors) is an open source Python package that estimates the CO2e and water use of each LLM call from the token counts, the model and the cloud region. The factors are estimates and not measurements. Each result carries the data file and line behind the number. The code is MIT licensed and the data is CC BY 4.0. The method is described in a [paper](https://doi.org/10.1016/j.spc.2026.11.003) in Sustainable Production and Consumption. The dataset has the DOI [10.5281/zenodo.20443585](https://doi.org/10.5281/zenodo.20443585).
 
 ## Getting Started
 
@@ -65,6 +65,36 @@ Pass `log_path` to append one JSON line per call, and call `logger.reset()` to c
 ```python
 logger = SaefLogger(region="eu-west-1", log_path="saef_calls.jsonl")
 ```
+
+## Cost beside carbon
+
+Available in saef 3.5.0 and later. SAEF does not price tokens and has no price table. When LiteLLM reports `response_cost` for a call, the logger stores it on the record as `cost` and `cost_currency` (USD), next to the estimate. Calls where LiteLLM reports no cost have no cost fields.
+
+```python
+import time
+
+import litellm
+from saef.integrations.litellm import SaefLogger
+
+logger = SaefLogger(region="eu-west-1")
+litellm.callbacks = [logger]
+
+response = litellm.completion(
+    model="{{openai_small}}",
+    messages=[{"role": "user", "content": "Hello"}],
+    mock_response="Hi there",
+)
+
+time.sleep(1)  # success callbacks run in a background thread
+
+record = response._hidden_params["saef"]
+print(record["kg_co2e"], record["cost"], record["cost_currency"])
+
+totals = logger.totals()
+print(f"{totals['cost']:.6f} {totals['cost_currency']}, {totals['g_co2e_per_usd']:.4f} g CO2e per USD")
+```
+
+`g_co2e_per_usd` is the central estimate in grams divided by the cost, over the calls that have a cost. It is `None` when the total cost is zero. To total records you logged yourself, for example the lines written with `log_path`, pass them to `saef.summarize(records)`, which returns the same cost fields.
 
 ## Notes
 
