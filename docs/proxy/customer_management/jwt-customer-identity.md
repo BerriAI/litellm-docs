@@ -67,6 +67,53 @@ curl https://your-proxy.example.com/v1/chat/completions \
 
 LiteLLM records the app's team and the customer organization and member on the same spend log entry.
 
+### Require selected customer headers
+
+Customer headers are optional unless you require them. Set `required_customer_headers` to the actual header names callers must send. Use `["X-Tenant-ID"]` for the organization header, `["X-User-ID"]` for the member header, or both names for both headers.
+
+For a gateway that serves internal and customer traffic, configure the requirement on a regular LiteLLM team or virtual key through its `metadata`. These are the app's LiteLLM team and key, separate from the customer organization, team, and member used for customer budgets.
+
+Require the tenant header for a LiteLLM team with `/team/update`:
+
+```bash
+curl https://your-proxy.example.com/team/update \
+  -H "Authorization: Bearer ${LITELLM_MASTER_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"team_id":"customer-app","metadata":{"required_customer_headers":["X-Tenant-ID"]}}'
+```
+
+This requirement applies to the team's virtual keys, JWT requests that map to the team through `team_id_jwt_field`, and OAuth2 or trusted OAuth2-proxy requests that resolve to the team. The same metadata works when you create the team with `/team/new`.
+
+Require the user header for one virtual key with `/key/update`:
+
+```bash
+curl https://your-proxy.example.com/key/update \
+  -H "Authorization: Bearer ${LITELLM_MASTER_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"key":"sk-your-virtual-key","metadata":{"required_customer_headers":["X-User-ID"]}}'
+```
+
+Only proxy administrators can set, change, or clear this policy on teams and keys. Key owners can still edit unrelated fields, but replacement metadata must retain the stored policy. The same protection applies to bulk key updates and key rotation. Only a proxy administrator can move or detach a key from a team with required headers.
+
+The same metadata works with `/key/generate`. Team and key requirements add together. A key in the team above requires both headers if its own metadata requires `X-User-ID`. An empty key list does not remove a team requirement. Teams and keys with no requirement keep headers optional unless the gateway requires them. Merge the field into any existing metadata you want to preserve.
+
+To require headers for every authenticated inference request, set the gateway-wide option in YAML and restart the proxy:
+
+```yaml
+general_settings:
+  required_customer_headers: [X-Tenant-ID, X-User-ID]
+```
+
+The gateway-wide list also adds to team and key requirements. Omit a scope's setting or use `[]` to add no requirement at that scope. Team and key metadata also accept `null` for this field. The gateway-wide setting is YAML-only. It cannot be changed through the Admin API or dashboard, and values stored in the database are ignored. The scoped settings use the team and key management APIs; there is no dedicated dashboard control for them.
+
+On applicable inference routes, LiteLLM resolves the authenticated team using the existing auth cache and checks the combined requirements before customer registration and budget reservation. Existing authentication and budget validations retain their ordering. An earlier budget failure can return HTTP 422 before the missing-header check runs. Custom-auth deployments keep their existing common-checks contract. Enable `custom_auth_run_common_checks` to load stored team policies, or return trusted team metadata from the custom authenticator.
+
+LiteLLM returns HTTP 403 when a required header is missing or blank. Header names are case-insensitive. Health, information, and management routes do not require these headers. Incidental customer identity headers on these routes do not trigger customer lookup or automatic registration. A JWT does not substitute for a required header, and the requirement does not change whether LiteLLM reads customer identity from claims or headers. The header names must also match `customer_org_alias_header` and `customer_member_id_header` if you want them to identify the customer.
+
+With experimental Rust-first forwarding enabled (`LITELLM_RUST_FIRST=true`), a nonempty gateway-wide list at startup sends master-key `POST /v1/messages` requests to Python for header validation. Virtual-key and JWT requests already use Python, where team and key requirements are checked.
+
+Rust-first mode does not coordinate configuration reloads with Python. If a gateway starts without required headers, then YAML changes and Python reloads the file, Rust can keep admitting master-key Messages requests under its startup policy. An admin config read can trigger that Python reload. This is an existing Rust-first limitation exposed by the new gateway-wide policy. Keep `LITELLM_RUST_FIRST=false` for this feature until coordinated reloads are supported. A restart of the full gateway restores a consistent startup policy, but does not prevent later drift.
+
 :::warning
 Customer headers are not signed by the JWT. Use them only with trusted callers or an ingress that strips incoming identity headers and sets them from verified identity. Use signed customer claims if untrusted clients can reach the proxy directly.
 :::
