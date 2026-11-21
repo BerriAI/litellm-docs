@@ -10,7 +10,7 @@ import DecisionBenchmark from '@site/src/components/DecisionBenchmark';
 
 These benchmarks test every [decision model](../decisions.md) that LiteLLM supports on three jobs: as a guardrail, as an Auto Router classifier, and as an LLM judge for Lens Signals. Each model got the same requests through a LiteLLM proxy on `/v1/decisions` in October 2026. The self-hosted models ran on an 8-core CPU without a GPU, so their latency does not compare with the hosted models
 
-Each row is the model on the provider in the [supported providers table](../decisions.md#supported-providers). The GPT-6 Luna rows ran on `openai/gpt-6-luna`. The same model on a host outside that table, such as GPT-6 Luna on AWS Bedrock, does not serve `/v1/decisions` through LiteLLM, so these numbers do not apply to it
+Each row is the model on the provider in the [supported providers table](../decisions.md#supported-providers). The GPT-6 Luna rows ran on `openai/gpt-6-luna`. The numbers apply only to that provider. The same model on another host can score differently, and some hosts do not serve `/v1/decisions` through LiteLLM at all, such as GPT-6 Luna on AWS Bedrock
 
 The best model depends on the job. GPT-6 Luna is in the top group as a guardrail and as a Lens judge, but it sends 15 of 80 prompts to a cheaper tier in the Auto Router test. Decision-1 ties for second on routing but picks the right evidence for only 44% of Lens flags
 
