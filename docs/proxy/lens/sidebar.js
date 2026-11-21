@@ -22,6 +22,7 @@ module.exports = {
       ],
     },
     {type: 'doc', id: 'proxy/lens/first-trace', label: 'Send your first trace'},
+    {type: 'doc', id: 'proxy/lens/rbac', label: 'Access control and workspace filters'},
     {
       type: 'category',
       label: 'Integrations',
