@@ -10,6 +10,7 @@ from litellm import (
     EvalTarget,
     EvalTask,
     Harness,
+    ModelNotMappedError,
     PredicateCheck,
     acompletion,
     completion_cost,
@@ -32,9 +33,13 @@ class MyAgent(EvalAgent):
             messages=[{"role": "user", "content": task.prompt}],
             metadata=dict(task.metadata),
         )
+        try:
+            cost = completion_cost(completion_response=response)
+        except ModelNotMappedError:
+            cost = None
         return AgentOutput(
             text=response.choices[0].message.content or "",
-            cost=completion_cost(completion_response=response),
+            cost=cost,
             usage=Usage(
                 input_tokens=response.usage.prompt_tokens,
                 output_tokens=response.usage.completion_tokens,

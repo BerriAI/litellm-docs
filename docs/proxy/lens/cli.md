@@ -52,7 +52,7 @@ targets += [EvalTarget(Harness.CODEX, model) for model in models]
 targets += [MyAgent("my-agent")]
 ```
 
-Replace `MyAgent.run` in the download with your agent's execution code. Keep per-attempt state inside `run`, since attempts can run concurrently. The complete configuration records cost and usage; omitted custom metrics remain unknown. Other [supported harnesses](/docs/harness) include Claude Code, OpenCode, Pi, and Deep Agents, with their own runtime dependencies
+Replace `MyAgent.run` in the download with your agent's execution code. Keep per-attempt state inside `run`, since attempts can run concurrently. When a gateway alias has no local price mapping, the custom agent keeps its answer and usage and reports cost as unknown. Other [supported harnesses](/docs/harness) include Claude Code, OpenCode, Pi, and Deep Agents, with their own runtime dependencies
 
 ## 2. Run the same tasks through each configuration
 
@@ -91,8 +91,8 @@ In **Lens > Datasets**, open your dataset, select a fixed revision, and click **
 Download <a href="/examples/lens-cli/dataset_to_csv.py" download>dataset_to_csv.py</a>, then run:
 
 ```bash
-python dataset_to_csv.py
-lens run gateway-tasks.csv --config evals.py --trials 2
+python dataset_to_csv.py && \
+  lens run gateway-tasks.csv --config evals.py --trials 2
 ```
 
-The converter preserves messages, expected outcomes, and the complete case metadata. The configuration passes the recorded conversation into each agent and rejects ungraded cases. This sample grader expects support-ticket categories; replace its instructions and check for another task. Keep the revision fixed while comparing configurations
+The converter preserves messages, expected outcomes, and the complete case metadata. This classifier reads conversations as prompt text and requires an expected support-ticket category. Fix ungraded cases in Lens and export a new revision before retrying. For other agent tasks, reconnect your tools and state and replace the instructions and pass check. Keep the revision fixed while comparing configurations
