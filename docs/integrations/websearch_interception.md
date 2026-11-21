@@ -243,6 +243,7 @@ Configure which search provider to use. LiteLLM supports multiple search provide
 | **Serper** | `serper` | `SERPER_API_KEY` |
 | **SearchAPI.io** | `searchapi` | `SEARCHAPI_API_KEY` |
 | **Microsoft Web IQ** | `webiq` | `WEBIQ_API_KEY` |
+| **Seltz** | `seltz` | `SELTZ_API_KEY` |
 
 See [Search Providers Documentation](../search/index.md) for detailed setup instructions.
 
