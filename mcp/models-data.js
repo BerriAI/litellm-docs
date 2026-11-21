@@ -102,7 +102,7 @@ const DISPLAY_NAMES = dict(Object.entries({
   petals: 'Petals', pg_vector: 'PG Vector', pinstripes: 'Pinstripes', poe: 'Poe', predibase: 'Predibase',
   prism: 'Prism', publicai: 'PublicAI', pydantic_ai_agents: 'Pydantic AI Agents', qwen_ai_platform: 'Qianwen AI Platform', qwencloud: 'QwenCloud',
   ragflow: 'RAGFlow', recraft: 'Recraft', reducto: 'Reducto', refuseless: 'Refuseless', reka: 'Reka',
-  replicate: 'Replicate', runwayml: 'RunwayML', s3_vectors: 'AWS S3 Vectors', sagemaker: 'AWS - Sagemaker',
+  replicate: 'Replicate', resetdata: 'ResetData', runwayml: 'RunwayML', s3_vectors: 'AWS S3 Vectors', sagemaker: 'AWS - Sagemaker',
   sagemaker_chat: 'Sagemaker Chat', sail: 'Sail', sambanova: 'Sambanova', sap: 'SAP Generative AI Hub',
   sarvam: 'Sarvam', scaledown: 'ScaleDown', scaleway: 'Scaleway', 'scx-ai': 'SCX.ai', searchapi: 'SearchAPI',
   searxng: 'SearXNG', serper: 'Serper', snowflake: 'Snowflake', soniox: 'Soniox', stability: 'Stability AI',
