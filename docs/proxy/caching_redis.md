@@ -84,19 +84,27 @@ $ litellm --config /path/to/config.yaml
 | Spend and budget counters | Coordination Redis | `cache_params` Redis |
 | Cross-worker rate limits (v3 limiter) | Coordination Redis | `cache_params` Redis |
 | Redis transaction buffer for spend writes | Coordination Redis | `cache_params` Redis |
-| Pod locks for scheduled jobs | Coordination Redis | `cache_params` Redis |
+| Pod locks for scheduled jobs (except DB-coordinated spend log cleanup) | Coordination Redis | `cache_params` Redis |
 | CLI SSO login sessions and SAML sign-in cache | Coordination Redis | `cache_params` Redis |
 | Shared config cache (`litellm_config_cache`) | Coordination Redis | `cache_params` Redis |
 | Virtual-key auth cache with `enable_redis_auth_cache: true` | Coordination Redis | `cache_params` Redis |
+| Hook state, MCP state and per-user OAuth token cache, JWKS/OIDC documents, and UI settings with `enable_redis_auth_cache: true` | Coordination Redis | `cache_params` Redis |
 | Router state (cooldowns, usage and latency routing) | Router's own Redis if configured, otherwise coordination Redis | Router's own Redis if configured, otherwise `cache_params` Redis |
 | Alerting state | Coordination Redis | `cache_params` Redis |
 | Config sync and auth invalidation pub/sub | Coordination Redis | `cache_params` Redis |
 | Shared health checks | Coordination Redis | `cache_params` Redis |
 | Login throttle counters and PKCE verifier storage | Coordination Redis | `cache_params` Redis |
+| Vector store fallback cooldowns | Coordination Redis | `cache_params` Redis |
+| Background response polling and cancellation | Coordination Redis | `cache_params` Redis |
+| Anthropic message-thread ownership | Coordination Redis | `cache_params` Redis |
+| Bedrock incremental guardrail scan state | Coordination Redis | `cache_params` Redis |
+| MCP registration rate limits and JWT signer state | Coordination Redis | `cache_params` Redis |
 
 With a separate coordination client, `cache_params` Redis serves only LLM response caching. Removing `coordination_redis` moves coordination traffic onto the response cache Redis, rather than removing that traffic. Response-cache traffic depends on the cache mode and request options, not just request volume.
 
 Virtual-key auth entries stay in memory per worker unless `litellm_settings.enable_redis_auth_cache: true`. That flag adds a Redis tier on the coordination client, falling back to the response cache client when no coordination block is set. Auth invalidation pub/sub uses coordination Redis even when the auth entries themselves stay in memory.
+
+The same flag shares hook state, MCP state and the per-user OAuth token cache, JWKS/OIDC documents, and UI settings through Redis. These caches otherwise stay local to each worker. Vector store fallback cooldowns, background response polling, and Bedrock incremental scan state use coordination Redis independently of that flag.
 
 Response caching is not required for coordination. With no `coordination_redis` block and no Redis response cache, the proxy can build a coordination client from `REDIS_*` environment variables.
 
