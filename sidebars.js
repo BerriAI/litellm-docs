@@ -1336,10 +1336,11 @@ const sidebars = {
       link: {
         type: "generated-index",
         title: "Multimodal",
-        description: "Vision, audio, PDF input, and image generation in chat.",
+        description: "Realtime voice, vision, audio, PDF input, and image generation in chat.",
         slug: "/guides/multimodal_io",
       },
       items: [
+        "voice",
         "completion/vision",
         "completion/audio",
         "completion/document_understanding",
@@ -1552,6 +1553,7 @@ const sidebars = {
         },
         "realtime",
         "proxy/realtime_webrtc",
+        "live_sessions",
         "realtime_translation",
         "rerank",
         { type: "ref", id: "response_api" },
