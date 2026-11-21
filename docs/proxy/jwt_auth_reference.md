@@ -43,7 +43,7 @@ Mappings omitted from an issuer entry fall back to global `litellm_jwtauth` sett
 
 :::important
 
-`issuers` is routing configuration, not an allowlist. An unmatched `iss` falls back to the global `JWT_PUBLIC_KEY_URL`, `JWT_ISSUER`, and `JWT_AUDIENCE` path. Leave `JWT_PUBLIC_KEY_URL` unset if only the configured issuers should authenticate.
+`issuers` is routing configuration, not an allowlist. An unmatched `iss` falls back to the global `JWT_PUBLIC_KEY_URL`, `JWT_ISSUER`, and `JWT_AUDIENCE` path, where `litellm_jwtauth.public_key_url` and `litellm_jwtauth.audience` replace their environment variables when set. Leave both key URL settings unset if only the configured issuers should authenticate.
 
 :::
 
