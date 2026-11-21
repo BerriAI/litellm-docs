@@ -321,11 +321,11 @@ claude --model claude-opus-vertex
 
 ### Bedrock-specific setup for Claude Code
 
-Two extra steps make Claude Code work cleanly against Bedrock through LiteLLM today. Please do both before launching `claude` against a Bedrock-backed model.
+Check these two things before you launch `claude` against a Bedrock-backed model.
 
 :::note[Temporary workaround]
 
-The Invoke preference and the beta-header flag below are temporary. LiteLLM already re-implements many Anthropic-API features on top of Bedrock inside the gateway, and we're steadily extending that coverage on the Converse path. Soon, these workarounds will no longer be necessary.
+The Invoke preference below is temporary. LiteLLM already re-implements many Anthropic-API features on top of Bedrock inside the gateway, and we're steadily extending that coverage on the Converse path. Soon, this workaround will no longer be necessary.
 
 :::
 
@@ -333,49 +333,24 @@ The Invoke preference and the beta-header flag below are temporary. LiteLLM alre
 
 In the config above, Bedrock models use the `bedrock/invoke/<model-id>` prefix, currently the smoother path for Claude Code traffic. If you'd like to try Converse, swap the prefix from `bedrock/invoke/` to `bedrock/converse/` and check the matrix for the feature you need.
 
-#### 2. Disable Claude Code's experimental beta headers for Bedrock
+#### 2. Don't set `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS`
 
-Claude Code attaches Anthropic experimental beta headers (e.g. `anthropic-beta: prompt-caching-scope-2026-01-05,advanced-tool-use-2025-11-20`) on every request. These work great against Anthropic's first-party API, but Bedrock doesn't currently accept all of them and might return a `400 invalid beta flag` error. Set the **`CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS`** environment variable to `1` to strip those headers.
+Earlier versions of this guide told Bedrock users to set `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1` to avoid a `400 invalid beta flag` error. LiteLLM drops the beta headers Bedrock doesn't accept, and v1.109.0 fixed the last `invalid beta flag` error on Bedrock Invoke, so Claude Code works against Bedrock without the variable.
 
-The recommended place to set it is your **global Claude Code user settings file** at:
+The variable also turns off auto mode's [server-side checks](https://code.claude.com/docs/en/permission-modes#server-side-classifier-review). Claude Code then sends its own classifier requests, which [count toward your token usage](https://code.claude.com/docs/en/auto-mode-classifier-billing), and `/status` shows `Auto mode server: Disabled`. If you set it earlier, remove it from the `env` block in `~/.claude/settings.json`, from your project's `.claude/settings.json` or `.claude/settings.local.json`, and from your shell profile. Then fully quit and reopen Claude Code, or restart your IDE for the VS Code and JetBrains plugins.
 
+If you still need the variable, for example on a proxy older than v1.109.0 that answers `400 invalid beta flag`, set `CLAUDE_CODE_AUTO_MODE_SERVER` to `1` next to it. On Claude Code 2.1.319 or later, this keeps the server-side checks on.
+
+```json title="~/.claude/settings.json"
+{
+  "env": {
+    "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1",
+    "CLAUDE_CODE_AUTO_MODE_SERVER": "1"
+  }
+}
 ```
-~/.claude/settings.json
-```
 
-(That's `/Users/<you>/.claude/settings.json` on macOS / Linux, or `C:\Users\<you>\.claude\settings.json` on Windows. All Claude Code clients, incl. CLI, VS Code extension, JetBrains plugin, etc., read from this file.)
-
-**How to edit it:**
-
-1. Open `~/.claude/settings.json` in your editor of choice. If it doesn't exist yet, create it.
-
-   ```bash
-   # macOS / Linux - open with your default editor
-   ${EDITOR:-nano} ~/.claude/settings.json
-
-   # Or with VS Code
-   code ~/.claude/settings.json
-   ```
-
-2. Add (or merge into the existing) `env` block:
-
-   ```json title="~/.claude/settings.json"
-   {
-     "env": {
-       "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1"
-     }
-   }
-   ```
-
-3. **Fully quit and reopen Claude Code** so the new setting is picked up. For IDE plugins (VS Code, JetBrains), restart your IDE.
-
-:::tip[Alternative: project-scoped or shell-scoped]
-
-If you only want to disable beta headers for a single project, put the same `env` block in `.claude/settings.json` (committed) or `.claude/settings.local.json` (gitignored, personal) at the project root.
-
-Shell-level exports also work for the CLI (`export CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1` before launching `claude`), but **not** IDE plugins.
-
-:::
+To confirm the checks are on, let Claude Code run one tool call, then run `/status` and look for `Auto mode server: Enabled`.
 
 <Image img={require('../../img/release_notes/claude_code_demo.png')} style={{ width: '500px', height: 'auto' }} />
 
