@@ -90,7 +90,8 @@ curl -X POST \
 |---|---|---|
 | `ON_DEMAND` | `"default"` | `input_cost_per_token` |
 | `ON_DEMAND_PRIORITY` | `"priority"` | `input_cost_per_token_priority` |
-| `ON_DEMAND_FLEX` | `"flex"` | `input_cost_per_token_flex` |
+| `ON_DEMAND_FLEX`, `FLEX` or `BATCH` | `"flex"` | `input_cost_per_token_flex` |
+| `PROVISIONED_THROUGHPUT` or any other value | `"default"` | `input_cost_per_token` |
 
 The response carries this `service_tier` <SinceVersion v="1.112.0" />.
 
