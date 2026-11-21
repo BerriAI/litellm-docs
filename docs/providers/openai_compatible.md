@@ -31,6 +31,18 @@ To call models hosted behind an openai proxy, make 2 changes:
 1. **Do NOT** add anything additional to the base url e.g. `/v1/embedding`. LiteLLM uses the openai-client to make these calls, and that automatically adds the relevant endpoints. 
 
 
+## External provider definitions
+
+:::note Unreleased
+
+The `--providers` option and `PROVIDERS_FILE_PATH` environment variable depend on [LiteLLM PR #50623](https://github.com/BerriAI/litellm/pull/50623). They are not available in a stable release yet.
+
+:::
+
+`litellm --providers /path/to/providers.json` loads external OpenAI-compatible provider definitions at startup. Set `PROVIDERS_FILE_PATH` to the same path when the flag is omitted. An explicit `--providers` path takes precedence over the environment variable. The file uses the bundled `providers.json` shape. Entries extend the bundled registry, and an entry with an existing provider slug replaces that definition. A missing or invalid file stops startup.
+
+An external entry needs a `base_url` and an `api_key_env` name. Requests use their explicit `api_key` or the secret named by `api_key_env`. If neither is set, the request fails before it reaches the provider. An external entry does not inherit an unrelated `OPENAI_API_KEY`.
+
 ## Usage - completion
 ```python
 import litellm
