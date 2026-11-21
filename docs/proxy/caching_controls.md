@@ -5,6 +5,7 @@ description: Control what the LiteLLM proxy caches and for how long, per request
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import SinceVersion from '@site/src/components/SinceVersion';
 
 # Cache Controls
 
@@ -253,6 +254,52 @@ curl http://localhost:4000/v1/chat/completions \
 
 </TabItem>
 </Tabs>
+
+### `Cache-Control` request header
+
+Clients that cannot add a `cache` field to the body can send the standard HTTP `Cache-Control` request header instead. <SinceVersion v="1.112.0" /> The proxy reads `no-cache` and `no-store` from it and applies them like the body controls above.
+
+<Tabs>
+<TabItem value="openai" label="OpenAI Python SDK">
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="your-api-key",
+    base_url="http://0.0.0.0:4000"
+)
+
+chat_completion = client.chat.completions.create(
+    messages=[{"role": "user", "content": "Hello"}],
+    model="{{openai_small}}",
+    extra_headers={"Cache-Control": "no-cache"}  # Skip the cached response for this request
+)
+```
+
+</TabItem>
+
+<TabItem value="curl" label="curl">
+
+```shell
+curl http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Cache-Control: no-cache" \
+  -d '{
+    "model": "{{openai_small}}",
+    "messages": [
+      {"role": "user", "content": "Hello"}
+    ]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+Only `no-cache` and `no-store` are read from the header, and other directives such as `max-age` and `s-maxage` are ignored. A value in the body's `cache` field wins over the header. When a virtual key sets `allowed_cache_controls`, a header directive outside that list is ignored instead of rejected. Cache controls in a key's metadata, described below, take precedence over the header the same way they do over the body.
+
+Some HTTP clients send `Cache-Control: no-cache` on every request by default (Postman does), so their requests skip the cache.
 
 ## Per-key cache controls
 
