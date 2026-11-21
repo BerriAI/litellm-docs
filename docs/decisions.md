@@ -53,6 +53,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
 | A deployment's own [`supports_audio_input` and `supports_video_input`](#audio-and-video-on-other-deployments) values, and clip requests going only to the group deployments that take clips | `v1.110.0` |
 | [JSON input](#json-input) on OpenAI | `v1.112.0-rc.1`, and `v1.108.14` on the 1.108.x LTS line |
+| [Another LiteLLM proxy](#send-decision-calls-through-a-litellm-proxy) as a provider, with `litellm_proxy/` models | `v1.112.0-rc.1`, and `v1.108.15` on the 1.108.x LTS line |
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -83,6 +84,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | [vLLM](https://docs.vllm.ai/en/latest/serving/online_serving/structured_decisions.html) (self-hosted) | `hosted_vllm/Qwen/Qwen3-0.6B` | `HOSTED_VLLM_API_BASE` or `api_base` required, `HOSTED_VLLM_API_KEY` optional | `/v1/systemone` | No |
 | [Laya](https://github.com/NandhaKishorM/laya) (self-hosted) | `laya/english`, `laya/multilingual` or `laya/typed-decisions` | `api_base` or `LAYA_API_BASE` required, `LAYA_API_KEY` optional | `/v1/systemone` | No |
 | [Bespoke Nimble](https://github.com/bespokelabsai/nimble) (self-hosted) | `bespoke/nimble` on Ollama, else `bespoke/nimble-latest` or `bespoke/bespokelabs/Bespoke-Nimble-9B` | `api_base` or `BESPOKE_API_BASE` required, `BESPOKE_API_KEY` optional | `/v1/systemone` | No |
+| [LiteLLM proxy](#send-decision-calls-through-a-litellm-proxy) | `litellm_proxy/<model on that proxy>` | `LITELLM_PROXY_API_BASE` or `api_base` required, `LITELLM_PROXY_API_KEY` optional | The route you called | When that proxy's model takes them |
 
 Some of these providers need a newer LiteLLM release than the decision routes, as listed in [Availability and supported features](#availability-and-supported-features)
 
@@ -641,6 +643,42 @@ Through the Router the same split applies: `router.decisions` and `router.adecis
 :::info Upgrading from v1.104.x
 In v1.104.2 through v1.104.x, `litellm.decisions` accepted both shapes and picked the format from whether you passed `input` or `state`. Those calls keep working unchanged, with a `UserWarning`. Rename `litellm.decisions(state=...)` to `litellm.systemone(state=...)` when convenient, the arguments stay the same.
 :::
+
+### Send decision calls through a LiteLLM proxy
+
+Give a model the `litellm_proxy/` prefix to send the call to another LiteLLM proxy. `litellm.decisions` calls go to that proxy's `/v1/decisions` and `litellm.systemone` calls go to its `/v1/systemone`, so the proxy's virtual key needs access to the route you call. The answer has the fields a direct call to that model returns, and the call's cost is the proxy's `x-litellm-response-cost` header, else the cost map price of the model after the prefix.
+
+```python showLineNumbers title="SDK through a LiteLLM proxy"
+import os
+import litellm
+
+os.environ["LITELLM_PROXY_API_BASE"] = "https://litellm.example.com"
+os.environ["LITELLM_PROXY_API_KEY"] = "sk-..."
+
+response = litellm.systemone(
+    model="litellm_proxy/jev",
+    state="Customer wrote: I was charged twice for my order #4411 and want one of the charges refunded today.",
+    questions={
+        "is_refund_request": {"type": "noul", "instructions": "Is the customer asking for a refund?"},
+    },
+)
+print(response.answers["is_refund_request"].noul)
+```
+
+`use_litellm_proxy=True` on the call, or `litellm.use_litellm_proxy = True`, sends a model without the prefix to the same proxy. A `drop_params` you pass on the call goes to the proxy too, while the global `litellm.drop_params` stays local.
+
+On a proxy, a `litellm_proxy/` deployment forwards decision calls to the LiteLLM proxy its `api_base` names. The deployment's own `drop_params` goes to that proxy too, while `drop_params` in `litellm_settings` stays local.
+
+```yaml showLineNumbers
+model_list:
+  - model_name: jev
+    litellm_params:
+      model: litellm_proxy/jev
+      api_base: https://litellm.example.com
+      api_key: os.environ/UPSTREAM_LITELLM_KEY
+    model_info:
+      mode: decisions
+```
 
 ## Limits
 
