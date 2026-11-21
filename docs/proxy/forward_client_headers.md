@@ -4,7 +4,7 @@ Control which model groups can forward client headers to the underlying LLM prov
 
 ## Overview
 
-By default, LiteLLM does not forward client headers to LLM provider APIs for security reasons, with one exception. On Claude models LiteLLM always forwards `anthropic-user-profile-id`, see [Request Headers](./request_headers.md). However, you can selectively enable header forwarding for specific model groups using the `forward_client_headers_to_llm_api` setting.
+By default, LiteLLM does not forward client headers to LLM provider APIs for security reasons, with one exception. LiteLLM forwards `anthropic-user-profile-id` to Claude models without this setting, see [Request Headers](./request_headers.md). However, you can selectively enable header forwarding for specific model groups using the `forward_client_headers_to_llm_api` setting.
 
 ## How it Works
 
