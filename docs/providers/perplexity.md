@@ -1,7 +1,16 @@
+---
+title: "Perplexity API with LiteLLM: Sonar and Agent API"
+sidebar_label: "Perplexity AI"
+description: "Call Perplexity Sonar models and the Agent API via LiteLLM with the perplexity/ prefix from the Python SDK or AI Gateway, with web search and reasoning."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Perplexity AI (pplx-api)
+
+Perplexity offers the Sonar models and an Agent API with a web search tool; LiteLLM calls both with the `perplexity/` prefix from the Python SDK or AI Gateway.
+
 https://www.perplexity.ai
 
 ## API Key
@@ -473,8 +482,6 @@ response = responses(
         {"type": "fetch_url"}
     ],
     instructions="Use web_search to find relevant information and fetch_url to retrieve detailed content from sources. Provide citations for all claims.",
-    max_output_tokens=1000,
-    temperature=0.7,
 )
 
 print(f"Response ID: {response.id}")

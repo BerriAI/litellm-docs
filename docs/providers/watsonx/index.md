@@ -1,3 +1,9 @@
+---
+title: "IBM watsonx.ai API with LiteLLM: Setup"
+sidebar_label: "WatsonX"
+description: "Chat with Llama, Granite and Mixtral on IBM watsonx.ai, call tuned models in deployment spaces, embed text with Slate and authenticate with a Zen API key."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

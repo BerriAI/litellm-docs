@@ -109,13 +109,13 @@ If I do not have a license yet, stop and point me to ${SALES_URL}.`,
 2. Add the LiteAdmin MCP server to this client the way the guide shows for it (Claude Code, Claude Desktop, or Codex). Show me the change before writing it.
 3. Verify: list the gateway's models and my teams through the MCP tools, then stop and ask me what to change.`,
   },
-  liteagents: {
-    title: 'Try LiteAgents on one of my agents',
-    text: `Help me try LiteAgents, a preview SDK for switching agent harnesses without rewriting the agent. First read https://github.com/BerriAI/liteagents/blob/main/docs/getting-started.md and the harness-switching recipe at https://github.com/BerriAI/liteagents/blob/main/cookbook/recipes/10_harness_switch.py. Then:
-1. Install the preview release the getting-started guide names, in a separate virtual environment.
-2. Ask me which agent to port and which model to use. If I run a LiteLLM Gateway, point the model at it with a virtual key read from the environment.
-3. Port the agent to a LiteAgents profile, keeping its tools and MCP connections, and run one task.
-4. Change only the harness field to a second harness, run the same task, and show me both results side by side.`,
+  sdk_agents: {
+    title: 'Run an agent with the LiteLLM SDK',
+    text: `Help me run an agent with litellm.agent(), part of the LiteLLM Python SDK. First read ${DOCS}/docs/harness.md, ${DOCS}/docs/harness/quickstart.md and ${DOCS}/docs/harness/supported.md. Then:
+1. Check this project's Python environment and installed harness runtimes. Use the project's package manager to install litellm and the dependencies for the harness I choose.
+2. Ask which task, workspace and model to use. Reuse LITELLM_PROXY_API_BASE and LITELLM_PROXY_API_KEY from the environment when available; never print credentials or save them in code.
+3. Create a small script using litellm.agent(), the Harness enum and an explicit sandbox. Explain the selected sandbox and permissions before running the task. Check agent_capabilities() before adding custom tools or other optional features.
+4. Run the task and show its result, stop reason, usage and cost. Link to agent_session() for follow-up turns and stream=True for live events.`,
   },
 };
 
@@ -335,7 +335,7 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
 // it with one small text visual.
 const CARD_GROUPS = [
   {title: 'Tools and agents', ids: ['mcp', 'agents']},
-  {title: 'Models and harnesses', ids: ['autorouter', 'liteagents']},
+  {title: 'Models and agents', ids: ['autorouter', 'sdk_agents']},
   {title: 'Your terminal and your agent', ids: ['tools', 'liteadmin']},
 ];
 
@@ -388,20 +388,24 @@ const PRODUCT_CARDS = [
     prompt: 'autorouter',
   },
   {
-    id: 'liteagents',
-    product: 'LiteAgents (preview)',
-    problem: 'Use a different agent harness and keep your agent code.',
-    text: 'Replace one parameter to move between Deep Agents, Pydantic AI, the Claude Agent SDK, Codex, and OpenCode. Your tools and MCP connections stay the same.',
+    id: 'sdk_agents',
+    product: 'Agents in the LiteLLM SDK',
+    problem: 'Run agents from Python with one API.',
+    text: 'Use litellm.agent() with Claude Code, Codex, OpenCode, Pi, Deep Agents or Tool Loop. Choose a harness and model, stream output, and track cost. Included in the litellm package.',
     visual: {
       type: 'code',
       lang: 'python',
-      code: `ProfileOptions(
-    harness="deepagents",  # or "claude-sdk", "codex", "pydantic-ai"
-    model="my-model",
+      code: `from litellm import agent, Harness, sandbox
+
+result = agent(
+    Harness.CODEX, "Explain this repository.",
+    sandbox=sandbox.local("."),
+    model="litellm_proxy/coder",
+    permissions="read-only",
 )`,
     },
-    to: '/blog/liteagents-sdk',
-    prompt: 'liteagents',
+    to: '/docs/harness',
+    prompt: 'sdk_agents',
   },
   {
     id: 'tools',

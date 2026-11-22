@@ -139,7 +139,7 @@ const sidebars = {
         { type: "doc", id: "langchain/langchain", label: "LangChain with LiteLLM", customProps: { icon: "/img/integrations/langchain.png" } },
         { type: "ref", id: "projects/openai-agents", customProps: { icon: "/img/integrations/openai.png" } },
         { type: "doc", id: "tutorials/instructor", label: "Instructor with LiteLLM" },
-        { type: "link", label: "Agent Harnesses (litellm.agent)", href: "/docs/harness", className: "sidebar-xlink" },
+        { type: "link", label: "Agents in the LiteLLM SDK", href: "/docs/harness", className: "sidebar-xlink" },
       ]
     },
     {
@@ -395,6 +395,7 @@ const sidebars = {
       className: "sidebar-rail",
       items: [
         { type: "doc", id: "proxy/docker_quick_start", label: "Quickstart" },
+        { type: "doc", id: "proxy/sync_models_github", label: "Auto Sync New Models" },
         { type: "doc", id: "proxy/quick_start", label: "CLI Quickstart" },
         { type: "doc", id: "benchmarks", label: "Benchmarks" },
         { type: "html", value: "Set up", className: "sidebar-group-label", defaultStyle: true },
@@ -441,6 +442,7 @@ const sidebars = {
                   label: "High Availability",
                   items: [
                     { type: "doc", id: "proxy/deploy/ha/overview", label: "Overview" },
+                    "proxy/deploy/ha/haproxy",
                     "proxy/deploy/ha/blue_green",
                     "proxy/deploy/ha/canary",
                     {
@@ -454,11 +456,23 @@ const sidebars = {
                     },
                   ],
                 },
-                { type: "doc", id: "proxy/global_control_plane", className: "sidebar-enterprise" },
+                {
+                  type: "category",
+                  label: "Global Control Plane",
+                  className: "sidebar-enterprise",
+                  items: [
+                    { type: "doc", id: "proxy/global_control_plane", label: "Overview" },
+                    "proxy/global_control_plane/architecture",
+                    "proxy/global_control_plane/configuration",
+                    "proxy/global_control_plane/api_reference",
+                    "proxy/global_control_plane/legacy_ui",
+                  ],
+                },
               ],
             },
             "proxy/prod",
             "proxy/upgrade_guide",
+            "proxy/database_migrations",
             "proxy/health",
           ],
         },
@@ -554,7 +568,10 @@ const sidebars = {
             {
               type: "category",
               label: "Cursor",
-              items: [{ type: "doc", id: "tutorials/cursor_integration", label: "Setup" }],
+              items: [
+                { type: "doc", id: "tutorials/cursor_integration", label: "IDE setup" },
+                { type: "doc", id: "tutorials/cursor_cli_subscription", label: "CLI subscription" },
+              ],
             },
             {
               type: "category",
@@ -657,15 +674,8 @@ const sidebars = {
           label: "Spend Tracking",
           items: [
             "proxy/cost_tracking",
-            {
-              type: "category",
-              label: "Customer Portal",
-              items: [
-                "proxy/customer_portal/track-customer-spend",
-                "proxy/customer_portal/api_reference",
-              ],
-            },
             "proxy/model_cost_map",
+            "proxy/model_updates_feed",
             { type: "doc", id: "fallback_generalizations", label: "Fallback generalizations" },
             "proxy/request_tags",
             "proxy/billing",
@@ -678,7 +688,6 @@ const sidebars = {
             "proxy/provider_margins",
             "proxy/provider_discounts",
             "proxy/off_peak_pricing",
-            "proxy/sync_models_github",
             "tutorials/vertex_ai_pay_go",
             "proxy/spend_logs_deletion",
             "proxy/token_redaction_spend_logs",
@@ -691,7 +700,6 @@ const sidebars = {
             "proxy/users",
             "proxy/team_budgets",
             { type: "doc", id: "proxy/project_management", className: "sidebar-enterprise" },
-            "proxy/customers",
 
             { type: "doc", id: "proxy/ui_team_soft_budget_alerts", className: "sidebar-enterprise" },
             "proxy/tag_budgets",
@@ -810,6 +818,7 @@ const sidebars = {
             { type: "doc", id: "proxy/dynamic_logging", className: "sidebar-enterprise" },
             "proxy/logging",
             "proxy/logging_spec",
+            "proxy/prefix_block_hashes",
             { type: "doc", id: "proxy/team_logging", className: "sidebar-enterprise" },
             { type: "ref", id: "proxy/audit_logs", label: "Audit Logs", className: "sidebar-enterprise" },
             { type: "ref", id: "proxy/prometheus", label: "Prometheus Metrics" },
@@ -884,7 +893,6 @@ const sidebars = {
               type: "category",
               label: "Observability: Usage",
               items: [
-                "proxy/customer_usage",
                 "proxy/endpoint_activity",
               ]
             },
@@ -1056,6 +1064,21 @@ const sidebars = {
         { type: "link", label: "Prompt Cache Routing", href: "/docs/tutorials/claude_code_prompt_cache_routing", className: "sidebar-xlink" },
       ],
     },
+    require('./docs/proxy/lens/sidebar'),
+    {
+      type: "category",
+      label: "Customer Management",
+      link: {type: "doc", id: "proxy/customers"},
+      items: [
+        "proxy/customers",
+        "proxy/customer_management/track-customer-spend",
+        "proxy/customer_management/applications",
+        "proxy/customer_management/rbac",
+        "proxy/customer_management/customer-surcharge",
+        "proxy/customer_management/jwt-customer-identity",
+        "proxy/customer_management/api_reference",
+      ],
+    },
     {
       type: "category",
       label: "Python SDK",
@@ -1120,11 +1143,11 @@ const sidebars = {
             },
           ],
         },
-        // litellm.agent(): agent harnesses (Claude Code, Codex, OpenCode, Deep Agents, Tool Loop).
+        // litellm.agent(): agent harnesses (Claude Code, Codex, OpenCode, Pi, Deep Agents, Tool Loop).
         // Styled by the "litellm.harness docs" block in src/css/custom.css.
         {
           type: "category",
-          label: "Agent Harnesses",
+          label: "Agents",
           className: "harness-sidebar",
           items: [
             {
@@ -1147,6 +1170,7 @@ const sidebars = {
                 "harness/claude_code",
                 "harness/codex",
                 "harness/opencode",
+                "harness/pi",
                 "harness/deepagents",
                 "harness/tool_loop",
               ],
@@ -1158,6 +1182,7 @@ const sidebars = {
               collapsible: false,
               items: [
                 "harness/quickstart",
+                "harness/evaluation",
                 "harness/models",
                 "harness/sessions",
                 "harness/events",
@@ -1207,7 +1232,6 @@ const sidebars = {
         "exception_mapping",
       ],
     },
-    require('./docs/proxy/lens/sidebar'),
     { type: "html", value: "Features", className: "sidebar-caption", defaultStyle: true },
     { type: "doc", id: "guides/index", className: "top-level-doc-item" },
     { type: "doc", id: "subscriptions", className: "top-level-doc-item" },
@@ -1312,10 +1336,11 @@ const sidebars = {
       link: {
         type: "generated-index",
         title: "Multimodal",
-        description: "Vision, audio, PDF input, and image generation in chat.",
+        description: "Realtime voice, vision, audio, PDF input, and image generation in chat.",
         slug: "/guides/multimodal_io",
       },
       items: [
+        "voice",
         "completion/vision",
         "completion/audio",
         "completion/document_understanding",
@@ -1353,7 +1378,6 @@ const sidebars = {
       ],
     },
     { type: "html", value: "Developer Tools", className: "sidebar-caption", defaultStyle: true },
-    { type: "doc", id: "liteagents", label: "liteagents SDK", className: "top-level-doc-item sidebar-beta" },
     {
       type: "category",
       label: "lite CLI",
@@ -1529,6 +1553,7 @@ const sidebars = {
         },
         "realtime",
         "proxy/realtime_webrtc",
+        "live_sessions",
         "realtime_translation",
         "rerank",
         { type: "ref", id: "response_api" },
@@ -1557,6 +1582,7 @@ const sidebars = {
             "search/nimble",
             "search/bing_grounding",
             "search/deepseek",
+            "search/webiq",
           ]
         },
         "skills",
@@ -1906,6 +1932,7 @@ const providersSidebar = {
     { type: "html", value: "Vector Stores", className: "sidebar-group-label", defaultStyle: true },
     "providers/milvus_vector_stores",
     "providers/mongodb_vector_stores",
+    "providers/opensearch_vector_stores",
     "providers/s3_vectors",
     "providers/valkey_vector_stores",
     "providers/ragflow_vector_store",
@@ -1953,6 +1980,7 @@ const providersSidebar = {
     "providers/github_copilot",
     "providers/gmi",
     "providers/gradient_ai",
+    "providers/gradium",
     "providers/heroku",
     "providers/hostinger_router",
     { type: "category", label: "HuggingFace", className: "sidebar-provider", link: { type: "doc", id: "providers/huggingface" }, items: [
@@ -1994,6 +2022,7 @@ const providersSidebar = {
     "providers/refuseless",
     "providers/reka",
     "providers/replicate",
+    "providers/resetdata",
     { type: "category", label: "RunwayML", className: "sidebar-provider", link: { type: "doc", id: "providers/runwayml/images" }, items: [
       "providers/runwayml/videos",
     ] },

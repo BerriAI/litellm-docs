@@ -45,12 +45,12 @@ export const COMPONENTS = [
     id: 'messages',
     text: 'Messages translation',
     work: [
-      {id: 'anthropic', size: 2, partial: 'v1.104.0-rc.1'},
+      {id: 'anthropic', size: 2, partial: 'v1.104.0-rc.1', done: 'v1.111.0-rc.1'},
       {id: 'deepseek', size: 0.5, partial: 'v1.107.0-rc.1'},
       {id: 'vertex_ai', size: 0.5, partial: 'v1.107.0-rc.1'},
-      {id: 'bedrock', size: 0.5, partial: 'v1.104.0-rc.1'},
+      {id: 'bedrock', size: 0.5, partial: 'v1.104.0-rc.1', done: 'v1.111.0-rc.1'},
       {id: 'bedrock_mantle', size: 0.5, partial: 'v1.107.0-rc.1'},
-      {id: 'azure_ai', size: 0.5, partial: 'v1.94.0-rc.1'},
+      {id: 'azure_ai', size: 0.5, partial: 'v1.94.0-rc.1', done: 'v1.111.0-rc.1'},
       {id: 'minimax', size: 0.5, partial: 'v1.107.0-rc.1'},
       {id: 'github_copilot', size: 0.5},
       {id: 'tencent', size: 0.5, partial: 'v1.107.0-rc.1'},
@@ -140,20 +140,20 @@ export const COMPONENTS = [
     id: 'features',
     text: 'Python-only request features',
     work: [
-      {id: 'mock', text: 'Mock responses', size: 0.5},
-      {id: 'mcp-tools', text: 'Proxy MCP tools', size: 3},
-      {id: 'caller-client', text: 'Caller HTTP clients', size: 0.5},
+      {id: 'mock', text: 'Mock responses', size: 0.5, partial: 'v1.111.0-rc.1'},
+      {id: 'mcp-tools', text: 'Proxy MCP tools', size: 3, partial: 'v1.111.0-rc.1'},
+      {id: 'caller-client', text: 'Caller HTTP clients', size: 0.5, partial: 'v1.111.0-rc.1'},
       {id: 'timeouts', text: 'Request, stream and phase timeouts', size: 1},
-      {id: 'agentic-loop', text: 'Agentic loop hooks', size: 2},
-      {id: 'tls', text: 'TLS security level and curves', size: 1},
-      {id: 'modify-params', text: 'modify_params rewrites', size: 1},
-      {id: 'cache-control-injection', text: 'Prompt cache breakpoint injection', size: 1},
-      {id: 'workload-identity', text: 'Anthropic workload identity tokens', size: 1},
-      {id: 'thinking-retry', text: 'Thinking signature retry', size: 1},
-      {id: 'stream-cost', text: 'Cost in streamed usage', size: 0.5},
-      {id: 'websearch', text: 'Web search interception', size: 2},
-      {id: 'interceptors', text: 'Messages interceptors', size: 2},
-      {id: 'safeguards', text: 'Safeguards classifier', size: 2},
+      {id: 'agentic-loop', text: 'Agentic loop hooks', size: 2, partial: 'v1.111.0-rc.1'},
+      {id: 'tls', text: 'TLS security level and curves', size: 1, partial: 'v1.111.0-rc.1'},
+      {id: 'modify-params', text: 'modify_params rewrites', size: 1, partial: 'v1.111.0-rc.1'},
+      {id: 'cache-control-injection', text: 'Prompt cache breakpoint injection', size: 1, partial: 'v1.111.0-rc.1'},
+      {id: 'workload-identity', text: 'Anthropic workload identity tokens', size: 1, partial: 'v1.111.0-rc.1'},
+      {id: 'thinking-retry', text: 'Thinking signature retry', size: 1, partial: 'v1.111.0-rc.1'},
+      {id: 'stream-cost', text: 'Cost in streamed usage', size: 0.5, partial: 'v1.111.0-rc.1'},
+      {id: 'websearch', text: 'Web search interception', size: 2, partial: 'v1.111.0-rc.1'},
+      {id: 'interceptors', text: 'Messages interceptors', size: 2, partial: 'v1.111.0-rc.1'},
+      {id: 'safeguards', text: 'Safeguards classifier', size: 2, partial: 'v1.111.0-rc.1'},
       {id: 'drop-params', text: 'drop_params', size: 1, partial: 'v1.104.0-rc.1'},
       {id: 'extra-body', text: 'Extra body fields', size: 0.5},
       {id: 'prompt-management', text: 'Prompt management', size: 2},
@@ -214,7 +214,7 @@ export const COMPONENTS = [
     text: 'Budgets and rate limits',
     work: [
       {id: 'scripts', text: 'Shared rate limit scripts and key naming', size: 3, partial: 'v1.110.0-rc.1'},
-      {id: 'budgets', text: 'Budget checks', size: 2},
+      {id: 'budgets', text: 'Budget checks', size: 2, partial: 'v1.111.0-rc.1'},
     ],
   },
   {
@@ -240,9 +240,9 @@ export const COMPONENTS = [
     text: 'Logging and callbacks',
     work: [
       {id: 'logging', text: 'Logging callbacks', size: 1, partial: 'v1.104.0-rc.1'},
-      {id: 'payload', text: 'Shared logging payload', size: 4},
+      {id: 'payload', text: 'Shared logging payload', size: 4, partial: 'v1.111.0-rc.1'},
       {id: 'prometheus', text: 'Prometheus', size: 2},
-      {id: 'exporters', text: 'S3 and other exporters', size: 1},
+      {id: 'exporters', text: 'S3 and other exporters', size: 1, partial: 'v1.111.0-rc.1'},
       {id: 'hooks', text: 'Hook pipeline contract', size: 3, partial: 'v1.105.0-rc.1'},
       {id: 'custom-callbacks', text: 'Custom Python callbacks forwarded to Python', size: 1},
     ],
@@ -332,27 +332,14 @@ export const GOALS: readonly GoalDeclaration[] = [
 // or revise the plan.
 export const PLANS: readonly PlanDeclaration[] = [
   {
-    // Dates and scope from the Rust Migration Depth First Plan's calibration
-    // table. The mapping to catalog items and their percentages is approximate.
+    // Dates and scope from the Rust Migration Depth First Plan's timeline. The
+    // mapping to catalog items and their percentages is approximate.
     // Source: https://app.notion.com/p/40343b8acdab80faaa76fce7ab5922b4
-    id: 'auth-spend-callbacks',
-    date: '2026-11-14',
-    label: 'Auth + spend',
-    description: 'Auth and spend logs complete the proxy path, with logging and callbacks ready for the common configuration.',
-    done: {
-      auth: ['key-lookup', 'invalidation', 'authorization'],
-      budgets: '*',
-      spend: '*',
-      logging: ['logging', 'payload', 'hooks', 'custom-callbacks'],
-    },
-  },
-  {
-    id: 'config-db-cache',
+    id: 'db-spend-logs',
     date: '2026-11-21',
-    label: 'Config + cache',
-    description: 'Config loading, database access for the common Messages path, and caching. Callback migration and testing continue.',
-    done: {db: '*', config: '*', cache: ['backends', 'wiring', 'gaps', 'accounting']},
-    partial: {logging: ['payload', 'exporters']},
+    label: 'DB + spend logs',
+    description: 'Database access finishes and spend logs are written from Rust. More Messages providers and cost tracking continue.',
+    done: {db: '*', spend: '*'},
   },
   {
     // Keep the public target after the internal work dates. Do not assign
@@ -361,7 +348,8 @@ export const PLANS: readonly PlanDeclaration[] = [
     date: '2026-12-01',
     route: 'messages',
     label: ['e2e', 'simple'],
-    description: 'Common Messages requests end to end in Rust. The projected percentage is a rough estimate of the broader migration, based on the shared infrastructure needed for this path.',
+    description: 'Common Messages requests end to end in Rust, with config loading and key and JWT auth in the gateway. The projected percentage is a rough estimate of the broader migration, based on the shared infrastructure needed for this path.',
+    done: {config: '*', auth: ['key-lookup', 'authorization', 'jwt']},
   },
 ];
 

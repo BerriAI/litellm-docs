@@ -1,3 +1,9 @@
+---
+title: "Gemini Files API (Beta) with LiteLLM"
+sidebar_label: "[BETA] Google AI Studio (Gemini) Files API"
+description: "Beta: upload large media files to Google AI Studio (Gemini) through the LiteLLM AI Gateway for generateContent, with config.yaml setup and Azure Blob Storage."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

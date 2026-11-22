@@ -1,3 +1,9 @@
+---
+title: "OpenAI API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "OpenAI"
+description: "Call GPT-5, GPT-4.1 and o-series models with reasoning effort, web search, vision, PDF input and the Responses API bridge, and transcribe audio with gpt-transcribe."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -142,18 +148,12 @@ print(response)
 <TabItem value="langchain" label="Langchain">
 
 ```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000", # set openai_api_base to the LiteLLM Proxy
-    model = "{{openai_small}}",
-    temperature=0.1
+    model = "{{openai_small}}"
 )
 
 messages = [
@@ -164,7 +164,7 @@ messages = [
         content="test from litellm. tell me why it's amazing in 1 sentence"
     ),
 ]
-response = chat(messages)
+response = chat.invoke(messages)
 
 print(response)
 ```
@@ -990,9 +990,7 @@ Supported models:
 
 | Model Name                | Function Call                                                          |
 |---------------------------|-----------------------------------------------------------------|
-| `whisper-1`    | `response = completion(model="whisper-1", file=audio_file)`     |
-| `gpt-4o-transcribe` | `response = completion(model="gpt-4o-transcribe", file=audio_file)` |
-| `gpt-4o-mini-transcribe` | `response = completion(model="gpt-4o-mini-transcribe", file=audio_file)` |
+| `gpt-transcribe` | `response = transcription(model="gpt-transcribe", file=audio_file)` |
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -1005,7 +1003,7 @@ import os
 os.environ["OPENAI_API_KEY"] = ""
 audio_file = open("/path/to/audio.mp3", "rb")
 
-response = transcription(model="gpt-4o-transcribe", file=audio_file)
+response = transcription(model="gpt-transcribe", file=audio_file)
 
 print(f"response: {response}")
 ```
@@ -1017,9 +1015,9 @@ print(f"response: {response}")
 
 ```yaml
 model_list:
-- model_name: gpt-4o-transcribe
+- model_name: gpt-transcribe
   litellm_params:
-    model: gpt-4o-transcribe
+    model: gpt-transcribe
     api_key: os.environ/OPENAI_API_KEY
   model_info:
     mode: audio_transcription
@@ -1040,7 +1038,7 @@ litellm --config config.yaml
 curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'file=@"/Users/krrishdholakia/Downloads/gettysburg.wav"' \
---form 'model="gpt-4o-transcribe"'
+--form 'model="gpt-transcribe"'
 ```
 
 

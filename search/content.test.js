@@ -3,8 +3,67 @@ const assert = require('node:assert/strict');
 const {createIndex, loadIndex, search} = require('./engine');
 const {collectPages, extractSections} = require('../plugins/docs-search');
 const {sourceLabel, sourceDetail} = require('./content');
+const {serializeRuntimeIndex, loadRuntimeIndex} = require('./runtime-index');
 
 const passage = (url, title, extra = {}) => ({id: url, url, title, heading: '', text: 'Configure request routing.', ...extra});
+
+test('search results use the rendered parent product instead of the URL folder', () => {
+  const cases = [
+    ['/docs/proxy/lens/deployment/storage', 'LiteLLM Lens', 'Set up Lens', 'Storage and secrets', 'Lens'],
+    ['/docs/benchmarks', 'AI Gateway', 'Performance', 'Benchmarks', 'AI Gateway'],
+    ['/docs/proxy/tool_policies', 'MCP Gateway', 'Access Control', 'Tool policies', 'MCP Gateway'],
+    ['/docs/response_api', 'Python SDK', 'SDK Functions', 'responses()', 'Python SDK'],
+    ['/docs/skills_gateway', 'Agent Gateway', 'Skills', 'Skills gateway', 'Agent Gateway'],
+    ['/docs/proxy/auto_routing', 'Auto Router', 'Configuration', 'Routing', 'Auto Router'],
+    ['/docs/future_product/setup', 'Future product', 'Deployment', 'Setup', 'Future product'],
+  ];
+  const documents = cases.flatMap(([url, parent, section, title]) => extractSections(
+    `<nav><ol><li class="breadcrumbs__item"><a aria-label="Home page" href="/docs/"></a></li>
+      <li class="breadcrumbs__item">${parent}</li><li class="breadcrumbs__item">${section}</li>
+      <li class="breadcrumbs__item breadcrumbs__item--active">${title}</li></ol></nav>
+      <article class="theme-doc-markdown"><h1>${title}</h1><h2 id="configuration">Configuration</h2><p>Configure request routing.</p></article>`, url));
+  const portable = loadIndex(JSON.stringify(createIndex(documents)));
+  for (const index of [portable, loadRuntimeIndex(serializeRuntimeIndex(portable))]) {
+    for (const groupPages of [true, false]) {
+      const results = search(index, 'request routing', {groupPages, limit: 20});
+      assert.equal(results.length, cases.length);
+      for (const [url, , , , category] of cases) {
+        const result = results.find(hit => hit.url.split('#')[0] === url);
+        assert.equal(sourceLabel(result), 'Docs');
+        assert.equal(sourceDetail(result), category, url);
+      }
+    }
+  }
+});
+
+test('product landing pages without parent breadcrumbs keep specific product labels', () => {
+  const cases = [
+    ['/docs/proxy/lens', 'Lens'], ['/docs/proxy/lens/deployment/storage', 'Lens'],
+    ['/docs/simple_proxy', 'AI Gateway'], ['/docs/proxy/config_settings', 'AI Gateway'],
+    ['/docs/mcp', 'MCP Gateway'], ['/docs/mcp_authentication', 'MCP Gateway'],
+    ['/docs/a2a', 'Agent Gateway'], ['/docs/auto_router/', 'Auto Router'],
+    ['/docs/python_sdk', 'Python SDK'], ['/docs/completion/input', 'Python SDK'],
+    ['/docs/proxy/lens_other', 'AI Gateway'], ['/docs/mcpherson', 'Docs'],
+  ];
+  for (const [url, category] of cases) {
+    const [result] = search(createIndex([passage(url, 'Configuration')]), 'request routing');
+    assert.equal(result.category, category, url);
+  }
+});
+
+test('explicit integration and API categories and provider ranking categories are preserved', () => {
+  const html = '<li class="breadcrumbs__item">OpenAI</li><li class="breadcrumbs__item">Setup</li><article class="theme-doc-markdown"><h1>Setup</h1><p>Configure request routing.</p></article>';
+  const cases = [
+    ['/docs/tutorials/openai_agents_sdk', {category: 'Integrations'}, 'Integration guide', ''],
+    ['/docs/reference', {category: 'API reference'}, 'Docs', 'API reference'],
+    ['/docs/providers/openai/responses_api', {}, 'Docs', 'Providers'],
+  ];
+  for (const [url, metadata, label, detail] of cases) {
+    const [result] = search(createIndex(extractSections(html, url, metadata)), 'request routing');
+    assert.equal(sourceLabel(result), label);
+    assert.equal(sourceDetail(result), detail);
+  }
+});
 
 test('article metadata excludes listings, drafts, unlisted content, and external pages', () => {
   const metadata = (permalink, extra = {}) => ({permalink, title: 'Request routing', ...extra});
@@ -34,6 +93,49 @@ test('blog extraction preserves article headings and code without author or navi
   assert.equal(sections[1].date, '2026-01-02');
   assert.doesNotMatch(JSON.stringify(sections), /Navigation noise|Author noise|Tag noise|Copy/);
   assert.deepEqual(extractSections('<meta http-equiv="refresh" content="0;url=/elsewhere">' + html, '/blog/redirect'), []);
+});
+
+test('SDK scope follows the Python SDK subtree, including agents', () => {
+  const docs = [
+    ['python_sdk', '/docs/python_sdk'],
+    ['response_api', '/docs/response_api'],
+    ['harness/index', '/docs/harness'],
+    ['gateway_overview', '/docs/gateway_overview'],
+  ].map(([id, permalink]) => ({id, permalink, title: id, sidebar: 'tutorialSidebar'}));
+  const pages = collectPages({
+    'docusaurus-plugin-content-docs': {default: {loadedVersions: [{docs, sidebars: {tutorialSidebar: [
+      {type: 'category', link: {type: 'doc', id: 'python_sdk'}, items: [
+        {type: 'category', items: [{type: 'doc', id: 'response_api'}, {type: 'doc', id: 'harness/index'}]},
+        {type: 'link', href: '/docs/gateway_overview'},
+      ]},
+      {type: 'doc', id: 'gateway_overview'},
+    ]}}]}},
+  });
+  const html = '<article class="theme-doc-markdown"><h1>SDK guide</h1><p>Run a harness.</p></article>';
+  const sections = [...pages].flatMap(([url, metadata]) => extractSections(html, url, metadata));
+  assert.deepEqual(sections.filter(section => section.sdk).map(section => section.url),
+    ['/docs/python_sdk', '/docs/response_api', '/docs/harness']);
+});
+
+test('SDK scope includes shared completion guides and the Requests & Responses subtree, not proxy guides', () => {
+  const docs = [
+    ['completion/stream', '/docs/completion/stream'],
+    ['completion/function_call', '/docs/completion/function_call'],
+    ['reasoning_content', '/docs/reasoning_content'],
+    ['proxy/user_keys', '/docs/proxy/user_keys'],
+  ].map(([id, permalink]) => ({id, permalink, title: id, sidebar: 'tutorialSidebar'}));
+  const pages = collectPages({
+    'docusaurus-plugin-content-docs': {default: {loadedVersions: [{docs, sidebars: {tutorialSidebar: [
+      {type: 'category', link: {type: 'generated-index', slug: '/guides/core_request_response_patterns'}, items: [
+        {type: 'doc', id: 'completion/stream'}, {type: 'doc', id: 'reasoning_content'},
+      ]},
+      {type: 'category', link: {type: 'generated-index', slug: '/guides/tools_integrations'}, items: [
+        {type: 'doc', id: 'completion/function_call'}, {type: 'doc', id: 'proxy/user_keys'},
+      ]},
+    ]}}]}},
+  });
+  assert.deepEqual([...pages].filter(([, metadata]) => metadata.sdk).map(([url]) => url),
+    ['/docs/completion/stream', '/docs/completion/function_call', '/docs/reasoning_content']);
 });
 
 test('archive growth leaves docs scores unchanged and source filters survive serialization', () => {

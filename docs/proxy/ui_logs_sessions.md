@@ -74,7 +74,7 @@ response2 = client.chat.completions.create(
 Initialize a new session with a unique ID and create a chat model instance for making requests. The session ID is embedded in the model's configuration.
 
 ```python showLineNumbers
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 import uuid
 
 # Create a session ID

@@ -1,3 +1,9 @@
+---
+title: "AWS SageMaker API with LiteLLM AI Gateway"
+sidebar_label: "AWS Sagemaker"
+description: "Call AWS SageMaker endpoints via LiteLLM with the sagemaker/ prefix from the Python SDK or AI Gateway. Set AWS credentials, stream, run embedding models."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem'
 

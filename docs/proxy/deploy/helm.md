@@ -9,6 +9,8 @@ import TabItem from '@theme/TabItem';
 
 # Deploy with Helm
 
+For new model prices, [reload pricing without upgrading the image or Helm chart](../sync_models_github).
+
 {/* keep-version-note */}
 
 ## Prerequisites
@@ -114,7 +116,6 @@ backend:
 
 ```bash
 helm upgrade --install litellm oci://ghcr.io/berriai/litellm/chart/litellm \
-  --version 1.0.0 \
   --namespace litellm --values values.yaml \
   --wait --timeout 30m
 ```
@@ -186,7 +187,9 @@ See the [complete values.yaml](https://github.com/BerriAI/litellm/blob/main/lite
 | `ingress.extraPaths` | `[]` | Adds paths before the backend catch-all. Entries need `path`. Component targets default to `service: gateway` and `pathType: Prefix`. Duplicate built-in routes are rejected. |
 | `ingress.extraPaths[].serviceName`, `.servicePort` | Unset | Routes an extra path to another Kubernetes Service. Set both and omit `service`. |
 
-In single-service mode, built-in and component-targeted paths use the monolith Service. Keep health and metrics endpoints private. Use the [cloud reference architectures](./cloud/overview.md) for network placement.
+In single-service mode, built-in and component-targeted paths use the monolith Service. Keep health and metrics endpoints private.
+
+In component mode the chart routes every path the gateway serves to the gateway Service. With the `alb` controller it puts two gateway prefixes in each ALB rule, so a default install stays under the 100 rules an ALB listener allows by default. Older charts sent `/decisions`, `/v1/decisions`, `/deepgram`, `/extraction`, `/v1/extraction`, `/fal_ai`, `/gigachat`, `/live/sessions`, `/v1/live/sessions`, `/nvidia_nim`, `/openrouter`, `/systemone`, `/v1/systemone`, `/tinyfish`, `/typesafe`, `/watsonx` and the exact path `/eu_jev/v1/systemone` to the backend catch-all. If you added any of them to `ingress.extraPaths` to work around that, remove those entries when you upgrade. An entry with the same path and path type as a built-in route makes the chart fail to render. Use the [cloud reference architectures](./cloud/overview.md) for network placement.
 
 </details>
 
@@ -256,7 +259,9 @@ Add [RPS and TPS targets](./autoscaling.md#scale-on-requests-and-tokens-per-pod)
 | `gateway.collector.resources` | Requests `500m` CPU / `1Gi`, limits `1` CPU / `2Gi` | Collector sidecar resources. |
 | `gateway.collector.scaleOnGatewayContainerCpu` | `true` | With the collector and CPU HPA enabled, scales on the main container's CPU only. Requires Kubernetes 1.30 or newer. |
 | `migrationJob.enabled`, `.hooks.helm.enabled`, `.hooks.argocd.enabled` | `true`, `true`, `false` | Migration Job and controller hooks. |
-| `migrationJob.backoffLimit`, `.activeDeadlineSeconds`, `.ttlSecondsAfterFinished` | `4`, `1800`, `120` | Job retries, total deadline, and cleanup delay. |
+| `migrationJob.mode` | `data-plane` | Selects data plane or `control-plane` migrations. |
+| `migrationJob.controlPlane.databaseSecret.name`, `.key` | `""`, `database-url` | Secret with the control plane database URL. Required for control plane migrations. |
+| `migrationJob.backoffLimit`, `.activeDeadlineSeconds`, `.ttlSecondsAfterFinished` | `4`, `1800`, `120` | Job retries, total deadline, and cleanup delay. Argo CD uses hook cleanup instead of the TTL. |
 | `migrationJob.serviceAccountName`, `.automountServiceAccountToken` | `""`, `false` | Job identity. Name an existing account when cloud database authentication needs it. |
 | `billingMetrics.enabled` | `false` | Enterprise request metering. |
 | `liteadmin.enabled` | `false` | Optional admin worker. Requires `liteadmin.existingSecret`, `liteadmin.gatewayUrl`, and `liteadmin.model`. |

@@ -2,7 +2,7 @@
 title: "LiteLLM v1.91.4 - Docker Migration Assets & Prisma Bake"
 description: "Restores the litellm-proxy-extras folder and bakes the Prisma CLI at a fixed path. Fixes fresh-database migrations for non-root users."
 slug: "v1-91-4"
-date: 2026-07-18T19:14:34
+date: 2026-07-19T02:45:36
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

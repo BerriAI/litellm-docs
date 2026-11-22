@@ -1,3 +1,9 @@
+---
+title: "Poe API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Poe"
+description: "Reach the 100+ models on Quora's Poe, including GPT and Claude families, with streaming, tools and response_format from the LiteLLM Python SDK or AI Gateway."
+---
+
 # Poe
 
 ## Overview

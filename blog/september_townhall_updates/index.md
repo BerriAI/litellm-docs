@@ -99,6 +99,8 @@ It's expensive, and cost and latency both scale with panel size and the models y
 
 ### liteagents SDK
 
+For new projects, use [Agents in the LiteLLM SDK](/docs/harness). The following recap describes the separate LiteAgents preview announced at this town hall.
+
 liteagents is a beta SDK that lets you swap between agent harnesses without rewriting your agent. Pick the harness in a `ProfileOptions` block, whether that's the Claude Agent SDK, Deep Agents or Pydantic AI, and query it through one client.
 
 ![liteagents SDK code sample: a LiteAgentClient is configured with a ProfileOptions block selecting the deepagents harness and a model, then queried for a response](./liteagents-sdk.png)

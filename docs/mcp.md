@@ -825,7 +825,7 @@ asyncio.run(main())
 - Customer budgets are applied
 - All tool calls are tracked under `customer_123`
 
-[Learn more about customer management →](./proxy/customers)
+[Legacy customer object permissions](./proxy/legacy_end_users.md#setting-customer-object-permissions). For customer spend and budgets from v1.111, use [Customer Management](./proxy/customers.md).
 
 ## Calling the Proxy's /v1/responses Endpoint
 

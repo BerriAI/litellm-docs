@@ -1,8 +1,10 @@
 ---
-title: Structured output
+title: Structured output from litellm.agent()
+sidebar_label: Structured output
+description: Pass a Pydantic model to litellm.agent() to validate the final answer and read typed data from the result.
 ---
 
-# Structured output
+# Structured output from `litellm.agent()`
 
 Pass a Pydantic model as `output=`. The runtime does its normal work, and its final answer is validated into `result.output`.
 

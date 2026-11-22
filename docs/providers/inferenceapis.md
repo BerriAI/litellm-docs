@@ -1,3 +1,9 @@
+---
+title: "Inference APIs with LiteLLM AI Gateway"
+sidebar_label: "Inference APIs"
+description: "Call DeepSeek V4, GLM-5.3, Qwen3.8 and gpt-oss on Inference APIs from the Python SDK or AI Gateway, across chat, Responses and Messages, with cost tracking."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

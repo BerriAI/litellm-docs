@@ -1,3 +1,9 @@
+---
+title: "Azure AI Search Vector Store with LiteLLM"
+sidebar_label: "Azure AI Search - Vector Store (Unified API)"
+description: "Search Azure AI Search vector stores through LiteLLM's unified API from the Python SDK or AI Gateway. Set up config.yaml, an embedding model and an index."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -263,6 +269,10 @@ The vector dimensions must match your embedding model. For example:
 - `text-embedding-ada-002`: 1536 dimensions
 
 
+## Search service fallbacks
+
+For resilience across Azure AI Search services, [define vector store fallbacks](../completion/knowledgebase.md#define-vector-store-fallbacks) in YAML. Search service failover is separate from embedding model-group routing. It supports unified search and the native Azure search routes, while writes retain their existing routing without fallback.
+
 ## Common Issues
 
 **"Failed to generate embedding for query"**
@@ -281,4 +291,3 @@ The `vector_store_id` doesn't match any index in your search service. Check:
 **"Field 'contentVector' not found"**
 
 Your index uses a different vector field name. Pass it via `azure_search_vector_field`.
-

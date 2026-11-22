@@ -1,3 +1,9 @@
+---
+title: "Refuseless API with LiteLLM AI Gateway"
+sidebar_label: "Refuseless"
+description: "Use Refuseless abliterated GLM and DeepSeek models with reasoning effort, tools, structured output, prompt caching and the Responses API through LiteLLM."
+---
+
 # Refuseless
 
 Use [Refuseless](https://refuseless.com) through LiteLLM with the `refuseless/` model prefix. LiteLLM reads `REFUSELESS_API_KEY` and sends requests to `https://api.refuseless.com/v1`.

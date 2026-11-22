@@ -14,7 +14,8 @@ Supported Providers:
 - Vertex AI Chirp, transcription only ([see full docs](/docs/providers/vertex_transcription#chirp-realtime-transcription))
 - Bedrock
 - Meta Muse Voice, transcription only ([see full docs](/docs/providers/meta#muse-voice-realtime-transcription))
-- OpenAI Live models such as `gpt-live-1`, on their own `/v1/live/sessions` route ([see below](#openai-live-sessions-gpt-live-1))
+- OpenAI Live models such as `gpt-live-1`, on their own `/v1/live/sessions` route ([see full docs](/docs/live_sessions))
+- Live transcription with `gpt-live-transcribe` on OpenAI and Azure ([see below](#live-transcription-with-gpt-live-transcribe))
 - Live speech translation with `gpt-realtime-translate` on OpenAI and Azure, on its own `/v1/realtime/translations` route ([see full docs](/docs/realtime_translation))
 
 ## Proxy Usage
@@ -27,9 +28,9 @@ Supported Providers:
 
 ```yaml
 model_list:
-  - model_name: openai-gpt-4o-realtime-audio
+  - model_name: openai-gpt-realtime
     litellm_params:
-      model: openai/gpt-4o-realtime-preview-2024-10-01
+      model: openai/gpt-realtime-2.1
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       mode: realtime
@@ -39,23 +40,17 @@ model_list:
 
 ```yaml
 model_list:
-  - model_name: azure-gpt-4o-realtime-audio
-    litellm_params:
-      model: azure/gpt-4o-realtime-preview
-      api_key: os.environ/AZURE_SWEDEN_API_KEY
-      api_base: os.environ/AZURE_SWEDEN_API_BASE
-
   - model_name: azure-gpt-realtime
     litellm_params:
-      model: azure/gpt-realtime
+      model: azure/gpt-realtime-2.1
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
     model_info:
       mode: realtime
 
-  - model_name: openai-gpt-4o-realtime-audio
+  - model_name: openai-gpt-realtime
     litellm_params:
-      model: openai/gpt-4o-realtime-preview-2024-10-01
+      model: openai/gpt-realtime-2.1
       api_key: os.environ/OPENAI_API_KEY
 ```
 
@@ -93,12 +88,11 @@ Run this script using node - `node test.js`
 // test.js
 const WebSocket = require("ws");
 
-const url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio";
-// const url = "wss://my-azure-endpoint.openai.azure.com/openai/realtime?api-version=2024-10-01-preview&deployment=gpt-4o-realtime-preview";
+const url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-realtime";
+// const url = "wss://my-azure-endpoint.openai.azure.com/openai/v1/realtime?model=gpt-realtime-2.1";
 const ws = new WebSocket(url, {
     headers: {
         "api-key": `sk-<your-litellm-api-key>`,
-        "OpenAI-Beta": "realtime=v1",
     },
 });
 
@@ -107,7 +101,7 @@ ws.on("open", function open() {
     ws.send(JSON.stringify({
         type: "response.create",
         response: {
-            modalities: ["text"],
+            output_modalities: ["text"],
             instructions: "Please assist the user.",
         }
     }));
@@ -124,86 +118,86 @@ ws.on("error", function handleError(error) {
 
 ## OpenAI Live sessions (`gpt-live-1`)
 
-<SinceVersion v="1.107.0" /> OpenAI Live models such as `gpt-live-1` use their own WebSocket protocol, and LiteLLM serves them on `/v1/live/sessions`, first in `v1.107.0-rc.1`. OpenAI rejects a Live model on `/v1/realtime` with `invalid_model`, so a `/v1/realtime` client cannot use `gpt-live-1`. Use the route below instead.
+GPT-Live models such as `gpt-live-1` do not run on `/v1/realtime`. They have their own route, `/v1/live/sessions`, and their own page. See [GPT-Live](/docs/live_sessions).
 
-### Add the model to config
+## Live transcription with `gpt-live-transcribe`
+
+`gpt-live-transcribe` turns a stream of audio into text as it arrives. It runs on the Realtime route as a transcription session, on OpenAI and on Azure. It is not a GPT-Live model, so it does not use `/v1/live/sessions`.
 
 ```yaml
 model_list:
-  - model_name: gpt-live-1
+  - model_name: gpt-live-transcribe
     litellm_params:
-      model: openai/gpt-live-1
+      model: openai/gpt-live-transcribe
       api_key: os.environ/OPENAI_API_KEY
+  - model_name: azure-live-transcribe
+    litellm_params:
+      model: azure/gpt-live-transcribe
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
 ```
 
-Live sessions support the `openai` provider only. A session on a deployment of another provider, such as `azure/gpt-live-1`, gets an `error` event that says `OpenAI Live sessions require the openai provider`, and the session closes with code 1011. LiteLLM connects to `/v1/live/sessions` on the host in `api_base` and drops any path in it, so an `api_base` behind a path prefix does not work.
-
-### Connect
-
-Open a WebSocket to `/v1/live/sessions` on the proxy with a LiteLLM virtual key. `/live/sessions` and `/openai/v1/live/sessions` work too. The first message must be `session.start`, and its `session.model` is the `model_name` from your config. LiteLLM takes the model from that message and ignores a `?model=` query parameter. It swaps in the deployment's model, connects to OpenAI's `/v1/live/sessions`, and then passes every event through unchanged in both directions.
-
-The OpenAI Python SDK does all of this when you point `base_url` at the proxy. `client.live` needs `openai` 3.12.0 or later, so install or upgrade it with `pip install -U "openai[realtime]>=3.12.0"`:
+Connect to `/v1/realtime` with `intent=transcription` in the query string. Without it LiteLLM opens a conversation session, and the provider rejects the handshake for a transcription model.
 
 ```python
 import asyncio
+import base64
+import json
 import os
 
-from openai import AsyncOpenAI
+import websockets
 
-client = AsyncOpenAI(base_url="http://0.0.0.0:4000/v1", api_key=os.environ["LITELLM_API_KEY"])
+URL = "ws://0.0.0.0:4000/v1/realtime?model=gpt-live-transcribe&intent=transcription"
 
 
 async def main() -> None:
-    async with client.live.connect() as connection:
-        await connection.send({"type": "session.start", "session": {"model": "gpt-live-1"}})
-        async for event in connection:
-            print(event.type)
-            if event.type == "session.started":
-                await connection.send({"type": "session.close"})
-            if event.type in ("session.closed", "error"):
+    headers = {"Authorization": f"Bearer {os.environ['LITELLM_API_KEY']}"}
+    async with websockets.connect(URL, additional_headers=headers) as ws:
+        await ws.send(
+            json.dumps(
+                {
+                    "type": "session.update",
+                    "session": {
+                        "type": "transcription",
+                        "audio": {
+                            "input": {
+                                "format": {"type": "audio/pcm", "rate": 24000},
+                                "transcription": {"model": "gpt-live-transcribe"},
+                            }
+                        },
+                    },
+                }
+            )
+        )
+        with open("speech.pcm", "rb") as f:
+            pcm = f.read()
+        for start in range(0, len(pcm), 4800):
+            chunk = base64.b64encode(pcm[start : start + 4800]).decode()
+            await ws.send(json.dumps({"type": "input_audio_buffer.append", "audio": chunk}))
+        await ws.send(json.dumps({"type": "input_audio_buffer.commit"}))
+
+        async for message in ws:
+            event = json.loads(message)
+            if event["type"] == "conversation.item.input_audio_transcription.delta":
+                print(event["delta"], end="", flush=True)
+            if event["type"] in ("conversation.item.input_audio_transcription.completed", "error"):
                 break
 
 
 asyncio.run(main())
 ```
 
-Wait for `session.started` before you send audio. Send audio as base64 chunks in `session.input_audio.append` events, and read the model's audio from `session.output_audio.delta` events. See OpenAI's [GPT-Live guide](https://developers.openai.com/api/docs/guides/live) and [WebSocket guide](https://developers.openai.com/api/docs/guides/voice-websockets?api=live) for the full list of events.
+`speech.pcm` is 16-bit mono PCM at 24 kHz. The text arrives in `conversation.item.input_audio_transcription.delta` events, and the `completed` event carries the full transcript.
 
-### Auth and errors
-
-LiteLLM checks the virtual key when the WebSocket opens. It reads the key from the `Authorization: Bearer <key>` header, then from the `api-key` header, then from an `openai-insecure-api-key.<key>` WebSocket subprotocol for clients that cannot set headers. A key sent from a browser is readable by anyone who uses the page, so give that key only the models and budget the page needs. A missing or invalid key, or a key over its total budget (`max_budget`), gets HTTP 403 and the WebSocket never opens.
-
-After `session.start`, LiteLLM runs the checks that need the model, such as whether the key may call `session.model` and per-model budgets (`model_max_budget`). When a check fails, LiteLLM sends an `error` event with one of these codes and closes the session with code 1008:
-
-| Code | Cause |
-| --- | --- |
-| `model_not_allowed` | The key may not call the model |
-| `session_not_allowed` | Another check failed, such as a used-up per-model budget |
-| `invalid_session_start` | First message is not `session.start` |
-
-LiteLLM also sends `invalid_session_start` when no first message arrives within 30 seconds. If the key may call the model but no `model_name` in your config matches it, LiteLLM sends an `error` event of type `server_error` and closes the session with code 1011.
-
-The key's rate limits, such as `rpm_limit`, are checked after `session.start` too. A session over a limit gets an `error` event of type `guardrail_error` whose message starts with `429`, and the session closes with code 1011. Without Redis, each proxy worker counts on its own, so a proxy with several workers can let more sessions through than the limit.
-
-### Spend tracking
-
-To end a session, send `session.close` and wait for `session.closed`, which carries the final `usage`. LiteLLM bills the session from the `usage.seconds` that OpenAI reports, at the model's `input_cost_per_second`. That is the deployment's own `input_cost_per_second` when you set one in `litellm_params`, else the model cost map's. For example, a session with 6 seconds of audio costs 6 times `input_cost_per_second`. If the client drops the socket without `session.close`, LiteLLM sends `session.close` to OpenAI itself and still bills the `usage.seconds` in OpenAI's `session.closed`. When a session ends with no `session.closed` from OpenAI, such as when the connection to OpenAI drops or OpenAI sends none within 5 seconds of a dropped client, LiteLLM bills the larger of the last reported `usage.seconds` and the time the session was open.
-
-When the session hands work to a Responses model, OpenAI sends `response.event` events, and LiteLLM adds the tokens of each finished response at that model's token prices. A model that is missing from LiteLLM's model cost map adds $0 for its tokens. LiteLLM adds only token costs, so fees for tools such as web search are not billed.
-
-The whole cost goes to the session's spend log and to the key's spend, so key budgets apply the same way they do on `/v1/realtime`. LiteLLM checks budgets when a session starts and adds the cost when the session ends, so one long session can spend past a budget. Later sessions on that key or model are then refused.
-
-### Limits
-
-Guardrails do not run on Live sessions. When a `pre_call`, `post_call`, or `realtime_input_transcription` guardrail applies to the session, LiteLLM sends an `error` event that says `Guardrails are not supported on OpenAI Live sessions` and closes the session with code 1011. That includes a guardrail attached to the key and one with `default_on: true`, so a `default_on` guardrail in one of these modes closes every Live session on the proxy. Guardrails in other modes, such as `during_call`, and the `guardrails` query parameter do not close the session, and the session runs without them.
-
-LiteLLM checks and bills Live sessions on the WebSocket route only. WebRTC session creation (`POST /v1/live/sessions`) and the call control routes under `/v1/live/sessions/{session_id}/`, such as `hangup` and `accept`, have no Live route on the proxy. The [OpenAI pass-through](/docs/pass_through/openai_passthrough) on `/openai/v1/live/sessions` forwards them to OpenAI as plain pass-through calls, and LiteLLM does not bill them as Live sessions, so their use never counts toward key spend or budgets. A proxy admin can keep a key on the Live WebSocket route by setting the key's `allowed_routes` to `["/v1/live/sessions"]`.
+For a browser, create a short-lived token with `POST /v1/realtime/client_secrets` and a `session.type` of `transcription`, then follow the [WebRTC guide](/docs/proxy/realtime_webrtc). `gpt-live-transcribe` does not work on `/v1/audio/transcriptions`, which is for file uploads to models such as `gpt-4o-transcribe`.
 
 ## Azure: GA vs beta realtime protocol
 
 Azure exposes two realtime upstreams. The GA endpoint (`/openai/v1/realtime?model=<deployment>`) speaks the GA event schema (`session.type`, `output_modalities`, nested `audio`), and the older beta endpoint (`/openai/realtime?api-version=2024-10-01-preview&deployment=<deployment>`) speaks the beta schema (`modalities`, `voice`, flat audio formats). Sending a GA-shaped `session.update` to the beta endpoint fails with `Unknown parameter: 'session.type'`
 
 LiteLLM picks the upstream from the client connection. A client that sends the `OpenAI-Beta: realtime=v1` header (the openai SDK's `client.beta.realtime.connect`) is bridged to the beta endpoint. A client without that header (the openai SDK's `client.realtime.connect`, and most voice agent frameworks) is bridged to the GA endpoint. Transcription sessions (`intent=transcription`) always use GA
+
+<SinceVersion v="1.110.0" /> Models that Azure serves only on GA, such as `gpt-realtime-2.1`, use GA too, and LiteLLM bridges a beta client's events to the GA endpoint. LiteLLM recognizes these models by the deployment name in `model`, or by `base_model` when the deployment has a custom name. A deployment like `azure/my-realtime-prod` that runs `gpt-realtime-2.1` needs `base_model: azure/gpt-realtime-2.1` or `realtime_protocol: GA` in its `litellm_params`. Without either, LiteLLM sends a beta client to the beta endpoint, and Azure closes the session with `realtime_beta_access_required`
 
 ```python
 import os
@@ -228,15 +222,17 @@ To pin one protocol regardless of what the client sends, set `realtime_protocol`
 model_list:
   - model_name: azure-gpt-realtime
     litellm_params:
-      model: azure/gpt-realtime
+      model: azure/gpt-realtime-2.1
       api_key: os.environ/AZURE_API_KEY
       api_base: os.environ/AZURE_API_BASE
-      realtime_protocol: beta # or GA
+      realtime_protocol: GA
 ```
 
 ```bash
-export LITELLM_AZURE_REALTIME_PROTOCOL=beta # or GA
+export LITELLM_AZURE_REALTIME_PROTOCOL=GA
 ```
+
+`beta` is the other value. Azure closes a `gpt-realtime-2.1` session on the beta endpoint with `realtime_beta_access_required`, so don't pin `beta` for it.
 
 ## Guardrails
 
@@ -258,7 +254,7 @@ Useful for testing guardrails without modifying key/team config.
 const WebSocket = require("ws");
 
 const guardrails = ["your-guardrail-name"]; // comma-separated list
-const url = `ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio&guardrails=${guardrails.join(",")}`;
+const url = `ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-realtime&guardrails=${guardrails.join(",")}`;
 
 const ws = new WebSocket(url, {
     headers: {
@@ -291,7 +287,7 @@ import asyncio
 import websockets
 
 async def main():
-    url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-4o-realtime-audio&guardrails=your-guardrail-name"
+    url = "ws://0.0.0.0:4000/v1/realtime?model=openai-gpt-realtime&guardrails=your-guardrail-name"
     async with websockets.connect(
         url,
         additional_headers={"Authorization": "Bearer sk-<your-litellm-api-key>"},

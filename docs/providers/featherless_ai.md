@@ -1,3 +1,9 @@
+---
+title: "Featherless AI API with LiteLLM: Setup"
+sidebar_label: "Featherless AI"
+description: "Run Qwerky, Qwen2.5, OpenHands LM and DeepSeek-V3 models hosted on Featherless AI from the LiteLLM Python SDK, with standard and streaming chat completions."
+---
+
 # Featherless AI
 https://featherless.ai/
 

@@ -1,3 +1,9 @@
+---
+title: "LiteLLM Proxy (LLM Gateway) from the Python SDK"
+sidebar_label: "LiteLLM Proxy (LLM Gateway)"
+description: "Send Python SDK requests to a LiteLLM AI Gateway with the litellm_proxy/ prefix: chat, streaming, embeddings, images, audio and rerank, once or per call."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -132,7 +138,7 @@ with open("your-image.png", "rb") as f:
 import litellm
 
 response = litellm.transcription(
-    model="litellm_proxy/whisper-1",
+    model="litellm_proxy/gpt-transcribe",
     file="your-audio-file",
     api_base="your-litellm-proxy-url",
     api_key="your-litellm-proxy-api-key"
@@ -145,7 +151,8 @@ response = litellm.transcription(
 import litellm
 
 response = litellm.speech(
-    model="litellm_proxy/tts-1",
+    model="litellm_proxy/tts-1-1106",
+    voice="alloy",
     input="Hello world",
     api_base="your-litellm-proxy-url",
     api_key="your-litellm-proxy-api-key"

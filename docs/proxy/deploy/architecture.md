@@ -12,7 +12,7 @@ import TabItem from '@theme/TabItem';
 
 {/* keep-version-note */}
 
-Reference designs for cloud infrastructure, client access, and availability.
+Reference designs for cloud infrastructure, client access, availability, and capacity.
 
 ## Choose a topic {#cloud-architectures}
 
@@ -42,7 +42,9 @@ Reference designs for cloud infrastructure, client access, and availability.
 
 ### Keep serving through failures and releases
 
-Plan replicas, availability zones, and data-store availability in [High Availability](./ha/overview.md). Use [Blue/Green Deployments](./ha/blue_green.md) for a controlled cutover or [Canary Deployments](./ha/canary.md) for a gradual release.
+Plan replicas, availability zones, and data-store availability in [High Availability](./ha/overview.md). Follow the [Upgrade Guide](../upgrade_guide.md) for the rollout sequence. Use [Blue/Green Deployments](./ha/blue_green.md) for a controlled cutover or [Canary Deployments](./ha/canary.md) for a gradual release.
+
+Use [L7 proxy with LiteLLM](./ha/haproxy.md) to handle traffic bursts with bounded buffering, per-worker admission control, and KEDA scaling.
 
 For more than one region, see [Multi-Region Deployment](../multi_region.md), [Routing](./multi_region/routing.md), and [Failover](./multi_region/failover.md).
 
@@ -51,7 +53,7 @@ For more than one region, see [Multi-Region Deployment](../multi_region.md), [Ro
 
 ### Manage independent deployments
 
-The [Global Control Plane](../global_control_plane.md) manages independent deployments from one UI. Each deployment has its own database, Redis, keys, and budgets. This Enterprise feature does not synchronize state or route inference traffic between deployments.
+The [Global Control Plane](../global_control_plane.md) provides one management API for independent deployments, fleet inventory, usage reports, and audit export. Each data plane has its own database, Redis, keys, and budgets. See the [AWS, Azure, and GCP architectures](../global_control_plane/architecture.md) or the existing [UI Deployment Selector](../global_control_plane/legacy_ui.md).
 
 </TabItem>
 </Tabs>

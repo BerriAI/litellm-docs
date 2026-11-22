@@ -1,3 +1,9 @@
+---
+title: "Hugging Face API with LiteLLM: Inference Setup"
+sidebar_label: "HuggingFace"
+description: "Call Hugging Face Inference Providers and dedicated Inference Endpoints via LiteLLM from the Python SDK or AI Gateway, with streaming, tools and embedding."
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

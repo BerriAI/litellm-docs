@@ -1,3 +1,9 @@
+---
+title: "OpenRouter API in Python with LiteLLM"
+sidebar_label: "OpenRouter"
+description: "Call any OpenRouter model, pass transforms and route, embed text, create or edit images with Gemini image models, and reach Jev decision models via the proxy."
+---
+
 # OpenRouter
 LiteLLM supports all the text / chat / vision / embedding models from [OpenRouter](https://openrouter.ai/docs)
 

@@ -16,7 +16,7 @@ Send LiteLLM Proxy users emails for specific events.
 
 | Category | Details |
 |----------|---------|
-| Supported Events | • User added as a user on LiteLLM Proxy<br/>• Proxy API Key created for user<br/>• Proxy API Key rotated for user<br/>• Virtual key approaching or crossing its budget |
+| Supported Events | • User added as a user on LiteLLM Proxy<br/>• Proxy API Key created for user<br/>• Proxy API Key rotated for user<br/>• Virtual key approaching or crossing its budget<br/>• Virtual key about to expire |
 | Supported Email Integrations | • Resend API<br/>• SendGrid API<br/>• SMTP |
 
 ## Usage
@@ -101,7 +101,7 @@ general_settings:
 
 **Max Budget Alerts**: Automatically triggered when a key reaches a specified percentage of its maximum budget (default: 80%). These alerts warn you when you're approaching budget exhaustion.
 
-Both alert types send a maximum of one email per 24-hour period to prevent spam.
+Each configured percentage has its own 24-hour suppression window. Fixed-dollar alerts have a separate suppression window.
 
 #### Per-key thresholds and recipients
 
@@ -127,7 +127,48 @@ With the key above, spend of $50 emails the owner, $75 emails the owner and fina
 
 Configuring `max_budget_alert_emails` on a key replaces the default 80% alert for that key. To change thresholds on an existing key, send the same `metadata` block to `/key/update`.
 
-There is no UI field for this yet, so set it through `/key/generate` or `/key/update`.
+Configure these thresholds in the key create/edit form, or through `/key/generate` or `/key/update`.
+
+#### Team budget thresholds and recipients
+
+<SinceVersion v="1.112.0" />
+
+<EnterpriseFeature>Email budget alerts require an enterprise license.</EnterpriseFeature>
+
+For alerts on a team's combined spend, use `metadata.max_budget_alert_emails`, the same field and percentage-to-recipient format as keys. Configure a positive `max_budget` on the team and at least one recipient for each threshold. Alerts use total team spend across all its keys, including service-account keys.
+
+```shell showLineNumbers
+curl -X POST 'http://0.0.0.0:4000/team/update' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "team_id": "my-team",
+    "max_budget": 1000,
+    "metadata": {
+      "max_budget_alert_emails": {
+        "50": ["finance@your-company.com"],
+        "75": ["finance@your-company.com"],
+        "90": ["finance@your-company.com"]
+      }
+    }
+  }'
+```
+
+When you use `/team/update`, include any other metadata you want to keep. `/team/new` accepts the same configuration. In the Admin UI, open **Teams**, select the team, choose **Settings > Edit Settings**, set a positive **Max Budget (USD)**, and add percentages and recipients under **Team Budget Alerts**. Legacy dollar controls are under **Legacy dollar alerts (deprecated)**.
+
+In this example, alerts become eligible at $500, $750, and $900 of combined team spend. Recorded team spend is checked on the next inference request, so one request can send several levels at once. Non-inference checks, such as team eligibility and MCP grantor lookups, do not send these emails. Only the configured recipients are emailed; key owners are not added, and `default_key_max_budget_alert_emails` does not apply to teams.
+
+Each percentage sends at most once per team every `EMAIL_BUDGET_ALERT_TTL` (24 hours), however many keys the team has or rotates through. Key budget alerts are tracked separately. Budget resets do not clear this window, so an alert can repeat a day later while spend stays above its threshold.
+
+These alerts are email only. Hard-budget enforcement and its Slack, Microsoft Teams, and webhook notifications are unchanged.
+
+Team create and update requests are rejected if a percentage is not a plain whole number from 1 to 100 (for example, `"050"` is rejected), a percentage has no recipients, or `max_budget` is missing or not positive. To remove `max_budget`, remove the alerts in the same update. To turn off percentage alerts, remove `max_budget_alert_emails` from the team's metadata.
+
+##### Legacy fixed-dollar team alerts
+
+Fixed-dollar team alerts (`soft_budget` with `metadata.soft_budget_alerting_emails`) are deprecated in favor of percentage alerts. They still work and remain editable, and nothing is converted automatically.
+
+If both are configured, both send. Percentage alerts require `email` in `general_settings.alerting` and legacy alerts do not, so enable it before you migrate. To migrate, add the percentages and recipients, then remove `soft_budget_alerting_emails` from the team's metadata. Percentage alerts follow `max_budget`: a 75% alert fires at $750 on a $1,000 budget, but at $1,500 if the budget becomes $2,000. Teams without a maximum budget can keep using fixed-dollar alerts.
 
 #### Team member budget thresholds and recipients
 
@@ -178,6 +219,40 @@ EMAIL_BUDGET_ALERT_MAX_SPEND_ALERT_PERCENTAGE=0.8
 # Time-to-live for alert deduplication in seconds (default: 24 hours)
 EMAIL_BUDGET_ALERT_TTL=86400
 ```
+
+### 4. Configure Key Expiry Alerts (Optional)
+
+<SinceVersion v="1.111.0" />
+
+Key expiry alerts email a key's owner once before the key expires, so they can regenerate it in time. They need an Enterprise license, a database, and one of the email integrations above. The event is off by default. To turn it on, open **Email Settings** in the Admin UI, turn on **Virtual Key Expiring** under **Email events** and save, or send the same change to `PATCH /email/event_settings`.
+
+Then set how many days ahead to warn:
+
+```yaml showLineNumbers title="proxy_config.yaml"
+general_settings:
+  key_expiry_alert_days: 7
+```
+
+`key_expiry_alert_days` applies to every key that has an expiry date and an owner with an email, including keys created before you set it. The owner gets one email when the key has that many days or fewer left. The proxy reads the value on each run, so a change through the Admin UI or `/config/field/update` applies without a restart.
+
+To use a different window for one key, set `key_expiry_alert_days` in its metadata. This also works when the global value is unset, so you can opt in single keys.
+
+```shell showLineNumbers
+curl -X POST 'http://0.0.0.0:4000/key/generate' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "user_id": "owner-user-id",
+    "duration": "30d",
+    "metadata": {"key_expiry_alert_days": 3}
+  }'
+```
+
+Both values must be a whole number from 1 to 365. `/key/generate` and `/key/update` return a 400 for anything else, and an invalid global value is logged and ignored while per-key values keep working.
+
+The email goes only to the `user_email` of the key's `user_id`, so a key with no owner, an owner without an email, or a blocked key gets nothing. It shows the key alias, or a shortened key name when there is no alias, and never the key itself. It also gives the expiry time in UTC, the days left, and a link to the dashboard at `PROXY_BASE_URL`. The subject is `LiteLLM: Virtual Key Expiring`. Changing a key's expiry or its day count arms one new email for the new value.
+
+The check runs every 12 hours by default, so an email can arrive up to one interval after a key enters its window. Set `LITELLM_KEY_EXPIRY_ALERT_CHECK_INTERVAL_SECONDS` to change that. When the proxy uses Redis, one pod runs each check and a shared claim per key stops duplicate emails across pods.
 
 ## Email Templates 
 

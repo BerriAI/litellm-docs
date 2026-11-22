@@ -2,7 +2,7 @@
 title: "LiteLLM v1.81.3 - Performance - 25% CPU Usage Reduction"
 description: "Adds gpt-audio pricing and ChatGPT subscription support. Cuts CPU usage by 25% and fixes Bedrock AgentCore streaming."
 slug: "v1-81-3"
-date: 2026-01-26T10:00:00
+date: 2026-02-08T00:28:27
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

@@ -2,7 +2,7 @@
 title: "LiteLLM v1.80.11-stable - Google Interactions API"
 description: "Adds Gemini 3 Flash Preview, Stability AI, the LiteLLM Content Filter and Azure Sentinel logging. Cuts SDK memory and import latency by 50%."
 slug: "v1-80-11"
-date: 2025-12-20T10:00:00
+date: 2026-01-10T22:21:31
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

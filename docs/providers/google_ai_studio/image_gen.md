@@ -1,3 +1,9 @@
+---
+title: "Google AI Studio Image Generation with LiteLLM"
+sidebar_label: "Google AI Studio Image Generation"
+description: "Generate images with Imagen 4 and Gemini 3 image preview models from Google AI Studio via the Python SDK or AI Gateway, with Search grounding and imageConfig."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

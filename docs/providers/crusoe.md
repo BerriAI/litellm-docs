@@ -1,3 +1,9 @@
+---
+title: "Crusoe API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Crusoe"
+description: "Use DeepSeek V4, Gemma 4 and NVIDIA Nemotron models on Crusoe Cloud from the Python SDK or AI Gateway, with streaming, tool calls and per-token cost settings."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

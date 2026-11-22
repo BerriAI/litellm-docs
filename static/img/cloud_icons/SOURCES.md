@@ -29,6 +29,8 @@ The service icons listed below are unmodified SVGs from the providers' official 
 | `aws-s3.svg` | `Architecture-Service-Icons_07312026/Arch_Storage/48/Arch_Amazon-Simple-Storage-Service_48.svg` |
 | `aws-bedrock.svg` | `Architecture-Service-Icons_07312026/Arch_Artificial-Intelligence/48/Arch_Amazon-Bedrock_48.svg` |
 | `aws-cloudwatch.svg` | `Architecture-Service-Icons_07312026/Arch_Management-Tools/48/Arch_Amazon-CloudWatch_48.svg` |
+| `aws-vpn-gateway.svg` | `Resource-Icons_07312026/Res_Networking-Content-Delivery/Res_Amazon-VPC_VPN-Gateway_48.svg` |
+| `aws-customer-gateway.svg` | `Resource-Icons_07312026/Res_Networking-Content-Delivery/Res_Amazon-VPC_Customer-Gateway_48.svg` |
 
 ## Google Cloud
 
@@ -70,3 +72,16 @@ Use the assets for architecture diagrams and documentation. Do not crop, flip, r
 | `azure-openai.svg` | `Azure_Public_Service_Icons/Icons/ai + machine learning/03438-icon-service-Azure-OpenAI.svg` |
 
 Brand logos and vendor-neutral icons in this directory predate this asset refresh.
+
+## HAProxy and KEDA
+
+These official product marks are copied unchanged and identify components in the
+HAProxy with LiteLLM on Kubernetes architecture. Retrieved November 17, 2026.
+
+| File | Official source | Usage terms |
+| --- | --- | --- |
+| `haproxy.svg` | [HAProxy icon](https://cdn.haproxy.com/assets/our_logos/haproxy-icon.svg), linked by [haproxy.com](https://www.haproxy.com/) | [HAProxy Trademark Policy](https://www.haproxy.com/legal/haproxy-trademark-policy) |
+| `keda.svg` | [KEDA color icon](https://github.com/kedacore/governance/blob/main/logos/icon/color/keda-icon-color.svg), listed in [KEDA branding](https://github.com/kedacore/governance/blob/main/BRANDING.md) | [Linux Foundation trademark usage](https://www.linuxfoundation.org/trademark-usage/), as specified by KEDA branding and the [CNCF artwork terms](https://github.com/cncf/artwork/blob/main/LICENSE.md) |
+
+HAProxy is a registered trademark of HAProxy Technologies. KEDA and its logo are
+marks of The Linux Foundation. These marks do not imply endorsement of LiteLLM.

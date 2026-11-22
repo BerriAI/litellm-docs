@@ -1,3 +1,9 @@
+---
+title: "Azure AI Speech Text to Speech with LiteLLM"
+sidebar_label: "Azure AI Speech (Cognitive Services)"
+description: "Turn text into speech with Azure AI Speech neural voices from the Python SDK or AI Gateway, with OpenAI voice mapping, raw SSML and per-character costs."
+---
+
 # Azure AI Speech (Cognitive Services)
 
 Azure AI Speech is Azure's Cognitive Services text-to-speech API, separate from Azure OpenAI. It provides high-quality neural voices with broader language support and advanced speech customization.

@@ -1,8 +1,16 @@
+---
+title: "Gemini API with LiteLLM: Google AI Studio Setup"
+sidebar_label: "Google AI Studio"
+description: "Call Gemini on Google AI Studio from the Python SDK or AI Gateway with thinking levels, TTS, transcription, Google Search, code execution and context caching."
+---
+
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Gemini - Google AI Studio
+
+Google AI Studio is Google's managed platform for building with Gemini models; LiteLLM calls them with the `gemini/` prefix and a `GEMINI_API_KEY` from the Python SDK or AI Gateway, with no GCP project needed.
 
 | Property | Details |
 |-------|-------|
@@ -49,7 +57,7 @@ response = completion(
 
 ## Decisions {#decisions}
 
-Gemini Decision 1 answers yes/no, choice and rubric score questions through LiteLLM's [`/v1/decisions` and `/v1/systemone`](../decisions.md) routes. This provider is on main through [LiteLLM #51220](https://github.com/BerriAI/litellm/pull/51220), not yet in a release
+Gemini Decision 1 answers yes/no, choice and rubric score questions through LiteLLM's [`/v1/decisions` and `/v1/systemone`](../decisions.md) routes <SinceVersion v="1.111.0" />, first in `v1.111.0-rc.1`
 
 Set `GEMINI_API_KEY` in the proxy environment and add this deployment to `config.yaml`
 

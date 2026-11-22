@@ -156,6 +156,29 @@ curl -s -H "Authorization: Bearer $LITELLM_API_KEY" \
   | jq -c '.models[] | {slug, context_window, max_context_window}'
 ```
 
+#### Models and service tiers with `lite codex` {#lite-codex}
+
+<SinceVersion v="1.112.0" />
+
+[`lite codex`](../management_cli.md#run-coding-agents-through-the-proxy) does not use `model_catalog_url`. On every launch it writes the gateway's chat models to `$CODEX_HOME/litellm-models.json` (by default `~/.codex/litellm-models.json`) and points Codex at that file with `-c model_catalog_json=...`, which takes the place of the catalog Codex would fetch. A model the installed Codex knows keeps that Codex's own entry. A model whose deployments set `model_info.display_name` or `model_info.service_tiers` takes that name and those tiers from the catalog the gateway serves your key, and so does a key or team alias:
+
+```yaml title="config.yaml" keep-model-ids
+model_list:
+  - model_name: gpt-6.1-sol-fast
+    litellm_params:
+      model: openai/gpt-6.1-sol
+      api_key: os.environ/OPENAI_API_KEY
+      service_tier: priority
+    model_info:
+      mode: responses
+      display_name: GPT-6.1 Sol Fast
+      service_tiers: ["priority"]
+```
+
+With this config, `lite codex` lists `GPT-6.1 Sol Fast` in `/model` and offers `/fast` for it. Earlier versions of `lite codex` wrote the file without the gateway's display names and service tiers.
+
+The gateway must run v1.106.0 {/* keep-version-note */} or newer, which serves Codex's catalog format. With an older gateway, `lite codex` prints `litellm: Codex keeps its own display names and service tiers` and writes the file without them.
+
 ## Sign in with LiteLLM SSO
 
 Use the [Codex CLI SSO guide](./codex_cli_sso.md) to authenticate with `lite auth print-token` in place of a long-lived virtual key.

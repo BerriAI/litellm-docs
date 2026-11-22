@@ -1,3 +1,9 @@
+---
+title: "Manus Agents API with LiteLLM: Responses API"
+sidebar_label: "Manus"
+description: "Create Manus agent tasks with manus-1.6, manus-1.6-lite or manus-1.6-max through the Responses API, poll until they finish and upload files to analyze."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,9 @@
+---
+title: "W&B Inference API with LiteLLM: Setup"
+sidebar_label: "Weights & Biases Inference"
+description: "Run Qwen3 and other models on Weights & Biases Inference with streaming, JSON responses and a fixed seed, and resolve 401, 403 and 429 errors in LiteLLM."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

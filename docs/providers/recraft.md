@@ -1,3 +1,9 @@
+---
+title: "Recraft Image Generation with LiteLLM"
+sidebar_label: "Recraft"
+description: "Generate images with Recraft V3 and V2 or edit reference images with strength control, passing a style or Recraft's own style_id, from the SDK or AI Gateway."
+---
+
 # Recraft
 https://www.recraft.ai/
 

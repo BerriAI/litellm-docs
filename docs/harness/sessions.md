@@ -1,8 +1,10 @@
 ---
-title: Sessions
+title: Sessions for litellm.agent()
+sidebar_label: Sessions
+description: Use litellm.agent_session() to keep a working directory and conversation history across multiple agent turns.
 ---
 
-# Sessions
+# Sessions for `litellm.agent()`
 
 A session keeps its working directory and conversation history alive between turns. `litellm.agent()` creates a session for one turn and closes it afterwards. Use `litellm.agent_session()` when you need more than one turn
 

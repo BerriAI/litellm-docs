@@ -1,3 +1,9 @@
+---
+title: "Scaleway Generative APIs with LiteLLM"
+sidebar_label: "Scaleway"
+description: "Run Scaleway Generative APIs chat models such as Qwen3 235B and transcribe audio with Whisper large v3, from the LiteLLM Python SDK or AI Gateway."
+---
+
 
 # Scaleway 
 LiteLLM supports all [models available on Scaleway Generative APIs ↗](https://www.scaleway.com/en/docs/generative-apis/reference-content/supported-models/). 

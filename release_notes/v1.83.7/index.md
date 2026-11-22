@@ -2,7 +2,7 @@
 title: "LiteLLM v1.83.7-stable - Per-User MCP OAuth, Team Spend Logs RBAC"
 description: "Adds per-user MCP OAuth tokens and team spend logs RBAC. Reduces default Prometheus latency buckets from 35 to 18, which changes dashboard queries."
 slug: "v1-83-7-stable"
-date: 2026-04-18T00:00:00
+date: 2026-04-19T06:43:46
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

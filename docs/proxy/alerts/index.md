@@ -36,6 +36,6 @@ The notification bell shows up to five open alerts across both categories. Selec
 
 ## Notifications outside the dashboard
 
-Use [Slack and webhooks](../alerting.md) for request failures, slow requests, budget events, and other supported events. You can also configure [email notifications](../email.md) or [PagerDuty](../pagerduty.md).
+Use [Slack and webhooks](../alerting.md) for request failures, slow requests, budget events, and other supported events. You can also configure [email notifications](../email.md) or [PagerDuty](../pagerduty.md). Email also covers [key expiry alerts](../email.md#4-configure-key-expiry-alerts-optional), which warn a key's owner before the key expires.
 
 Performance findings appear in the dashboard and [Alerts API](./api.md). They do not send email, Slack, or webhook notifications. The **Performance monitoring** switch controls performance detection only. Your existing notification settings and model deprecation alerts keep working.
