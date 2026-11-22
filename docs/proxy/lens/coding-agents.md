@@ -35,17 +35,27 @@ export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1
 export CLAUDE_CODE_PROPAGATE_TRACEPARENT=1
 export OTEL_TRACES_EXPORTER=otlp
+export OTEL_LOGS_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="$ANTHROPIC_BASE_URL/v1/traces"
+export OTEL_EXPORTER_OTLP_ENDPOINT="$ANTHROPIC_BASE_URL"
 export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer $ANTHROPIC_AUTH_TOKEN"
 export OTEL_LOG_USER_PROMPTS=1
+export OTEL_LOG_ASSISTANT_RESPONSES=1
+export OTEL_LOG_TOOL_DETAILS=1
+export OTEL_LOG_TOOL_CONTENT=1
+export OTEL_LOG_RAW_API_BODIES=1
+export CLAUDE_CODE_OTEL_CONTENT_MAX_LENGTH=1048576
 
 claude -p "Reply with exactly: Lens telemetry check."
 ```
 
-Every telemetry variable is required. `CLAUDE_CODE_ENABLE_TELEMETRY`, `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA`, and `OTEL_TRACES_EXPORTER` together produce the turn; drop any one and Lens shows only separate `chat <model>` rows. `CLAUDE_CODE_PROPAGATE_TRACEPARENT` puts the turn's trace ID on each model call; without it the turn and its gateway calls land as two unrelated traces. `OTEL_LOG_USER_PROMPTS` includes the text you typed, which otherwise reads `<REDACTED>`, and it stores that text in Lens. The endpoint is your gateway address followed by `/v1/traces`, and the header carries your LiteLLM key.
+`lite configure claude` writes these settings for you. `CLAUDE_CODE_ENABLE_TELEMETRY`, `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA`, and `OTEL_TRACES_EXPORTER` together produce the turn; drop any one and Lens shows only separate `chat <model>` rows. `CLAUDE_CODE_PROPAGATE_TRACEPARENT` puts the turn's trace ID on each model call; without it the turn and its gateway calls land as two unrelated traces. `OTEL_LOGS_EXPORTER` sends the events that carry replies, tool results, and model call bodies. The endpoint is your gateway address, to which Claude Code adds `/v1/traces` and `/v1/logs`, and the header carries your LiteLLM key.
 
-Do not set `OTEL_LOGS_EXPORTER` on this path. The gateway accepts trace spans only and answers `POST /v1/logs` with `410`. Do not add `lens.session.capture=true` from the direct setup below either: together with `CLAUDE_CODE_PROPAGATE_TRACEPARENT=1` it splits each turn into two traces, the turn under one trace ID and its gateway calls under another.
+The content settings decide what each step shows. `OTEL_LOG_USER_PROMPTS` includes the text you typed, which otherwise reads `<REDACTED>`. `OTEL_LOG_ASSISTANT_RESPONSES`, `OTEL_LOG_TOOL_DETAILS`, and `OTEL_LOG_TOOL_CONTENT` include replies, tool arguments, and tool output. `OTEL_LOG_RAW_API_BODIES` includes the request and response of every model call, so a model call step shows the conversation it received as its input and what the model returned, usually the next tool call, as its output. Without it the step reads "No content recorded for this span". `CLAUDE_CODE_OTEL_CONTENT_MAX_LENGTH=1048576` raises Claude Code's default 60 KB limit on exported content to 1 MiB; a request over the limit arrives cut off and its step stays empty.
+
+These settings store prompts, replies, file contents, and command output in Lens, and each model call repeats the conversation so far. Enable them only for a Lens deployment where you intend to keep that content. To leave model call bodies out, set `OTEL_LOG_RAW_API_BODIES=0`; `lite configure claude` keeps a value you already set for any content setting.
+
+Do not add `lens.session.capture=true` from the direct setup below: together with `CLAUDE_CODE_PROPAGATE_TRACEPARENT=1` it splits each turn into two traces, the turn under one trace ID and its gateway calls under another.
 
 Open **Lens > Traces** in LiteLLM and filter by **claude-code**. Each turn is one `claude_code.interaction` trace with its model and tool calls nested under it, your prompt, and the gateway's cost. Verified with Claude Code **2.1.330**.
 
@@ -101,14 +111,14 @@ Assistant replies use a separate telemetry stream from trace spans. Keep both ex
 
 The `/v1/logs` endpoint receives OpenTelemetry events for Lens. These become part of the session trace and do not create entries in the normal LiteLLM **Logs** screen or additional spend records.
 
-Claude's stable tool-output events omit failed executions and some tool kinds. To fill these gaps from the next model request, optionally enable native API-body export:
+Model call steps show their request and response only with native API-body export, which also fills in tool output that Claude's stable tool-output events omit, such as failed executions:
 
 ```bash
 export OTEL_LOG_RAW_API_BODIES=1
 export CLAUDE_CODE_OTEL_CONTENT_MAX_LENGTH=1048576
 ```
 
-This sends full API bodies, including conversation history and source content, to the Lens service. Lens extracts tool results for Conversation and discards the body attribute. The larger limit avoids Claude's default 60 KB truncation in typical short sessions, but long sessions can still exceed it. Lens warns when a body is incomplete. Results that are never sent to another model request remain unavailable. `file:<dir>` mode writes bodies only on your machine and cannot supply them to a remote Lens service.
+This sends full API bodies, including conversation history and source content, to the Lens service. Lens keeps the system prompt, the messages, and the reply on the model call step, extracts tool results for Conversation, and discards tool definitions, thinking blocks, and the rest of the body. The larger limit avoids Claude's default 60 KB truncation in typical short sessions, but long sessions can still exceed it. Lens warns when a body is incomplete. Results that are never sent to another model request remain unavailable. `file:<dir>` mode writes bodies only on your machine and cannot supply them to a remote Lens service.
 
 The conversation below includes a deliberately failed command. With the optional body export, Lens shows its stdout alongside the failure and the assistant's final reply.
 
