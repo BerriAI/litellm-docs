@@ -9,9 +9,9 @@ import TabItem from '@theme/TabItem';
 
 # Send your first trace
 
-Connect your project to Lens with your coding agent and open the trace of a real task. These steps work with standalone Lens and with Lens inside the LiteLLM dashboard.
+Connect your coding agent to Lens and open the trace of a real task. These steps work with standalone Lens and with Lens inside the LiteLLM dashboard.
 
-You need a running Lens service. If Lens is not ready, follow [Set up Lens](./deployment.md) first. If your project has no coding agent, [set up manually](#set-up-manually) with the Python example instead.
+You need a running Lens service. If Lens is not ready, follow [Set up Lens](./deployment.md) first. To trace your own application instead of a coding agent, [set up manually](#set-up-manually) with the Python example.
 
 ## 1. Open Lens Home {#open-lens-home}
 
@@ -22,33 +22,40 @@ Open Lens through the place you intend to use it:
 | Connected to LiteLLM | Sign in to LiteLLM and select **Lens** in the sidebar. |
 | Standalone | Open your Lens URL at `/ui/` and sign in with `LENS_ADMIN_TOKEN`. |
 
-**Home** shows **Connect a new agent** with the **Set up with your coding agent** panel. The same instructions work in Claude Code, Codex, and Cursor.
+**Home** shows **Connect a new agent** with two ways to connect. Lens opens on the one that matches how it runs:
 
-![Lens Home shows the Set up with your coding agent panel for Claude Code, Codex, and Cursor, with the Copy instructions with new key button.](/img/lens/home-connect-agent.png)
+| Path | Use it when | Key the agent uses |
+| --- | --- | --- |
+| **Through the LiteLLM gateway** | Your coding agent's model calls already go through a LiteLLM gateway connected to Lens. The agent sends its telemetry to that gateway. | The LiteLLM key it already uses. No Lens tracing key is needed. |
+| **Standalone Lens** | Your coding agent does not use LiteLLM. It sends its telemetry straight to Lens. | A dedicated Lens tracing key. |
+
+![Lens Home shows the two connection paths, with Standalone Lens selected, the Claude Code, Codex, and OpenCode choices, and the Copy instructions with new key button.](/img/lens/home-connect-agent.png)
 
 ## 2. Copy the instructions into your coding agent {#copy-the-instructions}
 
-Select **Copy instructions with new key**. Lens creates a dedicated tracing key and copies instructions that already contain that key and your trace endpoint. Open your project in your coding agent and paste them.
+Choose **Claude Code**, **Codex**, or **OpenCode**, then select the copy button and paste the instructions into that coding agent. The instructions turn on the agent's own telemetry on your machine, keep its model provider and credentials, and run one real task. To read them first, expand **View full instructions**. The settings they apply are the ones in [Coding agent sessions](./coding-agents.md).
 
-The agent inspects your project, adds tracing for its framework, keeps your existing model provider and credentials, runs one real task, and confirms with Lens that the trace arrived. To read the instructions first, expand **View full instructions**.
+On the gateway path the button reads **Copy setup instructions**. The instructions carry no key: the agent finds the gateway address and the LiteLLM key it already uses.
 
-The pasted instructions contain the tracing key, so the key stays in your coding agent's chat history. Paste them only into an agent you trust. To reuse a key instead of creating one, select **Use an existing key**. If the button reads **Copy setup instructions**, the instructions carry no key and the agent uses the tracing key in your project's environment. If you cannot create one, ask your Lens or gateway administrator for a dedicated tracing key and save it there as `LITELLM_TRACING_KEY`.
+On the standalone path the button reads **Copy instructions with new key**. Lens creates a dedicated tracing key and copies instructions that already contain that key and your Lens address. The key stays in your coding agent's chat history, so paste the instructions only into an agent you trust. To reuse a key instead of creating one, select **Use an existing key**. If the button reads **Copy setup instructions**, the instructions carry no key and the agent uses the tracing key saved in your environment as `LITELLM_TRACING_KEY`. If you cannot create one, ask your Lens or gateway administrator for a dedicated tracing key.
 
-The instructions name the trace endpoint of this Lens, such as `http://localhost:4318/v1/traces` for the local quickstart. An agent in another container or on another machine needs an address it can reach, not its own `localhost`.
+The instructions name the address of this Lens or gateway, such as `http://localhost:4318` for the local quickstart. An agent in another container or on another machine needs an address it can reach, not its own `localhost`.
+
+These settings send your typed prompts, the agent's replies, the files it reads, and its tool arguments and output to Lens. Use them only with a Lens deployment where you intend to keep that content.
 
 ## 3. Open the trace {#view-your-first-trace}
 
-After you copy the instructions, **See your trace** on Lens Home shows **Waiting for your agent's trace**. When the task finishes, your coding agent reports the agent name and trace ID and gives you a link to the trace in Lens. Open the link, or select **Open trace** when Lens Home shows **Trace received**.
+When the task finishes, restart any coding agent sessions you had open so they pick up the settings. On the standalone path, **See your trace** on Lens Home shows **Waiting for your agent's trace**, then **Trace received** with **Open trace**. On the gateway path, select **View agents** and open the run.
 
-You should see the run under your agent's name. Model calls, tool steps, and prompt and response text appear only when the instrumentation records them. The coding agent ends by asking what to instrument next, so ask for them there. **Demo data** shows samples; turn it off when checking your own trace. If nothing arrives, see [If the trace does not appear](#troubleshooting).
+You should see the run under the agent's name, such as **claude-code**, with your prompt, the model calls, and the tool steps. **Demo data** shows samples; turn it off when checking your own trace. If nothing arrives, see [If the trace does not appear](#troubleshooting).
 
 ## Set up manually {#set-up-manually}
 
-Use this path when you have your own application and no coding agent. The Python example needs Python {{python_version}} and a model key. It makes one model call, which can incur a provider charge. For an agent built on a framework, use the [framework guide](#connect-your-existing-agent). To record Claude Code or Codex sessions themselves, see [Coding agent sessions](./coding-agents.md).
+Use this path to trace your own application. The Python example needs Python {{python_version}} and a model key. It makes one model call, which can incur a provider charge. For an agent built on a framework, use the [framework guide](#connect-your-existing-agent). To record Claude Code, Codex, or OpenCode sessions themselves, see [Coding agent sessions](./coding-agents.md).
 
 ### Get a tracing key and endpoint {#connect-your-agent}
 
-On Lens Home, select **Set up manually**, then **Create tracing key**. If the button is unavailable, ask your Lens or gateway administrator for a dedicated tracing key.
+On Lens Home, select **Standalone Lens**, then **Set up manually**, then **Create tracing key**. If the button is unavailable, ask your Lens or gateway administrator for a dedicated tracing key.
 
 ![Set up manually on Lens Home shows Create tracing key and the environment variables for your project, including the trace endpoint.](/img/lens/home-set-up-manually.png)
 

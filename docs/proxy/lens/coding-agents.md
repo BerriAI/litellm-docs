@@ -1,17 +1,26 @@
 ---
 title: Trace coding agent sessions
-description: Configure Claude Code or Codex to send sessions to Lens, then open the recorded activity in Traces.
+description: Configure Claude Code, Codex, or OpenCode to send sessions to Lens, then open the recorded activity in Traces.
 ---
 
 import AgentPrompt from '@site/src/components/Conversion/AgentPrompt';
 
 # Trace coding agent sessions
 
-Send your [Claude Code](#claude-code) or [Codex](#codex) activity to Lens. Your model login and model endpoint stay unchanged.
+Send your [Claude Code](#claude-code), [Codex](#codex), or [OpenCode](#opencode) activity to Lens. Your model login and model endpoint stay unchanged.
 
-You need a running Lens installation and a dedicated Lens tracing key. If you are starting from scratch, follow the [Lens deployment guide](./deployment/local.md). Your existing Claude Code or Codex model login continues to work.
+You need a running Lens installation. If you are starting from scratch, follow the [Lens deployment guide](./deployment/local.md).
 
-Open `http://localhost:4318/ui/` for the local quickstart, or select **Lens** in your LiteLLM dashboard. [Generate a tracing key](./first-trace.md#connect-your-agent) and copy the full **Traces endpoint**, including `/v1/traces`. Ask your administrator if you cannot create a key. The examples use local Lens; replace the address with your endpoint and keep any `/lens-ingest` prefix. A tracing key uploads telemetry, not model requests. Keep it private.
+A coding agent reaches Lens in one of two ways, and **Home** in Lens offers both under **Connect a new agent**:
+
+| How the agent connects | Where telemetry goes | Key it uses |
+| --- | --- | --- |
+| **Through the LiteLLM gateway**: the agent's model calls already go through a gateway [connected to Lens](./deployment/litellm.md) | Your gateway address | The LiteLLM key the agent already uses for model calls |
+| **Standalone Lens**: the agent does not use LiteLLM | Your Lens address | A dedicated Lens tracing key |
+
+On Lens Home, choose the path, choose your coding agent, and select the copy button. Paste the copied instructions into that coding agent and it applies the settings below and runs one real task. On the standalone path, **Copy instructions with new key** creates the tracing key for you. To set things up by hand, follow the section for your agent.
+
+A tracing key uploads telemetry. It does not call models or read traces. Keep it private. The standalone examples use local Lens at `http://localhost:4318`; replace it with your Lens address and keep any `/lens-ingest` prefix.
 
 ## Claude Code
 
@@ -25,7 +34,9 @@ Claude Code's telemetry is off by default, and Lens records Claude Code turns on
 
 ### Through the LiteLLM gateway
 
-If Claude Code already sends its model calls through your LiteLLM gateway, send its telemetry to the same gateway with the same key. The gateway forwards it to Lens, so the machine that runs `claude` needs no Lens address and no Lens tracing key. The gateway must be [connected to Lens](./deployment/litellm.md).
+If Claude Code already sends its model calls through your LiteLLM gateway, send its telemetry to the same gateway with the same key. The gateway forwards the trace spans and log events to Lens, so the machine that runs `claude` needs no Lens address and no Lens tracing key.
+
+The gateway forwards agent telemetry from LiteLLM v1.112.0. An earlier gateway answers `POST /v1/logs` with `410`. {/* keep-version-note: The first gateway release that forwards agent telemetry is the subject of this note. */}
 
 ```bash
 export ANTHROPIC_BASE_URL="http://localhost:4000"
@@ -35,88 +46,85 @@ export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1
 export CLAUDE_CODE_PROPAGATE_TRACEPARENT=1
 export OTEL_TRACES_EXPORTER=otlp
+export OTEL_LOGS_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="$ANTHROPIC_BASE_URL/v1/traces"
+export OTEL_EXPORTER_OTLP_ENDPOINT="$ANTHROPIC_BASE_URL"
 export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer $ANTHROPIC_AUTH_TOKEN"
 export OTEL_LOG_USER_PROMPTS=1
+export OTEL_LOG_ASSISTANT_RESPONSES=1
+export OTEL_LOG_TOOL_DETAILS=1
+export OTEL_LOG_TOOL_CONTENT=1
+export OTEL_LOG_RAW_API_BODIES=1
+export CLAUDE_CODE_OTEL_CONTENT_MAX_LENGTH=16777216
 
 claude -p "Reply with exactly: Lens telemetry check."
 ```
 
-Every telemetry variable is required. `CLAUDE_CODE_ENABLE_TELEMETRY`, `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA`, and `OTEL_TRACES_EXPORTER` together produce the turn; drop any one and Lens shows only separate `chat <model>` rows. `CLAUDE_CODE_PROPAGATE_TRACEPARENT` puts the turn's trace ID on each model call; without it the turn and its gateway calls land as two unrelated traces. `OTEL_LOG_USER_PROMPTS` includes the text you typed, which otherwise reads `<REDACTED>`, and it stores that text in Lens. The endpoint is your gateway address followed by `/v1/traces`, and the header carries your LiteLLM key.
+`OTEL_EXPORTER_OTLP_ENDPOINT` is your gateway address with no path. Claude Code adds `/v1/traces` and `/v1/logs` itself. The [settings reference](#claude-code-settings) below says what each variable does and what Lens shows without it.
 
-Do not set `OTEL_LOGS_EXPORTER` on this path. The gateway accepts trace spans only and answers `POST /v1/logs` with `410`. Do not add `lens.session.capture=true` from the direct setup below either: together with `CLAUDE_CODE_PROPAGATE_TRACEPARENT=1` it splits each turn into two traces, the turn under one trace ID and its gateway calls under another.
-
-Open **Lens > Traces** in LiteLLM and filter by **claude-code**. Each turn is one `claude_code.interaction` trace with its model and tool calls nested under it, your prompt, and the gateway's cost. Verified with Claude Code **2.1.330**.
+Open **Lens > Traces** in LiteLLM and filter by **claude-code**. Each turn is one `claude_code.interaction` trace with its model and tool calls nested under it, your prompt, the reply, and the gateway's cost. Select a model call to see the conversation it received and what the model returned.
 
 ### Directly to Lens
 
-Use this path when Claude Code does not go through a LiteLLM gateway. Model calls can continue through your Claude subscription or your existing API provider; leave your Claude login and model endpoint unchanged. Claude Code sends trace spans and assistant response logs straight to Lens with a Lens tracing key.
+Use this path when Claude Code does not go through a LiteLLM gateway. Model calls continue through your Claude subscription or your existing API provider, so leave your Claude login and model endpoint unchanged. Claude Code sends the same telemetry straight to Lens with a Lens tracing key.
 
 Copy this prompt into your coding agent to have it configure this machine, or follow the manual steps below.
 
 <AgentPrompt id="lens-claude-code" />
 
-Verified with Claude Code **2.1.328** and Lens **0.1.0**. Keep `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1`: the telemetry enable flag alone does not enable its beta trace exporter.
-
-In the terminal where you run `claude`, paste the endpoint and tracing key in the first two lines, then run the block. The logs URL uses the same address with `/v1/logs` in place of `/v1/traces`:
+In the terminal where you run `claude`, paste your Lens address and tracing key in the first two lines, then run the block:
 
 ```bash
+export LENS_URL="http://localhost:4318"
 export LENS_TRACING_KEY="<paste your Lens tracing key>"
-export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://localhost:4318/v1/traces"
-export OTEL_EXPORTER_OTLP_TRACES_HEADERS="Authorization=Bearer $LENS_TRACING_KEY"
-export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT="${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT%/v1/traces}/v1/logs"
-export OTEL_EXPORTER_OTLP_LOGS_HEADERS="Authorization=Bearer $LENS_TRACING_KEY"
 
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1
-export OTEL_METRICS_INCLUDE_SESSION_ID=true
+export CLAUDE_CODE_PROPAGATE_TRACEPARENT=1
 export OTEL_TRACES_EXPORTER=otlp
-export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL="http/protobuf"
-export OTEL_METRICS_EXPORTER=none
 export OTEL_LOGS_EXPORTER=otlp
-export OTEL_EXPORTER_OTLP_LOGS_PROTOCOL="http/protobuf"
-export OTEL_RESOURCE_ATTRIBUTES="lens.session.capture=true,gen_ai.agent.name=claude-code"
-
+export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+export OTEL_EXPORTER_OTLP_ENDPOINT="$LENS_URL"
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer $LENS_TRACING_KEY"
 export OTEL_LOG_USER_PROMPTS=1
 export OTEL_LOG_ASSISTANT_RESPONSES=1
 export OTEL_LOG_TOOL_DETAILS=1
 export OTEL_LOG_TOOL_CONTENT=1
+export OTEL_LOG_RAW_API_BODIES=1
+export CLAUDE_CODE_OTEL_CONTENT_MAX_LENGTH=16777216
 
 claude -p "Reply with exactly: Lens telemetry check."
 ```
 
-The content flags include prompts, assistant replies, tool arguments, and supported tool outputs, which can contain source code or secrets. Enable them only for a Lens deployment where you intend to store that content.
+Open **Traces** in Lens and filter by **claude-code**. The trace shows the turn with its prompt, reply, tool calls, and model calls. Cost is filled only when the model calls go through a LiteLLM gateway, which is where the price is known. Run `claude` without `-p` for interactive sessions.
 
-Open **Traces** in standalone Lens or **Lens > Traces** in LiteLLM. Filter by **claude-code**, open the session trace, and select **Conversation** to see the prompt and reply. Run `claude` without `-p` for interactive sessions. New turns in the same session update its trace.
+Lens groups Claude Code turns by session without any resource attribute. Do not set `OTEL_METRICS_INCLUDE_SESSION_ID=false`. Despite its name, this removes `session.id` from Claude's traces too.
 
-`lens.session.capture=true` groups turns with the same Claude session ID into one trace, including resumed sessions and background-agent replies. Original trace IDs remain in span attributes. Omit this resource attribute to retain Claude's separate traces per interaction. If you already set `OTEL_RESOURCE_ATTRIBUTES`, append these values instead of replacing your existing attributes.
+### Settings reference {#claude-code-settings}
 
-Do not set `OTEL_METRICS_INCLUDE_SESSION_ID=false`. Despite its name, this removes `session.id` from Claude's traces too and prevents session grouping.
+Both paths use the same telemetry variables. Only the endpoint and the key differ.
 
-<details>
-<summary>Additional Claude Code content and persistent settings</summary>
+| Variable | What it does | Without it |
+| --- | --- | --- |
+| `CLAUDE_CODE_ENABLE_TELEMETRY=1` | Turns Claude Code telemetry on | No turn. Lens lists the gateway's model calls one by one |
+| `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` | Turns on the trace exporter that sends turn, tool, and subagent spans. The enable flag alone does not | No turn |
+| `OTEL_TRACES_EXPORTER=otlp` | Sends those spans over OTLP | No turn |
+| `OTEL_LOGS_EXPORTER=otlp` | Sends Claude Code's events over OTLP: assistant replies, tool results, and model call bodies | Steps have no replies, tool output, or model call content |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Where the spans and events go: your gateway address, or your Lens address on the direct path | The exporter targets `localhost:4318` |
+| `OTEL_EXPORTER_OTLP_HEADERS` | Authenticates the upload with your LiteLLM key, or your Lens tracing key on the direct path | The upload is rejected |
+| `OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf` | Uses the OTLP/HTTP format the gateway and Lens accept | Claude Code's default export protocol is not guaranteed to match |
+| `CLAUDE_CODE_PROPAGATE_TRACEPARENT=1` | Puts the turn's trace ID on each model call | Through a gateway, the turn and its gateway calls show up as two unrelated traces |
+| `OTEL_LOG_USER_PROMPTS=1` | Includes the text you typed | The turn's input reads `<REDACTED>` |
+| `OTEL_LOG_ASSISTANT_RESPONSES=1` | Includes the text Claude Code replied with | The turn has no reply |
+| `OTEL_LOG_TOOL_DETAILS=1` and `OTEL_LOG_TOOL_CONTENT=1` | Include each tool call's arguments and output | Tool steps show a name and a duration only |
+| `OTEL_LOG_RAW_API_BODIES=1` | Includes the request and response of every model call | A model call step reads "No content recorded for this span" |
+| `CLAUDE_CODE_OTEL_CONTENT_MAX_LENGTH=16777216` | Raises Claude Code's 60 KB limit on exported content to 16 MiB | Requests longer than 60 KB arrive cut off, and their model call step has no input |
 
-Assistant replies use a separate telemetry stream from trace spans. Keep both exporters enabled. The allowlisted detailed-tracing endpoint is not required. See Claude Code's [monitoring reference](https://code.claude.com/docs/en/monitoring-usage) for the beta exporter's coverage and content limits.
+These settings store what you type, what Claude Code replies, the files it reads, and the output of the commands it runs. That content can include source code or secrets, so use them only with a Lens deployment where you intend to keep it. With `OTEL_LOG_RAW_API_BODIES=1`, Lens keeps the system prompt, the messages, and the reply of each model call. It does not keep tool definitions or thinking blocks. Each request repeats the conversation so far, so a long session stores it once per model call. To leave model call bodies out, set `OTEL_LOG_RAW_API_BODIES=0`.
 
-The `/v1/logs` endpoint receives OpenTelemetry events for Lens. These become part of the session trace and do not create entries in the normal LiteLLM **Logs** screen or additional spend records.
+To keep the settings across terminals, add the same variables as string entries to the `env` object in your user-level `~/.claude/settings.json`, preserving existing settings. `settings.json` does not expand variables, so write the address and the key's actual value there. Repository-level settings cannot enable telemetry or choose its destination. Managed settings may override your local destination.
 
-Claude's stable tool-output events omit failed executions and some tool kinds. To fill these gaps from the next model request, optionally enable native API-body export:
-
-```bash
-export OTEL_LOG_RAW_API_BODIES=1
-export CLAUDE_CODE_OTEL_CONTENT_MAX_LENGTH=1048576
-```
-
-This sends full API bodies, including conversation history and source content, to the Lens service. Lens extracts tool results for Conversation and discards the body attribute. The larger limit avoids Claude's default 60 KB truncation in typical short sessions, but long sessions can still exceed it. Lens warns when a body is incomplete. Results that are never sent to another model request remain unavailable. `file:<dir>` mode writes bodies only on your machine and cannot supply them to a remote Lens service.
-
-The conversation below includes a deliberately failed command. With the optional body export, Lens shows its stdout alongside the failure and the assistant's final reply.
-
-![Claude Code conversation showing a failed command and its captured output](/img/lens-coding-agents/claude-after.jpg)
-
-For persistent configuration, add these variables to the `env` object in your user-level `~/.claude/settings.json`, preserving existing settings. Repository-level settings cannot enable telemetry or choose its destination. Managed settings may override your local destination.
-
-</details>
+Verified with Claude Code **2.1.330**.
 
 ## Codex
 
@@ -159,12 +167,51 @@ CLI capture was checked with Codex **0.170.0** and plugin **0.4.0**. Each chat h
 
 The plugin reads visible transcript items for newly recorded turns, including commentary, repeated messages, tool outcomes, model changes, and subagents. Completed transcript turns can be recovered when a completion hook is missing. See the [coverage and privacy details](https://github.com/BerriAI/litellm-lens-codex-integration#what-youll-see) for its limits. To pause recording, ask Codex: `Use lens-setup to pause recording.`
 
+## OpenCode
+
+OpenCode sends no telemetry by default. Turn on its OpenTelemetry spans in `opencode.json`, in your project or in `~/.config/opencode/opencode.json`, and keep any settings already there:
+
+```json
+{
+  "experimental": {
+    "openTelemetry": true
+  }
+}
+```
+
+Then set these variables in the terminal where you run `opencode`:
+
+```bash
+export OTEL_EXPORTER_OTLP_ENDPOINT="<address>"
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer <key>"
+export OTEL_BSP_SCHEDULE_DELAY=1000
+
+opencode run "Run the date command, then tell me what it printed."
+```
+
+The address and key depend on how OpenCode connects:
+
+| Setup | `<address>` | `<key>` |
+| --- | --- | --- |
+| OpenCode routed through a LiteLLM gateway [connected to Lens](./deployment/litellm.md) | Your gateway address, such as `http://localhost:4000` | The LiteLLM key OpenCode already uses for model calls |
+| Standalone Lens | Your Lens address, such as `http://localhost:4318` | A Lens tracing key |
+
+OpenCode adds `/v1/traces` to the address. If `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` is already set in that terminal, it takes priority and receives the key in `OTEL_EXPORTER_OTLP_HEADERS`, so unset it first.
+
+Open **Traces** in standalone Lens or **Lens > Traces** in LiteLLM and filter by **opencode**. A session is one trace, and each prompt you send is a turn in it that shows what you asked and holds the model calls and tool calls made to answer it. Each model call shows the messages the request carried and the model's reply, including the tool calls it asked for. Each tool call is its own step with its input and output.
+
+OpenCode does not send its remaining spans when it exits. `OTEL_BSP_SCHEDULE_DELAY=1000` sends them every second instead of every five. Without it, a short `opencode run` records no model calls, and with it the last model call of a one-shot `opencode run` can still be missing. An interactive session keeps running and sends every call.
+
+These settings store what you type, what the model replies, the files OpenCode reads, and the output of the commands it runs. To stop the export, remove `experimental.openTelemetry`.
+
+Verified with OpenCode **1.19.6**.
+
 ## Coverage and troubleshooting
 
-Lens shows the content the coding agent exported. It cannot recover missing content from older traces. Claude's native telemetry does not export an exact terminal recording: images, hidden reasoning, local menus, permission dialogs, and some session events may be absent. Claude also limits exported content length; long tool results or replies can be truncated before Lens receives them. Codex replaces media with explicit omission markers and identifies unsupported transcript items. These limits prevent a promise of identical rendering for every session or future agent version.
+Lens shows the content the coding agent exported. It cannot recover missing content from older traces. Claude's native telemetry does not export an exact terminal recording: images, hidden reasoning, local menus, permission dialogs, and some session events may be absent. Codex replaces media with explicit omission markers and identifies unsupported transcript items. These limits prevent a promise of identical rendering for every session or future agent version.
 
-If Claude shows tools but no replies, check `OTEL_LOGS_EXPORTER`, `OTEL_LOG_ASSISTANT_RESPONSES`, and the logs endpoint. A `404` for `/v1/logs` means the Lens service or ingestion route needs an update. Allow the exporters to flush after a turn. Do not enable raw API-body export to compensate for missing reply logs.
+If Claude Code shows only rows named `chat <model>` with no `claude_code.interaction` row, the telemetry settings did not reach the process that ran `claude`. Check the three variables that produce the turn and restart Claude Code. If Claude shows tools but no replies, check `OTEL_LOGS_EXPORTER`, `OTEL_LOG_ASSISTANT_RESPONSES`, and that the endpoint accepts `POST /v1/logs`. A `404` or `410` for `/v1/logs` means the Lens service or the gateway needs an update. Allow the exporters to flush after a turn.
 
-To change the Claude agent name, set `gen_ai.agent.name` in `OTEL_RESOURCE_ATTRIBUTES`. For example, `gen_ai.agent.name=my-claude-code,developer=alice,lens.session.capture=true`. Use that exact name in the trace filter and in any investigation's agent filter. An investigation restricted to `claude-code` will not sample `my-claude-code` automatically.
+To change the Claude agent name, set `gen_ai.agent.name` in `OTEL_RESOURCE_ATTRIBUTES`. For example, `OTEL_RESOURCE_ATTRIBUTES="gen_ai.agent.name=my-claude-code,developer=alice"`. Use that exact name in the trace filter and in any investigation's agent filter. An investigation restricted to `claude-code` will not sample `my-claude-code` automatically. If you already set `OTEL_RESOURCE_ATTRIBUTES`, append to it instead of replacing your existing attributes.
 
-For large traces, use **Load next steps** in Conversation to load later activity. If a step fails to load, retry it before loading the next page. Subagent branches preserve their own messages and tool results so concurrent agents do not appear to be one speaker.
+For large traces, use **Load more steps** to load later activity. If a step fails to load, retry it before loading the next page. Subagent branches preserve their own messages and tool results so concurrent agents do not appear to be one speaker.
