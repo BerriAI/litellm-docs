@@ -120,7 +120,7 @@ For persistent configuration, add these variables to the `env` object in your us
 
 ## Codex
 
-Use the [BerriAI Codex integration](https://github.com/BerriAI/litellm-lens-codex-integration) for local Codex desktop and CLI sessions. Automatic setup currently supports **macOS** and requires Python 3.11 or later and a Codex version with plugin support. Run setup on the computer where Codex runs. {/* keep-python-version: Codex integration prerequisite */}
+Use the [LiteLLM Lens plugin for Codex](https://github.com/BerriAI/litellm-lens-plugins/tree/main/codex) for local Codex desktop and CLI sessions. It is the recommended Codex setup: each chat is one trace, and each model call is a step with its tokens and, when Codex's model calls go through your LiteLLM gateway, its cost. Automatic setup supports **macOS and Linux** and requires Python 3.11 or later and a Codex version with plugin support. Run setup on the computer where Codex runs. {/* keep-python-version: Codex integration prerequisite */}
 
 Copy this prompt into your coding agent to have it install and configure the integration, or follow the manual steps below.
 
@@ -129,7 +129,7 @@ Copy this prompt into your coding agent to have it install and configure the int
 In Terminal, install the plugin. The same plugin serves desktop and CLI:
 
 ```bash
-codex plugin marketplace add BerriAI/litellm-lens-codex-integration
+codex plugin marketplace add BerriAI/litellm-lens-plugins
 codex plugin add litellm-lens@berriai-lens
 ```
 
@@ -155,9 +155,11 @@ codex exec "Reply with exactly: Lens Codex telemetry check."
 
 Open **Traces** in standalone Lens or **Lens > Traces** in LiteLLM, filter by **codex**, and open the chat trace in **Conversation**. Do not paste your tracing key into a Codex prompt or use it as your model key. The plugin handles telemetry; do not copy the Claude Code environment variables into Codex or enable a second exporter for the same recording.
 
-CLI capture was checked with Codex **0.170.0** and plugin **0.4.0**. Each chat has one trace, updated after completed or interrupted turns. Reopening a chat continues its trace. The plugin supplies the chat-level trace ID, so this grouping works on both Lens **0.1.0** and **main**, without `lens.session.capture` or `lens.session.attribute`. Only activity after setup is recorded.
+CLI capture was checked with Codex **0.171.0** and plugin **0.5.0**. If you installed the plugin from `BerriAI/litellm-lens-codex-integration`, run `codex plugin marketplace remove berriai-lens` first, then the two commands above and setup once more. Each chat has one trace, updated after completed or interrupted turns. Reopening a chat continues its trace. The plugin supplies the chat-level trace ID, so this grouping works on both Lens **0.1.0** and **main**, without `lens.session.capture` or `lens.session.attribute`. Only activity after setup is recorded.
 
-The plugin reads visible transcript items for newly recorded turns, including commentary, repeated messages, tool outcomes, model changes, and subagents. Completed transcript turns can be recovered when a completion hook is missing. See the [coverage and privacy details](https://github.com/BerriAI/litellm-lens-codex-integration#what-youll-see) for its limits. To pause recording, ask Codex: `Use lens-setup to pause recording.`
+The plugin reads visible transcript items for newly recorded turns, including commentary, repeated messages, tool outcomes, model changes, and subagents. Completed transcript turns can be recovered when a completion hook is missing. See the [coverage and privacy details](https://github.com/BerriAI/litellm-lens-plugins/tree/main/codex#what-youll-see) for its limits. To pause recording, ask Codex: `Use lens-setup to pause recording.`
+
+When Codex's model calls already go through a LiteLLM gateway connected to Lens, enter the gateway address and the LiteLLM key Codex uses in place of the Lens endpoint and tracing key. The gateway stamps the trace with the key's user and team and forwards it to Lens. Codex's own OpenTelemetry export remains available as a fallback where the plugin cannot run; see the [Lens Codex guide](https://github.com/BerriAI/lens/blob/main/docs/codex-cli.md).
 
 ## Coverage and troubleshooting
 
