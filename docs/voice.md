@@ -50,7 +50,7 @@ For audio that does not need a live session, use [`/audio/transcriptions`](/docs
 | Your server, such as a phone call or a media stream | WebSocket | Your server holds the LiteLLM key and sends the audio |
 | A microphone in a browser or mobile app | [WebRTC](/docs/proxy/realtime_webrtc) | The browser gets a short-lived token, and audio goes to the provider without passing through the proxy |
 
-WebRTC works for Realtime models, `gpt-live-transcribe`, and `gpt-realtime-translate` on OpenAI and Azure. `gpt-live-1` has its own [WebRTC route](/docs/live_sessions#start-a-session-from-a-browser-over-webrtc). LiteLLM bills Realtime and `gpt-live-1` WebRTC calls and counts them against budgets. Translation WebRTC calls are not billed yet, so use WebSocket when a translation session must count against a budget.
+WebRTC works for Realtime models, `gpt-live-transcribe`, and `gpt-realtime-translate` on OpenAI and Azure. `gpt-live-1` has its own [WebRTC route](/docs/live_sessions#start-a-session-from-a-browser-over-webrtc). LiteLLM bills WebRTC calls and counts them against budgets. It bills a translation WebRTC call for the time the call ran.
 
 ## Run a first session
 
