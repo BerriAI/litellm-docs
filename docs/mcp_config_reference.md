@@ -242,6 +242,8 @@ general_settings:
 
 The setting reuses cached authorization records; it does not cache responses from upstream MCP servers. A grant change can remain visible until the applicable cache entry expires or is invalidated. Set `general_settings.user_api_key_cache_ttl` in seconds to tune the management-object cache defaults. Shared Redis entries can have separate TTLs or invalidation rules, so verify those settings too. There is no catalog-specific TTL or single revocation bound. Callers that require fresh policy continue to read it from the database.
 
+If cross-worker cache invalidation is unavailable or fails, a worker can continue to honor a cached `proxy_admin` role for unscoped catalog listings after a demotion until its cache entry expires or is invalidated. This setting does not guarantee immediate role revocation.
+
 ## Related docs
 
 - [MCP Overview](./mcp): adding servers via UI or config.yaml, full field reference
