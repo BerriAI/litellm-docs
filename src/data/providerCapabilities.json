@@ -331,6 +331,12 @@
       "chat"
     ]
   },
+  "providers/augure": {
+    "prefix": "augure",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/aws_sagemaker": {
     "prefix": "sagemaker",
     "capabilities": [
