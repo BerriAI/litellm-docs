@@ -3,6 +3,23 @@ import {ONE_CLICK} from './content';
 import {track} from './shared';
 import styles from './styles.module.css';
 
+export function OneClickBadges({source = 'docs'}) {
+  return (
+    <div className={styles.deployBadges}>
+      {ONE_CLICK.map(([name, url, badge]) => (
+        <a
+          key={name}
+          href={url}
+          target="_blank"
+          rel="nofollow noopener"
+          onClick={() => track('docs_one_click_deploy', {provider: name, source})}>
+          <img src={badge} alt={`Deploy on ${name}`} height="40" />
+        </a>
+      ))}
+    </div>
+  );
+}
+
 // A small, self-contained block for hosted one-click deploys. The badges are
 // the providers' own images, used as published.
 export default function OneClickDeploy({source = 'docs'}) {

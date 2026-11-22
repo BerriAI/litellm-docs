@@ -329,6 +329,23 @@
   color: var(--cv-muted);
 }
 
+.deployBadges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.deployBadges img {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+.deployBadges a:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 3px;
+}
+
 .oneClick {
   --cv-line: var(--ifm-color-emphasis-300);
   display: flex;
