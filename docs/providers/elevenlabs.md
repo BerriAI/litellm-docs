@@ -330,7 +330,11 @@ With server VAD, ElevenLabs commits a segment after a pause of `vad_silence_thre
 | `conversation.item.input_audio_transcription.completed` | `item_id`, `content_index: 0`, `transcript`, `usage: {"type": "duration", "seconds": 7.57}` | Final transcript for the segment |
 | `error` | `error.type: server_error`, `error.message: ElevenLabs realtime transcription failed: <type>` | ElevenLabs reported an error such as `auth_error` or `quota_exceeded` |
 
-ElevenLabs keeps revising the last word of each partial transcript, so a delta carries a word only after a later partial confirms it. The `completed` transcript is the authoritative text for the segment. An invalid ElevenLabs key arrives as an `error` event with `auth_error`, followed by a normal close. If LiteLLM cannot open the ElevenLabs socket at all (a network failure, a timeout or an HTTP rejection of the handshake), the proxy closes the client connection with code `1011` and a reason such as `ElevenLabs realtime connection failed (HTTP 403)`.
+ElevenLabs keeps revising the last word of each partial transcript, so a delta carries a word only after a later partial confirms it. For text without spaces, such as Chinese and Japanese, a delta carries the characters two partials agree on, minus the last character and any trailing punctuation, which ElevenLabs often revises. The `completed` transcript is the authoritative text for the segment. An invalid ElevenLabs key arrives as an `error` event with `auth_error`, followed by a normal close, and the session is logged as a failure rather than a success. If LiteLLM cannot open the ElevenLabs socket at all (a network failure, a timeout or an HTTP rejection of the handshake), the proxy closes the client connection with code `1011` and a reason such as `ElevenLabs realtime connection failed (HTTP 403)`.
+
+### Health checks
+
+Health checks for `scribe_v2_realtime` open the ElevenLabs realtime socket with the deployment's settings and wait for `session_started`, without sending audio, so they cost nothing. A rejected key or a socket that closes first marks the deployment unhealthy with the ElevenLabs error, for example `ElevenLabs realtime transcription failed: auth_error`.
 
 ### Pricing and usage
 
