@@ -8,9 +8,11 @@ import ThemedVideo from '@site/src/components/ThemedVideo';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import QuickStartBox from '@site/src/components/QuickStartBox';
-import {OneClickDeploy} from '@site/src/components/Conversion';
+import {OneClickBadges} from '@site/src/components/Conversion/OneClickDeploy';
 
 # Quickstart
+
+<OneClickBadges source="docker-quickstart" />
 
 Run LiteLLM and PostgreSQL locally, then use the Admin UI to add models, create keys, and send your first request.
 
@@ -32,7 +34,7 @@ The [compose file](https://github.com/BerriAI/litellm/blob/f52f26d9c636038c6e360
 
 For Kubernetes, see the [Helm guide](./deploy/helm.md).
 
-<OneClickDeploy source="docker-quickstart" />
+On Render, set **Blueprint Path** to `litellm/deploy/render/render.yaml` before you deploy.
 
 :::warning[What the two keys do]
 The local setup generates both keys in `.env`. The compose file requires both keys. On a 1-click deploy, set them in the provider's environment.
