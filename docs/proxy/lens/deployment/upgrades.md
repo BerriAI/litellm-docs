@@ -6,7 +6,7 @@ slug: "/proxy/lens/deployment/upgrades"
 
 # Upgrade Lens
 
-Select an available [Lens artifact](./releases.md) and read its migration requirements. Lens and gateway versions can differ when their contracts are compatible. An embedded UI change requires the corresponding gateway UI update
+Select an available [Lens artifact](./releases.md) and read its migration requirements. Lens and gateway versions can differ when their contracts are compatible. From LiteLLM v1.112.0, the dashboard shows the UI that the connected Lens serves, so the Lens page in LiteLLM follows the Lens version. An earlier gateway carries its own copy of the Lens UI and needs a gateway update to change it {/* keep-version-note: The first gateway release that loads the UI from Lens is the subject of this note. */}
 
 Before changing a persistent installation, [back up and rehearse recovery](https://github.com/BerriAI/lens/blob/main/docs/backup.md). Retain the exact installed image, source or installation bundle, environment file, ClickHouse data and Keeper state. Pause scheduled work and finish or cancel active investigations before the maintenance window
 
@@ -24,7 +24,7 @@ For Compose, update `LENS_IMAGE` in the retained `deploy/lens/.env` to the verif
 docker compose -f deploy/lens/compose.yaml up -d --wait
 ```
 
-A [quickstart](./local.md) install keeps `.env` beside the downloaded `compose.yaml`, and that file has no `LENS_IMAGE` line yet. Add one with the verified artifact, such as `LENS_IMAGE=ghcr.io/berriai/lens:0.1.0`, then apply it from that folder:
+A [quickstart](./local.md) install keeps `.env` beside the downloaded `compose.yaml`, and that file has no `LENS_IMAGE` line yet. Add one with the verified artifact, such as `LENS_IMAGE=ghcr.io/berriai/lens:0.3.0`, then apply it from that folder:
 
 ```sh
 docker compose up -d --wait

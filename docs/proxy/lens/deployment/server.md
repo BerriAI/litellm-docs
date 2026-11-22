@@ -6,12 +6,12 @@ slug: "/proxy/lens/deployment/server"
 
 # Docker Compose on a server
 
-Install Docker with Compose v2, then run the [v0.1.0 release bundle](https://github.com/BerriAI/lens/releases/tag/v0.1.0) on your server. It needs no Git, pulls the published image by digest, and can be [verified](./releases.md#verify-a-release) before you run it:
+Install Docker with Compose v2, then run the [v0.3.0 release bundle](https://github.com/BerriAI/lens/releases/tag/v0.3.0) on your server. It needs no Git, pulls the published image by digest, and can be [verified](./releases.md#verify-a-release) before you run it:
 
 ```sh
-curl -fLO https://github.com/BerriAI/lens/releases/download/v0.1.0/lens-install-0.1.0.tar.gz
-tar xzf lens-install-0.1.0.tar.gz
-cd lens-0.1.0
+curl -fLO https://github.com/BerriAI/lens/releases/download/v0.3.0/lens-install-0.3.0.tar.gz
+tar xzf lens-install-0.3.0.tar.gz
+cd lens-0.3.0
 ./start
 ```
 
@@ -31,7 +31,7 @@ Replace the hostname with yours. This controls the browser origin, generated tra
 
 ## Apply the configuration {#2-start-the-services}
 
-From the extracted `lens-0.1.0` directory:
+From the extracted `lens-0.3.0` directory:
 
 ```sh
 docker compose -f deploy/lens/compose.yaml up -d --wait
