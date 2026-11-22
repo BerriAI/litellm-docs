@@ -361,6 +361,12 @@
       "chat"
     ]
   },
+  "providers/c0mpute": {
+    "prefix": "c0mpute",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/cerebras": {
     "prefix": "cerebras",
     "capabilities": [

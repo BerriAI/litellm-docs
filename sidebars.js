@@ -1952,6 +1952,7 @@ const providersSidebar = {
     "providers/black_forest_labs",
     "providers/black_forest_labs_img_edit",
     "providers/bytez",
+    "providers/c0mpute",
     "providers/cerebras",
     "providers/chatgpt",
     "providers/chutes",
