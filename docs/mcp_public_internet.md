@@ -10,7 +10,7 @@ Control which MCP servers are visible to external callers (e.g., ChatGPT, Claude
 | Property | Details |
 |-------|-------|
 | Description | IP-based access control for MCP servers — external callers only see servers marked as public |
-| Setting | `available_on_public_internet` on each MCP server |
+| Setting | `available_on_public_internet` and `allowed_cidrs` on each MCP server |
 | Network Config | `mcp_internal_ip_ranges` in `general_settings` |
 | Supported Clients | ChatGPT, Claude Desktop, Cursor, OpenAI API, or any MCP client |
 
@@ -25,7 +25,7 @@ If an MCP server is **`available_on_public_internet: false`** (internal for IP-b
 When a request arrives at LiteLLM's MCP endpoints, LiteLLM checks the caller's IP address to determine whether they are an **internal** or **external** caller:
 
 1. **Extract the client IP** from the incoming request (supports `X-Forwarded-For` when configured behind a reverse proxy).
-2. **Classify the IP** as internal or external by checking it against the configured private IP ranges (defaults to RFC 1918: `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.0/8`).
+2. **Classify the IP** as internal or external by checking it against the configured private IP ranges (defaults to RFC 1918 plus loopback and IPv6 private space: `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.0/8`, `::1/128`, `fc00::/7`).
 3. **Filter the server list**:
    - **Internal callers** see all MCP servers (public and private).
    - **External callers** only see servers with `available_on_public_internet: true`.
@@ -254,7 +254,52 @@ general_settings:
     - "100.64.0.0/10"    # Add your VPN/Tailscale range
 ```
 
-When empty, the standard private ranges are used (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.0/8`).
+When empty, the standard private ranges are used (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.0/8`, `::1/128`, `fc00::/7`).
+
+### Per-Server CIDR Allowlist (IPv4 + IPv6)
+
+`available_on_public_internet` and `mcp_internal_ip_ranges` operate at the gateway level: they classify a caller as internal or external for every server at once. For a sensitive server that must only ever be reachable from a specific set of networks, set a per-server `allowed_cidrs` list. When it is non-empty, LiteLLM requires the caller's source IP to fall within one of the listed ranges on every ingress path (tool listing and tool calls, all transports), so a leaked or compromised API key with access to the server still cannot reach it from outside the allowed networks.
+
+Both IPv4 and IPv6 CIDRs are accepted and matched with Python's `ipaddress`, so `2001:db8::/32` works alongside `10.0.0.0/8`. The allowlist applies on top of the global controls rather than replacing them: a server that is internal-only still rejects public IPs even if they match its `allowed_cidrs`, and a server left without an `allowed_cidrs` list keeps its current behavior unchanged. If every entry in the list is malformed the server fails closed (no caller matches) rather than falling open.
+
+<Tabs>
+<TabItem value="ui" label="UI">
+
+Add ranges to the **Allowed CIDRs** field in the Permission Management / Access Control section when creating or editing an MCP server. Leave it empty for no per-server IP restriction.
+
+</TabItem>
+<TabItem value="config" label="config.yaml">
+
+```yaml title="config.yaml" showLineNumbers
+mcp_servers:
+  internal_payroll:
+    url: https://payroll.internal/mcp
+    available_on_public_internet: false
+    allowed_cidrs:
+      - "10.10.0.0/16"       # corp VPN
+      - "2001:db8:42::/48"   # IPv6 office range
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+```bash title="Create a server with a CIDR allowlist" showLineNumbers
+curl -X POST <your-litellm-url>/v1/mcp/server \
+  -H "Authorization: Bearer sk-..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "server_name": "internal_payroll",
+    "url": "https://payroll.internal/mcp",
+    "transport": "http",
+    "available_on_public_internet": false,
+    "allowed_cidrs": ["10.10.0.0/16", "2001:db8:42::/48"]
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+A caller whose IP is outside the allowlist receives a `403` with an `ip_filtering` error explaining that the server enforces a per-server CIDR allowlist.
 
 ---
 
