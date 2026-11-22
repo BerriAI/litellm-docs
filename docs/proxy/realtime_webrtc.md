@@ -139,4 +139,4 @@ general_settings:
   meter_webrtc_calls: false
 ```
 
-Translation calls on `/v1/realtime/translations/calls` are not billed yet.
+The proxy also joins translation calls on `/v1/realtime/translations/calls`. The provider reports no usage for a translation call, so LiteLLM bills the seconds between the moment its connection joins the call and the moment the call ends, at the `input_cost_per_second` of the model.
