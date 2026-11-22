@@ -25,7 +25,7 @@ export default function OneClickDeploy({source = 'docs'}) {
             target="_blank"
             rel="nofollow noopener"
             onClick={() => track('docs_one_click_deploy', {provider: name, source})}>
-            <img src={badge} alt={`Deploy on ${name}`} height="32" />
+            <img src={badge} alt={`Deploy on ${name}`} height="48" />
           </a>
         ))}
       </div>
