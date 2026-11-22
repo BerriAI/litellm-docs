@@ -1,3 +1,9 @@
+---
+title: "CompactifAI API with LiteLLM: Setup and Models"
+sidebar_label: "CompactifAI"
+description: "Call CompactifAI's compressed Llama, Mistral and CodeLlama models from the Python SDK or AI Gateway, with streaming, function calling and async requests."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

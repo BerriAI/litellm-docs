@@ -1,9 +1,10 @@
 ---
-title: Models and routing
+title: Models and routing for litellm.agent()
 sidebar_label: Models and routing
+description: Choose a model for litellm.agent() and route model calls through the LiteLLM AI Gateway or directly to a provider.
 ---
 
-# Models and routing
+# Models and routing for `litellm.agent()`
 
 `model=` follows the same convention as `litellm.completion`. A model prefixed with `litellm_proxy/` goes to the gateway, and anything else is called directly through the LiteLLM SDK.
 

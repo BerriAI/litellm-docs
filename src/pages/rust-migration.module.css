@@ -896,7 +896,8 @@
    follows the theme without a second asset. */
 .benchPanels {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  /* At most two columns, so four panels form a square instead of three and an orphan. */
+  grid-template-columns: repeat(auto-fit, minmax(max(320px, calc(50% - 0.625rem)), 1fr));
   gap: 1.25rem;
 }
 
@@ -915,31 +916,54 @@
   letter-spacing: -0.01em;
 }
 
-/* Four columns sharing one baseline. */
-.benchRows {
+/* Tick labels in a narrow left column, the plot beside them, and the names
+   under the plot. The plot has a fixed height so ticks, gridlines, and bars
+   all measure against the same box. */
+.benchChart {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 13rem auto;
+  column-gap: 0.6rem;
+  /* Room above the plot for the off-scale reading. */
+  padding-top: 2.25rem;
+}
+
+.benchTicks {
+  position: relative;
+  min-width: 2rem;
+}
+
+.benchTick {
+  position: absolute;
+  right: 0;
+  transform: translateY(50%);
+  color: var(--ifm-color-emphasis-500);
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.benchPlot {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.9rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
 }
 
-/* Value above, bar in the middle, name below. The middle row takes the slack,
-   so every bar measures against the same height. */
-.benchRow {
-  display: grid;
-  grid-template-rows: 1fr auto;
-  gap: 0.5rem;
-  height: 15rem;
-  min-width: 0;
+.benchGridline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--ifm-color-emphasis-200);
 }
 
-/* The track is the measured area. The bar grows from its floor and the reading
-   is pinned to the same percentage, so the two move together. */
+/* The bar grows from the floor and the reading is pinned to the same
+   percentage, so the two move together. */
 .benchTrack {
   position: relative;
-  min-height: 0;
+  min-width: 0;
 }
 
 .benchBar {
@@ -958,13 +982,35 @@
   background: var(--ifm-color-primary);
 }
 
+/* A slanted gap near the top, the usual mark for a bar cut to fit. */
+.benchBarBroken::after {
+  content: '';
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  top: 14%;
+  height: 0.4rem;
+  background: var(--ifm-background-surface-color);
+  transform: skewY(-12deg);
+}
+
+.benchNames {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .benchName {
+  min-width: 0;
   color: var(--ifm-color-emphasis-700);
   font-size: 0.75rem;
   line-height: 1.3;
   text-align: center;
   overflow-wrap: anywhere;
-  border-top: 1px solid var(--ifm-color-emphasis-200);
   padding-top: 0.5rem;
 }
 
@@ -972,10 +1018,14 @@
   position: absolute;
   left: 0;
   right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin-bottom: 0.4rem;
   color: var(--ifm-color-emphasis-700);
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
+  line-height: 1.25;
   text-align: center;
   white-space: nowrap;
 }
@@ -985,23 +1035,23 @@
   font-weight: 600;
 }
 
+.benchOffScale {
+  color: var(--ifm-color-emphasis-500);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .benchAxis {
   margin: 0.85rem 0 0;
   color: var(--ifm-color-emphasis-500);
   font-size: 0.72rem;
 }
 
-.benchNote {
-  max-width: 720px;
-  margin: 1.75rem 0 0;
-  color: var(--ifm-color-emphasis-600);
-  font-size: 0.76rem;
-  line-height: 1.6;
-}
-
 @media (max-width: 520px) {
-  .benchRow {
-    height: 11rem;
+  .benchChart {
+    grid-template-rows: 10rem auto;
   }
 
   .benchValue {

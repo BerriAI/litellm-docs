@@ -1,3 +1,9 @@
+---
+title: "OpenAI-Compatible Endpoints with LiteLLM"
+sidebar_label: "OpenAI-Compatible Endpoints"
+description: "Call any OpenAI-compatible endpoint via LiteLLM with the openai/ prefix and your api_base, from the Python SDK or AI Gateway, for completion and embedding."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -137,6 +143,26 @@ Here's how to call an OpenAI-Compatible Endpoint with the LiteLLM Proxy Server
 
   </Tabs>
 
+
+### Calling `/v1/messages` (Anthropic format)
+
+LiteLLM routes `/v1/messages` requests for `openai/` models through the OpenAI Responses API, so the proxy calls `/responses` on your `api_base`. If your endpoint only serves `/chat/completions`, the request fails with the endpoint's error for that route, usually a 404 or a 400, while `/chat/completions` requests to the same model keep working.
+
+To send `/v1/messages` requests through `/chat/completions` instead, turn on `use_chat_completions_url_for_anthropic_messages`.
+
+```yaml
+model_list:
+  - model_name: my-model
+    litellm_params:
+      model: openai/<your-model-name>
+      api_base: <model-api-base>
+      api_key: api-key
+
+litellm_settings:
+  use_chat_completions_url_for_anthropic_messages: true
+```
+
+You can also set the env var `LITELLM_USE_CHAT_COMPLETIONS_URL_FOR_ANTHROPIC_MESSAGES=true`. The setting applies to the whole proxy, so `/v1/messages` requests for models hosted by OpenAI itself also go through `/chat/completions` once it is on. See the [`/v1/messages` to `/responses` parameter mapping](../anthropic_unified/messages_to_responses_mapping.md) for how the default route translates a request.
 
 ### Advanced - Disable System Messages
 

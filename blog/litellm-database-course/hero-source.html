@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>LiteLLM database course hero</title>
+<style>
+@font-face{font-family:Geist;src:url('../../static/animations/internal-devin-two-days/assets/geist-variable.woff2')}@font-face{font-family:'Geist Mono';src:url('../../static/animations/internal-devin-two-days/assets/geist-mono-variable.woff2')}
+*{box-sizing:border-box}html,body{margin:0}body{--paper:#fff;--ink:#252936;--muted:#7c8491;--line:#d8dbe2;--blue:#0117be;background:var(--paper);color:var(--ink);font-family:Geist,sans-serif}body.dark{--paper:#0b1120;--ink:#f1f5ff;--muted:#94a0b6;--line:#2c3548;--blue:#a9b7ff}.hero{width:1200px;height:630px;padding:58px 64px;overflow:hidden}header{display:flex;align-items:center;justify-content:space-between}.logo{width:174px;height:auto}.url{font-family:'Geist Mono',monospace;font-size:17px;color:var(--muted)}h1{font-size:64px;line-height:1.06;font-weight:400;letter-spacing:-2.6px;margin:67px 0 25px}h1 span{display:block;color:var(--blue)}.deck{margin:0;font-size:25px;letter-spacing:-.4px}footer{margin-top:75px;border-top:1px solid var(--line);padding-top:24px;font-size:18px;color:var(--muted);font-weight:400}
+</style>
+<body>
+<main class="hero">
+<header><img class="logo" src="../../static/img/brand/litellm-logo-blue.png" alt="LiteLLM"><span class="url">litellm.ai/course</span></header>
+<h1>Learn the<span>LiteLLM database</span></h1>
+<p class="deck">Every table, what it does, and why it was added.</p>
+<footer>69 lessons · 16 chapters</footer>
+</main>
+<script>
+if(new URLSearchParams(location.search).get('theme')==='dark'){document.body.classList.add('dark');document.querySelector('.logo').src='../../static/img/brand/litellm-logo-white.png'}
+</script>
+<!-- Render at 1200x630. Add ?theme=dark for the dark variant. Official marks and Geist fonts come from the site's existing assets. Course size comes from content/database/course.json in BerriAI/litellm-gateway-course. -->
+</body>
+</html>

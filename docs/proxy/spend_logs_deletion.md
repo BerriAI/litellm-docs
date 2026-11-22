@@ -246,7 +246,7 @@ Partition maintenance interacts with the run budget in one way worth knowing. Th
 
 Partitioning a populated table cannot be done in place, so the conversion renames the existing table aside and creates a fresh partitioned table. The partition key must be part of the primary key, so the primary key becomes the composite `("request_id", "startTime")`; LiteLLM's spend-log write path uses `INSERT ... ON CONFLICT DO NOTHING`, which is compatible with this.
 
-Run the runbook in [`db_scripts/partition_spend_logs.sql`](https://github.com/BerriAI/litellm/blob/main/db_scripts/partition_spend_logs.sql) against your database (test on a staging copy and take a backup first). It creates the partitioned parent, the composite primary key, the `startTime` index, and a `DEFAULT` partition as a safety net for any out-of-range rows.
+Run the runbook in [`db_scripts/partition_spend_logs.sql`](https://github.com/BerriAI/litellm/blob/main/litellm/scripts/db/partition_spend_logs.sql) against your database (test on a staging copy and take a backup first). It creates the partitioned parent, the composite primary key, the `startTime` index, and a `DEFAULT` partition as a safety net for any out-of-range rows.
 
 After converting, set a retention period as shown above and the cleanup job manages partitions for you.
 

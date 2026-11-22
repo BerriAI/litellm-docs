@@ -109,12 +109,12 @@ litellm --config /path/to/config.yaml
 
 ## Translate an audio file
 
-Use this to try the model, or to translate a recorded file. Use the script [`cookbook/gpt_realtime_translate.py`](https://github.com/BerriAI/litellm/blob/main/cookbook/gpt_realtime_translate.py) from the LiteLLM repo. The script sends a WAV file through the proxy at the speed of the recorded speech. It shows the translated text as it comes back and writes the translated speech to `translated.wav`.
+Use this to try the model, or to translate a recorded file. Use the script [`cookbook/gpt_realtime_translate.py`](https://github.com/BerriAI/litellm/blob/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/gpt_realtime_translate.py) from the LiteLLM repo. The script sends a WAV file through the proxy at the speed of the recorded speech. It shows the translated text as it comes back and writes the translated speech to `translated.wav`.
 
 ```bash
 pip install websockets
 export LITELLM_API_KEY=sk-<your-litellm-api-key>   # a LiteLLM virtual key
-curl -sO https://raw.githubusercontent.com/BerriAI/litellm/main/cookbook/gpt_realtime_translate.py
+curl -sO https://raw.githubusercontent.com/BerriAI/litellm/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/gpt_realtime_translate.py
 
 python gpt_realtime_translate.py speech.wav \
   --base-url http://localhost:4000 \
@@ -254,6 +254,8 @@ LiteLLM does not change these events. For all the fields, see the OpenAI [realti
 LiteLLM bills each second of input audio at the `input_cost_per_second` of the model. As of November 2026, `gpt-realtime-translate` costs approximately $0.034 for each minute on OpenAI and on Azure. See the [gpt-realtime-translate price and limits](https://models.litellm.ai/models/gpt-realtime-translate) on models.litellm.ai. The cost goes to the spend log and to the key, team, and user spend, so budgets apply as for other calls.
 
 The count of seconds comes from `usage.input_seconds` in `session.closed`. If the provider does not send this value, LiteLLM counts the seconds of audio that your client sent. Thus, always send `session.close` and wait for `session.closed`. A session that gets only error events, for example from an unknown model, is recorded as a failure and LiteLLM does not bill it.
+
+On WebRTC, the audio does not go through the proxy. The proxy joins each call with its own connection and bills the seconds from the moment it joins to the moment the call ends. A call that the proxy cannot join gets `503` and does not start. See [billing and limits](/docs/proxy/realtime_webrtc#billing-and-limits) for reconnects and the `meter_webrtc_calls` setting.
 
 To use a different price, set `input_cost_per_second` on the deployment:
 

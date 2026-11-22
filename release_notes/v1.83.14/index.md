@@ -2,7 +2,7 @@
 title: "LiteLLM v1.83.14 - GPT-5.5, Prompt Compression & Memory API"
 description: "Adds GPT-5.5 and GPT-5.5 Pro, server-side prompt compression, a /v1/memory API and an LLM-as-a-Judge guardrail."
 slug: "v1-83-14"
-date: 2026-04-27T00:00:00
+date: 2026-05-02T04:00:22
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

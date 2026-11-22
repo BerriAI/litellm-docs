@@ -1,3 +1,9 @@
+---
+title: "PublicAI API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "PublicAI"
+description: "Call Swiss AI Apertus 8B and 70B instruct models on PublicAI with streaming and a custom base URL, from the LiteLLM Python SDK or AI Gateway config.yaml."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

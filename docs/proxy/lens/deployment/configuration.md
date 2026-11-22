@@ -19,7 +19,7 @@ Use the [Lens installation guide](https://github.com/BerriAI/lens/blob/main/depl
 | Gateway service and signing credentials | Authenticate the optional internal connection and delegated identity |
 | LiteLLM user or model key | Access the gateway under its existing authentication and model rules |
 
-The standalone starter creates its admin token and database password in `deploy/lens/.env`. A standalone tracing installation needs those credentials and a tracing key. Investigations, Signals and eval judging require their corresponding provider configuration. Gateway connection secrets are needed only when connecting LiteLLM
+The standalone starter creates its admin token and database password in `deploy/lens/.env`. The [quickstart](./local.md) writes them to `.env` beside the downloaded `compose.yaml`. A standalone tracing installation needs those credentials and a tracing key. Investigations, Signals and eval judging require their corresponding provider configuration. Gateway connection secrets are needed only when connecting LiteLLM
 
 Keep deployment secrets private and retain them with your recovery materials. The gateway keeps its own database and encryption keys; those are separate from Lens's ClickHouse storage
 
@@ -31,11 +31,13 @@ An optional separate ingestion address uses `LITELLM_LENS_PUBLIC_URL` on Lens, o
 
 The gateway separately uses `LITELLM_LENS_URL` for its private connection and `LITELLM_LENS_PUBLIC_URL` for the tracing address shown to users. Verify reachability from the actual gateway, browser and agent networks
 
+For Kubernetes, use reachable HTTPS origins for Lens `publicUrl` and gateway `lens.publicUrl`, with ingress, DNS and TLS configured. Gateway `lens.url` uses the private Lens Service address across namespaces. Port-forward is only an initial health check, not the published endpoint
+
 ## Use an ingress with Helm {#dedicated-ingress}
 
-The independent Lens chart uses `publicUrl`, optional `ingestionUrl` and `ingress` at the top level. Its ingress can serve the standalone UI and API. Configure the hostname, TLS and ingress controller using the [Lens Helm guide](https://github.com/BerriAI/lens/blob/main/helm/lens/README.md)
+The independent Lens chart uses `publicUrl`, optional `ingestionUrl` and `ingress` at the top level. Its ingress can serve the standalone UI and API. Configure the hostname, TLS and ingress controller as shown in [Expose Lens](./kubernetes.md#ingress)
 
-When a gateway chart owns the Lens deployment, the adapter settings live under `lensWorker`. An external Lens deployment can preserve the gateway's `/lens-ingest` route through `lensWorker.externalServiceName`. Use the values for the chart and version you actually deploy
+The LiteLLM chart connects to an independent Lens deployment through `lens.enabled`, `lens.url`, `lens.publicUrl`, and Secret references. See [Add Lens to LiteLLM](./litellm.md#helm). The chart does not accept `lensWorker` or deploy Lens and ClickHouse.
 
 ## Connect Docker networks {#docker-network}
 
@@ -73,14 +75,32 @@ Multiple Lens replicas can share one supported ClickHouse server. Keeper coordin
 
 The gateway forwards telemetry through a bounded asynchronous queue. If Lens is unavailable, ordinary gateway inference continues, while telemetry may be delayed or dropped after retry or queue limits. Agent exporters have their own retry behavior. Verify outage behavior for your selected deployment and exporter
 
+## Other container platforms {#other-container-platforms}
+
+On a managed container platform, run the published image from [Releases and images](./releases.md#container-images) and supply `LENS_ADMIN_TOKEN`, `LENS_PUBLIC_URL` and the [ClickHouse connection](./storage.md#external-clickhouse) through the platform's private configuration. Use the release's [Compose configuration](https://github.com/BerriAI/lens/blob/main/deploy/lens/compose.yaml) as the reference for resource and sandbox settings
+
+Keep the image's non-root user, read-only filesystem, bounded temporary space, dropped capabilities and sandbox settings. Investigations need native Linux with the capabilities of the [calculation sandbox](https://github.com/BerriAI/lens/blob/main/docs/sandbox.md)
+
+Lens listens on port 4318. Use `/health/live` for process health and `/health/ready` for readiness
+
 ## Troubleshooting
 
-From a source Compose installation:
+On a fresh Helm install, a few Lens restarts with `Error: Storage(Storage(Transport))` are expected while ClickHouse starts. If they continue after ClickHouse is Ready, check its Service, credentials and logs. If ClickHouse stays Pending, inspect its PVC and StorageClass with `kubectl --namespace "$LENS_NAMESPACE" describe pvc`, using the namespace from your Helm setup. Do not treat a persistent failure as normal startup
+
+If a start fails, check Docker and the service logs. After the [quickstart](./local.md), run these from the folder that holds the downloaded `compose.yaml`. The last command checks readiness:
+
+```sh
+docker info
+docker compose ps
+docker compose logs --tail=100 lens clickhouse
+curl --fail http://localhost:4318/health/ready
+```
+
+From the extracted release bundle or a Lens checkout, name the Compose file:
 
 ```sh
 docker compose -f deploy/lens/compose.yaml ps
 docker compose -f deploy/lens/compose.yaml logs --tail=100 lens clickhouse
-curl --fail http://localhost:4318/health/ready
 ```
 
 | What you see | What to check |

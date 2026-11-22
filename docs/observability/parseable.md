@@ -1,3 +1,8 @@
+---
+title: "Parseable Tracing for LiteLLM AI Gateway"
+sidebar_label: "Parseable"
+description: "Send LiteLLM traces, logs and metrics to Parseable over OpenTelemetry from the Python SDK or AI Gateway, with dashboards for usage, tokens and cost."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -220,7 +220,7 @@ A stale update or conflicting approval returns `409`; reload the published skill
 
 ### Optional security scans
 
-Deploy the [SkillSpector adapter](https://github.com/BerriAI/litellm/tree/main/cookbook/skill_scanner) on a separate service and configure its shared secret in the gateway environment:
+Deploy the [SkillSpector adapter](https://github.com/BerriAI/litellm/tree/main/litellm/proxy/discovery_endpoints/skill_scanner_adapter) on a separate service and configure its shared secret in the gateway environment:
 
 ```yaml title="config.yaml"
 general_settings:

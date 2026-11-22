@@ -1,3 +1,8 @@
+---
+title: "Reco Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Reco"
+description: "Send prompts from the LiteLLM AI Gateway to Reco for inspection before they reach the model, so Reco can block or flag risky requests in pre_call mode."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

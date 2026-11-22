@@ -1,3 +1,8 @@
+---
+title: "Aporia Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Aporia"
+description: "Detect PII in requests and profanity in responses with Aporia on the LiteLLM AI Gateway, using pre-call and post-call projects and per-key control."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

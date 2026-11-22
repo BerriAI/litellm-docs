@@ -4,7 +4,7 @@ The master key is the proxy's admin credential; it authenticates admin API calls
 
 :::warning
 
-If you set a [salt key](./prod.md#set-the-salt-key), the proxy decrypts stored credentials with the salt key, not the master key. Do not rotate the master key with `POST /key/regenerate` and `new_master_key` in that setup. That flow re-encrypts everything under the new master key, but the running proxy keeps decrypting with the salt key, so every stored credential becomes unreadable and the deployment can be bricked. Follow the salt-key section below instead.
+If you set a [salt key](./prod.md#set-the-salt-key), the proxy decrypts stored credentials with the salt key, not the master key. Before v1.112.0, do not rotate the master key with `POST /key/regenerate` and `new_master_key` in that setup. On those versions the call re-encrypts everything under the new master key, but the proxy keeps decrypting with the salt key, so every stored credential becomes unreadable and the deployment can be bricked. The call keeps stored credentials encrypted with the salt key <SinceVersion v="1.112.0" />, so they stay readable. On every version, follow the salt-key section below, which does not use the call.
 
 :::
 
@@ -16,9 +16,9 @@ Virtual keys are stored hashed, not encrypted, so they keep working after either
 
 When `LITELLM_SALT_KEY` is set, the salt key encrypts and decrypts your stored credentials, and the master key is only an auth credential. Rotating it does not touch anything encrypted at rest, so there is nothing to re-encrypt.
 
-Generate a new master key value, update wherever the secret lives (the `LITELLM_MASTER_KEY` environment variable, or `general_settings.master_key` in your config), and restart every proxy instance so they pick up the new value. Do not call `POST /key/regenerate` with `new_master_key` here; that would re-encrypt your credentials under a key the proxy never uses to decrypt.
+Generate a new master key value, update wherever the secret lives (the `LITELLM_MASTER_KEY` environment variable, or `general_settings.master_key` in your config), and restart every proxy instance so they pick up the new value. You do not need `POST /key/regenerate` with `new_master_key` here. Before v1.112.0, do not call it; it re-encrypts your credentials under the new master key, a key the proxy never uses to decrypt them.
 
-Do not rotate `LITELLM_SALT_KEY` itself. It must not change after you have added a model; there is no in-place migration for salt-key rotation, so every stored credential would need to be re-registered.
+Do not rotate or remove `LITELLM_SALT_KEY` itself. It must not change after you have added a model, including at the restart that follows a master key rotation; there is no in-place migration for salt-key rotation, so every stored credential would need to be re-registered.
 
 ## If the master key is your encryption key
 
@@ -100,7 +100,7 @@ When the variable is already set to a known unsafe value or is empty, the error 
 echo "sk-$(openssl rand -hex 32)"
 ```
 
-Then start the proxy again. This is the same swap and restart as [rotating with a salt key](#if-you-use-a-salt-key-recommended-setup). Do not call `POST /key/regenerate` with `new_master_key` when `LITELLM_SALT_KEY` is set. As the warning at the top of this page explains, that leaves your stored credentials unreadable.
+Then start the proxy again. This is the same swap and restart as [rotating with a salt key](#if-you-use-a-salt-key-recommended-setup). You do not need `POST /key/regenerate` with `new_master_key` when `LITELLM_SALT_KEY` is set. As the warning at the top of this page explains, before v1.112.0 that call leaves your stored credentials unreadable.
 
 ### The database holds values encrypted with the old key
 

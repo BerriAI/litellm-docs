@@ -1,132 +1,104 @@
 ---
 title: Upgrade Guide
-description: Upgrade LiteLLM with Helm or Terraform. Run schema migrations and request-log indexing in a separate job before the gateway rollout.
+description: Upgrade LiteLLM without downtime. Prepare a rolling deployment, protect active streams, verify the new version, and keep a rollback path.
+toc_max_heading_level: 2
 ---
 
-# Upgrade Guide
+# Upgrade LiteLLM with zero downtime
 
-Helm charts and the official Terraform modules provide a **separate migration job** for schema changes and request-log indexing. Keep `DISABLE_SCHEMA_UPDATE=true` on the gateway pods and let the job finish before rolling out the new gateway version.
+## Overview
 
-```mermaid
-flowchart LR
-    subgraph Job["Migration job"]
-        Schema["Schema migrations"] --> Indexes["Request-log indexes"]
-    end
-    Indexes -->|Success| Gateway["Roll out gateway pods"]
-```
+Keep the current version serving until replacements are ready. Route new requests to healthy instances and let active requests finish before retiring old instances.
 
-## Before you upgrade
+**Prepare → Migrate if needed → Roll out and drain → Verify**
 
-Read the [release notes](/release_notes) for the versions you will cross. Check breaking changes and database changes, take a database snapshot, and test the upgrade against a restored copy of production to measure its duration. Rolling back an image does not undo database changes.
+Use rolling deployments for routine upgrades, [blue/green](./deploy/ha/blue_green.md) to test a full replacement before cutover, or a [canary](./deploy/ha/canary.md) to shift traffic gradually.
 
-### Dry-run the migrations before the upgrade
+## Before you start {#before-you-upgrade}
 
-From v1.109.0 the proxy applies the pending migrations at boot and lets PostgreSQL report the first one the database cannot take, the same way it reports any other failed migration (see [migration troubleshooting](../troubleshoot/prisma_migrations.md#6-database-migration-cannot-proceed-on-rows-the-schema-change-cannot-take)). To see that outcome before the upgrade window, run the dry run from any machine that can reach the database, with the **target** image:
+| Check | Required for this workflow |
+| --- | --- |
+| Availability | At least two healthy instances behind a load balancer, an autoscaler minimum of two, and spare compute/database connections for replacements. |
+| Release | Pin the image and chart/module versions. Review [release notes](/release_notes) for every version you cross. Save the current image and configuration. |
+| Shared state | Keep the same database, Redis, authentication settings, and `LITELLM_SALT_KEY`. See [production configuration](./prod.md). |
+| Rehearsal | Back up the database. Test both versions against a migrated production-sized copy, and test a long stream during instance replacement. |
 
-```bash
-docker run \
--e DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname> \
-docker.litellm.ai/berriai/litellm:X.Y.Z --check_migrations_against_existing_data
-```
+## 1. Configure a rolling deployment
 
-It runs the real SQL of every pending migration, in order, each inside its own transaction that is rolled back before the next one starts, so `_prisma_migrations` and the schema are left exactly as they were and no lock outlives its migration, the same way the real upgrade commits one migration file at a time. A migration that depends on the one before it (an index on a column the previous migration adds) is replayed together with it. Exit code 0 lists each migration with the time it took, which is the time the real upgrade will hold that migration's locks:
-
-```
-LiteLLM Proxy: 2 pending migration(s) applied one at a time in a dry run, each rolled back before the next so its locks are released, nothing changed:
-  20991231000000_require_team_alias: 0.0 s
-  20991231000001_team_alias_index: 0.0 s
-```
-
-Exit code 2 prints PostgreSQL's own error for the first migration that fails. Nothing after it runs, and the migrations before it are listed with their times:
-
-```
-LiteLLM Proxy: Database migration cannot proceed. Migration 20991231000000_require_team_alias fails on this database after 0.0 s, nothing was applied.
-column "team_alias" of relation "LiteLLM_TeamTable" contains null values
-```
-
-Because the statements really run, the dry run takes the same table locks the upgrade will, for as long as each statement takes, and a `CREATE INDEX` on a large `LiteLLM_SpendLogs` holds writes off that table for minutes. Run it off-peak or against a restored copy of production. An index a migration builds `CONCURRENTLY` is built the plain way inside the transaction, since PostgreSQL does not allow the concurrent form there. A database that has the tables but no `_prisma_migrations` history is not replayed: the dry run asks the same questions the boot asks before it baselines, that the migrations folder is the one this build ships (a custom `LITELLM_MIGRATION_DIR` is refused) and that the live schema matches this build's `schema.prisma`, and reports `nothing to dry-run` when both hold or the refusal (the `prisma migrate diff`, or the custom folder) when one does not. The request-log indexes the proxy builds in the background after it starts serving are not part of the dry run; on v1.108.0 only, the same flag ran read-only row counts instead and the proxy refused to boot on what they found.
-
-## Upgrade with Helm or Terraform
-
-| Deployment | Select the release | Run migrations before rollout |
-|---|---|---|
-| [Helm](./deploy.md#deploy-with-helm) | Pin the chart and image versions. Keep the migration job and application images on the same LiteLLM release. | Keep `migrationJob.enabled: true` and enable the hook for your deployment controller. Wait for the job to complete. |
-| [Terraform](./deploy.md#deploy-with-terraform-aws-and-gcp) | Bump the module `version`. Component images default to that release; review any image overrides. | Run `terraform init -upgrade`, review `terraform plan`, then apply. The modules run an ECS migration task on AWS or a Cloud Run migration job on GCP before updating the services. |
-
-<details>
-<summary>Helm and Argo CD hook settings</summary>
-
-For `helm upgrade`, use these values. The componentized `litellm` chart defaults to Helm hooks; the older `litellm-helm` chart defaults to Argo CD hooks and needs this change when used with Helm directly.
+Merge this into your [Helm values](./deploy/helm.md), preserving existing `extraEnv` entries. This HPA example assumes a **600-second request limit**; adjust timeouts for your longest request, including streams.
 
 ```yaml title="values.yaml"
-migrationJob:
-  enabled: true
-  hooks:
-    helm:
-      enabled: true
-    argocd:
-      enabled: false
+gateway:
+  hpa:
+    minReplicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  terminationGracePeriodSeconds: 650
+  extraEnv:
+    - name: GRACEFUL_SHUTDOWN_TIMEOUT
+      value: "610"
+  lifecycle:
+    preStop:
+      exec:
+        command: ["sh", "-c", "sleep 10"]
 ```
 
-For Argo CD, enable `argocd` and disable `helm` instead. The PreSync job then runs before the application sync. See the chart values for [`litellm`](https://github.com/BerriAI/litellm/blob/main/helm/litellm/values.yaml) and [`litellm-helm`](https://github.com/BerriAI/litellm/blob/main/helm/litellm-helm/values.yaml).
+**These settings apply to new pods.** Check the existing pods' shutdown settings before replacement. If they cannot drain your longest requests, start replacement capacity, remove old pods from new traffic, and let active requests finish before terminating them.
 
-</details>
+Keep the chart's [`/health/readiness` probe](./health.md#probe-endpoints) enabled. With KEDA, set `gateway.keda.minReplicaCount: 2`; without autoscaling, set `gateway.replicaCount: 2`. Apply equivalent settings to separate backend/UI components.
 
-Check the **migration job logs** for both schema and indexing completion. After the gateway rollout, verify [`/health/readiness`](./health.md#probe-endpoints) and send a test request through the gateway.
+The `preStop` delay allows traffic routing to update; the server then drains requests on shutdown. Keep termination grace above **preStop + server drain + cleanup time**. Align ingress timeouts and test stream completion; see [shutdown settings](./server_tuning.md#keep-restarts-hitless).
 
-## Database migrations
+`maxUnavailable: 0` preserves the desired number of available replicas during the update, but the surge pod still needs schedulable CPU, memory, and database connections. A PodDisruptionBudget governs voluntary evictions and does not control the Deployment's own rolling update. See Kubernetes' [rolling update settings](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment) and [pod termination flow](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination-flow).
 
-### What takes time
+## 2. Prepare the database {#database-migrations}
 
-The migration job runs schema migrations first, then builds any missing request-log indexes. **Both stages count toward the job's runtime.** Existing valid indexes are skipped.
+Skip this step without a database. Helm runs schema changes through a separate migration job automatically. For upgrades from older versions or custom deployments, review the [migration safeguards](./database_migrations.md#upgrading-from-a-version-before-v11040) before rollout.
 
-| Work | What affects duration | Effect on the database |
-|---|---|---|
-| Schema changes, such as new tables or nullable columns | Usually short; lock waits can still delay them | Brief locks can delay other queries |
-| Request-log indexes | `LiteLLM_SpendLogs` size, disk speed, memory, and database load | Concurrent index builds allow reads and writes, but consume database resources |
-| A migration with a plain index build, table rewrite, or data backfill | Rows scanned or changed; inspect the release's migration SQL | Can block writes or other queries; test and plan a maintenance window if needed |
+Run one migration job with the **target image** before application rollout. Require successful schema migration and request-log indexing. Helm and the official Terraform modules provide this job; custom deployments use [`litellm --skip_server_startup`](./database_migrations.md#run-the-migration-job). See [dry runs](./database_migrations.md#dry-run-the-migrations-before-the-upgrade) and [job timeouts](./database_migrations.md#migration-duration-and-timeouts).
 
-### Expected duration
+## 3. Roll out the new version {#upgrade-with-helm-or-terraform}
 
-Time the **complete migration job** against a production-sized database copy. A schema-only upgrade can be quick while a new index on a large spend-log table takes much longer. Table size alone is not enough to predict an upgrade window.
+| Deployment | Action |
+| --- | --- |
+| [Helm](./deploy/helm.md) | Pin `image.tag` or `image.digest`. Keep `migrationJob.enabled: true` and the Helm pre-upgrade hook enabled. Run the command below. |
+| [Argo CD](./deploy/helm.md) | Pin the chart/image. Enable the Argo CD migration hook and disable the Helm hook. Sync the full Application so PreSync completes first. |
+| [Terraform](./deploy/terraform.md) | Pin the module revision and `image`. Run `terraform init -upgrade`, review `terraform plan`, then apply. Confirm replacement capacity and draining for your cloud runtime. |
+| Custom containers or VMs | Start new instances behind the load balancer, wait for readiness, then stop sending new requests to old instances. Keep them running until active requests finish. |
 
-For Helm, set `migrationJob.activeDeadlineSeconds` (default **1800 seconds**) and the deployment controller's timeout to cover the complete job. With `helm upgrade`, also set `--timeout` accordingly. For Terraform, check the ECS task or Cloud Run job timeout and the deployment wait limit; Helm settings do not apply there.
-
-Use [spend-log retention](./spend_logs_deletion.md) to limit the data future index builds must scan.
-
-<details>
-<summary>Check which schema migrations are already applied</summary>
-
-```sql
-SELECT migration_name, finished_at
-FROM "_prisma_migrations"
-WHERE finished_at IS NOT NULL
-  AND rolled_back_at IS NULL
-ORDER BY finished_at;
-```
-
-Compare the full result with the [migration files](https://github.com/BerriAI/litellm/tree/main/litellm-proxy-extras/litellm_proxy_extras/migrations) at your **target release tag**, rather than `main`. Inspect pending SQL for operations on large tables. Request-log indexing is a separate stage, so migration history alone does not confirm that the job is done.
-
-</details>
-
-## Rolling upgrades and spend log cleanup
-
-[Spend log cleanup](./spend_logs_deletion.md#when-the-job-runs) runs from the `LiteLLM_ScheduledJobRun` table, created by migration `20261105000000_scheduled_job_runs`. Pods on an older version schedule the same cleanup from an in-process timer with a Redis lock, or with no lock at all when Redis is not configured, and the two never see each other. During a rolling upgrade both versions therefore run cleanup at the same time until the last old pod is gone. Each side deletes in small batches under its own statement timeout and both use the same retention cutoff, so the cost is duplicate work and extra delete load for the length of the rollout, not data loss. If the table is large and the rollout is slow, unset the retention settings before the upgrade and restore them after, or accept the extra load. A pod on the old version boots fine against a database that already has the new table, and a database migrated to the new version by the first upgraded pod needs nothing from the others
-
-## Custom deployments
-
-If your deployment does not provide a migration job, run this in a separate container using the **target LiteLLM proxy image**, with `DATABASE_URL` and the required database credentials configured:
+For Helm, set the chart version and measured timeout below. Use your existing release name and namespace:
 
 ```bash
-DISABLE_SCHEMA_UPDATE=false litellm --skip_server_startup
+helm upgrade litellm oci://ghcr.io/berriai/litellm/chart/litellm \
+  --version "$CHART_VERSION" \
+  --namespace litellm --values values.yaml \
+  --wait --timeout "$UPGRADE_TIMEOUT"
 ```
 
-This LiteLLM command runs schema migrations **and request-log indexing**, waits for both to finish, and exits without starting the gateway. Require a successful exit before rolling out gateway containers with `DISABLE_SCHEMA_UPDATE=true`. A migration the rows cannot take fails inside this command with PostgreSQL's error and the command exits non-zero, see [the dry run](#dry-run-the-migrations-before-the-upgrade) to catch that earlier.
+In another terminal, inspect the migration job and replacement pods. Discover the gateway Deployment name, then watch its rollout, replacing `<gateway-deployment>` with that name:
 
-## When a migration is slow or stuck
+```bash
+kubectl -n litellm get jobs,pods
+kubectl -n litellm get deployments -l app.kubernetes.io/instance=litellm
+kubectl -n litellm rollout status deployment/<gateway-deployment> --timeout=10m
+kubectl -n litellm get events --sort-by=.lastTimestamp
+```
 
-Start with the **migration job's logs and status**. Check database lock waits in `pg_stat_activity` and index-build progress in `pg_stat_progress_create_index` before changing timeouts.
+The observation timeout above does not cancel or undo the rollout. Inspect a failing job's logs or an unready pod's events before retrying. Do not assume that a failed Helm command restored the previous application or database state.
 
-`LITELLM_PRISMA_MIGRATE_DEPLOY_TIMEOUT` controls the schema migration subprocess (default **600 seconds**). Set it on the **migration job** if that stage needs longer; it does not cover request-log indexing. The whole-job and deployment timeouts must allow enough time for both stages and retries.
+If migrations fail, replacements stay unready, or errors rise, stop the rollout. Keep healthy instances serving while you investigate.
 
-See [migration troubleshooting](../troubleshoot/prisma_migrations.md) for failed migrations and PostgreSQL version-specific issues.
+## 4. Verify the upgrade
+
+Confirm every new instance passes `/health/readiness`. Through the normal ingress, send an authenticated model request and a streaming request using an existing virtual key. Check that streams finish, model permissions work, spend is recorded, and required callbacks arrive.
+
+Compare errors, latency, and interrupted streams with your baseline for the observation period you selected. Verify the target image on every serving component, including separate backend/UI deployments. Finish when all instances run the target version, old instances have drained, and metrics stay within the agreed limits. Readiness and a successful Helm command do not test provider calls; see [health checks](./health.md).
+
+## Roll back if needed
+
+Restore the previous image and configuration, or switch traffic back to blue, **only if that version was tested against the current database schema**. Skip migration hooks/jobs for this application rollback and drain the failed version.
+
+An image rollback does not undo migrations. If the old version cannot use the new schema, stop and follow the tested database recovery plan; restoring a snapshot requires downtime and can lose writes made since the snapshot. See [database recovery](./database_migrations.md#recovery-when-migration-history-is-ahead-of-the-schema).

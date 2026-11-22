@@ -1,5 +1,6 @@
 ---
-title: Wally
+title: "Wally API with LiteLLM: Python SDK and Gateway"
+sidebar_label: "Wally"
 description: Call Wally models from RunAnywhere through LiteLLM with the Python SDK or Gateway. Configure your API key, model name, and optional API base.
 ---
 

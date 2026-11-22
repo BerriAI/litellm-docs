@@ -1,3 +1,8 @@
+---
+title: "Generic API Logging for LiteLLM: Any HTTP Endpoint"
+sidebar_label: "Generic API"
+description: "Send LiteLLM logs to any HTTP endpoint with the generic_api callback, with custom headers, event filters, batching and JSON array or NDJSON format."
+---
 # Generic API
 
 Send LiteLLM logs to any HTTP endpoint.

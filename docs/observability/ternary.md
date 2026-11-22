@@ -1,3 +1,8 @@
+---
+title: "Ternary Cost Export for LiteLLM AI Gateway"
+sidebar_label: "Ternary"
+description: "Export LiteLLM AI Gateway spend to Ternary as FOCUS 1.2 cost reports to split AI costs across teams, projects and API keys, with token breakdown."
+---
 # Ternary
 
 LiteLLM can export proxy spend data to [Ternary](https://ternary.app) as [FOCUS 1.2](https://focus.finops.org/) formatted cost reports. This lets you allocate and analyse LLM spend alongside your cloud costs in Ternary's FinOps platform, for example by splitting a shared AI invoice across teams, projects, and API keys.

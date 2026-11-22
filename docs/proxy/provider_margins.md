@@ -140,6 +140,10 @@ litellm /path/to/config.yaml
 
 The margin will be automatically applied to all cost calculations for the configured providers.
 
+## Surcharge on Customer Requests
+
+The `customer` key adds a percentage only to requests made for a customer organization. See [Add a surcharge to customer requests](./customer_management/customer-surcharge.md).
+
 ## How Margins Work
 
 - Margins are applied **after** discounts (if configured)

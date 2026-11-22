@@ -1,3 +1,9 @@
+---
+title: "NVIDIA NIM Rerank with LiteLLM"
+sidebar_label: "Nvidia NIM - Rerank"
+description: "Rerank documents for search and RAG with NVIDIA NIM models like llama-3.2-nv-rerankqa-1b-v2, pick the /v1/ranking endpoint and set truncate."
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

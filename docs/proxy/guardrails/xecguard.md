@@ -1,3 +1,8 @@
+---
+title: "XecGuard Guardrails on LiteLLM AI Gateway"
+sidebar_label: "XecGuard"
+description: "Scan for prompt injection, harmful content and PII with CyCraft XecGuard on the LiteLLM AI Gateway, plus RAG context grounding and fail-open."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -1,3 +1,8 @@
+---
+title: "Braintrust Logging for LiteLLM AI Gateway"
+sidebar_label: "Braintrust"
+description: "Log LiteLLM calls to Braintrust from the Python SDK or AI Gateway, set the project ID or name per request, and add custom span names and attributes."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

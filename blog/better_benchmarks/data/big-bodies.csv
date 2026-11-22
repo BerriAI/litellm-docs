@@ -1,0 +1,16 @@
+rps_nominal,rps_measured,gateway,features,ok_pct,first_byte_overhead_p50_ms,first_byte_overhead_p99_ms,peak_memory_gib
+0.5,0.5,LiteLLM Rust,basic,100,20.5,32.8,0.2
+1,1.1,LiteLLM Rust,basic,100,20.8,35.2,0.2
+2,2.3,LiteLLM Rust,basic,100,20.2,32.6,0.3
+4,3.8,LiteLLM Rust,basic,100,19.9,31.7,0.4
+8,7.7,LiteLLM Rust,basic,100,20.0,30.4,0.6
+0.5,0.5,Bifrost,basic,100,41.0,93.4,1.7
+1,1.1,Bifrost,basic,100,39.7,82.2,2.9
+2,2.3,Bifrost,basic,100,37.0,87.9,4.8
+4,3.8,Bifrost,basic,100,34.9,78.5,7.5
+8,7.7,Bifrost,basic,100,35.0,89.1,13.6
+0.5,0.5,Portkey,none,100,79.7,114.4,0.7
+1,1.1,Portkey,none,100,74.4,109.3,1.1
+2,2.3,Portkey,none,100,73.0,138.8,1.5
+4,3.8,Portkey,none,99.85,73.5,144.2,2.2
+8,7.7,Portkey,none,100,78.5,187.4,4.1

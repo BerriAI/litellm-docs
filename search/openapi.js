@@ -101,4 +101,4 @@ function extractOpenAPI(spec) {
   return {documents, structure};
 }
 
-module.exports = {extractOpenAPI, operationStructure};
+module.exports = {extractOpenAPI, operationStructure, dereference, referencedDefinitions, methods};

@@ -1,0 +1,379 @@
+:global(body):has(.hero) {
+  background: #000;
+}
+
+:global(html[data-theme='light']) :global(body):has(.hero) :global(.navbar) {
+  --aurora-nav-bg: #fff;
+}
+
+:global(body):has(.hero) :global(.footer) {
+  --ifm-footer-background-color: #000;
+  --ifm-footer-color: #aaa;
+  --ifm-footer-link-color: #ddd;
+  border-top: 1px solid #202020;
+}
+
+:global(article):has(.hero) {
+  --ifm-background-color: #000;
+  --ifm-background-surface-color: #111;
+  --ifm-heading-color: #fff;
+  --ifm-color-primary: #d5b4ef;
+  --ifm-link-color: #f3e6ff;
+  --ifm-color-emphasis-200: #292929;
+  --ifm-table-stripe-background: #0a0a0a;
+  padding-bottom: 128px;
+  color: #ededed;
+  background: #000;
+}
+
+:global(html[data-theme]) :global(article):has(.hero) > :global(.markdown) {
+  color: #ededed;
+  font-size: 18px;
+  line-height: 1.56;
+  letter-spacing: -0.012em;
+}
+
+:global(article):has(.hero) > :global(.markdown) > :not([data-full-width]):not([aria-hidden='true']) {
+  max-width: min(640px, calc(100% - 48px));
+  margin-inline: auto !important;
+}
+
+:global(article):has(.hero) > :global(.markdown) > p {
+  margin-block: 0 24px;
+}
+
+:global(article):has(.hero) > :global(.markdown) > h2 {
+  margin-block: 112px 28px;
+  font-size: 32px;
+  line-height: 1.18;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  color: #fff;
+}
+
+:global(article):has(.hero) a {
+  color: #f3e6ff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+:global(article):has(.hero) a:hover {
+  color: #fff;
+}
+
+:global(article):has(.hero) code {
+  border-color: #333;
+  background: #151515;
+  color: #eee;
+}
+
+:global(article):has(.hero) :global(.prism-code) {
+  background: #101010 !important;
+  color: #e6e6e6 !important;
+}
+
+:global(article):has(.hero) :global(.theme-code-block) {
+  margin-block: 32px;
+  border: 1px solid #292929;
+  border-radius: 12px;
+  background: #101010;
+  box-shadow: none;
+}
+
+:global(article):has(.hero) :global(.theme-code-block) pre {
+  margin: 0;
+  border: 0;
+}
+
+:global(html[data-theme]) :global(article):has(.hero) pre code {
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+:global(article):has(.hero) :global(.token) {
+  color: #e6e6e6 !important;
+}
+
+:global(article):has(.hero) :global(.token.comment) { color: #999 !important; }
+:global(article):has(.hero) :global(.token.string) { color: #add7b1 !important; }
+:global(article):has(.hero) :global(.token.keyword),
+:global(article):has(.hero) :global(.token.builtin) { color: #d5b4ef !important; }
+:global(article):has(.hero) :global(.token.number) { color: #e9be98 !important; }
+:global(article):has(.hero) :global(.token.function) { color: #e6d3f5 !important; }
+
+:global(article):has(.hero) pre {
+  margin-block: 32px;
+  border: 1px solid #292929;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+:global(article):has(.hero) table {
+  margin-block: 36px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+:global(article):has(.hero) th,
+:global(article):has(.hero) td {
+  border-color: #292929;
+  padding: 14px 16px;
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100svh - var(--ifm-navbar-height));
+  padding: 56px 24px 44px;
+  overflow: hidden;
+  isolation: isolate;
+  text-align: center;
+  background: #000;
+}
+
+.heroContent {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+:global(article):has(.hero) .hero h1 {
+  margin: 0 0 24px !important;
+  color: #c69be9 !important;
+  font-family: var(--ifm-font-family-base);
+  font-size: clamp(80px, 14vw, 190px) !important;
+  font-weight: 400 !important;
+  line-height: 0.94 !important;
+  letter-spacing: -0.075em;
+  white-space: nowrap;
+}
+
+.hero .tagline {
+  max-width: 620px;
+  margin: 0 auto;
+  color: #d5d0da;
+  font-size: clamp(20px, 2vw, 25px);
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.ctaRow {
+  display: flex;
+  justify-content: center;
+  margin: 24px auto 0;
+}
+
+.cta,
+.cta:hover {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 280px;
+  min-height: 60px;
+  padding: 18px 32px;
+  border-radius: 999px;
+  background: #fff;
+  color: #000 !important;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.25;
+  text-decoration: none !important;
+  transition: background 150ms ease;
+}
+
+.cta:hover { background: #ddd; }
+.cta:focus-visible { outline: 2px solid #d5b4ef; outline-offset: 5px; }
+
+.hero .byline {
+  margin: 22px 0 0;
+  color: #999;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+.byline span { margin-inline: 8px; }
+
+.cliPreview {
+  width: min(1200px, 100%);
+  margin: 36px auto 0;
+  text-align: left;
+}
+
+.terminal {
+  padding: 24px 28px 18px;
+  border: 1px solid #29222f;
+  border-radius: 14px;
+  background: #0b090e;
+  color: #dedbe3;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 14px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.command { display: block; min-height: 1.5em; margin: 0; padding: 0; border: 0; background: transparent; color: #f3eff7; font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.command:focus-visible { outline: 1px solid #d38aff; outline-offset: 5px; }
+.prompt { color: #d38aff; }
+.cursor { display: inline-block; width: 0.5em; height: 1em; margin-left: 2px; vertical-align: -0.14em; background: #d38aff; }
+.cliPreview[data-playing] .cursor { animation: cursorBlink 1s steps(2, end) infinite; }
+.reportMeta { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 20px; margin: 22px 0; color: #8e8795; font-size: 12px; }
+.reportMeta strong { color: #c5b8cf; font-weight: 500; }
+.pending { visibility: hidden; }
+.savedReport { transition: opacity 180ms ease; }
+.recommendation { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; padding-bottom: 18px; color: #d38aff; }
+.recommendation strong { color: #e7c6ff; font-weight: 600; }
+.recommendation small { color: #a3ddae; font-size: 12px; }
+.reportGrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; }
+:global(html[data-theme]) :global(article):has(.hero) .terminal h3 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid #3b2c44; color: #dedbe3; font-family: inherit; font-size: 15px; font-weight: 500; letter-spacing: 0; }
+.terminal h3 > span { color: #d38aff; }
+.terminal h3 small { margin-left: auto; color: #817a88; font-size: 11px; }
+.results { min-width: 0; }
+.tableScroll { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-color: #604375 #161019; }
+:global(article):has(.hero) .terminal .rankTable { display: table; width: 100%; min-width: 720px; margin: 0; border: 0; border-radius: 0; background: transparent; border-collapse: collapse; font-family: inherit; font-size: 12px; line-height: 1.45; }
+:global(article):has(.hero) .terminal .rankTable :is(th, td) { padding: 9px 6px; border: 0; background: transparent; color: inherit; white-space: nowrap; }
+:global(article):has(.hero) .terminal .rankTable th { color: #827a8b; text-align: left; font-size: 10px; font-weight: 400; text-transform: uppercase; }
+:global(article):has(.hero) .terminal .rankTable :is(th, td):first-child { padding-left: 0; }
+:global(article):has(.hero) .terminal .rankTable :is(th, td):nth-child(n+4) { text-align: right; }
+:global(article):has(.hero) .terminal .rankTable thead { display: table-header-group; position: static; width: auto; height: auto; overflow: visible; clip: auto; white-space: normal; }
+:global(article):has(.hero) .terminal .rankTable tbody { display: table-row-group; width: auto; background: transparent; }
+:global(article):has(.hero) .terminal .rankTable tr { display: table-row; width: auto; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+:global(article):has(.hero) .terminal .rankTable :is(th, td) { display: table-cell; width: auto; }
+:global(article):has(.hero) .terminal .rankTable td::before { display: none; }
+:global(article):has(.hero) .terminal .rankTable .recommendedRow { background: #271632; color: #e3b5ff; }
+.chart { min-width: 0; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.gridLine { stroke: #242028; stroke-dasharray: 3 5; }
+.axisLine { stroke: #4b4054; stroke-width: 1; }
+.axisText, .axisTitle { fill: #92889b; font-family: var(--ifm-font-family-monospace); font-size: 10px; }
+.frontier { fill: none; stroke: #ac76d4; stroke-width: 1.5; stroke-dasharray: 3 5; }
+.chartPoint { fill: var(--brand, #9d929f); cursor: pointer; outline: none; }
+.pointHitArea { fill: transparent; }
+.pointDot { stroke: #080808; stroke-width: 1px; pointer-events: none; }
+.activePoint .pointDot, .chartPoint:focus-visible .pointDot { fill: #d68bff; stroke: #ecccff; stroke-width: 1.5px; }
+.activePoint text { fill: #ecccff; }
+.chartPoint text { font-family: var(--ifm-font-family-monospace); font-size: 12px; pointer-events: none; }
+.hero .outlier { display: block; margin: 5px 0 0; padding: 4px 0; border: 0; background: transparent; color: #817a88; font-family: inherit; font-size: 10px; line-height: 1.5; text-align: left; cursor: pointer; }
+.hero .outlier:hover, .hero .activeOutlier { color: #d68bff; }
+.outlier:focus-visible { outline: 1px solid #d38aff; outline-offset: 3px; }
+.terminalFooter { display: flex; justify-content: space-between; gap: 20px; margin-top: 20px; padding-top: 14px; border-top: 1px solid #302636; color: #817a88; font-size: 11px; }
+.replayCaption { margin-top: 16px; color: #8e8795; font-size: 13px; line-height: 1.5; }
+
+
+.rankSelect { min-width: 16px; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.rankSelect:focus-visible { outline: 1px solid #d38aff; outline-offset: 3px; }
+.brandGlyph { display: inline-block; width: 1em; text-align: center; }
+:global(article):has(.hero) .terminal .rankTable td.passValue { color: #8fe3a0; }
+:global(article):has(.hero) .terminal .rankTable td.failValue { color: #f59a8a; }
+:global(article):has(.hero) .terminal .rankTable td.errorValue { color: #f2cc6b; }
+:global(article):has(.hero) .terminal .rankTable td.mutedValue { color: #a0a0a8; }
+:global(article):has(.hero) .terminal .rankTable tr { cursor: pointer; transition: opacity 160ms ease, background 120ms ease; }
+:global(article):has(.hero) .terminal .rankTable tr.activeRow { background: #302039; box-shadow: inset 2px 0 #d68bff; }
+:global(article):has(.hero) .terminal .rankTable tr.unrevealedRow { opacity: 0; pointer-events: none; }
+.chartColumn { min-width: 0; width: 100%; max-width: 460px; margin-inline: auto; }
+.hero .chartHint { margin: 12px 0 0; color: #8e8795; font-size: 11px; line-height: 1.5; }
+.configurationDetail { display: flex; flex-direction: column; gap: 4px; margin-top: 20px; padding-left: 12px; border-left: 2px solid #a56ac7; font-size: 12px; line-height: 1.6; }
+.configurationDetail strong { color: #e4d5ed; font-weight: 500; }
+.configurationDetail > span { color: #cdbed6; }
+.configurationDetail small { color: #9b8da5; font-size: 10px; }
+@media (min-width: 800px) {
+  .reportGrid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; }
+}
+
+@media (min-width: 1200px) {
+  .reportGrid { grid-template-columns: minmax(720px, 1.8fr) minmax(0, 1fr); }
+}
+
+@keyframes cursorBlink { 50% { opacity: 0; } }
+
+@media (max-width: 799px) {
+  .reportGrid { grid-template-columns: 1fr; gap: 28px; }
+  .chart { width: min(460px, 100%); margin-inline: auto; }
+  :global(article):has(.hero) .terminal .rankTable { font-size: 13px; }
+}
+
+.hero + .ctaRow { margin-top: 0; margin-bottom: 72px; }
+
+.preview {
+  margin-block: 36px 64px;
+  color: #aaa;
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
+.preview strong { color: #ddd; font-weight: 500; }
+
+:global(article):has(.hero) > :global(.markdown) > .figure {
+  width: min(1100px, calc(100% - 48px));
+  max-width: none;
+  margin-block: 72px 80px;
+}
+
+.figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0 !important;
+}
+
+.figure figcaption {
+  max-width: 640px;
+  margin: 20px auto 0;
+  color: #999;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  :global(article):has(.hero) { padding-bottom: 80px; }
+
+  :global(article):has(.hero) > :global(.markdown) > :not([data-full-width]):not([aria-hidden='true']) {
+    max-width: calc(100% - 40px);
+  }
+
+  :global(article):has(.hero) > :global(.markdown) > h2 {
+    margin-top: 80px;
+    font-size: 28px;
+  }
+
+  .hero { padding: 36px 20px; }
+  :global(article):has(.hero) .hero h1 { margin-bottom: 24px !important; font-size: clamp(72px, 18vw, 96px) !important; }
+  .hero .tagline { max-width: 400px; font-size: 21px; }
+  .ctaRow { margin-top: 32px; }
+  .cliPreview { width: calc(100% + 24px); margin: 32px -12px 0; }
+  .terminal { padding: 20px 14px 16px; font-size: 11px; }
+  .reportMeta { display: block; font-size: 10px; }
+  .reportMeta > span { display: block; margin-top: 5px; }
+  .recommendation { gap: 5px; }
+  .recommendation > span { width: 100%; }
+  .recommendation strong { font-size: 11px; }
+  .recommendation small { font-size: 10px; }
+  :global(article):has(.hero) .terminal .rankTable { font-size: 12px; }
+  :global(article):has(.hero) .terminal .rankTable :is(th, td) { padding: 9px 6px; }
+  :global(article):has(.hero) .terminal .rankTable th { font-size: 10px; }
+  :global(html[data-theme]) :global(article):has(.hero) .terminal h3 { font-size: 13px; }
+  .terminalFooter { gap: 10px; font-size: 9px; }
+  .terminalFooter > span:last-child { text-align: right; }
+  .replayCaption { padding-inline: 4px; font-size: 11px; }
+
+  :global(article):has(.hero) > :global(.markdown) > .figure {
+    width: calc(100% - 16px);
+    margin-block: 48px 56px;
+  }
+
+  .figure figcaption { padding-inline: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta, .savedReport, :global(article):has(.hero) .terminal .rankTable tr { transition: none; }
+  .cliPreview .cursor { animation: none; }
+}

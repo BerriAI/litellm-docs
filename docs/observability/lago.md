@@ -1,3 +1,8 @@
+---
+title: "Lago Usage Billing for LiteLLM AI Gateway"
+sidebar_label: "Lago"
+description: "Send LiteLLM usage and cost to Lago for usage-based billing from the Python SDK or AI Gateway, with a config.yaml callback and the Lago log object."
+---
 import Image from '@theme/IdealImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -113,13 +118,8 @@ print(response)
 <TabItem value="langchain" label="Langchain">
 
 ```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 import os 
 
 os.environ["OPENAI_API_KEY"] = "anything"
@@ -127,7 +127,6 @@ os.environ["OPENAI_API_KEY"] = "anything"
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model = "{{openai_small}}",
-    temperature=0.1,
     extra_body={
         "user": "my_customer_id"  # whatever your customer id is
     }
@@ -141,7 +140,7 @@ messages = [
         content="test from litellm. tell me why it's amazing in 1 sentence"
     ),
 ]
-response = chat(messages)
+response = chat.invoke(messages)
 
 print(response)
 ```

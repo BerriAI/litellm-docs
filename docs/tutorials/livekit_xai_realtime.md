@@ -180,7 +180,7 @@ Because they make up everything!
 
 ## Complete Working Example
 
-**[LiveKit Agent SDK Cookbook](https://github.com/BerriAI/litellm/tree/main/cookbook/livekit_agent_sdk)**
+**[LiveKit Agent SDK Cookbook](https://github.com/BerriAI/litellm/tree/89a6b5fbb26b632ef0faf633b0d3cf317d73deaa/cookbook/livekit_agent_sdk)**
 
 
 ## Learn More

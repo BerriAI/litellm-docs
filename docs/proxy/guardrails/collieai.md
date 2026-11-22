@@ -1,3 +1,8 @@
+---
+title: "CollieAi Guardrails on LiteLLM AI Gateway"
+sidebar_label: "CollieAi"
+description: "Check chat completions against a CollieAi project policy on the LiteLLM AI Gateway before and after the model call, in observe or block mode."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

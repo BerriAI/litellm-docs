@@ -1,3 +1,9 @@
+---
+title: "Azure AI Search Passthrough on LiteLLM Gateway"
+sidebar_label: "Azure AI Search - Vector Store (Passthrough API)"
+description: "Let developers create and search Azure AI Search vector stores in the native API format through the LiteLLM AI Gateway, without sharing Azure credentials."
+---
+
 # Azure AI Search - Vector Store (Passthrough API)
 
 Use this to allow developers to **create** and **search** vector stores using the Azure AI Search API in the **native** Azure AI Search API format, without giving them the Azure AI credentials.
@@ -389,3 +395,7 @@ if __name__ == "__main__":
     # display_results(results)
 
 ```
+
+## Search fallbacks
+
+[Configure fallback stores in YAML](../../completion/knowledgebase.md#define-vector-store-fallbacks) to fail over `POST /azure_ai/indexes/{name}/docs/search` and `GET /azure_ai/indexes/{name}/docs`. `/azure/` and `/azure_ai/` use the same handler and both support fallbacks. Keep one LiteLLM index registration pointing to the primary; each backup must contain the same physical index name used by the request. Writes and index lifecycle operations do not fail over.

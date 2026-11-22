@@ -4,6 +4,8 @@ import TabItem from '@theme/TabItem';
 
 # Billing
 
+For customer and end-user spend tracking from v1.111, start with [Customer Management](./customers.md). The Lago examples below use legacy end-user, internal user, and team IDs. For the new customer hierarchy, read its usage APIs from your billing backend.
+
 Bill internal teams, external customers for their usage
 
 ** Requirements**
@@ -115,13 +117,8 @@ print(response)
 <TabItem value="langchain" label="Langchain">
 
 ```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 import os 
 
 os.environ["OPENAI_API_KEY"] = "sk-tXL0wt5-lOOVK9sfY2UacA" # Team's Key
@@ -129,7 +126,6 @@ os.environ["OPENAI_API_KEY"] = "sk-tXL0wt5-lOOVK9sfY2UacA" # Team's Key
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model = "{{openai_large}}",
-    temperature=0.1,
 )
 
 messages = [
@@ -140,7 +136,7 @@ messages = [
         content="test from litellm. tell me why it's amazing in 1 sentence"
     ),
 ]
-response = chat(messages)
+response = chat.invoke(messages)
 
 print(response)
 ```
@@ -235,13 +231,8 @@ For:
   <TabItem value="langchain" label="Langchain">
 
   ```python
-  from langchain.chat_models import ChatOpenAI
-  from langchain.prompts.chat import (
-      ChatPromptTemplate,
-      HumanMessagePromptTemplate,
-      SystemMessagePromptTemplate,
-  )
-  from langchain.schema import HumanMessage, SystemMessage
+  from langchain_openai import ChatOpenAI
+  from langchain_core.messages import HumanMessage, SystemMessage
   import os 
 
   os.environ["OPENAI_API_KEY"] = "anything"
@@ -249,7 +240,6 @@ For:
   chat = ChatOpenAI(
       openai_api_base="http://0.0.0.0:4000",
       model = "{{openai_large}}",
-      temperature=0.1,
       extra_body={
           "user": "my_customer_id"  # whatever your customer id is
       }
@@ -263,7 +253,7 @@ For:
           content="test from litellm. tell me why it's amazing in 1 sentence"
       ),
   ]
-  response = chat(messages)
+  response = chat.invoke(messages)
 
   print(response)
   ```

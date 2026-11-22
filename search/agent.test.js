@@ -2,8 +2,8 @@ const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const {createIndex} = require('./engine');
 const {answerQuestion} = require('./answer');
-const {tools, createDocumentationTools} = require('./tools');
 const {getTracing} = require('./tracing');
+const {tools, createDocumentationTools} = require('./tools');
 
 const docs = [
   {id: 'irrelevant', title: 'Project Management UI', heading: '', url: '/docs/proxy/ui_project_management', text: 'Manage projects on this UI page.'},
@@ -16,7 +16,7 @@ const config = {apiKey: 'test-agent-secret', baseUrl: 'https://gateway.example.c
 const corpus = {index: createIndex(docs), documents: new Map(docs.map(doc => [doc.id, doc]))};
 const toolCall = (id, name, args) => ({id, type: 'function', function: {name, arguments: JSON.stringify(args)}});
 const toolResponse = calls => Response.json({choices: [{finish_reason: 'tool_calls', message: {content: null, tool_calls: calls}}]});
-const answer = text => Response.json({choices: [{finish_reason: 'stop', message: {content: text}}]});
+const answer = text => toolResponse([toolCall('answer', 'write_answer', {answer: text})]);
 
 test('agent can inspect an irrelevant result, batch new searches, read evidence, then answer', async () => {
   let calls = 0;
@@ -27,7 +27,7 @@ test('agent can inspect an irrelevant result, batch new searches, read evidence,
       switch (calls++) {
         case 0:
           assert.equal(body.tool_choice, 'required');
-          assert.equal(body.stream, undefined);
+          assert.equal(body.stream, true);
           return toolResponse([toolCall('s1', 'search_docs', {queries: ['Project Management UI']})]);
         case 1:
           assert.ok(body.messages.at(-1).content.includes('Project Management UI'));
@@ -40,18 +40,14 @@ test('agent can inspect an irrelevant result, batch new searches, read evidence,
         }
         case 3:
           assert.ok(body.messages.at(-1).content.includes('choice questions only'));
-          return toolResponse([toolCall('finish', 'finish_research', {})]);
-        case 4:
-          assert.equal(body.tools, undefined);
-          const evidence = JSON.parse(body.messages[1].content[0].text).documentation;
+          const evidence = JSON.parse(body.messages.at(-1).content).passages;
           assert.ok(evidence.some(passage => passage.text.includes('choice questions only')));
-          assert.ok(!JSON.stringify(body).includes('Project Management UI'));
-          assert.ok(!JSON.stringify(body).includes('Gemini reasoning'));
+          assert.match(body.messages[0].content[0].text, /Search previews are for discovery/);
           return answer('Use hosted_vllm/<served-model-name>; api_base is required and the key is optional. Choice questions only. [1]');
         default: assert.fail('Unexpected model call');
       }
     }});
-  assert.equal(calls, 5);
+  assert.equal(calls, 4);
   assert.equal(result.body.sources[0].url, '/docs/decisions#supported-providers');
   assert.equal(result.body.sources.length, 1);
   assert.ok(events.some(event => event.event === 'sources'));
@@ -63,7 +59,6 @@ test('the agent can search, read, search again and read before one final answer'
     toolResponse([toolCall('r1', 'read_docs', {passage_ids: ['pi']})]),
     toolResponse([toolCall('s2', 'search_docs', {queries: ['decision vllm', 'Gemini']})]),
     toolResponse([toolCall('r2', 'read_docs', {passage_ids: ['decisions']})]),
-    toolResponse([toolCall('f', 'finish_research', {})]),
     answer('Pi is mentioned in Lite-Harness. vLLM supports choice questions. [1][2]'),
   ];
   let calls = 0;
@@ -76,12 +71,12 @@ test('the agent can search, read, search again and read before one final answer'
     }
     return steps[calls++];
   }});
-  assert.equal(calls, 6);
+  assert.equal(calls, 5);
   assert.equal(result.body.sources.length, 2);
 });
 
 test('search results do not become citations until the agent reads them; unrelated pages stay out', async () => {
-  const tool = createDocumentationTools({...corpus, config, tracing: getTracing(config)});
+  const tool = createDocumentationTools({tracing: getTracing(config), ...corpus, config});
   const found = await tool.execute(toolCall('s', 'search_docs', {queries: ['Pi AI', 'Gemini']}));
   assert.equal(found.results.length, 2);
   assert.equal(tool.sources.size, 0);
@@ -93,7 +88,7 @@ test('search results do not become citations until the agent reads them; unrelat
 });
 
 test('tools reject undiscovered IDs, arbitrary URLs, malformed arguments and oversized batches', async () => {
-  const tool = createDocumentationTools({...corpus, tracing: getTracing(config)});
+  const tool = createDocumentationTools({tracing: getTracing(config), ...corpus});
   for (const call of [
     toolCall('a', 'read_docs', {passage_ids: ['decisions']}),
     toolCall('b', 'read_docs', {passage_ids: ['https://private.example/secret']}),
@@ -104,12 +99,12 @@ test('tools reject undiscovered IDs, arbitrary URLs, malformed arguments and ove
   assert.equal(tool.sources.size, 0);
 });
 
-test('repeated tool requests stop at the round limit and get a final answer without tools', async () => {
+test('repeated tool requests stop at the round limit and restrict the last call to writing the answer', async () => {
   let calls = 0;
   await answerQuestion({...corpus, config, question: 'Pi AI', fetchImpl: async (_url, request) => {
     const body = JSON.parse(request.body); calls++;
     if (calls <= 8) return toolResponse([toolCall(`s${calls}`, 'search_docs', {queries: ['Pi AI']})]);
-    assert.equal(body.tools, undefined);
+    assert.deepEqual(body.tools.map(tool => tool.function.name), ['write_answer']);
     return answer('I could not verify the Pi selection string.');
   }});
   assert.equal(calls, 9);
@@ -124,7 +119,6 @@ test('an invalid final citation fails once without replacing the streamed answer
   const responses = [
     toolResponse([toolCall('s', 'search_docs', {queries: ['Pi AI']})]),
     toolResponse([toolCall('r', 'read_docs', {passage_ids: ['pi']})]),
-    toolResponse([toolCall('f', 'finish_research', {})]),
     answer('The Pi selector is not documented. [9]'),
   ];
   let calls = 0;
@@ -133,7 +127,7 @@ test('an invalid final citation fails once without replacing the streamed answer
     onEvent: (event, data) => events.push({event, data}),
     fetchImpl: async () => {assert.ok(calls < responses.length); return responses[calls++];},
   }), /Invalid documentation citation/);
-  assert.equal(calls, 4);
+  assert.equal(calls, 3);
   assert.ok(!events.some(({event}) => event === 'answer-start'));
   assert.equal(events.filter(({event}) => event === 'answer-delta').map(({data}) => data.text).join(''), 'The Pi selector is not documented. [9]');
 });
@@ -142,7 +136,7 @@ test('page reads include all indexed link destinations and keep stable source nu
   const linked = {...docs[1], links: [{title: 'Public reference', url: '/api-reference/'},
     ...Array.from({length: 40}, (_, i) => ({title: `Related ${i}`, url: `/docs/related-${i}`}))]};
   const documents = new Map([[linked.id, linked], ['pi', docs[3]]]);
-  const tool = createDocumentationTools({index: createIndex([...documents.values()]), documents, tracing: getTracing(config)});
+  const tool = createDocumentationTools({tracing: getTracing(config), index: createIndex([...documents.values()]), documents});
   const found = await tool.execute(toolCall('s', 'search_docs', {queries: ['decision vllm', 'Pi AI']}));
   assert.equal(found.results[0].matches[0].passages[0].links[0].url, '/api-reference/');
   assert.equal(tool.sources.size, 0);
@@ -162,7 +156,7 @@ test('reading a page includes the requested evidence, remaining chunks, and requ
     {...docs[1], id: 'example', url: '/docs/decisions#request', heading: '/v1/decisions', text: 'A choice request has a choices array.'},
   ];
   const documents = new Map(parts.map(doc => [doc.id, doc]));
-  const tool = createDocumentationTools({index: createIndex(parts), documents, tracing: getTracing(config)});
+  const tool = createDocumentationTools({tracing: getTracing(config), index: createIndex(parts), documents});
   await tool.execute(toolCall('s', 'search_docs', {queries: ['decision vllm']}));
   const first = await tool.execute(toolCall('r1', 'read_docs', {passage_ids: ['part1']}));
   assert.equal(first.passages.length, 3);
@@ -181,7 +175,6 @@ test('long pages and later reads reach the final answer without truncation', asy
     toolResponse([toolCall('s', 'search_docs', {queries: ['decision vllm', 'Pi AI']})]),
     toolResponse([toolCall('r1', 'read_docs', {passage_ids: ['part-0']})]),
     toolResponse([toolCall('r2', 'read_docs', {passage_ids: ['pi']})]),
-    toolResponse([toolCall('f', 'finish_research', {})]),
     answer('Both complete examples are available. [40][41]'),
   ];
   let calls = 0;
@@ -194,12 +187,12 @@ test('long pages and later reads reach the final answer without truncation', asy
         assert.deepEqual(read.passages.map(doc => doc.text), (calls === 2 ? longPage : [laterPage]).map(doc => doc.text));
         assert.deepEqual(read.unavailable, []);
       }
-      if (calls === 4) {
-        const evidence = JSON.parse(body.messages[1].content[0].text).documentation;
+      if (calls === 3) {
+        const evidence = body.messages.filter(message => message.role === 'tool').flatMap(message => JSON.parse(message.content).passages || []);
         assert.deepEqual(evidence.map(doc => doc.text), complete.map(doc => doc.text));
       }
       return responses[calls++];
     }});
-  assert.equal(calls, 5);
+  assert.equal(calls, 4);
   assert.deepEqual(result.body.sources.map(source => source.id), [40, 41]);
 });

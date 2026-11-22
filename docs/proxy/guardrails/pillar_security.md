@@ -1,3 +1,8 @@
+---
+title: "Pillar Security Guardrails on LiteLLM AI Gateway"
+sidebar_label: "Pillar Security"
+description: "Block prompt injection, jailbreaks and PII leaks with Pillar Security on the LiteLLM AI Gateway via the Generic Guardrail API, on prompts and responses."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

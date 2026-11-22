@@ -1,41 +1,76 @@
 ---
 title: Trace coding agent sessions
-description: Send your personal Claude Code and Codex sessions to LiteLLM Lens.
+description: Configure Claude Code or Codex to send sessions to Lens, then open the recorded activity in Traces.
 ---
 
 import AgentPrompt from '@site/src/components/Conversion/AgentPrompt';
 
 # Trace coding agent sessions
 
-For optional help from your coding agent, [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md) has prompts for an existing LiteLLM deployment, standalone Lens, and external ClickHouse. The agent should inspect the installed version before applying this guide
-
-Send your personal Claude Code or Codex sessions to [LiteLLM Lens](./index.md) to inspect their recorded activity. Choose your agent below.
+Send your [Claude Code](#claude-code) or [Codex](#codex) activity to Lens. Your model login and model endpoint stay unchanged.
 
 You need a running Lens installation and a dedicated Lens tracing key. If you are starting from scratch, follow the [Lens deployment guide](./deployment/local.md). Your existing Claude Code or Codex model login continues to work.
 
-In standalone Lens, open **Traces** and click **Connect project** if the setup panel is not already open. In a gateway-bundled release, open **Lens > Traces** and click **Connect project**. Under **Connection details**, copy the full **Traces endpoint**, including `/v1/traces`, and click **Generate tracing key**. Ask your administrator for a tracing key if you cannot create one. Keep any `/lens-ingest` prefix in the URL. These settings affect telemetry; your model URL and model credentials stay separate.
+Open `http://localhost:4318/ui/` for the local quickstart, or select **Lens** in your LiteLLM dashboard. [Generate a tracing key](./first-trace.md#connect-your-agent) and copy the full **Traces endpoint**, including `/v1/traces`. Ask your administrator if you cannot create a key. The examples use local Lens; replace the address with your endpoint and keep any `/lens-ingest` prefix. A tracing key uploads telemetry, not model requests. Keep it private.
 
 ## Claude Code
 
-Claude Code needs no Lens plugin or helper. Its built-in [OpenTelemetry exporters](https://code.claude.com/docs/en/monitoring-usage) send trace spans and assistant response logs directly to Lens. Model calls can continue through your Claude subscription or your existing API provider; leave your Claude login and model endpoint unchanged.
+Claude Code needs no Lens plugin or helper. Its built-in [OpenTelemetry exporters](https://code.claude.com/docs/en/monitoring-usage) do the work.
+
+:::warning Telemetry is required
+
+Claude Code's telemetry is off by default, and Lens records Claude Code turns only when you turn it on. Without the settings below, Lens lists the gateway's model calls one by one, with no turn, tool, or subagent steps.
+
+:::
+
+### Through the LiteLLM gateway
+
+If Claude Code already sends its model calls through your LiteLLM gateway, send its telemetry to the same gateway with the same key. The gateway forwards it to Lens, so the machine that runs `claude` needs no Lens address and no Lens tracing key. The gateway must be [connected to Lens](./deployment/litellm.md).
+
+```bash
+export ANTHROPIC_BASE_URL="http://localhost:4000"
+export ANTHROPIC_AUTH_TOKEN="<your LiteLLM key>"
+
+export CLAUDE_CODE_ENABLE_TELEMETRY=1
+export CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1
+export CLAUDE_CODE_PROPAGATE_TRACEPARENT=1
+export OTEL_TRACES_EXPORTER=otlp
+export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="$ANTHROPIC_BASE_URL/v1/traces"
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer $ANTHROPIC_AUTH_TOKEN"
+export OTEL_LOG_USER_PROMPTS=1
+
+claude -p "Reply with exactly: Lens telemetry check."
+```
+
+Every telemetry variable is required. `CLAUDE_CODE_ENABLE_TELEMETRY`, `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA`, and `OTEL_TRACES_EXPORTER` together produce the turn; drop any one and Lens shows only separate `chat <model>` rows. `CLAUDE_CODE_PROPAGATE_TRACEPARENT` puts the turn's trace ID on each model call; without it the turn and its gateway calls land as two unrelated traces. `OTEL_LOG_USER_PROMPTS` includes the text you typed, which otherwise reads `<REDACTED>`, and it stores that text in Lens. The endpoint is your gateway address followed by `/v1/traces`, and the header carries your LiteLLM key.
+
+Do not set `OTEL_LOGS_EXPORTER` on this path. The gateway accepts trace spans only and answers `POST /v1/logs` with `410`. Do not add `lens.session.capture=true` from the direct setup below either: together with `CLAUDE_CODE_PROPAGATE_TRACEPARENT=1` it splits each turn into two traces, the turn under one trace ID and its gateway calls under another.
+
+Open **Lens > Traces** in LiteLLM and filter by **claude-code**. Each turn is one `claude_code.interaction` trace with its model and tool calls nested under it, your prompt, and the gateway's cost. Verified with Claude Code **2.1.330**.
+
+### Directly to Lens
+
+Use this path when Claude Code does not go through a LiteLLM gateway. Model calls can continue through your Claude subscription or your existing API provider; leave your Claude login and model endpoint unchanged. Claude Code sends trace spans and assistant response logs straight to Lens with a Lens tracing key.
 
 Copy this prompt into your coding agent to have it configure this machine, or follow the manual steps below.
 
 <AgentPrompt id="lens-claude-code" />
 
-This setup requires the Lens service with its `/v1/logs` ingestion route. Use a current Claude Code version with assistant response logging support.
+Verified with Claude Code **2.1.328** and Lens **0.1.0**. Keep `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1`: the telemetry enable flag alone does not enable its beta trace exporter.
 
 In the terminal where you run `claude`, paste the endpoint and tracing key in the first two lines, then run the block. The logs URL uses the same address with `/v1/logs` in place of `/v1/traces`:
 
 ```bash
 export LENS_TRACING_KEY="<paste your Lens tracing key>"
-export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="<paste the full Traces endpoint>"
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://localhost:4318/v1/traces"
 export OTEL_EXPORTER_OTLP_TRACES_HEADERS="Authorization=Bearer $LENS_TRACING_KEY"
 export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT="${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT%/v1/traces}/v1/logs"
 export OTEL_EXPORTER_OTLP_LOGS_HEADERS="Authorization=Bearer $LENS_TRACING_KEY"
 
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1
+export OTEL_METRICS_INCLUDE_SESSION_ID=true
 export OTEL_TRACES_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL="http/protobuf"
 export OTEL_METRICS_EXPORTER=none
@@ -48,14 +83,19 @@ export OTEL_LOG_ASSISTANT_RESPONSES=1
 export OTEL_LOG_TOOL_DETAILS=1
 export OTEL_LOG_TOOL_CONTENT=1
 
-claude
+claude -p "Reply with exactly: Lens telemetry check."
 ```
 
 The content flags include prompts, assistant replies, tool arguments, and supported tool outputs, which can contain source code or secrets. Enable them only for a Lens deployment where you intend to store that content.
 
-Complete a prompt that uses a tool, then open **Lens > Traces**, select **claude-code**, and switch the trace to **Conversation**. You should see your prompt, commentary, tool activity, and final reply. Child agents appear in expandable branches. Background title generation and suggested prompts are excluded from the conversation.
+Open **Traces** in standalone Lens or **Lens > Traces** in LiteLLM. Filter by **claude-code**, open the session trace, and select **Conversation** to see the prompt and reply. Run `claude` without `-p` for interactive sessions. New turns in the same session update its trace.
 
 `lens.session.capture=true` groups turns with the same Claude session ID into one trace, including resumed sessions and background-agent replies. Original trace IDs remain in span attributes. Omit this resource attribute to retain Claude's separate traces per interaction. If you already set `OTEL_RESOURCE_ATTRIBUTES`, append these values instead of replacing your existing attributes.
+
+Do not set `OTEL_METRICS_INCLUDE_SESSION_ID=false`. Despite its name, this removes `session.id` from Claude's traces too and prevents session grouping.
+
+<details>
+<summary>Additional Claude Code content and persistent settings</summary>
 
 Assistant replies use a separate telemetry stream from trace spans. Keep both exporters enabled. The allowlisted detailed-tracing endpoint is not required. See Claude Code's [monitoring reference](https://code.claude.com/docs/en/monitoring-usage) for the beta exporter's coverage and content limits.
 
@@ -76,19 +116,46 @@ The conversation below includes a deliberately failed command. With the optional
 
 For persistent configuration, add these variables to the `env` object in your user-level `~/.claude/settings.json`, preserving existing settings. Repository-level settings cannot enable telemetry or choose its destination. Managed settings may override your local destination.
 
+</details>
+
 ## Codex
 
-Use the [BerriAI Codex integration on GitHub](https://github.com/BerriAI/litellm-lens-codex-integration). This public preview supports local Codex desktop and CLI sessions. Automatic setup currently supports macOS and requires Python 3.11 or later. {/* keep-python-version: Codex integration prerequisite */}
+Use the [BerriAI Codex integration](https://github.com/BerriAI/litellm-lens-codex-integration) for local Codex desktop and CLI sessions. Automatic setup currently supports **macOS** and requires Python 3.11 or later and a Codex version with plugin support. Run setup on the computer where Codex runs. {/* keep-python-version: Codex integration prerequisite */}
 
 Copy this prompt into your coding agent to have it install and configure the integration, or follow the manual steps below.
 
 <AgentPrompt id="lens-codex" />
 
-1. Follow **[From Terminal (recommended)](https://github.com/BerriAI/litellm-lens-codex-integration#from-terminal-recommended)** in the installation guide. The same installer works for desktop and CLI.
-2. At **Lens ingestion URL**, paste the full **Traces endpoint** from the dashboard. The installer accepts that endpoint and keeps `/lens-ingest` when present. Enter your **Lens tracing key** at the hidden prompt, choose an **agent name**, and confirm to start recording.
-3. **Start a new Codex chat and complete a turn.** Open **Lens > Traces** and find the agent name you chose.
+In Terminal, install the plugin. The same plugin serves desktop and CLI:
 
-Each chat has one trace, updated after completed or interrupted turns. Reopening a chat continues its trace. Only activity after setup is recorded.
+```bash
+codex plugin marketplace add BerriAI/litellm-lens-codex-integration
+codex plugin add litellm-lens@berriai-lens
+```
+
+Start a **new Codex chat** and send:
+
+```text
+Use lens-setup to connect my Codex chats to LiteLLM Lens.
+```
+
+In the private Terminal setup window, enter these values:
+
+| Setup field | Local Lens value |
+| --- | --- |
+| Lens ingestion URL | `http://localhost:4318/v1/traces`, or the full endpoint copied from Lens |
+| Lens tracing key | The dedicated tracing key, entered at the hidden prompt |
+| Agent name | `codex` |
+
+Confirm recording, then start **another new chat** so its hooks load. For a CLI check, run this from your project:
+
+```bash
+codex exec "Reply with exactly: Lens Codex telemetry check."
+```
+
+Open **Traces** in standalone Lens or **Lens > Traces** in LiteLLM, filter by **codex**, and open the chat trace in **Conversation**. Do not paste your tracing key into a Codex prompt or use it as your model key. The plugin handles telemetry; do not copy the Claude Code environment variables into Codex or enable a second exporter for the same recording.
+
+CLI capture was checked with Codex **0.170.0** and plugin **0.4.0**. Each chat has one trace, updated after completed or interrupted turns. Reopening a chat continues its trace. The plugin supplies the chat-level trace ID, so this grouping works on both Lens **0.1.0** and **main**, without `lens.session.capture` or `lens.session.attribute`. Only activity after setup is recorded.
 
 The plugin reads visible transcript items for newly recorded turns, including commentary, repeated messages, tool outcomes, model changes, and subagents. Completed transcript turns can be recovered when a completion hook is missing. See the [coverage and privacy details](https://github.com/BerriAI/litellm-lens-codex-integration#what-youll-see) for its limits. To pause recording, ask Codex: `Use lens-setup to pause recording.`
 

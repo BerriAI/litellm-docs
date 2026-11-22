@@ -1,3 +1,8 @@
+---
+title: "Langtrace Tracing for LiteLLM AI Gateway"
+sidebar_label: "Langtrace"
+description: "Send LiteLLM traces to Langtrace from the Python SDK or AI Gateway, directly to its /api/trace endpoint or through an OpenTelemetry Collector on OTel v2."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

@@ -149,7 +149,7 @@ proxy_config:
 </TabItem>
 <TabItem value="terraform" label="Terraform">
 
-Add these inputs to your existing [LiteLLM AWS or Google Cloud module](../deploy.md#use-the-modules-directly). Set `var.agent_client_secret_ref` to the secret ARN on AWS or Secret Manager resource ID on Google Cloud.
+Add these inputs to your existing [LiteLLM AWS or Google Cloud module](../deploy/terraform.md). Set `var.agent_client_secret_ref` to the secret ARN on AWS or Secret Manager resource ID on Google Cloud.
 
 ```hcl title="Existing LiteLLM module inputs"
 gateway_extra_env = { PROXY_BASE_URL = "https://litellm.example.com" }
@@ -239,7 +239,7 @@ proxy_config:
 </TabItem>
 <TabItem value="terraform" label="Terraform">
 
-Add these inputs to your existing [LiteLLM AWS or Google Cloud module](../deploy.md#use-the-modules-directly). Set `var.agent_client_secret_ref` to the secret ARN on AWS or Secret Manager resource ID on Google Cloud.
+Add these inputs to your existing [LiteLLM AWS or Google Cloud module](../deploy/terraform.md). Set `var.agent_client_secret_ref` to the secret ARN on AWS or Secret Manager resource ID on Google Cloud.
 
 ```hcl title="Existing LiteLLM module inputs"
 gateway_extra_env = { PROXY_BASE_URL = "https://litellm.example.com" }

@@ -40,11 +40,12 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
-  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js')],
+  clientModules: [require.resolve('./src/clientModules/imageZoom.js'), require.resolve('./src/clientModules/gridMarks.js'), require.resolve('./src/clientModules/lensLegacyRedirect.js'), require.resolve('./src/clientModules/deployLegacyRedirect.js')],
   plugins: [
     require('./plugins/litellm-stats'),
     require('./plugins/release-feed'),
     require('./plugins/llms'),
+    require('./plugins/mcp-models-snapshot'),
     // vega-canvas tries to load the optional node `canvas` package during SSR.
     // Charts render as SVG, so resolve it to an empty module.
     () => ({
@@ -59,6 +60,11 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          {from: '/docs/liteagents', to: '/docs/harness'},
+          {from: '/docs/proxy/customer_portal/api_reference_guide', to: '/docs/proxy/customer_management/track-customer-spend'},
+          {from: '/docs/proxy/customer_portal/track-customer-spend', to: '/docs/proxy/customer_management/track-customer-spend'},
+          {from: '/docs/proxy/customer_portal/api_reference', to: '/docs/proxy/customer_management/api_reference'},
+          {from: '/blog/customer-portal', to: '/blog/customer-management'},
           // The decisions page was split into subpages for a few days in October 2026.
           {from: '/docs/decisions/providers', to: '/docs/decisions#supported-providers'},
           {from: '/docs/decisions/openai_format', to: '/docs/decisions#v1decisions'},
@@ -85,7 +91,14 @@ const config = {
           {from: '/docs/proxy/jwt_auth_arch', to: '/docs/proxy/access_management/jwt_permissions#beta-control-access-with-oidc-roles'},
           {from: ['/docs/oidc', '/docs/oidcz'], to: '/docs/proxy/model_management#workload-identity-credentials'},
           {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
+          {from: '/docs/proxy/lens/deployment/docker', to: '/docs/proxy/lens/deployment/configuration#other-container-platforms'},
+          {from: '/docs/proxy/lens/deployment/docker-compose', to: '/docs/proxy/lens/deployment/litellm#docker-compose'},
           {from: '/docs/proxy/rust_gateway', to: '/rust-migration'},
+          {from: '/docs/proxy/deploy/iap/cloudflare', to: '/docs/proxy/deploy/iap/overview#cloudflare'},
+          {from: '/docs/proxy/deploy/iap/aws', to: '/docs/proxy/deploy/iap/overview#aws'},
+          {from: '/docs/proxy/deploy/iap/azure', to: '/docs/proxy/deploy/iap/overview#azure'},
+          {from: '/docs/proxy/deploy/iap/gcp', to: '/docs/proxy/deploy/iap/overview#gcp'},
+
           {
             from: '/docs/proxy/control_plane_and_data_plane',
             to: '/docs/proxy/multi_region',
@@ -104,7 +117,23 @@ const config = {
           },
           {
             from: '/docs/proxy/microservices_helm',
-            to: '/docs/proxy/deploy#deploy-with-helm',
+            to: '/docs/proxy/deploy/helm',
+          },
+          {
+            from: ['/docs/proxy/deploy/kubernetes', '/docs/proxy/manifests_to_microservices'],
+            to: '/docs/proxy/deploy/helm',
+          },
+          {
+            from: '/docs/proxy/deploy/terraform/provider',
+            to: '/docs/proxy/configuration/terraform',
+          },
+          {
+            from: '/docs/proxy/deploy/terraform/aws',
+            to: '/docs/proxy/deploy/terraform#aws',
+          },
+          {
+            from: '/docs/proxy/deploy/terraform/gcp',
+            to: '/docs/proxy/deploy/terraform#gcp',
           },
           {
             from: '/docs/proxy/db_deadlocks',
@@ -408,7 +437,7 @@ const config = {
       // rendered; it holds the evergreen entry so the config still reads true.
       // Bump `id` to resurface the bar for readers who dismissed the last one.
       announcementBar: {
-        id: 'decisions_api_gemini_2026_11',
+        id: 'customer_portal_nov_20_townhall_dec_3_2026',
         content:
           '<a class="announcement-link" href="/docs/decisions"><strong>Decisions API is here.</strong> Call Gemini Decision 1, Jev, Clef or any decision model through one /v1/decisions endpoint. &rarr;</a>',
         isCloseable: true,
@@ -464,6 +493,7 @@ const config = {
           },
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
+          { href: 'https://www.litellm.ai/course', label: 'Learn', position: 'left' },
           { to: '/rust-migration', label: 'Rust', position: 'left' },
           {
             href: 'https://github.com/BerriAI/litellm',

@@ -2,7 +2,7 @@
 title: "LiteLLM v1.80.0-stable - Introducing Agent Hub: Register, Publish, and Share Agents"
 description: "Adds Agent Hub, RunwayML video and image generation, and GPT-5.1 support. Adds Prometheus metrics to the open-source version."
 slug: "v1-80-0"
-date: 2025-11-15T10:00:00
+date: 2025-11-23T00:00:05
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

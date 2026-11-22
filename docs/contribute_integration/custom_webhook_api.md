@@ -100,7 +100,7 @@ curl -L -X POST 'http://0.0.0.0:4000/chat/completions' \
 If you're adding a new integration, please add documentation for it under the `observability` folder:
 
 - Create a new file at `docs/my-website/docs/observability/<your_integration>_integration.md`
-- Follow the format of existing integration docs, such as [Langsmith Integration](https://github.com/BerriAI/litellm/blob/main/docs/my-website/docs/observability/langsmith_integration.md)
+- Follow the format of existing integration docs, such as [Langsmith Integration](https://docs.litellm.ai/docs/observability/langsmith_integration)
 - Include: Quick Start, SDK usage, Proxy usage, and any advanced configuration options
 
 5. File a PR! 

@@ -1,3 +1,8 @@
+---
+title: "Databricks Zerobus Logging for LiteLLM AI Gateway"
+sidebar_label: "Databricks Zerobus"
+description: "Send LiteLLM AI Gateway request logs to a Unity Catalog Delta table with Databricks Zerobus Ingest, using a service principal and YAML or Admin UI setup."
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import ZerobusArchitecture from '@site/src/components/ZerobusArchitecture';
