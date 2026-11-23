@@ -1,13 +1,13 @@
 ---
 title: Trace coding agent sessions
-description: Configure Claude Code or Codex to send sessions to Lens, then open the recorded activity in Traces.
+description: Configure Claude Code, Codex or OpenCode to send sessions to Lens, then open the recorded activity in Traces.
 ---
 
 import AgentPrompt from '@site/src/components/Conversion/AgentPrompt';
 
 # Trace coding agent sessions
 
-Send your [Claude Code](#claude-code) or [Codex](#codex) activity to Lens. Your model login and model endpoint stay unchanged.
+Send your [Claude Code](#claude-code), [Codex](#codex) or [OpenCode](#opencode) activity to Lens. Your model login and model endpoint stay unchanged.
 
 You need a running Lens installation and a dedicated Lens tracing key. If you are starting from scratch, follow the [Lens deployment guide](./deployment/local.md). Your existing Claude Code or Codex model login continues to work.
 
@@ -158,6 +158,27 @@ Open **Traces** in standalone Lens or **Lens > Traces** in LiteLLM, filter by **
 CLI capture was checked with Codex **0.170.0** and plugin **0.4.0**. Each chat has one trace, updated after completed or interrupted turns. Reopening a chat continues its trace. The plugin supplies the chat-level trace ID, so this grouping works on both Lens **0.1.0** and **main**, without `lens.session.capture` or `lens.session.attribute`. Only activity after setup is recorded.
 
 The plugin reads visible transcript items for newly recorded turns, including commentary, repeated messages, tool outcomes, model changes, and subagents. Completed transcript turns can be recovered when a completion hook is missing. See the [coverage and privacy details](https://github.com/BerriAI/litellm-lens-codex-integration#what-youll-see) for its limits. To pause recording, ask Codex: `Use lens-setup to pause recording.`
+
+## OpenCode
+
+OpenCode 2.3.2 and later use the [Lens OpenCode plugin](https://github.com/BerriAI/litellm-lens-plugins/tree/main/opencode). OpenCode 2 exports no prompts, replies or tool content in its own telemetry, so the plugin records them instead. OpenCode 1.x keeps using its telemetry; follow the [OpenCode 1.x steps](https://github.com/BerriAI/lens/blob/main/docs/opencode.md#opencode-1x-telemetry) for it. Run `opencode --version` to see which applies.
+
+The plugin is off until you give it an address and a key, because it uploads your prompts, the model's replies, the files OpenCode reads and the output of the commands it runs. If OpenCode already sends its model calls through your LiteLLM gateway, use that gateway address and the same LiteLLM key. The gateway must be [connected to Lens](./deployment/litellm.md).
+
+```bash
+opencode plugin add github:BerriAI/litellm-lens-plugins
+export LITELLM_LENS_OPENCODE_URL="http://localhost:4000"
+export LITELLM_LENS_OPENCODE_API_KEY="<your LiteLLM key>"
+opencode service stop
+
+opencode run "Run the date command, then tell me what it printed."
+```
+
+`opencode service stop` restarts OpenCode's background service so it loads the two variables; add them to your shell profile to keep them. With standalone Lens, set the address to your Lens address, such as `http://localhost:4318`, and the key to a Lens tracing key. Leave `experimental.openTelemetry` and the `OTEL_EXPORTER_OTLP_*` variables unset on OpenCode 2, since the plugin replaces them.
+
+Open **Lens > Traces** in LiteLLM or **Traces** in standalone Lens and filter by **opencode**. A session is one trace, and each prompt you send is a turn in it with your prompt and the final reply. Inside a turn, each model call is a `chat <model>` step with the messages added since the previous reply, the reply and tokens, and each tool call is an `execute_tool <name>` step with its input and output. A subagent's steps sit under the tool call that started it. Through the gateway, each model call shows the cost the gateway billed and the trace belongs to the key, user and team of your LiteLLM key. With standalone Lens, model calls show tokens and no cost.
+
+Capture through the gateway was checked with OpenCode **2.3.2** and plugin **0.1.2**. To stop recording, unset the two variables or run `opencode plugin remove github:BerriAI/litellm-lens-plugins`.
 
 ## Coverage and troubleshooting
 
