@@ -113,11 +113,11 @@ Start a **new Codex chat** and send:
 Use lens-setup to connect my Codex chats to LiteLLM Lens.
 ```
 
-In the private Terminal setup window, enter these values:
+On macOS, Codex opens a private Terminal setup window. On Linux, Codex prints a `bash .../scripts/run.sh setup` command; run it in your own terminal. Enter these values:
 
 | Setup field | Local Lens value |
 | --- | --- |
-| Lens ingestion URL | `http://localhost:4318/v1/traces`, or the full endpoint copied from Lens |
+| Lens ingestion URL | `http://localhost:4318`, or the address copied from Lens. A trailing `/v1/traces` is accepted |
 | Lens tracing key | The dedicated tracing key, entered at the hidden prompt |
 | Agent name | `codex` |
 
