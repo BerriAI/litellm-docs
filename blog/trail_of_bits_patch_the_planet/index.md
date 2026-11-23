@@ -20,7 +20,7 @@ Fixes will begin shipping in the coming days. Most will ship in public releases 
 
 ## What's happening
 
-Over the course of this year, we have significantly increased our investment in LiteLLM's security posture. Much of our attention has been focused on areas surrounding the codebase: a team dedicated to security, the release pipeline, identity and access, internal policies and procedures, and monitoring and detection. We've partnered with HackerOne for a managed vulnerability disclosure program. We built out a private registry to enable embargoed releases for high-risk vulnerabilities. We now have LTS releases of LiteLLM to decouple resolving vulnerabilities from pulling in new features.
+Over the course of this year, we have significantly increased our investment in LiteLLM's security posture. We established dedicated security leadership, and are continuing to build out our security team. Much of this year's work has focused on areas surrounding the codebase: the release pipeline, identity and access, internal policies and procedures, and monitoring and detection. We've partnered with HackerOne for a managed vulnerability disclosure program. We built out a private registry to enable embargoed releases for high-risk vulnerabilities. We now have LTS releases of LiteLLM to decouple resolving vulnerabilities from pulling in new features.
 
 We are also investing in the codebase itself, and this is where Trail of Bits came in.
 
@@ -35,9 +35,9 @@ Getting a patch is different from shipping it. LiteLLM is used in many different
 
 Over the coming weeks and as a result of this work, we will be publishing more advisories than in any comparable period.
 
-Advisory volume reflects how closely software is examined and how openly its maintainers report what they find. Some of the most hardened software in the world publishes constantly: the Linux kernel issues thousands of CVEs a year, and Google Chrome hundreds. Trail of Bits examined LiteLLM very closely, and we are committed to openly publishing an advisory for every fix that warrants one.
+Advisory volume reflects how closely software is examined and how openly its maintainers report what they find. Some of the most hardened software in the world publishes constantly: the Linux kernel issues thousands of CVEs a year, and Google Chrome hundreds. Trail of Bits examined LiteLLM very closely, and we are publishing an advisory for every fix that warrants one.
 
-Each advisory publishe represents a weakness removed from the product. This high volume of upcoming advisories leaves us in a significantly better place.
+Each advisory published represents a weakness removed from the product. This high volume of upcoming advisories leaves us in a significantly better place.
 
 
 ## How the fixes will ship
