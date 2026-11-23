@@ -26,8 +26,6 @@ Our increased security investment also extends to the codebase itself, which is 
 
 Trail of Bits is one of the most highly respected security research firms today. In conjunction with OpenAI, they run an initiative called Patch the Planet, which combines frontier-model AI-driven vulnerability discovery with experienced security researchers who reproduce, validate, prioritize, and propose fixes for the findings. LiteLLM had the privilege of being selected for this initiative, joining prominent open-source projects like SQLite, Python, Go, WordPress, curl, rsync, and others. Our experience working with Trail of Bits was immensely positive, and I would strongly encourage maintainers of open source projects to apply.
 
-Getting a patch is different from shipping it. LiteLLM is used in many different ways by our customers, and an external reviewer can't anticipate every use case. With proposed fixes in hand, we still need to test each change carefully for regressions and adapt the patches where necessary.
-
 
 ## Contextualizing advisory counts
 
@@ -39,6 +37,8 @@ Each advisory published represents a weakness removed from the product. This hig
 
 
 ## How the fixes will ship
+
+Getting a patch is different from shipping it. LiteLLM is used in many different ways by our customers, and an external reviewer can't anticipate every use case. With proposed fixes in hand, we still need to test each change carefully for regressions and adapt the patches where necessary.
 
 Most fixes will ship in regular public releases and patches. When a fix is released, we will publish a GitHub Security Advisory on our [advisory feed](https://github.com/BerriAI/litellm/security/advisories) and request a CVE. The first of these should land in the coming days.
 
