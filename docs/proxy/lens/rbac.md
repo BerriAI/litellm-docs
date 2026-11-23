@@ -1,6 +1,6 @@
 ---
 title: "Access control and workspace filters"
-description: "Control who can read Lens traces, enable tracing for teams and keys, and filter requests by organization, team, project or key."
+description: "Lens reuses your LiteLLM gateway users, teams and permissions. See who can read traces, enable tracing for teams and keys, and filter by organization, team, project or key."
 slug: "/proxy/lens/rbac"
 ---
 
@@ -14,9 +14,31 @@ These team/key tracing controls and Org, Team, Project and Key selectors are par
 
 :::
 
-Use Lens in the LiteLLM dashboard to share traces and inspect application traffic. Your Gateway account determines which traces you can read. Workspace filters narrow those results; selecting another organization, team, project or key does not grant access.
+Connect Lens to your LiteLLM gateway and the permissions you already set up there apply in Lens. You do not create Lens users, map teams or define roles a second time. Your Gateway account determines which traces you can read, and that holds for every request that runs through the gateway.
 
-First [connect Lens to LiteLLM](./deployment/litellm.md). An administrator configures that connection once. Team members do not enter separate Lens integration credentials for each key.
+## Use the permissions you already have {#gateway-permissions}
+
+An administrator [connects Lens to LiteLLM](./deployment/litellm.md) once, with four environment variables on the gateway and two on Lens. From then on Lens asks the gateway who each person is and what they can see.
+
+| Already set up in LiteLLM | What it does in Lens |
+| --- | --- |
+| Users and single sign-on (SSO) | People sign in to Lens with their LiteLLM login. Lens has no separate user list or identity provider setup. |
+| Proxy administrator and administrator viewer roles | These roles read every trace. |
+| Teams and team administrators | Traces belong to the team of the key that made the request. Team administrators read their team's traces. |
+| Team member permissions | Members read their team's traces when the team grants `/spend/logs`, the same permission that shares its spend logs. |
+| Virtual keys | Each trace records the key, user and team that sent it, so people see their own traffic without extra setup. |
+
+Changes on the gateway carry over too. Add someone to a team or change a member permission in LiteLLM, and it applies in Lens the next time that person opens Lens or signs in. There is no matching change to make in Lens.
+
+### Sign in with your LiteLLM login {#log-in-with-litellm}
+
+Select **Lens** in the LiteLLM dashboard sidebar to open Lens with your current gateway session. On the Lens address itself, select **Log in with LiteLLM** on the sign-in page. The gateway signs you in, through SSO when you use it, and returns you to Lens with your gateway permissions. [Offer Log in with LiteLLM](./deployment/litellm.md#log-in-with-litellm) covers the one extra setting for the Lens sign-in page.
+
+![The Lens sign-in page shows the Log in with LiteLLM button above the Admin token option.](/img/lens/rbac/log-in-with-litellm.png)
+
+Team members do not enter separate Lens integration credentials for each key. Workspace filters narrow the traces you can already read. Selecting another organization, team, project or key does not grant access.
+
+Lens also runs without a gateway. Standalone Lens has one admin token and no per-team permissions, so connect a gateway when different people need different access.
 
 Org and Project menus need configured entities and permission to list them. Organization management follows the Gateway's Enterprise licensing. Those management permissions do not grant trace access.
 
@@ -37,7 +59,7 @@ A key can belong to a team without a project. A personal key can also have no te
 
 ## Who can read traces
 
-Lens uses the Gateway's existing trace permissions:
+Lens uses the Gateway's existing trace permissions. Nothing in this table is configured in Lens:
 
 | Reader | Visible traces |
 | --- | --- |

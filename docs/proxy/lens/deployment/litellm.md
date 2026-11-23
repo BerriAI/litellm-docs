@@ -11,6 +11,8 @@ import TabItem from '@theme/TabItem';
 
 Traffic you send through the gateway shows up in Lens as traces with cost when your app or agent has the OpenTelemetry (OTel) environment variables set. Follow the [app tracing](../first-trace.md) or [coding-agent setup](../coding-agents.md). Lens also opens from the LiteLLM sidebar with your LiteLLM login.
 
+The users, teams, SSO and permissions you already set up in LiteLLM apply in Lens as soon as the two are connected. You do not set up permissions again. See [what carries over](../rbac.md#gateway-permissions).
+
 You need LiteLLM v1.108.0 or later, a running Lens, and access to the environment settings of both. Gateway admins become Lens admins, so connect only a gateway you trust. {/* keep-version-note: The minimum gateway release is the subject of this note. */}
 
 ## 1. Get the Lens address
@@ -204,6 +206,16 @@ Keep your usual Compose file and project flags. This restarts the selected servi
 Sign in to your LiteLLM dashboard as a gateway administrator and select **Lens** in the sidebar. The connected Lens workspace opens on **Traces**. You should not be asked for the standalone Lens admin token.
 
 If the service is connected but has no traces, select **Home** in Lens and follow [Send your first trace](../first-trace.md) from there. Creating the tracing key here applies the gateway user's access scope. Existing standalone traces are not reassigned to a different user or team when you connect the gateway.
+
+### Offer Log in with LiteLLM on the Lens sign-in page {#log-in-with-litellm}
+
+People who open the Lens address directly can also sign in with their LiteLLM login and get the same gateway permissions. Add the address browsers use for the gateway to the Lens service, then redeploy Lens:
+
+```dotenv
+LENS_GATEWAY_PUBLIC_URL=https://litellm.example.com
+```
+
+On the Lens Helm chart, set it through `extraEnv`. The gateway's `LITELLM_LENS_PUBLIC_URL` must be the address browsers use for Lens, since the gateway sends the browser back there after sign-in. The Lens sign-in page then shows **Log in with LiteLLM**. This needs LiteLLM v1.112.0 or later and Lens 0.4.0 or later. {/* keep-version-note: The first gateway and Lens releases that support signing in to standalone Lens with a LiteLLM login. */}
 
 Make one normal model request through your gateway to check that its existing model connection still works. Lens setup does not require changing the model endpoint or model keys used by your agents.
 

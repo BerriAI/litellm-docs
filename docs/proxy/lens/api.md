@@ -229,6 +229,8 @@ A successful upload confirms ClickHouse accepted it. A 429 or 503 is retryable, 
 
 ## Who can read traces {#access}
 
+These rules come from the gateway. Lens adds no users, roles or grants of its own, as described in [Use the permissions you already have](./rbac.md#gateway-permissions).
+
 Proxy administrators and proxy administrator viewers can read every trace. Every other user, SCIM-provisioned users included, reads the traces owned by their user plus the traces of each team that shares them, as described under [Share a team's traces](#trace-access). SQL queries follow the same rules. A key that belongs to no user, such as a team service account key, cannot read traces and gets a 403.
 
 ### Share a team's traces {#trace-access}
