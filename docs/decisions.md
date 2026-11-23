@@ -51,7 +51,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | vLLM, Microsoft Foundry, OpenRouter spend from `usage.cost` | `v1.104.3` |
 | Databricks serving endpoints, image input on Cloudflare Clef, [audio and video input](#audio-and-video-input) on Cloudflare Clef-omni, TypeSafe images and box questions | `v1.106.0` |
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
-| Nace Drex | <SinceVersion v="1.109.0-dev.1" />. Image input on the Drex models other than `drex-v2.0` <SinceVersion v="1.111.0-rc.1" />. |
+| Nace Drex | <SinceVersion v="1.109.0-dev.1" />. Image input on the Drex models other than `drex-v2.0` <SinceVersion v="1.111.0-rc.1" />; stable `v1.110.2` does not include it. |
 | A deployment's own [`supports_audio_input` and `supports_video_input`](#audio-and-video-on-other-deployments) values, and clip requests going only to the group deployments that take clips | `v1.110.0` |
 | [JSON input](#json-input) on OpenAI | `v1.112.0-rc.1`, and `v1.108.14` on the 1.108.x LTS line |
 | [Another LiteLLM proxy](#send-decision-calls-through-a-litellm-proxy) as a provider, with `litellm_proxy/` models | `v1.112.0-rc.1`, and `v1.108.15` on the 1.108.x LTS line |

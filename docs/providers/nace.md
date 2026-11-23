@@ -13,7 +13,7 @@
 | Image input | Every Drex model except `drex-v2.0`, up to 8 PNG, JPEG or WebP images per request |
 | Price in LiteLLM | $0.03 per million input tokens for every Nace model from v1.111.0-rc.1, output tokens are not billed |
 
-The provider first ships in [v1.109.0-dev.1](https://github.com/BerriAI/litellm/releases/tag/v1.109.0-dev.1) through [PR #46523](https://github.com/BerriAI/litellm/pull/46523). Image input, the `drex-max` and `drex-max-v1.1` cost map entries and the $0.03 price for every Nace model first ship <SinceVersion v="1.111.0-rc.1" /> through [PR #48426](https://github.com/BerriAI/litellm/pull/48426). Nace documents the models, prices and limits in the [Drex Max guide](https://console.nace.ai/docs/drex/guides/drex-max) and the [models reference](https://console.nace.ai/docs/drex/reference/models).
+The provider first ships in [v1.109.0-dev.1](https://github.com/BerriAI/litellm/releases/tag/v1.109.0-dev.1) through [PR #46523](https://github.com/BerriAI/litellm/pull/46523). Image input, the `drex-max` and `drex-max-v1.1` cost map entries and the $0.03 price for every Nace model first ship in v1.111.0-dev.2 through [PR #48426](https://github.com/BerriAI/litellm/pull/48426) and are included <SinceVersion v="1.111.0-rc.1" />. Stable `v1.110.2` does not include them. Nace documents the models, prices and limits in the [Drex Max guide](https://console.nace.ai/docs/drex/guides/drex-max) and the [models reference](https://console.nace.ai/docs/drex/reference/models).
 
 ## Environment variables
 
