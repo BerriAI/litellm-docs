@@ -1845,6 +1845,7 @@ const providersSidebar = {
     { type: "category", label: "Google AI Studio", className: "sidebar-provider", link: { type: "doc", id: "providers/gemini" }, items: [
       "providers/gemini/videos",
       "providers/gemini/music",
+      "providers/gemini/multimodal_file_inspection",
       "providers/gemini_file_search",
       "providers/google_ai_studio/files",
       "providers/google_ai_studio/image_gen",
