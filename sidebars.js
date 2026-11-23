@@ -226,6 +226,7 @@ const sidebars = {
             "observability/focus",
             "observability/greenscale_integration",
             "observability/lago",
+            "observability/luca_integration",
             "observability/mavvrik",
             "observability/openmeter",
             "observability/pointfive",
