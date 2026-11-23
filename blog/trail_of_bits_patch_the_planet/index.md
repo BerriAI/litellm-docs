@@ -22,13 +22,11 @@ Fixes will begin shipping in the coming days. Most will ship in public releases 
 
 Over the course of this year, we have significantly increased our investment in LiteLLM's security posture. We established dedicated security leadership, and are continuing to build out our security team. We have put a lot of focus on areas surrounding the codebase: the release pipeline, identity and access, internal policies and procedures, and monitoring and detection. We've partnered with HackerOne for a managed vulnerability disclosure program. We built out a private registry to enable embargoed releases for high-risk vulnerabilities. We now have LTS releases of LiteLLM to decouple resolving vulnerabilities from pulling in new features.
 
-We are, of course, also investing in the codebase itself.
+Our increased security investment also extends to the codebase itself, which is where Patch the Planet comes in.
 
-Trail of Bits is one of the most highly respected security research firms today. In conjunction with OpenAI, they run an initiative called Patch the Planet, which combines frontier-model AI-driven vulnerability discovery with experienced security researchers who reproduce, validate, prioritize, and propose fixes for the findings.
+Trail of Bits is one of the most highly respected security research firms today. In conjunction with OpenAI, they run an initiative called Patch the Planet, which combines frontier-model AI-driven vulnerability discovery with experienced security researchers who reproduce, validate, prioritize, and propose fixes for the findings. LiteLLM had the privilege of being selected for this initiative, joining prominent open-source projects like SQLite, Python, Go, WordPress, curl, rsync, and others. Our experience working with Trail of Bits was immensely positive, and I would strongly encourage maintainers of open source projects to apply.
 
-LiteLLM had the privilege of being selected for this initiative, joining prominent open-source projects like SQLite, Python, Go, WordPress, curl, rsync, and others. Our experience working with Trail of Bits was immensely positive. I would strongly encourage maintainers of open source projects to apply.
-
-Getting a patch is different from shipping it. LiteLLM is used in many different ways by our customers, and an external reviewer can't anticipate every use case. We still need to test each change carefully for regressions and adapt the patches where necessary.
+Getting a patch is different from shipping it. LiteLLM is used in many different ways by our customers, and an external reviewer can't anticipate every use case. With proposed fixes in hand, we still need to test each change carefully for regressions and adapt the patches where necessary.
 
 
 ## Contextualizing advisory counts
