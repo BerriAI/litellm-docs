@@ -52,7 +52,7 @@ cosign verify \
   ghcr.io/berriai/litellm:v1.108.9
 ```
 
-For releases published before October 21, 2026, use the previous key at `https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub` instead.
+For releases published before October 21, 2026, use the previous key at `https://raw.githubusercontent.com/BerriAI/litellm/0112e53046018d726492c814b3644b7d376029d0/cosign.pub` instead. The [image signing discussion](https://github.com/BerriAI/litellm/discussions/48242) has the full list of releases signed with each key.
 
 ### Expected output
 
