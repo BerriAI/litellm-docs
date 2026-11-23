@@ -393,7 +393,7 @@ Any user with role=`proxy_admin` can create a new organization
 
 **Usage**
 
-[**API Reference for /organization/new**](https://docs.litellm.ai/api-reference/#/organization%20management/new_organization_organization_new_post)
+[**API Reference for /organization/new**](https://docs.litellm.ai/api-reference/#tag/organization~20management/new_organization_organization_new_post)
 
 ```shell
 curl --location 'http://0.0.0.0:4000/organization/new' \
