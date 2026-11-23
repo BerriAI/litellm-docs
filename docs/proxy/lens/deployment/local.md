@@ -18,9 +18,9 @@ It finishes in under a minute and prints the address to open and your setup toke
 credentials-1  | Open http://localhost:4318/ui/ and paste this setup token: <your token>
 ```
 
-Open [http://localhost:4318/ui/](http://localhost:4318/ui/), open **Legacy admin token**, paste the token into the **Admin token** field, and select **Sign in**. To look around without a token, select **Explore demo data** on the same page.
+Open [http://localhost:4318/ui/](http://localhost:4318/ui/), open **Admin token**, paste the token into the field, and select **Sign in**. To look around without a token, select **Explore demo data** on the same page.
 
-![Lens sign-in page with the Legacy admin token section open and its Admin token field.](/img/lens/quickstart-signin.webp)
+![Lens sign-in page with the Admin token section open.](/img/lens/quickstart-signin.webp)
 
 You need Docker with Docker Compose 2.24 or newer, and Docker must be running. You do not need Git, LiteLLM, Kubernetes, PostgreSQL, or a model key. The command downloads one [Compose file](https://github.com/BerriAI/lens/blob/main/deploy/lens/compose.yaml) and starts Lens and ClickHouse from published images. Lens generates its credentials on the first start and saves them in `.env` beside that file, where the token is `LENS_ADMIN_TOKEN`.
 

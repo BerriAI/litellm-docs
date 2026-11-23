@@ -72,7 +72,7 @@ If you started Lens with the [quickstart](./local.md), add the two variables to 
 docker compose up -d --wait
 ```
 
-If you run the [release bundle](./server.md), add them to `deploy/lens/.env` instead. From the `lens-0.3.0` directory, apply them:
+If you run the [release bundle](./server.md), add them to `deploy/lens/.env` instead. From the `lens-0.4.0` directory, apply them:
 
 ```sh
 docker compose -f deploy/lens/compose.yaml up -d --wait

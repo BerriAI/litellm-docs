@@ -29,11 +29,11 @@ Open Lens through the place you intend to use it:
 | **Through the LiteLLM gateway** | Your coding agent's model calls already go through a LiteLLM gateway connected to Lens. The agent sends its telemetry to that gateway. | The LiteLLM key it already uses. No Lens tracing key is needed. |
 | **Standalone Lens** | Your coding agent does not use LiteLLM. It sends its telemetry straight to Lens. | A dedicated Lens tracing key. |
 
-![Lens Home shows the two connection paths, with Standalone Lens selected, the Claude Code, Codex, and OpenCode choices, and the Copy instructions with new key button.](/img/lens/home-connect-agent.png)
+![Lens Home shows the two connection paths, with Standalone Lens selected, the coding agent choices, and the Copy instructions with new key button.](/img/lens/home-connect-agent.png)
 
 ## 2. Copy the instructions into your coding agent {#copy-the-instructions}
 
-Choose **Claude Code**, **Codex**, or **OpenCode**, then select the copy button and paste the instructions into that coding agent. The instructions turn on the agent's own telemetry on your machine, keep its model provider and credentials, and run one real task. To read them first, expand **View full instructions**. The settings they apply are the ones in [Coding agent sessions](./coding-agents.md).
+Choose your coding agent, such as **Claude Code** or **Codex**, then select the copy button and paste the instructions into that coding agent. The instructions install the Lens plugin for that agent on your machine, keep its model provider and credentials, and run one real task. To read them first, expand **View full instructions**. The plugin setup they apply is the one in [Coding agent sessions](./coding-agents.md).
 
 On the gateway path the button reads **Copy setup instructions**. The instructions carry no key: the agent finds the gateway address and the LiteLLM key it already uses.
 
@@ -41,17 +41,17 @@ On the standalone path the button reads **Copy instructions with new key**. Lens
 
 The instructions name the address of this Lens or gateway, such as `http://localhost:4318` for the local quickstart. An agent in another container or on another machine needs an address it can reach, not its own `localhost`.
 
-These settings send your typed prompts, the agent's replies, the files it reads, and its tool arguments and output to Lens. Use them only with a Lens deployment where you intend to keep that content.
+The plugin sends your typed prompts, the agent's replies, the files it reads, and its tool arguments and output to Lens. Use it only with a Lens deployment where you intend to keep that content.
 
 ## 3. Open the trace {#view-your-first-trace}
 
-When the task finishes, restart any coding agent sessions you had open so they pick up the settings. On the standalone path, **See your trace** on Lens Home shows **Waiting for your agent's trace**, then **Trace received** with **Open trace**. On the gateway path, select **View agents** and open the run.
+When the task finishes, restart any coding agent sessions you had open so they load the plugin. On the standalone path, **See your trace** on Lens Home shows **Waiting for your agent's trace**, then **Trace received** with **Open trace**. On the gateway path, select **View agents** and open the run.
 
 You should see the run under the agent's name, such as **claude-code**, with your prompt, the model calls, and the tool steps. **Demo data** shows samples; turn it off when checking your own trace. If nothing arrives, see [If the trace does not appear](#troubleshooting).
 
 ## Set up manually {#set-up-manually}
 
-Use this path to trace your own application. The Python example needs Python {{python_version}} and a model key. It makes one model call, which can incur a provider charge. For an agent built on a framework, use the [framework guide](#connect-your-existing-agent). To record Claude Code, Codex, or OpenCode sessions themselves, see [Coding agent sessions](./coding-agents.md).
+Use this path to trace your own application. The Python example needs Python {{python_version}} and a model key. It makes one model call, which can incur a provider charge. For an agent built on a framework, use the [framework guide](#connect-your-existing-agent). To record Claude Code or Codex sessions themselves, see [Coding agent sessions](./coding-agents.md).
 
 ### Get a tracing key and endpoint {#connect-your-agent}
 

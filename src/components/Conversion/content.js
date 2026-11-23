@@ -47,12 +47,14 @@ const PROMPTS = {
   },
   'lens-claude-code': {
     title: 'Set up Claude Code tracing in Lens',
-    text: `Set up this machine to send my Claude Code sessions straight to LiteLLM Lens with a Lens tracing key. First read ${DOCS}/docs/proxy/lens/coding-agents.md.
-1. Ask me for my Lens address, such as http://localhost:4318, and keep any /lens-ingest prefix. Read my dedicated Lens tracing key from an existing environment variable such as LITELLM_TRACING_KEY or a hidden terminal prompt. Never ask me to paste the key into chat, print it, or commit it. If I have no key, tell me to open Home in Lens, choose Standalone Lens, and create one.
-2. Explain that these settings send my typed prompts, Claude Code's replies, the files it reads, tool arguments, and tool output to my Lens service.
-3. Add every variable from the guide's Directly to Lens block as a string entry in the env object in my user-level ~/.claude/settings.json, preserving other settings. Set OTEL_EXPORTER_OTLP_ENDPOINT to the Lens address with no /v1/traces suffix and write the key's actual value into OTEL_EXPORTER_OTLP_HEADERS, because settings.json does not expand variables. Do not install a plugin or helper, add a LiteLLM gateway, or change my Claude subscription/API login or model endpoint.
-4. Run claude -p "Reply with exactly: Lens telemetry check." and report any telemetry export error it prints. Then tell me to restart my open Claude Code sessions and to confirm a claude_code.interaction trace from the agent claude-code appears under Traces in Lens with the prompt, reply, and model call. Report missing content or a rejected upload instead of claiming setup succeeded.
-5. Show me the configuration changes with credentials hidden and explain how to pause telemetry.`,
+    text: `Set up this machine to record my Claude Code sessions in LiteLLM Lens with the LiteLLM Lens plugin for Claude Code. First read ${DOCS}/docs/proxy/lens/coding-agents.md.
+1. Check that python3 is on the PATH and that this machine runs macOS or Linux. If either is missing, stop and tell me instead of configuring something else.
+2. Find out whether my Claude Code model calls go through a LiteLLM gateway: look at ANTHROPIC_BASE_URL and ANTHROPIC_AUTH_TOKEN in the shell and in the env object of ~/.claude/settings.json. If they do, use that gateway address and that same key. Otherwise ask me for my Lens address, such as http://localhost:4318, keep any /lens-ingest prefix, and read my dedicated Lens tracing key from LITELLM_TRACING_KEY. Never ask me to paste a key into chat, print it, or commit it. If I have no tracing key, tell me to open Home in Lens, choose Standalone Lens, and create one.
+3. Explain that the plugin sends my typed prompts, Claude Code's replies, tool arguments, and tool output to my Lens service.
+4. Run claude plugin marketplace add BerriAI/litellm-lens-plugins, then claude plugin install litellm-lens@berriai-lens --config lens_url=<address> --config lens_key="$<variable holding the key>". If litellm-lens@berriai-lens is already installed, run claude plugin uninstall litellm-lens@berriai-lens first, because installing again does not change its saved address and key. Do not change my Claude subscription/API login or model endpoint.
+5. The plugin sends nothing while CLAUDE_CODE_ENABLE_TELEMETRY and CLAUDE_CODE_ENHANCED_TELEMETRY_BETA are both set. If both are set in the shell or in ~/.claude/settings.json, tell me and ask whether to remove them; change nothing there without my answer.
+6. Run claude -p "Reply with exactly: Lens plugin check." Then tell me to restart my open Claude Code sessions and to confirm a trace from the agent claude-code appears under Traces in Lens with the prompt, reply, and model call. If none arrives, read last_error.txt in ~/.claude/plugins/data/litellm-lens-berriai-lens and report it instead of claiming setup succeeded.
+7. Show me what changed with credentials hidden and explain that claude plugin uninstall litellm-lens@berriai-lens stops recording.`,
   },
   'lens-codex': {
     title: 'Set up Codex tracing in Lens',
