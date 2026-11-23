@@ -2001,6 +2001,7 @@ const providersSidebar = {
     "providers/moonshot",
     "providers/morph",
     "providers/nadir",
+    "providers/nagaai",
     "providers/nano-gpt",
     "providers/nebius",
     "providers/neosantara",
