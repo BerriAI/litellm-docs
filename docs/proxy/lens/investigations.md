@@ -56,9 +56,9 @@ Use **Run now** to start another investigation with the saved settings. Schedule
 
 Open **Findings** when the investigation finishes. **Needs attention** shows problems, ordered by priority. **Patterns** shows other observations, including successful recovery and useful behavior.
 
-Open a finding to read what happened and the suggested next step. **Examples** lists the supporting runs with their quotes. Click **View span** on a quote to see the cited step in its trace.
+Open a finding to read its **Summary** and **Suggested fix**. **Frequency** shows the share of sampled traces it affects. **Examples** lists the supporting runs with their quotes. Click **View span** on a quote to see the cited step in its trace.
 
-![An example finding with a suggested next step and supporting evidence.](/img/lens/investigation-findings.png)
+![An example finding with its summary, suggested fix, frequency and supporting examples.](/img/lens/investigation-findings.png)
 
 Use **History** to return to a previous run and its findings, settings, progress, total duration, and cost. Duration includes any wait for a worker. **Agent traces** shows the activity selected for that run; this tab is called **LLM requests** or **Traces and requests** when those activity types are selected.
 
@@ -66,7 +66,7 @@ Findings describe the reviewed sample. **Examples** lists cited supporting runs;
 
 ### Give feedback
 
-If Lens flags expected behavior, explain why in **Feedback** and click **This is expected**. Lens uses that feedback in later investigations for the same lens.
+If Lens flags expected behavior, explain why under **What should Lens remember?** and click **This is expected**. Lens uses that feedback in later investigations for the same lens.
 
 After you fix an issue, click **Mark resolved**. Lens can reopen it if the same issue appears in new runs.
 
