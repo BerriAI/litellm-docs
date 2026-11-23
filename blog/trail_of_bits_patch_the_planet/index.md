@@ -20,9 +20,9 @@ Fixes will begin shipping in the coming days. Most will ship in public releases 
 
 ## What's happening
 
-Over the course of this year, we have significantly increased our investment in LiteLLM's security posture. We established dedicated security leadership, and are continuing to build out our security team. Much of this year's work has focused on areas surrounding the codebase: the release pipeline, identity and access, internal policies and procedures, and monitoring and detection. We've partnered with HackerOne for a managed vulnerability disclosure program. We built out a private registry to enable embargoed releases for high-risk vulnerabilities. We now have LTS releases of LiteLLM to decouple resolving vulnerabilities from pulling in new features.
+Over the course of this year, we have significantly increased our investment in LiteLLM's security posture. We established dedicated security leadership, and are continuing to build out our security team. We have put a lot of focus on areas surrounding the codebase: the release pipeline, identity and access, internal policies and procedures, and monitoring and detection. We've partnered with HackerOne for a managed vulnerability disclosure program. We built out a private registry to enable embargoed releases for high-risk vulnerabilities. We now have LTS releases of LiteLLM to decouple resolving vulnerabilities from pulling in new features.
 
-We are also investing in the codebase itself, and this is where Trail of Bits came in.
+We are, of course, also investing in the codebase itself.
 
 Trail of Bits is one of the most highly respected security research firms today. In conjunction with OpenAI, they run an initiative called Patch the Planet, which combines frontier-model AI-driven vulnerability discovery with experienced security researchers who reproduce, validate, prioritize, and propose fixes for the findings.
 
