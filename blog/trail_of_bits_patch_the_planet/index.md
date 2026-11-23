@@ -13,7 +13,7 @@ We're thrilled to share that LiteLLM was selected for [Patch the Planet](https:/
 
 Trail of Bits worked within our codebase, identifying and triaging vulnerabilities, and proposing remediation patches. Their work covers a combination of issues they discovered as well as reports from independent security researchers.
 
-Fixes are now beginning to ship, and we expect to get through them within the next week or two. Most will ship in public releases accompanied by a security advisory. The most severe vulnerabilities will go to our private registry first, under embargo.
+Fixes will begin shipping in the coming days, and we expect to get through them within the next week or two. Most will ship in public releases accompanied by a security advisory. The most severe vulnerabilities will go to our private registry first, under embargo.
 
 
 {/* truncate */}
