@@ -71,6 +71,8 @@ A run prunes these tables, each on the cutoff implied by its retention setting:
 | `LiteLLM_SpendLogToolIndex` | `start_time` | `maximum_spend_logs_retention_period` |
 | `LiteLLM_SpendLogGuardrailIndex` | `start_time` | `maximum_spend_logs_retention_period` |
 | `LiteLLM_AutoRouterSession` | `last_turn_at` | `maximum_autorouter_session_retention_period` |
+| `LiteLLM_AutoRouterUserSession` | `last_turn_at` | `maximum_autorouter_session_retention_period` |
+| `LiteLLM_AutoRouterDailySpend` | `date` | `maximum_autorouter_session_retention_period` |
 | `LiteLLM_HealthCheckTable` | `checked_at` | `maximum_health_check_retention_period` |
 | `LiteLLM_DailyTagSpend` | `date` | `maximum_daily_tag_spend_retention_period` |
 
