@@ -31,6 +31,8 @@ curl -fsSLO https://raw.githubusercontent.com/BerriAI/lens/main/deploy/lens/comp
 
 Open [http://localhost:4318/ui/](http://localhost:4318/ui/) and paste the setup token that the command prints. You do not need a LiteLLM gateway, Kubernetes, or a model provider key. The [standalone quickstart](./deployment/local.md) covers sign-in and the first trace.
 
+Already run a LiteLLM gateway? [Add Lens to it](./deployment/litellm.md). People sign in with their LiteLLM login, and the users, teams and permissions you already set up in the gateway [carry over to Lens](./rbac.md#gateway-permissions), so there is nothing to set up twice.
+
 If your team already runs Lens, [send your first trace](./first-trace.md). Choose your framework, give the agent a name, and run the example.
 
 For a team, deploy Lens on [a server](./deployment/server.md) or [Kubernetes](./deployment/kubernetes.md), or [add it to your LiteLLM dashboard](./deployment/litellm.md). If Lens already runs, [connect that deployment to your gateway](./deployment/litellm.md#1-get-the-lens-address). Each guide ends with a connection check and a first trace.

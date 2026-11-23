@@ -33,6 +33,8 @@ Agents send traces directly to Lens with a tracing key. Investigations send sele
 | Kubernetes | [Install the Helm chart](./deployment/kubernetes.md) |
 | Add to an existing LiteLLM gateway | [Connect Lens to LiteLLM](./deployment/litellm.md) |
 
+With a gateway connected, Lens reuses its users, teams, SSO and trace permissions. See [Access control](./rbac.md#gateway-permissions).
+
 Already set up? [Send your first trace](./first-trace.md).
 
 ## Record coding agent sessions
