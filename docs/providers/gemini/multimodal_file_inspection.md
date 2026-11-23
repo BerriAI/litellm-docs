@@ -9,6 +9,8 @@ import TabItem from '@theme/TabItem';
 
 # Gemini Multimodal File Inspection
 
+<SinceVersion v="1.109.0" />
+
 Gemini Multimodal File Inspection lets you send only part of a file to the model: a page range of a PDF or Office document, a slide range of a presentation, one worksheet or cell range of a workbook, or a time segment of an audio or video file. Gemini also reads Microsoft Office and OpenDocument files natively, and it counts and bills tokens only for the slice you select.
 
 [Official Gemini document processing documentation](https://aistudio.google.com/docs/document-processing)
