@@ -18,15 +18,15 @@ keywords:
 
 Use WebRTC to connect a microphone in a browser or mobile app to a Realtime model. Your app asks the LiteLLM proxy for a short-lived token, and the browser uses that token to start the call. The provider key never reaches the browser, and audio flows between the browser and OpenAI or Azure without passing through the proxy.
 
-For a server that already holds a LiteLLM key, use the [WebSocket route](/docs/realtime) instead. For `gpt-realtime-translate`, use the [translation routes](/docs/realtime_translation#translate-microphone-audio-in-a-browser-or-mobile-app). For `gpt-live-1`, use [GPT-Live](/docs/live_sessions), which the proxy serves over WebSocket only. The [Voice overview](/docs/voice) compares every route.
+For a server that already holds a LiteLLM key, use the [WebSocket route](/docs/realtime) instead. For `gpt-realtime-translate`, use the [translation routes](/docs/realtime_translation#translate-microphone-audio-in-a-browser-or-mobile-app). For `gpt-live-1`, use [GPT-Live](/docs/live_sessions#start-a-session-from-a-browser-over-webrtc). The [Voice overview](/docs/voice) compares every route.
 
-:::warning WebRTC calls are not in spend logs
-LiteLLM checks the virtual key, its budget, and its model access when it issues the token. After the call connects, audio and usage go between the browser and the provider, so LiteLLM writes no spend log for the call and does not add its cost to the key, team, or user. Guardrails do not see the audio. Use the [WebSocket route](/docs/realtime) when a session must count against a budget.
+:::info WebRTC calls are billed
+LiteLLM checks the virtual key, its budget, and its model access when it issues the token and again when the call starts. The proxy then joins the call with its own connection to the provider, reads the usage the provider reports, writes a spend log for the call, and adds the cost to the key, team, and user. See [Billing and limits](#billing-and-limits). Guardrails do not see the audio.
 :::
 
 ## How it works
 
-The proxy handles two HTTP requests and then steps out of the call.
+The proxy handles two HTTP requests. When the call starts it also opens its own WebSocket to the provider for that call, which only listens for usage and never sends anything into the call.
 
 ```
 Browser                  LiteLLM Proxy              OpenAI/Azure
@@ -35,6 +35,7 @@ Browser                  LiteLLM Proxy              OpenAI/Azure
   |<-- encrypted token -------|<-- ek_... ---------------|
   |-- POST calls [SDP+token] ->|-- POST calls ----------->|
   |<-- SDP answer ------------|<-- SDP answer -----------|
+  |                           |== usage, WebSocket =====>|
   |===== audio, browser to provider =====================>|
 ```
 
@@ -117,4 +118,25 @@ If `client_secrets` returns `401` or `403`, the LiteLLM key is invalid, over bud
 
 If the call connects but you hear nothing, check that the page has microphone permission, that `pc.ontrack` attaches the stream to an audio element with `autoplay`, and that your network allows WebRTC traffic to the provider.
 
+If `/v1/realtime/calls` returns `503`, the proxy could not join the call to bill it, so it did not hand out the SDP answer. The usual causes are a key at its rate limit or over its budget, or a network that lets the proxy reach the provider over HTTPS and not over WebSocket.
+
 On Azure, a `404` or a version error from either route usually means the `api_base` or `api_version` in `litellm_params` does not match the resource.
+
+## Billing and limits
+
+The proxy bills a call from the usage events the provider sends on the proxy's own connection. When the call ends, the logs page shows one row for it with its tokens and cost, and the key's spend goes up.
+
+A call uses four requests of the key's rate limit: the token, the call, the proxy's join, and one more join attempt after the call ends, which is how the proxy learns the call is over. It also holds one of the key's parallel request slots while it runs. Raise `rpm_limit` and `max_parallel_requests` values that were sized for one request per call.
+
+`/v1/realtime/calls` waits for the proxy's connection before it answers, for up to 10 seconds. A call the proxy cannot join gets `503` and does not start, so no call runs unbilled.
+
+If the proxy's connection drops while the call still runs, the proxy joins again and bills the rest of the call. A reply that finishes while the connection is down is not billed, and a proxy restart during a call stops billing for the rest of that call. Budgets are checked when the call starts and not during it.
+
+To start WebRTC calls without the proxy's connection, set `meter_webrtc_calls` to `false`. Calls then start as they did before LiteLLM billed them: no spend log, no cost on the key, and no `503`.
+
+```yaml
+general_settings:
+  meter_webrtc_calls: false
+```
+
+The proxy also joins translation calls on `/v1/realtime/translations/calls`. The provider reports no usage for a translation call, so LiteLLM bills the seconds between the moment its connection joins the call and the moment the call ends, at the `input_cost_per_second` of the model.

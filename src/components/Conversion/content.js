@@ -56,7 +56,7 @@ const PROMPTS = {
   },
   'lens-codex': {
     title: 'Set up Codex tracing in Lens',
-    text: `Set up LiteLLM Lens tracing for my local Codex desktop or CLI sessions. First read ${DOCS}/docs/proxy/lens/coding-agents.md and https://github.com/BerriAI/litellm-lens-codex-integration/blob/main/README.md.
+    text: `Set up LiteLLM Lens tracing for my local Codex desktop or CLI sessions. First read ${DOCS}/docs/proxy/lens/coding-agents.md and https://github.com/BerriAI/litellm-lens-plugins/blob/main/codex/README.md.
 1. Check this machine's operating system and Python version against the integration's current prerequisites. If automatic setup is unsupported, explain the limitation rather than inventing installation steps.
 2. Ask me for the full Traces endpoint from Lens > Traces > Set up tracing and an agent name. The installer accepts that endpoint at its Lens ingestion URL prompt and preserves /lens-ingest when present. Use the documented Terminal setup so I can enter my dedicated tracing key at its hidden prompt and confirm recording. Never ask me to paste the key into chat, print it, or commit it.
 3. Install or update the official BerriAI integration using the README's From Terminal instructions. Reuse an existing installation where possible, and preserve my Codex authentication, model configuration, and unrelated hooks. Explain what will be recorded; only newly captured activity should be exported.

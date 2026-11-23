@@ -21,7 +21,7 @@ npm ci
 npm run dev
 ```
 
-The first start builds Lens, which compiles the Rust backend and takes about 22 minutes. It then generates private credentials in `deploy/lens/.env`, starts Lens and ClickHouse, and starts the UI at [http://127.0.0.1:3100/ui/](http://127.0.0.1:3100/ui/). Sign in by pasting the `LENS_ADMIN_TOKEN` value from that file into the **Setup token** field. Read it locally and keep it out of shared logs. UI changes reload automatically, and the development server forwards API requests to the Lens container
+The first start builds Lens, which compiles the Rust backend and takes about 22 minutes. It then generates private credentials in `deploy/lens/.env`, starts Lens and ClickHouse, and starts the UI at [http://127.0.0.1:3100/ui/](http://127.0.0.1:3100/ui/). Sign in by opening **Legacy admin token** and pasting the `LENS_ADMIN_TOKEN` value from that file into the **Admin token** field. Read it locally and keep it out of shared logs. UI changes reload automatically, and the development server forwards API requests to the Lens container
 
 Open **Home** and choose **Set up with your coding agent** or **Set up manually** to create a tracing key. Run your agent with the generated configuration. Home offers **Open trace** when the run arrives; the empty **Traces** page also has **Check for traces**. Provider configuration is only needed when you enable investigations or Signals
 

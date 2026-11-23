@@ -543,6 +543,12 @@
       "chat"
     ]
   },
+  "providers/gnani": {
+    "prefix": "gnani",
+    "capabilities": [
+      "audio"
+    ]
+  },
   "providers/gradient_ai": {
     "prefix": "gradient_ai",
     "capabilities": [

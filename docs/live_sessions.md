@@ -24,7 +24,7 @@ The model names look alike, but each family has its own route.
 
 | Model | What it does | Route on the proxy | Docs |
 | --- | --- | --- | --- |
-| `gpt-live-1` | Full-duplex voice conversation | `WS /v1/live/sessions` | [GPT-Live](/docs/live_sessions) |
+| `gpt-live-1` | Full-duplex voice conversation | `WS /v1/live/sessions`, or [WebRTC](#start-a-session-from-a-browser-over-webrtc) | [GPT-Live](/docs/live_sessions) |
 | `gpt-realtime` and other Realtime models | Voice or text conversation with turns and tools | `WS /v1/realtime`, or [WebRTC](/docs/proxy/realtime_webrtc) | [Realtime](/docs/realtime) |
 | `gpt-live-transcribe` | Live speech to text | `WS /v1/realtime?intent=transcription` | [Live transcription](/docs/realtime#live-transcription-with-gpt-live-transcribe) |
 | `gpt-realtime-translate` | Live speech translation | `WS /v1/realtime/translations` | [Realtime translation](/docs/realtime_translation) |
@@ -89,6 +89,29 @@ asyncio.run(main())
 
 Wait for `session.started` before you send audio. Send audio as base64 chunks in `session.input_audio.append` events, and read the model's audio from `session.output_audio.delta` events. See OpenAI's [GPT-Live guide](https://developers.openai.com/api/docs/guides/live) and [WebSocket guide](https://developers.openai.com/api/docs/guides/voice-websockets?api=live) for the full list of events.
 
+## Start a session from a browser over WebRTC
+
+Use WebRTC when the audio comes from a microphone in a browser or a mobile app. Your server sends the browser's SDP offer to the proxy with its LiteLLM key, and audio then flows between the browser and OpenAI or Azure without passing through the proxy.
+
+```bash
+curl -X POST https://litellm-domain/v1/live/sessions \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"session": {"model": "gpt-live-1"}, "transport": {"type": "webrtc", "sdp": "<SDP offer from the browser>"}}'
+```
+
+The proxy returns `201` with the SDP answer in `transport.sdp` and a `session.id`. Pass the answer to `setRemoteDescription` in the browser. A `transport.type` other than `webrtc` gets `400`.
+
+The `session.id` is a token that only the proxy can read. Your server can join the session with it, to receive every session event and to send events such as `session.close`:
+
+```
+wss://litellm-domain/v1/live/sessions/{session.id}/attach
+```
+
+Connect with the LiteLLM key that created the session. Another key gets the socket closed with code 1008 and `Unknown session`.
+
+LiteLLM bills a WebRTC session the same way as a WebSocket one. The proxy joins each session with its own connection to read the seconds the provider reports, and a session it cannot join gets `503` and does not start. The [WebRTC guide](/docs/proxy/realtime_webrtc#billing-and-limits) covers rate limits, reconnects, and the `meter_webrtc_calls` setting, which apply here too.
+
 ## Auth and errors
 
 LiteLLM checks the virtual key when the WebSocket opens. It reads the key from the `Authorization: Bearer <key>` header, then from the `api-key` header, then from an `openai-insecure-api-key.<key>` WebSocket subprotocol for clients that cannot set headers. A key sent from a browser is readable by anyone who uses the page, so give that key only the models and budget the page needs. A missing or invalid key, or a key over its total budget (`max_budget`), gets HTTP 403 and the WebSocket never opens.
@@ -117,4 +140,4 @@ The whole cost goes to the session's spend log and to the key's spend, so key bu
 
 Guardrails do not run on Live sessions. When a `pre_call`, `post_call`, or `realtime_input_transcription` guardrail applies to the session, LiteLLM sends an `error` event that says `Guardrails are not supported on OpenAI Live sessions` and closes the session with code 1011. That includes a guardrail attached to the key and one with `default_on: true`, so a `default_on` guardrail in one of these modes closes every Live session on the proxy. Guardrails in other modes, such as `during_call`, and the `guardrails` query parameter do not close the session, and the session runs without them.
 
-LiteLLM checks and bills Live sessions on the WebSocket route only. WebRTC session creation (`POST /v1/live/sessions`) and the call control routes under `/v1/live/sessions/{session_id}/`, such as `hangup` and `accept`, have no Live route on the proxy. The [OpenAI pass-through](/docs/pass_through/openai_passthrough) on `/openai/v1/live/sessions` forwards them to OpenAI as plain pass-through calls, and LiteLLM does not bill them as Live sessions, so their use never counts toward key spend or budgets. A proxy admin can keep a key on the Live WebSocket route by setting the key's `allowed_routes` to `["/v1/live/sessions"]`.
+LiteLLM checks and bills Live sessions on the WebSocket route and on WebRTC sessions created with `POST /v1/live/sessions`. The call control routes under `/v1/live/sessions/{session_id}/`, such as `hangup` and `accept`, have no Live route on the proxy. The [OpenAI pass-through](/docs/pass_through/openai_passthrough) on `/openai/v1/live/sessions` forwards requests to OpenAI as plain pass-through calls, and LiteLLM does not bill them as Live sessions, so their use never counts toward key spend or budgets. A proxy admin can keep a key on the Live routes by setting the key's `allowed_routes` to `["/v1/live/sessions"]`.

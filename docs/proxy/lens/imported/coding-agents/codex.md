@@ -22,7 +22,7 @@ You need Codex, a running [Lens installation](https://github.com/BerriAI/lens/bl
 
 ## Setup
 
-Follow the [Lens coding agent setup guide](/docs/proxy/lens/coding-agents) for the tracing endpoint and key instructions. See the [LiteLLM Lens Codex integration](https://github.com/BerriAI/litellm-lens-codex-integration) for the integration’s configuration and supported telemetry.
+Follow the [Lens coding agent setup guide](/docs/proxy/lens/coding-agents) for the tracing endpoint and key instructions. See the [LiteLLM Lens plugin for Codex](https://github.com/BerriAI/litellm-lens-plugins/tree/main/codex) for the integration’s configuration and supported telemetry.
 
 ## Verify the trace
 
