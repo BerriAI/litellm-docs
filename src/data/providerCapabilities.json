@@ -594,6 +594,12 @@
       "rerank"
     ]
   },
+  "providers/kunavo": {
+    "prefix": "kunavo",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/lambda_ai": {
     "prefix": "lambda_ai",
     "capabilities": [
