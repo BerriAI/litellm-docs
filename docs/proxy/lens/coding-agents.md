@@ -176,9 +176,9 @@ opencode run "Run the date command, then tell me what it printed."
 
 `opencode service stop` restarts OpenCode's background service so it loads the two variables; add them to your shell profile to keep them. With standalone Lens, set the address to your Lens address, such as `http://localhost:4318`, and the key to a Lens tracing key. Leave `experimental.openTelemetry` and the `OTEL_EXPORTER_OTLP_*` variables unset on OpenCode 2, since the plugin replaces them.
 
-Open **Lens > Traces** in LiteLLM or **Traces** in standalone Lens and filter by **opencode**. Each prompt is one trace: an `invoke_agent opencode` step with your prompt and the final reply, a `chat <model>` step for each model call with the messages sent, the reply and tokens, and an `execute_tool <name>` step for each tool call with its input and output. Through the gateway, each model call shows the cost the gateway billed and the trace belongs to the key, user and team of your LiteLLM key. With standalone Lens, model calls show tokens and no cost.
+Open **Lens > Traces** in LiteLLM or **Traces** in standalone Lens and filter by **opencode**. A session is one trace, and each prompt you send is a turn in it with your prompt and the final reply. Inside a turn, each model call is a `chat <model>` step with the messages added since the previous reply, the reply and tokens, and each tool call is an `execute_tool <name>` step with its input and output. A subagent's steps sit under the tool call that started it. Through the gateway, each model call shows the cost the gateway billed and the trace belongs to the key, user and team of your LiteLLM key. With standalone Lens, model calls show tokens and no cost.
 
-Capture through the gateway was checked with OpenCode **2.3.2** and plugin **0.1.0**. To stop recording, unset the two variables or run `opencode plugin remove github:BerriAI/litellm-lens-plugins`.
+Capture through the gateway was checked with OpenCode **2.3.2** and plugin **0.1.2**. To stop recording, unset the two variables or run `opencode plugin remove github:BerriAI/litellm-lens-plugins`.
 
 ## Coverage and troubleshooting
 
