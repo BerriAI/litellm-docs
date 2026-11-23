@@ -76,7 +76,7 @@ A run prunes these tables, each on the cutoff implied by its retention setting:
 
 `LiteLLM_SpendLogToolIndex` and `LiteLLM_SpendLogGuardrailIndex` rows are derived from spend logs, so they expire on the same cutoff as the log rows they point at. Auto-router session rollups carry their own retention setting and their own cutoff. Setting only `maximum_autorouter_session_retention_period` is enough to register the job, in which case spend logs are left untouched and only session rollups are pruned
 
-`LiteLLM_SpendLogGuardrailIndex` holds one row per request for each guardrail that ran on it, whatever the outcome, and backs the Logs tab of the Guardrails Monitor. A guardrail that is on by default therefore adds one row per request, so on a high-volume deployment this table grows at the same rate as the spend logs and needs the same sizing of the batch settings described under [Sizing the knobs](#sizing-the-knobs). Its rows are pruned from v1.112.0 onward; earlier versions never delete from it. Once a row is pruned the request no longer appears in the Logs tab, while the Guardrails Monitor overview keeps its counts, because those come from the daily totals in `LiteLLM_DailyGuardrailMetrics`, which this job does not touch
+`LiteLLM_SpendLogGuardrailIndex` holds one row per request for each guardrail that ran on it and backs the Logs tab of the Guardrails Monitor. Its rows are pruned from v1.112.0 onward. Pruned requests leave the Logs tab, and the overview counts are unaffected
 
 `LiteLLM_DailyTagSpend` holds one row per tag, model and calendar day and backs the Tag Usage page. Its `date` column is a `YYYY-MM-DD` string, so the cutoff is a day: rows whose day is strictly older than the day the retention period reaches back to are deleted, and the horizon day itself is kept. With `maximum_daily_tag_spend_retention_period` unset the table is never touched, which is the pre-existing behavior. Tag budgets are enforced from lifetime counters and are unaffected by this pruning, but the Tag Usage chart can no longer show days that were deleted
 
@@ -243,7 +243,7 @@ The fix is native Postgres range partitioning on `startTime`. With a partitioned
 
 This is opt-in. The default schema is not partitioned, so existing deployments are unaffected until you convert the table.
 
-Only `LiteLLM_SpendLogs` can be partitioned. `LiteLLM_SpendLogToolIndex` and `LiteLLM_SpendLogGuardrailIndex` stay ordinary tables, so their expired rows are always removed with batched deletes, bounded by the batch settings above, and the disk those rows used is reused for new rows but not returned to the operating system.
+Only `LiteLLM_SpendLogs` can be partitioned. The tool index and guardrail index tables are always pruned with batched deletes.
 
 Partition maintenance interacts with the run budget in one way worth knowing. The job only starts partition maintenance while the run still has budget left, and a run that is already over skips it until the next tick. Once a drop is running the budget cannot cut it short, because dropping a partition is DDL that holds an `ACCESS EXCLUSIVE` lock and has to run to completion. Everything else the job does is interruptible between statements, so this is the single piece of work a budget cannot bound mid-flight
 
