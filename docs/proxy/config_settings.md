@@ -1506,6 +1506,7 @@ Size for the total number of waiting requests across deployments and workers. Te
 | NO_MAX_TOKENS_TPM_RESERVATION_FRACTION | <SinceVersion v="1.109.0" /> Share of a TPM limit reserved for a request that sets no output cap, as a fraction from 0.01 to 1. On a deployment with `otpm`, a request without `max_tokens` reserves the smaller of the model's max output and this share of `otpm`. On the proxy, it also sets the `max_tokens` written into a request without one when its key, team, or project has a TPM limit under 4096. A value outside the range logs a warning and uses the default. Default is 0.25. [Docs](./io_token_rate_limits.md#pre-call-admission)
 | NO_OPENAPI | Flag to disable the /openapi.json endpoint
 | NO_PROXY | List of addresses to bypass proxy
+| NO_REDOC | Set to `true` to disable ReDoc unless `REDOC_URL` is set to a nonempty value
 | NO_SWAGGER | <SinceVersion v="1.112.0" /> Set to `true` to disable Swagger UI unless `SWAGGER_URL` is set.
 | NON_LLM_CONNECTION_TIMEOUT | Timeout in seconds for non-LLM service connections. Default is 15
 | OAUTH_TOKEN_INFO_ENDPOINT | Endpoint for OAuth token info retrieval
@@ -1613,6 +1614,7 @@ Size for the total number of waiting requests across deployments and workers. Te
 | REDIS_TIMEOUT_LOG_INTERVAL | Seconds between Redis timeout log lines. The first timeout of a streak logs at the normal level, later ones log at DEBUG, and once the interval passes one line reports how many were suppressed. Non-timeout Redis errors are not throttled. Default is 5.0
 | REDIS_GCP_SERVICE_ACCOUNT | GCP service account for IAM authentication with Redis. Format: "projects/-/serviceAccounts/name@project.iam.gserviceaccount.com"
 | REDIS_GCP_SSL_CA_CERTS | Path to SSL CA certificate file for secure GCP Memorystore Redis connections
+| REDOC_URL | Custom path for ReDoc. Defaults to `/redoc` unless `NO_REDOC` is true. A nonempty value overrides `NO_REDOC`
 | REPEATED_STREAMING_CHUNK_LIMIT | Limit for repeated streaming chunks to detect looping. Default is 100
 | REALTIME_CREDENTIAL_RESOLUTION_TIMEOUT_SECONDS | Timeout in seconds for fetching the Vertex AI access token before a realtime session starts. Default is 20.0
 | REALTIME_WEBSOCKET_MAX_MESSAGE_SIZE_BYTES | Maximum size in bytes for WebSocket messages in realtime connections. Default is None.
