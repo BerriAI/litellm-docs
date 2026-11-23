@@ -727,6 +727,13 @@
       "embeddings"
     ]
   },
+  "providers/phase_router": {
+    "prefix": "phase_router",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
   "providers/predibase": {
     "prefix": "predibase",
     "capabilities": [
