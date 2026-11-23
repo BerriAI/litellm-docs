@@ -6,6 +6,7 @@ description: Deploy LiteLLM for corporate users through private cloud frontends 
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import { CloudArchitecture } from '@site/src/components/CloudArchitecture';
 
 # Cloud Deployments
 
@@ -22,15 +23,43 @@ Apply each cloud guide's private-ingress changes before deploying the AWS or GCP
 
 Run LiteLLM on AKS with a private Application Gateway frontend, managed PostgreSQL and Redis, and private endpoints. The [Azure architecture](./azure.md) shows separate gateway, backend, and UI services.
 
+<CloudArchitecture cloud="azure-aks-micro" />
+
 </TabItem>
 <TabItem value="aws" label="AWS">
 
 Use Terraform on ECS Fargate or Helm on EKS. The [AWS architectures](./aws.md) show private ALB ingress, private workloads, NAT egress, and optional Bedrock interface endpoints across two availability zones.
 
+<Tabs>
+<TabItem value="ecs" label="Terraform on ECS Fargate" default>
+
+<CloudArchitecture cloud="aws-ecs" />
+
+</TabItem>
+<TabItem value="eks" label="Helm on EKS">
+
+<CloudArchitecture cloud="aws-eks-micro" />
+
+</TabItem>
+</Tabs>
+
 </TabItem>
 <TabItem value="gcp" label="GCP">
 
 Use Terraform on Cloud Run or Helm on GKE. The [GCP architectures](./gcp.md) show internal load balancers, private network access, private database connections, and NAT egress.
+
+<Tabs>
+<TabItem value="cloud-run" label="Terraform on Cloud Run" default>
+
+<CloudArchitecture cloud="gcp-cloud-run" />
+
+</TabItem>
+<TabItem value="gke" label="Helm on GKE">
+
+<CloudArchitecture cloud="gcp-gke-micro" />
+
+</TabItem>
+</Tabs>
 
 </TabItem>
 </Tabs>
