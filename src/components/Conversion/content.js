@@ -47,12 +47,12 @@ const PROMPTS = {
   },
   'lens-claude-code': {
     title: 'Set up Claude Code tracing in Lens',
-    text: `Set up this machine to send my Claude Code sessions to LiteLLM Lens. First read ${DOCS}/docs/proxy/lens/coding-agents.md and ${DOCS}/docs/proxy/lens/deployment.md.
-1. Ask me for the full Traces endpoint from Lens > Traces > Set up tracing and an agent name, defaulting to claude-code. Preserve any /lens-ingest prefix and include /v1/traces once. Derive the logs endpoint by replacing the final /v1/traces with /v1/logs. Read my dedicated tracing key from an existing environment variable or a hidden terminal prompt. Never ask me to paste the key into chat, print it, or commit it.
-2. Check that tracing is enabled and the Lens service accepts Claude conversation logs at /v1/logs. If it needs an upgrade, explain that before changing my local settings.
-3. Explain which session content will be sent to my Lens service. Configure Claude's built-in OTLP trace and log exporters and the content flags in the guide. Merge them into the env object in my user-level ~/.claude/settings.json, preserving other settings and resource attributes. Keep credentials in private user configuration. Use lens.session.capture=true and my chosen gen_ai.agent.name. Do not install a plugin or helper, change my Claude subscription/API login or model endpoint, or enable optional raw API-body export.
-4. Tell me to restart Claude Code, then complete a small prompt that uses a tool. Verify the new trace under my chosen agent name in Lens > Traces > Conversation contains the prompt, tool activity, and assistant reply. These events belong in Lens, not the normal request Logs screen. Report any missing content or export error instead of claiming setup succeeded.
-5. Show me the configuration changes with credentials hidden, explain how to pause telemetry, and point out the capture limits described in the guide.`,
+    text: `Set up this machine to send my Claude Code sessions straight to LiteLLM Lens with a Lens tracing key. First read ${DOCS}/docs/proxy/lens/coding-agents.md.
+1. Ask me for my Lens address, such as http://localhost:4318, and keep any /lens-ingest prefix. Read my dedicated Lens tracing key from an existing environment variable such as LITELLM_TRACING_KEY or a hidden terminal prompt. Never ask me to paste the key into chat, print it, or commit it. If I have no key, tell me to open Home in Lens, choose Standalone Lens, and create one.
+2. Explain that these settings send my typed prompts, Claude Code's replies, the files it reads, tool arguments, and tool output to my Lens service.
+3. Add every variable from the guide's Directly to Lens block as a string entry in the env object in my user-level ~/.claude/settings.json, preserving other settings. Set OTEL_EXPORTER_OTLP_ENDPOINT to the Lens address with no /v1/traces suffix and write the key's actual value into OTEL_EXPORTER_OTLP_HEADERS, because settings.json does not expand variables. Do not install a plugin or helper, add a LiteLLM gateway, or change my Claude subscription/API login or model endpoint.
+4. Run claude -p "Reply with exactly: Lens telemetry check." and report any telemetry export error it prints. Then tell me to restart my open Claude Code sessions and to confirm a claude_code.interaction trace from the agent claude-code appears under Traces in Lens with the prompt, reply, and model call. Report missing content or a rejected upload instead of claiming setup succeeded.
+5. Show me the configuration changes with credentials hidden and explain how to pause telemetry.`,
   },
   'lens-codex': {
     title: 'Set up Codex tracing in Lens',

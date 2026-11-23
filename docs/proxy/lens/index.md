@@ -35,7 +35,7 @@ If your team already runs Lens, [send your first trace](./first-trace.md). Choos
 
 For a team, deploy Lens on [a server](./deployment/server.md) or [Kubernetes](./deployment/kubernetes.md), or [add it to your LiteLLM dashboard](./deployment/litellm.md). If Lens already runs, [connect that deployment to your gateway](./deployment/litellm.md#1-get-the-lens-address). Each guide ends with a connection check and a first trace.
 
-**See your coding agent sessions:** start Lens, generate a tracing key, then follow the [Claude Code](./coding-agents.md#claude-code) or [Codex](./coding-agents.md#codex) setup. Open **Traces** to see the recorded activity.
+**See your coding agent sessions:** start Lens, generate a tracing key, then follow the [Claude Code](./coding-agents.md#claude-code), [Codex](./coding-agents.md#codex), or [OpenCode](./coding-agents.md#opencode) setup. Open **Traces** to see the recorded activity.
 
 Once traces are available, [run an investigation](./investigations.md) or use the [API reference](./api.md).
 
