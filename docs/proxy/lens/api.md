@@ -221,7 +221,7 @@ Use the Lens base URL, keeping `/lens-ingest` when present, followed by the path
 | `POST /v1/logs` | Ingest OTLP/HTTP logs, including coding-agent session events |
 | `POST /v1/traces/receipt` | Check delivery of a `trace_id` and up to 1,000 `span_ids` uploaded with the same tracing key. Returns `received`; never returns trace contents |
 
-A tracing key permits ingestion and its own delivery receipts only. It cannot read traces or call models, and ordinary model keys cannot upload. The gateway upload routes return 410, so exporter URLs must point directly to Lens.
+A tracing key permits ingestion and its own delivery receipts only. It cannot read traces or call models, and ordinary model keys cannot upload to Lens directly. The LiteLLM gateway also serves `POST /v1/traces` and `POST /v1/logs`: it authenticates the request with a LiteLLM key and forwards the upload to Lens under that key's owner, as the [coding agents guide](./coding-agents.md) uses for Claude Code. It answers `501` when agent tracing is not enabled on the gateway and `503` when Lens is unavailable.
 
 A successful upload confirms ClickHouse accepted it. A 429 or 503 is retryable, so use bounded exporter retries. During an extended outage, the exporter can drop traces. Keys refresh on each Lens replica every 30 seconds, with a 90-second maximum credential snapshot age.
 

@@ -45,8 +45,6 @@ claude -p "Reply with exactly: Lens telemetry check."
 
 Every telemetry variable is required. `CLAUDE_CODE_ENABLE_TELEMETRY`, `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA`, and `OTEL_TRACES_EXPORTER` together produce the turn; drop any one and Lens shows only separate `chat <model>` rows. `CLAUDE_CODE_PROPAGATE_TRACEPARENT` puts the turn's trace ID on each model call; without it the turn and its gateway calls land as two unrelated traces. `OTEL_LOG_USER_PROMPTS` includes the text you typed, which otherwise reads `<REDACTED>`, and it stores that text in Lens. The endpoint is your gateway address followed by `/v1/traces`, and the header carries your LiteLLM key.
 
-Do not set `OTEL_LOGS_EXPORTER` on this path. The gateway accepts trace spans only and answers `POST /v1/logs` with `410`. Do not add `lens.session.capture=true` from the direct setup below either: together with `CLAUDE_CODE_PROPAGATE_TRACEPARENT=1` it splits each turn into two traces, the turn under one trace ID and its gateway calls under another.
-
 Open **Lens > Traces** in LiteLLM and filter by **claude-code**. Each turn is one `claude_code.interaction` trace with its model and tool calls nested under it, your prompt, and the gateway's cost. Verified with Claude Code **2.1.330**.
 
 ### Directly to Lens
@@ -76,7 +74,7 @@ export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL="http/protobuf"
 export OTEL_METRICS_EXPORTER=none
 export OTEL_LOGS_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_LOGS_PROTOCOL="http/protobuf"
-export OTEL_RESOURCE_ATTRIBUTES="lens.session.capture=true,gen_ai.agent.name=claude-code"
+export OTEL_RESOURCE_ATTRIBUTES="gen_ai.agent.name=claude-code"
 
 export OTEL_LOG_USER_PROMPTS=1
 export OTEL_LOG_ASSISTANT_RESPONSES=1
@@ -90,7 +88,7 @@ The content flags include prompts, assistant replies, tool arguments, and suppor
 
 Open **Traces** in standalone Lens or **Lens > Traces** in LiteLLM. Filter by **claude-code**, open the session trace, and select **Conversation** to see the prompt and reply. Run `claude` without `-p` for interactive sessions. New turns in the same session update its trace.
 
-`lens.session.capture=true` groups turns with the same Claude session ID into one trace, including resumed sessions and background-agent replies. Original trace IDs remain in span attributes. Omit this resource attribute to retain Claude's separate traces per interaction. If you already set `OTEL_RESOURCE_ATTRIBUTES`, append these values instead of replacing your existing attributes.
+Lens groups turns with the same Claude session ID into one trace, including resumed sessions and background-agent replies. Original trace IDs remain in span attributes. If you already set `OTEL_RESOURCE_ATTRIBUTES`, append this value instead of replacing your existing attributes.
 
 Do not set `OTEL_METRICS_INCLUDE_SESSION_ID=false`. Despite its name, this removes `session.id` from Claude's traces too and prevents session grouping.
 
@@ -155,7 +153,7 @@ codex exec "Reply with exactly: Lens Codex telemetry check."
 
 Open **Traces** in standalone Lens or **Lens > Traces** in LiteLLM, filter by **codex**, and open the chat trace in **Conversation**. Do not paste your tracing key into a Codex prompt or use it as your model key. The plugin handles telemetry; do not copy the Claude Code environment variables into Codex or enable a second exporter for the same recording.
 
-CLI capture was checked with Codex **0.171.0** and plugin **0.5.2**. If you installed the plugin from `BerriAI/litellm-lens-codex-integration`, run `codex plugin marketplace remove berriai-lens` first, then the two commands above and setup once more. Each chat has one trace, updated after completed or interrupted turns. Reopening a chat continues its trace. The plugin supplies the chat-level trace ID, so this grouping works on both Lens **0.1.0** and **main**, without `lens.session.capture` or `lens.session.attribute`. Only activity after setup is recorded.
+CLI capture was checked with Codex **0.171.0** and plugin **0.5.2**. If you installed the plugin from `BerriAI/litellm-lens-codex-integration`, run `codex plugin marketplace remove berriai-lens` first, then the two commands above and setup once more. Each chat has one trace, updated after completed or interrupted turns. Reopening a chat continues its trace. The plugin supplies the chat-level trace ID, so this grouping works on both Lens **0.1.0** and **main**. Only activity after setup is recorded.
 
 The plugin reads visible transcript items for newly recorded turns, including commentary, repeated messages, tool outcomes, model changes, and subagents. Completed transcript turns can be recovered when a completion hook is missing. See the [coverage and privacy details](https://github.com/BerriAI/litellm-lens-plugins/tree/main/codex#what-youll-see) for its limits. To pause recording, ask Codex: `Use lens-setup to pause recording.`
 
@@ -188,6 +186,6 @@ Lens shows the content the coding agent exported. It cannot recover missing cont
 
 If Claude shows tools but no replies, check `OTEL_LOGS_EXPORTER`, `OTEL_LOG_ASSISTANT_RESPONSES`, and the logs endpoint. A `404` for `/v1/logs` means the Lens service or ingestion route needs an update. Allow the exporters to flush after a turn. Do not enable raw API-body export to compensate for missing reply logs.
 
-To change the Claude agent name, set `gen_ai.agent.name` in `OTEL_RESOURCE_ATTRIBUTES`. For example, `gen_ai.agent.name=my-claude-code,developer=alice,lens.session.capture=true`. Use that exact name in the trace filter and in any investigation's agent filter. An investigation restricted to `claude-code` will not sample `my-claude-code` automatically.
+To change the Claude agent name, set `gen_ai.agent.name` in `OTEL_RESOURCE_ATTRIBUTES`. For example, `gen_ai.agent.name=my-claude-code,developer=alice`. Use that exact name in the trace filter and in any investigation's agent filter. An investigation restricted to `claude-code` will not sample `my-claude-code` automatically.
 
 For large traces, use **Load next steps** in Conversation to load later activity. If a step fails to load, retry it before loading the next page. Subagent branches preserve their own messages and tool results so concurrent agents do not appear to be one speaker.

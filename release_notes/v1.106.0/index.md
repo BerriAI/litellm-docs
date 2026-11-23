@@ -490,7 +490,7 @@ Counts represent new catalog identifiers compared with `v1.105.0`, including ali
 #### Trace ingestion
 
 - Support Claude Agent SDK traces with prompts, tool arguments and outputs, token counts, the agent name and a Claude logo - [PR #44248](https://github.com/BerriAI/litellm/pull/44248)
-- Accept native Claude Code response logs on the authenticated `/v1/logs` endpoint to rebuild replies, failed-tool output and subagent branches; group a whole session with `lens.session.capture=true` - [PR #44711](https://github.com/BerriAI/litellm/pull/44711)
+- Accept native Claude Code response logs on the authenticated `/v1/logs` endpoint to rebuild replies, failed-tool output and subagent branches - [PR #44711](https://github.com/BerriAI/litellm/pull/44711)
 - Keep native Claude Code logs that arrive without trace context, and recover headless tool results that precede trailing system messages - [PR #44894](https://github.com/BerriAI/litellm/pull/44894)
 - Use configured framework agent names instead of service names for the Agent column and filter, and render GenAI messages that use `parts` instead of crashing the Traces page - [PR #44218](https://github.com/BerriAI/litellm/pull/44218)
 - Show the first user message as a run's input instead of the latest follow-up - [PR #44958](https://github.com/BerriAI/litellm/pull/44958)
