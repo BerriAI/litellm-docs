@@ -13,14 +13,14 @@ We're thrilled to share that LiteLLM was selected for [Patch the Planet](https:/
 
 Trail of Bits worked within our codebase, identifying and triaging vulnerabilities, and proposing remediation patches. Their work covers a combination of issues they discovered as well as reports from independent security researchers.
 
-Fixes will begin shipping in the coming days, and we expect to get through them within the next week or two. Most will ship in public releases accompanied by a security advisory. The most severe vulnerabilities will go to our private registry first, under embargo.
+Fixes will begin shipping in the coming days. Most will ship in public releases accompanied by a security advisory. The most severe vulnerabilities will go to our private registry first, under embargo.
 
 
 {/* truncate */}
 
 ## What's happening
 
-Over the course of this year, we have made a lot of investments in strengthening LiteLLM's security posture. Much of our attention has been focused on areas surrounding the codebase: the release pipeline, identity and access, internal policies and procedures, and monitoring and detection. We've partnered with HackerOne for a managed vulnerability disclosure program. We built out a private registry to enable embargoed releases for high-risk vulnerabilities. We now have LTS releases of LiteLLM to decouple resolving vulnerabilities from pulling in new features.
+Over the course of this year, we have significantly increased our investment in LiteLLM's security posture. Much of our attention has been focused on areas surrounding the codebase: a team dedicated to security, the release pipeline, identity and access, internal policies and procedures, and monitoring and detection. We've partnered with HackerOne for a managed vulnerability disclosure program. We built out a private registry to enable embargoed releases for high-risk vulnerabilities. We now have LTS releases of LiteLLM to decouple resolving vulnerabilities from pulling in new features.
 
 We are also investing in the codebase itself, and this is where Trail of Bits came in.
 
@@ -28,14 +28,14 @@ Trail of Bits is one of the most highly respected security research firms today.
 
 LiteLLM had the privilege of being selected for this initiative, joining prominent open-source projects like SQLite, Python, Go, WordPress, curl, rsync, and others. Our experience working with Trail of Bits was immensely positive. I would strongly encourage maintainers of open source projects to apply.
 
-Of course, getting a patch is different from shipping it. LiteLLM is used in many different ways by our customers, and an external reviewer can't anticipate every use case. We still need to test each change carefully for regressions and adapt the patches where necessary.
+Getting a patch is different from shipping it. LiteLLM is used in many different ways by our customers, and an external reviewer can't anticipate every use case. We still need to test each change carefully for regressions and adapt the patches where necessary.
 
 
 ## Contextualizing advisory counts
 
 Over the coming weeks and as a result of this work, we will be publishing more advisories than in any comparable period.
 
-A quiet advisory feed is not evidence of secure software, and some of the most hardened software projects in the world publish frequently, with the Linux kernel posting thousands of advisories per year, and Google Chrome hundreds.
+Advisory volume reflects how closely software is examined and how openly its maintainers report what they find. Some of the most hardened software in the world publishes constantly: the Linux kernel issues thousands of CVEs a year, and Google Chrome hundreds. Trail of Bits examined LiteLLM very closely, and we are committed to openly publishing an advisory for every fix that warrants one.
 
 Each advisory publishe represents a weakness removed from the product. This high volume of upcoming advisories leaves us in a significantly better place.
 
