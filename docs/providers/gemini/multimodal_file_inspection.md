@@ -9,29 +9,29 @@ import TabItem from '@theme/TabItem';
 
 # Gemini Multimodal File Inspection
 
-<SinceVersion v="1.109.0" />
+<SinceVersion v="1.80.11" />
 
-Gemini Multimodal File Inspection lets you send only part of a file to the model: a page range of a PDF or Office document, a slide range of a presentation, one worksheet or cell range of a workbook, or a time segment of an audio or video file. Gemini also reads Microsoft Office and OpenDocument files natively, and it counts and bills tokens only for the slice you select.
+Gemini Multimodal File Inspection allows you to send just a portion of a file to the model: a page range of a PDF or Office document, a slide range of a presentation, a worksheet or cell range of a workbook, or a time segment of an audio or video file. Gemini can also natively read Microsoft Office and OpenDocument files and only charges for the tokens in the slice you send.
 
 [Official Gemini document processing documentation](https://aistudio.google.com/docs/document-processing)
 
 ## Supported routes
 
-LiteLLM Proxy forwards the slicing fields unchanged on the routes that speak Gemini's own request format. Write the request exactly as Google documents it and point it at the proxy.
+LiteLLM proxy just passes the slice fields through unchanged on the routes that use Gemini's own request format. Write the request out exactly as Google specify and point it at the proxy.
 
 | Route | Proxy path | Slicing fields |
 |-------|-----------|----------------|
 | [generateContent](../../generateContent.md) | `/v1beta/models/{model}:generateContent` and `:streamGenerateContent` | `documentMetadata`, `spreadsheetMetadata`, `videoMetadata`, `audioMetadata`, `mediaResolution` on a `fileData` part |
 | [Interactions](../../interactions.md) | `/v1beta/interactions` | `processing` on a `document`, `video` or `audio` input block |
-| [Google AI Studio passthrough](../../pass_through/google_ai_studio.md) | `/gemini/v1beta/...` | Either of the above, depending on the Google endpoint you call |
+| [Google AI Studio passthrough](../../pass_through/google_ai_studio.md) | `/gemini/v1beta/...` | Either of the above, it depends on which Google endpoint you're calling |
 
-Each route returns the same input token count as a direct call to Google, and LiteLLM computes spend from that usage. The examples on this page were run against LiteLLM `v1.110.2`.
+Each route returns the same input token count as a direct call to Google and LiteLLM calculates spend from that usage. The examples on this page were all run against LiteLLM `v1.110.2`.
 
-Slicing through the OpenAI-compatible `/v1/chat/completions` route is not covered on this page. Use one of the routes above.
+Slicing through the OpenAI compatible `/v1/chat/completions` route is not covered on this page. Use one of the routes listed above.
 
 ## Setup
 
-Add a Gemini model to your proxy config and start the proxy.
+Add a Gemini model to your proxy config and get the proxy going.
 
 ```yaml title="config.yaml"
 model_list:
@@ -45,7 +45,7 @@ model_list:
 litellm --config config.yaml
 ```
 
-Upload the file with the [Gemini Files API](https://aistudio.google.com/docs/files) and use the returned file URI in the examples below. Google states that slicing works on Gemini 3 and Gemini 4 models.
+Upload the file via the [Gemini Files API](https://aistudio.google.com/docs/files) and use the returned file URI in the examples below. Google state that slicing works on Gemini 3 and Gemini 4 models.
 
 ## Slice pages or slides
 
@@ -133,7 +133,7 @@ curl -X POST "http://localhost:4000/gemini/v1beta/models/gemini-4-hydrogen:gener
   }'
 ```
 
-The passthrough also accepts the Interactions body at `/gemini/v1beta/interactions`.
+The passthrough will also take the Interactions body at `/gemini/v1beta/interactions`.
 
 </TabItem>
 </Tabs>
@@ -145,11 +145,11 @@ The passthrough also accepts the Interactions body at `/gemini/v1beta/interactio
 | `documentMetadata.contentLayers` | `processing.page_options.content_layers` | `PAGE_IMAGE` / `page_image` (rendered pages), `PAGE_TEXT` / `page_text` (extracted text), or both |
 | `mediaResolution.level` | `resolution` on the `document` block | Detail level of the rendered page images |
 
-For an Office file, change the MIME type and keep the same fields. A `.pptx` deck uses `application/vnd.openxmlformats-officedocument.presentationml.presentation`, and `startPage` / `endPage` select slides.
+For an Office file, change the MIME type and leave the fields as they are. A `.pptx` deck uses `application/vnd.openxmlformats-officedocument.presentationml.presentation` and `startPage`/`endPage` select the slides.
 
 ## Slice a worksheet or cell range
 
-Use these fields for spreadsheets (`.xlsx`, `.xls`, `.ods`). `sheetIndex` is the 1-indexed position of the worksheet in tab order, and `visibleCells` is an A1 cell or range.
+Use these fields for spreadsheets (`.xlsx`, `.xls`, `.ods`). `sheetIndex` is the 1-indexed position of the worksheet in tab order and `visibleCells` is an A1 cell or range.
 
 <Tabs>
 <TabItem value="generate-content" label="generateContent">
@@ -218,7 +218,7 @@ curl -X POST "http://localhost:4000/v1beta/interactions" \
 
 ## Slice a video or audio segment
 
-Offsets are strings of seconds ending in `s`, such as `"10s"` or `"10.5s"`.
+Offsets are strings of seconds ending in `s` (e.g. `"10s"`, `"10.5s"`).
 
 <Tabs>
 <TabItem value="generate-content" label="generateContent">
@@ -244,7 +244,7 @@ curl -X POST "http://localhost:4000/v1beta/models/gemini-4-hydrogen:generateCont
   }'
 ```
 
-For audio, set `mimeType` to the audio type (for example `audio/mpeg`) and replace `videoMetadata` with `"audioMetadata": {"startOffset": "60s", "endOffset": "90s"}`.
+For audio: set `mimeType` to the audio type (e.g. `audio/mpeg`) and replace `videoMetadata` with `"audioMetadata": {"startOffset": "60s", "endOffset": "90s"}`.
 
 </TabItem>
 <TabItem value="interactions" label="Interactions">
@@ -271,14 +271,14 @@ curl -X POST "http://localhost:4000/v1beta/interactions" \
   }'
 ```
 
-For audio, use `"type": "audio"` with the audio MIME type (for example `audio/mpeg`) and the same `processing` offsets.
+For audio use `"type": "audio"` with the audio MIME type (e.g. `audio/mpeg`) and the same `processing` offsets.
 
 </TabItem>
 </Tabs>
 
 ## Token usage and cost
 
-Gemini bills only the slice it sends to the model, and the proxy reports the same input token count as a direct call. The table shows `promptTokenCount` for the same requests sent to Google directly and through LiteLLM `v1.110.2` on `gemini-4-hydrogen`. All three proxy routes returned the same counts as the direct call.
+Gemini only bills for the slice that it sends to the model and the proxy reports the same input token count as a direct call. The table shows `promptTokenCount` for the same requests made to Google directly and via LiteLLM `v1.110.2` on `gemini-4-hydrogen`. All three proxy routes returned the same count as the direct call.
 
 | File | Request | Input tokens | Change |
 |------|---------|--------------|--------|
@@ -294,8 +294,8 @@ Gemini bills only the slice it sends to the model, and the proxy reports the sam
 | 120-second audio | Whole file | 3879 | |
 | 120-second audio | Seconds 60 to 90 | 999 | 74% fewer |
 
-Savings depend on the file. LiteLLM tracks spend for these calls from the usage Gemini returns, and the proxy sends the cost back in the `x-litellm-response-cost` response header.
+Savings are file dependent. LiteLLM tracks the spend on these calls from the usage that Gemini returns and the proxy then sends the cost back in the `x-litellm-response-cost` response header.
 
 ## Limits
 
-Google applies its file limits to the whole uploaded file, even when you slice it: up to 50 MB per file, 1,000 pages per PDF, 2,000 pages or slides per Office or OpenDocument file, and 50,000 cells per sheet. See [Google's documentation](https://aistudio.google.com/docs/document-processing) for the full list of formats and options.
+Google apply their file limits to the entire uploaded file (even if you've sliced it up): 50 MB per file, 1,000 pages per PDF, 2,000 pages or slides per Office/OpenDocument file and 50,000 cells per sheet. Full list of formats and options is at [Google's documentation](https://aistudio.google.com/docs/document-processing).
