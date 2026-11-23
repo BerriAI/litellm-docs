@@ -24,7 +24,7 @@ For Compose, update `LENS_IMAGE` in the retained `deploy/lens/.env` to the verif
 docker compose -f deploy/lens/compose.yaml up -d --wait
 ```
 
-A [quickstart](./local.md) install keeps `.env` beside the downloaded `compose.yaml`, and that file has no `LENS_IMAGE` line yet. Add one with the verified artifact, such as `LENS_IMAGE=ghcr.io/berriai/lens:0.3.0`, then apply it from that folder:
+A [quickstart](./local.md) install keeps `.env` beside the downloaded `compose.yaml`, and that file has no `LENS_IMAGE` line yet. Add one with the verified artifact, such as `LENS_IMAGE=ghcr.io/berriai/lens:0.4.0`, then apply it from that folder:
 
 ```sh
 docker compose up -d --wait
