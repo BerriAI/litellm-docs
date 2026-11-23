@@ -1941,6 +1941,7 @@ const providersSidebar = {
     "providers/pydantic_ai_agent",
     { type: "html", value: "More Providers A-Z", className: "sidebar-group-label", defaultStyle: true },
     "providers/abliteration",
+    "providers/adaption",
     "providers/ai21",
     "providers/aiml",
     "providers/aleph_alpha",

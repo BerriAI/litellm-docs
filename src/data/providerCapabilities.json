@@ -294,6 +294,12 @@
       "chat"
     ]
   },
+  "providers/adaption": {
+    "prefix": "adaption",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/ai21": {
     "prefix": "ai21",
     "capabilities": [
