@@ -11,15 +11,15 @@
 | Property | Value |
 | --- | --- |
 | LiteLLM provider | `acedatacloud/` |
-| API base | `https://api.acedata.cloud/openai` |
+| API base | `https://api.acedata.cloud/v1` |
 | API key | `ACEDATACLOUD_API_KEY` |
-| Supported endpoints | Chat Completions and Responses |
+| Supported endpoints | Chat Completions, Responses, and Messages, according to each model's catalog entry |
 | API documentation | [Chat Completions](https://platform.acedata.cloud/documents/openai-chat-completions), [Responses](https://platform.acedata.cloud/documents/openai-responses) |
 | Model catalog and prices | [Models](https://platform.acedata.cloud/models), [machine-readable catalog](https://platform.acedata.cloud/api/v1/models/catalog/) |
 
 :::note Release availability
 
-The `acedatacloud/` prefix requires a LiteLLM version containing [the provider integration](https://github.com/BerriAI/litellm/pull/44817). Older releases can route through the [OpenAI-compatible provider](https://docs.litellm.ai/docs/providers/openai_compatible) with `openai/gpt-6-luna`, `api_base="https://api.acedata.cloud/openai"`, an explicit API key, and custom prices from the public catalog.
+The `acedatacloud/` prefix, public model discovery, and Messages-only model routing require a LiteLLM version containing [the provider integration](https://github.com/BerriAI/litellm/pull/44817). Older releases can route Chat Completions models through the [OpenAI-compatible provider](https://docs.litellm.ai/docs/providers/openai_compatible) with `openai/gpt-6-luna`, `api_base="https://api.acedata.cloud/v1"`, an explicit API key, and custom prices from the public catalog.
 
 Versions without the Credit-cost fix can fail strict response serialization when `usage.cost` contains a structured Credit value. Verify serialization and custom prices before using the generic configuration in a proxy.
 
@@ -35,7 +35,7 @@ python -m pip install 'litellm[proxy]'
 
 ## Get an API key
 
-Register or sign in at [Ace Data Cloud Applications](https://platform.acedata.cloud/console/applications?utm_source=opensource&utm_medium=referral&utm_campaign=evergreen&utm_content=litellm_provider_docs_api_key). If no General application exists, choose **Initialize General Application**. Open **General application** and confirm OpenAI service access, the selected model, current balance, and [pricing](https://platform.acedata.cloud/models?utm_source=opensource&utm_medium=referral&utm_campaign=evergreen&utm_content=litellm_provider_docs_pricing).
+Register or sign in at [Ace Data Cloud Applications](https://platform.acedata.cloud/console/applications?utm_source=opensource&utm_medium=referral&utm_campaign=evergreen&utm_content=litellm_provider_docs_api_key). If no General application exists, choose **Initialize General Application**. Open **General application** and confirm access to the selected model's service and API, current balance, and [pricing](https://platform.acedata.cloud/models?utm_source=opensource&utm_medium=referral&utm_campaign=evergreen&utm_content=litellm_provider_docs_pricing).
 
 Copy its API key or choose **Manage Keys** and **Create** to make a separate `LiteLLM models` key. A service-specific application key is limited to its service. Use a business API credential; Account Tokens are for the separate platform management API. Paste only the token string, without `Bearer ` or quotes.
 
@@ -49,7 +49,28 @@ These redacted Ace console images are reused from the Suno Dify onboarding guide
 export ACEDATACLOUD_API_KEY="your-api-token"
 ```
 
-The provider uses the `/openai` base path. LiteLLM appends `/chat/completions` or `/responses` as appropriate.
+The provider defaults to `https://api.acedata.cloud/v1`. LiteLLM selects the transport from the model's endpoint metadata. Use `responses()` only for a model whose entry includes `/v1/responses`.
+
+## Discover models
+
+Provider discovery reads the public catalog and includes every item with `modality: "chat"`, prefixed with `acedatacloud/`. This request does not send your API key. Model discovery does not grant service access or update LiteLLM's protocol and pricing metadata.
+
+Read the current IDs and protocols without an inference request:
+
+```python
+import json
+from urllib.request import urlopen
+
+with urlopen("https://platform.acedata.cloud/api/v1/models/catalog/") as response:
+    catalog = json.load(response)
+
+for item in catalog["items"]:
+    if item["modality"] == "chat":
+        protocols = [endpoint["protocol"] for endpoint in item.get("endpoints", [])]
+        print(f"acedatacloud/{item['id']}", ", ".join(protocols))
+```
+
+Choose a model with the endpoint your application uses. The examples below use `gpt-6-luna`; use any current eligible ID with the same provider prefix. For a newly listed model, check that your LiteLLM model metadata includes its endpoint and price rules before deployment.
 
 ## Chat Completions
 
@@ -82,6 +103,22 @@ print(response.output)
 ```
 
 `gpt-6-luna` accepts `none`, `low`, `medium`, `high`, `xhigh`, and `max` reasoning effort. It does not accept `minimal`.
+
+## Messages-only models
+
+Use the same `completion()` interface for a model served only by Messages. The provider sends the request to `/v1/messages` with your Ace Bearer credential and returns a LiteLLM completion response. For example, `claude-sonnet-5-5` has a Messages endpoint and no Chat Completions or Responses endpoint.
+
+```python keep-model-ids
+from litellm import completion
+
+response = completion(
+    model="acedatacloud/claude-sonnet-5-5",
+    messages=[{"role": "user", "content": "Reply with exactly OK."}],
+    max_tokens=64,
+    num_retries=0,
+)
+print(response.choices[0].message.content)
+```
 
 ## LiteLLM Proxy
 
@@ -121,7 +158,7 @@ curl http://localhost:4000/v1/responses \
   -d '{"model":"ace-gpt-6-luna","input":"Reply with exactly OK.","reasoning":{"effort":"none"},"max_output_tokens":64}'
 ```
 
-In the Admin UI, open **Models + Endpoints**, choose **Add Model**, select **Ace Data Cloud**, select `acedatacloud/gpt-6-luna`, and enter your Ace Data Cloud API key.
+In the Admin UI, open **Models + Endpoints**, choose **Add Model**, select **Ace Data Cloud**, choose an eligible model from the current catalog, and enter your Ace Data Cloud API key.
 
 ![Actual candidate Ace provider selection](/img/acedatacloud/litellm-ace-provider-selected.jpg)
 
@@ -131,11 +168,11 @@ These are real isolated candidate captures from October 18, 2026, running exact 
 
 ## Models and cost tracking
 
-The initial priced model is `acedatacloud/gpt-6-luna`, using the standard service tier. You can use other model IDs documented for Ace Data Cloud's OpenAI-compatible endpoints with the same prefix, but configure custom pricing for models or service tiers without an Ace Data Cloud catalog entry. Check endpoint eligibility and model-specific capabilities in the current catalog. Models served only by the separate Claude Messages API are outside this integration.
+LiteLLM's Ace model registry includes per-model endpoint and price metadata. Model discovery reads the current public inventory separately. Check endpoint eligibility and capabilities for the selected ID, and configure custom pricing for a new model or service tier whose price rules are absent from your LiteLLM registry.
 
-Ace Data Cloud bills in Credits. Convert consumption to USD using `Credits × package price / package amount`. LiteLLM's catalog uses the public entry package verified on October 6, 2026: USD 7 for 40 Credits, or USD 0.175 per Credit. Larger recharge packages and account discounts can lower the effective USD cost.
+Ace Data Cloud bills in Credits. Convert consumption to USD using `Credits × package price / package amount`. The provider's submitted price metadata uses the public entry package verified on November 23, 2026: USD 7 for 40 Credits, or USD 0.175 per Credit. Larger recharge packages and account discounts can lower the effective USD cost.
 
-The priced model includes uncached input, cached input, cache creation, output, and the higher rates for prompts over 272,000 tokens. The source is the catalog's full `cost` rules, not its rounded display prices. The `usage.cost` returned by Ace Data Cloud is denominated in Credits. LiteLLM omits this structured field from its numeric cost field and estimates USD spend using the model catalog.
+Use each API's full `cost` rules for token, cache, and context-band prices. Fixed request charges remain per-request prices, including the `-all` models and `gpt-4o-image`; do not convert them to a token rate. The `usage.cost` returned by Ace Data Cloud is denominated in Credits. LiteLLM omits this structured field from its numeric cost field and estimates USD spend using the model registry.
 
 To track a different recharge tier, configure [custom pricing](https://docs.litellm.ai/docs/proxy/custom_pricing) using that package's current conversion rate and the model's public cost rules. Check [the live catalog](https://platform.acedata.cloud/api/v1/models/catalog/) before changing rates.
 
