@@ -5,11 +5,11 @@ description: "Add Seltz web search to LiteLLM: call search() in the Python SDK o
 ---
 # Seltz Search
 
-[Seltz](https://seltz.ai) is a web search API built for AI agents; LiteLLM exposes it through one `search()` call in the Python SDK and the `/v1/search` endpoint on the AI Gateway.
+[Seltz](https://seltz.ai?utm_source=litellm&utm_medium=integration&utm_campaign=marketplace) is a web search API built for AI agents; LiteLLM exposes it through one `search()` call in the Python SDK and the `/v1/search` endpoint on the AI Gateway.
 
-**Get API Key:** [https://console.seltz.ai/api-keys](https://console.seltz.ai/api-keys)
+**Get API Key:** [https://console.seltz.ai/api-keys?utm_source=litellm&utm_medium=integration&utm_campaign=marketplace](https://console.seltz.ai/api-keys?utm_source=litellm&utm_medium=integration&utm_campaign=marketplace)
 
-LiteLLM sends `POST https://api.seltz.ai/v1/search`. Set `SELTZ_API_KEY`, or pass `api_key`. The key goes in the `x-api-key` header. See the [Seltz Search API](https://docs.seltz.ai/api-reference/search).
+LiteLLM sends `POST https://api.seltz.ai/v1/search`. Set `SELTZ_API_KEY`, or pass `api_key`. The key goes in the `x-api-key` header. See the [Seltz Search API](https://docs.seltz.ai/api-reference/search?utm_source=litellm&utm_medium=integration&utm_campaign=marketplace).
 
 The default host is `https://api.seltz.ai`. Set `api_base` on the SDK call or the proxy search tool, or set `SELTZ_API_BASE`, to use another host. `/v1/search` is appended once. A base that already ends in `/v1/search` is left as it is. Pass `api_key` together with a caller-selected `api_base`. The key in `SELTZ_API_KEY` is not sent to that host. `SELTZ_API_KEY` with `SELTZ_API_BASE` is used when the call omits `api_base`.
 
@@ -76,7 +76,7 @@ curl http://0.0.0.0:4000/v1/search/seltz-search \
 | `country` | Not forwarded |
 | `max_tokens_per_page` | Not forwarded. Set content and snippet size with `fields` |
 
-`scope`, `tier`, `exclude_domains`, `from_date`, `to_date`, `fields`, and `include_domains` pass through. `tier` is forwarded as written. Seltz matches that name without case or surrounding whitespace, and the name selects the price. See [Seltz pricing](https://docs.seltz.ai/pricing).
+`scope`, `tier`, `exclude_domains`, `from_date`, `to_date`, `fields`, and `include_domains` pass through. `tier` is forwarded as written. Seltz matches that name without case or surrounding whitespace, and the name selects the price. See [Seltz pricing](https://docs.seltz.ai/pricing?utm_source=litellm&utm_medium=integration&utm_campaign=marketplace).
 
 `scope` limits the corpus. The values are `web` (beta; the default when `scope` is omitted), `news`, `wikipedia`, `people`, `companies`, and `financial-reports`. A scope that does not exist, or that the key cannot reach, returns 404. `tier` is `base` or `pro`. Omitting `tier` selects `pro`. `base` returns first-stage ranking, and `pro` adds a ranking stage. Seltz rejects a tier name other than those two. `exclude_domains` drops results from those domains. `from_date` and `to_date` keep documents published on or after, and on or before, that point: a date, a UTC datetime, or an offset such as `now-7d`. `fields` selects `content`, `snippets`, and `properties`. `content` and `snippets` take `true`, `false`, or an options object. `properties` is returned unless it is `false` or an empty list.
 
@@ -127,7 +127,7 @@ Seltz documents have no title, so `title` is empty. `content` is copied to `snip
 
 ## Cost
 
-LiteLLM prices each Seltz search from the [model cost map](/docs/proxy/model_cost_map). [Seltz lists](https://docs.seltz.ai/pricing) Pro at $5 per 1,000 searches and Base at $3 per 1,000. Omitting `tier` is Pro, so that search is $0.005. `tier` `base` is $0.003.
+LiteLLM prices each Seltz search from the [model cost map](/docs/proxy/model_cost_map). [Seltz lists](https://docs.seltz.ai/pricing?utm_source=litellm&utm_medium=integration&utm_campaign=marketplace) Pro at $5 per 1,000 searches and Base at $3 per 1,000. Omitting `tier` is Pro, so that search is $0.005. `tier` `base` is $0.003.
 
 | `tier` | Cost map entry | Price per search |
 | --- | --- | --- |
