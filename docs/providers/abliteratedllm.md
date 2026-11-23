@@ -131,19 +131,19 @@ Prompt caching is automatic. When a request starts with the same tokens as a rec
 
 Chat Completions supports function `tools`, `tool_choice`, and `parallel_tool_calls`. A tool whose `type` is not `function` returns 400. `response_format` with `json_object` or `json_schema` works on every model. Use [LiteLLM function calling](../completion/function_call.md) for tool-result continuations and [structured outputs](../completion/json_mode.md) for JSON Schema examples.
 
-The provider passes `reasoning_effort` through to the model. Each model accepts the levels below, checked against the upstream models on November 9, 2026, and on November 19, 2026 for `glm-5.3-cyber-abliterated`. LiteLLM's model map declares the same levels, and LiteLLM uses them to resolve the requested level.
+The provider passes `reasoning_effort` through to the model. Each model accepts the levels below, checked against the upstream models on November 9, 2026, and on November 23, 2026 for `glm-5.3-cyber-abliterated`. LiteLLM's model map declares the same levels, and LiteLLM uses them to resolve the requested level.
 
 | Models | `reasoning_effort` levels |
 | --- | --- |
 | `glm-5.3-flash-abliterated`, `glm-5.3-flash`, `glm-5.3`, `glm-5.3-fast` | `low`, `high`, `max` |
-| `glm-5.3-cyber-abliterated` | `low`, `high`, `max` |
+| `glm-5.3-cyber-abliterated` | `low`, `high` |
 | `deepseek-v4.1-flash-1017`, `deepseek-v4.1-flash-1017-ultrafast`, `deepseek-v4.1-flash-original` | `none`, `low`, `high`, `max` |
 | `kimi-k3`, `kimi-k3-fast`, `kimi-k3.1-pro`, `ember-1` | `none`, `low`, `medium`, `high`, `max` |
 | `muse-spark-open` | `low`, `medium`, `high`, `xhigh` |
 | `qwen3.8-max`, `qwen3.8-2.4t-a95b` | `none`, `low`, `medium`, `xhigh` |
 | `minimax-m3` | `low`, `medium`, `high` |
 
-`"none"` turns reasoning off on the models that list it. `glm-5.3-flash-abliterated`, `glm-5.3-flash`, `glm-5.3`, `glm-5.3-fast`, and `muse-spark-open` always reason, and `"none"` returns 400 for them. `glm-5.3-cyber-abliterated` also always reasons: its chat template honors `"low"` and `"high"`, and any other value, `"none"` included, runs at maximum effort. Reasoning text, when returned, is available as `message.reasoning_content`. Reasoning tokens are billed as output tokens and count toward the output budget, which is 16,384 tokens when a request sets no `max_tokens`. See [AbliteratedLLM chat completions](https://abliteratedllm.dev/docs/chat-completions).
+`"none"` turns reasoning off on the models that list it. `glm-5.3-flash-abliterated`, `glm-5.3-flash`, `glm-5.3`, `glm-5.3-fast`, and `muse-spark-open` always reason, and `"none"` returns 400 for them. `glm-5.3-cyber-abliterated` also always reasons and accepts only `"low"` and `"high"`: any other value, `"none"` and `"max"` included, returns 400. Reasoning text, when returned, is available as `message.reasoning_content`. Reasoning tokens are billed as output tokens and count toward the output budget, which is 16,384 tokens when a request sets no `max_tokens`. See [AbliteratedLLM chat completions](https://abliteratedllm.dev/docs/chat-completions).
 
 ## Responses API
 
