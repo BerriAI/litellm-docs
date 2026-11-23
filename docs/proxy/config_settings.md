@@ -1502,6 +1502,7 @@ Size for the total number of waiting requests across deployments and workers. Te
 | NO_MAX_TOKENS_TPM_RESERVATION_FRACTION | <SinceVersion v="1.109.0" /> Share of a TPM limit reserved for a request that sets no output cap, as a fraction from 0.01 to 1. On a deployment with `otpm`, a request without `max_tokens` reserves the smaller of the model's max output and this share of `otpm`. On the proxy, it also sets the `max_tokens` written into a request without one when its key, team, or project has a TPM limit under 4096. A value outside the range logs a warning and uses the default. Default is 0.25. [Docs](./io_token_rate_limits.md#pre-call-admission)
 | NO_OPENAPI | Flag to disable the /openapi.json endpoint
 | NO_PROXY | List of addresses to bypass proxy
+| NO_SWAGGER | Set to `true` to disable Swagger UI unless `SWAGGER_URL` is set.
 | NON_LLM_CONNECTION_TIMEOUT | Timeout in seconds for non-LLM service connections. Default is 15
 | OAUTH_TOKEN_INFO_ENDPOINT | Endpoint for OAuth token info retrieval
 | OPENAI_BASE_URL | Base URL for OpenAI API
@@ -1664,6 +1665,7 @@ Size for the total number of waiting requests across deployments and workers. Te
 | SUPABASE_URL | Base URL for Supabase instance
 | STORE_MODEL_IN_DB | If true, enables storing model + credential information in the DB. 
 | STORE_PROMPTS_IN_SPEND_LOGS | Flag to persist the request and response payloads of each call on its SpendLogs row, so prompts and completions are visible in the logs UI. Environment equivalent of `general_settings.store_prompts_in_spend_logs`; either source enabling it is enough. **Default is False**
+| SWAGGER_URL | Path to Swagger UI. Defaults to `/swagger`, or `/swagger/ui` if Scalar or the OpenAPI schema already uses `/swagger`.
 | SYSTEM_MESSAGE_TOKEN_COUNT | Token count for system messages. Default is 4
 | TEST_EMAIL_ADDRESS | Email address used for testing purposes
 | TOGETHER_AI_4_B | Size parameter for Together AI 4B model. Default is 4
