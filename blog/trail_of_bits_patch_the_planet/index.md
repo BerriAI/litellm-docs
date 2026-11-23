@@ -1,7 +1,7 @@
 ---
 slug: trail-of-bits-patch-the-planet
 title: "Trail of Bits helped harden LiteLLM, and fixes are on the way"
-date: 2026-11-21T14:00:00
+date: 2026-11-23T14:00:00
 authors:
   - oliver
 description: "Trail of Bits worked on LiteLLM through Patch the Planet. Here is what is coming over the next several weeks, how the fixes will ship, and what to do."
@@ -13,7 +13,7 @@ We're thrilled to share that LiteLLM was selected for [Patch the Planet](https:/
 
 Trail of Bits worked within our codebase, identifying and triaging vulnerabilities, and proposing remediation patches. Their work covers a combination of issues they discovered as well as reports from independent security researchers.
 
-Fixes are now beginning to ship, and we expect to get through them within the next week or two. Most will ship in public releases accompanied by a security advisory. The most severe vulnerabilities will first go out to our [private registry](/blog/litellm-private-registry-access) under embargo, with public releases and advisories following two weeks later.
+Fixes are now beginning to ship, and we expect to get through them within the next week or two. Most will ship in public releases accompanied by a security advisory. The most severe vulnerabilities will go to our private registry first, under embargo.
 
 
 {/* truncate */}
@@ -26,7 +26,7 @@ We are also investing in the codebase itself, and this is where Trail of Bits ca
 
 Trail of Bits is one of the most highly respected security research firms today. In conjunction with OpenAI, they run an initiative called Patch the Planet, which combines frontier-model AI-driven vulnerability discovery with experienced security researchers who reproduce, validate, prioritize, and propose fixes for the findings.
 
-LiteLLM had the privilege of being selected for this initiative, joining prominent OSS projects like sqlite, python golang, wordpress, curl, rsync, and others. Our experience working with Trail of Bits was immensely positive. I would strongly encourage maintainers of open source projects to apply.
+LiteLLM had the privilege of being selected for this initiative, joining prominent open-source projects like SQLite, Python, Go, WordPress, curl, rsync, and others. Our experience working with Trail of Bits was immensely positive. I would strongly encourage maintainers of open source projects to apply.
 
 Of course, getting a patch is different from shipping it. LiteLLM is used in many different ways by our customers, and an external reviewer can't anticipate every use case. We still need to test each change carefully for regressions and adapt the patches where necessary.
 
