@@ -72,7 +72,7 @@ const DISPLAY_NAMES = dict(Object.entries({
   assemblyai: 'AssemblyAI', auto_router: 'Auto Router', aws_polly: 'AWS - Polly', azure: 'Azure',
   azure_ai: 'Azure AI', azure_text: 'Azure Text', baseten: 'Baseten', bedrock: 'AWS - Bedrock',
   bedrock_mantle: 'Bedrock Mantle', bespoke: 'Bespoke Nimble', bigmodel: 'BigModel (Zhipu AI)',
-  bing_grounding: 'Bing Grounding', black_forest_labs: 'Black Forest Labs', brave: 'Brave Search', bytez: 'Bytez',
+  bing_grounding: 'Bing Grounding', black_forest_labs: 'Black Forest Labs', blockrun: 'BlockRun', brave: 'Brave Search', bytez: 'Bytez',
   cerebras: 'Cerebras', charity_engine: 'Charity Engine', chatgpt: 'ChatGPT Subscription', chutes: 'Chutes',
   clarifai: 'Clarifai', clf_ai_gateway: 'CLF AI Gateway', cloudflare: 'Cloudflare AI Workers', codestral: 'Codestral',
   cognition: 'Cognition', cohere: 'Cohere', cohere_chat: 'Cohere Chat', cometapi: 'CometAPI',
