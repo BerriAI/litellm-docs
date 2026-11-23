@@ -43,6 +43,7 @@ module.exports = {
       items: ['proxy/lens/model-optimizations-demo'],
     },
     'proxy/lens/api',
+    {type: 'doc', id: 'proxy/lens/mcp', label: 'MCP server'},
     {type: 'doc', id: 'proxy/lens/scalability', label: 'Scalability design'},
   ],
 };

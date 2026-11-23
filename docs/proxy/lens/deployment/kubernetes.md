@@ -22,7 +22,7 @@ helm upgrade --install lens oci://ghcr.io/berriai/charts/lens \
 
 Argo CD and other GitOps tools render the chart without cluster access, so generated credentials would change on every sync. Use [pre-provisioned Secrets](./storage.md#gitops) there
 
-On first start, the Lens pod can restart a few times until ClickHouse is ready. Persistent failures need [storage and startup diagnostics](./configuration.md#troubleshooting)
+On first start, the Lens pod stays in `Init` until the bundled ClickHouse answers. With your own ClickHouse, Lens restarts until it can connect. Persistent failures need [storage and startup diagnostics](./configuration.md#troubleshooting)
 
 ## Expose Lens {#ingress}
 
@@ -47,7 +47,7 @@ curl --fail https://lens.example.com/health/ready
 
 ## Sign in
 
-Open `https://lens.example.com/ui/` and paste the generated admin token into the **Setup token** field. Read the token with:
+Open `https://lens.example.com/ui/`, open **Admin token** and paste the generated admin token. Read the token with:
 
 ```sh
 kubectl --namespace lens get secret lens-admin \
@@ -62,18 +62,19 @@ See the [complete values.yaml](https://github.com/BerriAI/lens/blob/main/helm/le
 
 | Value | Default | Description |
 | --- | --- | --- |
-| `publicUrl` | `http://localhost:4318` | Browser-facing origin of Lens, without `/ui/`. |
+| `publicUrl` | `""` | Browser-facing origin of Lens, without `/ui/`. Lens rejects sign-in and saves from any other origin. When empty, it is the `ingress.host` address when ingress is enabled (`https` when `ingress.tls` is set) and `http://localhost:4318` otherwise. The install fails when it names a different host than `ingress.host`. |
 | `ingestionUrl` | `""` | Address agents send traces to. Uses `publicUrl` when empty. |
 | `ingress.enabled` | `false` | Creates the Ingress. Install its controller separately. |
 | `ingress.className`, `ingress.host` | Both `""` | Ingress class and hostname. The hostname is required when ingress is enabled. |
 | `ingress.annotations`, `ingress.tls` | `{}`, `[]` | Controller settings and Kubernetes ingress TLS entries. |
+| `service.type`, `service.nodePort` | `ClusterIP`, `null` | Service type. Use `NodePort` or `LoadBalancer` to reach Lens without an ingress, and set `publicUrl` to the address browsers open. |
 | `adminTokenSecret.name`, `.key` | `""`, `admin-token` | Existing Secret with the admin token. The chart generates `lens-admin` when the name is empty. |
 | `gateway.enabled` | `false` | Accepts sign-in from a LiteLLM gateway. See [Add Lens to LiteLLM](./litellm.md). |
 | `gateway.secretName`, `serviceTokenSecret.name` | Both `""` | Existing Secrets with the two gateway connection values. |
 | `clickhouse.storage`, `clickhouse.storageClassName` | `20Gi`, `null` | Size and StorageClass of the ClickHouse volume. Size it for your traffic and retention. |
 | `clickhouseSecret.name`, `.key` | `""`, `url` | Secret with the URL of an [existing ClickHouse](./storage.md). Replaces the bundled one. |
 | `retentionDays` | `14` | Days Lens keeps trace data. |
-| `resources`, `clickhouse.resources` | Requests `100m` CPU with `256Mi` and `512Mi`, memory limit `2Gi` | Lens and ClickHouse container resources. |
+| `resources`, `clickhouse.resources` | Requests `100m` CPU with `256Mi` and `512Mi`, memory limits `2Gi` and `4Gi` | Lens and ClickHouse container resources. |
 | `extraEnv`, `extraEnvFrom` | Both `[]` | Extra [environment settings](./configuration.md), such as analysis model credentials. |
 
 ## Upgrade

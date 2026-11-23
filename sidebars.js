@@ -1979,6 +1979,7 @@ const providersSidebar = {
     "providers/github",
     "providers/github_copilot",
     "providers/gmi",
+    "providers/gnani",
     "providers/gradient_ai",
     "providers/gradium",
     "providers/heroku",

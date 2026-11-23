@@ -6,16 +6,16 @@ slug: "/proxy/lens/deployment/server"
 
 # Docker Compose on a server
 
-Install Docker with Compose v2, then run the [v0.1.0 release bundle](https://github.com/BerriAI/lens/releases/tag/v0.1.0) on your server. It needs no Git, pulls the published image by digest, and can be [verified](./releases.md#verify-a-release) before you run it:
+Install Docker with Compose v2, then run the [v0.4.0 release bundle](https://github.com/BerriAI/lens/releases/tag/v0.4.0) on your server. It needs no Git, pulls the published image by digest, and can be [verified](./releases.md#verify-a-release) before you run it:
 
 ```sh
-curl -fLO https://github.com/BerriAI/lens/releases/download/v0.1.0/lens-install-0.1.0.tar.gz
-tar xzf lens-install-0.1.0.tar.gz
-cd lens-0.1.0
+curl -fLO https://github.com/BerriAI/lens/releases/download/v0.4.0/lens-install-0.4.0.tar.gz
+tar xzf lens-install-0.4.0.tar.gz
+cd lens-0.4.0
 ./start
 ```
 
-The script generates credentials in `deploy/lens/.env` and starts Lens with ClickHouse. Sign in at `/ui/` by pasting the `LENS_ADMIN_TOKEN` value from that file into the **Setup token** field. Stop with `docker compose -f deploy/lens/compose.yaml down` and restart with `./start`. Keep the extracted bundle, environment file and persistent volume
+The script generates credentials in `deploy/lens/.env` and starts Lens with ClickHouse. Sign in at `/ui/` by opening **Admin token** and pasting the `LENS_ADMIN_TOKEN` value from that file. Stop with `docker compose -f deploy/lens/compose.yaml down` and restart with `./start`. Keep the extracted bundle, environment file and persistent volume
 
 For help configuring an existing deployment, use [Set it up for me](https://github.com/BerriAI/lens/blob/main/docs/setup-with-agent.md). To connect the Lens service to an existing gateway, use [Add Lens to LiteLLM](./litellm.md#docker-compose)
 
@@ -31,7 +31,7 @@ Replace the hostname with yours. This controls the browser origin, generated tra
 
 ## Apply the configuration {#2-start-the-services}
 
-From the extracted `lens-0.1.0` directory:
+From the extracted `lens-0.4.0` directory:
 
 ```sh
 docker compose -f deploy/lens/compose.yaml up -d --wait
@@ -82,6 +82,6 @@ Allow inbound HTTPS on port 443. Keep the database private and preserve the cont
 
 ## Check the installation {#4-check-the-installation}
 
-Open `https://lens.example.com/ui/` using your hostname and paste the generated admin token into the **Setup token** field. Complete the [first-trace check](../deployment.md#check-the-installation) from the agent's actual network. If you enabled investigations, verify one bounded investigation as well
+Open `https://lens.example.com/ui/` using your hostname then open **Admin token** and paste the generated admin token. Complete the [first-trace check](../deployment.md#check-the-installation) from the agent's actual network. If you enabled investigations, verify one bounded investigation as well
 
 Use [Back up and restore Lens](https://github.com/BerriAI/lens/blob/main/docs/backup.md) to retain the data, Keeper state, credentials and exact image together. Store backups outside this server and rehearse a restore. The supported database topology is one ClickHouse server; moving to external storage does not itself provide replication or automatic failover
