@@ -16,14 +16,6 @@
   ></script>
   <script>
     const slug = value => encodeURIComponent(value).replaceAll('~', '%7E').replaceAll('%', '~');
-    if (location.hash.startsWith('#/')) {
-      try {
-        const parts = location.hash.slice(2).split('/').map(decodeURIComponent);
-        history.replaceState(null, '', '#tag/' + parts.map(slug).join('/'));
-      } catch {
-        history.replaceState(null, '', location.pathname + location.search);
-      }
-    }
     Scalar.createApiReference('#reference', {
       url: '/openapi.json',
       generateTagSlug: ({name}) => slug(name),
