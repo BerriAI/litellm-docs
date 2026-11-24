@@ -1177,8 +1177,6 @@ This routing applies to traces only. The GenAI client metrics (see [Metrics](#me
 
 If the incoming request has a W3C `traceparent` header, LiteLLM continues that trace instead of starting a new one. Your LiteLLM spans then appear inline inside whatever distributed trace your application already has, so you can follow a request from your app, through the proxy, to the LLM provider, in one view.
 
-Without a `traceparent` header, a proxy request can name its trace with `trace_id` in `metadata` or `litellm_metadata`, or a `langfuse_trace_id` header. Requests that send the same value share one trace, see [trace ID with `langfuse_otel`](./langfuse_integration#trace-id-with-langfuse_otel).
-
 ## Configuration reference
 
 All values are environment variables. Boolean flags accept `true`/`false`.

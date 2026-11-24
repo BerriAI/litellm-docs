@@ -9,7 +9,7 @@ description: "Move from the langfuse SDK callback to langfuse_otel on OpenTeleme
 
 This guide takes a proxy from the SDK based `langfuse` callback to the `langfuse_otel` callback on OpenTelemetry v2. Read the breaking changes before you start. With the default settings V2 will be sending a lot more data to Langfuse than the SDK callback did and will be omitting the prompts entirely. A straight swap of callbacks will therefore change both your Langfuse bill and what your traces show.
 
-If you're already running `langfuse_otel` without `LITELLM_OTEL_V2` then follow the [general V2 migration guide]](./opentelemetry_v2_migration) instead.
+If you're already running `langfuse_otel` without `LITELLM_OTEL_V2` then follow the [general V2 migration guide](./opentelemetry_v2_migration) instead.
 
 ## Breaking changes
 
@@ -23,8 +23,8 @@ Each of those takes effect immediately on switch and each has a setting which re
 | **Stored key and team callbacks.** Saved `langfuse` entries are not converted | Those keys and teams will continue to log via the SDK callback, or will log twice if you add `langfuse_otel` | Re-register each as `langfuse_otel` and delete the old entry ([step 3](#3-move-key-and-team-callbacks)) |
 | **Secret field name.** V2 reads `langfuse_secret_key` only | An entry saved with the old `langfuse_secret` field logs to your project rather than the tenant's, with no error | Use `langfuse_secret_key` when you re-register |
 | **Custom tenant hosts.** A `langfuse_host` on a key or team requires an allowlist entry | That tenant's traces aren't sent to its host and the proxy logs a warning | Add the host to `provider_url_destination_allowed_hosts` |
-| **Other OTel callbacks.** `LITELLM_OTEL_V2=true` - moves all OTel callbacks on the proxy to V2 (with the exception of `logfire`) | Your `otel`, Arize, Phoenix and similar exports will also be affected | Check them against the [general V2 migration guide]](./opentelemetry_v2_migration) prior to setting the flag |
-| **Self-hosted servers.** V2 exports to `/api/public/otel/v1/traces` | Langfuse v2 servers return HTTP 404 | Upgrade the server first. The SDK callback has been using the same endpoint since v1.104.0 so a server that works with your current setup on that version or later is fine.
+| **Other OTel callbacks.** `LITELLM_OTEL_V2=true` moves all OTel callbacks on the proxy to V2 (with the exception of `logfire`) | Your `otel`, Arize, Phoenix and similar exports will also be affected | Check them against the [general V2 migration guide](./opentelemetry_v2_migration) prior to setting the flag |
+| **Self-hosted servers.** V2 exports to `/api/public/otel/v1/traces` | Langfuse v2 servers return HTTP 404 | Upgrade the server first. The SDK callback has been using the same endpoint since v1.104.0 so a server that works with your current setup on that version or later is fine. |
 
 Metadata fields also change shape. See [Field changes](#field-changes) prior to relying on any dashboards, filters or masking.
 
@@ -91,7 +91,7 @@ litellm_settings:
   provider_url_destination_allowed_hosts: ["langfuse.example.com"]
 ```
 
-A key or team project will be used to fulfil that request. If you want to keep a copy in yours as well then set `otel_tenant_destination_mode: additive` under `litellm_settings`. See [per-key and per-team credentials ](./opentelemetry_v2#per-key--per-team-credentials-multi-tenant)] for the full routing rules.
+A key or team project will be used to fulfil that request. If you want to keep a copy in yours as well then set `otel_tenant_destination_mode: additive` under `litellm_settings`. See [per-key and per-team credentials](./opentelemetry_v2#per-key--per-team-credentials-multi-tenant) for the full routing rules.
 
 ### 4. Verify on staging
 
@@ -112,18 +112,18 @@ Restore the saved callback config and the stored key and team `langfuse` entries
 | SDK callback field | On V2 |
 |---|---|
 | `trace_name`, `langfuse_trace_name` header | Unchanged. If no name is set an `full` trace becomes `litellm-{call_type}` and an `llm_only` trace takes on the name of the generation |
-| `generation_name` | Ignored. Generations are named `{operation} {model}` for instance (`chat gpt-4o`), with the SDK callback using `litellm:{key_alias}` or `litellm-{call_type}`). Update the name filters.
+| `generation_name` | Ignored. Generations are named `{operation} {model}` for instance (`chat gpt-4o`), with the SDK callback using `litellm:{key_alias}` or `litellm-{call_type}`). Update the name filters. |
 | `trace_user_id`, `langfuse_trace_user_id` header | Unchanged, but no longer falls back to the end-user ID |
 | `session_id`, `langfuse_session_id` header | Unchanged |
 | `tags` | Unchanged. Key tags, team tags and the `x-litellm-tags` header are included |
 | `trace_release`, `trace_version`, `LANGFUSE_TRACING_ENVIRONMENT` | Mapped <SinceVersion v="1.111.0" />. `LANGFUSE_RELEASE` is not read |
-| `trace_id`, `existing_trace_id` | On the proxy calls that have the same value in `metadata` or `litellm_metadata` (or a `langfuse_trace_id` header) will share one trace (see [trace ID with `langfuse_otel`](./langfuse_integration#trace-id-with-langfuse_otel)). A W3C `traceparent` header will win if both are present. V2 cannot update the fields of an existing trace.
+| `trace_id`, `existing_trace_id` | On the proxy calls that have the same value in `metadata` or `litellm_metadata` (or a `langfuse_trace_id` header) will share one trace (see [trace ID with `langfuse_otel`](./langfuse_integration#trace-id-with-langfuse_otel)). A W3C `traceparent` header will win if both are present. V2 cannot update the fields of an existing trace. |
 | `update_trace_keys` | Ignored. V2 cannot update an existing trace |
 | `generation_id`, `parent_observation_id` | Ignored. The observation ID is the LiteLLM call ID which a caller can set via the `x-litellm-call-id` header. |
-| `trace_metadata`, custom generation metadata | Not passed through. Allowlist the keys you require via `LITELLM_OTEL_BAGGAGE_METADATA_KEYS` (see [request identity](./opentelemetry_v2#request-identity-on-every-span))
+| `trace_metadata`, custom generation metadata | Not passed through. Allowlist the keys you require via `LITELLM_OTEL_BAGGAGE_METADATA_KEYS` (see [request identity](./opentelemetry_v2#request-identity-on-every-span)) |
 | Usage `cache_read_input_tokens`, `cache_creation_input_tokens` | Renamed to `input_cached_tokens` and `input_cache_creation`. Reasoning tokens move out of `output` into `output_reasoning_tokens` |
-| `mask_input`, `mask_output`, `langfuse_masking_function` | Ignored. If a caller is using them and has capture on, it will send its prompt. Use `turn_off_message_logging` with `llm_only` or `capture_message_content: no_content` on that destination.
-| `redact_user_api_key_info` | Still strips the key fields from the Langfuse metadata, just not the `litellm.metadata.user_api_key_alias`, `user_api_key_user_id`, `user_api_key_end_user_id` and `user_api_key_org_id` attributes that V2 adds to every span.
+| `mask_input`, `mask_output`, `langfuse_masking_function` | Ignored. If a caller is using them and has capture on, it will send its prompt. Use `turn_off_message_logging` with `llm_only` or `capture_message_content: no_content` on that destination. |
+| `redact_user_api_key_info` | Still strips the key fields from the Langfuse metadata, just not the `litellm.metadata.user_api_key_alias`, `user_api_key_user_id`, `user_api_key_end_user_id` and `user_api_key_org_id` attributes that V2 adds to every span. |
 | Langfuse prompt link | Not supported. Generations are no longer linked to Langfuse prompts |
 | `debug_langfuse` | Ignored |
 

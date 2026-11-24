@@ -388,7 +388,7 @@ Set `mask_output` to `True` and the output will be logged for that call.
 Be aware that if you're continuing an existing trace and you set `update_trace_keys` to include either `input` or `output` and you also set the corresponding `mask_input` or `mask_output` then that trace will have its existing input and/or output replaced with a redacted message. This only applies when `langfuse_enable_update_trace_keys` is on.
 
 ## Troubleshooting & Errors
-Is data not getting logged to Langfuse? 
+### Data not getting logged to Langfuse ? 
 - Ensure you're on the latest version of langfuse `uv add langfuse -U`. The latest version allows litellm to log JSON input/outputs to langfuse
 - Follow [this checklist](https://langfuse.com/faq/all/missing-traces) if you don't see any traces in langfuse.
 
