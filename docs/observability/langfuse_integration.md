@@ -9,7 +9,7 @@ import Image from '@theme/IdealImage';
 
 ## What is Langfuse?
 
-Langfuse ([GitHub](https://github.com/langfuse/langfuse)) is an open-source LLM engineering platform for model [tracing](https://langfuse.com/docs/tracing), [prompt management](https://langfuse.com/docs/prompts/get-started), and application [evaluation](https://langfuse.com/docs/scores/overview). Langfuse helps teams to collaboratively debug, analyze, and iterate on their LLM applications. 
+Langfuse ([GitHub](https://github.com/langfuse/langfuse)) is an open source LLM engineering platform for model [tracing](https://langfuse.com/docs/tracing), [prompt management](https://langfuse.com/docs/prompts/get-started) and application [evaluation](https://langfuse.com/docs/scores/overview). It's a platform that enables teams to collaboratively debug, analyse and iterate on their LLM applications. 
 
 
 Example trace in Langfuse using multiple models via LiteLLM:
@@ -18,13 +18,13 @@ Example trace in Langfuse using multiple models via LiteLLM:
 
 :::tip[Recommended: Use OpenTelemetry v2]
 
-For Langfuse v3 and v4, we recommend using the `langfuse_otel` preset in the [OpenTelemetry v2 guide](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets). This provides better span quality, lower latency, and native OpenTelemetry semantics.
+For Langfuse v3 and v4 we'd recommend using the `langfuse_otel` preset as per the [OpenTelemetry v2 guide](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets). That gives you better span quality, lower latency and native OpenTelemetry semantics.
 
-Moving from the SDK-based `langfuse` callback? Read the [Langfuse SDK to OpenTelemetry v2 migration guide](./langfuse_to_otel_v2_migration) first for ingestion costs, server compatibility, content capture and metadata changes. Use `llm_only` unless you need the full request tree in Langfuse.
+Moving from the SDK based `langfuse` callback? Read the [Langfuse SDK to OpenTelemetry v2 migration guide](./langfuse_to_otel_v2_migration) first on ingestion costs, server compatibility, content capture and metadata changes. Use `llm_only` unless you specifically need the full request tree in Langfuse.
 
-The SDK callback below (`langfuse`) requires the Langfuse Python SDK v4 (`langfuse>=4.7,<5`). It exports traces through LiteLLM's own OpenTelemetry pipeline to Langfuse's OTLP endpoint, so traces appear in near real time, and uses the SDK's REST client only for prompt management and credential checks. Batch size and prompt cache TTL are tuned with `LANGFUSE_FLUSH_AT` and `LANGFUSE_PROMPT_CACHE_DEFAULT_TTL_SECONDS` (see [config settings](../proxy/config_settings)).
+The SDK callback below (`langfuse`) is SDK v4 of the Langfuse Python SDK (`langfuse>=4.7,<5`). It pushes traces via LiteLLM's own OpenTelemetry pipeline to Langfuse's OTLP endpoint so they appear in near real time and makes use of the SDK's REST client only for prompt management and credential checks. Batch size and prompt cache TTL are set via `LANGFUSE_FLUSH_AT` and `LANGFUSE_PROMPT_CACHE_DEFAULT_TTL_SECONDS` (see [config settings](../proxy/config_settings)).
 
-Self-hosted Langfuse must be on server 3.63.0 or newer for SDK v4, per the [Langfuse compatibility matrix](https://langfuse.com/self-hosting/upgrade/versioning#sdk-server); OSS v2 servers do not serve the `/api/public/otel/v1/traces` route the callback exports to, so traces are rejected with a 404 and the proxy logs the rejection. Upgrade the server before upgrading LiteLLM, or keep the previous LiteLLM version until then. An ingress or reverse proxy with a request body limit in front of Langfuse answers 413 to a large batch; the callback splits that batch in halves and resends, and only a single span that alone exceeds the limit is dropped, with an error log.
+Self-hosted Langfuse must be 3.63.0 or later for SDK v4 (see [Langfuse compatibility matrix](https://langfuse.com/self-hosting/upgrade/versioning#sdk-server)). OSS v2 servers don't serve the `/api/public/otel/v1/traces` route that the callback exports to so traces are rejected 404 and the proxy logs the rejection. You must upgrade the server prior to upgrading LiteLLM or stick with the previous version of LiteLLM until then. If you have an ingress or reverse proxy in front of Langfuse with a request body limit then it will return 413 for a large batch. The callback will split that batch in half and re-send it and only a single span that individually exceeds the limit will be dropped (with an error logged).
 
 :::
 
@@ -33,14 +33,14 @@ Self-hosted Langfuse must be on server 3.63.0 or newer for SDK v4, per the [Lang
 
 [**Follow this link to start sending logs to langfuse with LiteLLM Proxy server**](../proxy/logging)
 
-To route different teams or virtual keys to different Langfuse projects, see [Team/Key Based Logging](../proxy/team_logging). Team defaults live in trusted `config.yaml` (where `os.environ/...` references are resolved by the gateway), while per-key callbacks are provisioned via `/key/generate` or `/key/update` with resolved credential values; these are stored settings on the key, not per-request credentials.
+To route different teams/virtual keys to different Langfuse projects see [Team/Key Based Logging](../proxy/team_logging). Team defaults are in trusted `config.yaml` (where `os.environ/...` references get resolved at the gateway) and per-key callbacks are provisioned via `/key/generate` or `/key/update` with the resolved credential values. The credential values are stored as settings on the key, not as per-request credentials.
 
 
 ## Usage with LiteLLM Python SDK
 
 :::note
 
-This section covers the `langfuse` callback, which uses the Langfuse Python SDK v4. Alternatively, you can use the [OpenTelemetry v2 integration](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets) directly.
+This section looks at the `langfuse` callback using the Langfuse Python SDK v4. You could alternatively use the [OpenTelemetry v2 integration](./opentelemetry_v2#2-send-traces-to-a-specific-tool-presets).
 
 :::
 
@@ -181,9 +181,9 @@ print(response)
 
 :::info[Langfuse v4 semantics]
 
-- **Custom `trace_id`**: Langfuse v4 requires W3C trace IDs (32 lowercase hex chars). LiteLLM first lowercases your `trace_id` and strips hyphens, so a UUID such as `01234567-89AB-CDEF-0123-456789ABCDEF` becomes `0123456789abcdef0123456789abcdef` and is used as is. Anything that still isn't 32 hex chars is deterministically hashed to one (via `Langfuse.create_trace_id(seed=<your id>)`). The same `trace_id` always maps to the same Langfuse trace, but the ID visible in Langfuse is the normalized or hashed form, not your original string.
-- **`version` / `trace_version`**: Langfuse v4 has a single `version` attribute. On a new trace, `trace_version` takes precedence over `version`; on an `existing_trace_id` continuation, `version` still lands on the generation.
-- **Continued traces**: the v4 server derives a trace's name/input/output from the latest root observation in the trace. `update_trace_keys` with `input`/`output` is still honored - the values are written via observation fields.
+- **Custom `trace_id`**: Langfuse v4 requires W3C trace IDs (32 lowercase hex chars). LiteLLM will take your `trace_id`, lowercase it and remove any hyphens so a UUID like `01234567-89AB-CDEF-0123-456789ABCDEF` becomes `0123456789abcdef0123456789abcdef` and is used as such. Anything that isn't 32 hex chars after that is deterministically hashed to one (via `Langfuse.create_trace_id(seed=<your id>)`). The same `trace_id` will always map to the same Langfuse trace, but the ID you see in Langfuse is the normalised/hashed version rather than your original string.
+- **`version` / `trace_version`**: Langfuse v4 has a single `version` attribute. On a new trace `trace_version` wins over `version`; on an `existing_trace_id` continuation `version` still goes to the generation.
+- **Continued traces**: the v4 server takes the trace name/input/output from the most recent root observation in the trace. `update_trace_keys` with `input`/`output` is still honoured in that the values are written via the observation fields.
 
 :::
 
@@ -210,7 +210,7 @@ curl --location --request POST 'http://0.0.0.0:4000/chat/completions' \
 
 #### Trace ID with `langfuse_otel`
 
-Calls sent through `langfuse_otel` land in one Langfuse trace when they name the same trace. A call names a trace with any of these, on both OpenTelemetry integrations (`LITELLM_OTEL_V2` unset or `true`):
+Calls sent via `langfuse_otel` end up in a single Langfuse trace if they name that same trace. A call will name a trace with any of the following on both of the OpenTelemetry integrations (`LITELLM_OTEL_V2` unset or `true`):
 
 | What the request sends | Where |
 |---|---|
@@ -231,21 +231,21 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 }'
 ```
 
-- The ID is normalized the same way as for the `langfuse` callback: lowercased, hyphens stripped, and hashed to 32 hex chars when it is not a UUID or 32 hex chars. The trace ID shown in Langfuse is the normalized form.
-- A `traceparent` header wins when a request sends both. The call joins the `traceparent` trace and `trace_id` is not used for grouping.
-- Send a different `trace_id` for each unit of work you want as its own trace. Calls that reuse one value, for example a constant, are merged into a single trace.
-- A trace ID that LiteLLM fills in from a session header such as `x-litellm-session-id` does not group calls. Those calls share the session and keep one trace each.
-- With `LITELLM_OTEL_V2=true` this applies to requests sent through the LiteLLM Proxy with a JSON body, on every endpoint (`/v1/chat/completions`, `/v1/responses`, `/v1/messages` and the rest). The whole request, including its auth and routing spans, joins the named trace, and the `traceresponse` response header carries that trace ID. Calls made with the Python SDK directly are grouped by the active OpenTelemetry span instead.
-- Earlier versions set `trace_id` only as a span attribute, or ignored it with `LITELLM_OTEL_V2=true`, so each call landed in its own trace.
+- The ID is normalised in the same way as for the `langfuse` callback: lowercased, hyphens removed and hashed to 32 hex chars if it's not a UUID or 32 hex chars. The trace ID you see in Langfuse is the normalized form.
+- A `traceparent` header wins if the request has both. The call will be in the `traceparent` trace and `trace_id` will not be used for grouping.
+- Send a separate `trace_id` for each unit of work that you want to be its own trace. Calls that re-use the same value (e.g. a constant) are merged into a single trace.
+- A trace ID that LiteLLM pulls from a session header (e.g. `x-litellm-session-id`) will not group the calls. The calls will all share the session and will each have their own trace.
+- With `LITELLM_OTEL_V2=true` this applies to requests sent via the LiteLLM Proxy with a JSON body of up to 16MB on every endpoint (`/v1/chat/completions`, `/v1/responses`, `/v1/messages` and all the rest). The entire request (including its auth and routing spans) will be part of the named trace and the `traceresponse` response header will contain that trace ID. Calls made via the Python SDK directly will be grouped under the active OpenTelemetry span.
+- The earlier versions of the code just set `trace_id` as a span attribute (or else omitted it entirely with `LITELLM_OTEL_V2=true`) so each call ended up in its own trace.
 
 #### Trace & Generation Parameters
 
 ##### Trace Specific Parameters
 
-* `trace_id`       - Identifier for the trace, must use `existing_trace_id` instead of `trace_id` if this is an existing trace, auto-generated by default. IDs are lowercased and stripped of hyphens; anything that still isn't 32 hex chars is deterministically hashed to a 32-hex W3C trace ID (see note above)
+* `trace_id` - the trace id, must use `existing_trace_id` rather than `trace_id` if this is an existing trace (generated automatically by default). The IDs are all lower case and hyphens removed. Anything that's still not 32 hex chars is deterministically hashed to a 32 hex W3C trace id (see note above).
 * `trace_name`     - Name of the trace, auto-generated by default
 * `session_id`     - Session identifier for the trace, defaults to `None`
-* `trace_version`  - Version for the trace, defaults to value for `version`. Langfuse v4 has a single `version` attribute: `trace_version` takes precedence on a new trace
+* `trace_version` - the trace version, defaults to the value of `version`. Langfuse v4 has a single `version` attribute: `trace_version` takes precedence on a new trace.
 * `trace_release`  - Release for the trace, defaults to `None`
 * `trace_metadata` - Metadata for the trace, defaults to `None`
 * `trace_user_id`  - User identifier for the trace, defaults to completion argument `user`
@@ -259,7 +259,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 * `prompt`                - Langfuse prompt object used for the generation, defaults to `None`
 
 
-Any other key value pairs passed into the metadata are logged on the generation under `requester_metadata`. On the proxy this happens automatically for whatever you send in the request body. From the SDK, nest them so they are picked up:
+Any other key value pairs that you pass into the metadata are logged on the generation under `requester_metadata`. On the proxy this happens automatically for whatever you put in the request body. From the SDK you need to nest them so that they are picked up:
 
 ```python
 response = litellm.completion(
@@ -271,7 +271,7 @@ response = litellm.completion(
 
 #### Multiple Langfuse Projects (Per-Request Credentials)
 
-You can send traces to different Langfuse projects per request by passing credentials directly to `completion()` or `acompletion()`. This works alongside (or instead of) the global env vars and is useful when different teams or business processes use different Langfuse projects.
+You can send traces to different Langfuse projects per request by passing the credentials directly into `completion()` or `acompletion()`. This works in conjunction with (or indeed instead of) the global env vars and is useful when different teams or different business processes are using different Langfuse projects.
 
 Pass **`langfuse_public_key`**, **`langfuse_secret_key`** (or **`langfuse_secret`**), and optionally **`langfuse_host`** as keyword arguments:
 
@@ -323,15 +323,15 @@ response = await acompletion(
 )
 ```
 
-- **`langfuse_public_key`** – Langfuse project public key (required for per-request override).
-- **`langfuse_secret_key`** or **`langfuse_secret`** – Langfuse secret key (either name is accepted).
+- **`langfuse_public_key`** – Langfuse project public key (required for per-request override)
+- **`langfuse_secret_key`** or **`langfuse_secret`** – Langfuse secret key (either one will do).
 - **`langfuse_host`** – Langfuse host URL (e.g. `https://us.cloud.langfuse.com`); optional, defaults to env or Langfuse cloud.
 
-When these are passed, that request uses this project (and host) for the Langfuse callback; when omitted, the callback uses the global Langfuse client (from env vars if set). LiteLLM caches a Langfuse client per credential set to avoid creating a new client on every request.
+When these are passed the request will use this project (and host) for the Langfuse callback. If they are omitted the callback will use the global Langfuse client (from the env vars if set). LiteLLM will cache a Langfuse client per credential set so as not to create a new client on every request.
 
 #### Disable Logging - Specific Calls
 
-To disable logging for specific calls use the `no-log` flag. 
+To disable logging for particular calls use the `no-log` flag. 
 
 `completion(messages = ..., model = ...,  **{"no-log": True})`
 
@@ -375,20 +375,20 @@ chat(messages)
 
 #### Redact Messages and Responses from all Langfuse Logging
 
-Set `litellm.turn_off_message_logging=True` This will prevent the messages and responses from being logged to langfuse, but request metadata will still be logged.
+Set `litellm.turn_off_message_logging=True`. This will stop the messages and responses from being logged to Langfuse (request metadata will still be logged).
 
 #### Redact Messages and Responses from specific Langfuse Logging
 
-In the metadata typically passed for text completion or embedding calls you can set specific keys to mask the messages and responses for this call.
+In the metadata that's normally passed along for text completion or embedding calls you can set certain keys to hide the messages and responses for that particular call.
 
 Setting `mask_input` to `True` will mask the input from being logged for this call 
 
-Setting `mask_output` to `True` will make the output from being logged for this call.
+Set `mask_output` to `True` and the output will be logged for that call.
 
-Be aware that if you are continuing an existing trace, and you set `update_trace_keys` to include either `input` or `output` and you set the corresponding `mask_input` or `mask_output`, then that trace will have its existing input and/or output replaced with a redacted message. This applies only when `langfuse_enable_update_trace_keys` is on.
+Be aware that if you're continuing an existing trace and you set `update_trace_keys` to include either `input` or `output` and you also set the corresponding `mask_input` or `mask_output` then that trace will have its existing input and/or output replaced with a redacted message. This only applies when `langfuse_enable_update_trace_keys` is on.
 
 ## Troubleshooting & Errors
-### Data not getting logged to Langfuse ? 
+Is data not getting logged to Langfuse? 
 - Ensure you're on the latest version of langfuse `uv add langfuse -U`. The latest version allows litellm to log JSON input/outputs to langfuse
 - Follow [this checklist](https://langfuse.com/faq/all/missing-traces) if you don't see any traces in langfuse.
 
