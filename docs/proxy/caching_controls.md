@@ -347,7 +347,9 @@ litellm_settings:
 
 The setting is per deployment. When several deployments share one `model_name`, repeat it on each of them.
 
-A model that sets `allowed_cache_controls` also decides caching for its fallbacks. When a request for that model is served by a fallback model, the requested model's `cache` controls apply over the fallback's own, and a request control is honored only if both models allow it. A model locked to never cache therefore stays uncached on its fallbacks, and a fallback's own `no-store` still holds. A model without `allowed_cache_controls` leaves each fallback on the fallback's own settings.
+A model that sets `allowed_cache_controls` also decides caching for its fallbacks. When a request for that model is served by a fallback model with no `allowed_cache_controls` of its own, the requested model's `cache` controls apply over the fallback's, and the fallback keeps any control the requested model does not set. When the fallback has its own `allowed_cache_controls`, the stricter value of each control holds: `no-cache` or `no-store` set on either model stays on, and the shorter lifetime wins. A request control is honored only if both models allow it. A model without `allowed_cache_controls` leaves each fallback on the fallback's own settings.
+
+A virtual key's own `cache` controls always apply. A model's `allowed_cache_controls` filters only what the request itself sends, so a key set to `no-store` stays uncached on a model whose list leaves `no-store` out.
 
 ### Choose which controls a client may override
 
