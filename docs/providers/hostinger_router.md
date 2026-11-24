@@ -21,21 +21,13 @@ import TabItem from '@theme/TabItem';
 | Base URL | `https://router.hostinger.com/v1` |
 | Supported Operations | [`/chat/completions`](#usage---litellm-python-sdk), [`/responses`](#responses-api), [`/messages`](#anthropic-messages-api), [`/embeddings`](#embeddings) |
 
-<br />
-<br />
+## Available Models
 
 **We support ALL Hostinger AI Router models, just set `hostinger_router/` as a prefix when sending requests.** The router's own model ids, such as `claude-sonnet-5` or `gpt-5.2`, go after the prefix.
 
-## Available Models
+The router publishes its live catalog at [`router.hostinger.com/v1/models`](https://router.hostinger.com/v1/models) (no authentication required), with each model's id, supported endpoints, and supported parameters. Models work with the `hostinger_router/` prefix as soon as Hostinger adds them, so this page links the live catalog instead of mirroring a model list that would go stale.
 
-| Model | Mode |
-|-------|------|
-| `hostinger_router/claude-sonnet-5` | chat |
-| `hostinger_router/gpt-5.2` | chat |
-| `hostinger_router/text-embedding-3-small` | embedding |
-| `hostinger_router/text-embedding-3-large` | embedding |
-
-LiteLLM tracks spend for the models above, counting one Hostinger credit as $0.01. Any other model in the router's catalog also works with the `hostinger_router/` prefix, but LiteLLM records its spend as $0 until a price is added, which you can set yourself through `model_info` on the proxy.
+LiteLLM tracks spend for priced models, counting one Hostinger credit as $0.01. A catalog model without a price entry in LiteLLM records its spend as $0 until you set one through `model_info` on the proxy.
 
 Every chat model works on `/chat/completions`, `/responses`, and `/messages`. When LiteLLM knows a model serves `/v1/responses` or `/v1/messages` on the router, such as `gpt-5.2` on `/responses` or `claude-sonnet-5` on `/messages`, it calls that route directly. For every other model, LiteLLM converts the call and sends it through the router's `/v1/chat/completions`.
 
