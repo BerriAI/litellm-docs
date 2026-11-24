@@ -210,14 +210,15 @@ curl --location --request POST 'http://0.0.0.0:4000/chat/completions' \
 
 #### Trace ID with `langfuse_otel`
 
-How calls are grouped into one Langfuse trace depends on which OpenTelemetry integration `langfuse_otel` runs on.
+Calls sent through `langfuse_otel` land in one Langfuse trace when they name the same trace. A call names a trace with any of these, on both OpenTelemetry integrations (`LITELLM_OTEL_V2` unset or `true`):
 
-| Integration | What groups calls into one trace |
+| What the request sends | Where |
 |---|---|
-| `langfuse_otel` with `LITELLM_OTEL_V2` unset (the default) | `trace_id` or `existing_trace_id` in `metadata` or `litellm_metadata`, the `langfuse_trace_id` header, or a W3C `traceparent` header |
-| `langfuse_otel` with `LITELLM_OTEL_V2=true` | A W3C `traceparent` header only. `trace_id` is ignored, see the [migration guide](./langfuse_to_otel_v2_migration#field-changes) |
+| `trace_id` or `existing_trace_id` | `metadata` or `litellm_metadata` in the request body |
+| `langfuse_trace_id` | Request header |
+| W3C `traceparent` | Request header |
 
-With `LITELLM_OTEL_V2` unset, every call that sends the same `trace_id` lands in the same Langfuse trace:
+Every call that sends the same `trace_id` lands in the same Langfuse trace:
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
@@ -234,7 +235,8 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 - A `traceparent` header wins when a request sends both. The call joins the `traceparent` trace and `trace_id` is not used for grouping.
 - Send a different `trace_id` for each unit of work you want as its own trace. Calls that reuse one value, for example a constant, are merged into a single trace.
 - A trace ID that LiteLLM fills in from a session header such as `x-litellm-session-id` does not group calls. Those calls share the session and keep one trace each.
-- Earlier versions set `trace_id` only as a span attribute, so each call landed in its own trace.
+- With `LITELLM_OTEL_V2=true` this applies to requests sent through the LiteLLM Proxy with a JSON body, on every endpoint (`/v1/chat/completions`, `/v1/responses`, `/v1/messages` and the rest). The whole request, including its auth and routing spans, joins the named trace, and the `traceresponse` response header carries that trace ID. Calls made with the Python SDK directly are grouped by the active OpenTelemetry span instead.
+- Earlier versions set `trace_id` only as a span attribute, or ignored it with `LITELLM_OTEL_V2=true`, so each call landed in its own trace.
 
 #### Trace & Generation Parameters
 
