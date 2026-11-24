@@ -463,18 +463,12 @@ print(response)
 <TabItem value="langchain" label="Langchain">
 
 ```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model = "{{openai_small}}",
-    temperature=0.1,
     extra_body={
         "metadata": {
             "generation_name": "ishaan-generation-langchain-client",
@@ -493,7 +487,7 @@ messages = [
         content="test from litellm. tell me why it's amazing in 1 sentence"
     ),
 ]
-response = chat(messages)
+response = chat.invoke(messages)
 
 print(response)
 ```
@@ -1874,6 +1868,7 @@ litellm --config proxy_config.yaml
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
+    --header 'Content-Type: application/json' \
     --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data ' {
     "model": "{{openai_small}}",
@@ -1883,8 +1878,7 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
         "content": "good morning good sir"
         }
     ],
-    "user": "ishaan-app",
-    "temperature": 0.2
+    "user": "ishaan-app"
     }'
 ```
 
@@ -2450,7 +2444,7 @@ Your logs should be available on DynamoDB
     "S": "{{openai_small}}"
   },
   "modelParameters": {
-    "S": "{'temperature': 0.7, 'max_tokens': 100, 'user': 'ishaan-2'}"
+    "S": "{'max_tokens': 100, 'user': 'ishaan-2'}"
   },
   "response": {
     "S": "ModelResponse(id='chatcmpl-8W15J4480a3fAQ1yQaMgtsKJAicen', choices=[Choices(finish_reason='stop', index=0, message=Message(content='Great! What can I assist you with?', role='assistant'))], created=1702641357, model='{{openai_small}}', object='chat.completion', system_fingerprint=None, usage=Usage(completion_tokens=9, prompt_tokens=11, total_tokens=20))"

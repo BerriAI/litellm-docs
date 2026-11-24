@@ -1,11 +1,13 @@
 ---
-title: Quickstart
+title: litellm.agent() quickstart
+sidebar_label: Quickstart
+description: Install a harness, make your first litellm.agent() call, and stream events from a coding agent in Python.
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Quickstart
+# `litellm.agent()` quickstart
 
 ## 1. Install
 
@@ -16,6 +18,7 @@ import TabItem from '@theme/TabItem';
 | Claude Code | `pip install litellm starlette uvicorn` | `npm install -g @anthropic-ai/claude-code` |
 | Codex | `pip install litellm starlette uvicorn` | `npm install -g @openai/codex` |
 | OpenCode | `pip install litellm starlette uvicorn` | `npm install -g opencode-ai` |
+| [Pi](./pi.md) | `pip install litellm starlette uvicorn` | `npm install -g @earendil-works/pi-coding-agent` |
 | Deep Agents | `pip install litellm deepagents langchain-litellm` (Python 3.11+) {/* keep-python-version */} | nothing |
 | Tool Loop | `pip install litellm` | nothing |
 

@@ -53,7 +53,7 @@ When a retention period is set and `maximum_spend_logs_cleanup_cron` is not, the
 
 ### The size rule
 
-A retention period alone cannot protect a disk: a traffic spike can fill it long before any row is 30 days old, and the retention job never looks at how much space the rows take. `maximum_spend_logs_size` adds a second, independent rule. On every check the job reads what `LiteLLM_SpendLogs` and `LiteLLM_SpendLogToolIndex` take on disk (heap, indexes and TOAST, partitions included) from the Postgres catalog, the same number `SELECT pg_size_pretty(pg_total_relation_size('"LiteLLM_SpendLogs"'))` prints, and if the live data is over the limit it deletes the oldest spend logs first, with their tool-index rows, until the tables are under `maximum_spend_logs_cleanup_target_size`. With the target unset, a run stops as soon as the tables are back under the limit, so the next check may trigger again as soon as traffic pushes them over; set the target below the limit if you want quiet between runs. The two tables are the whole measurement. The rest of the database is not counted, so compare the number against your spend-log storage, not your total database size.
+A retention period alone cannot protect a disk: a traffic spike can fill it long before any row is 30 days old, and the retention job never looks at how much space the rows take. `maximum_spend_logs_size` adds a second, independent rule. On every check the job reads what `LiteLLM_SpendLogs` and `LiteLLM_SpendLogToolIndex` take on disk (heap, indexes and TOAST, partitions included) from the Postgres catalog, the same number `SELECT pg_size_pretty(pg_total_relation_size('"LiteLLM_SpendLogs"'))` prints, and if the live data is over the limit it deletes the oldest spend logs first, with their tool-index rows, until the tables are under `maximum_spend_logs_cleanup_target_size`. With the target unset, a run stops as soon as the tables are back under the limit, so the next check may trigger again as soon as traffic pushes them over; set the target below the limit if you want quiet between runs. The two tables are the whole measurement. `LiteLLM_SpendLogGuardrailIndex` is not counted and the size rule does not delete from it, so only the retention period bounds that table. The rest of the database is not counted, so compare the number against your spend-log storage, not your total database size.
 
 The size check has its own schedule. With `maximum_spend_logs_size` set and no cron, a `spend_log_size_check_job` runs every `maximum_spend_logs_size_check_interval` (default `1d`, plus the same random offset). A `1d` check only catches a spike a day late, so a deployment that fears spikes sets something like `"10m"`: a check is one catalog read and costs nothing when the tables are under the limit. With `maximum_spend_logs_cleanup_cron` set there is one schedule for both rules and the cron run does the size pass after the age pass.
 
@@ -69,11 +69,16 @@ A run prunes these tables, each on the cutoff implied by its retention setting:
 | --- | --- | --- |
 | `LiteLLM_SpendLogs` | `startTime` | `maximum_spend_logs_retention_period` |
 | `LiteLLM_SpendLogToolIndex` | `start_time` | `maximum_spend_logs_retention_period` |
+| `LiteLLM_SpendLogGuardrailIndex` | `start_time` | `maximum_spend_logs_retention_period` |
 | `LiteLLM_AutoRouterSession` | `last_turn_at` | `maximum_autorouter_session_retention_period` |
+| `LiteLLM_AutoRouterUserSession` | `last_turn_at` | `maximum_autorouter_session_retention_period` |
+| `LiteLLM_AutoRouterDailySpend` | `date` | `maximum_autorouter_session_retention_period` |
 | `LiteLLM_HealthCheckTable` | `checked_at` | `maximum_health_check_retention_period` |
 | `LiteLLM_DailyTagSpend` | `date` | `maximum_daily_tag_spend_retention_period` |
 
-`LiteLLM_SpendLogToolIndex` rows are derived from spend logs, so they expire on the same cutoff as the log rows they point at. Auto-router session rollups carry their own retention setting and their own cutoff. Setting only `maximum_autorouter_session_retention_period` is enough to register the job, in which case spend logs are left untouched and only session rollups are pruned
+`LiteLLM_SpendLogToolIndex` and `LiteLLM_SpendLogGuardrailIndex` rows are derived from spend logs, so they expire on the same cutoff as the log rows they point at. Auto-router session rollups carry their own retention setting and their own cutoff. Setting only `maximum_autorouter_session_retention_period` is enough to register the job, in which case spend logs are left untouched and only session rollups are pruned
+
+`LiteLLM_SpendLogGuardrailIndex` holds one row per request for each guardrail that ran on it and backs the Logs tab of the Guardrails Monitor. Its rows are pruned from v1.112.0 onward. Pruned requests leave the Logs tab, and the overview counts are unaffected
 
 `LiteLLM_DailyTagSpend` holds one row per tag, model and calendar day and backs the Tag Usage page. Its `date` column is a `YYYY-MM-DD` string, so the cutoff is a day: rows whose day is strictly older than the day the retention period reaches back to are deleted, and the horizon day itself is kept. With `maximum_daily_tag_spend_retention_period` unset the table is never touched, which is the pre-existing behavior. Tag budgets are enforced from lifetime counters and are unaffected by this pruning, but the Tag Usage chart can no longer show days that were deleted
 
@@ -131,7 +136,7 @@ How many `DELETE` statements the job issues per table per run, exactly that many
 
 #### `maximum_spend_logs_cleanup_run_budget` (optional)
 
-Wall-clock budget for the whole run, in the same duration format as the retention period. Default is `5m`. The budget covers every table the run touches rather than each table separately, so spend logs draw on it first and whatever is left over goes to the tool index and the session rollups. When the budget is spent the run stops where it is and the remaining backlog waits for the next tick. Environment default: `SPEND_LOG_CLEANUP_RUN_BUDGET_SECONDS`, expressed in seconds
+Wall-clock budget for the whole run, in the same duration format as the retention period. Default is `5m`. The budget covers every table the run touches rather than each table separately, so spend logs draw on it first and whatever is left over goes to the tool index, the guardrail index and the session rollups. When the budget is spent the run stops where it is and the remaining backlog waits for the next tick. Environment default: `SPEND_LOG_CLEANUP_RUN_BUDGET_SECONDS`, expressed in seconds
 
 #### `maximum_spend_logs_cleanup_batch_timeout` (optional)
 
@@ -239,6 +244,8 @@ At high request volume (millions of rows per day), retention via `DELETE` become
 The fix is native Postgres range partitioning on `startTime`. With a partitioned table, retention drops whole partitions with `DROP TABLE`, an instant metadata operation that frees disk immediately, with no tombstones and no vacuum. With `general_settings.use_spend_logs_partitioning: true` set and the table actually partitioned, the same cleanup job switches from batched deletes to dropping expired partitions, and it pre-creates upcoming partitions on each run so writes always have a partition to land in; both conditions are required, detection alone does not flip the behavior.
 
 This is opt-in. The default schema is not partitioned, so existing deployments are unaffected until you convert the table.
+
+Only `LiteLLM_SpendLogs` can be partitioned. The tool index and guardrail index tables are always pruned with batched deletes.
 
 Partition maintenance interacts with the run budget in one way worth knowing. The job only starts partition maintenance while the run still has budget left, and a run that is already over skips it until the next tick. Once a drop is running the budget cannot cut it short, because dropping a partition is DDL that holds an `ACCESS EXCLUSIVE` lock and has to run to completion. Everything else the job does is interruptible between statements, so this is the single piece of work a budget cannot bound mid-flight
 

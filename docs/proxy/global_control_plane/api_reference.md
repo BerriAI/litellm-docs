@@ -296,7 +296,8 @@ The OCSF endpoint checks the returned records' integrity. `sequence_gaps` counts
 | --- | --- | --- | --- |
 | `GET` | `/healthz` | None. No bearer token required. | `{"status":"ok"}` when the control-plane process responds. |
 | `GET` | `/readyz` | None. No bearer token required. | `{"status":"ok"}` when the control-plane process responds. |
-| `GET` | `/api/v1/docs` | None. No bearer token required. | Interactive Swagger UI. |
+| `GET` | `/api/v1/docs` | None. No bearer token required. | Interactive Scalar API reference. |
+| `GET` | `/api/v1/swagger` | None. No bearer token required. | Optional Swagger UI for the same OpenAPI schema. |
 | `GET` | `/api/v1/openapi.json` | None. No bearer token required. | OpenAPI schema for the running service. |
 
 The health paths do not use `CONTROL_PLANE_API_PREFIX`. They do not test data planes, audit delivery, or runtime store availability and migration status. Use `/api/v1/dataplanes/{id}/health` to check a data plane.

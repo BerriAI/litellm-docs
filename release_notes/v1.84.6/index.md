@@ -2,7 +2,7 @@
 title: "LiteLLM v1.84.6 - CrowdStrike AIDR Identity Capture"
 description: "Adds CrowdStrike AIDR user and model metadata capture to guardrails and reads identity from both metadata bags."
 slug: "v1-84-6"
-date: 2026-06-08T18:25:32
+date: 2026-06-09T01:36:45
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

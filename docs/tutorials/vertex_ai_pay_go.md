@@ -15,6 +15,8 @@ Check `supports_service_tier: true` in LiteLLM's [model pricing JSON](https://gi
 
 ### Send a priority request
 
+Pass `service_tier="priority"` (or `"flex"`) and LiteLLM sends the header below for you <SinceVersion v="1.112.0" />. The [Gemini `service_tier` docs](../providers/gemini.md#usage---service_tier) list every value. On an older version, or to set the header on a whole deployment, send it yourself.
+
 Use this header:
 
 `X-Vertex-AI-LLM-Shared-Request-Type: priority`
@@ -84,11 +86,14 @@ curl -X POST \
 
 **`trafficType` → `service_tier` mapping**
 
-| `usageMetadata.trafficType` | `service_tier` | Pricing keys used |
+| `usageMetadata.trafficType` | Response `service_tier` | Pricing keys used |
 |---|---|---|
-| `ON_DEMAND` | `None` | `input_cost_per_token` |
+| `ON_DEMAND` | `"default"` | `input_cost_per_token` |
 | `ON_DEMAND_PRIORITY` | `"priority"` | `input_cost_per_token_priority` |
-| `FLEX` / `BATCH` | `"flex"` | `input_cost_per_token_flex` |
+| `ON_DEMAND_FLEX`, `FLEX` or `BATCH` | `"flex"` | `input_cost_per_token_flex` |
+| `PROVISIONED_THROUGHPUT` or any other value | `"default"` | `input_cost_per_token` |
+
+The response carries this `service_tier` <SinceVersion v="1.112.0" />.
 
 If a tier-specific key is missing, LiteLLM falls back to standard pricing keys.
 
@@ -96,7 +101,7 @@ If a tier-specific key is missing, LiteLLM falls back to standard pricing keys.
 
 ## Standard PayGo vs Provisioned Throughput
 
-This is a different header from priority routing:
+This is a different header from priority routing. Sending `X-Vertex-AI-LLM-Shared-Request-Type` alone uses Provisioned Throughput first and then falls back to Priority or Flex PayGo. Add `X-Vertex-AI-LLM-Request-Type: shared` to use PayGo only.
 
 | Header value | Behavior |
 |---|---|

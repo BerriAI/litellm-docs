@@ -13,7 +13,7 @@ import TabItem from '@theme/TabItem';
 | Fallbacks | ✅ | Works between supported models |
 | Loadbalancing | ✅ | Works between supported models |
 | Guardrails | ✅ | Applies to output transcribed text (non-streaming only) |
-| Supported Providers | `openai`, `azure`, `vertex_ai`, `gemini`, `deepgram`, `groq`, `fireworks_ai`, `ovhcloud`, `mistral` | |
+| Supported Providers | `openai`, `azure`, `vertex_ai`, `gemini`, `deepgram`, `groq`, `fireworks_ai`, `ovhcloud`, `mistral`, `gnani` | |
 
 ## Quick Start
 
@@ -27,7 +27,7 @@ import os
 os.environ["OPENAI_API_KEY"] = ""
 audio_file = open("/path/to/audio.mp3", "rb")
 
-response = transcription(model="whisper", file=audio_file)
+response = transcription(model="gpt-transcribe", file=audio_file)
 
 print(f"response: {response}")
 ```
@@ -42,9 +42,9 @@ print(f"response: {response}")
 
 ```yaml showLineNumbers title="OpenAI Configuration"
 model_list:
-- model_name: whisper
+- model_name: gpt-transcribe
   litellm_params:
-    model: whisper-1
+    model: gpt-transcribe
     api_key: os.environ/OPENAI_API_KEY
   model_info:
     mode: audio_transcription
@@ -57,15 +57,15 @@ general_settings:
 
 ```yaml showLineNumbers title="OpenAI + Azure Configuration"
 model_list:
-- model_name: whisper
+- model_name: gpt-transcribe
   litellm_params:
-    model: whisper-1
+    model: gpt-transcribe
     api_key: os.environ/OPENAI_API_KEY
   model_info:
     mode: audio_transcription
-- model_name: whisper
+- model_name: gpt-transcribe
   litellm_params:
-    model: azure/azure-whisper
+    model: azure/gpt-transcribe
     api_version: 2024-02-15-preview
     api_base: os.environ/AZURE_EUROPE_API_BASE
     api_key: os.environ/AZURE_EUROPE_API_KEY
@@ -96,7 +96,7 @@ litellm --config /path/to/config.yaml
 curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'file=@"/Users/krrishdholakia/Downloads/gettysburg.wav"' \
---form 'model="whisper"'
+--form 'model="gpt-transcribe"'
 ```
 
 </TabItem>
@@ -104,7 +104,7 @@ curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 
 ```python showLineNumbers title="Test with OpenAI Python SDK"
 from openai import OpenAI
-client = openai.OpenAI(
+client = OpenAI(
     api_key="sk-<your-litellm-api-key>",
     base_url="http://0.0.0.0:4000"
 )
@@ -112,7 +112,7 @@ client = openai.OpenAI(
 
 audio_file = open("speech.mp3", "rb")
 transcript = client.audio.transcriptions.create(
-  model="whisper",
+  model="gpt-transcribe",
   file=audio_file
 )
 ```
@@ -126,6 +126,7 @@ transcript = client.audio.transcriptions.create(
 - [Fireworks AI](./providers/fireworks_ai.md#audio-transcription)
 - [Groq](./providers/groq.md#speech-to-text---whisper)
 - [Deepgram](./providers/deepgram.md)
+- [Gnani](./providers/gnani.md)
 - [Google AI Studio (Gemini)](./providers/gemini.md#audio-transcription-speech-to-text)
 - [Mistral (Voxtral)](./providers/mistral.md#audio-transcription)
 - [OVHcloud AI Endpoints](./providers/ovhcloud.md)
@@ -144,7 +145,7 @@ curl --location 'http://0.0.0.0:4000/v1/audio/transcriptions' \
 --header "Authorization: Bearer $LITELLM_API_KEY" \
 --form 'file=@"gettysburg.wav"' \
 --form 'model="groq/whisper-large-v3"' \
---form 'fallbacks[]="openai/whisper-1"'
+--form 'fallbacks[]="openai/gpt-transcribe"'
 ```
 
 </TabItem>
@@ -162,7 +163,7 @@ transcript = client.audio.transcriptions.create(
     model="groq/whisper-large-v3",
     file=audio_file,
     extra_body={
-        "fallbacks": ["openai/whisper-1"]
+        "fallbacks": ["openai/gpt-transcribe"]
     }
 )
 ```

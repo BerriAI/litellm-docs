@@ -35,8 +35,8 @@ const spec = {
     Result: {type: 'object', properties: {spend: {type: 'number'}}},
   }},
 };
-const operation = '/api-reference/#/key%20management/reset_key_spend';
-const inspection = '/api-reference/#/key%20management/inspect_reset';
+const operation = '/api-reference/#tag/key~20management/reset_key_spend';
+const inspection = '/api-reference/#tag/key~20management/inspect_reset';
 const call = (name, args) => ({id: name, function: {name, arguments: JSON.stringify(args)}});
 
 test('OpenAPI preserves inherited settings, overrides, schemas and recursive definitions', () => {
@@ -68,7 +68,7 @@ test('unsupported or missing API definitions fail instead of producing partial e
   assert.throws(() => extractOpenAPI({}), /OpenAPI 3/);
 });
 
-test('shared search keeps Swagger operations separate through serialization and full reads', async () => {
+test('shared search keeps Scalar operations separate through serialization and full reads', async () => {
   const {documents} = extractOpenAPI(spec);
   const index = loadIndex(JSON.stringify(createIndex(documents)));
   assert.equal(contentPage('/docs/proxy/users#budgets'), '/docs/proxy/users');

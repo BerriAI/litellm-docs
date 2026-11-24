@@ -9,6 +9,7 @@ export type NetworkGroup = {
   label: string;
   kind: 'cloud' | 'region' | 'vpc' | 'az' | 'public' | 'private' | 'managed' | 'optional' | 'project' | 'subnet';
   icon?: string;
+  dotted?: boolean;
 };
 
 // x/y are the center of the 44px service icon. Titles start at y + 39;
@@ -38,7 +39,7 @@ export type NetworkAnnotation = {
 export type NetworkDiagram = {
   title: string;
   description: string;
-  provider: 'aws' | 'gcp' | 'azure';
+  provider: 'aws' | 'gcp' | 'azure' | 'kubernetes';
   width: number; height: number;
   groups: NetworkGroup[];
   nodes: NetworkNode[];
@@ -47,4 +48,5 @@ export type NetworkDiagram = {
   annotations?: NetworkAnnotation[];
   notes: { title: string; text: string }[];
   sources: { label: string; url: string }[];
+  legend?: {kind: NetworkEdge['kind']; label: string}[];
 };

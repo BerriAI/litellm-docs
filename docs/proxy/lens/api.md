@@ -211,9 +211,11 @@ It covers the trace retention window by default and accepts the same `start_ms` 
 
 ## Upload traces {#upload}
 
-Agents upload traces directly to Lens using a dedicated tracing key in `Authorization: Bearer <tracing-key>`. Generate a key with `POST /lens/tracing/keys` on LiteLLM as a proxy administrator, or open **Lens > Traces**, click **Connect project**, and click **Generate tracing key**. `GET /lens/service` on LiteLLM returns the public ingestion base URL and connection status.
+An agent uploads its telemetry in one of two ways. An agent whose model calls go through your LiteLLM gateway sends OTLP to the gateway's `/v1/traces` and `/v1/logs` with the LiteLLM key it already uses in `Authorization: Bearer <key>`. The gateway checks the key, records which key, user, team, and organization sent it, and forwards the upload to Lens. An agent that does not use LiteLLM uploads directly to Lens with a dedicated tracing key in `Authorization: Bearer <tracing-key>`.
 
-Use the Lens base URL, keeping `/lens-ingest` when present, followed by the path below. The dashboard's **Traces endpoint** already includes `/v1/traces`.
+Generate a tracing key with `POST /lens/admin/tracing/keys` on LiteLLM as a proxy administrator, or open **Home** in Lens, select **Standalone Lens**, then **Set up manually**, and select **Create tracing key**. `GET /lens/service` on LiteLLM returns the public ingestion base URL and connection status.
+
+For a direct upload, use the Lens base URL, keeping `/lens-ingest` when present, followed by the path below.
 
 | Endpoint | Purpose |
 | --- | --- |
@@ -221,11 +223,13 @@ Use the Lens base URL, keeping `/lens-ingest` when present, followed by the path
 | `POST /v1/logs` | Ingest OTLP/HTTP logs, including coding-agent session events |
 | `POST /v1/traces/receipt` | Check delivery of a `trace_id` and up to 1,000 `span_ids` uploaded with the same tracing key. Returns `received`; never returns trace contents |
 
-A tracing key permits ingestion and its own delivery receipts only. It cannot read traces or call models, and ordinary model keys cannot upload. The gateway upload routes return 410, so exporter URLs must point directly to Lens.
+A tracing key permits ingestion and its own delivery receipts only. It cannot read traces or call models. Lens itself rejects a LiteLLM key with 401, so a LiteLLM key uploads only through the gateway.
 
 A successful upload confirms ClickHouse accepted it. A 429 or 503 is retryable, so use bounded exporter retries. During an extended outage, the exporter can drop traces. Keys refresh on each Lens replica every 30 seconds, with a 90-second maximum credential snapshot age.
 
 ## Who can read traces {#access}
+
+These rules come from the gateway. Lens adds no users, roles or grants of its own, as described in [Use the permissions you already have](./rbac.md#gateway-permissions).
 
 Proxy administrators and proxy administrator viewers can read every trace. Every other user, SCIM-provisioned users included, reads the traces owned by their user plus the traces of each team that shares them, as described under [Share a team's traces](#trace-access). SQL queries follow the same rules. A key that belongs to no user, such as a team service account key, cannot read traces and gets a 403.
 

@@ -292,6 +292,89 @@ Once your litellm-pg-vector-store is deployed:
 
 
 
+## Define Vector Store Fallbacks
+
+Configure an ordered list of backup vector stores for proxy search requests. LiteLLM tries the primary first, then the configured backups when a search fails with a retryable error. Callers keep using the primary store ID or the existing passthrough URL.
+
+:::note Config only
+
+Define the primary and every backup in `config.yaml` under `vector_store_registry`. Fallbacks cannot currently be configured through the management API or Admin UI, and database-only stores cannot be used as fallback targets. Database-backed stores still support ordinary searches.
+
+:::
+
+### Configure the primary and backups
+
+Add `fallbacks` under the primary store's `litellm_params`. Each entry is another registration's **`vector_store_id`**, not its `vector_store_name`. Use the existing provider store IDs in this OpenAI example:
+
+```yaml title="config.yaml"
+vector_store_registry:
+  - vector_store_name: documents-primary
+    litellm_params:
+      vector_store_id: vs_primary
+      custom_llm_provider: openai
+      api_key: os.environ/PRIMARY_OPENAI_API_KEY
+      fallbacks: [vs_backup]
+
+  - vector_store_name: documents-backup
+    litellm_params:
+      vector_store_id: vs_backup
+      custom_llm_provider: openai
+      api_key: os.environ/BACKUP_OPENAI_API_KEY
+
+router_settings:
+  cooldown_time: 5
+```
+
+Replace `vs_primary` and `vs_backup` with your real store IDs. Deploy or reload the proxy configuration after changes. Each attempt uses the target store's own provider settings and credentials. The caller must have access to the primary and all configured backups; fallback routing does not bypass store or index permissions.
+
+Backup IDs must be unique and refer to existing YAML registrations that support search. A store cannot fall back to itself, and a backup cannot define another fallback chain. Keep equivalent data in the stores yourself. LiteLLM does not copy documents, replicate writes, or synchronize indexes.
+
+### Search through the unified API
+
+```bash
+curl -i 'http://localhost:4000/v1/vector_stores/vs_primary/search' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"query": "What is our refund policy?"}'
+```
+
+The [unified search API](../vector_stores/search.md) can fall back across providers, provided each store supports search and has compatible data and search settings. These fallbacks apply to the proxy search endpoint and the native routes below; they do not configure chat-completion model fallbacks or provider-managed file-search tools.
+
+### Search through native passthrough APIs
+
+Native search uses the same `litellm_params.fallbacks` configuration. All targets must use the **same provider and API type** so the original request and response formats remain valid.
+
+| Provider | Native requests that support fallback |
+| --- | --- |
+| Azure AI Search | `POST /azure_ai/indexes/{name}/docs/search`, `GET /azure_ai/indexes/{name}/docs`. The `/azure/` prefix is also supported. |
+| Milvus | `POST /milvus/v2/vectordb/entities/search` |
+| OpenSearch | `GET` or `POST /opensearch/{name}/_search` |
+| Vertex AI Search | `POST /vertex_ai/discovery/v1*/projects/{project}/locations/{location}/collections/{collection}/dataStores/{store}/servingConfigs/{config}:search` |
+
+For Azure, Milvus, and OpenSearch, retain the existing index registration pointing to the primary store. You do not need a second LiteLLM index registration for the backup. The backup must contain the same physical index or collection name used by the native request. Vertex supports `vertex_ai/search_api` datastore searches, not engine routes, and uses each target's project and datastore settings. Milvus hybrid search and other native reads are outside this fallback support.
+
+**Writes do not fail over.** Document uploads, inserts, updates, deletes, and index lifecycle operations keep their existing passthrough routing. A primary write failure does not send the write to a backup, even when searches use that backup during cooldown.
+
+### Failover, cooldown, and response headers
+
+HTTP `408`, `429`, and `5xx` responses, plus connection failures and timeouts, trigger search failover. Other `4xx` responses, including authentication, authorization, and missing-index errors, are terminal. Query-embedding failures do not trigger vector-store failover; configure embedding resiliency on the [embedding model group](../providers/azure_ai_vector_stores.md#embed-queries-through-a-model-group).
+
+A retryable store failure immediately puts that store in cooldown for `router_settings.cooldown_time` seconds (5 by default). Searches skip it during cooldown. Once the time expires, it becomes eligible again and live traffic tests it. This does not use model-routing failure-count thresholds. If every target is in cooldown, LiteLLM returns `503` with `Retry-After`.
+
+For cooldown shared across proxy workers and instances, point `general_settings.coordination_redis` at the same Redis instance in every proxy's configuration:
+
+```yaml
+general_settings:
+  coordination_redis:
+    host: os.environ/REDIS_HOST
+    port: os.environ/REDIS_PORT
+    password: os.environ/REDIS_PASSWORD
+```
+
+Without coordination Redis, or if it is unavailable, cooldown relies on each worker's local cache.
+
+Successful responses expose `x-litellm-vector-store-id` for the serving store and `x-litellm-attempted-fallbacks` for the number of backup attempts. Native responses keep the provider's response body. These headers do not provide a full attempt history.
+
 ## Advanced
 
 ### Logging Vector Store Usage
@@ -695,5 +778,3 @@ vector_store_registry:
 ```
 
 The `litellm_params` section accepts all the same parameters as the `LiteLLM_ManagedVectorStore` constructor in the Python SDK.
-
-

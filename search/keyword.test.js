@@ -6,7 +6,7 @@ const fs = require('node:fs/promises');
 const {PassThrough} = require('node:stream');
 const {createHandler} = require('./server');
 const {createIndex, search} = require('./engine');
-const {serializeRuntimeIndex} = require('./runtime-index');
+const {serializeRuntimeIndex, loadRuntimeIndex} = require('./runtime-index');
 const {createKeywordSearchHandler} = require('./keyword-api');
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
@@ -16,8 +16,8 @@ const documents = [
 ];
 const index = createIndex(documents);
 const post = (body = {query: 'redis'}, headers = {}) => ({method: 'POST', headers: {'Content-Type': 'application/json', ...headers}, body: JSON.stringify(body)});
-async function serve(t, parsedBody) {
-  const options = {index, documents: new Map(documents.map(doc => [doc.id, doc])),
+async function serve(t, parsedBody, searchIndex = index) {
+  const options = {index: searchIndex, documents: new Map(documents.map(doc => [doc.id, doc])),
     config: {origin: 'https://docs.example.com'}, fetchImpl() {assert.fail('keyword search must not call a model');}};
   const handler = parsedBody === undefined ? createHandler(options) : createKeywordSearchHandler(options);
   const server = http.createServer((req, res) => {
@@ -60,6 +60,33 @@ test('keyword endpoint validates transport, origin, query and parsed Vercel bodi
   assert.equal((await fetch(url, post({query: 'x'.repeat(17000)}))).status, 413);
   const parsed = await serve(t, {query: 'redis', type: 'docs'});
   assert.deepEqual((await (await fetch(parsed, post())).json()).results, JSON.parse(JSON.stringify(search(index, 'redis', {type: 'docs', limit: 100}))));
+});
+
+test('SDK scope excludes non-SDK results before lexical fallback', async t => {
+  const liteagents = '/docs/liteagents#install-other-harnesses';
+  const gateway = '/docs/proxy/agent_harnesses';
+  const sdkIndex = loadRuntimeIndex(serializeRuntimeIndex(createIndex([
+    {id: 'sdk', type: 'docs', sdk: true, title: 'liteagents SDK', heading: 'Supported harnesses',
+      url: liteagents, text: 'Run Codex and DeepAgents.'},
+    {id: 'gateway', type: 'docs', title: 'liteagents harnesses compatibility',
+      url: gateway, text: 'Use the AI Gateway.'},
+    {id: 'blog', type: 'blog', title: 'liteagents harnesses compatibility',
+      url: '/blog/liteagents', text: 'Explore the release.'},
+  ])));
+  const url = await serve(t, undefined, sdkIndex);
+  const run = async (query, type) => {
+    const response = await fetch(url, post({query, type}));
+    assert.equal(response.status, 200);
+    const data = await response.json();
+    assert.equal(data.type, type);
+    return data.results.map(result => result.url);
+  };
+  assert.deepEqual(await run('liteagents harnesses', 'sdk'), [liteagents]);
+  const unscoped = await run('liteagents harnesses', 'all');
+  assert.ok(unscoped.includes(gateway));
+  assert.ok(unscoped.includes('/blog/liteagents'));
+  assert.deepEqual(await run('liteagents harnesses compatibility', 'docs'), [gateway]);
+  assert.deepEqual(await run('liteagents harnesses compatibility', 'sdk'), [liteagents]);
 });
 
 function vercelRequest(query = 'redis') {

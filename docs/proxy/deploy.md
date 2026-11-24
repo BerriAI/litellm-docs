@@ -16,5 +16,5 @@ Deploy LiteLLM with Helm on Kubernetes or Terraform on AWS and GCP. These guides
 | [Sizing & Scaling](./deploy/sizing.md) | [Autoscaling](./deploy/autoscaling.md), [PostgreSQL](./db_sizing.md), [Redis](./redis_sizing.md), [Server Tuning](./server_tuning.md) |
 | [Reference Architectures](./deploy/architecture.md) | [Cloud Deployments](./deploy/cloud/overview.md), [Identity-Aware Proxy](./deploy/iap/overview.md), [mTLS](./deploy/mtls.md), [High Availability](./deploy/ha/overview.md), [Multi-Region](./multi_region.md), [Global Control Plane](./global_control_plane.md) |
 | [Production Best Practices](./prod.md) | Production configuration and readiness |
-| [Upgrade Guide](./upgrade_guide.md) | Version upgrades and database migrations |
+| [Upgrade Guide](./upgrade_guide.md) | Zero-downtime upgrades and rollback |
 | [Health Checks](./health.md) | Readiness and liveness probes |

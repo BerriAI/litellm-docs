@@ -60,6 +60,7 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
+          {from: '/docs/liteagents', to: '/docs/harness'},
           {from: '/docs/proxy/customer_portal/api_reference_guide', to: '/docs/proxy/customer_management/track-customer-spend'},
           {from: '/docs/proxy/customer_portal/track-customer-spend', to: '/docs/proxy/customer_management/track-customer-spend'},
           {from: '/docs/proxy/customer_portal/api_reference', to: '/docs/proxy/customer_management/api_reference'},
@@ -90,6 +91,8 @@ const config = {
           {from: '/docs/proxy/jwt_auth_arch', to: '/docs/proxy/access_management/jwt_permissions#beta-control-access-with-oidc-roles'},
           {from: ['/docs/oidc', '/docs/oidcz'], to: '/docs/proxy/model_management#workload-identity-credentials'},
           {from: '/docs/proxy/lens/coding_agents', to: '/docs/proxy/lens/coding-agents'},
+          {from: '/docs/proxy/lens/deployment/docker', to: '/docs/proxy/lens/deployment/configuration#other-container-platforms'},
+          {from: '/docs/proxy/lens/deployment/docker-compose', to: '/docs/proxy/lens/deployment/litellm#docker-compose'},
           {from: '/docs/proxy/rust_gateway', to: '/rust-migration'},
           {from: '/docs/proxy/deploy/iap/cloudflare', to: '/docs/proxy/deploy/iap/overview#cloudflare'},
           {from: '/docs/proxy/deploy/iap/aws', to: '/docs/proxy/deploy/iap/overview#aws'},
@@ -434,7 +437,7 @@ const config = {
       // rendered; it holds the evergreen entry so the config still reads true.
       // Bump `id` to resurface the bar for readers who dismissed the last one.
       announcementBar: {
-        id: 'decisions_api_gemini_2026_11',
+        id: 'customer_portal_nov_20_townhall_dec_3_2026',
         content:
           '<a class="announcement-link" href="/docs/decisions"><strong>Decisions API is here.</strong> Call Gemini Decision 1, Jev, Clef or any decision model through one /v1/decisions endpoint. &rarr;</a>',
         isCloseable: true,
@@ -490,6 +493,7 @@ const config = {
           },
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
+          { href: 'https://www.litellm.ai/course', label: 'Learn', position: 'left' },
           { to: '/rust-migration', label: 'Rust', position: 'left' },
           {
             href: 'https://github.com/BerriAI/litellm',

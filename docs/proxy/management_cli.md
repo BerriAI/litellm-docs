@@ -178,14 +178,12 @@ lite logout             # clear the keychain entry and the token file, and revok
 
   ```bash
   lite models list
-  lite models add {{openai_large}} \
-    --param api_key=sk-123 \
-    --param max_tokens=2048
-  lite models update <model-id> -p temperature=0.7
+  lite models add {{openai_large}} --param model=openai/{{openai_large}} --param api_key=sk-123
+  lite models update <model-id> -p api_key=sk-456 -i id=<model-id>
   lite models delete <model-id>
   ```
 
-  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/model%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#tag/model~20management)
 
 ### Credentials Management
 
@@ -204,7 +202,7 @@ lite logout             # clear the keychain entry and the token file, and revok
   lite credentials delete azure-cred
   ```
 
-  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/credential%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#tag/credential~20management)
 
 ### Keys Management
 
@@ -231,7 +229,7 @@ lite logout             # clear the keychain entry and the token file, and revok
     --created-since 2026-01-01
   ```
 
-  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/key%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#tag/key~20management)
 
 ### User Management
 
@@ -250,7 +248,7 @@ lite logout             # clear the keychain entry and the token file, and revok
   lite users delete <user-id>
   ```
 
-  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/Internal%20User%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#tag/Internal~20User~20management)
 
 ### Teams Management
 
@@ -265,19 +263,20 @@ lite logout             # clear the keychain entry and the token file, and revok
 
   Running `lite teams assign-key` without `--team-id` prompts you to pick a team interactively.
 
-  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/team%20management)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#tag/team~20management)
 
 ### Chat Completions
 
 - Start an interactive streaming chat session with a model on the proxy server. Omit the model to pick one interactively.
+- `lite chat` sends a temperature of 0.7 unless you pass `--temperature`, and reasoning models that only accept 1 reject it, so the examples pass `--temperature 1`.
 - Example:
 
   ```bash
-  lite chat {{openai_large}}
-  lite chat {{openai_large}} --temperature 0.9 --system "You are a helpful coding assistant"
+  lite chat {{openai_large}} --temperature 1
+  lite chat {{openai_large}} --temperature 1 --system "You are a helpful coding assistant"
   ```
 
-  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#/chat%2Fcompletions)
+  [API used (OpenAPI)](https://docs.litellm.ai/api-reference/#tag/chat~2Fcompletions)
 
 ### General HTTP Requests
 
@@ -290,7 +289,7 @@ lite logout             # clear the keychain entry and the token file, and revok
     --json '{"model": "{{openai_large}}", "messages": [{"role": "user", "content": "Hello"}]}'
   ```
 
-  [All APIs (OpenAPI)](https://docs.litellm.ai/api-reference/#/)
+  [All APIs (OpenAPI)](https://docs.litellm.ai/api-reference/#tag/)
 
 ### Encryption Migration
 
@@ -321,9 +320,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 2. **Add a new model:**
 
    ```bash
-   lite models add {{openai_large}} \
-     --param api_key=sk-123 \
-     --param max_tokens=2048
+   lite models add {{openai_large}} --param model=openai/{{openai_large}} --param api_key=sk-123
    ```
 
 3. **Create a credential:**
@@ -348,6 +345,7 @@ lite logout             # clear the keychain entry and the token file, and revok
 
    ```bash
    lite chat {{openai_large}} \
+     --temperature 1 \
      --system "You are a helpful coding assistant"
    ```
 

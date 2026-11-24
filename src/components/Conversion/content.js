@@ -47,16 +47,18 @@ const PROMPTS = {
   },
   'lens-claude-code': {
     title: 'Set up Claude Code tracing in Lens',
-    text: `Set up this machine to send my Claude Code sessions to LiteLLM Lens. First read ${DOCS}/docs/proxy/lens/coding-agents.md and ${DOCS}/docs/proxy/lens/deployment.md.
-1. Ask me for the full Traces endpoint from Lens > Traces > Set up tracing and an agent name, defaulting to claude-code. Preserve any /lens-ingest prefix and include /v1/traces once. Derive the logs endpoint by replacing the final /v1/traces with /v1/logs. Read my dedicated tracing key from an existing environment variable or a hidden terminal prompt. Never ask me to paste the key into chat, print it, or commit it.
-2. Check that tracing is enabled and the Lens service accepts Claude conversation logs at /v1/logs. If it needs an upgrade, explain that before changing my local settings.
-3. Explain which session content will be sent to my Lens service. Configure Claude's built-in OTLP trace and log exporters and the content flags in the guide. Merge them into the env object in my user-level ~/.claude/settings.json, preserving other settings and resource attributes. Keep credentials in private user configuration. Use lens.session.capture=true and my chosen gen_ai.agent.name. Do not install a plugin or helper, change my Claude subscription/API login or model endpoint, or enable optional raw API-body export.
-4. Tell me to restart Claude Code, then complete a small prompt that uses a tool. Verify the new trace under my chosen agent name in Lens > Traces > Conversation contains the prompt, tool activity, and assistant reply. These events belong in Lens, not the normal request Logs screen. Report any missing content or export error instead of claiming setup succeeded.
-5. Show me the configuration changes with credentials hidden, explain how to pause telemetry, and point out the capture limits described in the guide.`,
+    text: `Set up this machine to record my Claude Code sessions in LiteLLM Lens with the LiteLLM Lens plugin for Claude Code. First read ${DOCS}/docs/proxy/lens/coding-agents.md.
+1. Check that python3 is on the PATH and that this machine runs macOS or Linux. If either is missing, stop and tell me instead of configuring something else.
+2. Find out whether my Claude Code model calls go through a LiteLLM gateway: look at ANTHROPIC_BASE_URL and ANTHROPIC_AUTH_TOKEN in the shell and in the env object of ~/.claude/settings.json. If they do, use that gateway address and that same key. Otherwise ask me for my Lens address, such as http://localhost:4318, keep any /lens-ingest prefix, and read my dedicated Lens tracing key from LITELLM_TRACING_KEY. Never ask me to paste a key into chat, print it, or commit it. If I have no tracing key, tell me to open Home in Lens, choose Standalone Lens, and create one.
+3. Explain that the plugin sends my typed prompts, Claude Code's replies, tool arguments, and tool output to my Lens service.
+4. Run claude plugin marketplace add BerriAI/litellm-lens-plugins, then claude plugin install litellm-lens@berriai-lens --config lens_url=<address> --config lens_key="$<variable holding the key>". If litellm-lens@berriai-lens is already installed, run claude plugin uninstall litellm-lens@berriai-lens first, because installing again does not change its saved address and key. Do not change my Claude subscription/API login or model endpoint.
+5. The plugin sends nothing while CLAUDE_CODE_ENABLE_TELEMETRY and CLAUDE_CODE_ENHANCED_TELEMETRY_BETA are both set. If both are set in the shell or in ~/.claude/settings.json, tell me and ask whether to remove them; change nothing there without my answer.
+6. Run claude -p "Reply with exactly: Lens plugin check." Then tell me to restart my open Claude Code sessions and to confirm a trace from the agent claude-code appears under Traces in Lens with the prompt, reply, and model call. If none arrives, read last_error.txt in ~/.claude/plugins/data/litellm-lens-berriai-lens and report it instead of claiming setup succeeded.
+7. Show me what changed with credentials hidden and explain that claude plugin uninstall litellm-lens@berriai-lens stops recording.`,
   },
   'lens-codex': {
     title: 'Set up Codex tracing in Lens',
-    text: `Set up LiteLLM Lens tracing for my local Codex desktop or CLI sessions. First read ${DOCS}/docs/proxy/lens/coding-agents.md and https://github.com/BerriAI/litellm-lens-codex-integration/blob/main/README.md.
+    text: `Set up LiteLLM Lens tracing for my local Codex desktop or CLI sessions. First read ${DOCS}/docs/proxy/lens/coding-agents.md and https://github.com/BerriAI/litellm-lens-plugins/blob/main/codex/README.md.
 1. Check this machine's operating system and Python version against the integration's current prerequisites. If automatic setup is unsupported, explain the limitation rather than inventing installation steps.
 2. Ask me for the full Traces endpoint from Lens > Traces > Set up tracing and an agent name. The installer accepts that endpoint at its Lens ingestion URL prompt and preserves /lens-ingest when present. Use the documented Terminal setup so I can enter my dedicated tracing key at its hidden prompt and confirm recording. Never ask me to paste the key into chat, print it, or commit it.
 3. Install or update the official BerriAI integration using the README's From Terminal instructions. Reuse an existing installation where possible, and preserve my Codex authentication, model configuration, and unrelated hooks. Explain what will be recorded; only newly captured activity should be exported.
@@ -109,13 +111,13 @@ If I do not have a license yet, stop and point me to ${SALES_URL}.`,
 2. Add the LiteAdmin MCP server to this client the way the guide shows for it (Claude Code, Claude Desktop, or Codex). Show me the change before writing it.
 3. Verify: list the gateway's models and my teams through the MCP tools, then stop and ask me what to change.`,
   },
-  liteagents: {
-    title: 'Try LiteAgents on one of my agents',
-    text: `Help me try LiteAgents, a preview SDK for switching agent harnesses without rewriting the agent. First read https://github.com/BerriAI/liteagents/blob/main/docs/getting-started.md and the harness-switching recipe at https://github.com/BerriAI/liteagents/blob/main/cookbook/recipes/10_harness_switch.py. Then:
-1. Install the preview release the getting-started guide names, in a separate virtual environment.
-2. Ask me which agent to port and which model to use. If I run a LiteLLM Gateway, point the model at it with a virtual key read from the environment.
-3. Port the agent to a LiteAgents profile, keeping its tools and MCP connections, and run one task.
-4. Change only the harness field to a second harness, run the same task, and show me both results side by side.`,
+  sdk_agents: {
+    title: 'Run an agent with the LiteLLM SDK',
+    text: `Help me run an agent with litellm.agent(), part of the LiteLLM Python SDK. First read ${DOCS}/docs/harness.md, ${DOCS}/docs/harness/quickstart.md and ${DOCS}/docs/harness/supported.md. Then:
+1. Check this project's Python environment and installed harness runtimes. Use the project's package manager to install litellm and the dependencies for the harness I choose.
+2. Ask which task, workspace and model to use. Reuse LITELLM_PROXY_API_BASE and LITELLM_PROXY_API_KEY from the environment when available; never print credentials or save them in code.
+3. Create a small script using litellm.agent(), the Harness enum and an explicit sandbox. Explain the selected sandbox and permissions before running the task. Check agent_capabilities() before adding custom tools or other optional features.
+4. Run the task and show its result, stop reason, usage and cost. Link to agent_session() for follow-up turns and stream=True for live events.`,
   },
 };
 
@@ -335,7 +337,7 @@ completion(model="anthropic/${M.anthropic}", messages=messages)`,
 // it with one small text visual.
 const CARD_GROUPS = [
   {title: 'Tools and agents', ids: ['mcp', 'agents']},
-  {title: 'Models and harnesses', ids: ['autorouter', 'liteagents']},
+  {title: 'Models and agents', ids: ['autorouter', 'sdk_agents']},
   {title: 'Your terminal and your agent', ids: ['tools', 'liteadmin']},
 ];
 
@@ -388,20 +390,24 @@ const PRODUCT_CARDS = [
     prompt: 'autorouter',
   },
   {
-    id: 'liteagents',
-    product: 'LiteAgents (preview)',
-    problem: 'Use a different agent harness and keep your agent code.',
-    text: 'Replace one parameter to move between Deep Agents, Pydantic AI, the Claude Agent SDK, Codex, and OpenCode. Your tools and MCP connections stay the same.',
+    id: 'sdk_agents',
+    product: 'Agents in the LiteLLM SDK',
+    problem: 'Run agents from Python with one API.',
+    text: 'Use litellm.agent() with Claude Code, Codex, OpenCode, Pi, Deep Agents or Tool Loop. Choose a harness and model, stream output, and track cost. Included in the litellm package.',
     visual: {
       type: 'code',
       lang: 'python',
-      code: `ProfileOptions(
-    harness="deepagents",  # or "claude-sdk", "codex", "pydantic-ai"
-    model="my-model",
+      code: `from litellm import agent, Harness, sandbox
+
+result = agent(
+    Harness.CODEX, "Explain this repository.",
+    sandbox=sandbox.local("."),
+    model="litellm_proxy/coder",
+    permissions="read-only",
 )`,
     },
-    to: '/blog/liteagents-sdk',
-    prompt: 'liteagents',
+    to: '/docs/harness',
+    prompt: 'sdk_agents',
   },
   {
     id: 'tools',

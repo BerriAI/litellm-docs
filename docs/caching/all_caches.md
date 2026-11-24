@@ -577,6 +577,7 @@ def enable_cache(
     supported_call_types: Optional[
         List[Literal["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"]]
     ] = ["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"],
+    excluded_call_types: Optional[Sequence[CachingSupportedCallTypes]] = None,
     **kwargs,
 ) -> None: ...
 ```
@@ -601,9 +602,32 @@ def update_cache(
     supported_call_types: Optional[
         List[Literal["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"]]
     ] = ["completion", "acompletion", "embedding", "aembedding", "atranscription", "transcription"],
+    excluded_call_types: Optional[Sequence[CachingSupportedCallTypes]] = None,
     **kwargs,
 ) -> None: ...
 ```
+
+### Exclude call types from caching
+
+`excluded_call_types` is merged on LiteLLM `main` in [PR #52902](https://github.com/BerriAI/litellm/pull/52902) and is not in a tagged release yet.
+
+`excluded_call_types` removes call types from `supported_call_types`, or from the default list when `supported_call_types` is not set. `enable_cache`, `update_cache` and `Cache` all accept it. The signature type `CachingSupportedCallTypes` comes from `litellm.types.caching`. List both `embedding` and `aembedding` to stop caching sync and async embeddings while completions stay cached:
+
+```python
+import os
+
+import litellm
+
+litellm.enable_cache(
+    type="redis",
+    host=os.environ["REDIS_HOST"],
+    port=os.environ["REDIS_PORT"],
+    password=os.environ["REDIS_PASSWORD"],
+    excluded_call_types=["embedding", "aembedding"],
+)
+```
+
+Excluded call types skip cache reads and writes, including entries cached before the exclusion. An unset or empty `excluded_call_types` changes nothing, and `supported_call_types=None` or `[]` still caches nothing. See [Keep embeddings from evicting rate limits and spend](../proxy/caching_redis.md#keep-embeddings-from-evicting-rate-limits-and-spend) for why batch embedding jobs can fill a shared Redis.
 
 ## Custom Cache Keys:
 Define function to return cache key
@@ -713,6 +737,7 @@ def __init__(
     qdrant_semantic_cache_embedding_model="text-embedding-ada-002",
 
     qdrant_semantic_cache_vector_size: Optional[int] = None,
+    excluded_call_types: Optional[Sequence[CachingSupportedCallTypes]] = None,
     **kwargs
 ): ...
 ```

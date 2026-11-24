@@ -58,6 +58,7 @@ const HOSTED_URL = 'https://calendly.com/d/4mp-gd3-k5k/berriai-1-1-onboarding-li
 const NOTES = `- Which one: use the AI Gateway when several apps, teams, users, or coding agents (Claude Code, Codex, Cursor) share models and need keys, budgets, spend tracking, or a client that is not Python. Use the Python SDK when one Python app calls models directly.
 - Start the gateway: \`${QUICKSTART.gateway.mac}\` (macOS, Linux) or \`${QUICKSTART.gateway.windows}\` (Windows PowerShell). See "Start the AI Gateway" below.
 - Python SDK: \`${QUICKSTART.sdk}\` (or \`pip install litellm\`), then \`litellm.completion(model="<provider>/<model>", messages=[...])\`. Responses always use the OpenAI Chat Completions shape.
+- Agents in the LiteLLM SDK: \`litellm.agent()\` runs a chosen harness and returns its result, usage and cost. Start at ${SITE}/docs/harness.md.
 - Enterprise: a license key (\`LITELLM_LICENSE\`) on the same gateway image adds SSO, audit logs, and admin roles. Contact: ${SALES_URL}
 - Every docs page is available as markdown by appending \`.md\` to its URL, for example ${SITE}/docs/proxy/docker_quick_start.md. The full docs are in ${SITE}/llms-full.txt.
 - If you're interested in receiving updates on what's new in LiteLLM, sign up at ${SITE}/blog.`;
@@ -138,6 +139,7 @@ print(response.choices[0].message.content)`)}
 
 - Every provider returns the OpenAI Chat Completions shape. Provider list and model names: ${SITE}/docs/providers.md
 - Streaming and async: \`stream=True\` and \`await litellm.acompletion(...)\` (${SITE}/docs/completion/stream.md).
+- Agents: \`litellm.agent()\` runs tasks with a chosen harness and model; \`litellm.agent_session()\` keeps multi-turn sessions (${SITE}/docs/harness.md).
 - Retries, fallbacks, and load balancing across deployments inside one process: the Router (${SITE}/docs/routing.md).
 - Fewer dependencies for SDK-only apps: \`litellm-core\` (${SITE}/docs/litellm_core.md).`;
 

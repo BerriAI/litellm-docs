@@ -69,7 +69,6 @@ Everything below is enabled by the license key. Each item links to its setup gui
 
 ### Operations and branding {#operations--branding}
 
-- **Custom Swagger branding**. Set your own title, description, and filtered routes on the API docs page
 - **[Custom email branding](./proxy/email.md#email-customization)**. Your logo and colors on system emails
 - **Max request/response size limits**. Protect the proxy from runaway payloads
 - **[Team-managed models](./proxy/team_model_add.md)**. Let teams bring their own keys and fine-tunes

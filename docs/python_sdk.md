@@ -2,14 +2,14 @@
 id: python_sdk
 title: LiteLLM Python SDK
 sidebar_label: Overview
-description: The LiteLLM Python SDK gives you one interface to call 100+ LLM providers from Python, with the same input and output format for each provider.
+description: Call 100+ LLM providers and run agents from Python with the LiteLLM SDK. Use completion() for model calls and agent() for agent tasks.
 ---
 
 import NavigationCards from '@site/src/components/NavigationCards';
 
 # LiteLLM Python SDK
 
-The LiteLLM Python SDK is a Python library. It gives you one interface to call 100+ LLM providers, such as OpenAI, Anthropic, Vertex AI, and Bedrock, in the OpenAI format.
+The LiteLLM Python SDK gives you one interface to call 100+ LLM providers, such as OpenAI, Anthropic, Vertex AI, and Bedrock, in the OpenAI format. The same package runs [agents with `litellm.agent()`](/docs/harness), including Claude Code, Codex, OpenCode, Pi, Deep Agents and Tool Loop.
 
 You import the SDK into your application code. You do not operate a server.
 
@@ -46,6 +46,7 @@ To use a different provider, change the model name and the API key. The code for
 
 - **One interface.** Each provider uses the same `completion()` function and the same parameters.
 - **One output format.** Each response has the OpenAI format, for all providers.
+- **Agents.** Run agent tasks with `agent()`, stream events, and keep multi-turn sessions with `agent_session()`. Choose a harness and model for each task.
 - **Exception mapping.** The SDK changes provider errors into the OpenAI exception types. Your code that catches OpenAI exceptions also catches the errors of each provider.
 - **Auto routing.** Build an [Autorouter in Python](/docs/autorouter_sdk) to choose a model for each request based on its complexity.
 - **Routing.** The [Router](/docs/routing) gives you retries, fallbacks, and load balancing across deployments.
@@ -58,6 +59,7 @@ Each function has an async version with the prefix `a`. For example, the async v
 | Function | Use it to | Reference |
 |---|---|---|
 | `completion()` | Send chat messages to a model | [completion()](/docs/completion/input) |
+| `agent()` | Run an agent task with your chosen harness and model | [Agents in the LiteLLM SDK](/docs/harness) |
 | `responses()` | Use the OpenAI Responses API format | [responses()](/docs/response_api) |
 | `embedding()` | Get vector embeddings for text | [embedding()](/docs/embedding/supported_embedding) |
 | `image_generation()` | Make images from a text prompt | [image_generation()](/docs/image_generation) |
@@ -78,7 +80,7 @@ For all the endpoints that LiteLLM supports, refer to [Supported Endpoints](/doc
 | Calculate token usage and cost | [Token usage](/docs/completion/token_usage) |
 | Add retries, fallbacks, and load balancing | [Router](/docs/routing) |
 | Cache responses | [Caching](/docs/caching/all_caches) |
-| Run coding agents from Python | [Agent harnesses](/docs/harness) |
+| Run agents from Python | [Agents in the LiteLLM SDK](/docs/harness) |
 
 ## Threads and concurrency
 

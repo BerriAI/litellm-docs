@@ -43,7 +43,7 @@ Mappings omitted from an issuer entry fall back to global `litellm_jwtauth` sett
 
 :::important
 
-`issuers` is routing configuration, not an allowlist. An unmatched `iss` falls back to the global `JWT_PUBLIC_KEY_URL`, `JWT_ISSUER`, and `JWT_AUDIENCE` path. Leave `JWT_PUBLIC_KEY_URL` unset if only the configured issuers should authenticate.
+`issuers` is routing configuration, not an allowlist. An unmatched `iss` falls back to the global `JWT_PUBLIC_KEY_URL`, `JWT_ISSUER`, and `JWT_AUDIENCE` path, where `litellm_jwtauth.public_key_url` and `litellm_jwtauth.audience` replace their environment variables when set. Leave both key URL settings unset if only the configured issuers should authenticate.
 
 :::
 
@@ -95,6 +95,7 @@ All settings below go under `general_settings.litellm_jwtauth`. Identity claim f
 | `org_id_jwt_field` | A LiteLLM organization ID. |
 | `org_alias_jwt_field` | An existing organization's unique `organization_alias`. |
 | `end_user_id_jwt_field` | An end-user ID for customer spend attribution. The verified claim takes precedence over a customer ID supplied in request headers or body. |
+| `customer_org_alias_jwt_field`, `customer_member_id_jwt_field`, `customer_team_id_jwt_field` | Customer Management organization alias, member ID, and optional customer-team selection. Available globally and per issuer. When any of them is mapped, JWT requests ignore the customer headers. See [customer identity through JWT claims](./customer_management/jwt-customer-identity.md). |
 | `agent_id_jwt_field` | A registered agent's ID or name. See [registered agents](#bind-jwts-to-registered-agents). |
 
 ```yaml
@@ -109,6 +110,8 @@ general_settings:
 ```
 
 Use [user and team provisioning settings](./jwt_user_team_auth.md#2-map-the-claims) to control whether missing user records are created. `team_id_upsert: true` can create a missing team; leave it disabled when administrators must define team policies before access is granted. See [legacy customer ID precedence](./legacy_end_users.md#1-make-llm-api-call-w-customer-id) for JWT end-user tracking, or [Customer Management](./customers.md) for the recommended spend tracking setup from v1.111.
+
+If the JWT identifies the app but not the customer, see [how to send a JWT and customer headers together](./customer_management/jwt-customer-identity.md#app-jwt-customer-headers).
 
 ## Add custom validation {#custom-jwt-validate}
 

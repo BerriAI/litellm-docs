@@ -23,7 +23,7 @@ This guide covers the main sections and examples. The [settings reference](./con
 | `general_settings`   | Server settings, example setting `master_key: sk-my_special_key` [**see all**](./config_settings#general_settings---reference)|
 | `environment_variables`   | Environment Variables example, `REDIS_HOST`, `REDIS_PORT` [**see all**](./config_settings#environment-variables---reference)|
 
-**Complete List:** Check the Swagger UI docs on `<your-proxy-url>/#/config.yaml` (e.g. http://0.0.0.0:4000/#/config.yaml), for everything you can pass in the config.yaml.
+**Complete list:** Open the API reference at your proxy URL and search for `config.yaml`.
 
 
 ## Quick Start 
@@ -600,7 +600,7 @@ $ litellm --config /path/to/config.yaml
 
 ### Set custom tokenizer 
 
-If you're using the [`/utils/token_counter` endpoint](https://docs.litellm.ai/api-reference/#/llm%20utils/token_counter_utils_token_counter_post), and want to set a custom huggingface tokenizer for a model, you can do so in the `config.yaml`
+If you're using the [`/utils/token_counter` endpoint](https://docs.litellm.ai/api-reference/#tag/llm~20utils/token_counter_utils_token_counter_post), and want to set a custom huggingface tokenizer for a model, you can do so in the `config.yaml`
 
 ```yaml
 model_list:
@@ -733,22 +733,12 @@ LITELLM_LICENSE="eyJ..."
 ## Extras
 
 
-### Disable Swagger UI 
+### Disable the API reference
 
-To disable the Swagger docs from the base url, set 
+To disable the Scalar API reference, set:
 
 ```env
 NO_DOCS="True"
-```
-
-in your environment, and restart the proxy. 
-
-### Disable Redoc
-
-To disable the Redoc docs (defaults to `<your-proxy-url>/redoc`), set 
-
-```env
-NO_REDOC="True"
 ```
 
 in your environment, and restart the proxy. 
@@ -765,15 +755,14 @@ in your environment, and restart the proxy.
 
 ### Restrict all API documentation for production/air-gapped deployments
 
-Swagger, Redoc and the raw OpenAPI schema are three independent surfaces, each disabled by its own env var. To fully lock down a production or air-gapped deployment, set all three: 
+To disable the API reference and the raw OpenAPI schema on a production or air-gapped deployment, set both variables:
 
 ```env
 NO_DOCS="True"
-NO_REDOC="True"
 NO_OPENAPI="True"
 ```
 
-Restart the proxy after setting these. `/redoc` and `/openapi.json` then 404 with no schema in the response, `/` returns only the plain `"LiteLLM: RUNNING"` status string, and inference and management routes are unaffected.
+Restart the proxy after setting these. `/openapi.json` then returns 404, `/` returns the `"LiteLLM: RUNNING"` status string, and inference and management routes are unaffected.
 
 ### Use CONFIG_FILE_PATH for proxy (Easier Azure container deployment)
 

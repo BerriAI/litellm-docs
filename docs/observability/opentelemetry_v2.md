@@ -41,6 +41,23 @@ Highlights:
 - **Safe by default** — prompts and responses are **not** captured unless you explicitly opt in. Noisy routes (health checks, metrics scrapes, UI assets) are excluded automatically.
 - **Distributed tracing** — if your client sends a `traceparent` header, LiteLLM's spans nest inside your existing trace.
 
+### Retries and fallbacks
+
+When the router retries a request or falls back to another deployment, every provider attempt gets its own LLM-call span in the same trace. A failed attempt's span ends with ERROR status and carries that attempt's error type and message and its destination in `server.address` and `server.port`. Each LLM-call span starts when its own upstream call starts, so the spans line up with the attempts on the timeline. A request whose first deployment fails four times before the fallback answers looks like this:
+
+```
+POST /v1/chat/completions
+├── auth /v1/chat/completions
+├── chat {{openai_large}}       ERROR      ← attempt 1, first deployment
+├── chat {{openai_large}}       ERROR      ← attempt 2
+├── chat {{openai_large}}       ERROR      ← attempt 3
+├── chat {{openai_large}}       ERROR      ← attempt 4
+├── chat {{openai_large}}                  ← fallback deployment answers
+└── batch_write_to_db
+```
+
+This holds for the generic OTLP exporter and for every preset, since they all run on the same v2 logger. Spend logs, metrics and other callbacks still record the request once; only the trace gains a span per failed attempt. Span volume therefore grows with the number of retries, and with the Langfuse preset each failed attempt arrives as one more generation in the same trace.
+
 ## Getting started
 
 For Auto Router configuration identity, selected models and recovered classifier failures, see [Auto Router OTEL Telemetry](/docs/auto_router/telemetry).
@@ -896,7 +913,7 @@ callback_settings:
 
 ## Which routes are traced
 
-High-frequency, non-LLM routes are **excluded by default** so they don't flood your traces: health checks (`/health*`), the Prometheus scrape (`/metrics`), and static UI/docs assets (`/ui`, `/docs`, `/redoc`, `/_next`, `/openapi.json`, favicons, …).
+High-frequency, non-LLM routes are **excluded by default** so they don't flood your traces: health checks (`/health*`), the Prometheus scrape (`/metrics`), and static UI/docs assets (`/ui`, `/docs`, `/scalar`, `/_next`, `/openapi.json`, favicons, …).
 
 To change the set, use the standard OpenTelemetry env var (comma-separated paths, substring-matched):
 

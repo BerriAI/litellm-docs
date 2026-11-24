@@ -9,6 +9,8 @@ import TabItem from '@theme/TabItem';
 
 # Deploy with Helm
 
+For new model prices, [reload pricing without upgrading the image or Helm chart](../sync_models_github).
+
 {/* keep-version-note */}
 
 ## Prerequisites
@@ -114,7 +116,6 @@ backend:
 
 ```bash
 helm upgrade --install litellm oci://ghcr.io/berriai/litellm/chart/litellm \
-  --version 1.0.0 \
   --namespace litellm --values values.yaml \
   --wait --timeout 30m
 ```

@@ -106,7 +106,6 @@ literalai_client.instrument_openai()
 
 settings = {
     "model": "{{openai_small}}", # model you want to send litellm proxy
-    "temperature": 0,
     # ... more settings
 }
 

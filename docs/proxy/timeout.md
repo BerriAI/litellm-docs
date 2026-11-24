@@ -147,7 +147,7 @@ Per attempt, LiteLLM picks the first value that is set: a timeout sent with the 
 
 `timeout` and `stream_timeout` cap how long a request is allowed to run. A separate problem is that load balancers and reverse proxies in front of the proxy often close connections that look idle, even when the client is legitimately waiting on a response. Streaming requests to models with long silent gaps before the first token, such as extended or adaptive thinking models, or otherwise slow providers, can trip these idle-connection timeouts before any content arrives.
 
-Set `keepalive_seconds` under a deployment's `litellm_params` to keep the connection alive during these gaps. Once a stream goes silent for longer than `keepalive_seconds`, the proxy sends an SSE comment frame (`: ping`) down the connection, repeating every `keepalive_seconds` until real content resumes. Comment frames are part of the SSE spec, and clients and intermediate proxies are expected to ignore them, so they don't affect the response your application sees.
+Set `keepalive_seconds` under a deployment's `litellm_params` to keep the connection alive during these gaps. Once a stream goes silent for longer than `keepalive_seconds`, the proxy sends an SSE comment frame (`: ping`) down the connection, repeating every `keepalive_seconds` until real content resumes. Comment frames are part of the SSE spec, and clients and intermediate proxies are expected to ignore them, so they don't change the content your application sees. They do change how a failure arrives. Once a ping has gone out, the response has already started with status 200, so an error after that point comes as an SSE frame instead of an HTTP error status. See [Streaming errors](/docs/proxy/error_reference#streaming-errors) for the frames each route sends.
 
 ```yaml
 model_list:
@@ -271,7 +271,6 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
         "messages": [
             {"role": "user", "content": "what color is red"}
         ],
-        "logit_bias": {12481: 100},
         "timeout": 1
      }'
 ```
@@ -292,7 +291,6 @@ response = client.chat.completions.create(
     messages=[
         {"role": "user", "content": "what color is red"}
     ],
-    logit_bias={12481: 100},
     extra_body={"timeout": 1} # KEY CHANGE
 )
 

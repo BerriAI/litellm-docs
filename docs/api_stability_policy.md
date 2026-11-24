@@ -4,7 +4,7 @@ This page defines which parts of the LiteLLM Proxy HTTP API are a public contrac
 
 ## The OpenAPI spec is the public API
 
-Every endpoint that appears in the proxy's OpenAPI spec is public. The spec is served at `/openapi.json` and rendered as Swagger UI at `/` by default (configurable with `DOCS_URL`, see [UI settings](./proxy/ui.md)). For public endpoints we work to maintain the behavior contract: the path and HTTP method, the request and response shapes, authentication requirements, and default behavior.
+Every endpoint that appears in the proxy's OpenAPI spec is public. The spec is served at `/openapi.json` and rendered as Scalar at `/` by default (configurable with `DOCS_URL`, see [UI settings](./proxy/ui.md)). For public endpoints we work to maintain the behavior contract: the path and HTTP method, the request and response shapes, authentication requirements, and default behavior.
 
 Additive changes are not breaking and can ship in any release: new endpoints, new optional request fields, and new response fields. Clients should ignore response fields they do not recognize. A change that removes or renames a field, changes a default, tightens who may call an endpoint, or otherwise requires action to keep prior behavior is a breaking change. Breaking changes are called out in a dedicated `Breaking Changes` section at the top of the [release notes](/release_notes) for the version that ships them, and are held to the [release cycle](./proxy/release_cycle.md) versioning rules.
 
@@ -22,7 +22,7 @@ The spec is generated from the running proxy, so it reflects exactly the version
 curl -s http://localhost:4000/openapi.json | jq '.paths | keys'
 ```
 
-Setting `NO_DOCS` or `NO_OPENAPI` (see [environment variables](./proxy/config_settings.md#environment-variables---reference)) stops the proxy from serving Swagger UI or `/openapi.json`; it does not change which endpoints are public. Fetch the spec from a proxy without those flags set, or from the same version running locally, to see the public surface.
+Setting `NO_DOCS` or `NO_OPENAPI` (see [environment variables](./proxy/config_settings.md#environment-variables---reference)) stops the proxy from serving Scalar or `/openapi.json`; it does not change which endpoints are public. Fetch the spec from a proxy without those flags set, or from the same version running locally, to see the public surface.
 
 ## Related
 
