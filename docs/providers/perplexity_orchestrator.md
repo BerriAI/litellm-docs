@@ -152,7 +152,7 @@ HTTP/1.1 200 OK
 x-litellm-model-name: perplexity_orchestrator/openai/gpt-6-luna
 x-litellm-response-cost: 3.6e-06
 
-{"model":"gpt-6-luna","object":"response","status":"completed","output":[{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Hello"}]}],"usage":{"input_tokens":11,"output_tokens":5,"total_tokens":16}}
+{"model":"gpt-6-luna","object":"response","output":[{"content":[{"text":"Hello","type":"output_text"}],"role":"assistant","status":"completed","type":"message"}],"status":"completed","usage":{"input_tokens":11,"output_tokens":5,"total_tokens":16}}
 ```
 
 </TabItem>
@@ -177,7 +177,7 @@ HTTP/1.1 200 OK
 x-litellm-model-name: perplexity_orchestrator/anthropic/claude-haiku-5-5
 x-litellm-response-cost: 4e-06
 
-{"type":"message","role":"assistant","model":"claude-haiku","content":[{"type":"text","text":"Hello"}],"stop_reason":"end_turn","usage":{"input_tokens":15,"output_tokens":5,"cache_creation_input_tokens":0,"cache_read_input_tokens":0}}
+{"content":[{"text":"Hello","type":"text"}],"model":"claude-haiku","role":"assistant","stop_reason":"end_turn","type":"message","usage":{"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"input_tokens":15,"output_tokens":5}}
 ```
 
 </TabItem>
@@ -237,7 +237,7 @@ x-litellm-response-cost: 3.6e-06
 
 ## Unsupported Params
 
-The Orchestrator rejects `seed`, `logit_bias`, `top_logprobs`, `functions`, `function_call`, `modalities`, `audio`, `prediction`, `web_search_options`, `verbosity` and `prompt_cache_retention`, and the Responses API's `previous_response_id`. It also takes only the default value of `n` (1), `frequency_penalty` and `presence_penalty` (0), `logprobs`, `store` and `background` (false), and `service_tier` (`auto` or `default`, except on GPT models, which also take `flex` and `priority`). LiteLLM answers such a request with a 400 and does not call the Orchestrator:
+LiteLLM treats `seed`, `logit_bias`, `top_logprobs`, `functions`, `function_call`, `modalities`, `audio`, `prediction`, `web_search_options`, `verbosity` and `prompt_cache_retention`, and the Responses API's `previous_response_id` as unsupported on the Orchestrator. It also accepts only the default value of `n` (1), `frequency_penalty` and `presence_penalty` (0), `logprobs`, `store` and `background` (false), and `service_tier` (`auto` or `default`, except on GPT models, which also take `flex` and `priority`). LiteLLM answers such a request with a 400 and does not call the Orchestrator:
 
 ```bash showLineNumbers title="A request with seed" keep-model-ids
 curl -sS http://localhost:4000/v1/chat/completions \
@@ -294,14 +294,14 @@ The first call writes the cache, and LiteLLM bills the write at the 1 hour rate.
 x-litellm-response-cost: 0.0029379
 x-litellm-response-cost-cache-creation: 0.0029336
 
-"usage":{"input_tokens":13,"output_tokens":6,"cache_creation_input_tokens":14668,"cache_creation":{"ephemeral_1h_input_tokens":14668,"ephemeral_5m_input_tokens":0},"cache_read_input_tokens":0}
+"usage":{"cache_creation":{"ephemeral_1h_input_tokens":14668,"ephemeral_5m_input_tokens":0},"cache_creation_input_tokens":14668,"cache_read_input_tokens":0,"input_tokens":13,"output_tokens":6}
 ```
 
 ```text showLineNumbers title="Later call (trimmed)"
 x-litellm-response-cost: 0.00015098
 x-litellm-response-cost-cache-read: 0.00014668
 
-"usage":{"input_tokens":13,"output_tokens":6,"cache_creation_input_tokens":0,"cache_read_input_tokens":14668}
+"usage":{"cache_creation":{"ephemeral_1h_input_tokens":0,"ephemeral_5m_input_tokens":0},"cache_creation_input_tokens":0,"cache_read_input_tokens":14668,"input_tokens":13,"output_tokens":6}
 ```
 
 On `/v1/chat/completions` and `/v1/responses`, a `cache_control` marker on a Claude model or on `perplexity/auto` goes to the Orchestrator as its `prompt_cache_breakpoint` field.
