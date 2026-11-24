@@ -68,6 +68,23 @@ curl -L -X POST 'http://localhost:4000/key/service-account/generate' \
 | Omit `metadata` entirely on update | Safe — existing value is preserved |
 | Resend the same value | Allowed (no-op) |
 
+## Default routes for AI API keys
+
+To let new service account keys read their own spend and key info, select **AI APIs** in the Admin UI or send `"key_type": "llm_api"` to `POST /key/service-account/generate`. Set these routes in the proxy configuration. The spend report requires an Enterprise license.
+
+```yaml
+litellm_settings:
+  default_key_generate_params:
+    allowed_routes:
+      - llm_api_routes
+      - /key/spend/report
+      - /key/info
+```
+
+The configured list must include `llm_api_routes`. The eligible extra routes are `/key/spend/report`, `/key/info`, `/key/health`, `/model/info`, `/v1/model/info`, `/v2/model/info`, and `/model_group/info`. The proxy ignores other configured entries for these keys, including management route groups and wildcards. The spend report and key info routes are scoped to the calling key, including when other keys belong to the same team.
+
+The [default routes](./virtual_keys.md#default-keygenerate-params) apply at creation. Omit `key_type` in the API to keep the service account's ordinary route behavior, including the ability to create team keys where the team grants that permission.
+
 ## Example - require `user` param for all service account requests
 
 
