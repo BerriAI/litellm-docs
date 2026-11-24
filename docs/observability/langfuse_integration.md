@@ -208,6 +208,34 @@ curl --location --request POST 'http://0.0.0.0:4000/chat/completions' \
 ```
 
 
+#### Trace ID with `langfuse_otel`
+
+How calls are grouped into one Langfuse trace depends on which OpenTelemetry integration `langfuse_otel` runs on.
+
+| Integration | What groups calls into one trace |
+|---|---|
+| `langfuse_otel` with `LITELLM_OTEL_V2` unset (the default) | `trace_id` or `existing_trace_id` in `metadata` or `litellm_metadata`, the `langfuse_trace_id` header, or a W3C `traceparent` header |
+| `langfuse_otel` with `LITELLM_OTEL_V2=true` | A W3C `traceparent` header only. `trace_id` is ignored, see the [migration guide](./langfuse_to_otel_v2_migration#field-changes) |
+
+With `LITELLM_OTEL_V2` unset, every call that sends the same `trace_id` lands in the same Langfuse trace:
+
+```shell
+curl --location 'http://0.0.0.0:4000/chat/completions' \
+    --header 'Content-Type: application/json' \
+    --header 'Authorization: Bearer sk-1234' \
+    --data '{
+    "model": "gpt-4o",
+    "messages": [{"role": "user", "content": "what llm are you"}],
+    "metadata": {"trace_id": "0af76519-16cd-43dd-8448-eb211c80319c"}
+}'
+```
+
+- The ID is normalized the same way as for the `langfuse` callback: lowercased, hyphens stripped, and hashed to 32 hex chars when it is not a UUID or 32 hex chars. The trace ID shown in Langfuse is the normalized form.
+- A `traceparent` header wins when a request sends both. The call joins the `traceparent` trace and `trace_id` is not used for grouping.
+- Send a different `trace_id` for each unit of work you want as its own trace. Calls that reuse one value, for example a constant, are merged into a single trace.
+- A trace ID that LiteLLM fills in from a session header such as `x-litellm-session-id` does not group calls. Those calls share the session and keep one trace each.
+- Earlier versions set `trace_id` only as a span attribute, so each call landed in its own trace.
+
 #### Trace & Generation Parameters
 
 ##### Trace Specific Parameters
