@@ -461,6 +461,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | enforce_rbac | boolean | `false` | If true, enables role-based access control (RBAC) for all proxy operations |
 | forward_llm_provider_auth_headers | boolean | `false` | If true, forwards provider-specific auth headers to LLM API calls |
 | health_check_concurrency | integer | `null` (unbounded) | Maximum number of concurrent health check operations |
+| health_check_skip_blocked_background_models | boolean | `false` | If true, the background health check loop skips deployments paused with `model_info.blocked: true`, including public models that only a paused wildcard serves <SinceVersion v="1.113.0" />. [Doc on health checks](health#skip-paused-models) |
 | health_check_skip_disabled_background_models | boolean | `false` | If true, skips health probes for deployments with `model_info.disable_background_health_check: true` on on-demand `GET /health` and related health runs (not only the background loop). [Doc on health checks](health) |
 | health_check_staleness_threshold | integer | `600` (seconds) | Maximum age in seconds for health check results before marking deployments as stale |
 | maximum_spend_logs_cleanup_batch_size | integer | `1000` | Rows deleted per `DELETE` statement during spend log cleanup. Default is 1000. Overrides the `SPEND_LOG_CLEANUP_BATCH_SIZE` environment default when both are set. See [spend log deletion](spend_logs_deletion) |
