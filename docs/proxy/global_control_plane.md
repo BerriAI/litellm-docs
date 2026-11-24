@@ -34,7 +34,7 @@ Applications send inference requests directly to their regional data plane. A co
 
 PostgreSQL and Redis are not required for configuration-only operation. Enable [runtime configuration](./global_control_plane/configuration.md#runtime-configuration) to manage registry entries and roles through the API and propagate them across control-plane replicas.
 
-The control plane does not copy keys, synchronize data plane configuration, enforce a shared global budget, or fail over inference between data planes. Runtime configuration sharing only covers the control plane's own registry and roles. Use [Multi-Region Deployment](./multi_region.md) when regional gateways must share one database and the same keys.
+With runtime configuration enabled, operators can [adopt existing teams and manage their budgets across data planes](./global_control_plane/api_reference.md#adopted-team-budgets). Each data plane still enforces and accounts for its own budget. The control plane does not synchronize other data plane configuration, copy keys, enforce a shared global budget, or fail over inference. Use [Multi-Region Deployment](./multi_region.md) when regional gateways must share one database and the same keys.
 
 This implementation exposes REST APIs and interactive API documentation. It does not serve the Admin UI.
 

@@ -50,7 +50,8 @@ Both fields are required. The username accepts 1 to 256 characters. The password
 | Scope | Grants | Default roles |
 | --- | --- | --- |
 | `dataplanes:read` | Read registry entries, check data plane health, and inspect effective identity. | `admin`, `editor`, `viewer` |
-| `fleet:read` | List models and teams across data planes. | `admin`, `editor`, `viewer` |
+| `fleet:read` | List models and teams across data planes and read adopted team status. | `admin`, `editor`, `viewer` |
+| `fleet:write` | Adopt existing teams and set their desired budgets. | `admin` |
 | `usage:read` | Read usage summaries, daily usage, and top spenders. | `admin`, `editor`, `viewer`, `usage_viewer` |
 | `proxy:read` | Forward `GET` and `HEAD` requests to supported data plane management routes. | `admin`, `editor`, `viewer` |
 | `proxy:write` | Forward `POST`, `PUT`, `PATCH`, and `DELETE` requests to supported data plane management routes. | `admin`, `editor` |
@@ -100,7 +101,7 @@ With the default roles enabled and no other custom roles, `GET /api/v1/roles` re
 ```json
 {
   "items": [
-    {"name": "admin", "scopes": ["audit:read", "dataplanes:read", "dataplanes:write", "fleet:read", "proxy:read", "proxy:write", "roles:write", "usage:read"], "inherits": [], "source": "config"},
+    {"name": "admin", "scopes": ["audit:read", "dataplanes:read", "dataplanes:write", "fleet:read", "fleet:write", "proxy:read", "proxy:write", "roles:write", "usage:read"], "inherits": [], "source": "config"},
     {"name": "editor", "scopes": ["dataplanes:read", "fleet:read", "proxy:read", "proxy:write", "usage:read"], "inherits": [], "source": "config"},
     {"name": "finops", "scopes": ["usage:read"], "inherits": ["usage_viewer"], "source": "runtime"},
     {"name": "usage_viewer", "scopes": ["usage:read"], "inherits": [], "source": "config"},
@@ -200,6 +201,26 @@ Each model item includes `dataplane_id`, `model_name`, `litellm_model`, `provide
 Each team item includes `dataplane_id`, `team_id`, `team_alias`, `organization_id`, `spend`, `max_budget`, `members`, `models`, and `blocked`. `members` is a count.
 
 Both responses include `partial` and `unreachable`. See [Partial results](#partial-results).
+
+### Adopted team budgets
+
+Enable [runtime configuration](./configuration.md#runtime-configuration) and configure a service token on each target data plane. Each request requires access to every target data plane. Adoption and reconciliation use the configured service tokens without impersonating the operator. By default, only the `admin` role and the control plane master key can adopt teams or change desired budgets.
+
+| Method | Path | Required scope | Behavior |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/fleet/teams/adopt` | `fleet:write` | Send an exact `team_alias` and a non-empty `dataplanes` array of distinct IDs. The control plane pins the regional team IDs and URLs. Omit `fleet_team_id` to create a link, or supply it to refresh URLs for existing links. |
+| `PUT` | `/api/v1/fleet/teams/{fleet_team_id}` | `fleet:write` | Replace the desired settings with one or both of `max_budget` and `budget_duration`. The response returns the committed revision before the regional changes finish. |
+| `GET` | `/api/v1/fleet/teams/{fleet_team_id}/status` | `fleet:read` | Return the desired settings and each data plane's desired revision, applied revision, last error, and state. |
+
+Adoption returns `409` with a `conflicts` list if any target is unreachable, has no service token, or has zero or multiple exact matches. A new adoption also returns `409` if a regional team is already linked. A failed adoption changes no mappings.
+
+If a registered URL changes, the control plane stops reconciling the affected link. To resume, send another adoption request with the existing `fleet_team_id`, the same `team_alias`, and the affected IDs in `dataplanes`. The control plane checks access to the entire fleet team and refreshes each URL only if the new endpoint returns the same regional team ID. The desired budget and its revision stay the same. Repeating the request for unchanged URLs changes nothing.
+
+Omit a budget field to leave it unmanaged. Use `null` to clear a field; `max_budget: 0` is a zero budget. The reconciler reads each team and updates only the fields that differ. Keeping the same `budget_duration` preserves the existing reset schedule. Regional budget validation still applies.
+
+Status reports `pending` until the revision applies, `unreachable` if the data plane cannot be read, `applied` when the managed values match, and `drifted` if a local edit changed a managed value after application. Drift is report-only. Submit a new PUT to reapply the desired values. There is no fleet team creation, deletion, or spend reconciliation.
+
+If the control plane stops after a regional update commits but before it records progress, it reads the team again on retry and skips the write when the values match. A local edit made in that window can be overwritten once on retry.
 
 ### Usage {#usage}
 
