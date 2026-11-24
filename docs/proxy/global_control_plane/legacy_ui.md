@@ -10,7 +10,7 @@ import { ControlPlaneArchitecture } from '@site/src/components/ControlPlaneArchi
 
 {/* keep-version-note */}
 
-This guide covers the existing `worker_registry` UI. For the new management API, see [Global Control Plane](../global_control_plane.md).
+The `worker_registry` UI and `control_plane_url` worker login are deprecated. Existing deployments can continue using them. For new deployments, use the [Global Control Plane Admin UI](../global_control_plane.md#admin-ui), which signs in once and sends management requests through the control plane.
 
 Deploy a single LiteLLM UI that manages multiple independent LiteLLM proxy instances, each with its own database, Redis, and master key.
 

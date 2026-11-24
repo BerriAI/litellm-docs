@@ -36,7 +36,15 @@ PostgreSQL and Redis are not required for configuration-only operation. Enable [
 
 With runtime configuration enabled, operators can [adopt existing teams and manage their budgets across data planes](./global_control_plane/api_reference.md#adopted-team-budgets). Each data plane still enforces and accounts for its own budget. The control plane does not synchronize other data plane configuration, copy keys, enforce a shared global budget, or fail over inference. Use [Multi-Region Deployment](./multi_region.md) when regional gateways must share one database and the same keys.
 
-This implementation exposes REST APIs and interactive API documentation. It does not serve the Admin UI.
+## Admin UI
+
+Open `/ui/` on the control-plane host. Sign in once with the username and password set by `UI_USERNAME` and `UI_PASSWORD`. The dashboard uses the same origin and API prefix advertised by the control plane. The browser does not connect to a data plane or use its credentials.
+
+Select a data plane to open its management pages. The picker shows its last reported health. The control plane checks your scopes and data plane bindings, and the selected data plane checks your local permissions. Controls that your session cannot use stay visible with an explanation.
+
+Fleet Models, Fleet Teams, and Fleet Usage show results across the data planes available to your session. When a data plane does not respond, the page identifies it and marks the results as partial. Do not use partial totals as fleet totals.
+
+The Dataplanes and Roles pages manage runtime entries when the control plane has [runtime configuration](./global_control_plane/configuration.md#runtime-configuration) enabled and the session has the required write scope and fleet-wide access. Configuration entries stay read-only. The Audit Log shows recent events visible to the session.
 
 ## Documentation
 
@@ -45,4 +53,4 @@ This implementation exposes REST APIs and interactive API documentation. It does
 | [Reference Architectures](./global_control_plane/architecture.md) | AWS, Azure, GCP, and hybrid cloud diagrams with regions, private networks, and management connections. |
 | [Configuration](./global_control_plane/configuration.md) | Settings and defaults for the control plane, data plane authentication, and audit destinations. |
 | [API Reference](./global_control_plane/api_reference.md) | Endpoints, scopes, parameters, and responses. |
-| [UI Deployment Selector](./global_control_plane/legacy_ui.md) | The existing Admin UI setup using `worker_registry`. |
+| [Legacy UI Deployment Selector](./global_control_plane/legacy_ui.md) | The deprecated Admin UI setup using `worker_registry`. Existing deployments can continue using it. |
