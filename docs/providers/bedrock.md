@@ -1550,6 +1550,8 @@ for chunk in response:
   print(chunk)
 ```
 
+To stream with `litellm.anthropic.messages.acreate`, see [Handle Bedrock stream errors](../anthropic_unified/index.md#bedrock-messages-stream-errors) for the exceptions to catch while you iterate the stream.
+
 #### Example Streaming Output Chunk
 ```json
 {

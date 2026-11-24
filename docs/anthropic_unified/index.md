@@ -236,6 +236,39 @@ Example response:
 }
 ```
 
+### Handle Bedrock stream errors {#bedrock-messages-stream-errors}
+
+When you stream a `bedrock/` Claude model through `litellm.anthropic.messages.acreate` on the Bedrock Invoke route, an error event that Bedrock sends while you iterate the stream, such as `internalServerException` or `throttlingException`, can raise `litellm.llms.bedrock.common_utils.BedrockError`. That class is not an `openai.OpenAIError`, so catch both classes around the `await` and the `async for` loop.
+
+```python showLineNumbers title="Catch Bedrock errors raised while iterating a /v1/messages stream"
+import asyncio
+import os
+
+import openai
+
+import litellm
+from litellm.llms.bedrock.common_utils import BedrockError
+
+
+async def main() -> None:
+    try:
+        stream = await litellm.anthropic.messages.acreate(
+            model=os.environ["BEDROCK_MODEL"],
+            messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
+            max_tokens=100,
+            stream=True,
+        )
+        async for chunk in stream:
+            print(chunk)
+    except (openai.OpenAIError, BedrockError) as error:
+        print(f"{type(error).__name__}, status {getattr(error, 'status_code', None)}")
+
+
+asyncio.run(main())
+```
+
+Set `BEDROCK_MODEL` to the full LiteLLM model name with its `bedrock/` prefix. The AWS credentials and region come from the same environment variables as the examples above. Chunks that arrive before the error event are already delivered, so the output can be incomplete. This example reports the failure without retrying, and your application decides whether to keep the partial output, discard it, or send the request again.
+
 ### LiteLLM Proxy Server 
 
 <Tabs>
