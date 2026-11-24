@@ -284,7 +284,7 @@ Authenticate with `Authorization: Bearer <proxy key>`. LiteLLM sends `session.cr
 
 ### 3. Configure the session
 
-Send one `session.update` (or `transcription_session.update`). LiteLLM opens the ElevenLabs session with these settings and sends `session.updated`, with the same session id, once ElevenLabs accepts it. Later updates are ignored. Audio sent before `session.updated` is buffered and replayed, so you can start streaming right away. If no `session.update` arrives and the buffer fills up (200 messages or 10 MB), LiteLLM sends one `error` event with `code: session_not_configured` and drops later audio until the update arrives.
+Send one `session.update` (or `transcription_session.update`). LiteLLM opens the ElevenLabs session with these settings and sends `session.updated`, with the same session id, once ElevenLabs accepts it. Later updates are ignored. Audio sent before `session.updated` is buffered and replayed, so you can start streaming right away. If no `session.update` arrives and the buffer fills up (200 messages or 10 MB), later audio is dropped until the update arrives.
 
 ```json showLineNumbers title="session.update"
 {
@@ -305,16 +305,16 @@ Send one `session.update` (or `transcription_session.update`). LiteLLM opens the
 | Field | Rules |
 | --- | --- |
 | `format` | `type` must be `audio/pcm` and `channels` must be `1`. `rate` must be `8000`, `16000`, `22050`, `24000`, `44100` or `48000`; omitted means 24 kHz. |
-| `transcription.model` | Optional. Only `scribe_v2_realtime` or `elevenlabs/scribe_v2_realtime` is accepted. |
+| `transcription.model` | Optional. Only `scribe_v2_realtime` or `elevenlabs/scribe_v2_realtime` is accepted. Any other value, the proxy alias included, is rejected, or ignored when [`drop_params`](/docs/completion/drop_params) is set. |
 | `transcription.language` | Optional ISO 639-1 or ISO 639-3 code. Region suffixes are dropped, so `en-US` becomes `en`. |
 | `turn_detection` | Omitted or `{"type": "server_vad"}` selects ElevenLabs VAD commits; `null` selects manual commits. Any other `type` is rejected, or falls back to server VAD when [`drop_params`](/docs/completion/drop_params) is set. |
 | Beta layout | `input_audio_format: "pcm16"` plus `input_audio_transcription` is accepted at 24 kHz. |
 
-An invalid `session.update` (bad format, rate, model, language or turn detection type) closes the connection without an `error` event; the reason is in the proxy log at debug level. Invalid audio after setup, such as invalid base64 or an odd number of PCM bytes, closes the same way.
+An invalid `session.update` (bad format, rate, model, language or turn detection type) gets an `error` event of type `invalid_request_error` that names the problem, and then the connection closes. Invalid audio after setup, such as invalid base64 or an odd number of PCM bytes, closes the same way.
 
 ### 4. Stream audio
 
-`input_audio_buffer.append` carries base64 mono PCM16 at the configured rate. LiteLLM forwards it as ElevenLabs `input_audio_chunk` messages, splitting large appends into chunks of at most 32000 bytes. `input_audio_buffer.commit` and `input_audio_buffer.end` commit the audio sent since the last commit, in either mode. A commit with no new audio is not forwarded, because ElevenLabs closes the session on an empty commit. ElevenLabs also closes the session on a commit with less than 0.3 s of new audio, so LiteLLM pads a shorter commit or clear with silence up to 0.3 s, and that silence is billed like other audio. A commit whose audio has no speech still gets a `completed` event, with an empty transcript. `input_audio_buffer.clear` commits the pending audio and drops that segment's transcript, so the next `completed` event covers only audio sent after the clear. Each clear drops only the transcript of its own segment, even when the transcript of an earlier commit has not arrived yet. The cleared audio is still billed, and LiteLLM does not send `input_audio_buffer.cleared`. Every other client event, including `response.create`, is dropped.
+`input_audio_buffer.append` carries base64 mono PCM16 at the configured rate. LiteLLM forwards it as ElevenLabs `input_audio_chunk` messages, splitting large appends into chunks of at most 32000 bytes. `input_audio_buffer.commit` and `input_audio_buffer.end` commit the audio sent since the last commit, in either mode. A commit with no new audio is not forwarded, because ElevenLabs closes the session on an empty commit. ElevenLabs also closes the session on a commit with less than 0.3 s of new audio, so LiteLLM pads a shorter commit or clear with silence up to 0.3 s, and that silence is billed like other audio. A commit whose audio has no speech still gets a `completed` event, with an empty transcript. `input_audio_buffer.clear` commits the pending audio and drops that segment's transcript, so the next `completed` event covers only audio sent after the clear. Each clear drops only the transcript of its own segment, even when the transcript of an earlier commit has not arrived yet. The cleared audio is still billed. Once ElevenLabs answers the cleared segment, LiteLLM sends `input_audio_buffer.speech_stopped` if that segment already got `speech_started`, and then `input_audio_buffer.cleared`. A clear with no new audio since the last commit sends nothing. Every other client event, including `response.create`, is dropped.
 
 With server VAD, ElevenLabs commits a segment after a pause of `vad_silence_threshold_secs`, so keep streaming audio (silence included) in real time, or send `input_audio_buffer.commit` to commit at once.
 
@@ -326,8 +326,9 @@ With server VAD, ElevenLabs commits a segment after a pause of `vad_silence_thre
 | `session.updated` | Effective settings, same `session.id` | After ElevenLabs accepts your `session.update` |
 | `input_audio_buffer.speech_started` | `item_id` | First partial transcript of a segment |
 | `conversation.item.input_audio_transcription.delta` | `item_id`, `content_index: 0`, `delta` | New confirmed words, and the rest of the segment on commit |
-| `input_audio_buffer.speech_stopped` | `item_id` | The segment is committed |
+| `input_audio_buffer.speech_stopped` | `item_id` | The segment is committed or cleared |
 | `conversation.item.input_audio_transcription.completed` | `item_id`, `content_index: 0`, `transcript`, `usage: {"type": "duration", "seconds": 7.57}` | Final transcript for the segment |
+| `input_audio_buffer.cleared` | | ElevenLabs answered the segment an `input_audio_buffer.clear` committed |
 | `error` | `error.type`, `error.message: ElevenLabs realtime transcription failed: <type>` | ElevenLabs reported an error such as `auth_error` or `quota_exceeded` |
 
 ElevenLabs keeps revising the last word of each partial transcript, so a delta carries a word only after a later partial confirms it. When the segment is committed, LiteLLM sends the rest of the transcript as a last delta before `speech_stopped`, so the deltas of a segment add up to its `completed` transcript. For text without spaces, such as Chinese and Japanese, and for text whose last word has no spaces, such as Japanese with an English word in it, a delta carries the characters two partials agree on, minus the last character and any trailing punctuation, which ElevenLabs often revises. If ElevenLabs revises text a delta already carried, later deltas continue from the same word or character position, so the joined deltas can differ from `completed` in the revised words. A revision that changes the number of words, such as `twenty five` becoming `$25`, can make the next delta skip or repeat a word. The `completed` transcript is the authoritative text for the segment.
