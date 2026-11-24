@@ -706,9 +706,9 @@ Set `deferred_tools` in a deployment's `model_info` to choose how LiteLLM handle
 | Value | What LiteLLM sends | Use it for |
 |-------|--------------------|------------|
 | `drop` (default) | Every deferred tool as a normal tool, without `defer_loading` | Backends where the cache loss is acceptable |
-| `native` | The request to the provider's Responses API, with `ToolSearch` as client `tool_search` and deferred tools kept deferred | Azure OpenAI, OpenAI, and Fireworks AI |
+| `native` | The request to the provider's Responses API, with `ToolSearch` as client `tool_search` and deferred tools kept deferred | Azure OpenAI and OpenAI |
 | `emulate` | One fixed tool list, with deferred tools replaced by a `CallLoadedTool` tool that calls a loaded tool by name | Chat-only backends such as Bedrock or Fireworks Kimi |
-| `passthrough` | Each tool with its `defer_loading` flag as Claude Code sent it | Backends that accept Anthropic-style deferral |
+| `passthrough` | Each tool with its `defer_loading` flag as Claude Code sent it, and each `ToolSearch` result as text naming the loaded tools | Backends that accept Anthropic-style deferral |
 
 With `emulate`, a `ToolSearch` result reaches the model as text that names each loaded tool with its description and input schema, and the model calls the tool through `CallLoadedTool`. LiteLLM returns that call to Claude Code under the loaded tool's own name, so Claude Code runs the tool as usual. The tool list stays the same for the whole session, so the prompt cache holds across tool loads. `emulate` changes nothing on a request that has no `ToolSearch` tool.
 
@@ -718,7 +718,9 @@ With `emulate`, a loaded tool's arguments reach the model as the free-form `inpu
 
 `deferred_tools` applies only where LiteLLM translates `/v1/messages` to another API. A provider LiteLLM calls through its own `/v1/messages` API, such as Anthropic, gets deferred tools as Claude Code sent them, so any value other than `passthrough` answers 400 there.
 
-An unknown value, `native` on a provider other than the three above, or `passthrough` on OpenAI, which rejects `defer_loading` without its own tool search, answers 400. With `drop_params: true`, LiteLLM uses `drop` instead (and ignores the setting on a provider's own `/v1/messages` API) and drops a forced `ToolSearch` `tool_choice`.
+An unknown value, `native` on a provider other than the two above, or `passthrough` on OpenAI or Azure OpenAI, which reject `defer_loading` without their own tool search, answers 400. With `drop_params: true`, LiteLLM uses `drop` instead (and ignores the setting on a provider's own `/v1/messages` API), drops a forced `ToolSearch` `tool_choice`, and logs a warning that names the setting.
+
+The proxy turns on `drop_params` for Claude Code requests by default, so a Claude Code session gets that fallback and the warning instead of the 400. Set `drop_params: false` under `litellm_settings` to get the 400 there too.
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
