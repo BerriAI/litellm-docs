@@ -222,7 +222,7 @@ With `LITELLM_OTEL_V2` unset, every call that sends the same `trace_id` lands in
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
     --header 'Content-Type: application/json' \
-    --header 'Authorization: Bearer sk-1234' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
     --data '{
     "model": "gpt-4o",
     "messages": [{"role": "user", "content": "what llm are you"}],
