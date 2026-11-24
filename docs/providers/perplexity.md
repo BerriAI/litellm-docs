@@ -11,6 +11,8 @@ import TabItem from '@theme/TabItem';
 
 Perplexity offers the Sonar models and an Agent API with a web search tool; LiteLLM calls both with the `perplexity/` prefix from the Python SDK or AI Gateway.
 
+To call Claude, GPT, Gemini, Grok and other vendors' models through Perplexity's Orchestrator API, with model IDs such as `anthropic/claude-haiku-5-5`, use the [Perplexity Orchestrator provider](./perplexity_orchestrator.md).
+
 https://www.perplexity.ai
 
 ## API Key
