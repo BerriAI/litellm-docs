@@ -19,7 +19,7 @@
 
 :::note Release availability
 
-The `acedatacloud/` prefix, public model discovery, and Messages-only model routing require a LiteLLM version containing [the provider integration](https://github.com/BerriAI/litellm/pull/44817). Older releases can route Chat Completions models through the [OpenAI-compatible provider](https://docs.litellm.ai/docs/providers/openai_compatible) with `openai/gpt-6-luna`, `api_base="https://api.acedata.cloud/v1"`, an explicit API key, and custom prices from the public catalog.
+The `acedatacloud/` prefix, public model discovery, and native Messages support require a LiteLLM version containing [the provider integration](https://github.com/BerriAI/litellm/pull/44817). Older releases can route Chat Completions models through the [OpenAI-compatible provider](https://docs.litellm.ai/docs/providers/openai_compatible) with `openai/gpt-6-luna`, `api_base="https://api.acedata.cloud/v1"`, an explicit API key, and custom prices from the public catalog.
 
 Versions without the Credit-cost fix can fail strict response serialization when `usage.cost` contains a structured Credit value. Verify serialization and custom prices before using the generic configuration in a proxy.
 
@@ -49,7 +49,7 @@ These redacted Ace console images are reused from the Suno Dify onboarding guide
 export ACEDATACLOUD_API_KEY="your-api-token"
 ```
 
-The provider defaults to `https://api.acedata.cloud/v1`. LiteLLM selects the transport from the model's endpoint metadata. Use `responses()` only for a model whose entry includes `/v1/responses`.
+The provider defaults to `https://api.acedata.cloud/v1`. Choose the LiteLLM method for an endpoint listed for your model. Use `responses()` only for a model whose entry includes `/v1/responses`.
 
 ## Discover models
 
@@ -106,18 +106,21 @@ print(response.output)
 
 ## Messages-only models
 
-Use the same `completion()` interface for a model served only by Messages. The provider sends the request to `/v1/messages` with your Ace Bearer credential and returns a LiteLLM completion response. For example, `claude-sonnet-5-5` has a Messages endpoint and no Chat Completions or Responses endpoint.
+Use the native Messages interface for an ID such as `claude-sonnet-5-5` whose catalog entry lists only that protocol. LiteLLM sends the application API key as a Bearer credential.
 
 ```python keep-model-ids
-from litellm import completion
+import asyncio
+import litellm
 
-response = completion(
-    model="acedatacloud/claude-sonnet-5-5",
-    messages=[{"role": "user", "content": "Reply with exactly OK."}],
-    max_tokens=64,
-    num_retries=0,
-)
-print(response.choices[0].message.content)
+async def main():
+    response = await litellm.anthropic_messages(
+        model="acedatacloud/claude-sonnet-5-5",
+        messages=[{"role": "user", "content": "Hello"}],
+        max_tokens=64,
+    )
+    print(response["content"])
+
+asyncio.run(main())
 ```
 
 ## LiteLLM Proxy
@@ -159,12 +162,6 @@ curl http://localhost:4000/v1/responses \
 ```
 
 In the Admin UI, open **Models + Endpoints**, choose **Add Model**, select **Ace Data Cloud**, choose an eligible model from the current catalog, and enter your Ace Data Cloud API key.
-
-![Actual candidate Ace provider selection](/img/acedatacloud/litellm-ace-provider-selected.jpg)
-
-![Actual candidate model mapping and empty API key](/img/acedatacloud/litellm-ace-provider-model-empty-key.jpg)
-
-These are real isolated candidate captures from October 18, 2026, running exact provider commit `e6e760b8` through normal local product login. The visible `v1.105.1` header comes from dependency wheel metadata; the source checkout supplied the implementation. It is not evidence that release 1.105.1 includes this provider. No Ace key, Test Connect, or Add Model action was used, so the images do not prove credential storage, model output, or billing.
 
 ## Models and cost tracking
 

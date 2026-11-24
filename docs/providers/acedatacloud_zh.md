@@ -11,7 +11,7 @@
 python -m pip install 'litellm[proxy]'
 ```
 
-按照 [Proxy 快速开始](https://docs.litellm.ai/docs/proxy/quick_start) 启动自己的部署并登录管理界面。原生 `acedatacloud/` 前缀、公开模型发现、Messages 专属模型路由和 **Ace Data Cloud** 服务商选项需要包含 [Provider 集成](https://github.com/BerriAI/litellm/pull/44817) 的 LiteLLM 版本；安装旧版稳定包不会自动获得候选实现。
+按照 [Proxy 快速开始](https://docs.litellm.ai/docs/proxy/quick_start) 启动自己的部署并登录管理界面。原生 `acedatacloud/` 前缀、公开模型发现、原生 Messages 接口和 **Ace Data Cloud** 服务商选项需要包含 [Provider 集成](https://github.com/BerriAI/litellm/pull/44817) 的 LiteLLM 版本；安装旧版稳定包不会自动获得候选实现。
 
 尚未包含该集成的版本可参照 [OpenAI-compatible provider](https://docs.litellm.ai/docs/providers/openai_compatible)，为支持 Chat Completions 的模型使用 `openai/gpt-6-luna`、显式 API Key、`api_base="https://api.acedata.cloud/v1"`，并从当前公开模型目录设置自定义价格。没有 Credit-cost 修复的旧版本可能无法序列化结构化 `usage.cost`，使用前需验证响应序列化与费用设置。
 
@@ -30,12 +30,6 @@ python -m pip install 'litellm[proxy]'
 ## 在管理界面添加模型
 
 依次打开 **Models + Endpoints → Add Model**，搜索并选择 **Ace Data Cloud**，从当前目录选择支持所需接口的模型，将自己的业务 Key 填入 **API Key**。
-
-![真实候选界面：选择 Ace Data Cloud](/img/acedatacloud/litellm-ace-provider-selected.jpg)
-
-![真实候选界面：模型映射与 API Key 输入位置](/img/acedatacloud/litellm-ace-provider-model-empty-key.jpg)
-
-两张图于 2026-10-18 在精确 Provider 源码 `e6e760b8` 上，经正常本地产品登录拍摄。图中版本号 `v1.105.1` 来自依赖 wheel metadata，不能证明官方 1.105.1 已含此 Provider。拍摄时 Key 为空，没有 Test Connect 或 Add Model，因此不证明凭据存储、调用结果或账单。
 
 确认模型权限、余额与当次费用后，再测试并保存自己的配置。默认 API 基址为 `https://api.acedata.cloud/v1`；LiteLLM 按模型元数据选择接口。只有目录声明支持 `/v1/responses` 的模型才使用 `responses()`。不要把媒体 MCP 的 `/mcp` 地址填到模型 API 基址。
 
@@ -98,18 +92,21 @@ print(response.output)
 
 ## Messages 专属模型
 
-仅支持 Messages 的模型仍使用 `completion()`。Provider 会将请求发送到 `/v1/messages`，使用 Ace 的 Bearer 凭据，并返回 LiteLLM completion 响应。例如 `claude-sonnet-5-5` 只声明了 Messages，不支持 Chat Completions 或 Responses。
+对于目录只声明 Messages 的型号，例如 `claude-sonnet-5-5`，使用 LiteLLM 的原生 Messages 接口。该接口用应用 API Key 进行 Bearer 认证。
 
 ```python keep-model-ids
-from litellm import completion
+import asyncio
+import litellm
 
-response = completion(
-    model="acedatacloud/claude-sonnet-5-5",
-    messages=[{"role": "user", "content": "Reply with exactly OK."}],
-    max_tokens=64,
-    num_retries=0,
-)
-print(response.choices[0].message.content)
+async def main():
+    response = await litellm.anthropic_messages(
+        model="acedatacloud/claude-sonnet-5-5",
+        messages=[{"role": "user", "content": "Hello"}],
+        max_tokens=64,
+    )
+    print(response["content"])
+
+asyncio.run(main())
 ```
 
 ## Proxy 配置
@@ -149,7 +146,6 @@ Ace 按 Credits 结算，USD 换算为 `Credits × 当前套餐价格 / 套餐 C
 
 | 现象 | 检查方法 |
 | --- | --- |
-| 找不到 Ace Data Cloud | 检查已安装版本是否包含 Provider 集成；候选截图不能证明稳定包已发布。 |
 | 401 | 分别检查请求 LiteLLM 的 proxy key 和下游业务 Key；不要误用 Account Token 或重复添加 Bearer。 |
 | 403 | 阅读原始错误，分别检查服务/API 权限、Key 限制和内容审核。 |
 | 429 | 降低并发并等待，不盲目开启重复计费重试。 |

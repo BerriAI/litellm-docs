@@ -27,10 +27,6 @@ Open **MCP Servers**, click **Add New MCP Server**, and search for the service n
 
 The discovery entries require a LiteLLM version containing [the media catalog integration](https://github.com/BerriAI/litellm/pull/47149). If your installation has no matching entry, use **Custom Server** with the endpoint above, **Streamable HTTP**, and **Bearer Token**. This manual route does not mean the entry is already included in your installed release.
 
-![Five separate media service entries in the actual LiteLLM candidate UI](/img/acedatacloud/litellm-final-tip-five-media-cards.jpg)
-
-This real local candidate capture was taken on October 18, 2026, at exact media commit `6ed14e00`, using the existing normal product session. All five branded cards are visible. It shows the candidate catalog before official release; an installed stable version may not contain these entries.
-
 ## Get an API token
 
 Register or sign in at [Ace Data Cloud Applications](https://platform.acedata.cloud/console/applications?utm_source=opensource&utm_medium=referral&utm_campaign=evergreen&utm_content=litellm_media_docs_api_key). If no General application exists, choose **Initialize General Application**. Open **General application**, check that the account can use your chosen service, and review its [current prices and balance](https://platform.acedata.cloud/models?utm_source=opensource&utm_medium=referral&utm_campaign=evergreen&utm_content=litellm_media_docs_pricing) before generating anything.
@@ -45,18 +41,7 @@ These are redacted Ace console screenshots from the Suno Dify onboarding guide a
 
 ## Connect in LiteLLM
 
-In a release containing the media catalog change, the selected discovery card fills the server name, endpoint, Streamable HTTP transport, and Bearer Token authentication. Paste only the Ace token into **Authentication Value**, without `Bearer ` or quotes. Leave OAuth and custom Authorization headers unset when using this token route.
-
-The authenticated discovery preset waits for a nonblank token before testing the connection. Follow **Get your API token** to Applications if needed. Clicking **Add MCP Server** with an empty token displays a required-field error and does not submit; the button itself remains clickable.
-
-![Real candidate shows the empty password field and token-acquisition link](/img/acedatacloud/litellm-final-tip-suno-empty-token.jpg)
-
-The final-tip form was captured on October 18 at exact commit `6ed14e00`, using the existing normal product session. The token is empty and password-type, the Applications link carries four UTM fields, and Connection/Tools remain at Complete required fields without an automatic preview. Cancel leaves zero servers. No Add, Test, or Authorize action was used, and no token, connection, or generation was submitted. The native HTML required attribute is false. Application-form submit validation was checked separately at earlier commit `166f54e3` and in integration tests; this capture does not retest submission. These images do not prove official release, real-token authentication, final media output, or billing.
-
-
-Check the connection and credential scope, then choose **Add MCP Server**. Open the server's **MCP Tools** tab. Do not grant tools to all teams or keys by default. Use [MCP Permission Management](../mcp_control.md) to give the intended users access. Storing connections through the UI needs `store_model_in_db: true`, as described in [MCP prerequisites](../mcp.md#prerequisites).
-
-For a configuration-file deployment, this example connects only Suno. Use a separate entry and secret for another service.
+Select a service or choose **Custom Server**. Enter its endpoint, select **Streamable HTTP**, choose **Bearer Token** and paste the raw application token in **Authentication Value**. Save the connection and grant access to the intended users through [MCP permissions](../mcp_control.md). You can also configure the same connection in YAML.
 
 ```yaml title="config.yaml"
 mcp_servers:
