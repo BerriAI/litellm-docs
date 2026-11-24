@@ -123,7 +123,7 @@ general_settings:
 
 Set `health_check_details: false` to return only [the minimal entry](#response-fields) when the proxy is exposed to a broad audience.
 
-The cached result follows the same rules as a live check. Each key sees only its own deployments, a targeted call answers 503 when no targeted deployment is healthy in the cache, and non-admin keys get the admin-only fields removed. Until the first background run finishes the cache is empty, so an untargeted call answers 200 with empty lists, or `{}` for an admin key with no `models` list, and every targeted call answers 503 with empty lists. Each proxy worker, and each pod, runs its own background loop and keeps its own cache. Right after the proxy starts, or after a worker restarts, a worker whose first run has not finished answers from an empty cache while another worker already has results, so the same call can answer 503 and then 200 a moment later. A deployment the background loop skips, through `disable_background_health_check` or `background_health_check_model_groups` below, is never in the cache, so it never shows up and a targeted check of it always answers 503 with empty lists.
+The cached result follows the same rules as a live check. Each key sees only its own deployments, a targeted call answers 503 when no targeted deployment is healthy in the cache, and non-admin keys get the admin-only fields removed. Until the first background run finishes the cache is empty, so an untargeted call answers 200 with empty lists, or `{}` for an admin key with no `models` list, and every targeted call answers 503 with empty lists. Each proxy worker, and each pod, runs its own background loop and keeps its own cache. Right after the proxy starts, or after a worker restarts, a worker whose first run has not finished answers from an empty cache while another worker already has results, so the same call can answer 503 and then 200 a moment later. A deployment the background loop skips, through `disable_background_health_check`, `background_health_check_model_groups` or `health_check_skip_blocked_background_models` below, is never in the cache, so it never shows up and a targeted check of it always answers 503 with empty lists.
 
 To exclude a model from the background loop, set `disable_background_health_check: true` in its `model_info`. While background checks are on, `/health` only reads the cache, so that deployment drops out of its result as described above. Set `general_settings.health_check_skip_disabled_background_models: true` to also leave those deployments out of on-demand checks, which run when background checks are off, and out of shared health checks.
 
@@ -146,6 +146,20 @@ general_settings:
 ```
 
 For coordinating checks across multiple pods so expensive models are not probed once per pod, see [Shared Health Check State](./shared_health_check.md).
+
+### Skip paused models
+
+<SinceVersion v="1.113.0" />
+
+To stop probing a model while it is paused, set `general_settings.health_check_skip_blocked_background_models: true`. The background loop then skips every deployment with `model_info.blocked: true`, which `POST /model/block` and the Pause toggle on the Models + Endpoints page set, and every public model that only a paused wildcard serves. The setting is off by default, and it changes nothing when background checks are off, so an on-demand `/health` call still probes paused deployments then.
+
+```yaml
+general_settings:
+  background_health_checks: true
+  health_check_skip_blocked_background_models: true
+```
+
+A paused deployment is skipped like any other, so it drops out of `/health` and a targeted check of it answers 503 with empty lists. On the Health Status tab its row keeps the last result from before the pause until someone re-checks it, and a re-check marks it unhealthy because of that 503. Each worker picks up a pause or a resume when it next reloads its models, so one more background run can probe a deployment right after you pause it, and probes start again on the next run after you resume it. With [health check routing](health_check_routing) on, a model paused for longer than `health_check_staleness_threshold` counts as healthy right after you resume it, like a newly added model, until the next run probes it. Test Connection still sends a real request to a paused deployment.
 
 ## Model modes
 
