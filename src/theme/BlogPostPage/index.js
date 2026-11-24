@@ -157,7 +157,8 @@ function BlogPostPageContent({children, Hero}) {
                       ))}
                     </div>
                   )}
-                  <h1 className={styles.title}>{title}</h1>
+                  <h1 className={clsx(styles.title, frontMatter.subtitle && styles.titleWithSubtitle)}>{title}</h1>
+                  {frontMatter.subtitle && <p className={styles.subtitle}>{frontMatter.subtitle}</p>}
                   <Cover image={coverImage} Hero={Hero} />
                 </div>
               </header>

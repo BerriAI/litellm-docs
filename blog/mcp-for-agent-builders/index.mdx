@@ -1,0 +1,187 @@
+---
+slug: mcp-for-agent-builders
+title: "How to Let Customers Connect Their Apps to Your Agent"
+subtitle: "Using LiteLLM MCP Gateway"
+date: 2026-11-23T09:00:00-08:00
+authors: [moe]
+description: "Let customers connect their own accounts to your agent. Register an MCP server, grant key access, and call tools through LiteLLM."
+tags: [tutorial, agents, mcp]
+hide_table_of_contents: false
+image: ./hero.png
+---
+
+If you're building an agent, you've probably spent more time than you'd like figuring out connector auth. Each customer needs to sign in to their own accounts, and every tool call needs the right token. Add another MCP server, and you have another integration to configure and control.
+
+LiteLLM MCP Gateway gives you one place to add MCP servers and choose which ones your agent can use. Register a server, attach it to your application's virtual key, and send tool calls with the connected customer's access token. You can use the same application key across customers without creating LiteLLM accounts for them.
+
+This walkthrough connects Granola so customers can sign in from your app and ask your agent about their meetings. Your backend runs OAuth and stores their tokens. **LiteLLM forwards the access token on each request; it does not store customer OAuth tokens in this setup.**
+
+{/* truncate */}
+
+## Before you start
+
+You'll need a running LiteLLM gateway with its PostgreSQL database configured, permission to add MCP servers and manage virtual keys, and an application with user login. The examples target [LiteLLM v1.110.2](https://github.com/BerriAI/litellm/releases/tag/v1.110.2). If you need a gateway first, follow the [MCP deployment guide](/docs/mcp_deployment).
+
+Use a Granola account with [MCP access](https://docs.granola.ai/help-center/sharing/integrations/mcp) to test the connection. The backend example uses TypeScript; the request headers work with other MCP clients too.
+
+## 1. Add the MCP server
+
+Register Granola so LiteLLM can route your agent's requests to it. In a terminal, set your gateway's root URL, without `/v1`, and an administrator key:
+
+```bash
+export LITELLM_PROXY_API_BASE="https://gateway.example.com"
+export LITELLM_ADMIN_KEY="<your-litellm-admin-key>"
+```
+
+```bash
+curl --fail-with-body \
+  "${LITELLM_PROXY_API_BASE%/}/v1/mcp/server" \
+  -H "Authorization: Bearer $LITELLM_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "server_name": "granola",
+    "alias": "granola",
+    "url": "https://mcp.granola.ai/mcp",
+    "transport": "http",
+    "auth_type": "oauth_delegate",
+    "dcr_bridge": false,
+    "allowed_tools": ["get_account_info", "query_granola_meetings"]
+  }'
+```
+
+`oauth_delegate` tells LiteLLM to use the customer's token from each request. `dcr_bridge: false` keeps the sign-in flow in your application. The tool list allows account checks and meeting searches.
+
+The response includes a `server_id`, and Granola appears under **MCP Servers** in the Admin UI. Its gateway route is `/granola/mcp`. If you already registered Granola, update that entry to match these settings.
+
+## 2. Give your agent access
+
+Create a virtual key for your application in **Virtual Keys → + Create New Key**. Under **MCP Settings → Allowed MCP Servers**, select `granola`.
+
+For an existing key, open **Settings → Edit Settings** and add `granola` under **MCP Servers / Access Groups**. Keep its existing selections. If the key belongs to a team with an MCP allowlist, add Granola to the team's allowlist too.
+
+Save these environment variables in your agent backend's deployment settings:
+
+```dotenv
+LITELLM_PROXY_API_BASE=https://gateway.example.com
+LITELLM_PROXY_API_KEY=<your-application-virtual-key>
+```
+
+Use your gateway's root URL and the virtual key you created. Keep the key on the backend. Customers sign in to your app and never receive this key.
+
+## 3. Let a customer connect Granola
+
+Add a **Connect Granola** button to your app. It starts an OAuth authorization-code flow with PKCE: the customer signs in to Granola, approves access, and returns to your app.
+
+Use an MCP OAuth client, such as the [MCP TypeScript SDK](https://ts.sdk.modelcontextprotocol.io/v2/clients/oauth), to handle discovery, registration, and the code exchange. Start OAuth against `https://mcp.granola.ai/mcp`. Use the LiteLLM URL for tool calls in the next step.
+
+Your backend needs two routes:
+
+| Route | What it does |
+| --- | --- |
+| Connect | Read the signed-in customer from your app session. Start OAuth, save the state and PKCE verifier for that session, and redirect the browser to Granola. |
+| Callback | Validate the state and session, exchange the code, and save the connection under that customer's identity. Redirect back to your app. |
+
+Set the callback to an HTTPS route on your deployed app, such as `https://agent.example.com/oauth/callback`. Granola supports dynamic client registration, so the SDK can register this callback without a separate OAuth app setup.
+
+Save the access token, refresh token, expiry, and SDK client/discovery information in encrypted, persistent storage, keyed by your tenant ID, user ID, and MCP server. Get those IDs from your authenticated session. Keep refresh tokens on your backend, and refresh expired access tokens before tool calls. If the customer revokes access, show **Reconnect**.
+
+The [reference app](https://github.com/BerriAI/litellm-docs/tree/dcd908bbd8e92633bac0cd0dbc8c790d4694817b/static/examples/granola-meeting-agent) includes these routes in `src/server.ts` and the OAuth implementation in `src/connections.ts`. Its `begin()` and `finish()` methods cover the redirect and callback. Adapt its session and storage to your app; the included SQLite store is for a local, single-process demo. A hosted app needs storage that survives deployments and is available to all its instances.
+
+## 4. Call a tool with the customer's account
+
+Send two credentials on each MCP request: your application's LiteLLM key and the connected customer's Granola access token.
+
+```http
+POST /granola/mcp
+x-litellm-api-key: Bearer <application-virtual-key>
+Authorization: Bearer <customer-granola-access-token>
+```
+
+LiteLLM checks the key's MCP permissions and forwards the request with the customer's token. Granola determines which meetings that account can access.
+
+To verify the connection from a TypeScript backend, install the MCP client:
+
+```bash
+npm install @modelcontextprotocol/client@2.4.0
+```
+
+Add this function to your backend. It connects through LiteLLM and calls Granola's account-info tool:
+
+```typescript title="check-granola.ts"
+import {
+  Client,
+  StreamableHTTPClientTransport,
+} from "@modelcontextprotocol/client";
+
+export async function checkGranola(accessToken: string) {
+  const base = process.env.LITELLM_PROXY_API_BASE;
+  const key = process.env.LITELLM_PROXY_API_KEY;
+  if (!base || !key) throw new Error("Set the LiteLLM backend environment variables.");
+
+  const client = new Client({ name: "meeting-agent", version: "1.0.0" });
+  const transport = new StreamableHTTPClientTransport(
+    new URL("granola/mcp", `${base.replace(/\/$/, "")}/`),
+    {
+      authProvider: { token: async () => accessToken },
+      requestInit: {
+        headers: { "x-litellm-api-key": `Bearer ${key}` },
+        redirect: "error",
+      },
+    },
+  );
+
+  try {
+    await client.connect(transport);
+    let cursor: string | undefined;
+    do {
+      const page = await client.listTools({ cursor });
+      const tool = page.tools.find(t => t.name.endsWith("get_account_info"));
+      if (tool) return await client.callTool({ name: tool.name, arguments: {} });
+      cursor = page.nextCursor;
+    } while (cursor);
+    throw new Error("Account tool unavailable. Check the MCP tool permissions.");
+  } finally {
+    await client.close();
+  }
+}
+```
+
+In an authenticated request handler, load the current customer's saved connection and pass its unexpired access token to `checkGranola()`. A successful result identifies the connected Granola account and workspace. Only show **Connected** after this call succeeds. Test with a second account to confirm that your app retrieves each customer's own connection.
+
+Use the same transport in your agent's MCP integration. Give the model the tools returned by `listTools()` and execute its selected calls with `callTool()`, keeping the returned tool names. The reference app's `src/agent.ts` shows the complete loop, including a meeting search and an answer from a model through LiteLLM.
+
+## Add more integrations
+
+For another MCP server, repeat the registration and key grant, then add it to your app's Connect menu. Reuse your OAuth routes and connection storage for servers that support MCP OAuth discovery and dynamic client registration. Other providers can require a registered OAuth app or specific scopes.
+
+Create an MCP client for the current customer and server. If you use LiteLLM's aggregate `/mcp` endpoint instead, send each server's token in its own [per-server authorization header](/docs/mcp_oauth_passthrough#multi-server-aggregate-requests).
+
+## When everyone should use the same connection
+
+Some tools use data you make available to all your customers, such as a product documentation search. Configure a shared service credential for that MCP. Customers can use the tool without connecting an account of their own.
+
+For a server that accepts a static bearer token, add this to your gateway configuration:
+
+```yaml title="config.yaml"
+mcp_servers:
+  knowledge:
+    url: "https://mcp.example.com/mcp"
+    transport: "http"
+    auth_type: "bearer_token"
+    auth_value: os.environ/KNOWLEDGE_MCP_TOKEN
+```
+
+Replace the URL with your MCP server's URL and set `KNOWLEDGE_MCP_TOKEN` in the **gateway's** deployment environment to its service token. Restart the gateway with the updated config and grant your application key access to `knowledge`.
+
+Connect your agent to `/knowledge/mcp` with its LiteLLM key. Omit the customer `authProvider` from the TypeScript transport above; the `x-litellm-api-key` header stays. Call `listTools()` to check access. In this setup, LiteLLM reads the shared credential from its environment and uses it for upstream requests. All customers using it have that credential's upstream permissions.
+
+## Troubleshooting
+
+| Problem | Check |
+| --- | --- |
+| LiteLLM rejects the request | The application key, its MCP grant, and any team restrictions. |
+| Granola rejects a tool call | The saved token's expiry and account permissions. Reconnect if refresh fails. |
+| Sign-in opens a LiteLLM login page | Keep `dcr_bridge: false` and start OAuth against Granola's URL. |
+| A tool is missing | The server's `allowed_tools` and the key's tool permissions. |
+
+For the full local example, [open the reference app](https://github.com/BerriAI/litellm-docs/tree/dcd908bbd8e92633bac0cd0dbc8c790d4694817b/static/examples/granola-meeting-agent) and follow its README. See the [delegated OAuth reference](/docs/mcp_oauth_passthrough#oauth_delegate) for other client configurations.
