@@ -1,0 +1,25 @@
+{
+  "name": "granola-meeting-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Reference app: customers sign in, connect Granola, and ask an agent about their meetings through LiteLLM MCP Gateway",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.4.0",
+    "express": "5.1.0",
+    "tsx": "4.20.6"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.3",
+    "@types/node": "22.18.0",
+    "typescript": "5.9.3"
+  }
+}
