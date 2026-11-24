@@ -284,7 +284,7 @@ Authenticate with `Authorization: Bearer <proxy key>`. LiteLLM sends `session.cr
 
 ### 3. Configure the session
 
-Send one `session.update` (or `transcription_session.update`). LiteLLM opens the ElevenLabs session with these settings and sends `session.updated`, with the same session id, once ElevenLabs accepts it. Later updates are ignored. Audio sent before `session.updated` is buffered and replayed, so you can start streaming right away.
+Send one `session.update` (or `transcription_session.update`). LiteLLM opens the ElevenLabs session with these settings and sends `session.updated`, with the same session id, once ElevenLabs accepts it. Later updates are ignored. Audio sent before `session.updated` is buffered and replayed, so you can start streaming right away. If no `session.update` arrives and the buffer fills up (200 messages or 10 MB), LiteLLM sends one `error` event with `code: session_not_configured` and drops later audio until the update arrives.
 
 ```json showLineNumbers title="session.update"
 {
@@ -314,7 +314,7 @@ An invalid `session.update` (bad format, rate, model, language or turn detection
 
 ### 4. Stream audio
 
-`input_audio_buffer.append` carries base64 mono PCM16 at the configured rate. LiteLLM forwards it as ElevenLabs `input_audio_chunk` messages, splitting large appends into chunks of at most 32000 bytes. `input_audio_buffer.commit` and `input_audio_buffer.end` commit the current segment in either mode. `input_audio_buffer.clear` and every other client event, including `response.create`, are dropped.
+`input_audio_buffer.append` carries base64 mono PCM16 at the configured rate. LiteLLM forwards it as ElevenLabs `input_audio_chunk` messages, splitting large appends into chunks of at most 32000 bytes. `input_audio_buffer.commit` and `input_audio_buffer.end` commit the audio sent since the last commit, in either mode. A commit with no new audio is not forwarded, because ElevenLabs closes the session on an empty commit. `input_audio_buffer.clear` commits the pending audio and drops that segment's transcript, so the next `completed` event covers only audio sent after the clear. The cleared audio is still billed, and LiteLLM does not send `input_audio_buffer.cleared`. Every other client event, including `response.create`, is dropped.
 
 With server VAD, ElevenLabs commits a segment after a pause of `vad_silence_threshold_secs`, so keep streaming audio (silence included) in real time, or send `input_audio_buffer.commit` to commit at once.
 
@@ -325,12 +325,14 @@ With server VAD, ElevenLabs commits a segment after a pause of `vad_silence_thre
 | `session.created` | `session.type: transcription`, default 24 kHz server VAD settings | On connect |
 | `session.updated` | Effective settings, same `session.id` | After ElevenLabs accepts your `session.update` |
 | `input_audio_buffer.speech_started` | `item_id` | First partial transcript of a segment |
-| `conversation.item.input_audio_transcription.delta` | `item_id`, `content_index: 0`, `delta` | New words of the partial transcript |
+| `conversation.item.input_audio_transcription.delta` | `item_id`, `content_index: 0`, `delta` | New confirmed words, and the rest of the segment on commit |
 | `input_audio_buffer.speech_stopped` | `item_id` | The segment is committed |
 | `conversation.item.input_audio_transcription.completed` | `item_id`, `content_index: 0`, `transcript`, `usage: {"type": "duration", "seconds": 7.57}` | Final transcript for the segment |
-| `error` | `error.type: server_error`, `error.message: ElevenLabs realtime transcription failed: <type>` | ElevenLabs reported an error such as `auth_error` or `quota_exceeded` |
+| `error` | `error.type`, `error.message: ElevenLabs realtime transcription failed: <type>` | ElevenLabs reported an error such as `auth_error` or `quota_exceeded` |
 
-ElevenLabs keeps revising the last word of each partial transcript, so a delta carries a word only after a later partial confirms it. For text without spaces, such as Chinese and Japanese, a delta carries the characters two partials agree on, minus the last character and any trailing punctuation, which ElevenLabs often revises. The `completed` transcript is the authoritative text for the segment. An invalid ElevenLabs key arrives as an `error` event with `auth_error`, followed by a normal close, and the session is logged as a failure rather than a success. If LiteLLM cannot open the ElevenLabs socket at all (a network failure, a timeout or an HTTP rejection of the handshake), the proxy closes the client connection with code `1011` and a reason such as `ElevenLabs realtime connection failed (HTTP 403)`.
+ElevenLabs keeps revising the last word of each partial transcript, so a delta carries a word only after a later partial confirms it. When the segment is committed, LiteLLM sends the rest of the transcript as a last delta before `speech_stopped`, so the deltas of a segment add up to its `completed` transcript. For text without spaces, such as Chinese and Japanese, and for text whose last word has no spaces, such as Japanese with an English word in it, a delta carries the characters two partials agree on, minus the last character and any trailing punctuation, which ElevenLabs often revises. If ElevenLabs revises text a delta already carried, later deltas continue from the same word or character position, so the joined deltas can differ from `completed` in the revised words. The `completed` transcript is the authoritative text for the segment.
+
+`error.type` is `invalid_request_error` for `auth_error`, `quota_exceeded`, `rate_limited`, `invalid_request` and `input_error`, and `server_error` for every other ElevenLabs error. An invalid ElevenLabs key arrives as an `error` event with `auth_error`, followed by a normal close, and the session is logged as a failure rather than a success. If LiteLLM cannot open the ElevenLabs socket at all (a network failure, a timeout or an HTTP rejection of the handshake), the proxy closes the client connection with code `1011` and a reason such as `ElevenLabs realtime connection failed (HTTP 403)`.
 
 ### Health checks
 
@@ -338,7 +340,7 @@ Health checks for `scribe_v2_realtime` open the ElevenLabs realtime socket with 
 
 ### Pricing and usage
 
-Scribe v2 Realtime is billed per second of input audio (`input_cost_per_second` in the model cost map). `usage.seconds` is the audio LiteLLM sent to ElevenLabs since the previous `completed` event, silence included. Audio after the last `completed` event is billed when the session closes. The keyterm and transcript edit add-on rates are not included in the cost.
+Scribe v2 Realtime is billed per second of input audio (`input_cost_per_second` in the model cost map). `usage.seconds` is the audio LiteLLM sent to ElevenLabs since the previous `completed` event, silence included. Audio after the last `completed` event is billed when the session closes. When the deployment sets `keyterms`, each second is also billed at the keyterm prompting add-on rate, `elevenlabs/scribe_v2_realtime/keyterms` in the model cost map. Deployment custom pricing replaces only the base rate, and the add-on rate always comes from the cost map.
 
 ### Example Python client
 
