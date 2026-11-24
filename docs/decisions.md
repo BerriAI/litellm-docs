@@ -730,7 +730,7 @@ The [OpenRouter pass-through](./providers/openrouter.md#through-the-openrouter-p
 
 ## Migrate from TypeSafe pass-through
 
-When you upgrade to a build that removes the TypeSafe pass-through, `/typesafe/...` returns 404. Jev remains available through `/v1/systemone` and `/v1/decisions`. Configure a model deployment first, since the unified routes use `model_list` rather than forwarding arbitrary paths to TypeSafe.
+The TypeSafe pass-through is removed in `v1.113.0`. Once you upgrade to that release or later, `/typesafe/...` returns 404. Jev remains available through `/v1/systemone` and `/v1/decisions`. Configure a model deployment first, since the unified routes use `model_list` rather than forwarding arbitrary paths to TypeSafe.
 
 Set `TYPESAFE_API_KEY` on the proxy and add this deployment to its configuration. Clients authenticate with a LiteLLM key in `LITELLM_API_KEY`, not the TypeSafe key.
 
