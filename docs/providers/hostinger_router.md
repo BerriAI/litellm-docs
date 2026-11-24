@@ -27,6 +27,8 @@ import TabItem from '@theme/TabItem';
 
 The router publishes its live catalog at [`router.hostinger.com/v1/models`](https://router.hostinger.com/v1/models) (no authentication required), with each model's id, supported endpoints, and supported parameters. Models work with the `hostinger_router/` prefix as soon as Hostinger adds them, so this page links the live catalog instead of mirroring a model list that would go stale.
 
+The catalog also includes `default-hostinger`, an alias for whichever model Hostinger currently designates as the default (its name shows the current target, such as "Default Hostinger Model (gpt-5.6-luna)"). Call it as `hostinger_router/default-hostinger` to always reach the current default; Hostinger can repoint the alias as the catalog changes.
+
 LiteLLM tracks spend for priced models, counting one Hostinger credit as $0.01. A catalog model without a price entry in LiteLLM records its spend as $0 until you set one through `model_info` on the proxy.
 
 Every chat model works on `/chat/completions`, `/responses`, and `/messages`. When LiteLLM knows a model serves `/v1/responses` or `/v1/messages` on the router, such as `gpt-5.2` on `/responses` or `claude-sonnet-5` on `/messages`, it calls that route directly. For every other model, LiteLLM converts the call and sends it through the router's `/v1/chat/completions`.
