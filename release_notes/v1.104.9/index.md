@@ -50,6 +50,8 @@ This release is published as [`ghcr.io/berriai/litellm:v1.104.9`](https://github
 
 `v1.104.9` is a patch release on top of [`v1.104.8`](/release_notes/v1.104.8/v1-104-8). There are no new database migrations. The two `LiteLLM_SpendLogs` index migrations stay no-ops, and the indexes are now built after migrations run. The migration job builds them, and a proxy that runs its own migrations builds them in the background once it serves. The `v1.104.9` tag points at [`8aa2ffb`](https://github.com/BerriAI/litellm/commit/8aa2ffb6377e35b7e5e5c3a091f8bc944e006a4a).
 
+On `v1.104.0` through `v1.104.8`, the `litellm_call_id` and `(api_key, startTime)` indexes on `LiteLLM_SpendLogs` can be missing. On a large spend logs table, opening a request in the Logs view then scans the whole table, times out, and shows a misleading "prompt logging not enabled" message. This release builds both indexes after migrations without blocking spend log writes, on partitioned and non-partitioned tables. An index you already built by hand is detected and reused, not duplicated
+
 ### What's Changed
 
 - **Logging and observability:** Improved request lookups in the Logs view on large spend log tables by building any missing indexes after migrations - [PR #43948](https://github.com/BerriAI/litellm/pull/43948), [PR #44109](https://github.com/BerriAI/litellm/pull/44109), [PR #44203](https://github.com/BerriAI/litellm/pull/44203)

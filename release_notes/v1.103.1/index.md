@@ -52,6 +52,8 @@ This release is published as [`ghcr.io/berriai/litellm:v1.103.1`](https://github
 
 **Upgrading from `v1.102.x` or earlier adds an index on `LiteLLM_SpendLogs`, which blocks spend log writes while it builds at startup.** On a large table that can take a long time. To avoid this, build the index yourself before upgrading with `CONCURRENTLY`, which does not block writes. The migration then finds it and skips the build. See [PR #37983](https://github.com/BerriAI/litellm/pull/37983)
 
+Upgrading to [`v1.103.11`](/release_notes/v1.103.11/v1-103-11), [`v1.104.9`](/release_notes/v1.104.9/v1-104-9), or [`v1.105.0`](/release_notes/v1.105.0/v1-105-0) and later instead builds the `LiteLLM_SpendLogs` indexes automatically, so you can skip the manual steps below. The [migration job](/docs/proxy/database_migrations#run-the-migration-job) builds them after migrations run, and a proxy that runs its own migrations builds them in the background once it serves. The build does not block spend log writes, works on partitioned and non-partitioned tables, and reuses an index you already built by hand. See [PR #43948](https://github.com/BerriAI/litellm/pull/43948), [PR #50856](https://github.com/BerriAI/litellm/pull/50856) and [PR #50823](https://github.com/BerriAI/litellm/pull/50823). Use the steps below only if you upgrade to an earlier version
+
 ```sql
 SET statement_timeout = 0;
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "LiteLLM_SpendLogs_api_key_startTime_idx" ON "LiteLLM_SpendLogs"("api_key", "startTime");

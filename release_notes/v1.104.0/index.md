@@ -68,7 +68,9 @@ These callouts cover user-facing behavior that differs from `v1.103.0`, the prev
 
 :::warning Upgrading from `v1.102.x` or earlier
 
-The two `LiteLLM_SpendLogs` index migrations from `v1.103.0` are now no-ops. Build the indexes online yourself, outside a transaction:
+The two `LiteLLM_SpendLogs` index migrations from `v1.103.0` are now no-ops, so this version does not build the indexes. Upgrading to [`v1.103.11`](/release_notes/v1.103.11/v1-103-11), [`v1.104.9`](/release_notes/v1.104.9/v1-104-9), or [`v1.105.0`](/release_notes/v1.105.0/v1-105-0) and later builds them automatically, with no manual steps. The [migration job](/docs/proxy/database_migrations#run-the-migration-job) builds them after migrations run, and a proxy that runs its own migrations builds them in the background once it serves. The build does not block spend log writes, works on partitioned and non-partitioned tables, and reuses an index you already built by hand. See [PR #43948](https://github.com/BerriAI/litellm/pull/43948), [PR #50856](https://github.com/BerriAI/litellm/pull/50856) and [PR #50823](https://github.com/BerriAI/litellm/pull/50823)
+
+To stay on this version, build the indexes online yourself, outside a transaction:
 
 ```sql
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "LiteLLM_SpendLogs_api_key_startTime_idx" ON "LiteLLM_SpendLogs"("api_key", "startTime");
