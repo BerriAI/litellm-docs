@@ -221,9 +221,12 @@ This change does not apply to providers with no count API, such as Groq. They co
 
 #### Hugging Face tokenizer downloads <SinceVersion v="1.113.0" />
 
-Llama 2, Llama 3, Cohere, and Bedrock Kimi K3 models count with a tokenizer that the proxy downloads from Hugging Face. This also applies to providers with no count API, such as Groq, and to deployments that set `token_count_framing`. If the download fails, for example because the proxy cannot reach `huggingface.co`, the proxy count routes return a 503. The message names the tokenizer and tells you in how many seconds the proxy tries the download again. While the first download is still running after 5 seconds, the message tells you to try again in a few seconds. Before v1.113.0, the routes returned a 200 with a local tiktoken estimate in these cases.
+Llama 2, Llama 3, Cohere, and Bedrock Kimi K3 models count with a tokenizer that the proxy downloads from Hugging Face. This also applies to a deployment whose `base_model` is one of these models, to providers with no count API, such as Groq, and to deployments that set `token_count_framing`. If the download fails, for example because the proxy cannot reach `huggingface.co`, the proxy count routes return a 503. The message names the tokenizer and tells you in how many seconds the proxy tries the download again. While the first download is still running after 5 seconds, the message tells you to try again in a few seconds. This also happens when `huggingface.co` is reachable but slow, on the first count of each worker. For a deployment that sets `token_count_framing`, the message also gives the error from the provider count. Before v1.113.0, the routes returned a 200 with a local tiktoken estimate in these cases.
 
-To count with tiktoken and never download a tokenizer, set `disable_hf_tokenizer_download` or turn on offline mode. Refer to [Outbound requests](./proxy/outbound_requests.md).
+To never download a tokenizer, use one of these settings:
+
+- `disable_hf_tokenizer_download: true` counts every model with tiktoken. This includes DeepSeek and Claude models, whose tokenizers ship with LiteLLM and need no download.
+- Offline mode (`LITELLM_OFFLINE_MODE=true`) keeps the tokenizers that ship with LiteLLM and counts the other models with tiktoken. It also stops the other downloads in [Outbound requests](./proxy/outbound_requests.md), such as the remote model cost map.
 
 ```yaml
 model_list:
@@ -234,14 +237,14 @@ model_list:
       api_base: os.environ/DATABRICKS_API_BASE
 
 litellm_settings:
-  disable_hf_tokenizer_download: true  # count with tiktoken, never download
+  disable_hf_tokenizer_download: true  # count every model with tiktoken, never download
 ```
 
 Without that setting, the same deployment returns this error when the proxy cannot reach Hugging Face:
 
 ```bash
 curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
-  -H "Authorization: Bearer sk-1234" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model": "llama-3", "messages": [{"role": "user", "content": "Hello"}]}'
 ```
@@ -251,7 +254,7 @@ curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
   "type": "error",
   "error": {
     "type": "api_error",
-    "message": "Could not load the Hugging Face tokenizer Xenova/llama-3-tokenizer to count tokens for this model. LiteLLM retries the load in 60s. To count with tiktoken without downloading, set litellm_settings.disable_hf_tokenizer_download to true"
+    "message": "Could not load the Hugging Face tokenizer Xenova/llama-3-tokenizer to count tokens for this model. LiteLLM retries the load in 60s. To count every model with tiktoken without downloading, set litellm_settings.disable_hf_tokenizer_download to true"
   }
 }
 ```
