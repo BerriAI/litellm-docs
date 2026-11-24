@@ -8,7 +8,7 @@ This is community maintained. Please make an issue at https://github.com/guiller
 
 :::
 
-[SAEF](https://github.com/guillermollopis/soma-ai-emission-factors) is an open source Python package that estimates the CO2e and water use of each LLM call from the token counts, the model and the cloud region. The factors are estimates and not measurements. Each result carries the data file and line behind the number. The code is MIT licensed and the data is CC BY 4.0. The method is described in a [paper](https://doi.org/10.1016/j.spc.2026.11.003) in Sustainable Production and Consumption. The dataset has the DOI [10.5281/zenodo.20443585](https://doi.org/10.5281/zenodo.20443585).
+[SAEF](https://github.com/guillermollopis/soma-ai-emission-factors) is a Python package that estimates the CO2e and water use of each LLM call from the token counts, the model and the cloud region. The factors are estimates and not measurements. Each result carries the data file and line behind the number. The code and data are free for non-commercial use, and companies need a commercial licence (https://somaai.earth/licensing). Versions up to v3.2.0 are MIT code and CC BY 4.0 data. The method is described in a [paper](https://doi.org/10.1016/j.spc.2026.11.003) in Sustainable Production and Consumption. The dataset has the DOI [10.5281/zenodo.20443585](https://doi.org/10.5281/zenodo.20443585).
 
 ## Getting Started
 
