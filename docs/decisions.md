@@ -730,9 +730,9 @@ The [OpenRouter pass-through](./providers/openrouter.md#through-the-openrouter-p
 
 ## Migrate from TypeSafe pass-through
 
-The TypeSafe pass-through is removed in `v1.113.0`. Once you upgrade to that release or later, `/typesafe/...` returns 404. Jev remains available through `/v1/systemone` and `/v1/decisions`. Configure a model deployment first, since the unified routes use `model_list` rather than forwarding arbitrary paths to TypeSafe.
+The TypeSafe pass through is stripped in `v1.113.0`. Once you've upgraded to that version or later `/typesafe/...` will return a 404. Jev is available through `/v1/systemone` and `/v1/decisions`. You need to have a model deployment configured as the unified routes use `model_list` rather than just forwarding any old path through to TypeSafe.
 
-Set `TYPESAFE_API_KEY` on the proxy and add this deployment to its configuration. Clients authenticate with a LiteLLM key in `LITELLM_API_KEY`, not the TypeSafe key.
+Set `TYPESAFE_API_KEY` on the proxy and add this deployment to its config. Clients authenticate with a LiteLLM key in `LITELLM_API_KEY` (not the TypeSafe key).
 
 ```yaml showLineNumbers keep-model-ids
 model_list:
@@ -742,9 +742,9 @@ model_list:
       api_key: os.environ/TYPESAFE_API_KEY
 ```
 
-For an existing System One request, change the path from `/typesafe/v1/systemone` to `/v1/systemone` and set `model` to the deployment name, `jev`. Keep `state` and the `questions` map. For images, send JSON instead of multipart uploads. PNG and JPEG images use base64 `assets` on `/v1/systemone`, or `input_image` parts on `/v1/decisions`. Both require `TypeSafe-Danger-Zone-Images: true`.
+For an existing System One request, change the path from `/typesafe/v1/systemone` to `/v1/systemone` and set `model` to the deployment name, `jev`. Leave `state` and the `questions` map as they are. For images, send the JSON rather than the multipart upload. PNG and JPEG images are base64 `assets` on `/v1/systemone` or `input_image` parts on `/v1/decisions`. Both of these require `TypeSafe-Danger-Zone-Images: true`.
 
-Replace `<BASE64_PNG>` with the base64 bytes of a PNG, without a data URL prefix. The asset name must appear in `state`.
+Replace `<BASE64_PNG>` with the base64 bytes of a PNG (no data URL prefix). The asset name must be present in `state`.
 
 ```bash showLineNumbers
 curl -X POST 'http://localhost:4000/v1/systemone' \
@@ -763,7 +763,7 @@ curl -X POST 'http://localhost:4000/v1/systemone' \
   }'
 ```
 
-For OpenAI-shaped requests, use `/v1/decisions` with `input` and a questions array. Here the PNG bytes need the `data:image/png;base64,` prefix. For JPEG, use `format: "jpeg"` in assets or the `data:image/jpeg;base64,` prefix in an image URL.
+For OpenAI shaped requests use `/v1/decisions` with `input` and a questions array. In this case the PNG bytes require the `data:image/png;base64,` prefix. For JPEG use `format: "jpeg"` in assets or the `data:image/jpeg;base64,` prefix in an image URL.
 
 ```bash showLineNumbers
 curl -X POST 'http://localhost:4000/v1/decisions' \
@@ -786,4 +786,4 @@ curl -X POST 'http://localhost:4000/v1/decisions' \
   }'
 ```
 
-These request shapes were checked with a 512×512 PNG through a live proxy and TypeSafe Jev 1.14.0. Both unified routes returned 200 after removal, while the old pass-through path returned 404. See [TypeSafe images, box questions and long context](#typesafe-images-box-questions-and-long-context) for other image questions and opt-in headers. EU Jev, Laya, Bespoke and the OpenRouter pass-through are separate integrations and are not removed by this change.
+These request shapes were tested via a 512x512 PNG through a live proxy and TypeSafe Jev 1.14.0. Both of the unified routes returned 200 on removal, the old pass-through route returned 404. See [TypeSafe images, box questions and long context](#typesafe-images-box-questions-and-long-context) for other image questions and opt-in headers. EU Jev, Laya, Bespoke and the OpenRouter pass-through are separate integrations and are not affected by this change.
