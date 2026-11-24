@@ -318,6 +318,71 @@ curl http://localhost:4000/key/generate \
 
 Supported key-level cache controls: `ttl`, `s-maxage`, `no-cache`, `no-store`.
 
+## Per-model cache controls
+
+Set `cache` under a model's `litellm_params` and the proxy applies it to every request routed to that deployment, so clients need no changes. It takes the same controls as the request body: `ttl`, `s-maxage`, `no-cache`, `no-store`. A model with no `cache` setting uses the proxy-wide cache settings.
+
+```yaml
+model_list:
+  - model_name: cached-long
+    litellm_params:
+      model: openai/gpt-4o
+      cache: {ttl: 3600}          # cache for 1 hour
+  - model_name: cached-short
+    litellm_params:
+      model: openai/gpt-4o-mini
+      cache: {ttl: 60}            # cache for 1 minute
+  - model_name: uncached
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
+      cache: {no-cache: true, no-store: true}   # never read from or write to the cache
+      allowed_response_cache_overrides: []   # clients cannot change this
+  - model_name: default
+    litellm_params:
+      model: openai/gpt-4o        # no cache setting, uses litellm_settings
+
+litellm_settings:
+  cache: true
+```
+
+The setting is per deployment. When several deployments share one `model_name`, repeat it on each of them.
+
+A model that sets `allowed_response_cache_overrides` also decides caching for its fallbacks. When a request for that model is served by a fallback model with no `allowed_response_cache_overrides` of its own, the requested model's `cache` controls apply over the fallback's, and the fallback keeps any control the requested model does not set. When the fallback has its own `allowed_response_cache_overrides`, the stricter value of each control holds: `no-cache` or `no-store` set on either model stays on, and the shorter lifetime wins. A request control is honored only if both models allow it. A model without `allowed_response_cache_overrides` leaves each fallback on the fallback's own settings.
+
+A virtual key's own `cache` controls still apply on a model with `allowed_response_cache_overrides` when they are at least as strict as the model's: a key set to `no-store` or `no-cache` stays uncached on a model whose list leaves those out, and a key's `ttl` or `s-maxage` holds when the model sets the same control to an equal or longer lifetime. A key control that would relax the model's rule is ignored and named in the response header like any other.
+
+### Choose which controls a client may override
+
+The model's `cache` and the request's `cache` are merged one control at a time. The model's value is the default for each control, and by default a request overrides the controls it sends and leaves the others in place. A request that sends `"cache": {"ttl": 600}` to the `uncached` model above would change the `ttl` only; `no-cache` and `no-store` stay set.
+
+Add `allowed_response_cache_overrides` under the same `litellm_params` to list the controls a request may set on that model. A request control outside the list is ignored and the model's value is used.
+
+| `allowed_response_cache_overrides` | What a client can change on this model |
+|---|---|
+| not set | Any control it sends |
+| `[]` | Nothing, the model's `cache` is locked |
+| `["ttl"]` | Only the `ttl` |
+| `["no-cache", "no-store"]` | It can opt out of the cache, but cannot change the `ttl` |
+
+An ignored control is not dropped silently. The response carries an `x-litellm-ignored-cache-controls` header that names every ignored control, and the request still succeeds.
+
+```shell
+curl -i http://localhost:4000/v1/chat/completions   -H "Authorization: Bearer $LITELLM_API_KEY"   -H "Content-Type: application/json"   -d '{
+    "model": "uncached",
+    "messages": [{"role": "user", "content": "Hello"}],
+    "cache": {"ttl": 600, "no-store": false}
+  }'
+
+# HTTP/1.1 200 OK
+# x-litellm-ignored-cache-controls: ttl,no-store
+```
+
+This differs from `allowed_cache_controls` on a virtual key, which rejects a control outside its list with a 403. It is also unrelated to a provider's prompt caching, such as Anthropic's `cache_control` on a message block, which this setting does not touch.
+
+### Order of precedence
+
+Proxy-wide settings in `litellm_settings` decide whether caching is on at all and give the default `ttl`. A model's `cache` overrides those defaults for its deployment. The request's controls come next and are resolved in this order: the virtual key's metadata, then the body's `cache` field, then the `Cache-Control` header. The result overrides the model's value for each control the model allows, so a model's `allowed_response_cache_overrides` also applies to controls that come from a virtual key. No request or key setting turns caching on when it is off for the whole proxy.
+
 ## Set caching default off (opt in only)
 
 1. **Set `mode: default_off` for caching**
