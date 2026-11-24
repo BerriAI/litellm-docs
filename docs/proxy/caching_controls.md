@@ -349,7 +349,7 @@ The setting is per deployment. When several deployments share one `model_name`, 
 
 A model that sets `allowed_response_cache_overrides` also decides caching for its fallbacks. When a request for that model is served by a fallback model with no `allowed_response_cache_overrides` of its own, the requested model's `cache` controls apply over the fallback's, and the fallback keeps any control the requested model does not set. When the fallback has its own `allowed_response_cache_overrides`, the stricter value of each control holds: `no-cache` or `no-store` set on either model stays on, and the shorter lifetime wins. A request control is honored only if both models allow it. A model without `allowed_response_cache_overrides` leaves each fallback on the fallback's own settings.
 
-A virtual key's own `cache` controls always apply. A model's `allowed_response_cache_overrides` filters only what the request itself sends, so a key set to `no-store` stays uncached on a model whose list leaves `no-store` out.
+A virtual key's own `cache` controls still apply on a model with `allowed_response_cache_overrides` when they are at least as strict as the model's: a key set to `no-store` or `no-cache` stays uncached on a model whose list leaves those out, and a key's `ttl` or `s-maxage` holds when the model sets the same control to an equal or longer lifetime. A key control that would relax the model's rule is ignored and named in the response header like any other.
 
 ### Choose which controls a client may override
 
