@@ -151,7 +151,7 @@ For coordinating checks across multiple pods so expensive models are not probed 
 
 <SinceVersion v="1.113.0" />
 
-To stop probing a model while it is paused, set `general_settings.health_check_skip_blocked_background_models: true`. The background loop then skips every deployment with `model_info.blocked: true`, which `POST /model/block` and the Pause toggle on the Models + Endpoints page set, and every public model that only a paused wildcard serves. The setting is off by default, and it changes nothing when background checks are off.
+To stop probing a model while it is paused, set `general_settings.health_check_skip_blocked_background_models: true`. The background loop then skips every deployment with `model_info.blocked: true`, which `POST /model/block` and the Pause toggle on the Models + Endpoints page set, and every public model that only a paused wildcard serves. The setting is off by default, and it changes nothing when background checks are off, so an on-demand `/health` call still probes paused deployments then.
 
 ```yaml
 general_settings:
@@ -159,7 +159,7 @@ general_settings:
   health_check_skip_blocked_background_models: true
 ```
 
-A paused deployment is skipped like any other, so it drops out of `/health` and a targeted check of it answers 503 with empty lists. The Admin UI keeps showing its last result from before the pause. Each worker picks up a pause or a resume when it next reloads its models, so one more background run can probe a deployment right after you pause it, and probes start again on the next run after you resume it. Test Connection still sends a real request to a paused deployment.
+A paused deployment is skipped like any other, so it drops out of `/health` and a targeted check of it answers 503 with empty lists. On the Health Status tab its row keeps the last result from before the pause until someone re-checks it, and a re-check marks it unhealthy because of that 503. Each worker picks up a pause or a resume when it next reloads its models, so one more background run can probe a deployment right after you pause it, and probes start again on the next run after you resume it. With [health check routing](health_check_routing) on, a model paused for longer than `health_check_staleness_threshold` counts as healthy right after you resume it, like a newly added model, until the next run probes it. Test Connection still sends a real request to a paused deployment.
 
 ## Model modes
 
