@@ -239,6 +239,7 @@ const sidebars = {
           className: "sidebar-xlink",
         },
         { type: "ref", id: "proxy/headroom" },
+        { type: "ref", id: "proxy/compache" },
       
       ],
     },
@@ -741,6 +742,7 @@ const sidebars = {
               className: "sidebar-xlink",
             },
             "proxy/headroom",
+            "proxy/compache",
           ],
         },
         "traffic_mirroring",
