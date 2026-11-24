@@ -1,6 +1,29 @@
 [
   {
     "folders": [
+      "v1.108.16"
+    ],
+    "title": "LiteLLM v1.108.16 (LTS) adds Perplexity Orchestrator and fixes Codex on Bedrock",
+    "points": [
+      "Perplexity Orchestrator, Gradium text-to-speech, Gnani transcription and `gemini-decision-1` are new on the LTS line.",
+      "Codex over `ws /v1/responses` keeps working after its first tool call on Bedrock, Azure AI and OpenRouter, and Anthropic SDK 2.x calls stop failing under `anthropic-version: 2026-10-21`.",
+      "Set `LITELLM_MCP_DCR_GATEWAY_CLIENT=true` to keep automatic gateway-owned MCP DCR registration, and set `api_key` or `AZURE_API_KEY` on `azure` `/openai/v1` deployments that relied on `OPENAI_API_KEY`."
+    ]
+  },
+  {
+    "folders": [
+      "v1.110.3",
+      "v1.109.4"
+    ],
+    "title": "LiteLLM v1.110.3 and v1.109.4 make gateway MCP DCR registration opt-in",
+    "points": [
+      "New clientless MCP DCR bridges relay the client's own registration again, which fixes `403 oauth_principal_mismatch` for shared service keys.",
+      "Set `LITELLM_MCP_DCR_GATEWAY_CLIENT=true` before you upgrade if you rely on automatic gateway-owned registration.",
+      "v1.110.3 also fixes `GET /audit` returning 500 after a key or team update and checks file ownership on `/gemini` pass-through files."
+    ]
+  },
+  {
+    "folders": [
       "v1.108.15"
     ],
     "title": "LiteLLM v1.108.15 (LTS) adds ResetData and fixes Cohere v2 chat params",
@@ -195,26 +218,6 @@
       "Key, user and team spend no longer goes negative after a scheduled budget reset on multi-pod deployments.",
       "Gemini image edits bill by tokens instead of a flat per-image price, and Zscaler AI Guard scans only the latest user message.",
       "Model and pass-through routes refuse Azure login fields in the request body, so move those request tags into `metadata`."
-    ]
-  },
-  {
-    "folders": [
-      "v1.106.9"
-    ],
-    "title": "LiteLLM v1.106.9 forwards ChatGPT logins and refuses Azure body fields",
-    "points": [
-      "Codex and Pi forward their own ChatGPT login through the gateway with a separate key.",
-      "Model and pass-through routes refuse Azure login fields in the request body, so move those request tags into `metadata`."
-    ]
-  },
-  {
-    "folders": [
-      "v1.107.0rc4"
-    ],
-    "title": "LiteLLM v1.107.0rc4 adds a CLI command to link GitHub Copilot accounts",
-    "points": [
-      "`lite credentials connect` links a per-user GitHub Copilot credential from the terminal, so developers without Admin UI access can use Copilot.",
-      "The Docker images ship newer `aiohttp`, `ddtrace`, `pypdf` and other locked dependencies."
     ]
   }
 ]
