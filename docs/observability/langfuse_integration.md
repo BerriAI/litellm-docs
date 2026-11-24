@@ -215,7 +215,7 @@ Calls sent through `langfuse_otel` land in one Langfuse trace when they name the
 | What the request sends | Where |
 |---|---|
 | `trace_id` or `existing_trace_id` | `metadata` or `litellm_metadata` in the request body |
-| `langfuse_trace_id` | Request header |
+| `langfuse_trace_id` or `langfuse_existing_trace_id` | Request header |
 | W3C `traceparent` | Request header |
 
 Every call that sends the same `trace_id` lands in the same Langfuse trace:
