@@ -38,8 +38,6 @@ Each advisory published represents a weakness removed from the product. This hig
 
 ## How the fixes will ship
 
-Getting a patch is different from shipping it. LiteLLM is used in many different ways by our customers, and an external reviewer can't anticipate every use case. With proposed fixes in hand, we still need to test each change carefully for regressions and adapt the patches where necessary.
-
 Most fixes will ship in regular public releases and patches. When a fix is released, we will publish a GitHub Security Advisory on our [advisory feed](https://github.com/BerriAI/litellm/security/advisories) and request a CVE. The first of these should land in the coming days.
 
 Fixes for the most severe vulnerabilities will be published first to the [LiteLLM Private Registry](/blog/litellm-private-registry-access) under embargo, with public releases and advisories following two weeks later.
@@ -49,7 +47,7 @@ Fixes for the most severe vulnerabilities will be published first to the [LiteLL
 
 If you are pulling from our public registries, please ensure you are on a supported release. Fixes will ship to our [supported release lines](/docs/enterprise/version_support). For the least friction, we recommend the LTS release, which is the v1.108.x line.
 
-If you receive embargoed fixes through our private registry, please run the LTS line or the latest stable release. Given the size and breadth of these fixes, embargoed builds will only be available on those two lines; the rest of the supported versions will receive each fix at its public release.
+If you receive embargoed fixes through our private registry, please run the LTS line or the latest stable release. Given the size and breadth of these fixes, embargoed builds will only be available on those two lines; the rest of the supported versions will receive each fix at its public release. Disclosure notices will include the patched version(s). We will also make the patches themselves available upon request.
 
 We also recommend that you subscribe to the [Security Announcements mailing list](https://security.litellm.ai/mailinglist/), though please note that this list is reserved for urgent or critical matters only, and does not replace our advisory feed. Emails from this list come from `security@berri.ai`, so please allowlist that address in your spam filters.
 
