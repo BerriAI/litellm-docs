@@ -25,9 +25,7 @@ The following request fields were verified with Lakera v2 in `pre_call` mode on 
 
 On Responses requests, Lakera v2 also treats `instructions` as a system message when building its inspection request. The `skip_system_message_in_guardrail` setting applies to that message. In the 1.110.3 test, a request with flagged text only in `instructions` reached the model provider, so blocking on that field alone is unverified.
 
-For non-streaming Chat Completions, `post_call` reads assistant text from `choices[].message.content`. Native Responses `output[]` and Anthropic Messages response `content[]` are outside that output check. On LiteLLM 1.110.3, a native Responses request with string `input` and `post_call` enabled sent an empty `messages` array to Lakera. Lakera rejected the inspection payload, and the gateway returned HTTP 400. The same request succeeded with the guardrail disabled.
-
-MCP tool calls and A2A agent messages are outside the verified coverage above.
+For non-streaming Chat Completions, `post_call` reads assistant text from `choices[].message.content`. Native Responses `output[]` and Anthropic Messages response `content[]` are outside that output check. MCP tool calls and A2A agent messages are outside the verified coverage above.
 
 ## Quick Start
 ### 1. Define Guardrails on your LiteLLM config.yaml 
