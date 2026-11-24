@@ -697,6 +697,57 @@ print(follow_up.output_text)
 
 ---
 
+## Claude Code Tool Search on Non-Claude Models
+
+Claude Code with `ENABLE_TOOL_SEARCH=true` sends large tool sets, such as MCP server tools, with `defer_loading: true` and a `ToolSearch` tool that loads them on demand. Each load changes the tool list Claude Code sends on the next request. On a model behind `/v1/messages` that is not Claude, that change breaks the provider's prompt cache, so the request right after every tool load pays the full input price.
+
+Set `deferred_tools` in a deployment's `model_info` to choose how LiteLLM handles those deferred tools for that deployment.
+
+| Value | What LiteLLM sends | Use it for |
+|-------|--------------------|------------|
+| `drop` (default) | Every deferred tool as a normal tool, without `defer_loading` | Backends where the cache loss is acceptable |
+| `native` | The request to the provider's Responses API, with `ToolSearch` as client `tool_search` and deferred tools kept deferred | Azure OpenAI, OpenAI, and Fireworks AI |
+| `emulate` | One fixed tool list, with deferred tools replaced by a `CallLoadedTool` tool that calls a loaded tool by name | Chat-only backends such as Bedrock or Fireworks Kimi |
+| `passthrough` | Each tool with its `defer_loading` flag as Claude Code sent it | Backends that accept Anthropic-style deferral |
+
+With `emulate`, a `ToolSearch` result reaches the model as text that names each loaded tool with its description and input schema, and the model calls the tool through `CallLoadedTool`. LiteLLM returns that call to Claude Code under the loaded tool's own name, so Claude Code runs the tool as usual. The tool list stays the same for the whole session, so the prompt cache holds across tool loads. `emulate` changes nothing on a request that has no `ToolSearch` tool.
+
+With `native`, the deployment uses the Responses API even when `use_chat_completions_url_for_anthropic_messages` is on, so a conversation never switches API and loses its cache. A request that forces `tool_choice` onto `ToolSearch` answers 400, since the Responses API cannot force client tool search.
+
+With `emulate`, a loaded tool's arguments reach the model as the free-form `input` of `CallLoadedTool`, so the provider no longer checks them against the tool's schema or applies `strict` decoding. A request that forces `tool_choice` onto a deferred tool is forced through `CallLoadedTool`.
+
+`deferred_tools` applies only where LiteLLM translates `/v1/messages` to another API. A provider LiteLLM calls through its own `/v1/messages` API, such as Anthropic, gets deferred tools as Claude Code sent them, so any value other than `passthrough` answers 400 there.
+
+An unknown value, `native` on a provider other than the three above, or `passthrough` on OpenAI, which rejects `defer_loading` without its own tool search, answers 400. With `drop_params: true`, LiteLLM uses `drop` instead (and ignores the setting on a provider's own `/v1/messages` API) and drops a forced `ToolSearch` `tool_choice`.
+
+```yaml showLineNumbers title="config.yaml"
+model_list:
+  - model_name: azure-gpt
+    litellm_params:
+      model: azure/{{openai_large}}
+      api_base: os.environ/AZURE_API_BASE
+      api_key: os.environ/AZURE_API_KEY
+    model_info:
+      deferred_tools: native
+  - model_name: kimi
+    litellm_params:
+      model: bedrock/chat_completions/us.moonshotai.kimi-k3.1
+      aws_region_name: us-east-1
+    model_info:
+      deferred_tools: emulate
+```
+
+Start Claude Code against the proxy with tool search on, then use an MCP tool. The request after the tool load reports most of its input as `cache_read_input_tokens` in its usage.
+
+```bash showLineNumbers title="Start Claude Code"
+export ANTHROPIC_BASE_URL=http://0.0.0.0:4000
+export ANTHROPIC_AUTH_TOKEN=$LITELLM_API_KEY
+export ENABLE_TOOL_SEARCH=true
+claude --model kimi
+```
+
+---
+
 ## Additional Resources
 
 - [Anthropic Tool Search Documentation](https://docs.anthropic.com/en/docs/build-with-claude/tool-use/tool-search)
