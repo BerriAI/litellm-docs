@@ -9,7 +9,23 @@ import TabItem from '@theme/TabItem';
 
 # Lakera AI
 
-**Supported endpoints:** The Lakera v2 integration only supports the **chat completions** endpoint (`/v1/chat/completions`). It is not supported for the Responses API, `/v1/messages`, MCP, A2A, or other proxy endpoints.
+## Endpoint coverage
+
+The following request fields were verified with Lakera v2 in `pre_call` mode on LiteLLM 1.110.3.
+
+| Endpoint | Request text screened |
+| --- | --- |
+| Chat Completions (`/v1/chat/completions`) | User message text in `messages` |
+| Responses (`/v1/responses`) | String `input` and `input_text` blocks in input messages |
+| Anthropic Messages (`/v1/messages`) | User text blocks in `messages`. The top-level `system` field is outside this check. |
+| Embeddings (`/v1/embeddings`) | `input` supplied as a string or a list of strings |
+| Moderations (`/v1/moderations`) | String `input` |
+| Speech (`/v1/audio/speech`) | Text to synthesize in `input` |
+| Image generation (`/v1/images/generations`) | Text in `prompt` |
+
+On Responses requests, Lakera v2 also treats `instructions` as a system message when building its inspection request. System-message filtering applies.
+
+For non-streaming Chat Completions, `post_call` reads assistant text from `choices[].message.content`. Native Responses `output[]` and Anthropic Messages response `content[]` are outside that output check. MCP tool calls and A2A agent messages are outside the verified coverage above.
 
 ## Quick Start
 ### 1. Define Guardrails on your LiteLLM config.yaml 
@@ -49,7 +65,7 @@ guardrails:
 #### Supported values for `mode`
 
 - `pre_call` Run **before** LLM call, on **input**
-- `post_call` Run **after** LLM call, on **input & output**
+- `post_call` Inspect chat messages and the assistant reply after a non-streaming Chat Completions call.
 - `during_call` Run **during** LLM call, on **input** Same as `pre_call` but runs in parallel as LLM call.  Response not returned until guardrail check completes
 
 ### 2. Start LiteLLM Gateway 
