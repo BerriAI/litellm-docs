@@ -226,7 +226,7 @@ Llama 2, Llama 3, Cohere, and Bedrock Kimi K3 models count with a tokenizer that
 To never download a tokenizer, use one of these settings:
 
 - `disable_hf_tokenizer_download: true` counts every model with tiktoken. This includes DeepSeek and Claude models, whose tokenizers ship with LiteLLM and need no download.
-- Offline mode (`LITELLM_OFFLINE_MODE=true`) keeps the tokenizers that ship with LiteLLM and counts the other models with tiktoken. It also stops the other downloads in [Outbound requests](./proxy/outbound_requests.md), such as the remote model cost map.
+- Offline mode (`LITELLM_OFFLINE_MODE=true`) keeps the tokenizers that ship with LiteLLM and counts the other models with tiktoken. It also stops every other request in [Outbound requests](./proxy/outbound_requests.md), such as the remote model cost map and the breached password check.
 
 ```yaml
 model_list:
