@@ -305,6 +305,7 @@ const sidebars = {
           "proxy/guardrails/vigil_guard",
           "proxy/guardrails/wingback",
           { type: "doc", id: "proxy/guardrails/xecguard", customProps: { icon: "/img/integrations/xecguard.png" } },
+          "proxy/guardrails/beyondguard",
           { type: "doc", id: "proxy/guardrails/straiker", customProps: { icon: "/img/integrations/straiker.png" } },
           "proxy/guardrails/alice",
           "proxy/guardrails/llm_shield_proxy",
