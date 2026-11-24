@@ -23,7 +23,7 @@ The following request fields were verified with Lakera v2 in `pre_call` mode on 
 | Speech (`/v1/audio/speech`) | Text to synthesize in `input` |
 | Image generation (`/v1/images/generations`) | Text in `prompt` |
 
-On Responses requests, Lakera v2 also treats `instructions` as a system message when building its inspection request. System-message filtering applies.
+On Responses requests, Lakera v2 also treats `instructions` as a system message when building its inspection request. The `skip_system_message_in_guardrail` setting applies to that message. In the 1.110.3 test, a request with flagged text only in `instructions` reached the model provider, so blocking on that field alone is unverified.
 
 For non-streaming Chat Completions, `post_call` reads assistant text from `choices[].message.content`. Native Responses `output[]` and Anthropic Messages response `content[]` are outside that output check. MCP tool calls and A2A agent messages are outside the verified coverage above.
 
