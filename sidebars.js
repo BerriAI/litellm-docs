@@ -1967,6 +1967,7 @@ const providersSidebar = {
     "providers/dashscope",
     "providers/databricks",
     "providers/datarobot",
+    "providers/deapi",
     "providers/deepgram",
     "providers/deepinfra",
     "providers/edenai",

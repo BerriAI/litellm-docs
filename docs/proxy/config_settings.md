@@ -846,6 +846,8 @@ Size for the total number of waiting requests across deployments and workers. Te
 | DAYS_IN_A_MONTH | Days in a month for calculation purposes. Default is 28
 | DAYS_IN_A_WEEK | Days in a week for calculation purposes. Default is 7
 | DAYS_IN_A_YEAR | Days in a year for calculation purposes. Default is 365
+| DEAPI_API_BASE | Base URL for deAPI. Default is https://oai.deapi.ai/v1
+| DEAPI_API_KEY | API key for deAPI
 | DEEPGRAM_API_BASE | Base URL for Deepgram audio transcription. Default is https://api.deepgram.com/v1
 | DEEPINFRA_API_BASE | Base URL for DeepInfra. Default is https://api.deepinfra.com/v1/openai
 | DEEPSEEK_ANTHROPIC_API_BASE | Base URL for DeepSeek's Anthropic-compatible `/messages` endpoint, read before `DEEPSEEK_API_BASE`
