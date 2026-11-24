@@ -255,6 +255,7 @@ const config = {
             return keys.map((key, idx) => ({
               type: 'category',
               label: key,
+              ...(key === 'v1.108.x' ? {className: 'sidebar-lts'} : {}),
               collapsed: !(expandNewest && idx === 0),
               items: byMinor[key].items,
             }));
