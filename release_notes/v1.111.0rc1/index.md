@@ -202,7 +202,7 @@ Counts represent new catalog identifiers compared with `v1.110.0`, including ali
 
 ### Decisions providers
 
-- Add the Nace `drex-max` decision model, send images inline the way Nace reads them, and let the Auto Router pick a tier with `drex-max` through `provider: nace` - [PR #48426](https://github.com/BerriAI/litellm/pull/48426)
+- Add the Nace `drex-max` and `drex-max-v1.1` decision models, send images inline as data URLs on every Drex model except `drex-v2.0`, and price every Nace model at $0.03 per million input tokens - [PR #48426](https://github.com/BerriAI/litellm/pull/48426)
 - Add Vercel AI Gateway as a Decisions provider, so Decisions requests for its models reach the gateway instead of failing with a 400 and spend is reported instead of zero - [PR #50642](https://github.com/BerriAI/litellm/pull/50642)
 
 ### New providers
