@@ -316,6 +316,7 @@ Monitor failures while shipping logs to downstream callbacks like S3 cold storag
 - `S3Logger` - S3 cold storage failures
 - `langfuse` - Langfuse logging failures
 - `otel` -  OpenTelemetry logging failures
+- `audit_log_database` - audit log entries the proxy could not save to its database after retrying for about 30 seconds, one per lost entry <SinceVersion v="1.113.0" />
 
 ## Guardrail Metrics
 
