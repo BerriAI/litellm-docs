@@ -61,14 +61,43 @@ Plain string contents are joined with a blank line. When a merged message carrie
 
 A `developer` message that closes the conversation right after an `assistant` turn is sent as a `user` message instead. Moving it to the top would end the request on the assistant's turn, and a `system` message there fails on the same templates.
 
-Client-authored `system` messages are never moved. A `system` message placed mid-conversation is forwarded as sent, and a backend with a system-first template rejects it exactly as it does when called directly.
+On these models, a `system` message the client sends after the first conversation message is sent as a `user` message in the same position. Its first text block says it was a mid-conversation system reminder, and the message's text parts follow. Other parts, such as images, are dropped, since the chat format allows only text in a `system` message. It is not moved to the top, so the start of the prompt does not change when an agent adds a reminder, and a backend's prefix cache keeps working. A run of `system` messages right before tool results is sent after those results, since tool results have to follow their call. <SinceVersion v="1.113.0" />
 
-The model cost map declares the flag for some hosted models, such as `fireworks_ai/qwen3p8-max`, so those need no configuration. A value in the deployment's `model_info` overrides the cost map in both directions. Models without a declaration keep the in-place translation, so a prompt prefix that a provider caches does not change for them.
+The request below
+
+```json
+{
+  "messages": [
+    {"role": "system", "content": "You are a terse assistant."},
+    {"role": "user", "content": "Hi there"},
+    {"role": "system", "content": "Answer in French from now on."},
+    {"role": "user", "content": "What is the capital of France?"}
+  ]
+}
+```
+
+reaches the backend as
+
+```json
+{
+  "messages": [
+    {"role": "system", "content": "You are a terse assistant."},
+    {"role": "user", "content": "Hi there"},
+    {"role": "user", "content": [
+      {"type": "text", "text": "Operator note (not from the user): the following was originally a mid-conversation system-role reminder."},
+      {"type": "text", "text": "Answer in French from now on."}
+    ]},
+    {"role": "user", "content": "What is the capital of France?"}
+  ]
+}
+```
+
+The model cost map declares the flag for some hosted models, such as `fireworks_ai/qwen3p8-max`, so those need no configuration. A value in the deployment's `model_info` overrides the cost map in both directions, and a `false` set on one deployment does not apply to another deployment of the same model. Models without a declaration keep the in-place translation, so a prompt prefix that a provider caches does not change for them.
 
 ## Native Responses API routes
 
-Some backends implement the Responses API themselves and receive the client's `input` items. Fireworks (`fireworks_ai/`) folds the request's `instructions`, the leading `system` and `developer` items and every later text `developer` item into the top-level `instructions` field, unless the deployment's own `model_info` declares `supports_mid_conversation_system: true`, in which case each `developer` item is sent as a `system` item in place. A `true` set on another deployment of the same model does not turn the fold off. A `developer` item that is not folded, such as one that closes the input after an assistant turn, is sent as a `user` item on a model that declares the flag `false`, and as a `system` item otherwise.
+Some backends implement the Responses API themselves and receive the client's `input` items. Fireworks (`fireworks_ai/`) folds the request's `instructions`, the leading `system` and `developer` items and every later text `developer` item into the top-level `instructions` field, unless the deployment's own `model_info` declares `supports_mid_conversation_system: true`, in which case each `developer` item is sent as a `system` item in place. A `true` set on another deployment of the same model does not turn the fold off. A `developer` item that is not folded, such as one that closes the input after an assistant turn, is sent as a `user` item on a model that declares the flag `false`, and as a `system` item otherwise. On a model that declares the flag `false`, every `system` item after the leading block is sent as a `user` item in the same position, starting with the same operator note, and a run of them right before tool outputs is sent after those outputs.
 
-`hosted_vllm/` deployments that serve `/v1/responses` natively forward `developer` items as they arrive, unless the model declares `supports_mid_conversation_system: false`. With that declaration they fold the items into `instructions` the same way Fireworks does.
+`hosted_vllm/` deployments that serve `/v1/responses` natively forward `developer` items as they arrive, unless the model declares `supports_mid_conversation_system: false`. With that declaration they fold the items into `instructions` and send later `system` items as `user` items the same way Fireworks does. `openai/` deployments with an `api_base` that is not OpenAI's do the same on `/v1/responses` when the model declares the flag `false` and the request has a `system` or `developer` item after the first input item, or any such item on a turn that sets `previous_response_id`. Other requests to them are forwarded as sent.
 
 Requests that go through the chat completions bridge (`use_chat_completions_api: true`) follow the chat rules above.
