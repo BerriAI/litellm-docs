@@ -15,6 +15,7 @@ Supported Providers:
 - Bedrock
 - Meta Muse Voice, transcription only ([see full docs](/docs/providers/meta#muse-voice-realtime-transcription))
 - ElevenLabs Scribe v2 Realtime, transcription only ([see full docs](/docs/providers/elevenlabs#realtime-transcription-scribe-v2-realtime)) <SinceVersion v="1.113.0" />
+- Gnani Prisma, transcription only ([see full docs](/docs/providers/gnani#realtime-transcription)) <SinceVersion v="1.113.0" />
 - OpenAI Live models such as `gpt-live-1`, on their own `/v1/live/sessions` route ([see full docs](/docs/live_sessions))
 - Live transcription with `gpt-live-transcribe` on OpenAI and Azure ([see below](#live-transcription-with-gpt-live-transcribe))
 - Live speech translation with `gpt-realtime-translate` on OpenAI and Azure, on its own `/v1/realtime/translations` route ([see full docs](/docs/realtime_translation))
