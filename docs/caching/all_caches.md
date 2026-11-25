@@ -219,7 +219,7 @@ response2 = completion(
 
 Install redisvl client
 ```shell
-uv add redisvl==0.4.1
+uv add 'redisvl>=0.26.0,<1.0'
 ```
 
 For the hosted version you can setup your own Redis DB here: https://redis.io/try-free/
