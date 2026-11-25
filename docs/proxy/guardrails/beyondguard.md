@@ -183,6 +183,8 @@ For each call, LiteLLM sends the texts to check to the BeyondGuard endpoint and 
 | Rate limit of the BeyondGuard endpoint exceeded | HTTP 429, `BeyondGuard rate limit exceeded` |
 | Unreachable, timeout, other HTTP error (e.g. invalid token) or unexpected response | HTTP 503, `BeyondGuard unavailable (<reason>)` |
 
+Streamed responses (`"stream": true`) are checked once, when the model has finished, and the client receives nothing until then. On `/v1/chat/completions` masked text is streamed to the client; on other streamed routes a response that needs masking is blocked instead.
+
 The integration is **fail-closed**: if the verdict cannot be obtained, the request is rejected before it reaches the model (`pre_call`) or the response is withheld from the client (`post_call`). Error messages contain only rejection codes and a short reason, never the checked content.
 
 ## Supported Parameters
