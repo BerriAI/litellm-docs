@@ -227,6 +227,37 @@ A static key always wins: when the deployment, the credential, or `OPENAI_API_KE
 
 Only proxy admins can set these fields on a deployment or a credential, since the token file path decides which workload identity the proxy exchanges. Chat completions, the Responses API, and embeddings use federation, and API-backed token counting uses it from v1.107.0. From v1.108.0, every other OpenAI route uses it too: text completions, images, audio and transcription, moderation, files, batches, fine-tuning, assistants, containers, vector stores, videos, evals, decisions, and realtime sessions and client secrets. Before v1.108.0, those routes read `OPENAI_API_KEY`.
 
+#### Creating batches
+
+<SinceVersion v="1.112.0" />
+
+OpenAI runs a batch with the token that created it and never refreshes that token. A federated token expires within an hour, so a batch that OpenAI starts later fails every request with `token_expired`. LiteLLM therefore answers a batch create on a federated token with a 400, both on `POST /v1/batches` and on `POST /openai_passthrough/v1/batches`. File uploads, batch retrieve, list and cancel, and file content keep using federation.
+
+To create batches, add a deployment whose `api_key` is an OpenAI project API key with Batch Write permission, and upload the batch file to that model:
+
+```yaml
+model_list:
+  - model_name: gpt-5.6
+    litellm_params:
+      model: openai/gpt-5.6
+      openai_identity_provider_id: idp_...
+      openai_service_account_id: user-...
+      openai_identity_token_file: /var/run/secrets/tokens/openai
+  - model_name: gpt-5.6-batch
+    litellm_params:
+      model: openai/gpt-5.6
+      api_key: os.environ/OPENAI_BATCH_API_KEY
+```
+
+```python
+batch_file = client.files.create(
+    file=open("batch_input.jsonl", "rb"), purpose="batch", extra_body={"target_model_names": "gpt-5.6-batch"}
+)
+batch = client.batches.create(input_file_id=batch_file.id, endpoint="/v1/chat/completions", completion_window="24h")
+```
+
+The same create with `target_model_names` set to `gpt-5.6` raises `openai.BadRequestError` with a 400 that names this fix. Every deployment in the batch model's group must set `api_key`. For the OpenAI pass-through, set `use_in_pass_through: true` on the key deployment, which makes every pass-through call use its `api_key`.
+
 ### OpenAI Chat Completion Models
 
 | Model Name            | Function Call                                                   |
