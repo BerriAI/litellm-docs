@@ -71,6 +71,7 @@ Changes from [`v1.111.0`](https://github.com/BerriAI/litellm/releases/tag/v1.111
 - **Realtime**: `gpt-live-1` over WebRTC with sideband attach, billing for Realtime WebRTC calls and Gemini Live Avatar on Vertex AI
 - **Rust gateway**: Claude on Vertex AI, Bedrock Mantle and Claude Platform on AWS `/v1/messages` runs on Rust, and the native gateway now runs retries, fallbacks and cooldowns
 - **Lens**: `/lens/login` sign-in, agent span forwarding through `POST /v1/traces` and the Lens 0.2.0 UI
+- **Simplified Chinese**: the Admin UI account menu has a Language picker with Simplified Chinese and 4,243 more translated strings, and text without a translation stays in English
 
 ## New Providers and Endpoints
 
