@@ -8,7 +8,7 @@ description: "Transcribe audio with Gnani Prisma v3.0 and v2.5 using litellm.tra
 
 <SinceVersion v="1.112.0" />
 
-LiteLLM supports Gnani's Prisma REST speech-to-text API for one recording of up to 30 seconds, and the proxy streams live audio to Gnani over the OpenAI-compatible `/v1/realtime` WebSocket ([see below](#realtime-transcription)).
+LiteLLM supports Gnani's Prisma REST speech-to-text API for a single recording of up to 30 seconds, and the proxy will stream the live audio to Gnani via the OpenAI-compatible `/v1/realtime` WebSocket ([see below](#realtime-transcription)).
 
 | Property | Details |
 |-------|-------|
@@ -137,7 +137,7 @@ A transcription request to `gnani-prisma-v3` then returns `"request_id": "suppor
 
 ## Limitations
 
-These limits cover REST transcription. Prisma REST has no word timestamps, speaker diarization or streaming. For live audio, use [realtime transcription](#realtime-transcription). OpenAI `temperature`, `timestamp_granularities`, `chunking_strategy`, `include`, `known_speaker_names`, `known_speaker_references` and `stream=True` have no equivalent here, and neither does `prompt` on v2.5, so LiteLLM returns a 400 for them. It also returns a 400 for a Gnani option the chosen model does not accept, such as `topic` on v2.5. To drop them instead, pass `drop_params=True` in the SDK or set `drop_params: true` under `litellm_settings` on the proxy.
+These limits apply to REST transcription. Prisma REST has no word timestamps, no speaker diarisation and no streaming. For live audio use [realtime transcription](#realtime-transcription). OpenAI `temperature`, `timestamp_granularities`, `chunking_strategy`, `include`, `known_speaker_names`, `known_speaker_references` and `stream=True` have no equivalent here and neither does `prompt` on v2.5 so LiteLLM will return a 400 for those. It will also return a 400 for a Gnani option that the model in question doesn't accept (e.g. `topic` on v2.5). To drop those instead you can pass `drop_params=True` in the SDK or set `drop_params: true` under `litellm_settings` on the proxy.
 
 Gnani limits how many requests an account can run at once and answers an overlapping request with a 429. The account used in testing ran one request at a time, and keys on the same account share the limit. The proxy retries a 429 twice by default, which covered three overlapping requests in testing. For more parallel traffic, raise `num_retries` under `router_settings`. The SDK functions `litellm.transcription` and `litellm.atranscription` do not retry, so SDK code that sends overlapping requests should call `atranscription` on a `litellm.Router` with `num_retries` set.
 
@@ -185,7 +185,7 @@ model_list:
 
 <SinceVersion v="1.113.0" />
 
-The proxy serves Prisma v3.0 and v2.5 for live audio on its OpenAI-compatible `/v1/realtime` WebSocket. Clients speak the OpenAI Realtime transcription protocol. LiteLLM forwards the audio to Gnani's streaming API, and Gnani's voice activity detection decides where each utterance ends, so every utterance gets its own final transcript.
+The proxy is serving Prisma v3.0 and v2.5 for live audio via its OpenAI-compatible `/v1/realtime` WebSocket. Clients are using the OpenAI Realtime transcription protocol. LiteLLM is taking the audio and passing it on to Gnani's streaming API. Gnani does the VAD (voice activity detection) to determine where each utterance ends and so each utterance gets its own final transcript.
 
 ### 1. Add the model to your config
 
@@ -201,9 +201,9 @@ general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
-`api_key` falls back to `GNANI_API_KEY`. `api_base` falls back to `GNANI_API_BASE` and then to `https://api.vachana.ai`. It must be an `https://` or `wss://` URL, since LiteLLM sends the key in the WebSocket handshake. LiteLLM connects over `wss://` and appends `/stt/v3/stream` to the path. Set Gnani connection options such as `format` or `x-idle-timeout-sec` in the deployment's `extra_headers`.
+`api_key` falls back to `GNANI_API_KEY`. `api_base` falls back to `GNANI_API_BASE` and then to `https://api.vachana.ai`. It has to be an `https://` or `wss://` URL (LiteLLM puts the key in the WebSocket handshake). LiteLLM connects over `wss://` and appends `/stt/v3/stream` to the path. Set the Gnani connection options (e.g. `format`, `x-idle-timeout-sec`) in the deployment's `extra_headers`.
 
-The cost map has no Gnani price, so set your contracted rate as `input_cost_per_second` to track spend and enforce key and team budgets.
+The cost map has no Gnani price so set your contracted rate as `input_cost_per_second` to track spend and enforce both key and team budgets.
 
 ```bash showLineNumbers title="Start LiteLLM Proxy"
 litellm --config config.yaml
@@ -213,7 +213,7 @@ litellm --config config.yaml
 
 ### 2. Transcribe a recording
 
-Connect with `intent=transcription` in the query string. This example reads a 24 kHz mono PCM16 WAV file and prints its first final transcript.
+Connect via `intent=transcription` in the query string. This example reads a 24kHz mono PCM16 WAV file and outputs its first final transcript.
 
 ```python
 import asyncio
@@ -256,13 +256,13 @@ asyncio.run(transcribe("speech.wav"))
 | `turn_detection` | Omitted or `{"type": "server_vad"}`. Gnani's server VAD has fixed settings, so `threshold`, `prefix_padding_ms`, `silence_duration_ms`, any other turn detection type and `turn_detection: null` are rejected. |
 | `transcription.prompt` | Rejected. |
 
-With [`drop_params`](/docs/completion/drop_params) set on the deployment, LiteLLM drops the rejected settings and keeps Gnani's server VAD instead. A rejected `session.update` returns an `error` event and the session stays open, so the client can send a corrected update.
+With [`drop_params`](/docs/completion/drop_params) set on deployment, LiteLLM drops the rejected settings and keeps Gnani's server VAD. A rejected `session.update` returns an `error` event and the session remains open so the client can send a corrected update.
 
 ### 4. Stream audio
 
-`input_audio_buffer.append` carries base64 mono PCM16 at the session's rate, at most four seconds of audio per append. Gnani requires audio at real-time pace, so LiteLLM forwards it at that pace. Send each append as the audio arrives, since a recording sent faster than real time still takes its own length to reach Gnani.
+`input_audio_buffer.append` carries base64 mono PCM16 at the session rate (at most 4 seconds of audio per append). Gnani needs the audio at real time so LiteLLM is forwarding it at real time. Send each append as the audio comes in (a recording sent faster than real time still takes its own length to get to Gnani).
 
-`input_audio_buffer.commit` ends the current utterance at once. A commit with no speech since the last transcript, such as one after Gnani already ended the utterance on its own or one over silence only, gets no reply, so do not wait for `input_audio_buffer.committed` after it. Every other client event, including `input_audio_buffer.clear` and `response.create`, returns an `error` event and the session stays open.
+`input_audio_buffer.commit` terminates the current utterance immediately. A commit with no speech since the last transcript (i.e. one which occurs after Gnani has already terminated the utterance on its own, or one which occurs over just silence) will generate no reply so don't wait for an `input_audio_buffer.committed` after that. All other client events (including `input_audio_buffer.clear` and `response.create`) will result in an `error` event and the session will remain open.
 
 ### 5. Read transcripts
 
@@ -276,11 +276,11 @@ With [`drop_params`](/docs/completion/drop_params) set on the deployment, LiteLL
 | `conversation.item.input_audio_transcription.completed` | `item_id`, `transcript`, `usage: {"type": "duration", "seconds": 4.032}`, `detected_language_code` when Gnani reports it | Final transcript of each utterance |
 | `error` | `error.message` | Gnani or LiteLLM rejected an event |
 
-All four utterance events share one `item_id`. `usage.seconds` is the length of the utterance, and silence between utterances is billed with the next transcript or when the session closes.
+All four utterance events have one `item_id`. `usage.seconds` is the length of the utterance and silence between utterances is charged up with the next transcript or when the session closes.
 
 ### Session limits
 
-Gnani closes a session after 15 minutes, or after 60 seconds without detected speech. Set `x-idle-timeout-sec` (5 to 900) in the deployment's `extra_headers` to change the idle limit. LiteLLM does not reconnect a closed session, so open a new one and continue from the last completed utterance.
+Gnani closes a session after 15 minutes or after 60 seconds of no detected speech. To change the idle limit in the deployment's `extra_headers`, set `x-idle-timeout-sec` (5 to 900). LiteLLM will not automatically re-open a closed session so you'll need to open a new one and continue from the last completed utterance.
 
 ```yaml
 model_list:
@@ -293,6 +293,6 @@ model_list:
         x-idle-timeout-sec: "300"
 ```
 
-A session on `gnani-prisma` then stays open through up to five minutes without speech.
+A session on `gnani-prisma` will remain open for up to 5 minutes without any speech.
 
-On Python 3.13 and later, the resampler needs the `audioop-lts` package, which `pip install 'litellm[proxy]'` installs. {/* keep-python-version */}
+On Python 3.13 and above the resampler requires the `audioop-lts` package, which is installed by `pip install 'litellm[proxy]'`. {/* keep-python-version */}
