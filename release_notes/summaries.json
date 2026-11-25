@@ -1,6 +1,17 @@
 [
   {
     "folders": [
+      "v1.112.0rc1"
+    ],
+    "title": "LiteLLM v1.112.0rc1 adds a control plane and Perplexity Orchestrator",
+    "points": [
+      "A new control plane, started with `--control-plane`, manages dataplane fleets with fleet usage and audit log sinks.",
+      "Perplexity Orchestrator, Vispark, ResetData, Gradium and Gnani are new providers, and async chat requests can wait in opt-in priority queues after a 429 or 529.",
+      "The FOCUS export now uses the FOCUS 1.5 schema, so queries that read `ProviderName` or `PublisherName` must read `ServiceProviderName`."
+    ]
+  },
+  {
+    "folders": [
       "v1.108.17"
     ],
     "title": "LiteLLM v1.108.17 (LTS) fixes streamed OpenAI tool calls and adds MiniMax-H3-Image",
@@ -208,17 +219,6 @@
     "points": [
       "`azure/` deployments no longer return 400 on `/v1/decisions`.",
       "MCP sign-in no longer loops to `Authentication incomplete` on servers that answer `mcp_all` with detailed scopes."
-    ]
-  },
-  {
-    "folders": [
-      "v1.108.7"
-    ],
-    "title": "LiteLLM v1.108.7 (LTS) adds Gemini batches and Bedrock image search",
-    "points": [
-      "`/v1/batches` runs Gemini batches with output download through `/v1/files`, and Bedrock knowledge bases accept image search with `query_image`.",
-      "Azure AI Foundry deployments support gpt-image edits, and Gemini image calls bill text, thinking and Vertex Priority tokens at the correct rates.",
-      "Responses-only fields such as `max_tool_calls` return 400 on providers bridged through chat completions unless you set `drop_params: true`."
     ]
   }
 ]
