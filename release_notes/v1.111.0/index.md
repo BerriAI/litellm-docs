@@ -1,8 +1,8 @@
 ---
-title: "LiteLLM v1.111.0rc1 adds Customer Management and performance alerts"
+title: "LiteLLM v1.111.0 adds Customer Management and performance alerts"
 description: "Adds Customer Management with budgets for customer orgs, teams and members, performance alerts, Claude Fable 5.2 and Mythos 5.2, and Gemini 4 Carbon."
-slug: "v1-111-0-rc-1"
-date: 2026-11-18T02:22:41
+slug: "v1-111-0"
+date: 2026-11-25T01:41:45
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM
@@ -33,28 +33,28 @@ docker run \
 -e DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname> \
 -e STORE_MODEL_IN_DB=True \
 -p 4000:4000 \
-docker.litellm.ai/berriai/litellm:1.111.0-rc.1
+docker.litellm.ai/berriai/litellm:1.111.0
 ```
 
 </TabItem>
 <TabItem value="pip" label="Pip">
 
 ```bash
-pip install litellm==1.111.0rc1
+pip install litellm==1.111.0
 ```
 
 </TabItem>
 </Tabs>
 
-This release is published as [`ghcr.io/berriai/litellm:v1.111.0-rc.1`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.111.0-rc.1) and the full [releases page](https://github.com/BerriAI/litellm/releases).
+This release is published as [`ghcr.io/berriai/litellm:v1.111.0`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.111.0) and the full [releases page](https://github.com/BerriAI/litellm/releases).
 
-The published GitHub tag is `v1.111.0-rc.1`. These notes compare it with `v1.110.0-rc.3`, the previous release candidate. Changes backported onto `rc/1.110.0` and already shipped in `v1.110.0` are omitted.
+These notes compare `v1.111.0` with `v1.110.0`, the previous stable release. Changes added to the release line after rc.1, through rc.3 and the fixes backported before the stable tag, are under [Included after the v1.111.0-rc.1 cut](#included-after-the-v11110-rc1-cut).
 
 Customer-facing changes come first. Test, CI and internal changes are listed at the bottom.
 
 :::danger Breaking Changes
 
-Changes from [`v1.110.0`](/release_notes/v1.110.0/v1-110-0), the latest stable release, that may need action when upgrading.
+Changes from [`v1.110.0`](/release_notes/v1.110.0/v1-110-0), the previous stable release, that may need action when upgrading.
 
 - **Packaging**: the Docker image now runs as non-root by default, and we consolidated to one image (no more `litellm-database` or `litellm-non_root`) and one Helm chart, `helm/litellm` - [PR #43332](https://github.com/BerriAI/litellm/pull/43332), [PR #43330](https://github.com/BerriAI/litellm/pull/43330)
 - **Vertex AI**: client-supplied `vertex_location` and `vertex_project` are rejected unless the admin opts in - [PR #47028](https://github.com/BerriAI/litellm/pull/47028)
@@ -62,12 +62,11 @@ Changes from [`v1.110.0`](/release_notes/v1.110.0/v1-110-0), the latest stable r
 - **Chat Completions**: a message without a `role` now returns 400 - [PR #51124](https://github.com/BerriAI/litellm/pull/51124)
 - **Bedrock**: a `service_tier` the model cannot serve now returns 400 unless unsupported params are dropped - [PR #50516](https://github.com/BerriAI/litellm/pull/50516)
 - **Management APIs**: `/customer/new` and `/customer/update` reject unknown fields, and key, user, team and project writes reject unknown guardrail names - [PR #50965](https://github.com/BerriAI/litellm/pull/50965), [PR #51080](https://github.com/BerriAI/litellm/pull/51080)
+- **MCP**: new clientless DCR bridges relay the caller's own registration instead of creating a gateway-owned client. Set `LITELLM_MCP_DCR_GATEWAY_CLIENT=true` to keep automatic gateway-owned registration - [PR #53059](https://github.com/BerriAI/litellm/pull/53059)
 
 :::
 
 ## Key Highlights
-
-`v1.111.0rc1` is the current release candidate for 1.111.0.
 
 - **Customer Management**: a customer organization, team and member hierarchy with budget templates, rollups, per-level rate limits, daily usage and its own dashboard area
 - **Performance alerts**: an Alerts page that flags spend and traffic spikes, slower responses and higher error rates against the previous seven days, on by default with opt-in daily summaries by email and Slack
@@ -76,6 +75,25 @@ Changes from [`v1.110.0`](/release_notes/v1.110.0/v1-110-0), the latest stable r
 - **Dynamic rate limiter**: teams and customer organizations can borrow idle model capacity up to a cap, priority class shares split among active teams, and a `rate_limited_by` header names the limit behind a 429
 - **New models and providers**: Claude Fable 5.2 and Mythos 5.2 across Anthropic, Bedrock, Vertex AI and Azure, Gemini 4 Carbon and Hydrogen, Microsoft Web IQ search, and Replicate video, image and speech generation
 - **One image, one chart**: a single non-root Docker image with one entrypoint, and `helm/litellm` as the only Helm chart with a monolith mode
+
+## Included after the v1.111.0-rc.1 cut
+
+- GPT-6.2 caches system prompts sent to `/v1/chat/completions` or `/v1/messages` with `store: false` (rc.2) - [PR #52599](https://github.com/BerriAI/litellm/pull/52599), [PR #52694](https://github.com/BerriAI/litellm/pull/52694)
+- GPT-6.2 also caches those system prompts when `store` is on or unset (rc.3) - [PR #52906](https://github.com/BerriAI/litellm/pull/52906)
+- `temperature=1` on Claude models that removed sampling params no longer returns 400 on Anthropic, Vertex AI and Azure AI. This was broken since v1.110.0-rc.2 (rc.3) - [PR #52341](https://github.com/BerriAI/litellm/pull/52341)
+- Responses streams no longer retry after output reached the client, which sent duplicate events and billed extra calls (rc.3) - [PR #52461](https://github.com/BerriAI/litellm/pull/52461)
+- Responses streams that fail after reasoning output no longer restart on a fallback group and send a second response (rc.3) - [PR #52616](https://github.com/BerriAI/litellm/pull/52616)
+- Forwarded Anthropic credentials on `/v1/messages` use the deployment's custom prices again. This was broken since v1.109.0 (rc.3) - [PR #52313](https://github.com/BerriAI/litellm/pull/52313)
+- A burst of first requests for new customer org aliases no longer returns 503 and leaves their spend untracked (rc.3) - [PR #52080](https://github.com/BerriAI/litellm/pull/52080)
+- JWT key mappings without `jwt_issuer` apply right away when `litellm_jwtauth.issuers` is set, instead of after 5 minutes (rc.3) - [PR #52350](https://github.com/BerriAI/litellm/pull/52350)
+- `/key/info` no longer lets a key with no user read other userless keys by hash or alias (rc.3) - [PR #52838](https://github.com/BerriAI/litellm/pull/52838), [PR #52925](https://github.com/BerriAI/litellm/pull/52925)
+- Each proxy worker no longer opens six extra Postgres connections at boot (rc.3) - [PR #52378](https://github.com/BerriAI/litellm/pull/52378)
+- Failed calls free large request bodies without waiting for a full GC, so workers no longer grow to several GiB (rc.3) - [PR #52600](https://github.com/BerriAI/litellm/pull/52600)
+- New clientless MCP DCR bridges relay the caller's own registration unless `LITELLM_MCP_DCR_GATEWAY_CLIENT=true` is set, which fixes `403 oauth_principal_mismatch` for shared service keys - [PR #53059](https://github.com/BerriAI/litellm/pull/53059)
+- `/gemini` pass-through file get, download and delete apply the file ownership check that `/v1/files` applies - [PR #53171](https://github.com/BerriAI/litellm/pull/53171), [PR #53210](https://github.com/BerriAI/litellm/pull/53210)
+- A complexity-routed request to a model in cooldown uses that model's fallbacks instead of failing - [PR #52510](https://github.com/BerriAI/litellm/pull/52510)
+- `GET /audit` no longer returns 500 after a key or team update, so the Admin UI Audit Logs page shows entries again - [PR #50929](https://github.com/BerriAI/litellm/pull/50929), [PR #53305](https://github.com/BerriAI/litellm/pull/53305)
+- End-user restriction refreshes read only restricted customers instead of the whole end-user table. A partial `LiteLLM_EndUserTable_restricted_idx` index is built after migrations run without blocking writes, by the migration job or in the background by a proxy that runs its own migrations - [PR #51772](https://github.com/BerriAI/litellm/pull/51772)
 
 ## New Providers and Endpoints
 
@@ -873,7 +891,18 @@ Counts represent new catalog identifiers compared with `v1.110.0`, including ali
 - Expect zero admission tokens in the priority rate limit header test, since admission on an idle model now reserves one request and no tokens - [PR #52065](https://github.com/BerriAI/litellm/pull/52065)
 - Update four stale integration and UI tests that still expected old behavior after intended changes, with no product code change - [PR #52108](https://github.com/BerriAI/litellm/pull/52108)
 - Stop requiring safeguards calls to wait for the Anthropic beta map in the cold worker integration test, matching the lazy load from #52188 - [PR #52329](https://github.com/BerriAI/litellm/pull/52329)
+- Give the MCP startup-failure child process the test rig's calibrated readiness budget so the test stops timing out on busy runners - [PR #52365](https://github.com/BerriAI/litellm/pull/52365)
 - Bump `litellm-proxy-extras` 0.4.117 to 0.4.118 on rc/1.111.0 so the release pins a wheel that includes the new migrations - [PR #52370](https://github.com/BerriAI/litellm/pull/52370)
+- Expect the restricted end-user index build in the request log index migration test - [PR #52421](https://github.com/BerriAI/litellm/pull/52421)
+- Expect the fixed-sampling `temperature` message from #52341 in the Bedrock Mantle Claude wire test - [PR #52742](https://github.com/BerriAI/litellm/pull/52742)
+- Restore the Azure client session after the extra headers unit test - [PR #52815](https://github.com/BerriAI/litellm/pull/52815)
+- Keep the exact system prompt placement the Responses bridge integration tests expect in one shared helper - [PR #53000](https://github.com/BerriAI/litellm/pull/53000)
+- Allow a 3-token floor and 10% on provider token counts in the `count_tokens` e2e test, since Anthropic counts 2 to 3 tokens over billed input on short prompts - [PR #53023](https://github.com/BerriAI/litellm/pull/53023)
+- Compare matching pass-through rows in the model hub integration test - [PR #53193](https://github.com/BerriAI/litellm/pull/53193)
+- Expect the bridged Messages system prompt as an input message, and unsigned thinking dropped before Claude, in the Azure and Bedrock Mantle translation fixtures - [PR #53243](https://github.com/BerriAI/litellm/pull/53243)
+- Mark the Codex e2e MCP server as required so Codex waits for it to start before each turn - [PR #53927](https://github.com/BerriAI/litellm/pull/53927)
+- Bump `litellm-enterprise` 0.1.86 to 0.1.86.post1 on rc/1.111.0 so the release pins a wheel with the `GET /audit` fix - [PR #53975](https://github.com/BerriAI/litellm/pull/53975)
+- Bump `litellm-proxy-extras` 0.4.118 to 0.4.118.post1 on rc/1.111.0 so the release pins a wheel that builds the restricted end-user index - [PR #54243](https://github.com/BerriAI/litellm/pull/54243)
 
 ### PR roll-up by ownership area
 
@@ -894,6 +923,7 @@ PRs by ownership area (total: 525)
 
 ## New Contributors
 
+- [@Aditya-Pathanjali](https://github.com/Aditya-Pathanjali) made their first contribution in [PR #50929](https://github.com/BerriAI/litellm/pull/50929)
 - [@collieai-dev](https://github.com/collieai-dev) made their first contribution in [PR #49224](https://github.com/BerriAI/litellm/pull/49224)
 - [@giladk1221](https://github.com/giladk1221) made their first contribution in [PR #50883](https://github.com/BerriAI/litellm/pull/50883)
 - [@hktitof](https://github.com/hktitof) made their first contribution in [PR #40376](https://github.com/BerriAI/litellm/pull/40376)
@@ -916,4 +946,4 @@ PRs by ownership area (total: 525)
 
 ## Full Changelog
 
-https://github.com/BerriAI/litellm/compare/v1.110.0-rc.3...v1.111.0-rc.1
+https://github.com/BerriAI/litellm/compare/v1.110.0...v1.111.0

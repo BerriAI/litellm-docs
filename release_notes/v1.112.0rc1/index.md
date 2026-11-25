@@ -54,7 +54,7 @@ Customer-facing changes come first. Test, CI and internal changes are listed at 
 
 :::danger Breaking Changes
 
-Changes from [`v1.111.0`](https://github.com/BerriAI/litellm/releases/tag/v1.111.0), the latest stable release, that need action when upgrading.
+Changes from [`v1.111.0`](/release_notes/v1.111.0/v1-111-0), the latest stable release, that need action when upgrading.
 
 **The FOCUS export now uses the FOCUS 1.5 schema and no longer writes the `ProviderName` and `PublisherName` columns.** Queries and dashboards that read those columns from the CSV or Parquet export must read `ServiceProviderName` instead. See [PR #52105](https://github.com/BerriAI/litellm/pull/52105).
 
