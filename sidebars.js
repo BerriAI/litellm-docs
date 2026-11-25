@@ -1794,6 +1794,7 @@ const enterpriseSidebar = {
     { type: "doc", id: "enterprise", label: "Overview" },
     { type: "doc", id: "learn/enterprise_quickstart", label: "Production rollout" },
     { type: "doc", id: "enterprise/activate", label: "Activate your license" },
+    { type: "doc", id: "enterprise/private_registry", label: "Private container registry" },
     { type: "doc", id: "enterprise/moving_from_oss", label: "Moving from OSS" },
     { type: "html", value: "Features", className: "sidebar-group-label", defaultStyle: true },
     { type: "link", label: "All Enterprise features", href: "/docs/enterprise#full-feature-list" },

@@ -34,7 +34,7 @@ Make these decisions before the first deployment. Each one is difficult to chang
 - **Redis.** Run Redis 7.0 or newer when you run more than one instance or more than one worker. Without Redis, each instance enforces rate limits and budgets independently. Refer to [What needs Redis](/docs/proxy/redis_requirements).
 - **Salt key.** Set `LITELLM_SALT_KEY` before you add the first model. The salt key encrypts the stored credentials, and you must not change it after you add a model. Refer to [Set the salt key](/docs/proxy/prod#set-the-salt-key).
 - **Master key.** Keep the master key in your secret manager. Applications must use virtual keys, not the master key.
-- **Version.** Pin an exact version or image digest, and [verify the image signature](/docs/proxy/docker_image_security). Stay on a [supported version](/docs/enterprise/version_support).
+- **Version.** Pin an exact version or image digest, and [verify the image signature](/docs/proxy/docker_image_security). Stay on a [supported version](/docs/enterprise/version_support). You can pull Enterprise images from the [private container registry](/docs/enterprise/private_registry).
 - **Topology.** For more than one region, read [Multi-region deployment](/docs/proxy/multi_region) before you deploy.
 
 The full list is in [Production best practices](/docs/proxy/prod) and [Security best practices](/docs/proxy/security_best_practices).
