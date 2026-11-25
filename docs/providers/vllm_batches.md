@@ -56,7 +56,7 @@ Each line follows the OpenAI batch input shape. LiteLLM replaces `body.model` wi
 {"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "my-vllm-model", "messages": [{"role": "user", "content": "How are you?"}]}}
 ```
 
-Every line has to name the same `url`, and it has to match the `endpoint` you give the batch. `stream: true` lines, duplicate `custom_id`s, and unknown top-level fields are rejected at upload with a 400 that names the line
+Every line has to name the same `url`, and it has to match the `endpoint` you give the batch. `stream: true` lines, duplicate `custom_id`s, and unknown top-level fields are rejected when you create the batch, with a 400 that names the problem. The upload itself only checks that each line is a JSON object with `custom_id`, `method`, `url`, and `body`
 
 ### 4. Upload File & Create Batch
 
@@ -157,9 +157,9 @@ Batch `endpoint` can be `/v1/chat/completions`, `/v1/completions`, `/v1/embeddin
 
 ## How a batch runs
 
-The batch is created as `validating`, moves to `in_progress` while the proxy replica that received the create runs the lines, then `finalizing` while the result files are written, and ends `completed`. Lines the server rejects land in the error file with the server's status code, and the batch still completes. Cancelling marks the batch `cancelling`, lets the line in flight finish, and ends it `cancelled`, keeping the output of the lines that already finished. The 24 hour `completion_window` is enforced the same way: a line still unfinished when it closes is cut off and lands in the error file as `batch_expired`, and the batch ends `expired`, keeping the output of the lines that finished in time
+The batch is created as `validating`, moves to `in_progress` while the proxy replica that received the create runs the lines, then `finalizing` while the result files are written, and ends `completed`. Lines the server rejects land in the error file with the server's status code, and the batch still completes. Cancelling marks the batch `cancelling`, lets the lines in flight finish, and ends it `cancelled`, keeping the output of the lines that already finished. The 24 hour `completion_window` is enforced the same way: a line still unfinished when it closes is cut off and lands in the error file as `batch_expired`, and the batch ends `expired`, keeping the output of the lines that finished in time
 
-Results come back in OpenAI's batch output shape: `output_file_id` holds one line per successful request and `error_file_id` one line per failed request. Both are served only to the key that created the batch
+Results come back in OpenAI's batch output shape: `output_file_id` holds one line per successful request and `error_file_id` one line per failed request. Both are served to the key that created the batch, other keys of the same user or team, and proxy admins
 
 Each line is billed through the router as its own request, with the creating key, team, and tags on the spend log, at the price configured on the deployment. A deployment with no price logs its lines with spend 0
 
@@ -170,9 +170,9 @@ If the replica running a batch restarts, the batch is marked `failed` with a `ru
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `LITELLM_EXECUTED_BATCH_CONCURRENCY` | `4` | How many lines of one batch run in parallel |
-| `general_settings.allow_client_side_credentials` | `false` | Batch lines follow the same rule as live requests: a line whose body carries `api_base`, `api_key`, or another client-side credential field is rejected at upload unless this is `true` or the deployment lists the field in `configurable_clientside_auth_params` |
+| `general_settings.allow_client_side_credentials` | `false` | Batch lines follow the same rule as live requests: a line whose body carries `api_base`, `api_key`, or another client-side credential field is rejected when the batch is created unless this is `true` or the deployment lists the field in `configurable_clientside_auth_params` |
 
-Batch lines skip the proxy's pre-call guardrails, the same as batches a provider runs
+The proxy's pre-call guardrails run over every line when the file is uploaded and can rewrite or drop lines, or refuse the upload, there. They do not run again as each line executes
 
 ## Related
 

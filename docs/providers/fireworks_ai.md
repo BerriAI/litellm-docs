@@ -17,7 +17,7 @@ New to running Fireworks AI behind LiteLLM? [Getting Started with Fireworks AI o
 | Description | The fastest and most efficient inference engine to build production-ready, compound AI systems. |
 | Provider Route on LiteLLM | `fireworks_ai/` |
 | Provider Doc | [Fireworks AI ↗](https://docs.fireworks.ai/getting-started/introduction) |
-| Supported OpenAI Endpoints | `/chat/completions`, `/responses`, `/embeddings`, `/completions`, `/audio/transcriptions`, `/rerank` |
+| Supported OpenAI Endpoints | `/chat/completions`, `/responses`, `/embeddings`, `/completions`, `/audio/transcriptions`, `/rerank`, `/files` and `/batches` ([run by LiteLLM](./fireworks_ai_batches)) |
 
 
 ## Overview

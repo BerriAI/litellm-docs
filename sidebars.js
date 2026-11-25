@@ -1973,7 +1973,9 @@ const providersSidebar = {
     "providers/empiriolabs",
     "providers/fal_ai",
     "providers/featherless_ai",
-    "providers/fireworks_ai",
+    { type: "category", label: "Fireworks AI", className: "sidebar-provider", link: { type: "doc", id: "providers/fireworks_ai" }, items: [
+      "providers/fireworks_ai_batches",
+    ] },
     "providers/friendliai",
     "providers/galadriel",
     "providers/github",
