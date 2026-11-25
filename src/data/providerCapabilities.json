@@ -861,6 +861,12 @@
       "images"
     ]
   },
+  "providers/straitly": {
+    "prefix": "straitly",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/streamlake": {
     "prefix": "streamlake",
     "capabilities": [

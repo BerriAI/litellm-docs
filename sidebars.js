@@ -2038,6 +2038,7 @@ const providersSidebar = {
     "providers/scx_ai",
     "providers/snowflake",
     "providers/stability",
+    "providers/straitly",
     "providers/streamlake",
     "providers/strands_decider",
     "providers/synthetic",
