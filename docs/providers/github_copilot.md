@@ -449,6 +449,8 @@ print(response)
 
 If your Copilot plan comes from a GitHub Enterprise Cloud tenant with data residency then point the shared sign-in at that tenant. Set both variables prior to the first call and leave them set afterwards as LiteLLM will read the tenant from `GITHUB_COPILOT_ACCESS_TOKEN_URL` on every call. If that variable is unset or doesn't name github.com or a GHE.com host, LiteLLM reads the tenant from `GITHUB_COPILOT_API_KEY_URL` instead, and with neither it uses github.com.
 
+<SinceVersion v="1.113.0" />
+
 ```bash
 export GITHUB_COPILOT_DEVICE_CODE_URL="https://SUBDOMAIN.ghe.com/login/device/code"
 export GITHUB_COPILOT_ACCESS_TOKEN_URL="https://SUBDOMAIN.ghe.com/login/oauth/access_token"
