@@ -137,7 +137,7 @@ response = completion(
 
 On a project endpoint LiteLLM sends no `api-version`, because that route rejects every value. It sends the key as `Authorization: Bearer`, so `api_key` can hold an API key or a Microsoft Entra token. A service principal gets a token for `https://ai.azure.com/.default` unless `azure_scope` or `AZURE_SCOPE` sets another scope. A gateway in front of a project works too, as long as its path ends at `/api/projects/<project>` or goes on with `/openai`, `/models`, or `/v1`. LiteLLM keeps the gateway's query parameters, such as `subscription-key`, and drops only `api-version`.
 
-On a resource `/openai/v1` endpoint LiteLLM sends the key in the `api-key` header and passes through any `api_version` you set, such as `preview`.
+On a resource `/openai/v1` endpoint LiteLLM sends the key in the `api-key` header and adds no `api-version`. It passes through an `api_version` you set, and that route takes only `v1` or `preview`, so a dated version such as `2024-10-21` fails with `API version not supported`.
 
 An OpenAI model such as `azure_ai/gpt-4.1` on a `<resource>.openai.azure.com/openai/v1` or `<resource>.cognitiveservices.azure.com/openai/v1` base goes through the [Azure OpenAI](./azure/azure.md) provider, and its spend is logged under `azure`.
 
@@ -160,6 +160,19 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 ```
 
 LiteLLM sends the request to `https://my-resource.services.ai.azure.com/api/projects/my-project/openai/v1/chat/completions`, and the response's message content is `Four`. The same entry also serves `/v1/responses` and `/v1/messages`.
+
+For a resource `/openai/v1` endpoint, put that URL in `api_base` instead.
+
+```yaml
+model_list:
+  - model_name: {{openai_small}}
+    litellm_params:
+      model: azure_ai/{{openai_small}}
+      api_base: https://my-resource.services.ai.azure.com/openai/v1
+      api_key: os.environ/AZURE_AI_API_KEY
+```
+
+The same curl with `"model": "{{openai_small}}"` goes to `https://my-resource.services.ai.azure.com/openai/v1/chat/completions` with no `api-version`, and the response's message content is `Four`.
 
 ## Passing additional params - max_tokens, temperature 
 See all litellm.completion supported params [here](../completion/input.md#translated-openai-params)
