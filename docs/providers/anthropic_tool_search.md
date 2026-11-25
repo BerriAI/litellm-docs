@@ -703,6 +703,8 @@ Claude Code with `ENABLE_TOOL_SEARCH=true` sends large tool sets, such as MCP se
 
 Set `deferred_tools` in a deployment's `model_info` to choose how LiteLLM handles those deferred tools for that deployment.
 
+<SinceVersion v="1.113.0" />
+
 | Value | What LiteLLM sends | Use it for |
 |-------|--------------------|------------|
 | `drop` (default) | Every deferred tool as a normal tool, without `defer_loading` | Backends where the cache loss is acceptable |
