@@ -210,18 +210,7 @@ curl --location --request POST 'http://0.0.0.0:4000/chat/completions' \
 
 #### Trace ID with `langfuse_otel`
 
-Calls sent through `langfuse_otel` end up in a single Langfuse trace if they name the same trace. A call names a trace with any of the following on both OpenTelemetry integrations (`LITELLM_OTEL_V2` unset or `true`). When a request sends more than one, the first in this table wins:
-
-| What the request sends | Where |
-|---|---|
-| W3C `traceparent` | Request header |
-| `langfuse_trace_id` | Request header |
-| `x-litellm-trace-id` | Request header |
-| `trace_id` | `metadata` or `litellm_metadata` in the request body |
-
-With `LITELLM_OTEL_V2` unset, `existing_trace_id` in `metadata` (or the `langfuse_existing_trace_id` header) also adds the call to that trace, without renaming the trace.
-
-Every call that sends the same `trace_id` lands in the same Langfuse trace:
+Calls sent through `langfuse_otel` go into one Langfuse trace when they name the same trace. Send the same `trace_id` in `metadata` or `litellm_metadata`, or the same `langfuse_trace_id` request header, with every call that belongs to that trace:
 
 ```shell
 curl --location 'http://0.0.0.0:4000/chat/completions' \
@@ -234,11 +223,30 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 }'
 ```
 
-- The ID is normalised in the same way as for the `langfuse` callback (lowercase, hyphens removed) and is hashed to 32 hex chars if it's not a UUID or 32 hex chars. The trace ID that appears in Langfuse is the normalized form.
-- Send a different `trace_id` for each unit of work that you want to be its own trace. Calls that reuse the same value (e.g. a constant) are merged into a single trace.
-- A session header (e.g. `x-litellm-session-id`) does not name a trace. The calls share the session and each one has its own trace. With `LITELLM_OTEL_V2` unset, a session header also replaces a `trace_id` sent in the body, so send `x-litellm-trace-id` when you send a session header too.
-- With `LITELLM_OTEL_V2=true` this works for requests going through the LiteLLM Proxy on all endpoints (`/v1/chat/completions`, `/v1/responses`, `/v1/messages` and the rest), when the JSON body is within the proxy's `max_request_size_mb` and 16MB. The full request (including its auth and routing spans) is part of the named trace, and the `traceresponse` response header contains that trace ID. `existing_trace_id` is not used, since the request would become a second root of the trace and rename it. Calls made via the Python SDK directly are grouped by the active OpenTelemetry span.
-- Earlier versions set `trace_id` only as a span attribute, or ignored it with `LITELLM_OTEL_V2=true`, so each call landed in its own trace.
+When a request names its trace in more than one way, the first one in this order wins.
+
+With `LITELLM_OTEL_V2` unset:
+
+1. A valid W3C `traceparent` header.
+2. `existing_trace_id` in `metadata`, or the `langfuse_existing_trace_id` header. The call joins that trace without renaming it.
+3. The `langfuse_trace_id` header.
+4. The `x-litellm-trace-id` header.
+5. `trace_id` in `metadata` or `litellm_metadata`.
+
+With `LITELLM_OTEL_V2=true`:
+
+1. A valid W3C `traceparent` header.
+2. The `langfuse_trace_id` header.
+3. `trace_id` in `metadata` or `litellm_metadata`. When a `/v1/responses` or `/v1/messages` request sends both, the `litellm_metadata` one wins, since `metadata` is the provider's own field there.
+
+`x-litellm-trace-id` does not name a trace on V2, since it is one ID for a whole client session and the trace ID goes to every OpenTelemetry exporter. `existing_trace_id` is not used on V2 either, since the request would become a second root of the trace and rename it. A request that sends it gets its own trace and the proxy logs a warning once.
+
+- The ID is normalized in the same way as for the `langfuse` callback (lowercase, hyphens removed) and is hashed to 32 hex chars if it's not a UUID or 32 hex chars. The trace ID that appears in Langfuse is the normalized form.
+- Send a different `trace_id` for each unit of work that you want to be its own trace. Calls that reuse the same value (for example a constant) are merged into a single trace.
+- With `LITELLM_OTEL_V2=true` this works on every proxy endpoint (`/v1/chat/completions`, `/v1/responses`, `/v1/messages` and the rest) for a JSON body within the proxy's `max_request_size_mb` and 16 MB, and for calls made with the Python SDK. The whole request, including its auth and routing spans, is part of the named trace, every OpenTelemetry exporter gets that trace ID, and the `traceresponse` response header carries it. The proxy reads at most 64 MB of request bodies per worker at a time this way. A request past that gets its own trace, and the proxy logs a warning once.
+- A session header (for example `x-litellm-session-id`) does not name a trace. The calls share the session and each one has its own trace. With `LITELLM_OTEL_V2` unset, a session header also replaces a `trace_id` sent in the body, the same as for the `langfuse` callback, so send the `langfuse_trace_id` header when you send a session header too.
+- With `LITELLM_OTEL_V2=true`, the spend log session of a named call is the ID the caller sent.
+- Earlier versions set `trace_id` only as a span attribute, or ignored it with `LITELLM_OTEL_V2=true`, so each call went into its own trace.
 
 #### Trace & Generation Parameters
 

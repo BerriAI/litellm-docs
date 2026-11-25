@@ -117,8 +117,8 @@ Restore the saved callback config and the stored key and team `langfuse` entries
 | `session_id`, `langfuse_session_id` header | Unchanged |
 | `tags` | Unchanged. Key tags, team tags and the `x-litellm-tags` header are included |
 | `trace_release`, `trace_version`, `LANGFUSE_TRACING_ENVIRONMENT` | Mapped <SinceVersion v="1.111.0" />. `LANGFUSE_RELEASE` is not read |
-| `trace_id`, `langfuse_trace_id` header, `x-litellm-trace-id` header | On the proxy, calls that send the same value share one trace (see [trace ID with `langfuse_otel`](./langfuse_integration#trace-id-with-langfuse_otel)). A W3C `traceparent` header wins if both are present |
-| `existing_trace_id`, `update_trace_keys` | Ignored. V2 cannot add calls to an existing trace or update it |
+| `trace_id`, `langfuse_trace_id` header | Calls that send the same value share one trace (see [trace ID with `langfuse_otel`](./langfuse_integration#trace-id-with-langfuse_otel)). A W3C `traceparent` header wins if both are present. The `x-litellm-trace-id` header does not name a trace |
+| `existing_trace_id`, `update_trace_keys` | Ignored. V2 cannot add calls to an existing trace or update it, and logs a warning once for `existing_trace_id` |
 | `generation_id`, `parent_observation_id` | Ignored. The observation ID is the LiteLLM call ID, which a caller can set with the `x-litellm-call-id` header |
 | `trace_metadata`, custom generation metadata | Not passed through. Allowlist the keys you need with `LITELLM_OTEL_BAGGAGE_METADATA_KEYS`, see [request identity](./opentelemetry_v2#request-identity-on-every-span) |
 | Usage `cache_read_input_tokens`, `cache_creation_input_tokens` | Renamed to `input_cached_tokens` and `input_cache_creation`. Reasoning tokens move out of `output` into `output_reasoning_tokens` |
