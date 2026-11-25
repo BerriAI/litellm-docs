@@ -236,6 +236,8 @@ ElevenLabs returns transcription responses in OpenAI-compatible format:
 
 ## Realtime Transcription (Scribe v2 Realtime)
 
+<SinceVersion v="1.113.0" />
+
 LiteLLM serves `scribe_v2_realtime` through the proxy's OpenAI-compatible `/v1/realtime` WebSocket. Clients speak the OpenAI Realtime transcription protocol; LiteLLM opens the ElevenLabs realtime speech-to-text socket after the client's first `session.update`, forwards the audio and maps ElevenLabs transcripts back to OpenAI events. The model is realtime only; for file transcription use `scribe_v2` on `/audio/transcriptions`.
 
 ### 1. Add the model to your config
