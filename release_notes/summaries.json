@@ -1,6 +1,18 @@
 [
   {
     "folders": [
+      "v1.111.0"
+    ],
+    "title": "LiteLLM v1.111.0 adds Customer Management and performance alerts",
+    "points": [
+      "Customer Management adds customer organizations, teams and members, each with its own budgets, rate limits and daily usage in the dashboard.",
+      "Performance alerts flag spend and traffic spikes, slower responses and higher error rates against the previous seven days, and are on by default.",
+      "Claude Fable 5.2 and Mythos 5.2, Gemini 4 Carbon and Hydrogen, and 1,020 new fal.ai and Replicate models join the model catalog.",
+      "The Docker image now runs as non-root, `helm/litellm` is the only chart, and `LITELLM_EMAIL_FALLBACK_LINKS_ANY_USER=true` restores the old SSO email matching."
+    ]
+  },
+  {
+    "folders": [
       "v1.108.17"
     ],
     "title": "LiteLLM v1.108.17 (LTS) fixes streamed OpenAI tool calls and adds MiniMax-H3-Image",
@@ -67,8 +79,7 @@
   },
   {
     "folders": [
-      "v1.110.2",
-      "v1.111.0rc3"
+      "v1.110.2"
     ],
     "title": "LiteLLM v1.110.2 and v1.111.0rc3 fix Responses stream restarts",
     "points": [
@@ -113,7 +124,6 @@
   {
     "folders": [
       "v1.106.11",
-      "v1.111.0rc2",
       "v1.110.1"
     ],
     "title": "LiteLLM v1.110.1, v1.111.0rc2 and v1.106.11 fix GPT-6.2 prompt caching",
@@ -144,18 +154,6 @@
       "Spend goes through the `LiteLLM_SpendLogDelivery` ledger by default, and `general_settings.use_spend_logs_ledger: false` restores the previous spend queues.",
       "The Agent Skills Hub adds skill upload and import, version history and an admin review queue for member submissions.",
       "Model and pass-through routes refuse Azure login fields such as `client_id` and `tenant_id` in the request body, so move them into `metadata`."
-    ]
-  },
-  {
-    "folders": [
-      "v1.111.0rc1"
-    ],
-    "title": "LiteLLM v1.111.0rc1 adds Customer Management and performance alerts",
-    "points": [
-      "Customer Management adds customer organizations, teams and members, each with its own budgets, rate limits and daily usage in the dashboard.",
-      "Performance alerts flag spend and traffic spikes, slower responses and higher error rates against the previous seven days, and are on by default.",
-      "Claude Fable 5.2 and Mythos 5.2, Gemini 4 Carbon and Hydrogen, and 1,020 new fal.ai and Replicate models join the model catalog.",
-      "The Docker image now runs as non-root, `helm/litellm` is the only chart, and `LITELLM_EMAIL_FALLBACK_LINKS_ANY_USER=true` restores the old SSO email matching."
     ]
   },
   {
