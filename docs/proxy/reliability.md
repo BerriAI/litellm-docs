@@ -534,6 +534,41 @@ Sibling retries, order failover, and cross-group fallbacks are separate operatio
 
 These rules apply to errors LiteLLM classifies as `ContextWindowExceededError`, including provider refusals. `enable_pre_call_checks` additionally checks declared input limits before contacting the provider. The existing `max_fallbacks` limit still bounds the chain. A fallback deployment must still accept the prompt and pass access, health, and other routing checks.
 
+#### Retry the group before falling back
+
+<SinceVersion v="1.113.0" />
+
+With `enable_pre_call_checks: true` a context window error from the provider is retried on another deployment in the same group first. Those retries count against `num_retries` and occur prior to the later `order` levels and generic `fallbacks`. This is useful when a deployment's `max_input_tokens` is actually larger than the provider account will actually accept so the pre-call check allows the prompt through and the provider then refuses it.
+
+The retry will skip every deployment that serves the refused model (as they all refuse the same prompt). A deployment of that model will still be attempted if its own `max_input_tokens` is greater than the refused deployment's. The router will read the model from `model_info.base_model`, otherwise from `model` and will read the Bedrock region profiles (e.g. `us.`) as their base model. Two Azure deployments of the same model will both need the same `base_model` in order to be skipped together. A matching `context_window_fallbacks` rule will still take precedence over the retry and a call to one deployment id will not be retried. If the retries all fail then the request will return the first context window error.
+
+In this example the Bedrock deployment declares a 1M window but the account will accept fewer input tokens.
+
+```yaml
+model_list:
+  - model_name: long-prompt
+    litellm_params:
+      model: bedrock/us.anthropic.{{anthropic}}
+    model_info:
+      max_input_tokens: 1000000
+  - model_name: long-prompt
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_key: os.environ/OPENAI_API_KEY
+router_settings:
+  enable_pre_call_checks: true
+  num_retries: 2
+```
+
+```bash
+curl -i http://0.0.0.0:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @long_prompt.json
+```
+
+When the router selects the Bedrock deployment for a prompt which is longer than the account will accept, Bedrock returns a 400 with "prompt is too long". The router then forwards the prompt to the OpenAI deployment and the proxy returns a 200 with `x-litellm-attempted-retries: 1`. Without `enable_pre_call_checks` the 400 goes back to the caller or to the group's generic `fallbacks` if they have that.
+
 ### Context Window Fallbacks (Pre-Call Checks + Fallbacks)
 
 **Before call is made** check if a call is within model context window with  **`enable_pre_call_checks: true`**.
