@@ -5,6 +5,8 @@ description: Learn what LiteLLM publishes in its private registry, how to use it
 
 # Private container registry
 
+{/* keep-version-note */}
+
 The LiteLLM private registry hosts Enterprise container images and the LiteLLM Helm chart. For the most severe vulnerabilities, LiteLLM makes patched images available here before public disclosure so your team has time to scan and deploy them. You can also [activate your Enterprise license](./activate.md) on the gateway you already run.
 
 ## How to use the registry
