@@ -52,35 +52,6 @@ Upload the file via the [Gemini Files API](https://aistudio.google.com/docs/file
 Use these fields for PDFs (`.pdf`), documents (`.docx`, `.doc`, `.dotx`, `.odt`) and presentations (`.pptx`, `.ppt`, `.odp`). Pages and slides are 1-indexed and both ends of the range are inclusive.
 
 <Tabs>
-<TabItem value="generate-content" label="generateContent">
-
-```bash
-curl -X POST "http://localhost:4000/v1beta/models/gemini-4-hydrogen:generateContent" \
-  -H "x-goog-api-key: $LITELLM_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "contents": [{
-      "role": "user",
-      "parts": [
-        {
-          "fileData": {
-            "fileUri": "https://generativelanguage.googleapis.com/v1beta/files/FILE_ID",
-            "mimeType": "application/pdf"
-          },
-          "documentMetadata": {
-            "startPage": 3,
-            "endPage": 4,
-            "contentLayers": ["PAGE_IMAGE"]
-          },
-          "mediaResolution": {"level": "MEDIA_RESOLUTION_HIGH"}
-        },
-        {"text": "Summarize the chart and footnotes on pages 3 and 4."}
-      ]
-    }]
-  }'
-```
-
-</TabItem>
 <TabItem value="interactions" label="Interactions">
 
 ```bash
@@ -106,6 +77,35 @@ curl -X POST "http://localhost:4000/v1beta/interactions" \
       },
       {"type": "text", "text": "Summarize the chart and footnotes on pages 3 and 4."}
     ]
+  }'
+```
+
+</TabItem>
+<TabItem value="generate-content" label="generateContent">
+
+```bash
+curl -X POST "http://localhost:4000/v1beta/models/gemini-4-hydrogen:generateContent" \
+  -H "x-goog-api-key: $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "role": "user",
+      "parts": [
+        {
+          "fileData": {
+            "fileUri": "https://generativelanguage.googleapis.com/v1beta/files/FILE_ID",
+            "mimeType": "application/pdf"
+          },
+          "documentMetadata": {
+            "startPage": 3,
+            "endPage": 4,
+            "contentLayers": ["PAGE_IMAGE"]
+          },
+          "mediaResolution": {"level": "MEDIA_RESOLUTION_HIGH"}
+        },
+        {"text": "Summarize the chart and footnotes on pages 3 and 4."}
+      ]
+    }]
   }'
 ```
 
@@ -152,34 +152,6 @@ For an Office file, change the MIME type and leave the fields as they are. A `.p
 Use these fields for spreadsheets (`.xlsx`, `.xls`, `.ods`). `sheetIndex` is the 1-indexed position of the worksheet in tab order and `visibleCells` is an A1 cell or range.
 
 <Tabs>
-<TabItem value="generate-content" label="generateContent">
-
-```bash
-curl -X POST "http://localhost:4000/v1beta/models/gemini-4-hydrogen:generateContent" \
-  -H "x-goog-api-key: $LITELLM_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "contents": [{
-      "role": "user",
-      "parts": [
-        {
-          "fileData": {
-            "fileUri": "https://generativelanguage.googleapis.com/v1beta/files/WORKBOOK_FILE_ID",
-            "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-          },
-          "spreadsheetMetadata": {
-            "sheetIndex": 2,
-            "visibleCells": "A1:H50",
-            "contentLayers": ["DATA", "FORMULAS"]
-          }
-        },
-        {"text": "List the formulas in this range and what each one computes."}
-      ]
-    }]
-  }'
-```
-
-</TabItem>
 <TabItem value="interactions" label="Interactions">
 
 ```bash
@@ -208,6 +180,34 @@ curl -X POST "http://localhost:4000/v1beta/interactions" \
 ```
 
 </TabItem>
+<TabItem value="generate-content" label="generateContent">
+
+```bash
+curl -X POST "http://localhost:4000/v1beta/models/gemini-4-hydrogen:generateContent" \
+  -H "x-goog-api-key: $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "role": "user",
+      "parts": [
+        {
+          "fileData": {
+            "fileUri": "https://generativelanguage.googleapis.com/v1beta/files/WORKBOOK_FILE_ID",
+            "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          },
+          "spreadsheetMetadata": {
+            "sheetIndex": 2,
+            "visibleCells": "A1:H50",
+            "contentLayers": ["DATA", "FORMULAS"]
+          }
+        },
+        {"text": "List the formulas in this range and what each one computes."}
+      ]
+    }]
+  }'
+```
+
+</TabItem>
 </Tabs>
 
 | generateContent | Interactions | Meaning |
@@ -221,32 +221,6 @@ curl -X POST "http://localhost:4000/v1beta/interactions" \
 Offsets are strings of seconds ending in `s` (e.g. `"10s"`, `"10.5s"`).
 
 <Tabs>
-<TabItem value="generate-content" label="generateContent">
-
-```bash
-curl -X POST "http://localhost:4000/v1beta/models/gemini-4-hydrogen:generateContent" \
-  -H "x-goog-api-key: $LITELLM_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "contents": [{
-      "role": "user",
-      "parts": [
-        {
-          "fileData": {
-            "fileUri": "https://generativelanguage.googleapis.com/v1beta/files/VIDEO_FILE_ID",
-            "mimeType": "video/mp4"
-          },
-          "videoMetadata": {"startOffset": "10s", "endOffset": "20s", "fps": 1}
-        },
-        {"text": "Describe what happens in this segment."}
-      ]
-    }]
-  }'
-```
-
-For audio: set `mimeType` to the audio type (e.g. `audio/mpeg`) and replace `videoMetadata` with `"audioMetadata": {"startOffset": "60s", "endOffset": "90s"}`.
-
-</TabItem>
 <TabItem value="interactions" label="Interactions">
 
 ```bash
@@ -272,6 +246,32 @@ curl -X POST "http://localhost:4000/v1beta/interactions" \
 ```
 
 For audio use `"type": "audio"` with the audio MIME type (e.g. `audio/mpeg`) and the same `processing` offsets.
+
+</TabItem>
+<TabItem value="generate-content" label="generateContent">
+
+```bash
+curl -X POST "http://localhost:4000/v1beta/models/gemini-4-hydrogen:generateContent" \
+  -H "x-goog-api-key: $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "role": "user",
+      "parts": [
+        {
+          "fileData": {
+            "fileUri": "https://generativelanguage.googleapis.com/v1beta/files/VIDEO_FILE_ID",
+            "mimeType": "video/mp4"
+          },
+          "videoMetadata": {"startOffset": "10s", "endOffset": "20s", "fps": 1}
+        },
+        {"text": "Describe what happens in this segment."}
+      ]
+    }]
+  }'
+```
+
+For audio: set `mimeType` to the audio type (e.g. `audio/mpeg`) and replace `videoMetadata` with `"audioMetadata": {"startOffset": "60s", "endOffset": "90s"}`.
 
 </TabItem>
 </Tabs>
