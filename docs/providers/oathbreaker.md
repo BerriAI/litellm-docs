@@ -6,7 +6,7 @@ description: "Call Oathbreaker's abliterated GLM-5.3, DeepSeek V4.1 Flash and Ki
 
 # Oathbreaker
 
-<SinceVersion v="1.112.0" />
+<SinceVersion v="1.113.0" />
 
 Use [Oathbreaker AI](https://oathbreaker.ai) through LiteLLM with the `oathbreaker/` model prefix. LiteLLM reads `OATHBREAKER_API_KEY` and sends Chat Completions requests to `https://oathbreaker.ai/v1`.
 
