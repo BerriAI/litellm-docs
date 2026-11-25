@@ -56,7 +56,6 @@ guardrails:
 
 - `pre_call` — Run **before** the LLM call to check (and mask) **user input**
 - `post_call` — Run **after** the LLM call to check (and mask) **model output**
-- `during_call` — Run **in parallel** with the LLM call to check user input. It can block, but it cannot mask: the request has already been sent to the model, so a masking verdict lets it through unchanged. Use `pre_call` if you need masking.
 
 ### 3. Set environment variables
 
