@@ -1,6 +1,28 @@
 [
   {
     "folders": [
+      "v1.108.17"
+    ],
+    "title": "LiteLLM v1.108.17 (LTS) fixes streamed OpenAI tool calls and adds MiniMax-H3-Image",
+    "points": [
+      "Streamed OpenAI tool calls keep their arguments when OpenAI sends them only at the end, and `chat-latest` models on OpenAI, Azure and Azure AI stop failing with 400.",
+      "MiniMax-H3-Image is new on `/v1/images/generations` and `/v1/images/edits`, and Gemini file inputs on chat completions take page and sheet ranges.",
+      "OpenAI Agents API sessions through `/openai` now count toward key and team budgets, and a Bedrock Claude tool with shared `$defs` no longer stalls a worker."
+    ]
+  },
+  {
+    "folders": [
+      "v1.110.4",
+      "v1.109.5"
+    ],
+    "title": "LiteLLM v1.110.4 and v1.109.5 speed up restricted end-user refreshes",
+    "points": [
+      "Restricted end-user refreshes read a small partial index instead of scanning the whole end-user table every minute on each worker.",
+      "The standalone UI image moves to nginx 1.31.10 and zlib 1.4."
+    ]
+  },
+  {
+    "folders": [
       "v1.108.16"
     ],
     "title": "LiteLLM v1.108.16 (LTS) adds Perplexity Orchestrator and fixes Codex on Bedrock",
@@ -197,27 +219,6 @@
       "`/v1/batches` runs Gemini batches with output download through `/v1/files`, and Bedrock knowledge bases accept image search with `query_image`.",
       "Azure AI Foundry deployments support gpt-image edits, and Gemini image calls bill text, thinking and Vertex Priority tokens at the correct rates.",
       "Responses-only fields such as `max_tool_calls` return 400 on providers bridged through chat completions unless you set `drop_params: true`."
-    ]
-  },
-  {
-    "folders": [
-      "v1.109.1"
-    ],
-    "title": "LiteLLM v1.109.1 and v1.110.0rc2 refuse Azure login fields in the body",
-    "points": [
-      "Model and pass-through routes refuse `client_id`, `client_secret`, `tenant_id` and Azure login fields in the request body.",
-      "Move `tenant_id`, `client_id`, `client_secret`, `azure_username`, `azure_password` and `azure_scope` request tags into `metadata` before you upgrade."
-    ]
-  },
-  {
-    "folders": [
-      "v1.108.6"
-    ],
-    "title": "LiteLLM v1.108.6 (LTS) fixes negative spend and Gemini image edit cost",
-    "points": [
-      "Key, user and team spend no longer goes negative after a scheduled budget reset on multi-pod deployments.",
-      "Gemini image edits bill by tokens instead of a flat per-image price, and Zscaler AI Guard scans only the latest user message.",
-      "Model and pass-through routes refuse Azure login fields in the request body, so move those request tags into `metadata`."
     ]
   }
 ]
