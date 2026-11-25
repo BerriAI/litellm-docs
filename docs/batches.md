@@ -63,7 +63,7 @@ $ litellm --config config.yaml
 # RUNNING on http://0.0.0.0:4000
 ```
 
-In another terminal, set `LITELLM_API_KEY` to the key printed above, then send the requests below.
+In another terminal set `LITELLM_API_KEY` to the key printed above and then send the requests listed below.
 
 **Create File for Batch Completion**
 
@@ -208,7 +208,7 @@ print("list_batches_response=", list_batches_response)
 
 ## Multi-Account / Model-Based Routing
 
-Route batch operations to different provider accounts using model-specific credentials from your `config.yaml`. This eliminates the need for environment variables and enables multi-tenant batch processing.
+Route your batch operations to different provider accounts via the model specific credentials in your `config.yaml`. No environment variables required and this enables multi-tenant batch processing.
 
 ### How It Works
 
@@ -245,7 +245,7 @@ model_list:
 
 #### Scenario 1: Encoded File ID with Model
 
-When you upload a file with a model parameter, LiteLLM encodes the model information in the file ID. All subsequent operations automatically use those credentials.
+When you upload a file with a model parameter, LiteLLM will encode the model details into the file ID. All subsequent operations will then use those credentials.
 
 ```bash
 # Step 1: Upload file with model
@@ -290,7 +290,7 @@ curl http://localhost:4000/v1/batches/batch_bGl0ZWxsbTpiYXRjaF82OTIwM2IzNjg0MDQ4
 
 #### Scenario 2: Model via Header/Query Parameter
 
-Specify the model for each request without encoding it in the ID.
+Specify the model for each request (don't encode it in the ID).
 
 ```bash
 # Create batch with model header
@@ -469,20 +469,20 @@ LiteLLM supports the following provider-native batch APIs:
 | Amazon Bedrock | [Amazon Bedrock batch inference](./providers/bedrock_batches) |
 | Mistral AI | [Mistral AI Batch API](./providers/mistral_batches) |
 | vLLM | [vLLM batches](./providers/vllm_batches), run by LiteLLM when the server has no Files API |
-| Fireworks AI | [Fireworks AI batches](./providers/fireworks_ai_batches), run by LiteLLM because Fireworks' own Batch API is turned off as of November 2026 |
+| Fireworks AI | [Fireworks AI batches](./providers/fireworks_ai_batches), running via LiteLLM as Fireworks' own Batch API has been switched off as of November 2026 |
 | xAI | [xAI Batch API](./providers/xai_batches) |
 
-Amazon Bedrock is the supported AWS integration for batch inference.
+Amazon Bedrock is the AWS integration that's supported for batch inference.
 
 ## Batch Input File Validation
 
-LiteLLM validates batch input files at upload time. When a client uploads a file to `POST /v1/files` with `purpose="batch"`, LiteLLM checks the file locally and rejects invalid files before anything is forwarded to the provider. Validation runs on every `/v1/files` routing path, including provider-routed uploads configured through `files_settings` and [LiteLLM managed files](./proxy/managed_batches) uploads that use `target_model_names`
+LiteLLM validates the batch input files at upload time. When a client uploads a file to `POST /v1/files` via `purpose="batch"`, LiteLLM will validate the file locally and reject any invalid files prior to forwarding it on to the provider. Validation occurs on every `/v1/files` routing path, whether that be provider routed uploads via `files_settings` or [LiteLLM managed files](./proxy/managed_batches) uploads that use `target_model_names`.
 
-Rejections use the OpenAI error format, an `error` object with `message`, `type`, `param`, and `code` fields, so existing OpenAI SDK error handling works unchanged
+Rejections use the OpenAI error format (an `error` object with `message`, `type`, `param` and `code` fields) so existing OpenAI SDK error handling will work exactly as before.
 
 ### Limit the batch input file size
 
-Set `max_batch_file_size_mb` under `general_settings` to cap the size of batch input files. The value is an integer in MB. When it is unset, no size cap applies
+Set `max_batch_file_size_mb` under `general_settings` to cap the size of batch input files. It's an integer in MB. No cap is applied if it's unset.
 
 ```yaml
 general_settings:
@@ -507,7 +507,7 @@ A `purpose="batch"` upload larger than the cap is rejected with HTTP `413`:
 
 ### Limit the number of records in a batch file
 
-Set `max_batch_file_records` under `general_settings` to cap how many request lines one batch input file can hold. Blank lines are not counted. When it is unset, no record cap applies
+Set `max_batch_file_records` under `general_settings` to cap the number of request lines that one batch input file can hold. Blank lines are not counted. When it is unset then no record cap applies.
 
 ```yaml
 general_settings:
@@ -515,7 +515,7 @@ general_settings:
   max_batch_file_records: 1000
 ```
 
-A `purpose="batch"` upload with more records than the cap is rejected with HTTP `413`, and the file is not forwarded to the provider:
+A `purpose="batch"` upload with more records than the cap is rejected with HTTP `413` and the file is not passed on to the provider.
 
 ```json
 {
@@ -528,13 +528,13 @@ A `purpose="batch"` upload with more records than the cap is rejected with HTTP 
 }
 ```
 
-The `general_settings` value applies to every key. A proxy admin can give one key a different cap with `max_batch_file_records` in that key's metadata, and can add a cap for a whole team in the team's metadata. When both the key and its team have a cap, the lower one applies, and the message says where it was set
+The `general_settings` value applies to every key. A proxy admin can set a different cap on a key via `max_batch_file_records` in that key's metadata and can set a cap for an entire team in the team's metadata. If both the key and the team have a cap then the lower one applies and the message will tell you where it was set.
 
 ### Content validation
 
-LiteLLM always validates the content of `purpose="batch"` uploads. There is no setting to configure. The filename must end in `.jsonl`, matched case-insensitively. The file must contain at least one non-blank line. Every non-blank line must be valid JSON. Every line must be a JSON object. Every object must contain the `custom_id`, `method`, `url`, and `body` keys
+LiteLLM always validates the content of `purpose="batch"` uploads. There is no option to turn this off. The filename must end in `.jsonl` (case insensitive). The file must have at least one non-blank line. Every non-blank line must be valid JSON. Every line must be a JSON object. The object must contain the `custom_id`, `method`, `url` and `body` keys.
 
-A file that fails any of these checks is rejected with HTTP `400` and `"type": "invalid_request_error"`. The `param` field names the offending field: `file` for a wrong extension, an empty file, a line that is not valid JSON, or a line that is not a JSON object. For a line that is missing a required key, `param` is the missing key, such as `method`. The `message` includes the 1-based line number where relevant. Line numbers count every line in the file, including blank lines
+A file that fails any of these checks is rejected with HTTP `400` and `"type": "invalid_request_error"`. `param` is the field name of the failing field: `file` if the extension is wrong, the file is empty, the line is not valid JSON or the line is not a JSON object. `param` is the missing key in the case of a missing required key (e.g. `method`). `message` contains the 1-based line number where applicable. Line numbers count every line in the file including blank lines.
 
 ### Provider batch limits
 
@@ -547,11 +547,11 @@ Each provider enforces its own limits on batch input files. Use them to pick a v
 | [Vertex AI](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/multimodal/batch-prediction-gemini) | 1 GB | 200,000 per job |
 | [Amazon Bedrock](https://docs.aws.amazon.com/general/latest/gr/bedrock.html) | 1 GB per file | See AWS Service Quotas |
 
-Azure OpenAI raises its file cap to 1 GB with bring-your-own Blob Storage. The Vertex AI cap applies to Cloud Storage input. Amazon Bedrock also caps total job size, at 5 GB for most models. Set `max_batch_file_size_mb` at or below the smallest limit of the providers you route batch traffic to
+With bring your own Blob Storage the Azure OpenAI file cap is 1GB. The Vertex AI cap is on Cloud Storage input. Amazon Bedrock also has a total job size cap (5GB for most models). Set `max_batch_file_size_mb` at or below the smallest of the provider limits that you route your batch traffic to.
 
 ## Batch Upload and Download Limits
 
-Two settings cap how often a caller can upload batch input files and download file content. Both are off unless set
+Two settings govern how often a caller can upload their batch input files and download the file content. Both are off unless set.
 
 | Setting | What it counts | Window |
 | --- | --- | --- |
@@ -565,7 +565,7 @@ general_settings:
   max_file_downloads_per_minute: 10
 ```
 
-A request past either limit is rejected with HTTP `429` and a `Retry-After` header giving the seconds until the window resets. For uploads that is 00:00 UTC. The message names the limit, its value, and where it was set:
+A request which has passed either limit is rejected with an HTTP `429` and a `Retry-After` header which gives the seconds until the window resets. For uploads that is 00:00 UTC. The message will name the limit, its value and where it was set.
 
 ```json
 {
@@ -578,11 +578,11 @@ A request past either limit is rejected with HTTP `429` and a `Retry-After` head
 }
 ```
 
-The download limit is counted per file, so a caller that hits it on one file can still download other files. It covers every file id, whether a batch input, output, or error file
+The download limit is file based so you can hit it on one file and still go on to download other files. It's every file id, whether it's a batch input, batch output or an error file.
 
 ### Setting limits per key or team
 
-The `general_settings` value is a default that each key gets its own count against. A JWT caller without a virtual key is counted by its user id instead. A proxy admin can change the limit for one key by setting the same name in that key's metadata, which replaces the default for that key:
+The `general_settings` value is a default whereby each key has its own count. A JWT caller without a virtual key is counted against their user id. A proxy admin can change the limit for one key by setting the same name in that key's metadata which will then replace the default for that key:
 
 ```bash
 curl -X POST 'http://localhost:4000/key/update' \
@@ -591,28 +591,28 @@ curl -X POST 'http://localhost:4000/key/update' \
   -d '{"key": "sk-...", "metadata": {"max_file_downloads_per_minute": 2}}'
 ```
 
-Setting the name in a team's metadata adds a second limit shared by every key in that team. When both apply, a request must fit both, and a request rejected by one does not use up a slot in the other
+Setting the name in a team's metadata adds a second constraint which is shared by every key in that team. If both constraints are in place then the request has to satisfy both and a request which is rejected by one constraint doesn't consume a slot in the other.
 
-Only a proxy admin can set, change, or clear `max_batch_file_records`, `max_batch_file_uploads_per_day`, and `max_file_downloads_per_minute` in key or team metadata, including the metadata sent to `POST /user/new`. Requests from any other role that try to change them are rejected with a `403`. `/config/update` rejects a value that is not a positive integer
+Only a proxy admin can set, change or clear `max_batch_file_records`, `max_batch_file_uploads_per_day` and `max_file_downloads_per_minute` in key or team metadata (including the metadata sent to `POST /user/new`). Any request from any other role to change them will be rejected with a `403`. `/config/update` will reject a value that is not a positive integer.
 
 ### What counts against the limits
 
-An upload that fails batch input file validation (a wrong format, too many records, too large) does not count. An upload that passes validation counts even when a guardrail or the provider rejects it afterwards, and a download counts even when the provider returns an error for it
+An upload which fails batch input file validation (i.e. wrong format, too many records, too large) is not counted. An upload which passes validation is counted regardless of whether a guardrail or the provider subsequently rejects it. A download is counted even if the provider returns an error for it.
 
-With Redis configured, the counts are shared across every proxy instance and worker. Without Redis, each worker process keeps its own count, so a caller can reach up to the limit times the number of workers, and the counts reset when the proxy restarts. Each worker keeps up to 20,000 live counters (one per caller and window, and per file id for downloads), and once more than that are live the one closest to expiry is dropped, so that caller starts a fresh window early
+With Redis in place the counts are shared across all proxy instances and workers. Without Redis each worker has its own count so a caller could potentially hit the limit up to the number of workers times. The counts get reset on proxy restart. Each worker holds up to 20,000 live counters (one per caller and window and per file id for downloads) and once more than that are live the one closest to expiry is dropped so the caller starts a fresh window early.
 
 The limits apply to the `/v1/files` routes above, including `/files` and `/{provider}/v1/files`. Provider pass-through routes are not counted
 
 ## How Rate Limiting for Batches API Works
 
-Batch rate limits are enforced when the client calls `POST /v1/batches`, not when the input file is uploaded.
+Batch rate limits are enforced when the client makes the `POST /v1/batches` call, not when the input file is uploaded.
 
-1. The client uploads the JSONL input file with `POST /v1/files`. This upload does not consume the batch TPM or RPM allowance.
-2. When the client creates the batch, LiteLLM downloads and evaluates the referenced input file.
-3. LiteLLM atomically checks the complete file against every applicable limit.
-4. If any limit would be exceeded, LiteLLM returns `429` and does not submit the batch to the provider. Otherwise, it records the usage and creates the provider batch.
+1. The client uploads the JSONL input file with `POST /v1/files`. The upload of the file does not use up the batch TPM or RPM allowance.
+2. When the client creates the batch, LiteLLM will download and evaluate the referenced input file.
+3. LiteLLM atomically checks the entire file against all relevant limits.
+4. If a limit would be exceeded then LiteLLM returns `429` and doesn't submit the batch to the provider. Otherwise it records the usage and creates the provider batch.
 
-This allows LiteLLM to accept or reject the batch before the provider processes it.
+This enables LiteLLM to accept or reject the batch prior to the provider even processing it.
 
 ### What LiteLLM counts
 
@@ -621,19 +621,19 @@ This allows LiteLLM to accept or reject the batch before the provider processes 
 | RPM | One request for each JSONL record. |
 | TPM | Input tokens found in each record's `body.messages`, `body.prompt`, or `body.input`. |
 | Project ITPM | The same input-token count, grouped by each record's `body.model`. |
-| Project OTPM | An output-token reservation for each record, grouped by `body.model`. LiteLLM uses `max_tokens`, `max_completion_tokens`, or `max_output_tokens` when present and accounts for `n` or `best_of`. Embedding records reserve no output tokens. If no output cap is present, LiteLLM uses the v3 limiter's built-in estimate, bounded by the smallest applicable OTPM limit. |
+| Project OTPM | An output token reservation per record, grouped by `body.model`. LiteLLM uses `max_tokens`, `max_completion_tokens` or `max_output_tokens` where available and takes into account `n` and `best_of`. Embedding records have no output token reservation. If no output cap is present then LiteLLM will use the v3 limiter's built in estimate (bounded by the smallest applicable OTPM limit). |
 
-If LiteLLM cannot tokenize an individual record, it uses a conservative estimate based on the serialized record size. A malformed JSONL line still counts as one request.
+If LiteLLM can't tokenize an individual record it will use a conservative estimate based on the size of the serialized record. A bad JSONL line still counts as one request.
 
 :::important
 
-`LITELLM_TPM_TOKEN_RESERVATION_ENABLED` does not control batch rate limiting. That variable controls pre-request reservation for real-time requests such as chat completions. `POST /v1/batches` always uses the batch input-file limiter described here unless one of the batch-specific skip settings below is enabled.
+`LITELLM_TPM_TOKEN_RESERVATION_ENABLED` has no control over batch rate limiting. That variable is used to control pre-request reservation for real time requests such as chat completions. `POST /v1/batches` will always use the batch input file limiter as described here unless one of the batch specific skip settings below is in effect.
 
 :::
 
 ### Enqueued-token limits
 
-Per-minute windows fit batches poorly: a batch runs for hours, but its whole input file is charged to a single minute at submission. To govern batch submissions by outstanding batch work instead, set an enqueued-token allowance in the key or team metadata:
+Per-minute windows are a terrible fit for batches as a batch will run for hours but the entire input file is charged to a single minute at submission. To govern batch submissions by the amount of outstanding batch work, set an enqueued token allowance in the key or team metadata:
 
 ```bash
 curl -X POST 'http://localhost:4000/key/generate' \
@@ -642,29 +642,29 @@ curl -X POST 'http://localhost:4000/key/generate' \
   -d '{"metadata": {"batch_enqueued_token_limit": 100000}}'
 ```
 
-`batch_enqueued_token_limit` also works in team metadata. When both the key and its team set one, the batch must fit both allowances.
+`batch_enqueued_token_limit` also works in team metadata. If both the key and the team set the value then the batch has to fit both allowances.
 
-Only a proxy admin can set or change `batch_enqueued_token_limit`. Key and team requests from other roles that try to write it are rejected with a `403`.
+Only a proxy admin can set or change `batch_enqueued_token_limit`. Any key/team requests from any other role attempting to write it will be rejected with a `403`.
 
 When a key or team has an enqueued-token limit, batch submission is governed only by that allowance:
 
-1. When the client creates a batch, LiteLLM reserves the file's estimated tokens (the input tokens plus each record's output cap) against the allowance.
-2. If the batch does not fit, LiteLLM returns `429` naming the enqueued token limit and does not submit the batch to the provider.
-3. When LiteLLM serves a response showing the batch in a terminal state (completed, failed, expired, or cancelled), it refunds the reservation. Polling `GET /v1/batches/{batch_id}` and cancelling with `POST /v1/batches/{batch_id}/cancel` both qualify.
-4. Batch submissions are not charged to the per-minute TPM and RPM windows, so a batch whose record count exceeds the key's RPM is accepted when it fits the allowance.
+1. When the client creates a batch, LiteLLM takes the file's estimated tokens (the input tokens plus the output cap per record) and reserves those against the allowance.
+2. If the batch doesn't fit then LiteLLM returns `429` (naming the enqueued token limit) and doesn't submit the batch to the provider.
+3. When LiteLLM serves a response which shows the batch in a terminal state (i.e. completed, failed, expired or cancelled) it will refund the reservation. Polling `GET /v1/batches/{batch_id}` and cancelling with `POST /v1/batches/{batch_id}/cancel` both count.
+4. Batch submissions are not charged against the per minute TPM and RPM windows so a batch which would exceed the key's RPM is accepted as long as it falls within the allowance.
 
-Real-time traffic such as chat completions is unaffected: it consumes the key's TPM and RPM limits exactly as before.
+Real time traffic (e.g. chat completions) is unaffected in this respect as it will still consume the key's TPM and RPM limits exactly as before.
 
 Two details to plan around:
 
-- `disable_batch_input_file_rate_limiting` and `skip_batch_input_file_rate_limiting_for_providers` take precedence. When they apply, LiteLLM performs no enqueued-token accounting.
-- Reservations for batches whose terminal state LiteLLM never observes (for example, a batch only ever polled directly against the provider) expire after 8 days.
+- `disable_batch_input_file_rate_limiting` and `skip_batch_input_file_rate_limiting_for_providers` take priority. In those cases LiteLLM will do no enqueued token accounting at all.
+- Some batches do get to a terminal state that LiteLLM never sees. A case in point is a batch where the client is simply polling directly against the provider. The reservations for those batches expire after 8 days.
 
 #### Per-model limits on a project
 
 <SinceVersion v="1.111.0" />
 
-When several applications share one team, run each application as its own project and cap the tokens it can have enqueued for each model with `model_batch_enqueued_token_limit` in the project metadata:
+When you have several apps sharing one team then run each app as its own project and cap the tokens each app can have enqueued for each model with `model_batch_enqueued_token_limit` in the project metadata.
 
 ```bash
 curl -X POST 'http://localhost:4000/project/update' \
@@ -673,7 +673,7 @@ curl -X POST 'http://localhost:4000/project/update' \
   -d '{"project_id": "batch-app-project", "metadata": {"model_batch_enqueued_token_limit": {"gpt-5.5": 2000}}}'
 ```
 
-Every key in the project shares one counter per model, so callers whose custom auth issues rotating tokens still hit the same limit. A batch that does not fit gets a `429`:
+The project maintains one counter per model. Each key in the project shares that counter. A caller whose custom auth is producing rotating tokens will therefore still be subject to that same limit. A batch that doesn't fit gets a `429`:
 
 ```json
 {"error": {"message": "Batch enqueued token limit exceeded for project_model: batch-app-project:gpt-5.5. Batch requires 1221 tokens but only 779 enqueued tokens remaining out of 2000 enqueued token limit. Tokens free up as running batches complete or are cancelled.", "type": "throttling_error", "param": null, "code": "429"}}
@@ -681,37 +681,37 @@ Every key in the project shares one counter per model, so callers whose custom a
 
 How a batch is charged:
 
-- The batch is charged against the model it routes to and against every capped model named in its records' `body.model`. Records without a `body.model` count toward the model the batch routes to.
-- A managed file (uploaded with `target_model_names`) is charged only against the model the batch routes to, because LiteLLM rewrites its records to the deployment model on upload.
-- Names that resolve to the same model group, such as an alias and its model group or a deployment id, share one counter under the tightest limit set among them. A `-latest` model name is also charged against the limit set for the model it points to, and a dated snapshot such as `gpt-5.5-2026-04-23` against the limit set for its undated name.
-- Tokens are refunded the same way as key and team allowances: when LiteLLM serves a response showing the batch in a terminal state, or after 8 days.
-- Set project limits only after every proxy instance runs a version that supports them, and keep that in mind before a rollback. An instance on an older version that serves a batch's terminal state refunds only key and team allowances. The project tokens it skips stay held until no batch has reserved against that project and model for 8 days, so a project that keeps sending batches keeps them. If that fills a project's limit, raise the limit to make room.
+- The batch is charged against the model it routes to and against every capped model named in its records' `body.model`. Records which have no `body.model` are charged against the model the batch routes to.
+- LiteLLM will rewrite the record of a managed file (uploaded with `target_model_names`) to the deployment model on upload. A managed file therefore only counts against the limit of the model that the batch is routed to.
+- Any names that resolve to the same model group (e.g. an alias and its model group, or a deployment id) will share a single counter under the most restrictive limit set amongst them. A `-latest` model name will be charged against the limit set for the model that it points to and a dated snapshot such as `gpt-5.5-2026-04-23` will be charged against the limit set for its undated name.
+- Tokens are refunded in the same way as key and team allowances: either when LiteLLM serves a response which shows the batch in a terminal state, or after 8 days.
+- Only set project limits once every proxy instance has run a version that supports them. Bear that in mind when you're considering a rollback of a proxy instance. An instance running on an older version which is serving a batch's terminal state will only refund key and team allowances. The project tokens it skips remain held until no batch has reserved against that project and model for 8 days. A project which continues to send batches will therefore continue to have those tokens held. If that causes the project to hit its limit then you need to raise the limit to make space.
 
 How it combines with other limits:
 
-- When the key or team also has a `batch_enqueued_token_limit`, the batch must fit every allowance and no other batch limit applies, as described above.
-- When only the project limit applies and it caps both the model the batch routes to and every model named in its records, the per-minute batch limits (key, team, user, and end-user TPM and RPM, plus the project's per-model TPM, ITPM, and OTPM) are skipped for that batch. Daily `tpd_limit` caps still apply.
-- When any of those models has no project cap, the batch keeps the normal batch limits on top of the project reservation.
+- If the key/team also has a `batch_enqueued_token_limit` then the batch must meet every allowance and no other batch limit comes into play (as per the above).
+- Two conditions in combination will bypass the per-minute batch limits for a batch. Firstly, neither the key nor its team have a `batch_enqueued_token_limit` so only the project limit is in play. Secondly the project limit will cap the model the batch routes to and every model named in the batch's records. The limits that are skipped are key, team, user and end-user TPM and RPM as well as the project's per-model TPM, ITPM and OTPM. Daily `tpd_limit` caps still apply.
+- If any of those models have no project cap then the batch will simply retain the normal batch limits on top of the project reservation.
 
-Only a proxy admin can set or change `model_batch_enqueued_token_limit` on a project. Team admins who try get a `403`. Each value must be a positive integer, otherwise `/project/new` and `/project/update` return `400`.
+Only a proxy admin can set or change `model_batch_enqueued_token_limit` on a project. A team admin attempting to do so will get a `403`. Each value must be a positive integer, otherwise `/project/new` and `/project/update` will return `400`.
 
 The limit applies to callers whose request resolves to a project:
 
-- With custom auth, set `custom_auth_run_common_checks: true` under `general_settings` so LiteLLM loads the project's metadata.
-- Native JWT auth does not assign a project, so JWT callers are not covered.
+- With custom auth, place `custom_auth_run_common_checks: true` under `general_settings` so that LiteLLM can load the project's metadata.
+- Native JWT auth doesn't assign a project so JWT callers aren't covered.
 
 ### Operational behavior
 
 | Behavior | Operational impact |
 | --- | --- |
-| Accounting is based on the submitted file | Batch TPM and RPM counters are not reconciled against the provider's final usage. Final cost tracking is separate. |
-| The complete file cannot be downloaded or evaluated | LiteLLM logs the error and submits the batch without charging it to TPM or RPM. Monitor these errors if your deployment requires strict rate-limit enforcement. |
+| Accounting is based on the submitted file | The batch TPM and RPM counters are not reconciled against the provider's final usage. Final cost tracking is separate. |
+| The complete file cannot be downloaded or evaluated | LiteLLM will log the error and submit the batch without charging it to TPM or RPM. If every batch is required to count against TPM and RPM then you should be monitoring these errors. |
 | No applicable rate limit is configured | LiteLLM submits the batch without downloading it for rate-limit accounting. |
-| The API key has a model allowlist | LiteLLM reads the file and validates every `body.model` before submission. |
+| The API key has a model allowlist | LiteLLM reads the file and validates every `body.model` prior to submission. |
 
 ### Skipping the input-file pre-read
 
-Reading a large JSONL file can add latency to batch submission. If you do not need the batch to be charged against TPM or RPM at submission, configure one of these options:
+Reading a large JSONL file can add latency to the batch submission. If you don't need the batch to be charged against TPM or RPM at submission then one of the following options can be used:
 
 ```yaml
 general_settings:
@@ -723,28 +723,28 @@ general_settings:
     - bedrock
 ```
 
-The provider-specific option uses the provider configured on the selected route. It does not use a `custom_llm_provider` value supplied by the client.
+The provider specific option uses the provider that's configured on the route that's been selected. It doesn't use a `custom_llm_provider` value that the client supplies.
 
-For API keys with a model allowlist, LiteLLM must still read the file to validate each `body.model` value. In this case, the settings above skip the TPM and RPM counter update, but not the file download or model validation.
+For API keys that have a model allowlist, LiteLLM still has to read the file in order to validate each `body.model` value. In that scenario the settings above will only skip the TPM and RPM counter update. LiteLLM will still download the file and validate each model.
 
 The following options are not supported:
 
-- `skip_batch_input_file_rate_limiting_for_models` is retained for compatibility but has no effect. LiteLLM logs a warning at startup when it is configured.
-- A `skip_batch_input_file_rate_limiting` flag in request metadata is ignored.
+- `skip_batch_input_file_rate_limiting_for_models` is retained for compatibility but has no effect. LiteLLM generates a warning at startup if it's configured.
+- An `skip_batch_input_file_rate_limiting` flag in the request metadata is simply ignored.
 
-Use the global or provider-specific settings above to manage this behavior at the server level.
+Use the global or provider specific settings above to manage this behavior at the server level.
 
 ## How Cost Tracking for Batches API Works
 
-**Enterprise:** Automated batch cost tracking requires a LiteLLM Enterprise license.
+**Enterprise:** automated batch cost tracking requires a LiteLLM Enterprise licence.
 
 For managed batches, LiteLLM monitors the provider job in the background. When the job reaches a terminal state, LiteLLM:
 
-1. Downloads the provider's output file.
+1. Download the provider's output file.
 2. Reads each successful output record.
-3. Aggregates prompt, completion, and total token usage across those records.
-4. Calculates each record's cost using the deployment's configured batch pricing.
-5. Records the combined usage and cost against the user, key, team, and request tags that created the batch.
+3. Aggregates the prompt, completion and total token usage across those records.
+4. Calculates the cost of each record using the batch pricing that has been configured for the deployment.
+5. Records the combined usage and cost against the user, key, team and request tags from the request which created the batch.
 
 Failed output records are excluded from the aggregate. If the batch has no output file because every record failed, LiteLLM records zero usage and zero cost.
 

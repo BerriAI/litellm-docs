@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 
 # vLLM - Batch + Files API
 
-vLLM's OpenAI-compatible server serves `/v1/chat/completions`, `/v1/completions`, `/v1/embeddings`, and `/v1/responses`, but it has no `/v1/files` or `/v1/batches` routes. LiteLLM fills that gap: for a `hosted_vllm` deployment whose server has no Files API, the proxy stores the batch input itself, runs every line through the deployment, and serves the batch status and the output files, so the OpenAI Batch API works against vLLM unchanged
+vLLM's OpenAI compatible server supports `/v1/chat/completions`, `/v1/completions`, `/v1/embeddings` and `/v1/responses` but has no `/v1/files` or `/v1/batches` routes. LiteLLM provides the missing piece: for a `hosted_vllm` deployment where the server has no Files API the proxy will store the batch input itself, run each line through the deployment and serve the batch status and the output files. Clients simply call the standard OpenAI Batch API against vLLM with no changes.
 
 | Feature | Supported |
 |---------|-----------|
@@ -17,11 +17,11 @@ vLLM's OpenAI-compatible server serves `/v1/chat/completions`, `/v1/completions`
 | `/v1/batches` | ✅ run by LiteLLM |
 | Cost Tracking | ✅ every line is billed to the key that created the batch |
 
-This flow runs on the proxy and needs a database (`DATABASE_URL`), because the input file, the batch status, and the result files live there
+This flow runs on the proxy and requires a database (`DATABASE_URL`) as the input file, the batch status and the result files all reside there.
 
 ## When LiteLLM runs the batch itself
 
-LiteLLM decides per request. A deployment qualifies when its `litellm_params.model` starts with `hosted_vllm/` and `GET {api_base}/files` on its server answers 404. Every other deployment, and a `hosted_vllm` deployment whose server does implement the Files API (for example the vLLM production-stack router), keeps the passthrough behavior: the upload and the batch are forwarded to the server and it runs the batch
+LiteLLM makes the decision on a per-request basis. LiteLLM will run the batch for a deployment only if two conditions are met. Firstly, `litellm_params.model` must start with `hosted_vllm/`. Secondly, `GET {api_base}/files` on its server must return a 404. For every other deployment and for a `hosted_vllm` deployment whose server does in fact implement the Files API (e.g. the vLLM production stack router), the passthrough behaviour is maintained: the upload and the batch are both forwarded to the server which then runs the batch.
 
 Point `api_base` at the server's `/v1` root so the probe hits the right route
 
@@ -49,19 +49,19 @@ litellm --config /path/to/config.yaml
 
 ### 3. Create Batch File
 
-Each line follows the OpenAI batch input shape. LiteLLM replaces `body.model` with the batch's deployment name, so what you put there does not change which server runs the line
+Each line is in the OpenAI batch input shape. LiteLLM will substitute `body.model` with the name of the deployment that the batch is using so what you have in that field won't actually change which server the line gets run on.
 
 ```jsonl
 {"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "my-vllm-model", "messages": [{"role": "user", "content": "Hello!"}]}}
 {"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "my-vllm-model", "messages": [{"role": "user", "content": "How are you?"}]}}
 ```
 
-Every line has to name the same `url`, and it has to match the `endpoint` you give the batch. `stream: true` lines, duplicate `custom_id`s, and unknown top-level fields are rejected when you create the batch, with a 400 that names the problem. The upload itself only checks that each line is a JSON object with `custom_id`, `method`, `url`, and `body`
+The `url` on every line has to match the `endpoint` that you supply with the batch. `stream: true` lines, duplicate `custom_id`s and unknown top level fields are rejected at the time you're creating the batch with a 400 that states the problem. The upload itself only validates that each line is a JSON object containing `custom_id`, `method`, `url` and `body`.
 
 ### 4. Upload File & Create Batch
 
 :::tip[Model Routing]
-The upload has to name the deployment, either with the `x-litellm-model` header, the `?model=` query parameter, or the `target_model_names` form field. Use `purpose=batch`: an upload with another purpose to a deployment LiteLLM runs batches for answers 400, because there is no server to keep the file on. The returned file id is a long base64 id, not an OpenAI-style `file-...` id; batch operations on it route to the same deployment automatically
+The upload must name the deployment either via the `x-litellm-model` header, the `?model=` query parameter or the `target_model_names` form field. Set `purpose=batch` on the upload. For a deployment that LiteLLM is running batches for, any upload with a different purpose will result in a 400. The vLLM server has no Files API to keep the file in. The returned file id is a long base64 id (not an OpenAI-style `file-...` id) and batch operations on that id will automatically route to the same deployment.
 :::
 
 <Tabs>
@@ -157,22 +157,22 @@ Batch `endpoint` can be `/v1/chat/completions`, `/v1/completions`, `/v1/embeddin
 
 ## How a batch runs
 
-The batch is created as `validating`, moves to `in_progress` while the proxy replica that received the create runs the lines, then `finalizing` while the result files are written, and ends `completed`. Lines the server rejects land in the error file with the server's status code, and the batch still completes. Cancelling marks the batch `cancelling`, lets the lines in flight finish, and ends it `cancelled`, keeping the output of the lines that already finished. The 24 hour `completion_window` is enforced the same way: a line still unfinished when it closes is cut off and lands in the error file as `batch_expired`, and the batch ends `expired`, keeping the output of the lines that finished in time
+The batch is created as `validating`, moves to `in_progress` as the proxy replica which received the create runs the lines, then to `finalizing` as the result files are written and ends as `completed`. Lines which the server rejects go into the error file with the server's status code and the batch still completes. A cancel marks the batch as `cancelling`, allows the lines in flight to finish and ends it as `cancelled` (output of lines that have finished is retained). The 24 hour `completion_window` is dealt with in the same way. When the window closes LiteLLM terminates the lines still running and drops the lines not yet started. Those lines end up in the error file as `batch_expired`. The batch ends as `expired` and the output of the lines that finished in time is retained.
 
-Results come back in OpenAI's batch output shape: `output_file_id` holds one line per successful request and `error_file_id` one line per failed request. Both are served to the key that created the batch, other keys of the same user or team, and proxy admins
+Results come back in OpenAI's batch output format (`output_file_id` has one line per successful request, `error_file_id` has one line per failed request). Both are served to the key that created the batch, to other keys of the same user/team and to proxy admins.
 
-Each line is billed through the router as its own request, with the creating key, team, and tags on the spend log, at the price configured on the deployment. A deployment with no price logs its lines with spend 0
+Each line is billed through the router as its own request, with the creating key, team and tags on the spend log at the price set on the deployment. A deployment with no price will have its lines logged with a spend of 0.
 
-If the replica running a batch restarts, the batch is marked `failed` with a `runner_lost` error the next time it is retrieved more than three minutes after its last progress write. Resubmit it
+If the replica which is running the batch restarts, the batch is marked `failed` with an `runner_lost` error the next time it is retrieved more than 3 minutes after its last progress write. Resubmit it.
 
 ## Settings
 
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `LITELLM_EXECUTED_BATCH_CONCURRENCY` | `4` | How many lines of one batch run in parallel |
-| `general_settings.allow_client_side_credentials` | `false` | Batch lines follow the same rule as live requests: a line whose body carries `api_base`, `api_key`, or another client-side credential field is rejected when the batch is created unless this is `true` or the deployment lists the field in `configurable_clientside_auth_params` |
+| `general_settings.allow_client_side_credentials` | `false` | Batch lines follow the same rule as live requests in that a line whose body contains `api_base`, `api_key` or some other client side credential field will be rejected upon batch creation unless it's `true` or the deployment has that field in `configurable_clientside_auth_params` |
 
-The proxy's pre-call guardrails run over every line when the file is uploaded and can rewrite or drop lines, or refuse the upload, there. They do not run again as each line executes
+The proxy's pre-call guardrails run over every line when the file is uploaded and can either rewrite or drop the line, or reject the upload at that point. They don't run again as each line is processed.
 
 ## Related
 

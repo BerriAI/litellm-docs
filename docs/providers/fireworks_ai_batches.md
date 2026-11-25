@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 
 # Fireworks AI - Batch + Files API
 
-As of November 2026, Fireworks has turned off its own Batch API: new datasets and batch inference jobs are refused while Fireworks rebuilds it, and its inference server has no `/v1/files` route. LiteLLM fills that gap. For a `fireworks_ai` deployment, the proxy stores the batch input itself, runs every line through the deployment, and serves the batch status and the output files, so the OpenAI Batch API works against Fireworks unchanged
+As of Nov 2026 Fireworks have turned off their own Batch API (new datasets and batch inference jobs are now rejected as they rebuild the API) and their inference server has no `/v1/files` route. LiteLLM is in that space. For a `fireworks_ai` deployment the proxy will store the batch input itself, run every line through the deployment and then serve the batch status and the output files. Clients simply call the standard OpenAI Batch API against Fireworks with no changes.
 
 | Feature | Supported |
 |---------|-----------|
@@ -17,15 +17,15 @@ As of November 2026, Fireworks has turned off its own Batch API: new datasets an
 | `/v1/batches` | ✅ run by LiteLLM |
 | Cost Tracking | ✅ every line is billed to the key that created the batch |
 
-This flow runs on the proxy and needs a database (`DATABASE_URL`), because the input file, the batch status, and the result files live there
+This one runs on the proxy and requires a database (`DATABASE_URL`) as the input file, the batch status and the result files all reside in that database.
 
 ## When LiteLLM runs the batch itself
 
-LiteLLM decides per request. A deployment qualifies when its `litellm_params.model` starts with `fireworks_ai/` (or it sets `custom_llm_provider: fireworks_ai`) and `GET {api_base}/files` on its server answers 404, which is what `https://api.fireworks.ai/inference/v1` (the default `api_base`, overridden by `api_base` or `FIREWORKS_API_BASE`) answers today
+LiteLLM makes its decision on a per-request basis. LiteLLM will only run the batch for a given deployment when two conditions are met. Firstly, its `litellm_params.model` must start with `fireworks_ai/` or it must set `custom_llm_provider: fireworks_ai`. Secondly, `GET {api_base}/files` on its server must return a 404. The default `api_base` is `https://api.fireworks.ai/inference/v1` and that returns a 404 at the moment. You can override that with `api_base` or `FIREWORKS_API_BASE`.
 
 If that check gets any other answer, or none within 5 seconds, the upload answers 400 with `LiteLLM doesn't support fireworks_ai for 'create_file'`
 
-Each line is a normal Fireworks request, so it is billed at the deployment's regular price. There is no batch discount, because the Fireworks batch service that gave one is turned off
+Each line is a standard Fireworks request and is therefore charged at the deployment's normal rate. There is no batch discount as the Fireworks batch service which would have provided one has now been turned off.
 
 ## Quick Start
 
@@ -50,19 +50,19 @@ litellm --config /path/to/config.yaml
 
 ### 3. Create Batch File
 
-Each line follows the OpenAI batch input shape. LiteLLM replaces `body.model` with the batch's model name, so what you put there does not change which model runs the line. When several deployments share that model name, the router spreads the lines across them like any other traffic
+Each line adheres to the OpenAI batch input shape. LiteLLM will substitute `body.model` with the name of the model for that batch so what you have in that field has no effect on which model actually runs the line. If multiple deployments share that model name then the router will simply distribute the lines across them in the same way as any other traffic.
 
 ```jsonl
 {"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "fw-deepseek-v4p1-flash", "messages": [{"role": "user", "content": "What is the capital of France?"}]}}
 {"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "fw-deepseek-v4p1-flash", "messages": [{"role": "user", "content": "What is 2+2?"}]}}
 ```
 
-Every line has to name the same `url`, and it has to match the `endpoint` you give the batch. `stream: true` lines, duplicate `custom_id`s, and unknown top-level fields are rejected when you create the batch, with a 400 that names the problem. The upload itself only checks that each line is a JSON object with `custom_id`, `method`, `url`, and `body`
+Every line must conform to the same `url`. The `url` on each line must match the `endpoint` you've provided in the batch. Lines with `stream: true`, duplicate `custom_id`s and unknown top level fields are rejected at the time of batch creation with a 400 that indicates the problem. The upload itself only validates that each line is a JSON object containing `custom_id`, `method`, `url` and `body`.
 
 ### 4. Upload File & Create Batch
 
 :::tip[Model Routing]
-The upload has to name the deployment, either with the `x-litellm-model` header, the `?model=` query parameter, or the `target_model_names` form field. Use `purpose=batch`: an upload with another purpose answers 400, because there is no Fireworks file store to keep it in. The returned file id is a long base64 id, not an OpenAI-style `file-...` id; batch operations on it route to the same deployment automatically
+The upload must name the deployment either via the `x-litellm-model` header, the `?model=` query parameter or the `target_model_names` form field. Set `purpose=batch` on the upload. LiteLLM will reject an upload with any other purpose with a 400. Fireworks has no file store in which to keep such a file. The file id that is returned is a long base64 id rather than an OpenAI-style `file-...` id. Batch operations on that file id will automatically route to the same deployment.
 :::
 
 <Tabs>
@@ -152,11 +152,11 @@ client.files.delete(input_file.id)
 </TabItem>
 </Tabs>
 
-Use `/v1/files` and `/v1/batches` with any virtual key that may call the model. The provider-prefixed `/fireworks_ai/v1/files` route runs the same upload but is limited to proxy admins
+Use `/v1/files` and `/v1/batches` with any virtual key that may call the model. The provider prefixed `/fireworks_ai/v1/files` route does the same upload but is restricted to proxy admins.
 
 ## Where requests run (placement)
 
-Fireworks serverless models run wherever Fireworks schedules them, and a serverless request takes no region setting. To keep batch traffic in one region, create a Fireworks [on-demand deployment](https://docs.fireworks.ai/guides/ondemand-deployments) placed in that region and point the model at it. Fireworks sets the region when the deployment is created, through its `placement` field, and a region such as a US one needs GPU quota there on your Fireworks account (see [Fireworks regions](https://docs.fireworks.ai/deployments/regions)). The batch lines then run on that deployment like any other request to it:
+Fireworks will run serverless models wherever it chooses to schedule them. You can't specify a region on a serverless request. If you want to keep your batch traffic in a particular region then you create a Fireworks [on-demand deployment](https://docs.fireworks.ai/guides/ondemand-deployments) in that region and point your model at it. Fireworks sets the region when the deployment is created (via the `placement` field) and so in order to have a US region for example you need GPU quota in that region on your Fireworks account (see [Fireworks regions](https://docs.fireworks.ai/deployments/regions)). LiteLLM will then send each batch line to that deployment as a normal request:
 
 ```yaml
 model_list:
@@ -168,7 +168,7 @@ model_list:
 
 ## Data retention
 
-Nothing is uploaded to Fireworks as a file or dataset. Each line reaches Fireworks as a normal inference request, under the same data policy as any other request to that model. The input file, the batch status, and the result files live in the proxy's database. `DELETE /v1/files/{file_id}` removes a file and its content, after which the content answers 404. The batch record itself stays, and each line is logged like any other request, so whatever your logging setup keeps stays after the files are deleted
+Nothing gets uploaded to Fireworks as a file or a dataset. Each line is sent to Fireworks as a normal inference request, under the same data policy as any other request to that model. The input file, the batch status and the result files all reside in the proxy's database. `DELETE /v1/files/{file_id}` will remove the file and its content, at which point the content will return a 404. The batch record itself is not deleted. LiteLLM logs each line in exactly the same way as it would any other request. Deleting the files does not delete the logs.
 
 ## Supported Operations
 
@@ -187,22 +187,22 @@ Batch `endpoint` can be `/v1/chat/completions`, `/v1/completions`, `/v1/embeddin
 
 ## How a batch runs
 
-The batch is created as `validating`, moves to `in_progress` while the proxy replica that received the create runs the lines, then `finalizing` while the result files are written, and ends `completed`. Lines Fireworks rejects land in the error file with Fireworks' status code, and the batch still completes. Cancelling marks the batch `cancelling`, lets the lines in flight finish, and ends it `cancelled`, keeping the output of the lines that already finished. The 24 hour `completion_window` is enforced the same way: a line still unfinished when it closes is cut off and lands in the error file as `batch_expired`, and the batch ends `expired`, keeping the output of the lines that finished in time
+The batch is created as `validating`, moves to `in_progress` whilst the proxy replica which received the create runs the lines, then to `finalizing` whilst the result files are written and ends at `completed`. If Fireworks rejects a line that line goes into the error file with Fireworks' status code and the batch still completes. A cancel marks the batch as `cancelling`, allows the lines in flight to complete and ends it at `cancelled`, retaining the output of the lines that have finished. LiteLLM enforces the 24 hour `completion_window` in the same way. When the window closes LiteLLM kills off the lines that are still running and drops the lines that haven't even started. Each of those lines goes into the error file as `batch_expired`. The batch ends at `expired` and retains the output of the lines that finished in time.
 
-Results come back in OpenAI's batch output shape: `output_file_id` holds one line per successful request and `error_file_id` one line per failed request. Both are served to the key that created the batch, other keys of the same user or team, and proxy admins
+Results come back in the OpenAI batch output format as expected: `output_file_id` has one line per successful request and `error_file_id` has one line per failed request. Both are served to the key that created the batch, to any other keys of the same user or team and to proxy admins.
 
-Each line is billed through the router as its own request, with the creating key, team, and tags on the spend log, at the deployment's price
+Each line is billed through the router as its own request, with the create key, team and tags all present on the spend log at the deployment's price.
 
-If the replica running a batch restarts, the batch is marked `failed` with a `runner_lost` error the next time it is retrieved more than three minutes after its last progress write. Resubmit it
+If the replica which is running the batch restarts, the batch will be marked `failed` with a `runner_lost` error the next time it is retrieved more than 3 minutes after its last progress write. Resubmit it.
 
 ## Settings
 
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `LITELLM_EXECUTED_BATCH_CONCURRENCY` | `4` | How many lines of one batch run in parallel |
-| `general_settings.allow_client_side_credentials` | `false` | Batch lines follow the same rule as live requests: a line whose body carries `api_base`, `api_key`, or another client-side credential field is rejected when the batch is created unless this is `true` or the deployment lists the field in `configurable_clientside_auth_params` |
+| `general_settings.allow_client_side_credentials` | `false` | Batch lines follow the same rule as live requests in that a line whose body contains `api_base`, `api_key` or some other client side credential field will be rejected upon batch creation unless it's `true` or the deployment has that field listed in `configurable_clientside_auth_params` |
 
-The proxy's pre-call guardrails run over every line when the file is uploaded and can rewrite or drop lines, or refuse the upload, there. They do not run again as each line executes
+The proxy's pre-call guardrails run over every line when the file is uploaded and can rewrite or drop lines or indeed refuse the upload at that point. They don't run again as each line is executed.
 
 ## Related
 

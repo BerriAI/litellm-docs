@@ -22,11 +22,11 @@ New to running Fireworks AI behind LiteLLM? [Getting Started with Fireworks AI o
 
 ## Overview
 
-This guide explains how to integrate LiteLLM with Fireworks AI. You can connect to Fireworks AI in three main ways:
+This guide walks you through how to integrate LiteLLM with Fireworks AI. There are three primary ways in which you can connect to Fireworks AI:
 
-1. <b> Using Fireworks AI serverless models </b> – Easy connection to Fireworks-managed models.
-2. <b> Connecting to a model in your own Fireworks account </b> – Access models that are hosted within your Fireworks account.
-3. <b> Connecting via a direct-route deployment </b> – A more flexible, customizable connection to a specific Fireworks instance.
+1. <b> Using Fireworks AI serverless models </b> – Easy integration with Fireworks managed models.
+2. <b> Connecting to a model in your own Fireworks account </b> – access models that are hosted in your own Fireworks account.
+3. <b> Connecting via a direct-route deployment </b> – a more flexible, customisable connection to a particular Fireworks instance.
 
 
 ## API Key
@@ -50,7 +50,7 @@ response = completion(
 print(response)
 ```
 
-A bare serverless slug like `glm-5p3-flash` is expanded to `accounts/fireworks/models/glm-5p3-flash` for you, so you can pass either the short slug or the full resource id.
+A bare serverless slug (`glm-5p3-flash`) is expanded out to `accounts/fireworks/models/glm-5p3-flash` for you so you can pass either the short slug or the full resource id.
 
 ## Sample Usage - Serverless Models - Streaming
 ```python
@@ -101,12 +101,12 @@ response = completion(
 print(response)
 ```
 
-> **Note:** The above is for the chat interface, if you want to use the text completion interface it's model="text-completion-openai/accounts/fireworks/models/deepseek-v4p1-flash#accounts/gitlab/deployments/2fb7764c"
+> **Note:** That's for the chat interface. If you want to use the text completion interface it's model="text-completion-openai/accounts/fireworks/models/deepseek-v4p1-flash#accounts/gitlab/deployments/2fb7764c"
 
 
 ## Sample Usage - Routers
 
-Fireworks routers are served at `accounts/fireworks/routers/<router-id>` rather than `accounts/fireworks/models/<model-id>`, so a bare slug alone cannot tell LiteLLM which one you mean. Prefix the slug with `routers/` to target a router; LiteLLM expands `routers/<id>` to `accounts/fireworks/routers/<id>`. See the [Fireworks routers docs](https://docs.fireworks.ai/deployments/routers) for the routers available on your account.
+Fireworks routers are served at `accounts/fireworks/routers/<router-id>` rather than `accounts/fireworks/models/<model-id>`. A bare slug won't tell LiteLLM whether you're after a router or a model. Prefix the slug with `routers/` to indicate you want a router (LiteLLM will then expand `routers/<id>` to `accounts/fireworks/routers/<id>`). See the [Fireworks routers docs](https://docs.fireworks.ai/deployments/routers) for the routers available on your account.
 
 ```python
 from litellm import completion
@@ -122,11 +122,11 @@ response = completion(
 print(response)
 ```
 
-The full resource id (`fireworks_ai/accounts/fireworks/routers/glm-latest`) is still accepted if you prefer to be explicit. Slugs ending in `-fast` (for example `fireworks_ai/glm-5p3-fast`) are treated as routers even without the `routers/` prefix.
+The full resource id (`fireworks_ai/accounts/fireworks/routers/glm-latest`) is still valid if you want to be explicit. Slugs ending in `-fast` (e.g. `fireworks_ai/glm-5p3-fast`) are treated as routers even in the absence of the `routers/` prefix.
 
 ## FireRouter and open-model routers
 
-[FireRouter](https://docs.fireworks.ai/nexus/firerouter) is Fireworks' managed router. Instead of pointing at one model, a router ID picks a model for each user turn. Fireworks serves routers under `accounts/fireworks/routers/<id>`, and LiteLLM accepts the short ID or the full resource path:
+[FireRouter](https://docs.fireworks.ai/nexus/firerouter) is Fireworks' managed router. Rather than having a single model pointed at, a router ID will pick a model for each user turn. Fireworks serves routers under `accounts/fireworks/routers/<id>` and LiteLLM will accept either the short ID or the full resource path:
 
 | Router ID | What it routes across | LiteLLM model |
 | - | - | - |
@@ -136,9 +136,9 @@ The full resource id (`fireworks_ai/accounts/fireworks/routers/glm-latest`) is s
 | `firerouter/<models>` | Only the models you list, such as `firerouter/opus` or `firerouter/kimi-k3/glm-5p3` | `fireworks_ai/firerouter/kimi-k3/glm-5p3` |
 | any of the above | Same router, spelled out | `fireworks_ai/accounts/fireworks/routers/<id>` |
 
-`auto` and `auto-instant` only use Fireworks open models, so your Fireworks API key is the only credential they need. `firerouter/auto` and `firerouter/auto-instant` behave the same way. See [Example router IDs](https://docs.fireworks.ai/nexus/firerouter#example-router-ids) for more routes
+`auto` and `auto-instant` only make use of the Fireworks open models so your Fireworks API key is the only credential they require. `firerouter/auto` and `firerouter/auto-instant` are the same. See [Example router IDs](https://docs.fireworks.ai/nexus/firerouter#example-router-ids) for more routes.
 
-The full resource path works on every LiteLLM version. The short `firerouter` IDs work <SinceVersion v="1.104.0" /> (first in `v1.104.0-rc.1`), and the short `auto` and `auto-instant` IDs work <SinceVersion v="1.105.0" />. On older versions a short ID is sent as a model path and Fireworks returns a 404, so use the full path there
+The full resource path works on all LiteLLM versions. The short `firerouter` IDs work <SinceVersion v="1.104.0" /> (first in `v1.104.0-rc.1`) and the short `auto` and `auto-instant` IDs work <SinceVersion v="1.105.0" />. On the older versions a short ID is sent as a model path and Fireworks returns a 404, so you have to use the full path in those cases.
 
 ```yaml
 model_list:
@@ -161,15 +161,15 @@ curl -X POST http://localhost:4000/v1/chat/completions \
 
 ### Which model served the request
 
-The proxy returns the `model_name` you configured, such as `auto`, in the response `model` field. On the SDK, a non-streaming `completion()` reports the served model in `response.model`, for example `fireworks_ai/glm-5p3-flash`. A streamed response keeps the requested router ID in `model` and puts the served model in `response._hidden_params["provider_response_model"]`
+The proxy will return the `model_name` you configured (e.g. `auto`) in the `model` field of the response. On the SDK a non-streaming `completion()` will report the served model in the `response.model` field (e.g. `fireworks_ai/glm-5p3-flash`). A streamed response will retain the requested router ID in `model` and put the served model in `response._hidden_params["provider_response_model"]`.
 
 ### Closed-model credentials
 
-Fireworks does not resell closed models. When a `firerouter` route includes Claude or GPT, Fireworks calls that provider under your own account, using either [Provider Keys](https://docs.fireworks.ai/nexus/provider-keys) stored on your Fireworks account or an `x-anthropic-api-key` or `x-openai-api-key` header on the request. A header takes precedence over a stored Provider Key
+Fireworks don't resell closed models. If a `firerouter` route has Claude or GPT in it then Fireworks will call that provider under your own account, either using an [Provider Keys](https://docs.fireworks.ai/nexus/provider-keys) stored on your Fireworks account or an `x-anthropic-api-key` or `x-openai-api-key` header on the request. A header takes precedence over a stored Provider Key.
 
-If no credential is available for a closed model, FireRouter leaves it out and serves the turn with the other models in the route. For example, `firerouter/opus` without an Anthropic credential is served by Fireworks open models. You get `400 no_credential` instead when you send `x-routing-preference: 1`, which forces the route's closed primary, or when you call a closed model ID directly
+If there's no credential available for a closed model then FireRouter just omits that model and serves the turn with the other models in the route. So if for example Fireworks open models are being used they serve `firerouter/opus` in the absence of an Anthropic credential. `x-routing-preference: 1` will force the route's closed primary model. If there's no credential available then that request will get `400 no_credential`. A direct call to a closed model ID with no credential will get the same error.
 
-To send the header from LiteLLM, set it on the deployment with `litellm_params.extra_headers`, or let each client send its own by enabling `forward_client_headers_to_llm_api` globally or per model group
+To send the header via LiteLLM you can either set it on the deployment (`litellm_params.extra_headers`) or have each client send their own by enabling `forward_client_headers_to_llm_api` globally or per model group.
 
 ```yaml
 model_list:
@@ -203,11 +203,11 @@ response = completion(
 
 ### Routing preference
 
-`x-routing-preference` sets how strongly a `firerouter` request favors its primary model or cheaper models, from `1` (max intelligence) to `5` (max savings). The default is `3`. See [Routing Preferences](https://docs.fireworks.ai/nexus/routing-preferences). It travels the same way as the credential headers: `litellm_params.extra_headers` on the deployment, client-supplied when `forward_client_headers_to_llm_api` is on, or `extra_headers` on `completion()`
+`x-routing-preference` sets how strongly a `firerouter` request favors its primary model or the cheaper models (from `1`- max intelligence to `5`- max savings). The default is `3`. See [Routing Preferences](https://docs.fireworks.ai/nexus/routing-preferences). It travels the same route as the credential headers (`litellm_params.extra_headers` on the deployment, client supplied when `forward_client_headers_to_llm_api` is on, or `extra_headers` on `completion()`).
 
 ### Cost tracking
 
-LiteLLM prices each request off the model Fireworks reports it routed to, so a router has no price of its own. Fireworks-hosted models are billed at Fireworks rates, and closed models (for example a Claude turn) are billed at that provider's own list price. The charges land on two vendor bills, Fireworks for open models and Anthropic or OpenAI for closed ones, but LiteLLM spend logs and budgets add both up under the one model group
+LiteLLM prices each request off the model that Fireworks reports it was routed to. So the router itself has no price. Fireworks hosted models are charged at Fireworks rates and closed models (e.g. a Claude turn) are charged at that provider's own list price. The charges go on two vendor bills (Fireworks for the open models and Anthropic or OpenAI for the closed ones) but the LiteLLM spend logs and budgets simply total them all up under the one model group.
 
 ## Usage with LiteLLM Proxy 
 
@@ -303,7 +303,7 @@ print(response)
 
 ## Decisions (System One)
 
-Fireworks serves its decision model, `accounts/fireworks/routers/rune`, on `https://api.fireworks.ai/inference/v1/systemone`. It is in private preview, so ask your Fireworks account team to enable it; the model name they give you may differ. LiteLLM exposes it on both [`/v1/systemone` and `/v1/decisions`](../decisions.md): the System One route forwards the `state` plus `questions` body as is, and the OpenAI-format route is translated into the same request. The model accepts text only and is billed on input tokens, with a lower rate for `cached_input_tokens`, which LiteLLM records as cached tokens for cost tracking
+Fireworks has its decision model `accounts/fireworks/routers/rune` running on `https://api.fireworks.ai/inference/v1/systemone`. It's in private preview so you'll need to ask your Fireworks account team to enable it (the model name they give you may be different). LiteLLM exposes it on both [`/v1/systemone` and `/v1/decisions`](../decisions.md): the System One route just passes through the `state` and `questions` body as is, and the OpenAI format route is translated into the equivalent request. The model takes text only and is charged on input tokens (with a lower rate for `cached_input_tokens` which LiteLLM will record as cached tokens for cost purposes).
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -370,7 +370,7 @@ curl http://0.0.0.0:4000/v1/decisions \
 
 ## Responses API
 
-`fireworks_ai/` models on `/v1/responses` go straight to Fireworks' native `https://api.fireworks.ai/inference/v1/responses` endpoint, so server-side features such as MCP tools (`"type": "mcp"`), `previous_response_id`, and reasoning output items work the same as they do against Fireworks directly
+The `fireworks_ai/` models on `/v1/responses` go straight to Fireworks' native `https://api.fireworks.ai/inference/v1/responses` endpoint so server side features such as the MCP tools (`"type": "mcp"`), `previous_response_id` and reasoning output items work exactly the same as they do when you're talking to Fireworks directly.
 
 <Tabs>
 <TabItem value="sdk" label="SDK">
@@ -438,13 +438,13 @@ curl http://0.0.0.0:4000/v1/responses \
 </TabItem>
 </Tabs>
 
-Multi-turn tool calling works the same way it does against Fireworks directly: send back the `function_call_output` items together with the `previous_response_id` Fireworks returned, and Fireworks continues the conversation server-side
+Multi-turn tool calling works exactly the same way as it does when calling into Fireworks directly. You send back the `function_call_output` items with `previous_response_id` set to the id of the last Fireworks response and Fireworks then continues the conversation on the server side.
 
-`developer` input items are not sent to Fireworks as messages, since Fireworks' Responses API has no developer role on models such as kimi-k3 and qwen3.8. LiteLLM folds the request's `instructions`, the leading `system` and `developer` items and every later text `developer` item into the top-level `instructions` field, so a model whose chat template needs the system message first (qwen3.8) accepts a developer item placed after the first input item. A deployment that declares `supports_mid_conversation_system: true` in its own `model_info` gets each `developer` item as a `system` item in place instead. The same request through the chat completions bridge (`use_chat_completions_api: true`) follows the [developer role](../completion/developer_role.md) rules, which move a later `developer` message only for a model that declares `supports_mid_conversation_system: false`.
+`developer` input items are not passed on to Fireworks as messages as Fireworks' Responses API has no developer role on models such as kimi-k3 and qwen3.8. LiteLLM simply takes the `instructions` and folds it into the top level `instructions` field. It also takes the leading `system` and `developer` items and all subsequent text `developer` items and folds them into that `instructions` field. So a model that has the system message first in its chat template (qwen3.8) won't reject a developer item that comes after the first input item. A deployment that has `supports_mid_conversation_system: true` in its own `model_info` will have each `developer` item become an `system` item in its place. The same request via the chat completions bridge (`use_chat_completions_api: true`) will follow the [developer role](../completion/developer_role.md) rules which only move a later `developer` message for a model that has `supports_mid_conversation_system: false`.
 
 ## Document Inlining 
 
-LiteLLM supports document inlining for Fireworks AI models. This is useful for models that are not vision models, but still need to parse documents/images/etc.
+LiteLLM supports document inlining for Fireworks AI models. That's useful for models which aren't vision models per se but still want to be able to parse documents/images/etc.
 
 LiteLLM will add `#transform=inline` to the url of the image_url, if the model is not a vision model.[**See Code**](https://github.com/BerriAI/litellm/blob/1ae9d45798bdaf8450f2dfdec703369f3d2212b7/litellm/llms/fireworks_ai/chat/transformation.py#L114)
 
@@ -599,7 +599,7 @@ curl http://0.0.0.0:4000/v1/chat/completions \
 
 ## User and Session Attribution
 
-Fireworks can tell apart the developers behind a shared Fireworks API key when LiteLLM sends two identifiers on each request
+Fireworks can tell who the developers are behind a shared Fireworks API key when LiteLLM sends two IDs on each request.
 
 | Identifier | LiteLLM source | Sent to Fireworks as |
 |---|---|---|
@@ -608,7 +608,7 @@ Fireworks can tell apart the developers behind a shared Fireworks API key when L
 
 ### Session id
 
-`fireworks_ai/` deployments send the session id as `x-session-affinity` on `/v1/chat/completions` (streaming included), `/v1/responses` and `/v1/messages`, so every request in one session reaches the same Fireworks replica and reuses its prompt cache. No configuration is needed
+`fireworks_ai/` deployments send the session id as `x-session-affinity` on `/v1/chat/completions` (streaming included), `/v1/responses` and `/v1/messages` so every request in a session gets to the same Fireworks replica and reuses its prompt cache. No config is required.
 
 ```bash
 curl http://0.0.0.0:4000/v1/chat/completions \
@@ -618,11 +618,11 @@ curl http://0.0.0.0:4000/v1/chat/completions \
   -d '{"model": "fireworks-glm-5p2", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-When the request has no session id, or the proxy generated one because of `general_settings.missing_session_id`, no `x-session-affinity` header is sent. A client that sends its own `x-session-affinity` header keeps that value. For a Fireworks model behind the `openai/` prefix, set `provider_affinity_header: x-session-affinity` in that deployment's `litellm_params`
+LiteLLM doesn't send an `x-session-affinity` header if the request has no session id. It also won't send the `x-session-affinity` header if the proxy is the one that created the session id as a result of an `general_settings.missing_session_id`. If a client is sending its own `x-session-affinity` header then it will retain that value. For a Fireworks model behind the `openai/` prefix you'll want to set `provider_affinity_header: x-session-affinity` in that deployment's `litellm_params`.
 
 ### User id
 
-Set `fireworks_forward_user_id: true` on a deployment to send the LiteLLM user id as Fireworks' `user` field. It is off by default because user ids are often email addresses
+Set `fireworks_forward_user_id: true` on a deployment to send the LiteLLM user id into Fireworks as the `user` field. It's off by default as user ids are typically email addresses.
 
 ```yaml
 model_list:
@@ -633,13 +633,13 @@ model_list:
       fireworks_forward_user_id: true
 ```
 
-To turn it on from the Admin UI, open the model on the Models page, click **Edit Settings**, and add `"fireworks_forward_user_id": true` to **LiteLLM Params**
+To turn it on from the Admin UI: go to the Models page, open the model (**Edit Settings**), then add `"fireworks_forward_user_id": true` to **LiteLLM Params**.
 
-It applies to `/v1/chat/completions` (streaming included), `/v1/responses` and `/v1/messages` on `fireworks_ai/` deployments. The value is the `user_id` of the virtual key, so two developers sharing one Fireworks API key show up as two users, and requests made with the master key send the proxy admin id, `default_user_id`. Fireworks echoes `user` back in `/v1/responses` replies, so the developer sees their own user id there
+Applies to `/v1/chat/completions` (streaming included), `/v1/responses` and `/v1/messages` on `fireworks_ai/` deployments. The value is the `user_id` of the virtual key so two developers sharing one Fireworks API key will appear as two users and requests made with the master key will send the proxy admin id (`default_user_id`). Fireworks will echo back the `user` in the `/v1/responses` response so the developer will see their own user id there.
 
-The LiteLLM user id replaces any `user` the client sent (and `metadata.user_id` on `/v1/messages`) as well as the key hash that `litellm_settings.overwrite_user_with_key_hash` would send, and a request that tries to set `fireworks_forward_user_id` itself is rejected, so developers cannot change their own attribution. When the key has no `user_id`, LiteLLM leaves the request as it is and a client-supplied `user` is still forwarded. To stop such keys from choosing their own `user`, also set `litellm_settings.overwrite_user_with_key_hash: true`, which sends the key hash for them while keys with a `user_id` still send the user id
+The LiteLLM user id replaces whatever `user` the client sent (and `metadata.user_id` on `/v1/messages`) as well as the key hash that `litellm_settings.overwrite_user_with_key_hash` would have sent. A request that attempts to set `fireworks_forward_user_id` itself is rejected and so developers can't change their own attribution. If the key has no `user_id` then LiteLLM just leaves the request alone and the client supplied `user` is still passed through. To prevent such keys from choosing their own `user` you also need to set `litellm_settings.overwrite_user_with_key_hash: true`. That setting will send the key hash for those keys. Keys with an `user_id` will still send the user id.
 
-## Supported Models - ALL Fireworks AI Models Supported!
+## Supported Models - ALL Fireworks AI Models supported!
 
 :::info
 We support ALL Fireworks AI models, just set `fireworks_ai/` as a prefix when sending completion requests
@@ -654,13 +654,13 @@ We support ALL Fireworks AI models, just set `fireworks_ai/` as a prefix when se
 | minimax-m3 | `completion(model="fireworks_ai/minimax-m3", messages)` |
 | gpt-oss-120b | `completion(model="fireworks_ai/gpt-oss-120b", messages)` |
 
-The table above is a small selection of popular models. For the full, current list of models and routers, see the [Fireworks model library](https://fireworks.ai/models).
+The table above is a small selection of the popular models. For the full current list of models and routers see the [Fireworks model library](https://fireworks.ai/models).
 
 ## Latest model aliases
 
 <SinceVersion v="1.109.0" />
 
-`fireworks_ai/<family>-latest` names follow a model family as LiteLLM moves them to newer models, so your application keeps one model string. Use them like any other Fireworks AI model name. LiteLLM sends Fireworks AI the current target model and bills at that model's price. See [Latest model aliases](../model_latest_aliases.md) for how aliases work and the full list across providers.
+`fireworks_ai/<family>-latest` names are part of a model family as LiteLLM moves them to the newer models. Your app will therefore continue to have one model name. You use them exactly as you would any other Fireworks AI model name. LiteLLM will pass Fireworks AI the current target model and will bill at that model's rate. See [Latest model aliases](../model_latest_aliases.md) for details on how aliases work and the full list across providers.
 
 | Alias | Model family |
 | --- | --- |
