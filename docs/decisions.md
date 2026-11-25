@@ -718,7 +718,7 @@ Problems the form can catch, such as an empty **Input**, are listed above **Send
 
 <Image img={require('../img/decisions_playground_openai.png')} alt="Decisions playground with /v1/decisions and the luna model picked, the bug report triage example with choice, predicate and score questions and its answers" />
 
-The tab is in `v1.106.0` and later, and not in `v1.104.2` or `v1.105.0`. `v1.106.0` starts with the first example filled in, picks others from a dropdown instead of **Load example**, and labels the eraser **Clear**. The [TypeSafe page](./pass_through/typesafe.md#try-it-in-the-admin-ui) walks through the System One form, validation and answer view.
+The tab is in `v1.106.0` and later, and not in `v1.104.2` or `v1.105.0`. `v1.106.0` starts with the first example filled in, picks others from a dropdown instead of **Load example**, and labels the eraser **Clear**.
 
 ## Use a decision model as a guardrail
 
@@ -726,4 +726,64 @@ The [Decision Model guardrail](./proxy/guardrails/decision_model.md) asks any [s
 
 ## Decision routes vs pass-through routes
 
-The [TypeSafe pass-through](./pass_through/typesafe.md) at `/typesafe/v1/systemone` forwards raw requests to TypeSafe only and reads the key from the proxy environment. The [OpenRouter pass-through](./providers/openrouter.md#through-the-openrouter-pass-through) at `/openrouter/alpha/decisions` forwards raw requests to OpenRouter only. `/v1/decisions` and `/v1/systemone` use the models in your `model_list`, so you can switch providers, load balance and set per-deployment keys without changing the request body
+The [OpenRouter pass-through](./providers/openrouter.md#through-the-openrouter-pass-through) at `/openrouter/alpha/decisions` forwards raw requests to OpenRouter only. `/v1/decisions` and `/v1/systemone` use the models in your `model_list`, so you can switch providers, load balance and set per-deployment keys without changing the request body
+
+## Migrate from TypeSafe pass-through
+
+The TypeSafe pass through is stripped in `v1.113.0`. Once you've upgraded to that version or later `/typesafe/...` will return a 404. Jev is available through `/v1/systemone` and `/v1/decisions`. You need to have a model deployment configured as the unified routes use `model_list` rather than just forwarding any old path through to TypeSafe.
+
+Set `TYPESAFE_API_KEY` on the proxy and add this deployment to its config. Clients authenticate with a LiteLLM key in `LITELLM_API_KEY` (not the TypeSafe key).
+
+```yaml showLineNumbers keep-model-ids
+model_list:
+  - model_name: jev
+    litellm_params:
+      model: typesafe/jev-1.14.0
+      api_key: os.environ/TYPESAFE_API_KEY
+```
+
+For an existing System One request, change the path from `/typesafe/v1/systemone` to `/v1/systemone` and set `model` to the deployment name, `jev`. Leave `state` and the `questions` map as they are. For images, send the JSON rather than the multipart upload. PNG and JPEG images are base64 `assets` on `/v1/systemone` or `input_image` parts on `/v1/decisions`. Both of these require `TypeSafe-Danger-Zone-Images: true`.
+
+Replace `<BASE64_PNG>` with the base64 bytes of a PNG (no data URL prefix). The asset name must be present in `state`.
+
+```bash showLineNumbers
+curl -X POST 'http://localhost:4000/v1/systemone' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -H 'TypeSafe-Danger-Zone-Images: true' \
+  -d '{
+    "model": "jev",
+    "state": {"photo": "photo-red"},
+    "assets": {
+      "photo-red": {"type": "image", "format": "png", "data_base64": "<BASE64_PNG>"}
+    },
+    "questions": {
+      "red": {"type": "noul", "instructions": "Is the image mostly red?"}
+    }
+  }'
+```
+
+For OpenAI shaped requests use `/v1/decisions` with `input` and a questions array. In this case the PNG bytes require the `data:image/png;base64,` prefix. For JPEG use `format: "jpeg"` in assets or the `data:image/jpeg;base64,` prefix in an image URL.
+
+```bash showLineNumbers
+curl -X POST 'http://localhost:4000/v1/decisions' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -H 'TypeSafe-Danger-Zone-Images: true' \
+  -d '{
+    "model": "jev",
+    "input": [{
+      "type": "message",
+      "role": "user",
+      "content": [
+        {"type": "input_text", "text": "Inspect this photo."},
+        {"type": "input_image", "image_url": "data:image/png;base64,<BASE64_PNG>"}
+      ]
+    }],
+    "questions": [
+      {"name": "red", "type": "predicate", "instructions": "Is the image mostly red?"}
+    ]
+  }'
+```
+
+These request shapes were tested via a 512x512 PNG through a live proxy and TypeSafe Jev 1.14.0. Both of the unified routes returned 200 on removal, the old pass-through route returned 404. See [TypeSafe images, box questions and long context](#typesafe-images-box-questions-and-long-context) for other image questions and opt-in headers. EU Jev, Laya, Bespoke and the OpenRouter pass-through are separate integrations and are not affected by this change.
