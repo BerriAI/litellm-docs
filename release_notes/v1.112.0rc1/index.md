@@ -58,6 +58,17 @@ Changes from [`v1.111.0`](/release_notes/v1.111.0/v1-111-0), the latest stable r
 
 **The FOCUS export now uses the FOCUS 1.5 schema and no longer writes the `ProviderName` and `PublisherName` columns.** Queries and dashboards that read those columns from the CSV or Parquet export must read `ServiceProviderName` instead. See [PR #52105](https://github.com/BerriAI/litellm/pull/52105).
 
+**`/v1/chat/completions` and `/v1/messages` now reject `previous_response_id` with a 400.** Before, on a model LiteLLM serves through the provider's Responses API, a request with `previous_response_id` returned 200 and continued the stored response, and on Bedrock each follow-up turn billed the system prompt twice. It now returns 400 pointing to `/v1/responses`, and `/v1/messages/count_tokens` returns the same 400. `/v1/responses` keeps accepting the field. Send the earlier turns in `messages` instead, or move the call to `/v1/responses`. `drop_params: true` does not skip the check. If you cannot change clients yet, add the field to `additional_drop_params` on the deployment, and LiteLLM drops a `previous_response_id` sent at the top level of the request body instead of refusing it. The model then only sees `messages`, so use this only when clients already send the full history. See [PR #53038](https://github.com/BerriAI/litellm/pull/53038).
+
+```yaml
+model_list:
+  - model_name: gpt-openai-chat
+    litellm_params:
+      model: openai/responses/gpt-6.2-sol
+      api_key: os.environ/OPENAI_API_KEY
+      additional_drop_params: ["previous_response_id"]
+```
+
 :::
 
 ## Key Highlights
