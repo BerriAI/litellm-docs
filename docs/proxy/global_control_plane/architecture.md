@@ -17,6 +17,8 @@ Run the control plane in a management network and connect it to each data plane 
 
 The control plane uses dedicated PostgreSQL and Redis for [runtime configuration](./configuration.md#runtime-configuration). Each data plane keeps its own stores.
 
+To make request-log metadata and counters available in every region, deploy a [request-log replication worker](./configuration.md#replicate-request-logs-across-regions) alongside each regional database. Workers share a Redis Stream and write records from other regions into their own database. Request and response content stays in the region that handled the request.
+
 See [Configuration](./configuration.md) for service settings. Use the [cloud deployment guides](../deploy/cloud/overview.md) for each data plane's replicas, availability zones, and model-provider connections.
 
 For [OIDC token exchange](./configuration.md#data-plane-jwt-authentication), allow outbound HTTPS to the IdP from the control plane and each data plane. The control plane exchanges tokens. Each data plane fetches the IdP's signing keys and validates the exchanged token with its own JWT configuration.
