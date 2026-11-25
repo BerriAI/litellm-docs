@@ -718,7 +718,7 @@ With `emulate`, a loaded tool's arguments reach the model as the free-form `inpu
 
 `deferred_tools` applies only where LiteLLM translates `/v1/messages` to another API. A provider LiteLLM calls through its own `/v1/messages` API, such as Anthropic, gets deferred tools as Claude Code sent them, so any value other than `passthrough` answers 400 there.
 
-An unknown value, `native` on a provider other than the two above, or `passthrough` on OpenAI, Azure OpenAI, or Mistral, whose APIs reject `defer_loading`, answers 400. With `drop_params: true`, LiteLLM uses `drop` instead (and ignores the setting on a provider's own `/v1/messages` API), drops a forced `ToolSearch` `tool_choice`, sends `strict` deferred tools under `emulate` without `strict`, and logs a warning that names the setting.
+An unknown value, `native` on a provider other than the two above, or `passthrough` on OpenAI, Azure OpenAI, or Mistral, whose APIs reject `defer_loading`, answers 400. So does `passthrough` on a route that cannot carry `defer_loading` to the model: Bedrock Converse, Bedrock's native chat route (which falls back to Converse for many request params), Gemini, and Vertex AI Gemini. With `drop_params: true`, LiteLLM uses `drop` instead (and ignores the setting on a provider's own `/v1/messages` API), drops a forced `ToolSearch` `tool_choice`, sends `strict` deferred tools under `emulate` without `strict`, and logs a warning that names the setting.
 
 The proxy turns on `drop_params` for Claude Code requests by default, so a Claude Code session gets that fallback and the warning instead of the 400. Set `drop_params: false` under `litellm_settings` to get the 400 there too.
 
