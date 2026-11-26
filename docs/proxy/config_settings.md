@@ -914,6 +914,8 @@ Size for the total number of waiting requests across deployments and workers. Te
 | NEBIUS_API_BASE | Base URL for Nebius. Default is https://api.studio.nebius.ai/v1
 | NIMBLE_API_BASE | Base URL for the Nimble search provider. Default is https://sdk.nimbleway.com/v2
 | NLP_CLOUD_API_BASE | Base URL for NLP Cloud. Default is https://api.nlpcloud.io/v1/gpu/
+| NODECODE_API_BASE | <SinceVersion v="1.113.0" /> Base URL for Nodecode. Default is https://api.nodecode.ai/v1
+| NODECODE_API_KEY | <SinceVersion v="1.113.0" /> API key for Nodecode
 | NOVITA_API_BASE | Base URL for Novita. Default is https://api.novita.ai/v3/openai
 | NSCALE_API_BASE | Base URL for Nscale
 | OLLAMA_API_BASE | Base URL for Ollama. Default is http://localhost:11434

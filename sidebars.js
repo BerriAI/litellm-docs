@@ -2007,6 +2007,7 @@ const providersSidebar = {
     "providers/nebius",
     "providers/neosantara",
     "providers/nlp_cloud",
+    "providers/nodecode",
     "providers/novita",
     { type: "doc", id: "providers/nscale", label: "Nscale (EU Sovereign)" },
     "providers/nvidia_riva",
