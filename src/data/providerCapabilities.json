@@ -607,6 +607,13 @@
       "embeddings"
     ]
   },
+  "providers/lyceum": {
+    "prefix": "lyceum",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
   "providers/manus": {
     "prefix": "manus",
     "capabilities": [
