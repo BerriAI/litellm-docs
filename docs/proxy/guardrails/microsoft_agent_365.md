@@ -154,7 +154,7 @@ An allowed call returns the tool result. A blocked one returns HTTP 400
 
 Every guarded tool call, allowed, blocked or refused, on both `/mcp` and `/mcp-rest/tools/call`, gets a row under **Logs** in the Admin UI ([UI logs](/docs/proxy/ui_logs)). The row always shows the guardrail name, mode and status. It shows how long the Agent 365 call took, except when Agent 365 was not called, did not answer (unreachable or timed out), or answered with a 5xx or an unparseable body. The status is `success` for an allowed call, `guardrail_intervened` for a Defender block, a refused caller or a request Agent 365 rejected, and `guardrail_failed_to_respond` when Agent 365 or Entra could not be asked, throttled the call, returned a 5xx or an unparseable answer, or rejected the gateway's own credentials, or when Defender did not evaluate. A refused call's error details carry the full error body, including the Defender message and correlation id of a block
 
-The guardrail's response on the row, with the verdict (`Allow`, `Block`, `Rejected`, `Throttled`, `Unavailable`, `Unscanned`), the Defender status, the correlation id, the latency and the failure reason, is stored only when `store_prompts_in_spend_logs` is on. Without it the response shows as `REDACTED_BY_LITELM`
+The guardrail's response on the row, with the verdict (`Allow`, `Block`, `Rejected`, `Throttled`, `Unavailable`, `Unscanned`), the Defender status, the correlation id, the latency and the failure reason, is stored only when `store_prompts_in_spend_logs` is on. Without it the response is stored as `null`, so the row shows the guardrail name, mode and status and no response detail
 
 ```yaml
 general_settings:
