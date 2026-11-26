@@ -12,6 +12,17 @@
   },
   {
     "folders": [
+      "v1.108.18"
+    ],
+    "title": "LiteLLM v1.108.18 (LTS) adds ElevenLabs realtime transcription and Meta Muse",
+    "points": [
+      "ElevenLabs `scribe_v2_realtime` transcription on `/v1/realtime` and Meta Muse models on Vertex AI join the LTS line.",
+      "Guardrails on `/v1/messages` keep unchanged tools as sent, and Bedrock `during_call` guardrails now scan the `system` prompt and `tool_result` blocks.",
+      "A chat-bridged follow-up with an unknown `previous_response_id` now answers 400 instead of a billed 200 without history."
+    ]
+  },
+  {
+    "folders": [
       "v1.111.0"
     ],
     "title": "LiteLLM v1.111.0 adds Customer Management and performance alerts",
@@ -209,15 +220,6 @@
       "`vertex_request_label_fields` labels Vertex calls with the caller's key, team, org and project.",
       "Foundry project `/openai/v1` bases no longer return 400, and resource-level `/openai/v1` Responses bases no longer return 404.",
       "`s3://` image, PDF and video URLs on Bedrock Converse models go to Bedrock as S3 sources instead of returning 500."
-    ]
-  },
-  {
-    "folders": [
-      "v1.106.10"
-    ],
-    "title": "LiteLLM v1.106.10 fixes repeated sign-in on Google MCP servers",
-    "points": [
-      "Google MCP servers no longer ask users to sign in again when the access token expires."
     ]
   }
 ]
