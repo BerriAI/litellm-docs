@@ -61,7 +61,7 @@ On the LiteLLM UI, navigate to Logs -> Audit Logs. You should see the audit log 
 
 ## When an Audit Log Write Fails <SinceVersion v="1.113.0" />
 
-A change to a key, team, user, model, or other audited object still succeeds when the database fails to save its audit log. The proxy logs a warning and retries the write in the background for up to 30 seconds. An entry it still cannot save is logged as an error naming the object, and counted on `litellm_callback_logging_failures_metric` with `callback_name="audit_log_database"`, so you can alert on lost audit entries:
+A change to a key/team/user/model or other audited object will still succeed even if the database fails to save its audit log. The proxy will log a warning and then retry the write in the background for up to 30 seconds. If it still can't save the entry then that is logged as an error with the name of the object and is counted on `litellm_callback_logging_failures_metric` with `callback_name="audit_log_database"` so you can alert on lost audit entries:
 
 ```yaml
 groups:
@@ -71,7 +71,7 @@ groups:
         expr: increase(litellm_callback_logging_failures_metric_total{callback_name="audit_log_database"}[5m]) > 0
 ```
 
-If the database stays down past the retry window, the rule fires while any entry was lost in the last 5 minutes, and the proxy logs show `Failed Creating audit log for <action> <table> <object id>` for each of them.
+If the DB is down past the retry window then the rule will fire whilst any entry was lost in the last 5 minutes and the proxy logs will show `Failed Creating audit log for <action> <table> <object id>` for each of them.
 
 ## Export Audit Logs to External Storage
 
