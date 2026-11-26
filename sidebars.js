@@ -2027,6 +2027,7 @@ const providersSidebar = {
     "providers/reka",
     "providers/replicate",
     "providers/resetdata",
+    "providers/rightnow",
     { type: "category", label: "RunwayML", className: "sidebar-provider", link: { type: "doc", id: "providers/runwayml/images" }, items: [
       "providers/runwayml/videos",
     ] },
