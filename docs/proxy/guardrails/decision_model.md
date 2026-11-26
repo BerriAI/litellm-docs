@@ -188,7 +188,7 @@ Every run records `standard_logging_guardrail_information` on the request, visib
 
 A `/v1/responses` input made only of `function_call` and `function_call_output` items, with no instructions or user text, is not screened, because the shared Responses guardrail handler skips requests that have no text.
 
-From v1.109.0, LiteLLM sets no limit on the number of checks. Earlier versions skip a guardrail with more than 128 checks at startup and serve its requests unscreened. Every decisions call sends all of a guardrail's checks as one request, so a guardrail with more checks than its decision model's provider accepts fails every call. With the default `fail_closed` every screened request then returns 502, and with `fail_open` every request goes through unscreened. Keep the number of checks within your provider's per-request limit.
+From v1.113.0, LiteLLM sets no limit on the number of checks. Earlier versions skip a guardrail with more than 128 checks at startup and serve its requests unscreened. Every decisions call sends all of a guardrail's checks as one request, so a guardrail with more checks than its decision model's provider accepts fails every call. With the default `fail_closed` every screened request then returns 502, and with `fail_open` every request goes through unscreened. Keep the number of checks within your provider's per-request limit.
 
 ## Configuration reference
 

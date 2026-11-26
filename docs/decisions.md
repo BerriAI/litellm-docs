@@ -193,7 +193,7 @@ Changing `"model"` to `"jev"` sends the same questions to TypeSafe and returns t
 |-------|------|-------------|
 | `model` | string | A proxy model name, or `<provider>/<model>` in the SDK |
 | `input` | string or array | A string, or messages shaped like `{"type": "message", "role": "user", "content": ...}`. `content` is a string or a list of `input_text` and `input_image` parts |
-| `questions` | array | One or more questions. Answers come back in the same order. LiteLLM sets no limit of its own from v1.109.0 (earlier versions reject more than 128), so each provider applies its own per-request limit |
+| `questions` | array | One or more questions. Answers come back in the same order. LiteLLM sets no limit of its own from v1.113.0 (earlier versions reject more than 128), so each provider applies its own per-request limit |
 | `safety_identifier` | string, optional | A stable ID for your end user. Sent to OpenAI. Other providers return a 400, or drop it under `drop_params` |
 
 Every question takes `instructions` and an optional `name` that is echoed in its answer
