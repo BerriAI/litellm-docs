@@ -64,7 +64,7 @@ with compache.thread("conversation-17"):
     litellm.completion(model="openrouter/anthropic/claude-haiku-5.5", messages=messages)
 ```
 
-This covers the providers that LiteLLM calls through the OpenAI SDK, such as OpenAI, Azure OpenAI and OpenRouter. For the others, run `compache proxy` and pass `api_base="http://127.0.0.1:8787"`.
+From compache 0.15.2 on, this covers every provider that LiteLLM calls in Python, through the OpenAI SDK or through its own HTTP clients. Its native Messages passthrough and requests it signs, as for Bedrock, pass unchanged: run those through `compache proxy` and pass `api_base="http://127.0.0.1:8787"`.
 
 ## What the model sees
 
