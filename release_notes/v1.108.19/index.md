@@ -54,7 +54,7 @@ pip install litellm==1.108.19
 
 This release is published as [`ghcr.io/berriai/litellm:v1.108.19`](https://github.com/BerriAI/litellm/pkgs/container/litellm). See the [GitHub release](https://github.com/BerriAI/litellm/releases/tag/v1.108.19) and the full [releases page](https://github.com/BerriAI/litellm/releases).
 
-`v1.108.19` is a patch release on top of [`v1.108.18`](https://github.com/BerriAI/litellm/releases/tag/v1.108.18). There are no new database migrations. The `v1.108.19` tag points at [`56da5c3`](https://github.com/BerriAI/litellm/commit/56da5c3954805373220392a149e8821c55bededd).
+`v1.108.19` is a patch release on top of [`v1.108.18`](/release_notes/v1.108.18/v1-108-18). There are no new database migrations. The `v1.108.19` tag points at [`56da5c3`](https://github.com/BerriAI/litellm/commit/56da5c3954805373220392a149e8821c55bededd).
 
 ### What's Changed
 
