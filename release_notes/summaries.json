@@ -1,6 +1,17 @@
 [
   {
     "folders": [
+      "v1.108.19"
+    ],
+    "title": "LiteLLM v1.108.19 (LTS) adds Volcengine Seedream and Perplexity agent tools",
+    "points": [
+      "Volcengine Ark Seedream image generation, image edits and prices join the LTS line, and Perplexity Agent API models take function tools on chat completions.",
+      "Agent calls on chat, `/v1/responses` and `/v1/messages` bill at the agent's own price, and vLLM mid-stream aborts no longer end as a clean `stop`.",
+      "The Docker images bundle OpenSSL 3.5 LTS for Prisma instead of the end-of-life OpenSSL 3.6."
+    ]
+  },
+  {
+    "folders": [
       "v1.111.0"
     ],
     "title": "LiteLLM v1.111.0 adds Customer Management and performance alerts",
@@ -207,16 +218,6 @@
     "title": "LiteLLM v1.106.10 fixes repeated sign-in on Google MCP servers",
     "points": [
       "Google MCP servers no longer ask users to sign in again when the access token expires."
-    ]
-  },
-  {
-    "folders": [
-      "v1.108.8"
-    ],
-    "title": "LiteLLM v1.108.8 (LTS) fixes Azure Decisions calls and an MCP sign-in loop",
-    "points": [
-      "`azure/` deployments no longer return 400 on `/v1/decisions`.",
-      "MCP sign-in no longer loops to `Authentication incomplete` on servers that answer `mcp_all` with detailed scopes."
     ]
   }
 ]
