@@ -208,6 +208,50 @@ curl --location --request POST 'http://0.0.0.0:4000/chat/completions' \
 ```
 
 
+#### Trace ID with `langfuse_otel`
+
+<SinceVersion v="1.113.0" />
+
+Calls sent via `langfuse_otel` will end up in a single Langfuse trace if they are named the same trace. Send the same `trace_id` in `metadata` or `litellm_metadata` or the same `langfuse_trace_id` request header with every call that is part of that trace:
+
+```shell
+curl --location 'http://0.0.0.0:4000/chat/completions' \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Bearer $LITELLM_API_KEY" \
+    --data '{
+    "model": "gpt-4o",
+    "messages": [{"role": "user", "content": "what llm are you"}],
+    "metadata": {"trace_id": "0af76519-16cd-43dd-8448-eb211c80319c"}
+}'
+```
+
+When a request names its trace in more than one way the first one in that list wins.
+
+With `LITELLM_OTEL_V2` unset:
+
+1. A valid W3C `traceparent` header.
+2. `existing_trace_id` in `metadata`, or the `langfuse_existing_trace_id` header. The call simply joins that trace without renaming it.
+3. The `langfuse_trace_id` header.
+4. The `x-litellm-trace-id` header.
+5. `trace_id` in `metadata` or `litellm_metadata`.
+
+With `LITELLM_OTEL_V2=true`:
+
+1. A correct W3C `traceparent` header.
+2. The `langfuse_trace_id` header.
+3. `trace_id` in `metadata` or `litellm_metadata`. If a `/v1/responses` or `/v1/messages` request sends both then the `litellm_metadata` takes precedence as `metadata` is the provider's own field.
+
+`x-litellm-trace-id` doesn't name a trace on V2 as it's one ID for the entire client session and would merge all the calls of that session into a single trace. `existing_trace_id` isn't used on V2 either as the request would end up as a second root of the trace and Langfuse would rename the trace. A request that sends it gets its own trace. The proxy logs one warning the first time that occurs.
+
+- The ID is normalized in the same way as it is for the `langfuse` callback (lowercase, hyphens removed) and is hashed to 32 hex chars if it's not a UUID or 32 hex chars. The trace ID that shows up in Langfuse is the normalized form.
+- Send a different `trace_id` for each unit of work that you want to be its own trace. Any calls that reuse the same value (e.g. a constant) will be merged into a single trace.
+- With `LITELLM_OTEL_V2=true` this works on all proxy endpoints (`/v1/chat/completions`, `/v1/responses`, `/v1/messages` and all the rest) for a JSON, form or text body within the proxy's `max_request_size_mb` and 16MB limit and for calls made via the Python SDK. Binary bodies (e.g. audio) are not read so be sure to name your trace with the `langfuse_trace_id` header.
+- With `LITELLM_OTEL_V2=true` the entire request (including its auth and routing spans) is part of the named trace in Langfuse. The other OpenTelemetry exporters and the `traceresponse` response header still use the trace ID that the request originally started with and those exporters get no new span attributes. All the spans that get sent to Langfuse are linked to the same span within that trace.
+- With `LITELLM_OTEL_V2=true` the proxy will read the request body early in order to extract its trace ID. The early read will hold at most 64MB of request body at any one time per worker and will wait at most 10 seconds for the body. Any request that exceeds those limits will get its own trace and the root span in Langfuse will have the `litellm.otel.trace_id_skipped` attribute which will indicate why the proxy didn't use the trace ID. The proxy will log one warning the first time each of those limits is exceeded.
+- With `LITELLM_OTEL_V2` unset and the `otel` callback in place the `otel` exporter will keep the request's own trace and each call in Langfuse will be linked to its request span in the exporter.
+- A session header (e.g. `x-litellm-session-id`) doesn't name a trace. The calls are in the same session and each one has its own trace. If `LITELLM_OTEL_V2` is unset then the session header will also take the place of an `trace_id` sent in the body (same as it does for the `langfuse` callback). So if you're sending a session header you must also send an `langfuse_trace_id` header.
+- The earlier versions just set `trace_id` as a span attribute or else omitted it entirely with `LITELLM_OTEL_V2=true` so each call went into its own trace.
+
 #### Trace & Generation Parameters
 
 ##### Trace Specific Parameters
@@ -353,7 +397,7 @@ In the metadata typically passed for text completion or embedding calls you can 
 
 Setting `mask_input` to `True` will mask the input from being logged for this call 
 
-Setting `mask_output` to `True` will make the output from being logged for this call.
+Setting `mask_output` to `True` will replace the output logged for that call with `redacted-by-litellm`.
 
 Be aware that if you are continuing an existing trace, and you set `update_trace_keys` to include either `input` or `output` and you set the corresponding `mask_input` or `mask_output`, then that trace will have its existing input and/or output replaced with a redacted message. This applies only when `langfuse_enable_update_trace_keys` is on.
 
