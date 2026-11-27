@@ -212,6 +212,8 @@ To keep mid-stream blocking without that pause, add `streaming_scan_in_backgroun
 
 These settings apply to `/v1/chat/completions`, native `/v1/messages` streams, and the Bedrock `/bedrock/model/<model>/converse-stream` pass-through, where a mid-stream block ends the stream with an AWS `validationException` event that the AWS SDK raises with the guardrail's message.
 
+With `mask_response_content: true` the guardrail always holds the whole stream until the end-of-stream scan, so the masked output is what reaches the client. `streaming_buffer_until_moderated: false`, `streaming_end_of_stream_only` and `streaming_buffer_release_on_scan` do not apply to a masking guardrail's streams, on `/v1/responses` included.
+
 ## Contextual Grounding
 
 Bedrock only scores contextual grounding when it is told what the reference text and the question are. By default LiteLLM sends just the model response, so a grounding policy never blocks anything.
