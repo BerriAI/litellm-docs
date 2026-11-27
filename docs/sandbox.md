@@ -436,7 +436,7 @@ The provider drives OpenSandbox's REST lifecycle directly: `POST /v1/sandboxes` 
 
 ### modal
 
-Install the SDK with `pip install modal`, then set `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` (or pass `api_key="<token id>:<token secret>"` per call). Sandboxes are created in a Modal app named `litellm-sandbox`; set `MODAL_APP_NAME` or pass `app_name=...` to use another app. `template` is a registry image and defaults to Debian slim. `cpus` and `memory_mb` are applied as both the reservation and the limit, so the cost estimate covers everything the sandbox can use. `allow_internet_access=False` blocks the network.
+Install the SDK with `pip install 'litellm[modal]'`, then set `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` (or pass `api_key="<token id>:<token secret>"` per call). Sandboxes are created in a Modal app named `litellm-sandbox`; set `MODAL_APP_NAME` or pass `app_name=...` to use another app. `template` is a registry image and defaults to Debian slim. `cpus` and `memory_mb` are applied as both the reservation and the limit, so the cost estimate covers everything the sandbox can use. `allow_internet_access=False` blocks the network.
 
 ```python
 result = await litellm.acode_interpreter_tool(
