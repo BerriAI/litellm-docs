@@ -401,6 +401,18 @@ Setting `mask_output` to `True` will replace the output logged for that call wit
 
 Be aware that if you are continuing an existing trace, and you set `update_trace_keys` to include either `input` or `output` and you set the corresponding `mask_input` or `mask_output`, then that trace will have its existing input and/or output replaced with a redacted message. This applies only when `langfuse_enable_update_trace_keys` is on.
 
+### Images and Other Base64 Media
+
+<SinceVersion v="1.113.0" />
+
+The `langfuse` callback uploads base64 media in a trace to Langfuse media storage and stores a short reference in its place, the way the Langfuse SDK does. It covers data URIs such as an OpenAI `image_url`, Anthropic and Vertex base64 blocks, and Gemini `inline_data` parts, in the input, output and metadata of a trace. The Langfuse UI then loads the file from media storage when you open the trace. No setting is needed.
+
+A self-hosted Langfuse needs a media bucket for this, see the [Langfuse self-hosting guide](https://langfuse.com/self-hosting/deployment/infrastructure/blobstorage). When Langfuse has no media bucket, or an upload fails, the trace still holds the reference, the file is missing, and LiteLLM logs a warning that names the media and the trace.
+
+Uploads run in the background, so they never delay a request. Media waiting for upload is held in memory, up to `LANGFUSE_MEDIA_QUEUE_MAX_BYTES` (100 MB by default) for each set of Langfuse credentials in each worker. When that queue is full, new media is skipped with the same warning until earlier uploads finish.
+
+The `langfuse_otel` callback and the OpenTelemetry v2 Langfuse path send media inline and do not upload it.
+
 ## Troubleshooting & Errors
 ### Data not getting logged to Langfuse ? 
 - Ensure you're on the latest version of langfuse `uv add langfuse -U`. The latest version allows litellm to log JSON input/outputs to langfuse
