@@ -1,6 +1,17 @@
 [
   {
     "folders": [
+      "v1.108.20"
+    ],
+    "title": "LiteLLM v1.108.20 (LTS) fixes cancelled Responses billing and GET /audit",
+    "points": [
+      "Cancelled OpenAI and Azure `/v1/responses` streams now bill the usage the provider reports instead of nothing or a local estimate.",
+      "`GET /audit` no longer returns 500 after team or key updates, and update rows saved before the upgrade also load.",
+      "A tool message with a non-string `tool_call_id` now gets a 400, and LiteLLM does not send it to Anthropic."
+    ]
+  },
+  {
+    "folders": [
       "v1.108.19"
     ],
     "title": "LiteLLM v1.108.19 (LTS) adds Volcengine Seedream and Perplexity agent tools",
@@ -209,17 +220,6 @@
       "Versioned Claude models on Vertex AI, such as `claude-*@<version>`, no longer stop at 4096 tokens when the request has no `max_tokens`.",
       "Deployments with `base_model` set to `azure/eu/o3`, `o4-mini`, `o1` or `o3-mini` record real spend instead of $0.",
       "Async Codestral chat with a `file` part no longer returns 400."
-    ]
-  },
-  {
-    "folders": [
-      "v1.108.9"
-    ],
-    "title": "LiteLLM v1.108.9 (LTS) adds Vertex labels and fixes Foundry /openai/v1",
-    "points": [
-      "`vertex_request_label_fields` labels Vertex calls with the caller's key, team, org and project.",
-      "Foundry project `/openai/v1` bases no longer return 400, and resource-level `/openai/v1` Responses bases no longer return 404.",
-      "`s3://` image, PDF and video URLs on Bedrock Converse models go to Bedrock as S3 sources instead of returning 500."
     ]
   }
 ]
