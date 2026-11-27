@@ -165,6 +165,8 @@ By default, LiteLLM first looks for an issuer-scoped mapping, then falls back to
 
 Set `general_settings.litellm_jwtauth.disable_global_key_mapping_fallback: true` to skip global mappings for JWTs from configured issuers. An issuer entry can override the global setting with `true` or `false`. If the issuer has no scoped mapping and fallback is disabled, its effective `unregistered_jwt_client_behavior` applies. For example, `reject` denies the request, and `auto_register` creates an issuer-scoped mapping. JWTs whose issuer is absent or not configured keep their existing lookup behavior.
 
+Enable `disable_global_key_mapping_fallback` only after you upgrade every replica, because older replicas reject the field and cannot evict strict cache entries.
+
 ### Manage mappings {#managing-mappings}
 
 Mapping responses include an `id`, claim name and value, issuer, description, active flag, and audit metadata. They never return the linked key or its hash. Manage the key itself through [Virtual Keys](./virtual_keys.md).
