@@ -94,7 +94,7 @@ function ChooseApi() {
       <ul className={styles.apiChoices}>
         <li>
           <strong>Check prompt size.</strong> Use{" "}
-          <Link to="https://docs.litellm.ai/api-reference/#/llm%20utils/token_counter_utils_token_counter_post">
+          <Link to="https://docs.litellm.ai/api-reference/#tag/llm~20utils/token_counter_utils_token_counter_post">
             <code>/utils/token_counter</code>
           </Link>{" "}
           to check context limits or estimate input cost.

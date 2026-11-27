@@ -3,13 +3,14 @@ import TabItem from '@theme/TabItem';
 import Image from '@theme/IdealImage';
 
 # Virtual Keys
+
+For customer and end-user spend tracking from v1.111, start with [Customer Management](./customers.md). You can use one application key across customers and pass customer identity headers with each request.
 Track Spend, and control model access via virtual keys for the proxy
 
 :::info
 
 - [UI to Generate, Edit, Delete Keys (with SSO)](https://docs.litellm.ai/docs/proxy/ui)
 - [Deploy LiteLLM Proxy with Key Management](https://docs.litellm.ai/docs/proxy/deploy/helm#valuesyaml)
-- [Dockerfile.database for LiteLLM Proxy + Key Management](https://github.com/BerriAI/litellm/blob/main/docker/Dockerfile.database)
 
 
 :::
@@ -83,9 +84,9 @@ Inheritance is not uniform across permission surfaces. Model access and MCP acce
 ## Spend Tracking 
 
 Get spend per:
-- key - via `/key/info` [Swagger](https://docs.litellm.ai/api-reference/#/key%20management/info_key_fn_key_info_get)
-- user - via `/user/info` [Swagger](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/user_info_user_info_get)
-- team - via `/team/info` [Swagger](https://docs.litellm.ai/api-reference/#/team%20management/team_info_team_info_get)  
+- key - via `/key/info` [API reference](https://docs.litellm.ai/api-reference/#tag/key~20management/info_key_fn_key_info_get)
+- user - via `/user/info` [API reference](https://docs.litellm.ai/api-reference/#tag/Internal~20User~20management/user_info_user_info_get)
+- team - via `/team/info` [API reference](https://docs.litellm.ai/api-reference/#tag/team~20management/team_info_team_info_get)
 - end-users - via `/end_user/info` - [Comment on this issue for end-user cost tracking](https://github.com/BerriAI/litellm/issues/2633)
 
 **How is it calculated?**
@@ -676,7 +677,9 @@ Use this, if you need to control the default `max_budget` or any `key/generate` 
 
 When a `/key/generate` request does not specify `max_budget`, it will use the `max_budget` specified in `default_key_generate_params`. These defaults fill any field that is missing or `null` in the request. `budget_duration` is the one exception: sending an explicit `"budget_duration": null` creates a key whose budget never resets, skipping the configured default (`upperbound_key_generate_params` still applies). `allowed_routes` is applied the same way, so you can let eligible new keys call `/key/spend/report` by setting it to `["llm_api_routes", "/key/spend/report"]`. A non-empty `allowed_routes` is an allowlist, so include the route groups the key still needs. A non-empty `allowed_routes` on the request is kept unless a selected `key_type` preset overrides it. An empty list is treated as missing. A `key_type` of `llm_api` on the request (the Admin UI sends it by default) is replaced by this list only when the list includes `llm_api_routes`, so with the example below those keys also get `/key/spend/report`. The `management` and `read_only` key types always keep their presets, and a `key_type` of `default` (the Admin UI's "Full Access") keeps full access. A key created with no `allowed_routes` and no `key_type` gets only this list, so list every route group those keys need.
 
-Every route in this `allowed_routes` list is granted to eligible new keys whatever the owner's role, so list only routes you want those keys to reach. Since the routes come from the proxy admin, a key owner who is not a proxy admin cannot change them later with `/key/update`, which includes picking a different key type for the key in the Admin UI. A proxy admin can, and an owner who needs full access can create a key with the `default` key type. Service account keys from `/key/service-account/generate` do not get this default, so they keep access to `/key/generate` and `/key/update`. The routes are copied into each key when it is created, so changing or removing this default later leaves existing keys with the routes they already have.
+For eligible regular keys, the configured list applies to the key regardless of its owner's role. List only the routes these keys need. Since the routes come from the proxy admin, a key owner who is not a proxy admin cannot change them later with `/key/update`, which includes picking a different key type for the key in the Admin UI. A proxy admin can, and an owner who needs full access can create a key with the `default` key type. The routes are copied into each key when it is created, so changing or removing this default later leaves existing keys with the routes they already have.
+
+Service accounts created with the AI APIs preset inherit [eligible default routes](./service_accounts.md#default-routes-for-ai-api-keys). Service account requests with an omitted `key_type` skip the route default.
 
 Set `litellm_settings:default_key_generate_params`:
 ```yaml
@@ -722,7 +725,7 @@ curl 'http://localhost:4000/key/sk-<virtual-key>/regenerate' \
 
 - [Write rotated keys to secrets manager](https://docs.litellm.ai/docs/secret#aws-secret-manager)
 
-[** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/regenerate_key_fn_key__key__regenerate_post)
+[** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#tag/key~20management/regenerate_key_fn_key__key__regenerate_post)
 
 
 ### Scheduled Key Rotations
@@ -830,7 +833,7 @@ curl -L -X POST 'http://localhost:4000/key/update' \
 -d '{"key": "sk-b3Z3Lqdb_detHXSUp4ol4Q", "temp_budget_increase": 100, "temp_budget_expiry": "2026-10-15"}'
 ```
 
-[API Reference](https://docs.litellm.ai/api-reference/#/key%20management/update_key_fn_key_update_post)
+[API Reference](https://docs.litellm.ai/api-reference/#tag/key~20management/update_key_fn_key_update_post)
 
 ### Let key owners edit their own key budgets
 
@@ -946,15 +949,14 @@ class LitellmUserRoles(str, enum.Enum):
 
 ### Keys 
 
-#### [** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/key%20management/)
+#### [** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#tag/key~20management)
 
 ### Users
 
-#### [** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/)
+#### [** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#tag/Internal~20User~20management)
 
 
 ### Teams
 
-#### [** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#/team%20management)
-
+#### [** API REFERENCE DOCS**](https://docs.litellm.ai/api-reference/#tag/team~20management)
 

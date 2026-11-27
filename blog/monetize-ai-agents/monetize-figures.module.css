@@ -1,0 +1,629 @@
+/* Window chrome for this post's figures. */
+.figure {
+  width: min(640px, calc(100% - 48px)) !important;
+  margin: 32px auto !important;
+  color: #f4f5f7;
+  font-family: Geist, Arial, sans-serif;
+}
+
+.figure figcaption {
+  margin: 10px 0 0;
+  color: #969ca7;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.window {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid #626873;
+  border-radius: 12px;
+  background-color: #030405;
+  background-image: radial-gradient(#59637220 0.7px, transparent 0.9px);
+  background-size: 16px 16px;
+  transition: border-color 180ms ease;
+}
+
+.window:hover {
+  border-color: #9aabc9;
+}
+
+.windowHeader {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 32px;
+  padding: 8px 14px;
+  border-bottom: 1px solid #35383f;
+  color: #a9b1be;
+  font: 400 10px / 1.4 'Geist Mono', monospace;
+}
+
+.windowDots {
+  display: flex;
+  flex-shrink: 0;
+  gap: 5px;
+}
+
+.windowDots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #8b8e94;
+}
+
+.windowLogo {
+  display: block;
+  width: 80px;
+  height: 15px;
+  margin-left: auto;
+  object-fit: contain;
+  border-radius: 0 !important;
+}
+
+.windowFlow {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  fill: none;
+}
+
+.flowTrack {
+  stroke: #739bff;
+  stroke-width: 0.7;
+  opacity: 0.2;
+}
+
+.flowPacket {
+  stroke: #739bff;
+  stroke-width: 2;
+  stroke-dasharray: 0.035 0.965;
+  animation: packetFlow 5s linear infinite;
+}
+
+.window:hover .flowPacket {
+  stroke: #adc2ff;
+}
+
+.window[data-playing='false'] .flowPacket,
+.window[data-paused='true'] .flowPacket {
+  animation-play-state: paused;
+}
+
+.window[data-paused='true'] .flowPacket {
+  opacity: 0.25;
+}
+
+@keyframes packetFlow {
+  to { stroke-dashoffset: -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flowPacket {
+    animation: none;
+  }
+}
+
+
+.body {
+  position: relative;
+  padding: 18px 20px 20px;
+  font-family: Geist, Arial, sans-serif;
+  color: #f4f5f7;
+}
+
+.segments {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 3px;
+  height: 12px;
+}
+
+.segments i {
+  position: relative;
+  overflow: hidden;
+  background: #22252a;
+}
+
+.segments b {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: #174bff;
+  transition: width 120ms linear;
+}
+
+.segments[data-tone='cyan'] b {
+  background: #69d5f4;
+}
+
+.segments[data-capped='true'] b {
+  background: #ffb547;
+}
+
+.warn {
+  color: #ffb547 !important;
+}
+
+.good {
+  color: #9fe3b4 !important;
+}
+
+.totals {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  color: #969ca7;
+  font: 400 11px / 1.4 'Geist Mono', monospace;
+}
+
+.totals strong {
+  margin-left: 6px;
+  color: #f4f5f7;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+/* Use case 1: credit tank and event log */
+.creditGrid {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+.tank {
+  position: relative;
+  display: grid;
+  grid-template-rows: repeat(20, 1fr);
+  gap: 2px;
+  height: 240px;
+  margin: 14px 0;
+  padding: 6px;
+  border: 1px solid #35383f;
+  border-radius: 8px;
+}
+
+.tank i {
+  background: #17191d;
+  transition: background 140ms linear;
+}
+
+.tank i[data-level='credit'] {
+  background: #3d4350;
+}
+
+.tank i[data-level='spent'] {
+  background: #174bff;
+}
+
+.tank i[data-level='paused'] {
+  background: #ffb547;
+}
+
+.tank i[data-cap='true'] {
+  box-shadow: 0 -2px 0 #f4f5f7;
+}
+
+.tankLabel {
+  position: absolute;
+  top: -16px;
+  left: 0;
+  color: #6f7886;
+  font: 400 10px / 1 'Geist Mono', monospace;
+}
+
+.tankLabelEnd {
+  top: auto;
+  bottom: -16px;
+}
+
+.creditSide {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.events,
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.events li {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 8px 0 8px 14px;
+  border-left: 2px solid #22252a;
+  opacity: 0.35;
+  transition: opacity 200ms ease, border-color 200ms ease;
+}
+
+.events li[data-on='true'] {
+  border-color: #739bff;
+  opacity: 1;
+}
+
+.events strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.events span {
+  color: #969ca7;
+  font: 400 11px / 1.4 'Geist Mono', monospace;
+}
+
+/* Use case 2: seat allowances */
+.seatHead,
+.seatRow {
+  display: grid;
+  grid-template-columns: 52px 128px minmax(0, 1fr) 54px;
+  align-items: center;
+  gap: 14px;
+}
+
+.seatHead {
+  padding-bottom: 8px;
+  border-bottom: 1px solid #35383f;
+  color: #8a8d93;
+  font: 400 10px / 1.4 'Geist Mono', monospace;
+}
+
+.seatHead span:last-child,
+.seatRow em {
+  text-align: right;
+}
+
+.seatRow {
+  min-height: 38px;
+  border-bottom: 1px solid #1c1f24;
+  font-size: 13px;
+}
+
+.seatRow strong {
+  font-weight: 500;
+}
+
+.seatRow em {
+  color: #9fe3b4;
+  font: 400 13px / 1 'Geist Mono', monospace;
+  font-style: normal;
+}
+
+.template {
+  color: #b7bbc2;
+  font: 400 11px / 1.3 'Geist Mono', monospace;
+}
+
+.template[data-template='power-user'] {
+  color: #69d5f4;
+}
+
+.seatMeter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 128px;
+  align-items: center;
+  gap: 10px;
+}
+
+.seatMeter span {
+  color: #c6c9cf;
+  font: 400 11px / 1 'Geist Mono', monospace;
+}
+
+.seatRow[data-paused='true'] .seatMeter span {
+  color: #ffb547;
+}
+
+/* Use case 3: usage invoice */
+.usageGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 210px;
+  align-items: end;
+  gap: 22px;
+}
+
+.dailyChart {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  align-items: end;
+  gap: 3px;
+  height: 150px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid #35383f;
+}
+
+.dailyChart i {
+  position: relative;
+  height: 100%;
+}
+
+.dailyChart b {
+  position: absolute;
+  inset: auto 0 0 0;
+  background: #22252a;
+  transition: background 160ms ease;
+}
+
+.dailyChart i[data-recorded='true'] b {
+  background: linear-gradient(#69d5f4, #174bff);
+}
+
+.invoice {
+  margin: 0;
+  font: 400 11px / 1.4 'Geist Mono', monospace;
+}
+
+.invoice > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid #1c1f24;
+}
+
+.invoice dt {
+  color: #969ca7;
+}
+
+.invoice dd {
+  margin: 0;
+  color: #f4f5f7;
+  font-size: 13px;
+}
+
+.invoice .invoiceTotal dd {
+  color: #adc2ff;
+  font-size: 16px;
+}
+
+.capRow {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 170px;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  color: #969ca7;
+  font: 400 11px / 1.4 'Geist Mono', monospace;
+}
+
+.capRow span:last-child {
+  text-align: right;
+}
+
+/* Use case 4: plan upgrade */
+.planRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  color: #969ca7;
+  font: 400 11px / 1.4 'Geist Mono', monospace;
+}
+
+.planRow strong {
+  color: #f4f5f7;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.planBadge {
+  padding: 4px 10px;
+  border: 1px solid #4a5160;
+  border-radius: 999px;
+  color: #c6c9cf;
+  font: 500 12px / 1.2 Geist, Arial, sans-serif;
+}
+
+.planBadge[data-plan='pro'] {
+  border-color: #69d5f4;
+  color: #69d5f4;
+}
+
+.track {
+  position: relative;
+  margin-bottom: 34px;
+}
+
+.track .segments {
+  height: 16px;
+}
+
+.marker {
+  position: absolute;
+  top: -8px;
+  bottom: -8px;
+  width: 2px;
+  background: #f4f5f7;
+  font-style: normal;
+  transition: left 300ms ease;
+}
+
+.marker[data-kind='soft'] {
+  background: #739bff;
+}
+
+.marker[data-hit='true'] {
+  background: #ffb547;
+}
+
+.marker span {
+  position: absolute;
+  top: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #969ca7;
+  font: 400 10px / 1 'Geist Mono', monospace;
+  white-space: nowrap;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.steps li {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid #22252a;
+  border-radius: 8px;
+  opacity: 0.35;
+  transition: opacity 200ms ease, border-color 200ms ease;
+}
+
+.steps li[data-on='true'] {
+  border-color: #4a5c86;
+  opacity: 1;
+}
+
+.steps code {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #adc2ff;
+  font-size: 11px;
+}
+
+.steps span {
+  color: #c6c9cf;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+/* Use case 5: model tiers */
+.tierGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.lanes {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: 'Geist Mono', monospace;
+}
+
+.lane {
+  fill: none;
+  stroke: #3a3f48;
+  stroke-width: 1.2;
+}
+
+.lane[data-active='true'] {
+  stroke: #739bff;
+}
+
+.source {
+  fill: #f4f5f7;
+}
+
+.laneText {
+  fill: #969ca7;
+  font-size: 10px;
+}
+
+.packet[data-lane='premium'] {
+  fill: #174bff;
+}
+
+.packet[data-lane='economy'] {
+  fill: #69d5f4;
+}
+
+.node rect {
+  fill: #05070a;
+  stroke: #3a3f48;
+}
+
+.node[data-active='true'] rect {
+  stroke: #739bff;
+}
+
+.node text {
+  fill: #f4f5f7;
+  font-size: 11px;
+}
+
+.node .nodeSub {
+  fill: #969ca7;
+  font-size: 9.5px;
+}
+
+.tierMeters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  color: #969ca7;
+  font: 400 11px / 1.4 'Geist Mono', monospace;
+}
+
+.tierMeters span {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.tierMeters strong {
+  color: #f4f5f7;
+  font-weight: 500;
+}
+
+@media (max-width: 600px) {
+  .seatHead,
+  .seatRow {
+    grid-template-columns: 40px 92px minmax(0, 1fr) 40px;
+    gap: 8px;
+  }
+
+  .seatMeter {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .template {
+    font-size: 9px;
+  }
+
+  .usageGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .capRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .capRow span:last-child {
+    text-align: left;
+  }
+
+  .totals {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .creditGrid {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .steps,
+  .tierMeters {
+    grid-template-columns: 1fr;
+  }
+}

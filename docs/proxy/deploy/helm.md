@@ -9,6 +9,8 @@ import TabItem from '@theme/TabItem';
 
 # Deploy with Helm
 
+For new model prices, [reload pricing without upgrading the image or Helm chart](../sync_models_github).
+
 {/* keep-version-note */}
 
 ## Prerequisites
@@ -114,7 +116,6 @@ backend:
 
 ```bash
 helm upgrade --install litellm oci://ghcr.io/berriai/litellm/chart/litellm \
-  --version 1.0.0 \
   --namespace litellm --values values.yaml \
   --wait --timeout 30m
 ```
@@ -188,7 +189,9 @@ See the [complete values.yaml](https://github.com/BerriAI/litellm/blob/main/lite
 
 In single-service mode, built-in and component-targeted paths use the monolith Service. Keep health and metrics endpoints private.
 
-In component mode the chart routes every path the gateway serves to the gateway Service. With the `alb` controller it puts two gateway prefixes in each ALB rule, so a default install stays under the 100 rules an ALB listener allows by default. Older charts sent `/decisions`, `/v1/decisions`, `/deepgram`, `/extraction`, `/v1/extraction`, `/fal_ai`, `/gigachat`, `/live/sessions`, `/v1/live/sessions`, `/nvidia_nim`, `/openrouter`, `/systemone`, `/v1/systemone`, `/tinyfish`, `/typesafe`, `/watsonx` and the exact path `/eu_jev/v1/systemone` to the backend catch-all. If you added any of them to `ingress.extraPaths` to work around that, remove those entries when you upgrade. An entry with the same path and path type as a built-in route makes the chart fail to render. Use the [cloud reference architectures](./cloud/overview.md) for network placement.
+In component mode the chart routes every path the gateway serves to the gateway Service. With the `alb` controller it puts two gateway prefixes in each ALB rule, so a default install stays under the 100 rules an ALB listener allows by default. Older charts sent `/decisions`, `/v1/decisions`, `/deepgram`, `/extraction`, `/v1/extraction`, `/fal_ai`, `/gigachat`, `/live/sessions`, `/v1/live/sessions`, `/nvidia_nim`, `/openrouter`, `/systemone`, `/v1/systemone`, `/tinyfish`, `/watsonx` and the exact path `/eu_jev/v1/systemone` to the backend catch-all. If you added any of them to `ingress.extraPaths` to work around that, remove those entries when you upgrade. An entry with the same path and path type as a built-in route makes the chart fail to render. Use the [cloud reference architectures](./cloud/overview.md) for network placement.
+
+For Jev, use `/v1/systemone` or `/v1/decisions`, which the chart routes to the gateway. A build that removes the TypeSafe pass-through returns 404 for `/typesafe/...`. An `ingress.extraPaths` entry cannot restore the removed API route. Remove any old `/typesafe` override and follow the [migration examples](../../decisions.md#migrate-from-typesafe-pass-through), including the JSON image format and opt-in header.
 
 </details>
 

@@ -18,6 +18,8 @@ To help you manage those skills, we've added:
 - Version history
 - Download tracking
 
+Available in the [LiteLLM 1.110.x release](/release_notes/v1.110.0/v1-110-0). Upgrade to v1.110.0 or later to use these features.
+
 {/* truncate */}
 
 ## Upload a complete skill

@@ -59,6 +59,20 @@ On the LiteLLM UI, navigate to Logs -> Audit Logs. You should see the audit log 
 />
 
 
+## When an Audit Log Write Fails <SinceVersion v="1.113.0" />
+
+A change to a key/team/user/model or other audited object will still succeed even if the database fails to save its audit log. The proxy will log a warning and then retry the write in the background for up to 30 seconds. If it still can't save the entry then that is logged as an error with the name of the object and is counted on `litellm_callback_logging_failures_metric` with `callback_name="audit_log_database"` so you can alert on lost audit entries:
+
+```yaml
+groups:
+  - name: litellm-audit
+    rules:
+      - alert: AuditLogEntriesLost
+        expr: increase(litellm_callback_logging_failures_metric_total{callback_name="audit_log_database"}[5m]) > 0
+```
+
+If the DB is down past the retry window then the rule will fire whilst any entry was lost in the last 5 minutes and the proxy logs will show `Failed Creating audit log for <action> <table> <object id>` for each of them.
+
 ## Export Audit Logs to External Storage
 
 You can export audit logs to an external storage backend (e.g. S3) in addition to storing them in the database. Logs are batched and uploaded asynchronously, so they do not block your proxy requests.
@@ -146,7 +160,7 @@ curl -X POST 'http://0.0.0.0:4000/key/update' \
 
 #### 2. Set `LiteLLM-Changed-By` in request headers
 
-Set the 'user_id' in request headers, when calling a management endpoint. [View Full List](https://docs.litellm.ai/api-reference/#/team%20management).
+Set the 'user_id' in request headers, when calling a management endpoint. [View Full List](https://docs.litellm.ai/api-reference/#tag/team~20management).
 
 - Update Team budget with the opted-in admin key. 
 - Attribute change to 'krrish@berri.ai'. 

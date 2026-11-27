@@ -4,6 +4,8 @@ import Image from '@theme/IdealImage';
 
 # Spend Tracking
 
+For customer and end-user spend tracking from v1.111, start with [Customer Management](./customers.md). Its customer usage APIs report organization, team, and member totals. The `end_user` field and `/customer/*` examples below refer to [legacy tracking](./legacy_end_users.md).
+
 Track spend for keys, users, and teams across 100+ LLMs.
 
 LiteLLM automatically tracks spend for all known models. See how the [model cost map](./model_cost_map) prices each request
@@ -18,7 +20,33 @@ Provider-specific cost tracking (e.g., [Vertex AI PayGo / priority pricing](../p
 Use the step-by-step workflow in [Debugging a cost discrepancy](../troubleshoot/cost_discrepancy): align time ranges, compare token categories (including cache), then decide whether the gap is ingestion, formula, or model-map pricing.
 :::
 
-### How to Track Spend with LiteLLM
+## Track a public model alias
+
+Set the public name in `model_list[].model_name` and the provider model in `litellm_params.model`. Clients send the public name, such as `product-chat`, as the request's `model`:
+
+```yaml
+model_list:
+  - model_name: product-chat
+    litellm_params:
+      model: openai/{{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+```
+
+| Logging field | Use |
+| --- | --- |
+| `model_group` | The routed group for this attempt. Group spend by this field to report which configured route served the call. |
+| `model` | The resolved underlying model or deployment used for the call. Use it for provider-level cost investigation. |
+| `original_model_group` in metadata | The model group before fallbacks. Use it with the routed group to attribute fallback traffic to its original route. |
+
+A fallback can change `model_group`, so grouping only by that field splits a workload across its primary and fallback routes. For original-route reports, use `metadata.original_model_group` when present and fall back to `model_group` otherwise. Team-scoped deployments can use internal group names, so verify the mapping to the team's public name before combining reports. Test one direct request and one forced fallback and inspect the [fallback metadata](./reliability.md#track-fallbacks-in-spend-logs) before building reports.
+
+### Share one budget across routes
+
+Use one virtual key, or keys assigned to the same team, and set the entity's overall `max_budget` and `budget_duration`. For example, `max_budget: 100` with `budget_duration: "30d"` pools that entity's spend across models into a $100 budget per 30-day period. See [key budgets](./users.md#add-budgets-to-keys) and [team budgets](./team_budgets.md).
+
+Use `model_max_budget` when you need separate model budgets. Entries use the public model-group name and the [per-model budget schema](./users.md#genericbudgetinfo). This does not create a single budget spanning every fallback route: admission checks the requested model, while post-call accounting uses the routed group, or a team deployment's public name. `original_model_group` is reporting metadata, not a shared budget key. Review [fallback budget scope and concurrency limits](./reliability.md#enforce-budget-on-fallbacks), and test both direct and fallback requests near the budget before relying on enforcement.
+
+## How to Track Spend with LiteLLM
 
 **Step 1**
 
@@ -473,7 +501,7 @@ Each guardrail's `api_key_breakdown` includes only keys in that day's `breakdown
 
 ### API Reference
 
-See our [Swagger API](https://docs.litellm.ai/api-reference/#/Budget%20%26%20Spend%20Tracking/get_user_daily_activity_user_daily_activity_get) for more details on the `/user/daily/activity` endpoint
+See our [API reference](https://docs.litellm.ai/api-reference/#tag/Budget~20~26~20Spend~20Tracking/get_user_daily_activity_user_daily_activity_get) for more details on the `/user/daily/activity` endpoint
 
 :::info
 Request counts on this endpoint are derived from spend logs, so they only cover requests that were logged and they record each upstream attempt separately. For counts of what the gateway actually answered, including requests rejected before a key or model was resolved, use [`/gateway/daily/activity`](./endpoint_activity.md#gateway-daily-activity). The two are not expected to match
@@ -620,18 +648,12 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 <TabItem value="langchain" label="Langchain">
 
 ```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model = "{{openai_small}}",
-    temperature=0.1,
     extra_body={
         "metadata": {
             "tags": ["model-anthropic-claude-v2.1", "app-ishaan-prod"]
@@ -647,7 +669,7 @@ messages = [
         content="test from litellm. tell me why it's amazing in 1 sentence"
     ),
 ]
-response = chat(messages)
+response = chat.invoke(messages)
 
 print(response)
 ```
@@ -909,7 +931,7 @@ curl -X GET 'http://localhost:4000/global/spend/report?start_date=2024-04-01&end
 
 :::info
 
-Internal User (Key Owner): This is the value of `user_id` passed when calling [`/key/generate`](https://docs.litellm.ai/api-reference/#/key%20management/generate_key_fn_key_generate_post)
+Internal User (Key Owner): This is the value of `user_id` passed when calling [`/key/generate`](https://docs.litellm.ai/api-reference/#tag/key~20management/generate_key_fn_key_generate_post)
 
 :::
 
@@ -1280,18 +1302,12 @@ curl --location 'http://0.0.0.0:4000/chat/completions' \
 <TabItem value="langchain" label="Langchain">
 
 ```python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 
 chat = ChatOpenAI(
     openai_api_base="http://0.0.0.0:4000",
     model = "{{openai_small}}",
-    temperature=0.1,
     extra_body={
         "metadata": {
             "spend_logs_metadata": {
@@ -1309,7 +1325,7 @@ messages = [
         content="test from litellm. tell me why it's amazing in 1 sentence"
     ),
 ]
-response = chat(messages)
+response = chat.invoke(messages)
 
 print(response)
 ```

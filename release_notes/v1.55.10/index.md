@@ -41,7 +41,7 @@ Track cost, usage for Batch Creation Jobs. [Start here](https://docs.litellm.ai/
 
 ## ✨ `/guardrails/list` endpoint 
 
-Show available guardrails to users. [Start here](https://docs.litellm.ai/api-reference/#/guardrails)
+Show available guardrails to users. [Start here](https://docs.litellm.ai/api-reference/#tag/guardrails)
 
 
 ## ✨ Allow teams to add models

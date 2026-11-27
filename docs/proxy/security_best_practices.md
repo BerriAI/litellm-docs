@@ -103,15 +103,14 @@ Without one of these configured, a deployment behind TLS termination gets cookie
 
 ## 9. Disable API documentation in production
 
-By default the proxy serves Swagger UI at `/`, ReDoc at `/redoc`, and the raw OpenAPI schema at `/openapi.json` without authentication. Security scanners flag this as a reconnaissance surface because it lists every route and request schema. Disable all three in production:
+By default the proxy serves the Scalar API reference at `/` and the raw OpenAPI schema at `/openapi.json` without authentication. Disable both in production if you do not want to expose the route list and schemas:
 
 ```env
 NO_DOCS="True"
-NO_REDOC="True"
 NO_OPENAPI="True"
 ```
 
-Each variable controls a separate surface, so setting only `NO_DOCS` still leaves `/redoc` and `/openapi.json` readable; set all three and restart the proxy. `/redoc` and `/openapi.json` then return 404 and `/` returns only the plain `"LiteLLM: RUNNING"` status string, while inference and management routes are unaffected. See [Restrict all API documentation](./configs#restrict-all-api-documentation-for-productionair-gapped-deployments) for the per-surface variables and for moving the docs to a different path instead of disabling them.
+Setting only `NO_DOCS` leaves `/openapi.json` readable. Set both variables and restart the proxy. Then `/openapi.json` returns 404 and `/` returns the `"LiteLLM: RUNNING"` status string. Inference and management routes are unaffected. See [Restrict all API documentation](./configs#restrict-all-api-documentation-for-productionair-gapped-deployments).
 
 ## 10. Restrict file uploads
 

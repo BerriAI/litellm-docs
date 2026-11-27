@@ -2,7 +2,7 @@
 title: "LiteLLM v1.80.15-stable - Manus API Support"
 description: "Adds Manus API, MiniMax and AWS Polly support, a RAG query endpoint and MCP global mode. Reduces overhead by 50%."
 slug: "v1-80-15"
-date: 2026-01-10T10:00:00
+date: 2026-01-17T17:56:20
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

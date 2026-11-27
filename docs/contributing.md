@@ -117,4 +117,4 @@ git commit -m "feat: description of your changes"
 git push origin feat/your-feature-name
 ```
 
-4. Create a Pull Request on GitHub following the [PR template](https://github.com/BerriAI/litellm/blob/main/.github/pull_request_template.md)
+4. Create a Pull Request on GitHub following the [PR template](https://github.com/BerriAI/litellm/blob/main/.github/PULL_REQUEST_TEMPLATE/general.md)

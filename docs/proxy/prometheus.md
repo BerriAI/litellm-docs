@@ -149,9 +149,9 @@ Each detail counter is **sparse**: it is only incremented when the provider repo
 |--------------------------------------------------|----------------------------------------------------------------------|----------------------------------------------------|
 | `litellm_input_cached_tokens_metric`             | `prompt_tokens_details.cached_tokens`                                | OpenAI prompt cache, Anthropic `cache_read_input_tokens`, DeepSeek `prompt_cache_hit_tokens` |
 | `litellm_input_cache_creation_tokens_metric`     | `prompt_tokens_details.cache_creation_tokens`                        | Anthropic `cache_creation_input_tokens` (prompt cache writes) |
-| `litellm_input_audio_tokens_metric`              | `prompt_tokens_details.audio_tokens`                                 | OpenAI `gpt-4o-audio-*`, Gemini audio inputs       |
+| `litellm_input_audio_tokens_metric`              | `prompt_tokens_details.audio_tokens`                                 | OpenAI `gpt-audio-1.5`, Gemini audio inputs        |
 | `litellm_output_reasoning_tokens_metric`         | `completion_tokens_details.reasoning_tokens`                         | OpenAI `o1-*` / `o3-*`, Anthropic extended thinking |
-| `litellm_output_audio_tokens_metric`             | `completion_tokens_details.audio_tokens`                             | OpenAI `gpt-4o-audio-*` audio outputs              |
+| `litellm_output_audio_tokens_metric`             | `completion_tokens_details.audio_tokens`                             | OpenAI `gpt-audio-1.5` audio outputs               |
 
 Example PromQL, cache-hit ratio for a model group:
 
@@ -316,6 +316,7 @@ Monitor failures while shipping logs to downstream callbacks like S3 cold storag
 - `S3Logger` - S3 cold storage failures
 - `langfuse` - Langfuse logging failures
 - `otel` -  OpenTelemetry logging failures
+- `audit_log_database` - audit log entries the proxy was unable to save to its database after having retried for approximately 30 seconds, one per lost entry <SinceVersion v="1.113.0" />
 
 ## Guardrail Metrics
 

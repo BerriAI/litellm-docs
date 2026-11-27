@@ -6,7 +6,7 @@ description: Run agents with litellm.agent() against one LiteLLM AI Gateway virt
 
 # Using with LiteLLM AI Gateway
 
-The recommended way to run an agent with `litellm.agent()` is against a [LiteLLM AI Gateway](/docs/proxy/docker_quick_start). Claude Code, Codex, OpenCode, Deep Agents and Tool Loop use different model APIs and ways to pass credentials. With the gateway they share one virtual key, the same model groups and fallbacks, and every call lands in the gateway's spend logs tagged with the harness that made it
+The recommended way to run an agent with `litellm.agent()` is against a [LiteLLM AI Gateway](/docs/proxy/docker_quick_start). Claude Code, Codex, OpenCode, Pi, Deep Agents and Tool Loop use different model APIs and ways to pass credentials. With the gateway they share one virtual key, the same model groups and fallbacks, and every call lands in the gateway's spend logs tagged with the harness that made it
 
 The CLI runtimes only see a per-session token for a local endpoint on your host, and that endpoint adds your virtual key when it forwards to the gateway. Deep Agents and Tool Loop call the gateway from your Python process with the virtual key. Provider keys live on the gateway and never reach your machine
 
@@ -14,7 +14,7 @@ The CLI runtimes only see a per-session token for a local endpoint on your host,
 
 ```mermaid
 flowchart LR
-    R[Claude Code / Codex / OpenCode<br/>in sandbox] -->|session token| E[local endpoint<br/>on host]
+    R[Claude Code / Codex / OpenCode / Pi<br/>in sandbox] -->|session token| E[local endpoint<br/>on host]
     E -->|virtual key<br/>x-litellm-tags: harness,codex| G[LiteLLM AI Gateway]
     D[Deep Agents<br/>in your process] -->|virtual key| G
     T[Tool Loop<br/>in your process] -->|virtual key| G
@@ -27,7 +27,7 @@ Every forwarded request carries `x-litellm-tags: harness,<name>` (see [request t
 
 ## 1. Configure the gateway
 
-Give each kind of harness a model group that suits it. Claude Code is tuned for Claude, Codex for OpenAI reasoning models, and OpenCode, Deep Agents and Tool Loop work with any group that supports their API
+Give each kind of harness a model group that suits it. Claude Code is tuned for Claude, Codex for OpenAI reasoning models, and OpenCode, Pi, Deep Agents and Tool Loop work with any group that supports their API
 
 ```yaml title="config.yaml"
 model_list:
@@ -47,9 +47,9 @@ model_list:
   # OpenAI reasoning model with native Responses API support
   - model_name: gpt
     litellm_params:
-      model: openai/gpt-5
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
-  # a cheaper general model for OpenCode, Deep Agents and Tool Loop
+  # a cheaper general model for OpenCode, Pi, Deep Agents and Tool Loop
   - model_name: gemini
     litellm_params:
       model: gemini/gemini-2.5-pro
@@ -105,13 +105,14 @@ You can pass `api_base=` and `api_key=` on the call instead of using the environ
 
 ## 4. Choosing a harness
 
-All five harnesses take the same call, but they are good at different jobs and use the gateway route that fits each runtime
+All six harnesses take the same call, but they are good at different jobs and use the gateway route that fits each runtime
 
 | Harness | Gateway route | Best model group | Pick it for |
 |---|---|---|---|
 | Claude Code | `/v1/messages` | Claude (Anthropic, Bedrock or Vertex) | long, multi-file changes in a real repo |
 | Codex | `/v1/responses` | OpenAI reasoning model | hard, well-specified tasks where reasoning depth pays off |
 | OpenCode | `/v1/chat/completions` | any | running a coding agent on non-Claude or self-hosted models |
+| [Pi](./pi.md) | `/v1/chat/completions` | any tool-calling model | Pi file and shell tools with sessions and skills |
 | Deep Agents | `/v1/chat/completions` via `litellm_proxy/` | any | agents that call your own Python functions |
 | Tool Loop | `/v1/chat/completions` via `litellm_proxy/` | any tool-calling model | a minimal loop around your own Python functions |
 
@@ -162,6 +163,10 @@ litellm.agent(
     permissions="edit",
 )
 ```
+
+### Pi
+
+Pi uses Chat Completions through the same gateway model groups. Choose `Harness.PI` and install the Pi CLI in your sandbox. It supports `"read-only"`, `"edit"` and `"full"`, individual tool filtering, skills, structured output and session resume. See the [Pi guide](./pi.md) for a complete example and `PiOptions`.
 
 ### Deep Agents
 

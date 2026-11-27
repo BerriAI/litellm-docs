@@ -290,6 +290,64 @@ litellm --config /path/to/config.yaml
 </Tabs>
 
 ## Advanced
+
+### Retry Flex before standard-tier fallback {#flex-tier-fallbacks}
+
+Use OpenAI Flex for work that can tolerate variable latency and capacity. When the application permits standard-tier cost, configure a separate fallback deployment for that tier. A fallback changes the deployment, but does not automatically change `service_tier`. See OpenAI's [Flex processing guide](https://platform.openai.com/docs/guides/flex-processing) for model availability and resource-unavailable errors.
+
+In this standalone example, the client chooses `flex-workload` and each deployment sets its own tier. Replace the model with one that supports Flex in your provider account. The timeout values are examples to fit within your application's deadline:
+
+```yaml
+model_list:
+  - model_name: flex-workload
+    litellm_params:
+      model: openai/{{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+      service_tier: flex
+      timeout: 120
+      stream_timeout: 120
+  - model_name: standard-workload
+    litellm_params:
+      model: openai/{{openai_small}}
+      api_key: os.environ/OPENAI_API_KEY
+      service_tier: default
+      timeout: 60
+      stream_timeout: 60
+
+router_settings:
+  num_retries: 0
+  model_group_retry_policy:
+    flex-workload:
+      RateLimitErrorRetries: 2
+  max_fallbacks: 1
+  fallbacks:
+    - flex-workload: [standard-workload]
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+```
+
+OpenAI Flex capacity errors with HTTP `429` map to `RateLimitError`. This standalone configuration permits up to two router retries for that error in `flex-workload`, then one standard-tier fallback. Cooldowns and deployment availability can prevent a retry from reaching the provider. The router default for other errors and model groups is zero retries; the Flex policy grants its retry budget from the first failure. A request-level `num_retries: 0` disables the group retry policy; review caller, key, and existing router overrides before merging this into a shared gateway.
+
+Configure [timeouts](./timeout.md) within the application's deadline. Allow for every permitted Flex attempt, backoff, connection setup, the standard-tier attempt, and any client retries. The shown values are per-attempt budgets, not a total request deadline. An ingress or client timeout that expires first prevents the application from benefiting from fallback.
+
+Send the alias without a request-level `service_tier`:
+
+```bash
+curl http://localhost:4000/v1/responses \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"flex-workload","input":"Summarize this non-sensitive test sentence."}'
+```
+
+A request-level `service_tier: flex` takes precedence over deployment defaults and can carry through to the fallback, leaving both attempts on Flex. Keep the tier on the deployments for this pattern. This uses two model groups; it is not an automatic tier downgrade for arbitrary incoming requests. The fallback list handles general errors, so it is not restricted to Flex capacity errors. Use it only when standard-tier service is acceptable for the workload's failure cases, cost, and data policy. Grant the caller access to both aliases under [fallback model access checks](#enforce-key-model-access-on-fallbacks).
+
+#### Validate the tier transition
+
+Test a successful Flex request, a Flex capacity failure, and a Flex timeout. Check the tier returned by the provider where available, the retry count, final deployment, latency, and recorded cost. Use [fallback metadata in spend logs](#track-fallbacks-in-spend-logs) to distinguish the primary and final model groups. Then make the standard-tier target fail and confirm that the client receives an error after the configured attempts, rather than an unbounded retry loop.
+
+Repeat with streaming and measure time to first content as well as total duration. Do not assume a fallback can transparently restart a response after the client has consumed partial output. If standard-tier cost is prohibited, omit this fallback and let the application queue or retry the Flex work within its own deadline. Coordinate [alert routing](./alerting.md#route-actionable-alerts) so expected Flex latency does not drown out gateway failures.
+
 ### Fallbacks + Retries + Timeouts + Cooldowns
 
 To set fallbacks, just do: 
@@ -475,6 +533,41 @@ If the first `chat` deployment returns a context window error, the router tries 
 Sibling retries, order failover, and cross-group fallbacks are separate operations. A sibling retry selects another eligible deployment in the current group and order level within the retry budget. Setting `num_retries: 0` disables those retries without disabling order or cross-group failover. Order failover advances to a later order. A context window fallback changes groups. `enable_weighted_failover` remains excluded for context window errors and content policy errors.
 
 These rules apply to errors LiteLLM classifies as `ContextWindowExceededError`, including provider refusals. `enable_pre_call_checks` additionally checks declared input limits before contacting the provider. The existing `max_fallbacks` limit still bounds the chain. A fallback deployment must still accept the prompt and pass access, health, and other routing checks.
+
+#### Retry the group before falling back
+
+<SinceVersion v="1.113.0" />
+
+With `enable_pre_call_checks: true` a context window error from the provider is retried on another deployment in the same group first. Those retries count against `num_retries` and occur prior to the later `order` levels and generic `fallbacks`. This is useful when a deployment's `max_input_tokens` is actually larger than the provider account will actually accept so the pre-call check allows the prompt through and the provider then refuses it.
+
+The retry will skip every deployment that serves the refused model (as they all refuse the same prompt). A deployment of that model will still be attempted if its own `max_input_tokens` is greater than the refused deployment's. The router will read the model from `model_info.base_model`, otherwise from `model` and will read the Bedrock region profiles (e.g. `us.`) as their base model. Two Azure deployments of the same model will both need the same `base_model` in order to be skipped together. A matching `context_window_fallbacks` rule will still take precedence over the retry and a call to one deployment id will not be retried. If the retries all fail then the request will return the first context window error.
+
+In this example the Bedrock deployment declares a 1M window but the account will accept fewer input tokens.
+
+```yaml
+model_list:
+  - model_name: long-prompt
+    litellm_params:
+      model: bedrock/us.anthropic.{{anthropic}}
+    model_info:
+      max_input_tokens: 1000000
+  - model_name: long-prompt
+    litellm_params:
+      model: openai/{{openai_large}}
+      api_key: os.environ/OPENAI_API_KEY
+router_settings:
+  enable_pre_call_checks: true
+  num_retries: 2
+```
+
+```bash
+curl -i http://0.0.0.0:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @long_prompt.json
+```
+
+When the router selects the Bedrock deployment for a prompt which is longer than the account will accept, Bedrock returns a 400 with "prompt is too long". The router then forwards the prompt to the OpenAI deployment and the proxy returns a 200 with `x-litellm-attempted-retries: 1`. Without `enable_pre_call_checks` the 400 goes back to the caller or to the group's generic `fallbacks` if they have that.
 
 ### Context Window Fallbacks (Pre-Call Checks + Fallbacks)
 
@@ -947,6 +1040,8 @@ Earlier releases ran a fallback even when the caller could not call the fallback
 Budget is checked once, when the request is authenticated, against the model the caller asked for. The fallback target is picked afterwards, so on its own that check cannot see the model that actually bills. This matters most when the primary model is priced at zero: a zero-cost model is exempt from budget checks entirely, so without a second check a request for it is admitted, falls back to the paid model, and bills in full with no cap applied.
 
 The proxy re-checks the calling key's and user's budget against every fallback target before it is tried, so this needs no configuration. Over-budget targets are skipped. When no affordable target remains, the caller gets the primary model's own error. The primary attempt itself is never blocked, so a zero-cost model keeps working at the cap, and a zero-cost fallback target is always allowed. The check covers `fallbacks`, `context_window_fallbacks`, `content_policy_fallbacks` and `default_fallbacks`.
+
+This fallback check covers key and user overall `max_budget` plus team-member per-model caps. It does not re-check team or team-member overall budgets, end-user/org/global budgets, ordinary key/user/team `model_max_budget`, or the key's rolling `budget_limits`. It reads spend without reserving funds, so concurrent fallbacks can cross the cap. Do not treat an original model alias's budget as one enforced cap across all fallback groups; see [alias reporting and budgets](./cost_tracking.md#track-a-public-model-alias).
 
 ```yaml keep-model-ids
 model_list:

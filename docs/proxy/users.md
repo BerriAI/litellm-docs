@@ -4,6 +4,8 @@ import TabItem from '@theme/TabItem';
 
 # Budgets, Rate Limits
 
+For customer and end-user spend tracking from v1.111, start with [Customer Management](./customers.md). The end-user budget examples below cover the supported [legacy APIs](./legacy_end_users.md).
+
 :::info[**Budget Setup Options**]
 **Personal budgets**: Create virtual keys without team_id for individual spending limits
 
@@ -90,7 +92,7 @@ curl --location 'http://localhost:4000/team/new' \
 }' 
 ```
 
-[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
+[**See the API reference**](https://docs.litellm.ai/api-reference/#tag/team~20management/new_team_team_new_post)
 
 **Sample Response**
 
@@ -308,7 +310,7 @@ curl --location 'http://localhost:4000/user/new' \
 --data-raw '{"models": ["azure-models"], "max_budget": 0, "user_id": "krrish3@berri.ai"}' 
 ```
 
-[**See Swagger**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/new_user_user_new_post)
+[**See the API reference**](https://docs.litellm.ai/api-reference/#tag/Internal~20User~20management/new_user_user_new_post)
 
 **Sample Response**
 
@@ -1066,7 +1068,7 @@ curl --location 'http://0.0.0.0:4000/team/new' \
 --data '{"team_id": "my-prod-team", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
 
-[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
+[**See the API reference**](https://docs.litellm.ai/api-reference/#tag/team~20management/new_team_team_new_post)
 
 **Expected Response**
 
@@ -1145,7 +1147,7 @@ Other local rate limits (for example a key's overall `rpm_limit`) keep their exi
 
 **Verify:** Make a `/chat/completions` request and check response headers `x-litellm-key-remaining-requests-{model}` and `x-litellm-key-remaining-tokens-{model}` for the model-specific limits.
 
-[**See Swagger**](https://docs.litellm.ai/api-reference/#/team%20management/new_team_team_new_post)
+[**See the API reference**](https://docs.litellm.ai/api-reference/#tag/team~20management/new_team_team_new_post)
 
 </TabItem>
 <TabItem value="per-user" label="Per Internal User">
@@ -1160,7 +1162,7 @@ curl --location 'http://0.0.0.0:4000/user/new' \
 --data '{"user_id": "krrish@berri.ai", "max_parallel_requests": 10, "tpm_limit": 20, "rpm_limit": 4}' 
 ```
 
-[**See Swagger**](https://docs.litellm.ai/api-reference/#/Internal%20User%20management/new_user_user_new_post)
+[**See the API reference**](https://docs.litellm.ai/api-reference/#tag/Internal~20User~20management/new_user_user_new_post)
 
 **Expected Response**
 

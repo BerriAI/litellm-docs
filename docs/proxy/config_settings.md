@@ -336,6 +336,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | allowed_routes | array of strings | `null` (all routes) | List of allowed proxy API routes a user can access [Doc on controlling allowed routes](/docs/proxy/public_routes#define-public-admin-only-and-allowed-routes)|
 | key_management_system | string | `null` | Specifies the key management system. [Doc Secret Managers](../secret) |
 | master_key | string | `null` (falls back to `LITELLM_MASTER_KEY`) | The master key for the proxy. The proxy will not start when it is not set, is empty, or has a known unsafe value. [Set up Virtual Keys](virtual_keys), [Proxy refuses to start with a known unsafe master key](./master_key_rotations.md#proxy-refuses-to-start) |
+| meter_webrtc_calls | boolean | `true` | <SinceVersion v="1.112.0" /> If false, Realtime, GPT-Live, and translation WebRTC calls start without the proxy's billing connection, so they are not billed and not counted against budgets, and a call the proxy cannot join is no longer refused with `503`. [Doc](realtime_webrtc#billing-and-limits) |
 | dangerously_permit_weak_or_unset_master_key | boolean | `false` | For local development only: if true, the proxy starts even when the master key is not set, is empty, or has a known unsafe value, and logs a warning on every boot. Also settable via the `LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY` env var. [Proxy refuses to start with a known unsafe master key](./master_key_rotations.md#proxy-refuses-to-start) |
 | database_url | string | `null` (falls back to `DATABASE_URL`) | The URL for the database connection [Set up Virtual Keys](virtual_keys) |
 | database_connection_pool_limit | integer | `10` | The limit for database connection pool [Setting DB Connection Pool limit](./configs.md#configure-db-pool-limits--connection-timeouts) |
@@ -427,6 +428,8 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | failed_login_window_seconds | integer | `60` | Fixed window in seconds over which failed Admin UI sign-in attempts are counted, starting at the first failure |
 | failed_login_block_seconds | integer | `300` | How long a blocked address, or address and username pair, stays blocked. Every attempt from a blocked key is refused with 429 before the password is checked, and refused attempts do not extend the block |
 | litellm_jwtauth | Dict[str, Any] | `null` | Settings for JWT authentication. [Docs](./jwt_auth_reference.md) |
+| litellm_jwtauth.public_key_url | string | `null` | JWKS or OIDC discovery URL for the global JWT path, comma-separated for several. Takes precedence over `JWT_PUBLIC_KEY_URL`. [Docs](./token_auth.md#usage) <SinceVersion v="1.112.0" /> |
+| litellm_jwtauth.audience | string | `null` | Expected `aud` claim on the global JWT path. Takes precedence over `JWT_AUDIENCE`. [Docs](./token_auth.md#usage) <SinceVersion v="1.112.0" /> |
 | litellm_jwtauth.unregistered_jwt_client_behavior | string | `fallback_team_mapping` | What to do when a JWT has no key mapping: `fallback_team_mapping`, `reject`, `auto_register`, or `link_only` <SinceVersion v="1.109.0" />. [Docs](./jwt_key_mapping.md#step-1-configure-the-claim-and-unmapped-client-policy) |
 | litellm_jwtauth.auto_register_map_existing_key | boolean | `false` | With `auto_register`, reuse the user's newest eligible key instead of creating one. [Docs](./jwt_key_mapping.md#which-existing-key-is-selected) {/* keep-version-note */} |
 | litellm_license | str | `null` | The license key for the proxy. [Docs](../enterprise/activate.md) |
@@ -458,6 +461,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | enforce_rbac | boolean | `false` | If true, enables role-based access control (RBAC) for all proxy operations |
 | forward_llm_provider_auth_headers | boolean | `false` | If true, forwards provider-specific auth headers to LLM API calls |
 | health_check_concurrency | integer | `null` (unbounded) | Maximum number of concurrent health check operations |
+| health_check_skip_blocked_background_models | boolean | `false` | If true, the background health check loop skips deployments paused with `model_info.blocked: true`, including public models that only a paused wildcard serves <SinceVersion v="1.113.0" />. [Doc on health checks](health#skip-paused-models) |
 | health_check_skip_disabled_background_models | boolean | `false` | If true, skips health probes for deployments with `model_info.disable_background_health_check: true` on on-demand `GET /health` and related health runs (not only the background loop). [Doc on health checks](health) |
 | health_check_staleness_threshold | integer | `600` (seconds) | Maximum age in seconds for health check results before marking deployments as stale |
 | maximum_spend_logs_cleanup_batch_size | integer | `1000` | Rows deleted per `DELETE` statement during spend log cleanup. Default is 1000. Overrides the `SPEND_LOG_CLEANUP_BATCH_SIZE` environment default when both are set. See [spend log deletion](spend_logs_deletion) |
@@ -551,6 +555,7 @@ router_settings:
 | enable_tag_filtering | boolean | `false` | If true, uses tag based routing for requests [Tag Based Routing](tag_routing) |
 | enable_weighted_failover | boolean | `false` | If true and `routing_strategy` is `simple-shuffle`, a retryable failure on one deployment re-picks (weighted) across other deployments in the same model group before cross-group fallbacks. Default: false. |
 | enable_mid_stream_fallback_continuation | boolean | `false` | If true, a streaming chat completion that breaks after plain assistant text has been delivered continues on a prefill-capable fallback deployment via assistant prefill, instead of surfacing the error. Only deployments whose model supports assistant prefill, and whose own config sets none of the output constraints below, are eligible. The original error surfaces instead when the request sets `n` above 1, a structured `response_format`, a required or named `tool_choice`, or a fallback target, in the request or in config, that sets anything besides `model`, when the broken stream already used up the request's `max_tokens` or `max_completion_tokens`, top level or in `extra_body`, or when a guardrail with a `post_call` hook is registered. The fallback gets those limits minus the tokens already sent. Async only. |
+| enable_cross_model_group_collision_check | boolean | `false` | <SinceVersion v="1.112.0" /> If true, a request that names a raw `litellm_params.model` string shared by deployments in more than one model group is refused with a 400 instead of being load-balanced across those groups. Requests that name a model group are unaffected. Can also be set with the `LITELLM_ENABLE_CROSS_MODEL_GROUP_COLLISION_CHECK` environment variable. |
 | fallback_access_check | Optional[FallbackAccessCheck] | `null` | SDK only. An async predicate `(model, request_kwargs, llm_router) -> bool` the router consults before each cross-model fallback attempt; targets it rejects are skipped. The proxy injects its own check and exposes it through `general_settings.enforce_fallback_model_access`. [More information here](reliability#enforce-key-model-access-on-fallbacks) |
 | fallback_budget_check | Optional[FallbackBudgetCheck] | `null` | SDK only. An async predicate `(model, request_kwargs, llm_router) -> bool` the router consults before each cross-model fallback attempt; targets it rejects as over budget are skipped. The proxy injects its own check and exposes it through `general_settings.enforce_fallback_budget`. [More information here](reliability#enforce-budget-on-fallbacks) |
 | fallback_rate_limit_check | Optional[FallbackRateLimitCheck] | `null` | <SinceVersion v="1.110.0" /> SDK only. An async predicate `(model, request_kwargs, ctx) -> bool` the router consults before each cross-model fallback attempt; targets it rejects as over their per-model rate limit are skipped. The proxy injects its own check, which reserves the fallback target's per-model TPM and RPM limits in the v3 rate limiter, so a provider error fallback cannot bypass a key, team, organization, project or customer limit on the fallback model. |
@@ -564,6 +569,7 @@ router_settings:
 | allowed_fails_policy | object | `null` | Specifies the number of allowed failures for different error types before cooling down a deployment. [More information here](reliability) |
 | default_max_parallel_requests | Optional[int] | `null` (no limit) | The default maximum number of parallel requests for a deployment. |
 | default_priority | (Optional[int]) | `null` | The priority a `/chat/completions`, `/completions` or `/queue/chat/completions` request is queued at when it sends no `priority`. Lower numbers are served first. Default is None, so only requests that send a `priority` are queued. |
+| dynamic_queue | Optional[dict] | `null` (off) | <SinceVersion v="1.111.0" /> Opt-in congestion priority queue for asynchronous, non-streaming chat completions. Requires `enabled: true`, `default_priority`, router Redis, and an explicit `max_waiting` integer from 1 to 64 per deployment. There is no default queue size. `queue_timeout` defaults to 30 seconds of cumulative queue waiting. Fixed upstream statuses 429 and 529 mark congestion. Queue grants use request priority and FIFO ties. Redis coordination failure resumes ordinary routing. Streaming, text completions, synchronous calls and other endpoints retain their existing behavior. |
 | polling_interval | (Optional[float]) | `0.03` (seconds) | frequency of polling queue. Only for '.scheduler_acompletion()'. Default is 3ms. |
 | max_fallbacks | Optional[int] | `5` | The maximum number of fallbacks to try before exiting the call. |
 | default_litellm_params | Optional[dict] | `null` | The default litellm parameters to add to all requests (e.g. `temperature`, `max_tokens`). |
@@ -606,6 +612,33 @@ router_settings:
 | routing_groups | Optional[List[RoutingGroup]] | `null` | List of model groups that each apply their own routing strategy to a subset of models. Each group has a `group_name`, `models` (list of model names matched against the request's model), `routing_strategy`, and optional `routing_strategy_args`. |
 | plugins | Optional[List[RoutingPlugin]] | `null` | [SDK-only arg] Pipeline of routing plugins that run before the routing decision is made. Each plugin implements `async def run(context: RoutingContext) -> RoutingContext`, reading/narrowing `candidate_models` and attaching `signals` for the next plugin (or the final routing decision) to read. A plugin narrowing candidates to zero raises rather than falling back to the unfiltered pool. |
 
+
+#### Congestion priority queues
+
+`dynamic_queue` supports asynchronous, non-streaming chat completions only. Streaming, text completions, synchronous calls and other endpoints keep their existing behavior, including when this setting is enabled. Workers share one Redis queue per configured deployment ID. Deployments from the same provider do not automatically share a queue.
+
+```yaml
+router_settings:
+  redis_host: os.environ/REDIS_HOST
+  redis_port: os.environ/REDIS_PORT
+  default_priority: 5
+  dynamic_queue:
+    enabled: true
+    max_waiting: 8
+    queue_timeout: 30
+```
+
+`max_waiting: 8` is an example, not a default or a capacity recommendation. When enabled, `max_waiting` must be an integer from 1 to 64. The same operator-set limit applies separately to every deployment queue. API callers cannot override it. A full queue does not evict an existing waiter when a higher-priority request arrives.
+
+Upstream 429 and 529 responses mark a deployment congested. These trigger statuses are fixed. The queue applies after ordinary routing selects an eligible deployment. It does not alter deployment selection, make cooling deployments eligible, replace retry backoff, or change fallback policy.
+
+Applications set the existing request `priority`. Lower values receive queue grants first, with FIFO ordering for ties. Provider arrival and completion order can differ because requests proceed concurrently. Enabling the feature requires `default_priority`, which applies to requests without an explicit priority. Caller-owned credentials retain their existing routing behavior. The queue uses caller-supplied priorities and does not reserve waiting slots per tenant.
+
+Queue overflow returns 503. Exhausting `queue_timeout`, the cumulative queue wait across the request's attempts, returns 408. These queue rejections end the request without another retry or fallback. A selected deployment can therefore time out even when another deployment could serve the request. Ordinary retry sleeping is separate from queue waiting and does not consume `queue_timeout`. Provider retry delays and the request's total deadline still apply.
+
+When Redis coordination fails or a queue operation times out, requests resume ordinary routing and retries with their remaining budgets. Priority ordering is best-effort during that period. Ordinary cooldown and rate-limit behavior still apply. The existing Redis circuit breaker can delay recovery after Redis becomes available again.
+
+Size for the total number of waiting requests across deployments and workers. Ten full queues with `max_waiting: 64` mean 640 waiting requests. The per-deployment cap does not bound aggregate proxy CPU use. Test both waiting and simultaneous recovery under the intended workload, watching proxy CPU, healthy-request latency and Redis latency. Benchmark results are not universal capacity guarantees.
 
 ### environment variables - Reference
 
@@ -1016,6 +1049,7 @@ router_settings:
 | DEFAULT_MCP_SEMANTIC_FILTER_SIMILARITY_THRESHOLD | Default similarity threshold for MCP semantic tool filtering. Default is 0.3
 | DEFAULT_MCP_SEMANTIC_FILTER_TOP_K | Default number of top results to return for MCP semantic tool filtering. Default is 10
 | MCP_NPM_CACHE_DIR | Directory for npm cache used by STDIO MCP servers. In containers the default (~/.npm) may not exist or be read-only. Default is `/tmp/.npm_mcp_cache`
+| LITELLM_MCP_DCR_GATEWAY_CLIENT | <SinceVersion v="1.111.0" /> Set to `true` to let the proxy register its own gateway-owned OAuth client for new MCP DCR bridges that have no client of their own (`oauth_delegate` or `true_passthrough`). Needs `PROXY_BASE_URL` and a database. Tokens from that flow are bound to the browser user, not the calling key. Default is `false`: new clientless bridges relay the client's own registration upstream, and clients that are already configured or saved keep their current flow
 | LITELLM_MCP_CLIENT_TIMEOUT | MCP client connection timeout in seconds (stdio and HTTP/SSE transports). Default is 60
 | LITELLM_MCP_TOOL_LISTING_TIMEOUT | Timeout in seconds for listing tools from an MCP server. Default is 30
 | LITELLM_MCP_METADATA_TIMEOUT | HTTP client timeout in seconds for OAuth metadata fetching. Default is 10
@@ -1084,7 +1118,7 @@ router_settings:
 | DOCS_DESCRIPTION | Description text for documentation pages
 | DOCS_FILTERED | Flag indicating filtered documentation
 | DOCS_TITLE | Title of the documentation pages
-| DOCS_URL | The path to the Swagger API documentation. **By default this is "/"**
+| DOCS_URL | Path to the Scalar API reference. Defaults to `/`.
 | EMAIL_LOGO_URL | URL for the logo used in emails
 | EMAIL_BUDGET_ALERT_TTL | Time-to-live for email budget alerts in seconds
 | EMAIL_BUDGET_ALERT_MAX_SPEND_ALERT_PERCENTAGE | Maximum spend percentage for triggering email budget alerts
@@ -1188,10 +1222,10 @@ router_settings:
 | GITHUB_COPILOT_TOKEN_DIR | Directory to store GitHub Copilot token for `github_copilot` llm provider
 | GITHUB_COPILOT_API_KEY_FILE | File to store GitHub Copilot API key for `github_copilot` llm provider
 | GITHUB_COPILOT_ACCESS_TOKEN_FILE | File to store GitHub Copilot access token for `github_copilot` llm provider
-| GITHUB_COPILOT_API_BASE | Base URL for GitHub Copilot API. For GitHub Enterprise subscriptions with custom host, it is similar to https://copilot-api.my-company.ghe.com. Default is https://api.githubcopilot.com
+| GITHUB_COPILOT_API_BASE | Fallback base URL for the shared GitHub Copilot sign-in (used when the Copilot user lookup returns no usable API host). The default is https://api.githubcopilot.com, or https://copilot-api.my-company.ghe.com when the shared sign-in is on a GitHub Enterprise Cloud tenant
 | GITHUB_COPILOT_DEVICE_CODE_URL | URL for GitHub Copilot device code authentication. For GitHub Enterprise subscriptions with custom host, it is similar to https://my-company.ghe.com/login/device/code. Default is https://github.com/login/device/code
 | GITHUB_COPILOT_ACCESS_TOKEN_URL | URL for GitHub Copilot access token retrieval. For GitHub Enterprise subscriptions with custom host, it is similar to https://my-company.ghe.com/login/oauth/access_token. Default is https://github.com/login/oauth/access_token
-| GITHUB_COPILOT_API_KEY_URL | URL for GitHub Copilot API key retrieval. For GitHub Enterprise subscriptions with custom host, it is similar to https://my-company.ghe.com/api/v3/copilot_internal/v2/token. Default is https://api.github.com/copilot_internal/v2/token
+| GITHUB_COPILOT_API_KEY_URL | Legacy.  LiteLLM no longer calls that URL.  If GITHUB_COPILOT_ACCESS_TOKEN_URL is unset or names neither github.com nor a GHE.com host then a URL on api.my-company.ghe.com will point the shared sign-in's Copilot user lookup at that GitHub Enterprise Cloud tenant.
 | GITHUB_COPILOT_CLIENT_ID | Client ID for GitHub Copilot device flow authentication. This is used by the `github_copilot` provider for device code authentication. Default is "Iv1.b507a08c87ecfe98"
 | GREENSCALE_API_KEY | API key for Greenscale service
 | GREENSCALE_ENDPOINT | Endpoint URL for Greenscale service
@@ -1380,6 +1414,7 @@ router_settings:
 | LITELLM_MODE | Operating mode for LiteLLM (e.g., production, development)
 | LITELLM_NON_ROOT | Flag to run LiteLLM in non-root mode for enhanced security in Docker containers
 | LITELLM_OFFLINE_MODE | Set to `true` to stop every request LiteLLM makes on its own, such as fetching the model cost map, Anthropic beta headers, auto router presets, policy templates, blog posts and the latest release, the breached password check and Hugging Face tokenizer downloads. Bundled copies are used instead. Requests to providers and other destinations you configure are unaffected. Default is `false`. See [Outbound requests and offline mode](./outbound_requests).
+| LITELLM_PREFIX_BLOCK_HASHES_SECRET | <SinceVersion v="1.111.0" /> Dedicated HMAC secret for prompt-prefix block hash IDs when the `prefix_block_hashes` callback is enabled, with hashing skipped when unset and no fallback to the salt or master key. See [Prefix Block Hash IDs](./prefix_block_hashes.md).
 | LITELLM_RATE_LIMIT_WINDOW_SIZE | Rate limit window size for LiteLLM. Default is 60
 | LITELLM_REASONING_AUTO_SUMMARY | If set to "true", automatically enables detailed reasoning summaries (`summary: "detailed"`) for reasoning models across all translation paths (Anthropic adapter, Responses API, etc.). Default is "false"
 | LITELLM_SALT_KEY | Salt key for encryption in LiteLLM
@@ -1413,7 +1448,7 @@ router_settings:
 | LOGGING_WORKER_MAX_QUEUE_SIZE | Maximum size of the logging worker queue. When the queue is full, the worker aggressively clears tasks to make room instead of dropping logs. Default is 50,000
 | LOGGING_WORKER_MAX_TIME_PER_COROUTINE | Maximum time in seconds allowed for each coroutine in the logging worker before timing out. Default is 20.0
 | LOGGING_WORKER_CLEAR_PERCENTAGE | Percentage of the queue to extract when clearing. Default is 50% 
-| MAX_BASE64_LENGTH_FOR_LOGGING | Maximum number of base64 characters to keep in logging payloads. Data URIs exceeding this are replaced with a size placeholder. Set to 0 to disable truncation. Default is 64
+| MAX_BASE64_LENGTH_FOR_LOGGING | Maximum number of base64 characters to keep in logging payloads. Data URIs and Anthropic base64 source data exceeding this are replaced with a size placeholder. Set to 0 to disable truncation. Default is 64
 | MAX_BASE64_LENGTH_STDOUT_LOG | Maximum length, in characters, of a base64 run kept as is in a log line written to stdout, at every log level including DEBUG. A longer run is replaced with a size placeholder such as `[base64_data truncated: 2.86MB]`, in the message and in any traceback, and the text around it stays. Hex and decimal runs (digests, numeric ids) are left alone. Logging callbacks (OTEL, Datadog, etc.) still receive the full record. Set to 0 to disable. Default is 4096
 | MAX_COMPETITOR_NAMES | Maximum number of competitor names allowed in policy template enrichment. Default is 100
 | MAX_DECOMPRESSED_REQUEST_BODIES_IN_FLIGHT_MB | <SinceVersion v="1.108.0" /> Maximum total size in MB of the decoded request bodies one proxy worker holds at a time for requests sent with `Content-Encoding: gzip` or `zstd`. Each compressed request counts the decoded size its gzip or zstd data declares, or the largest size it may decode to when it declares none. A request that would take the worker past this limit gets a 503 with `Retry-After: 1` before it reaches auth or the route. A single request is always let through when no other decoded body is held. Default is 200
@@ -1423,7 +1458,8 @@ router_settings:
 | MAX_REQUEST_HEADER_SIZE | {/* keep-version-note: unversioned reference requested by maintainer */} Positive integer byte size for Uvicorn's h11 incomplete HTTP header buffer. **Default is 16384** (16 KiB). For example, set `MAX_REQUEST_HEADER_SIZE=131072` for 128 KiB. Applies to the default server and `--run_gunicorn` when h11 is used. Preserves automatic parser selection and is ignored by httptools, Hypercorn, and Granian. `--max_request_header_size` takes precedence. Export this variable before starting the proxy. This is not a strict total-header limit. [Further docs](./cli#--max_request_header_size). |
 | MAX_TIME_TO_CLEAR_QUEUE | Maximum time in seconds to spend clearing the logging worker queue during shutdown. Default is 5.0
 | LOGGING_WORKER_AGGRESSIVE_CLEAR_COOLDOWN_SECONDS | Cooldown time in seconds before allowing another aggressive clear operation when the queue is full. Default is 0.5 
-| MAX_STRING_LENGTH_PROMPT_IN_DB | Maximum length for strings in spend logs when sanitizing request bodies. Strings longer than this will be truncated. Default is 1000
+| MAX_STRING_LENGTH_PROMPT_IN_DB | Maximum length for strings in spend logs when sanitizing request bodies. Strings longer than this will be truncated. Provider-signed reasoning fields of `/v1/responses` calls served through chat completions follow `MAX_STRING_LENGTH_PROVIDER_SIGNED_IN_DB` when it is larger. Default is 2048
+| MAX_STRING_LENGTH_PROVIDER_SIGNED_IN_DB | <SinceVersion v="1.113.0" /> Maximum length of a provider-signed reasoning field (a signed Claude thinking block with its text, `redacted_thinking` data, `encrypted_content`, a Gemini thought signature) kept in a spend log row of a `/v1/responses` call that LiteLLM serves through chat completions, so a `previous_response_id` follow-up sends it back unchanged. A cut signature makes the provider reject the follow-up. A larger `MAX_STRING_LENGTH_PROMPT_IN_DB` wins, and a smaller one does not lower this limit. The 1.108 LTS line has it in releases after 1.108.15. Default is 1048576 (1 MiB)
 | MAX_STRING_LENGTH_STDOUT_LOG | Maximum number of characters an INFO-or-higher log line (message or traceback) may write to stdout. A longer line keeps its head and tail around a `litellm_truncated skipped N chars` marker, which counts toward the cap. DEBUG lines are never cut, so `--detailed_debug` still prints whole payloads, and logging callbacks (OTEL, Datadog, etc.) still receive the full record. Set to 0 to disable. Default is 4096
 | MAX_IN_MEMORY_QUEUE_FLUSH_COUNT | Maximum count for in-memory queue flush operations. Default is 1000
 | MAX_IMAGE_URL_DOWNLOAD_SIZE_MB | Maximum size in MB for downloading images from URLs. Prevents memory issues from downloading very large images. Images exceeding this limit will be rejected before download. Set to 0 to completely disable image URL handling (all image_url requests will be blocked). Default is 50MB (matching [OpenAI's limit](https://platform.openai.com/docs/guides/images-vision?api-mode=chat#image-input-requirements))
@@ -1468,11 +1504,12 @@ router_settings:
 | MS_TEAMS_WEBHOOK_URL | Incoming webhook URL for Microsoft Teams alerts, used when `ms_teams` is in `general_settings.alerting`. See [MS Teams alerting](./alerting#ms-teams-webhooks)
 | NEW_RELIC_APP_NAME | Application name for New Relic AI Monitoring integration |
 | NEW_RELIC_LICENSE_KEY | License key for New Relic authentication |
-| NO_DOCS | Flag to disable Swagger UI documentation
+| NO_DOCS | Disables the API reference
 | NO_MAX_TOKENS_TPM_RESERVATION_FRACTION | <SinceVersion v="1.109.0" /> Share of a TPM limit reserved for a request that sets no output cap, as a fraction from 0.01 to 1. On a deployment with `otpm`, a request without `max_tokens` reserves the smaller of the model's max output and this share of `otpm`. On the proxy, it also sets the `max_tokens` written into a request without one when its key, team, or project has a TPM limit under 4096. A value outside the range logs a warning and uses the default. Default is 0.25. [Docs](./io_token_rate_limits.md#pre-call-admission)
 | NO_OPENAPI | Flag to disable the /openapi.json endpoint
-| NO_REDOC | Flag to disable Redoc documentation
 | NO_PROXY | List of addresses to bypass proxy
+| NO_REDOC | Set to `true` to disable ReDoc unless `REDOC_URL` is set to a nonempty value {/* keep-version-note */}
+| NO_SWAGGER | <SinceVersion v="1.112.0" /> Set to `true` to disable Swagger UI unless `SWAGGER_URL` is set.
 | NON_LLM_CONNECTION_TIMEOUT | Timeout in seconds for non-LLM service connections. Default is 15
 | OAUTH_TOKEN_INFO_ENDPOINT | Endpoint for OAuth token info retrieval
 | OPENAI_BASE_URL | Base URL for OpenAI API
@@ -1579,7 +1616,7 @@ router_settings:
 | REDIS_TIMEOUT_LOG_INTERVAL | Seconds between Redis timeout log lines. The first timeout of a streak logs at the normal level, later ones log at DEBUG, and once the interval passes one line reports how many were suppressed. Non-timeout Redis errors are not throttled. Default is 5.0
 | REDIS_GCP_SERVICE_ACCOUNT | GCP service account for IAM authentication with Redis. Format: "projects/-/serviceAccounts/name@project.iam.gserviceaccount.com"
 | REDIS_GCP_SSL_CA_CERTS | Path to SSL CA certificate file for secure GCP Memorystore Redis connections
-| REDOC_URL | The path to the Redoc Fast API documentation. **By default this is "/redoc"**
+| REDOC_URL | Custom path for ReDoc. Defaults to `/redoc` unless `NO_REDOC` is true. A nonempty value overrides `NO_REDOC` {/* keep-version-note */}
 | REPEATED_STREAMING_CHUNK_LIMIT | Limit for repeated streaming chunks to detect looping. Default is 100
 | REALTIME_CREDENTIAL_RESOLUTION_TIMEOUT_SECONDS | Timeout in seconds for fetching the Vertex AI access token before a realtime session starts. Default is 20.0
 | REALTIME_WEBSOCKET_MAX_MESSAGE_SIZE_BYTES | Maximum size in bytes for WebSocket messages in realtime connections. Default is None.
@@ -1636,6 +1673,7 @@ router_settings:
 | SUPABASE_URL | Base URL for Supabase instance
 | STORE_MODEL_IN_DB | If true, enables storing model + credential information in the DB. 
 | STORE_PROMPTS_IN_SPEND_LOGS | Flag to persist the request and response payloads of each call on its SpendLogs row, so prompts and completions are visible in the logs UI. Environment equivalent of `general_settings.store_prompts_in_spend_logs`; either source enabling it is enough. **Default is False**
+| SWAGGER_URL | <SinceVersion v="1.112.0" /> Path to Swagger UI. Defaults to `/swagger`, or `/swagger/ui` if Scalar or the OpenAPI schema already uses `/swagger`.
 | SYSTEM_MESSAGE_TOKEN_COUNT | Token count for system messages. Default is 4
 | TEST_EMAIL_ADDRESS | Email address used for testing purposes
 | TOGETHER_AI_4_B | Size parameter for Together AI 4B model. Default is 4

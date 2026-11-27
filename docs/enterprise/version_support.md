@@ -7,7 +7,7 @@ description: LiteLLM supports the four most recent stable minor lines with patch
 
 :::info[Paused during the LTS pilot]
 
-Starting the week of November 2, 2026, this policy is paused while LiteLLM pilots a long-term support (LTS) line for one month. Refer to the [LTS pilot](./lts_pilot.md) for details.
+Starting the week of November 2, 2026, this policy is paused while LiteLLM pilots a long-term support (LTS) line for one month. During the pilot, LiteLLM supports the LTS line, the current stable line, and the current release candidate (rc). Refer to the [LTS pilot](./lts_pilot.md) for details.
 
 :::
 

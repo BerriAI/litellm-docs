@@ -141,7 +141,7 @@ This example explicitly chooses `default_model` fallback. The shipped `classifie
 
 Built-in JEV classification uses the same licensing policy as the built-in LLM classifier. Custom `instructions` and `tier_definitions` use the existing Enterprise custom-classifier capability. JEV also supports `enable_non_reasoning_tier`
 
-See the [JEV reference](/docs/proxy/auto_routing#jev-classifier) for defaults, context, recovery, authorization and accounting, the [measured comparison](/blog/jev-auto-router-benchmark) for quality and cost scope, and [TypeSafe pass-through](/docs/pass_through/typesafe) for calling System One directly
+See the [JEV reference](/docs/proxy/auto_routing#jev-classifier) for defaults, context, recovery, authorization and accounting, the [measured comparison](/blog/jev-auto-router-benchmark) for quality and cost scope, and the [unified decision endpoints](/docs/decisions#migrate-from-typesafe-pass-through) for calling Jev through `/v1/systemone` or `/v1/decisions`, including image requests
 
 ## Model-management API
 

@@ -65,7 +65,7 @@ In Cursor, [add it in one click](https://cursor.com/en-US/install-mcp?name=litel
 
 <AgentPrompt id="liteadmin" />
 
-<AgentPrompt id="liteagents" />
+<AgentPrompt id="sdk_agents" />
 
 ## LiteAdmin MCP
 

@@ -12,9 +12,9 @@ columns={1}
 items={[
   {
     title: "LiteLLM Academy",
-    description: "Get started with our interactive course. Learn the fundamentals every platform admin needs, from gateway setup and access control to routing and observability.",
-    ctaLabel: "Get started",
-    to: "https://litellm.ai/course",
+    description: "Take the gateway course to follow a request through LiteLLM, or the database course to understand every table and column and the changes that added them.",
+    ctaLabel: "Choose a course",
+    to: "https://www.litellm.ai/course",
   },
 ]}
 />

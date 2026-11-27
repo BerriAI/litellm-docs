@@ -145,8 +145,8 @@ print(response.choices[0].message.content)
 <TabItem value="langchain" label="Langchain">
 
 ```python
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import HumanMessage
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage
 
 chat = ChatOpenAI(
     model="{{openai_large}}",
@@ -158,7 +158,7 @@ chat = ChatOpenAI(
 )
 
 messages = []
-response = chat(messages)
+response = chat.invoke(messages)
 
 print(response.content)
 ```

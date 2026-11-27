@@ -202,3 +202,42 @@ test('heading text follows CommonMark: code keeps underscores, loose emphasis st
   const nested = headingIndex('# T\n\n   ## Indented\n\n> ## Quoted\n\n    ## Code block\n\n## C# client\n\n## Closed ##\n');
   assert.deepEqual(nested.map((h) => h.id), [null, 'indented', 'quoted', 'c-client', 'closed']);
 });
+
+test('unlisted docs retain direct markdown exports without entering discovery indexes', async (t) => {
+  const fs = require('node:fs/promises');
+  const os = require('node:os');
+  const path = require('node:path');
+  const siteDir = await fs.mkdtemp(path.join(os.tmpdir(), 'litellm-unlisted-docs-'));
+  t.after(() => fs.rm(siteDir, {recursive: true, force: true}));
+  const offline = process.env.LITELLM_DOCS_OFFLINE;
+  process.env.LITELLM_DOCS_OFFLINE = '1';
+  t.after(() => {
+    if (offline === undefined) delete process.env.LITELLM_DOCS_OFFLINE;
+    else process.env.LITELLM_DOCS_OFFLINE = offline;
+  });
+  await fs.mkdir(path.join(siteDir, 'src/data'), {recursive: true});
+  await fs.writeFile(path.join(siteDir, 'src/data/endpoints.js'), 'exports.CATEGORIES = []; exports.ENDPOINTS = []; exports.PASS_THROUGH = [];');
+  const docs = [
+    {id: 'current', title: 'Current setup'},
+    {id: 'legacy', title: 'Legacy setup', unlisted: true},
+    {id: 'draft', title: 'Draft setup', draft: true},
+  ].map((doc) => ({...doc, source: `@site/${doc.id}.md`, permalink: `/docs/${doc.id}`}));
+  await Promise.all(docs.map((doc) => fs.writeFile(path.join(siteDir, `${doc.id}.md`), `# ${doc.title}\n\n${doc.id} instructions.\n`)));
+
+  for (const selected of [docs, docs.slice(1)]) {
+    const outDir = path.join(siteDir, `build-${selected.length}`);
+    const plugin = require('./llms')({siteDir});
+    await plugin.allContentLoaded({allContent: {'docusaurus-plugin-content-docs': {default: {loadedVersions: [{
+      docs: selected,
+      sidebars: {tutorialSidebar: selected.map((doc) => ({type: 'doc', id: doc.id}))},
+    }]}}}});
+    await plugin.postBuild({outDir});
+    assert.match(await fs.readFile(path.join(outDir, 'docs/legacy.md'), 'utf8'), /legacy instructions/);
+    await assert.rejects(fs.access(path.join(outDir, 'docs/draft.md')), {code: 'ENOENT'});
+    for (const file of ['llms.txt', 'llms-full.txt', 'sitemap.md', 'mcp-pages.json', 'mcp-nav.json']) {
+      const content = await fs.readFile(path.join(outDir, file), 'utf8');
+      assert.doesNotMatch(content, /Legacy setup|legacy instructions|\/docs\/legacy|Draft setup/, file);
+      if (selected.length === docs.length) assert.match(content, /Current setup/, file);
+    }
+  }
+});

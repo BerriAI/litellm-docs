@@ -2,7 +2,7 @@
 title: "LiteLLM v1.94.2 - Dashboard Token Storage and Dependency Refresh"
 description: "Routes Admin UI MCP session tokens through the shared browser storage helper. Updates Terraform provider modules and four Python dependencies."
 slug: "v1-94-2"
-date: 2026-08-07T19:10:07
+date: 2026-08-08T02:31:09
 authors:
   - name: Krrish Dholakia
     title: CEO, LiteLLM

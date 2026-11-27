@@ -29,11 +29,9 @@ litellm --config /path/to/config.yaml
 http://0.0.0.0:4000/ui # <proxy_base_url>/ui
 ```
 
-### 3. Get Admin UI Link on Swagger
+### 3. Open the Admin UI from the API reference
 
-Your Proxy Swagger is available on the root of the Proxy: e.g.: `http://localhost:4000/`
-
-<Image img={require('../../img/ui_link.png')} alt="Swagger page with the Admin UI link" />
+Open your proxy's API reference at `http://localhost:4000/` and select the Admin Panel link in the introduction.
 
 ### 4. Sign in for the first time
 

@@ -47,11 +47,13 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 
 | Provider or feature | Release |
 |---------------------|---------|
-| [Gemini Decision 1](./providers/gemini.md#decisions) | On main through [LiteLLM #51220](https://github.com/BerriAI/litellm/pull/51220), not yet in a release |
+| [Gemini Decision 1](./providers/gemini.md#decisions) | `v1.111.0-rc.1` |
 | vLLM, Microsoft Foundry, OpenRouter spend from `usage.cost` | `v1.104.3` |
 | Databricks serving endpoints, image input on Cloudflare Clef, [audio and video input](#audio-and-video-input) on Cloudflare Clef-omni, TypeSafe images and box questions | `v1.106.0` |
 | Databricks `ai_decide`, Fireworks AI, Laya and Bespoke Nimble, including the Add Model form, and a deployment's own [`supports_box_questions`](#box-questions-on-other-deployments) value in the config and the SDK | `v1.107.0-rc.1` |
 | A deployment's own [`supports_audio_input` and `supports_video_input`](#audio-and-video-on-other-deployments) values, and clip requests going only to the group deployments that take clips | `v1.110.0` |
+| [JSON input](#json-input) on OpenAI | `v1.112.0-rc.1`, and `v1.108.14` on the 1.108.x LTS line |
+| [Another LiteLLM proxy](#send-decision-calls-through-a-litellm-proxy) as a provider, with `litellm_proxy/` models | `v1.112.0-rc.1`, and `v1.108.15` on the 1.108.x LTS line |
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -60,6 +62,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | Virtual keys, budgets, rate limits | Yes | Normal proxy key auth |
 | Load balancing, fallbacks | Yes | Goes through the router like `/chat/completions` |
 | Image input | OpenAI, Gemini, Cloudflare Clef and TypeSafe | TypeSafe needs the `TypeSafe-Danger-Zone-Images: true` header. Other providers return a 400, or drop the images under `drop_params` |
+| JSON input | OpenAI | `azure/` deployments send the parts on as OpenAI does. Other providers, Microsoft Foundry included, return a 400 that names `input_json`, or drop the parts under `drop_params` |
 | Audio and video input | Gemini Decision 1 and Cloudflare Clef-omni | Other models return a 400, or drop the clips under `drop_params`, unless a [deployment flag](#audio-and-video-on-other-deployments) turns clips on. `openai/` and `azure/` deployments refuse clips whatever the flag says |
 | Streaming | No | |
 
@@ -81,8 +84,11 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | [vLLM](https://docs.vllm.ai/en/latest/serving/online_serving/structured_decisions.html) (self-hosted) | `hosted_vllm/Qwen/Qwen3-0.6B` | `HOSTED_VLLM_API_BASE` or `api_base` required, `HOSTED_VLLM_API_KEY` optional | `/v1/systemone` | No |
 | [Laya](https://github.com/NandhaKishorM/laya) (self-hosted) | `laya/english`, `laya/multilingual` or `laya/typed-decisions` | `api_base` or `LAYA_API_BASE` required, `LAYA_API_KEY` optional | `/v1/systemone` | No |
 | [Bespoke Nimble](https://github.com/bespokelabsai/nimble) (self-hosted) | `bespoke/nimble` on Ollama, else `bespoke/nimble-latest` or `bespoke/bespokelabs/Bespoke-Nimble-9B` | `api_base` or `BESPOKE_API_BASE` required, `BESPOKE_API_KEY` optional | `/v1/systemone` | No |
+| [LiteLLM proxy](#send-decision-calls-through-a-litellm-proxy) | `litellm_proxy/<model on that proxy>` | `LITELLM_PROXY_API_BASE` or `api_base` required, `LITELLM_PROXY_API_KEY` optional | The route you called | When that proxy's model takes them |
 
 Some of these providers need a newer LiteLLM release than the decision routes, as listed in [Availability and supported features](#availability-and-supported-features)
+
+The host matters as well as the model. A decision model works only on a provider that LiteLLM has a Decisions integration for. GPT-6 Luna serves decisions on `openai/gpt-6-luna` and on Azure OpenAI as `azure/gpt-6-luna`. AWS Bedrock is not a Decisions provider, so `bedrock/` deployments, `bedrock/converse/` included, and `bedrock_mantle/` deployments of GPT-6 Luna answer chat requests but return `Unknown Decisions provider` on `/v1/decisions`, as an Auto Router decision classifier and in the Decision Model guardrail. Amazon's Decisions endpoint on Bedrock does not accept GPT-6 Luna yet. To classify Auto Router requests with a Bedrock-hosted GPT-6 Luna, use the [LLM classifier](./proxy/auto_routing.md) with `classifier_type: llm`, which calls the model over chat
 
 LiteLLM translates between the two formats, so the route you call does not limit which provider you can use. OpenAI receives OpenAI-format bodies, Gemini receives its native Decisions format and the other providers receive System One bodies. The answers come back in the format of the route you called. Text parts of an OpenAI `input` are joined into the System One `state`, and System One questions are named by their keys when they go to OpenAI
 
@@ -198,7 +204,7 @@ Changing `"model"` to `"jev"` sends the same questions to TypeSafe and returns t
 | Field | Type | Description |
 |-------|------|-------------|
 | `model` | string | A proxy model name, or `<provider>/<model>` in the SDK |
-| `input` | string or array | A string, or messages shaped like `{"type": "message", "role": "user", "content": ...}`. `content` is a string or a list of `input_text` and `input_image` parts |
+| `input` | string or array | A string, or messages shaped like `{"type": "message", "role": "user", "content": ...}`. `content` is a string or a list of `input_text`, `input_image` and [`input_json`](#json-input) parts |
 | `questions` | array | 1 to 128 questions. Answers come back in the same order |
 | `safety_identifier` | string, optional | A stable ID for your end user. Sent to OpenAI. Other providers return a 400, or drop it under `drop_params` |
 | `audio` | array, optional | Up to 4 audio clips, with the rules in [Audio and video input](#audio-and-video-input) |
@@ -322,6 +328,38 @@ Other providers do not take images, and TypeSafe takes them only with the images
 ```
 
 With `drop_params: true` in `litellm_settings` or on the deployment, LiteLLM drops the images and sends only the text. A request that has no text left after the drop still gets a 400.
+
+### JSON input
+
+OpenAI models take `input_json` parts in user messages. `data` is an object or an array of objects, and LiteLLM sends it to the provider as it is, next to the message's other parts. An `input_json` part in a developer or system message gets a 400, even with `drop_params` on.
+
+```bash showLineNumbers
+curl -X POST 'http://0.0.0.0:4000/v1/decisions' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{
+  "model": "luna",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {"type": "input_text", "text": "Evaluate the ticket using the order evidence."},
+        {"type": "input_json", "data": {"ticket": {"body": "Please refund the duplicate charge."}, "order": {"charges": [49, 49]}}}
+      ]
+    }
+  ],
+  "questions": [
+    {"type": "predicate", "name": "duplicate_charge", "instructions": "Does the ticket describe a duplicate charge supported by the order?"}
+  ]
+}'
+```
+
+The answer has the same shape as the answer to a text-only request. The [`hide-secrets`](./proxy/guardrails/secret_detection.md) guardrail also checks the keys and string values inside `data`, reading each value together with its key, and it replaces each secret it finds with `[REDACTED]` before the request goes to the provider. A redacted key that would clash with another key in the same object gets a number, such as `[REDACTED] (2)`, so no value is lost. The [LLM Shield Proxy](./proxy/guardrails/llm_shield_proxy.md) guardrail swaps personal data in the keys, string values, and numbers inside `data` for stand-in values, and a number it swaps is sent as a string. Other guardrails that read message text, such as banned keywords, OpenAI moderation and Azure Content Safety, read `data` as JSON text. Cisco AI Defense cannot rewrite `data`, so when it asks to redact a request that carries `input_json`, the gateway blocks the request with a 400, also in monitor mode.
+
+Other providers return a 400 that names `input_json` before the provider is called. With `drop_params` on, LiteLLM drops the `input_json` parts and sends the rest. A request that has no input left after the drop still gets a 400. `data` that is not an object or an array of objects gets a 400 even with `drop_params` on.
+
+In a load-balanced group, a request with `input_json` parts goes only to the deployments that take them, and requests without them still use every deployment. With `drop_params` on, a deployment that does not take JSON stays in the pick and drops the JSON parts, as long as it keeps some input. A deployment that would have no input left after it drops the JSON parts and any images or developer and system messages it does not take is skipped. So a request whose user message holds only `input_json` parts goes only to the deployments that take JSON. When no deployment in the group can take the request, it gets the 400 that names `input_json`, and then the group's [fallbacks](./proxy/reliability.md) run, if it has any. Without `drop_params`, when every deployment that takes JSON is cooling down, the request gets the same 400, and on the 1.108.x LTS line it gets the router's 429 cooldown error instead. With `drop_params` on, a deployment that does not take JSON can answer it then from the rest of the input. To keep JSON requests on deployments that read the JSON, put those deployments in a model group of their own and send JSON requests to that group.
 
 ## /v1/systemone
 
@@ -606,6 +644,42 @@ Through the Router the same split applies: `router.decisions` and `router.adecis
 In v1.104.2 through v1.104.x, `litellm.decisions` accepted both shapes and picked the format from whether you passed `input` or `state`. Those calls keep working unchanged, with a `UserWarning`. Rename `litellm.decisions(state=...)` to `litellm.systemone(state=...)` when convenient, the arguments stay the same.
 :::
 
+### Send decision calls through a LiteLLM proxy
+
+Give a model the `litellm_proxy/` prefix to send the call to another LiteLLM proxy. `litellm.decisions` calls go to that proxy's `/v1/decisions` and `litellm.systemone` calls go to its `/v1/systemone`, so the proxy's virtual key needs access to the route you call. The answer has the fields a direct call to that model returns, and the call's cost is the proxy's `x-litellm-response-cost` header, else the cost map price of the model after the prefix.
+
+```python showLineNumbers title="SDK through a LiteLLM proxy"
+import os
+import litellm
+
+os.environ["LITELLM_PROXY_API_BASE"] = "https://litellm.example.com"
+os.environ["LITELLM_PROXY_API_KEY"] = "sk-..."
+
+response = litellm.systemone(
+    model="litellm_proxy/jev",
+    state="Customer wrote: I was charged twice for my order #4411 and want one of the charges refunded today.",
+    questions={
+        "is_refund_request": {"type": "noul", "instructions": "Is the customer asking for a refund?"},
+    },
+)
+print(response.answers["is_refund_request"].noul)
+```
+
+`use_litellm_proxy=True` on the call, or `litellm.use_litellm_proxy = True`, sends a model without the prefix to the same proxy. A `drop_params` you pass on the call goes to the proxy too, while the global `litellm.drop_params` stays local.
+
+On a proxy, a `litellm_proxy/` deployment forwards decision calls to the LiteLLM proxy its `api_base` names. The deployment's own `drop_params` goes to that proxy too, while `drop_params` in `litellm_settings` stays local.
+
+```yaml showLineNumbers
+model_list:
+  - model_name: jev
+    litellm_params:
+      model: litellm_proxy/jev
+      api_base: https://litellm.example.com
+      api_key: os.environ/UPSTREAM_LITELLM_KEY
+    model_info:
+      mode: decisions
+```
+
 ## Limits
 
 OpenAI requires `instructions` on every question and at least 2 choices or score levels. When a System One question without `instructions` goes to an OpenAI model, LiteLLM fills in a generic one such as "Which choice best fits the input?", and a noul question's `criteria` are folded into the instructions OpenAI sees. A choice with one label or a score with one level has no OpenAI equivalent, so LiteLLM rejects it with a 400 before OpenAI is called
@@ -644,7 +718,7 @@ Problems the form can catch, such as an empty **Input**, are listed above **Send
 
 <Image img={require('../img/decisions_playground_openai.png')} alt="Decisions playground with /v1/decisions and the luna model picked, the bug report triage example with choice, predicate and score questions and its answers" />
 
-The tab is in `v1.106.0` and later, and not in `v1.104.2` or `v1.105.0`. `v1.106.0` starts with the first example filled in, picks others from a dropdown instead of **Load example**, and labels the eraser **Clear**. The [TypeSafe page](./pass_through/typesafe.md#try-it-in-the-admin-ui) walks through the System One form, validation and answer view.
+The tab is in `v1.106.0` and later, and not in `v1.104.2` or `v1.105.0`. `v1.106.0` starts with the first example filled in, picks others from a dropdown instead of **Load example**, and labels the eraser **Clear**.
 
 ## Use a decision model as a guardrail
 
@@ -652,4 +726,64 @@ The [Decision Model guardrail](./proxy/guardrails/decision_model.md) asks any [s
 
 ## Decision routes vs pass-through routes
 
-The [TypeSafe pass-through](./pass_through/typesafe.md) at `/typesafe/v1/systemone` forwards raw requests to TypeSafe only and reads the key from the proxy environment. The [OpenRouter pass-through](./providers/openrouter.md#through-the-openrouter-pass-through) at `/openrouter/alpha/decisions` forwards raw requests to OpenRouter only. `/v1/decisions` and `/v1/systemone` use the models in your `model_list`, so you can switch providers, load balance and set per-deployment keys without changing the request body
+The [OpenRouter pass-through](./providers/openrouter.md#through-the-openrouter-pass-through) at `/openrouter/alpha/decisions` forwards raw requests to OpenRouter only. `/v1/decisions` and `/v1/systemone` use the models in your `model_list`, so you can switch providers, load balance and set per-deployment keys without changing the request body
+
+## Migrate from TypeSafe pass-through
+
+The TypeSafe pass through is stripped in `v1.113.0`. Once you've upgraded to that version or later `/typesafe/...` will return a 404. Jev is available through `/v1/systemone` and `/v1/decisions`. You need to have a model deployment configured as the unified routes use `model_list` rather than just forwarding any old path through to TypeSafe.
+
+Set `TYPESAFE_API_KEY` on the proxy and add this deployment to its config. Clients authenticate with a LiteLLM key in `LITELLM_API_KEY` (not the TypeSafe key).
+
+```yaml showLineNumbers keep-model-ids
+model_list:
+  - model_name: jev
+    litellm_params:
+      model: typesafe/jev-1.14.0
+      api_key: os.environ/TYPESAFE_API_KEY
+```
+
+For an existing System One request, change the path from `/typesafe/v1/systemone` to `/v1/systemone` and set `model` to the deployment name, `jev`. Leave `state` and the `questions` map as they are. For images, send the JSON rather than the multipart upload. PNG and JPEG images are base64 `assets` on `/v1/systemone` or `input_image` parts on `/v1/decisions`. Both of these require `TypeSafe-Danger-Zone-Images: true`.
+
+Replace `<BASE64_PNG>` with the base64 bytes of a PNG (no data URL prefix). The asset name must be present in `state`.
+
+```bash showLineNumbers
+curl -X POST 'http://localhost:4000/v1/systemone' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -H 'TypeSafe-Danger-Zone-Images: true' \
+  -d '{
+    "model": "jev",
+    "state": {"photo": "photo-red"},
+    "assets": {
+      "photo-red": {"type": "image", "format": "png", "data_base64": "<BASE64_PNG>"}
+    },
+    "questions": {
+      "red": {"type": "noul", "instructions": "Is the image mostly red?"}
+    }
+  }'
+```
+
+For OpenAI shaped requests use `/v1/decisions` with `input` and a questions array. In this case the PNG bytes require the `data:image/png;base64,` prefix. For JPEG use `format: "jpeg"` in assets or the `data:image/jpeg;base64,` prefix in an image URL.
+
+```bash showLineNumbers
+curl -X POST 'http://localhost:4000/v1/decisions' \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -H 'TypeSafe-Danger-Zone-Images: true' \
+  -d '{
+    "model": "jev",
+    "input": [{
+      "type": "message",
+      "role": "user",
+      "content": [
+        {"type": "input_text", "text": "Inspect this photo."},
+        {"type": "input_image", "image_url": "data:image/png;base64,<BASE64_PNG>"}
+      ]
+    }],
+    "questions": [
+      {"name": "red", "type": "predicate", "instructions": "Is the image mostly red?"}
+    ]
+  }'
+```
+
+These request shapes were tested via a 512x512 PNG through a live proxy and TypeSafe Jev 1.14.0. Both of the unified routes returned 200 on removal, the old pass-through route returned 404. See [TypeSafe images, box questions and long context](#typesafe-images-box-questions-and-long-context) for other image questions and opt-in headers. EU Jev, Laya, Bespoke and the OpenRouter pass-through are separate integrations and are not affected by this change.

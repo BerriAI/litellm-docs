@@ -255,6 +255,8 @@ LiteLLM bills each second of input audio at the `input_cost_per_second` of the m
 
 The count of seconds comes from `usage.input_seconds` in `session.closed`. If the provider does not send this value, LiteLLM counts the seconds of audio that your client sent. Thus, always send `session.close` and wait for `session.closed`. A session that gets only error events, for example from an unknown model, is recorded as a failure and LiteLLM does not bill it.
 
+On WebRTC, the audio does not go through the proxy. The proxy joins each call with its own connection and bills the seconds from the moment it joins to the moment the call ends. A call that the proxy cannot join gets `503` and does not start. See [billing and limits](/docs/proxy/realtime_webrtc#billing-and-limits) for reconnects and the `meter_webrtc_calls` setting.
+
 To use a different price, set `input_cost_per_second` on the deployment:
 
 ```yaml

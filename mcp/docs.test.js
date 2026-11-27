@@ -43,6 +43,7 @@ test('URLs, paths, .md links and fragments resolve to permalinks on docs.litellm
   assert.ok(parseDocUrl('/docs/proxy/logging/').candidates.includes('/docs/proxy/logging'));
   assert.match(parseDocUrl('https://evil.example/docs/proxy/logging').error, /Only/);
   assert.equal(parseDocUrl('/api-reference/#/chat/chat_completion').api, '/api-reference/#/chat/chat_completion');
+  assert.equal(parseDocUrl('/api-reference/#tag/chat/chat_completion').api, '/api-reference/#tag/chat/chat_completion');
 });
 
 test('get_litellm_doc reads a page, a section, and refuses anything off the index', async () => {
@@ -96,6 +97,7 @@ test('API endpoints resolve by method and path, operationId, or reference URL', 
   assert.match(chat, /#\/components\/schemas\/ChatRequest/);
   assert.match(out(await call('get_litellm_api_endpoint', {endpoint: 'generate_key'})), /`x` \(header, required, string\)/);
   assert.match(out(await call('get_litellm_api_endpoint', {endpoint: 'https://docs.litellm.ai/api-reference/#/keys/generate_key'})), /Make a key/);
+  assert.match(out(await call('get_litellm_api_endpoint', {endpoint: 'https://docs.litellm.ai/api-reference/#tag/keys/generate_key'})), /Make a key/);
   const missing = await call('get_litellm_api_endpoint', {endpoint: '/chat'});
   assert.equal(missing.isError, true);
   assert.match(out(missing), /POST \/v1\/chat\/completions/);

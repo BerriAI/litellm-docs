@@ -1,0 +1,4 @@
+id,prompt,expected
+ticket-01,I was billed twice for this month's plan.,billing
+ticket-02,The API returns a 500 error when I upload a file.,technical
+ticket-03,Can we get a quote for 100 seats?,sales

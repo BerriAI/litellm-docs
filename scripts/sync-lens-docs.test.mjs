@@ -122,6 +122,6 @@ test('old section and framework links stay within the Proxy Lens category', () =
     '/docs/proxy/lens/investigations#connect-the-analyzer',
     '/docs/proxy/lens/integrations/claude-agent-sdk',
     '/docs/proxy/lens/deployment/storage',
-    '/docs/proxy/lens/deployment/kubernetes#existing-deployment',
+    '/docs/proxy/lens/deployment/litellm#helm',
   ]);
 });

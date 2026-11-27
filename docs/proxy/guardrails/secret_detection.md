@@ -104,7 +104,7 @@ https://api.groq.com/openai/v1/ \
 
 ## Skip tool results
 
-hide-secrets masks secrets in tool calls and tool results as well as in user text. To send tool results to the model as returned, set `skip_tool_message_in_guardrail: true` on the guardrail, or in `litellm_settings` to apply it to every guardrail. A per-guardrail value wins over the global one, so `false` on hide-secrets keeps tool results masked while other guardrails skip them. See [Skip tool messages in guardrail evaluation](./quick_start.md#skip-tool-messages-in-guardrail-evaluation).
+hide-secrets masks secrets in tool calls and tool results as well as in user text. On `/v1/decisions` it also checks the keys and string values inside [`input_json` parts](../../decisions.md#json-input). To send tool results to the model as returned, set `skip_tool_message_in_guardrail: true` on the guardrail, or in `litellm_settings` to apply it to every guardrail. A per-guardrail value wins over the global one, so `false` on hide-secrets keeps tool results masked while other guardrails skip them. See [Skip tool messages in guardrail evaluation](./quick_start.md#skip-tool-messages-in-guardrail-evaluation).
 
 ```yaml
 guardrails:

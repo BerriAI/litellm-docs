@@ -6,6 +6,12 @@ import Image from '@theme/IdealImage';
 
 Set a soft budget on a team and get email alerts when spending crosses the threshold, without blocking any requests.
 
+:::note Legacy fixed-dollar alerts
+
+This fixed-dollar email configuration is deprecated. For new alerts, use [team budget percentage thresholds](./email.md#team-budget-thresholds-and-recipients), which share the key alert format. Existing dollar alerts remain supported and editable. No automatic migration occurs, and configuring both types sends both alerts independently.
+
+:::
+
 ## Overview
 
 A **soft budget** is a spending threshold that triggers email notifications when exceeded, but **does not block requests**. This is different from a hard budget (`max_budget`), which rejects requests once the limit is reached.
