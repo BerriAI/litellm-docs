@@ -3,12 +3,12 @@ import TabItem from '@theme/TabItem';
 
 # Sandbox / Code Execution
 
-Run model-generated code inside an isolated sandbox and get its output back. The API is provider-agnostic; e2b and opensandbox are supported backends, talked to directly over HTTPS with no extra SDK dependency.
+Run model-generated code inside an isolated sandbox and get its output back. The API is provider-agnostic. e2b, opensandbox, tensorlake, blaxel and boat are talked to directly over HTTPS with no extra SDK dependency, and modal goes through the `modal` SDK.
 
 | Feature | Supported |
 |---------|-----------|
-| Supported Providers | `e2b`, `opensandbox` |
-| Cost Tracking | Passthrough (sandbox billing stays with the provider) |
+| Supported Providers | `e2b`, `opensandbox`, `modal`, `tensorlake`, `blaxel`, `boat` |
+| Cost Tracking | `litellm.asandbox_cost` returns the provider's own dollars or a labelled estimate (see [Sandbox cost](#sandbox-cost)) |
 | Logging | Via the standard `@client` logging path used by `litellm.asearch` |
 | Proxy Endpoint | Via the code interpreter interceptor on `/v1/responses` and `/v1/chat/completions` (see below); no standalone `/v1/sandbox` yet |
 
@@ -349,6 +349,21 @@ asyncio.run(main())
 
 `arun_code` and `adelete_sandbox` accept either the `ContainerHandle` returned by `acreate_sandbox` or a bare sandbox id string, so you can persist the id between processes and pick the sandbox back up later.
 
+## Sandbox cost
+
+`litellm.asandbox_cost` returns what a sandbox has cost so far. It works while the sandbox runs and after `adelete_sandbox`, because the final cost is kept on the container handle.
+
+```python
+container = await litellm.acreate_sandbox(provider="boat")
+await litellm.arun_code(provider="boat", container=container, code="print(1)")
+await litellm.adelete_sandbox(provider="boat", container=container)
+
+cost = await litellm.asandbox_cost(provider="boat", container=container)
+print(cost.cost_usd, cost.source, cost.seconds)
+```
+
+`source` says where the number comes from. `provider` means the provider reported the dollars itself, which is the case for boat. `estimate` means LiteLLM multiplied the sandbox's lifetime by the provider's list prices for its CPU, memory and disk, which is the case for e2b, modal, tensorlake and blaxel. `unknown` means there is no price for the provider, and `cost_usd` is then `None` and never `0`. The list prices live in `litellm/sandbox_prices.json`, separate from the model cost map. `acode_interpreter_tool` puts the same number in `result.hidden_params["response_cost"]` when it is known.
+
 ## Parameters
 
 ### `acode_interpreter_tool`
@@ -418,3 +433,40 @@ print(result.stdout)  # '45\n'
 ```
 
 The provider drives OpenSandbox's REST lifecycle directly: `POST /v1/sandboxes` to create, resolves the per-sandbox execd endpoint, streams `/code` SSE into a `CodeExecutionResult`, then `DELETE /v1/sandboxes/{id}` to tear down. Other defaults (template, entrypoint, language, polling interval, execd port, default network policy, output cap) live as literals in `litellm/constants.py`.
+
+### modal
+
+Install the SDK with `pip install 'litellm[modal]'`, then set `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` (or pass `api_key="<token id>:<token secret>"` per call). Sandboxes are created in a Modal app named `litellm-sandbox`; set `MODAL_APP_NAME` or pass `app_name=...` to use another app. `template` is a registry image and defaults to Debian slim. `cpus` and `memory_mb` are applied as both the reservation and the limit, so the cost estimate covers everything the sandbox can use. `allow_internet_access=False` blocks the network.
+
+```python
+result = await litellm.acode_interpreter_tool(
+    provider="modal",
+    code="print(sum(range(10)))",
+    cpus=0.25,
+    memory_mb=256,
+)
+```
+
+### tensorlake
+
+Set `TENSORLAKE_API_KEY` (or pass `api_key=...` per call). `template` is a Tensorlake sandbox image, and `cpus` and `memory_mb` size the sandbox. `allow_internet_access=False` creates the sandbox with outbound internet access turned off.
+
+```python
+result = await litellm.acode_interpreter_tool(provider="tensorlake", code="print(sum(range(10)))")
+```
+
+### blaxel
+
+Set `BL_API_KEY` (or pass `api_key=...` per call). Set `BL_WORKSPACE` when the key can reach more than one workspace. `template` is a Blaxel sandbox image and `memory_mb` sizes the sandbox. Blaxel's shortest lifetime is five minutes, so a shorter `timeout` is raised to 300 seconds. Blaxel sandboxes cannot be cut off from the internet through LiteLLM, so `allow_internet_access=False` raises an error instead of creating one.
+
+```python
+result = await litellm.acode_interpreter_tool(provider="blaxel", code="print(sum(range(10)))")
+```
+
+### boat
+
+Set `BOAT_API_KEY` (or pass `api_key=...` per call). `template` is the Boat sandbox type and defaults to `small`. Sandboxes are always created with `noEnv`, so the secrets and credentials stored on your Boat account never reach model-generated code. `allow_internet_access=False` creates the sandbox with a deny-all outbound network policy. Boat reports each sandbox's dollars itself, so `asandbox_cost` returns `source="provider"`.
+
+```python
+result = await litellm.acode_interpreter_tool(provider="boat", code="print(sum(range(10)))")
+```
