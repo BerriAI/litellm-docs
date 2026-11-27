@@ -600,6 +600,12 @@
       "chat"
     ]
   },
+  "providers/levanto": {
+    "prefix": "levanto",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/llamagate": {
     "prefix": "llamagate",
     "capabilities": [
