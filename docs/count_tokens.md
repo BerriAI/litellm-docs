@@ -213,10 +213,53 @@ Each error uses the error format of the API that you used: Anthropic, OpenAI, or
 | A Vertex AI partner model, such as GLM, has no count API | A 400 that names the model |
 | A non-Claude Bedrock model, such as Amazon Nova, has no count API | The 400 or 404 from AWS |
 | `litellm.disable_token_counter` is set, and the provider has no count API | A 503 |
+| A Llama 2, Llama 3, Cohere, or Bedrock Kimi K3 model cannot download its Hugging Face tokenizer | A 503 that names the tokenizer and when the proxy tries the download again |
 
 If the deployment sets `token_count_framing` or another framing key, the proxy returns a local estimate in place of a 400 or a 404 from the provider. Refer to [Local estimates for models without a count API](#local-estimates-for-models-without-a-count-api). A Vertex AI partner model with `custom_tokenizer` in `model_info` continues to use a local count and does not return the 400.
 
 This change does not apply to providers with no count API, such as Groq. They continue to use a local count. The SDK function `litellm.acount_tokens()` also continues to use a local count.
+
+#### Hugging Face tokenizer downloads <SinceVersion v="1.113.0" />
+
+Llama 2, Llama 3, Cohere, and Bedrock Kimi K3 models count with a tokenizer that the proxy downloads from Hugging Face. This also applies to a deployment whose `base_model` is one of these models, to providers with no count API, such as Groq, and to deployments that set `token_count_framing`. If the download fails, for example because the proxy cannot reach `huggingface.co`, the proxy count routes return a 503. The message names the tokenizer and tells you in how many seconds the proxy tries the download again. While the first download is still running after 5 seconds, the message tells you to try again in a few seconds. This also happens when `huggingface.co` is reachable but slow, on the first count of each worker. For a deployment that sets `token_count_framing`, the message also gives the error from the provider count. Before v1.113.0, the routes returned a 200 with a local tiktoken estimate in these cases.
+
+To never download a tokenizer, use one of these settings:
+
+- `disable_hf_tokenizer_download: true` counts every model with tiktoken. This includes DeepSeek and Claude models, whose tokenizers ship with LiteLLM and need no download.
+- Offline mode (`LITELLM_OFFLINE_MODE=true`) keeps the tokenizers that ship with LiteLLM and counts the other models with tiktoken. It also stops every other request in [Outbound requests](./proxy/outbound_requests.md), such as the remote model cost map and the breached password check.
+
+```yaml
+model_list:
+  - model_name: llama-3
+    litellm_params:
+      model: databricks/databricks-meta-llama-3-3-70b-instruct
+      api_key: os.environ/DATABRICKS_API_KEY
+      api_base: os.environ/DATABRICKS_API_BASE
+
+litellm_settings:
+  disable_hf_tokenizer_download: true  # count every model with tiktoken, never download
+```
+
+Without that setting, the same deployment returns this error when the proxy cannot reach Hugging Face:
+
+```bash
+curl -X POST "http://localhost:4000/v1/messages/count_tokens" \
+  -H "Authorization: Bearer $LITELLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "llama-3", "messages": [{"role": "user", "content": "Hello"}]}'
+```
+
+```json
+{
+  "type": "error",
+  "error": {
+    "type": "api_error",
+    "message": "Could not load the Hugging Face tokenizer Xenova/llama-3-tokenizer to count tokens for this model. LiteLLM retries the load in 60s. To count every model with tiktoken without downloading, set litellm_settings.disable_hf_tokenizer_download to true"
+  }
+}
+```
+
+The status is 503 Service Unavailable. The other count routes return the same message in their own error format.
 
 ### Local estimates for models without a count API
 

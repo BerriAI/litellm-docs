@@ -33,6 +33,8 @@ Offline mode freezes the model cost map at the copy bundled with your LiteLLM ve
 
 The breached password check sends only the first 5 characters of the password's SHA-1 hash, never the password.
 
+With offline mode off, the proxy count routes return a 503 error instead of a count when they can't download a Hugging Face or Kimi K3 tokenizer. Refer to [Proxy errors instead of local estimates](../count_tokens.md#proxy-errors-instead-of-local-estimates).
+
 Offline mode overrides the per-feature settings. With offline mode on, the breached password check stays off even when `password_policy_check_breached_passwords` is `true`, and the `*_URL` variables are ignored. To read a catalog from an internal mirror, leave offline mode off, set that catalog's `*_URL` variable, and turn off the other requests with their per-feature switches.
 
 The bundled copies are as current as the installed LiteLLM version. New model prices, presets, templates and blog posts arrive when you upgrade.
