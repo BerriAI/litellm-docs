@@ -185,6 +185,7 @@ const sidebars = {
             "observability/promptlayer_integration",
             "observability/qualifire_integration",
             "observability/wandb_integration",
+            "observability/whiteboxxai_integration",
           ],
         },
         {
