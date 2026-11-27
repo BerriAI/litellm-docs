@@ -181,6 +181,7 @@ general_settings:
       target: string                  # Target URL for forwarding
       auth: boolean                   # Enable LiteLLM authentication (Enterprise)
       forward_headers: boolean        # Forward all incoming headers
+      preserve_trace_context: boolean # Forward caller traceparent and tracestate without injecting a proxy span, even when forward_headers is false. Default: false.
       include_subpath: boolean        # If true, forwards requests to sub-paths (default: false)
       timeout: float                  # Optional: per-endpoint upstream timeout (seconds). Overrides pass_through_request_timeout
       methods: list[string]           # Optional: HTTP methods (e.g., ["GET", "POST"]). If not specified, all methods are supported.
