@@ -169,6 +169,7 @@ const sidebars = {
             "observability/phoenix_integration",
             "observability/athina_integration",
             "observability/braintrust",
+            "observability/dash0",
             "observability/grafana_cloud",
             "observability/opik_integration",
             "observability/deepeval_integration",
