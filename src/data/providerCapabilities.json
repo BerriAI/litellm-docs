@@ -774,6 +774,12 @@
       "images"
     ]
   },
+  "providers/redrouter": {
+    "prefix": "redrouter",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/refuseless": {
     "prefix": "refuseless",
     "capabilities": [

@@ -77,6 +77,7 @@ const PAGE_CAPABILITIES = {
   'providers/opencode_go': ['chat'],
   'providers/qwencloud': ['embeddings', 'rerank'],
   'providers/ragflow_vector_store': ['vector_stores'],
+  'providers/redrouter': ['chat'],
   'providers/xinference': ['embeddings'],
 };
 
