@@ -2017,6 +2017,7 @@ const providersSidebar = {
       "providers/perplexity_embedding",
       "providers/perplexity_orchestrator",
     ] },
+    "providers/phase_router",
     "providers/predibase",
     "providers/prism",
     "providers/publicai",
