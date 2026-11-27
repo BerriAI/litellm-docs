@@ -1995,6 +1995,7 @@ const providersSidebar = {
     "providers/jina_ai",
     "providers/lambda_ai",
     "providers/llamagate",
+    "providers/lyceum",
     "providers/manus",
     "providers/meta",
     "providers/meta_llama",
