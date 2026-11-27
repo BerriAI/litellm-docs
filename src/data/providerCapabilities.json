@@ -355,6 +355,12 @@
       "images"
     ]
   },
+  "providers/blockrun": {
+    "prefix": "blockrun",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/bytez": {
     "prefix": "bytez",
     "capabilities": [
