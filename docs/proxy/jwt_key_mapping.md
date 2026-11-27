@@ -161,7 +161,11 @@ Configure issuer-bound validation with `litellm_jwtauth.issuers` in the [per-iss
 }
 ```
 
-LiteLLM first looks for an issuer-scoped mapping, then falls back to a global mapping without `jwt_issuer`. Global mappings share the same claim namespace across providers. Use issuer-scoped mappings to distinguish identical claim values from different providers.
+By default, LiteLLM first looks for an issuer-scoped mapping, then falls back to a global mapping without `jwt_issuer`. Global mappings share the same claim namespace across providers.
+
+Set `general_settings.litellm_jwtauth.disable_global_key_mapping_fallback: true` to skip global mappings for JWTs from configured issuers. An issuer entry can override the global setting with `true` or `false`. If the issuer has no scoped mapping and fallback is disabled, its effective `unregistered_jwt_client_behavior` applies. For example, `reject` denies the request, and `auto_register` creates an issuer-scoped mapping. JWTs whose issuer is absent or not configured keep their existing lookup behavior.
+
+Enable `disable_global_key_mapping_fallback` only after you upgrade every replica, because older replicas reject the field and cannot evict strict cache entries.
 
 ### Manage mappings {#managing-mappings}
 

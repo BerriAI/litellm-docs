@@ -432,6 +432,7 @@ The **Default** column is the value LiteLLM uses when the setting is omitted fro
 | litellm_jwtauth.audience | string | `null` | Expected `aud` claim on the global JWT path. Takes precedence over `JWT_AUDIENCE`. [Docs](./token_auth.md#usage) <SinceVersion v="1.112.0" /> |
 | litellm_jwtauth.unregistered_jwt_client_behavior | string | `fallback_team_mapping` | What to do when a JWT has no key mapping: `fallback_team_mapping`, `reject`, `auto_register`, or `link_only` <SinceVersion v="1.109.0" />. [Docs](./jwt_key_mapping.md#step-1-configure-the-claim-and-unmapped-client-policy) |
 | litellm_jwtauth.auto_register_map_existing_key | boolean | `false` | With `auto_register`, reuse the user's newest eligible key instead of creating one. [Docs](./jwt_key_mapping.md#which-existing-key-is-selected) {/* keep-version-note */} |
+| litellm_jwtauth.disable_global_key_mapping_fallback | boolean | `false` | Skip global JWT key mappings after a scoped miss for configured issuers. Each issuer can override this setting. [Docs](./jwt_key_mapping.md#multiple-identity-providers) <SinceVersion v="1.113.0" /> |
 | litellm_license | str | `null` | The license key for the proxy. [Docs](../enterprise/activate.md) |
 | oauth2_config_mappings | Dict[str, str] | `{}` | Define the OAuth2 config mappings |
 | pass_through_endpoints | List[Dict[str, Any]] | `null` | Define the pass through endpoints. [Docs](./pass_through) |
