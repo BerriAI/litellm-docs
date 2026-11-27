@@ -285,6 +285,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/model_armor", customProps: { icon: "/img/integrations/google.png" } },
           { type: "doc", id: "proxy/guardrails/noma_security", customProps: { icon: "/img/integrations/noma.png" } },
           { type: "doc", id: "proxy/guardrails/dynamoai", customProps: { icon: "/img/integrations/dynamoai.png" } },
+          { type: "doc", id: "proxy/guardrails/dataandmore", customProps: { icon: "/img/integrations/dataandmore.png" } },
           { type: "doc", id: "proxy/guardrails/openai_moderation", customProps: { icon: "/img/integrations/openai.png" } },
           { type: "doc", id: "proxy/guardrails/pangea", customProps: { icon: "/img/integrations/pangea.png" } },
           "proxy/guardrails/pillar_security",
