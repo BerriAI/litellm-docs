@@ -684,6 +684,12 @@
       "chat"
     ]
   },
+  "providers/nodecode": {
+    "prefix": "nodecode",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/novita": {
     "prefix": "novita",
     "capabilities": [
