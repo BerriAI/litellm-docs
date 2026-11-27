@@ -87,7 +87,7 @@ const DISPLAY_NAMES = dict(Object.entries({
   github: 'GitHub Models', github_copilot: 'GitHub Copilot', gmi: 'GMI Cloud', google_pse: 'Google PSE',
   gradient_ai: 'GradientAI', groq: 'Groq AI', helicone: 'Helicone', heroku: 'Heroku', hosted_vllm: 'Hosted VLLM',
   hostinger_router: 'Hostinger Router', huggingface: 'Huggingface', hyperbolic: 'Hyperbolic', inception: 'Inception',
-  inferenceapis: 'Inference APIs', infinity: 'Infinity', jina_ai: 'Jina AI', kyma: 'Kyma API', lambda_ai: 'Lambda AI',
+  inferenceapis: 'Inference APIs', infinity: 'Infinity', jina_ai: 'Jina AI', kunavo: 'Kunavo', kyma: 'Kyma API', lambda_ai: 'Lambda AI',
   langflow: 'LangFlow', langgraph: 'LangGraph', laya: 'Laya', lemonade: 'Lemonade', libertai: 'LibertAI',
   linkup: 'Linkup', litellm_proxy: 'LiteLLM Proxy', llamafile: 'Llamafile', llamagate: 'LlamaGate',
   lm_studio: 'LM Studio', manus: 'Manus', maritalk: 'Maritalk', meta: 'Meta Model API',
