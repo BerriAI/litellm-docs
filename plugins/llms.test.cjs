@@ -48,6 +48,27 @@ test('version badges become plain text in the markdown export', () => {
   );
 });
 
+test('backported versions reach the markdown export with their release line', () => {
+  const page = [
+    '<SinceVersion v="1.111.0" backports={["1.108.10"]} />',
+    '',
+    `| \`LITELLM_X\` | <SinceVersion v="1.4.0" backports={["v1.2.3", '1.3.4']} /> Turns X on. |`,
+    '',
+    "Set it to keep IDs out. <SinceVersion v={'1.111.0'} backports={['1.108.10']} />",
+  ].join('\n');
+  assert.equal(
+    mdxToMarkdown(page),
+    [
+      'Available in LiteLLM v1.111.0 and later, and in v1.108.10 and later 1.108.x patches.',
+      '',
+      '| `LITELLM_X` | (since LiteLLM v1.4.0, and v1.2.3 and later 1.2.x patches and v1.3.4 and later 1.3.x patches) Turns X on. |',
+      '',
+      'Set it to keep IDs out. (since LiteLLM v1.111.0, and v1.108.10 and later 1.108.x patches)',
+      '',
+    ].join('\n'),
+  );
+});
+
 test('copy page gives the same version text as the markdown export', () => {
   const page = [
     '# Reasoning',
