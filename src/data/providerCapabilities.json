@@ -751,6 +751,12 @@
       "chat"
     ]
   },
+  "providers/qianfan": {
+    "prefix": "qianfan",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/qwencloud": {
     "prefix": "qwencloud",
     "capabilities": [

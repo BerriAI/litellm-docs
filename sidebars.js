@@ -2020,6 +2020,7 @@ const providersSidebar = {
     "providers/predibase",
     "providers/prism",
     "providers/publicai",
+    "providers/qianfan",
     "providers/qwencloud",
     "providers/ragflow",
     "providers/recraft",
