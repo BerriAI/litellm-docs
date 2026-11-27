@@ -407,6 +407,10 @@ litellm_settings:
     max_budget: 100                # Optional[float], optional): $100 budget for a new SSO sign in user
     budget_duration: 30d           # Optional[str], optional): 30 days budget_duration for a new SSO sign in user
     models: ["{{openai_small}}"]      # Optional[List[str]], optional): models to be used by a new SSO sign in user
+    model_max_budget:              # Optional[dict], optional): per-model budgets for a new user. Enterprise only
+      "{{openai_small}}":
+        budget_limit: 5            # $5 on this model
+        time_period: 30d           # every 30 days
     teams: # Optional[List[NewUserRequestTeam]], optional): teams to be used by the user
       - team_id: "team_id_1" # Required[str]: team_id to be used by the user
         max_budget_in_team: 100 # Optional[float], optional): $100 budget for the team. Defaults to None.
@@ -437,6 +441,8 @@ litellm_settings:
     personal_key_generation: # maps to 'Default Team' on UI 
       allowed_user_roles: ["proxy_admin"]
 ```
+
+`model_max_budget` under `default_internal_user_params` is an enterprise setting. It takes the same shape as `model_max_budget` on [`/user/new`](./users.md) and gives every new non-admin user those per-model budgets, unless the request that creates the user sets its own. You can also read it with `GET /get/internal_user_settings` and set it with `PATCH /update/internal_user_settings`, which rejects a non-empty value with a 400 when no enterprise license is active. Without a license, a `model_max_budget` set in `config.yaml` does not stop the proxy from starting or users from signing in: the proxy leaves it off new users, applies the other defaults, and logs a warning that names the key.
 
 ## Further Reading
 
