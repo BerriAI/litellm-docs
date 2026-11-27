@@ -37,6 +37,7 @@ The first provider's `sub` identifies a user; the second provider's `sub` identi
 | `audience` | Expected audience. Required unless `disable_audience_validation: true` is set. |
 | `disable_audience_validation` | Explicitly skip the audience check. Cannot be combined with `audience`. |
 | `jwks_url` | Optional JWKS URL. Otherwise LiteLLM reads the issuer's OIDC discovery document and follows `jwks_uri`. |
+| `disable_global_key_mapping_fallback` | Set to `true` to skip global JWT key mappings after an issuer-scoped miss. Set to `false` to allow fallback for this issuer. Omit it to inherit the [global setting](./jwt_key_mapping.md#multiple-identity-providers). |
 | Claim mappings | `user_id_jwt_field`, `user_email_jwt_field`, `team_id_jwt_field`, `team_ids_jwt_field`, `org_id_jwt_field`, and `end_user_id_jwt_field` override their global counterparts for this issuer. |
 
 Mappings omitted from an issuer entry fall back to global `litellm_jwtauth` settings. Move mappings into the issuer entries when a claim has different meanings across providers.
