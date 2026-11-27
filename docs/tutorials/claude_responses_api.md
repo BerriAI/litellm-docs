@@ -6,6 +6,8 @@ import TabItem from '@theme/TabItem';
 
 This tutorial shows how to call Claude models through LiteLLM proxy from Claude Code.
 
+For auto mode, see [Claude Code auto mode and classifier setup](../claude_code_auto_mode). Claude routes use the provider's safeguards without extra configuration. Non-Claude models, Azure OpenAI, Bedrock Converse, and auto router tiers that select non-Claude models need `general_settings.safeguards_classifier_model`. After a reply, run `/status` and check for `Auto mode server: Enabled`.
+
 :::info 
 
 This tutorial is based on [Anthropic's official LiteLLM configuration documentation](https://code.claude.com/docs/en/llm-gateway#litellm-configuration). This integration allows you to use any LiteLLM supported model through Claude Code with centralized authentication, usage tracking, and cost controls.
@@ -353,4 +355,3 @@ If you still need the variable, for example on a proxy older than v1.109.0 that 
 To confirm the checks are on, let Claude Code run one tool call, then run `/status` and look for `Auto mode server: Enabled`.
 
 <Image img={require('../../img/release_notes/claude_code_demo.png')} style={{ width: '500px', height: 'auto' }} />
-
