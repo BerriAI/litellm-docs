@@ -215,6 +215,8 @@ export const ENDPOINTS = [
       {label: 'Nimble', doc: 'search/nimble'},
       {label: 'Bing Grounding', doc: 'search/bing_grounding'},
       {label: 'DeepSeek', doc: 'search/deepseek'},
+      {label: 'Microsoft Web IQ', doc: 'search/webiq'},
+      {label: 'Seltz', doc: 'search/seltz'},
     ],
     keywords: ['asearch', 'web search', 'perplexity', 'tavily'],
   },

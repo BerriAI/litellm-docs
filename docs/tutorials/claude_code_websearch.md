@@ -161,6 +161,7 @@ Any search provider LiteLLM supports can run Claude Code's web searches. Set its
 | [**Grounding with Bing**](../search/bing_grounding.md) | `bing_grounding` | `BING_GROUNDING_PROJECT_ENDPOINT`, `BING_GROUNDING_MODEL`, Azure credentials or `BING_GROUNDING_TOKEN` |
 | [**DeepSeek**](../search/deepseek.md) | `deepseek` | `DEEPSEEK_API_KEY` |
 | [**xAI X Search**](https://docs.x.ai/developers/tools/x-search) (from v1.109.0) | `xai` | `XAI_API_KEY` |
+| [**Seltz**](../search/seltz.md) | `seltz` | `SELTZ_API_KEY` |
 
 See [all supported search providers](../search/index.md) for detailed setup instructions and provider-specific parameters.
 
