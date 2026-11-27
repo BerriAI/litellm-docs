@@ -7,47 +7,46 @@ description: "Call Qwen3 235B and other Nebius AI Studio models with JSON mode, 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Nebius AI Studio
-https://docs.nebius.com/studio/inference/quickstart
+# Nebius Token Factory
+https://docs.tokenfactory.nebius.com/
 
 :::tip
 
-**Litellm provides support to all models from Nebius AI Studio. To use a model, set `model=nebius/<any-model-on-nebius-ai-studio>` as a prefix for litellm requests. The full list of supported models is provided at https://studio.nebius.ai/ **
+**LiteLLM supports all models on Nebius Token Factory, previously called Nebius AI Studio. To use a model, set `model=nebius/<model-id>` as a prefix for litellm requests. Model IDs change as models launch and retire. `GET https://api.tokenfactory.nebius.com/v1/models` returns the IDs your API key can call. The [model catalog](https://tokenfactory.nebius.com/models/catalog) lists every model on the platform, including ones this API does not serve.**
 
 :::
 
-## API Key
+## API Key and Base URL
 ```python
 import os
-# env variable
-os.environ['NEBIUS_API_KEY']
+
+os.environ["NEBIUS_API_KEY"] = ""  # your Token Factory API key
+os.environ["NEBIUS_API_BASE"] = "https://api.tokenfactory.nebius.com/v1"
 ```
+
+Always set `NEBIUS_API_BASE`, or pass `api_base`, so requests go to Token Factory. LiteLLM v1.109.1 does not use this URL by default yet.
 
 ## Sample Usage: Text Generation
 ```python
 from litellm import completion
 import os
 
-os.environ['NEBIUS_API_KEY'] = "insert-your-nebius-ai-studio-api-key"
+os.environ["NEBIUS_API_KEY"] = ""
+os.environ["NEBIUS_API_BASE"] = "https://api.tokenfactory.nebius.com/v1"
+
 response = completion(
-    model="nebius/Qwen/Qwen3-235B-A22B",
+    model="nebius/Qwen/Qwen3-30B-A3B-Instruct-2507",
     messages=[
         {
             "role": "user",
             "content": "What character was Wall-e in love with?",
         }
     ],
-    max_tokens=10,
-    response_format={ "type": "json_object" },
+    max_tokens=100,
     seed=123,
-    stop=["\n\n"],
-    temperature=0.6,  # either set temperature or `top_p`
-    top_p=0.01,  # to get as deterministic results as possible
-    tool_choice="auto",
-    tools=[],
-    user="user",
+    temperature=0.6,
 )
-print(response)
+print(response.choices[0].message.content)
 ```
 
 ## Sample Usage - Streaming
@@ -55,9 +54,11 @@ print(response)
 from litellm import completion
 import os
 
-os.environ['NEBIUS_API_KEY'] = ""
+os.environ["NEBIUS_API_KEY"] = ""
+os.environ["NEBIUS_API_BASE"] = "https://api.tokenfactory.nebius.com/v1"
+
 response = completion(
-    model="nebius/Qwen/Qwen3-235B-A22B",
+    model="nebius/Qwen/Qwen3-30B-A3B-Instruct-2507",
     messages=[
         {
             "role": "user",
@@ -65,19 +66,44 @@ response = completion(
         }
     ],
     stream=True,
-    max_tokens=10,
-    response_format={ "type": "json_object" },
-    seed=123,
-    stop=["\n\n"],
-    temperature=0.6,  # either set temperature or `top_p`
-    top_p=0.01,  # to get as deterministic results as possible
-    tool_choice="auto",
-    tools=[],
-    user="user",
+    max_tokens=100,
 )
 
 for chunk in response:
-    print(chunk)
+    print(chunk.choices[0].delta.content or "", end="")
+```
+
+## Sample Usage - Tool Calling
+```python
+from litellm import completion
+import os
+
+os.environ["NEBIUS_API_KEY"] = ""
+os.environ["NEBIUS_API_BASE"] = "https://api.tokenfactory.nebius.com/v1"
+
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Get the current weather for a city",
+            "parameters": {
+                "type": "object",
+                "properties": {"city": {"type": "string"}},
+                "required": ["city"],
+            },
+        },
+    }
+]
+
+response = completion(
+    model="nebius/Qwen/Qwen3-30B-A3B-Instruct-2507",
+    messages=[{"role": "user", "content": "What is the weather in Amsterdam?"}],
+    tools=tools,
+    tool_choice="auto",
+    max_tokens=200,
+)
+print(response.choices[0].message.tool_calls)
 ```
 
 ## Sample Usage - Embedding
@@ -85,18 +111,20 @@ for chunk in response:
 from litellm import embedding
 import os
 
-os.environ['NEBIUS_API_KEY'] = ""
+os.environ["NEBIUS_API_KEY"] = ""
+os.environ["NEBIUS_API_BASE"] = "https://api.tokenfactory.nebius.com/v1"
+
 response = embedding(
-    model="nebius/BAAI/bge-en-icl",
+    model="nebius/Qwen/Qwen3-Embedding-8B",
     input=["What character was Wall-e in love with?"],
 )
-print(response)
+print(len(response.data[0]["embedding"]))
 ```
 
 
 ## Usage with LiteLLM Proxy Server
 
-Here's how to call a Nebius AI Studio model with the LiteLLM Proxy Server
+Here's how to call a Nebius Token Factory model with the LiteLLM Proxy Server
 
 1. Modify the config.yaml 
 
@@ -104,10 +132,14 @@ Here's how to call a Nebius AI Studio model with the LiteLLM Proxy Server
   model_list:
     - model_name: my-model
       litellm_params:
-        model: nebius/<your-model-name>  # add nebius/ prefix to use Nebius AI Studio as provider
-        api_key: api-key                 # api key to send your model
+        model: nebius/<your-model-id>       # add the nebius/ prefix
+        api_key: os.environ/NEBIUS_API_KEY  # read the key from the environment
+        api_base: https://api.tokenfactory.nebius.com/v1
+
+  general_settings:
+    master_key: os.environ/LITELLM_MASTER_KEY
   ```
-2. Start the proxy 
+2. Start the proxy with `NEBIUS_API_KEY` and `LITELLM_MASTER_KEY` set. The proxy does not start without a master key.
   ```bash
   $ litellm --config /path/to/config.yaml
   ```
@@ -119,9 +151,10 @@ Here's how to call a Nebius AI Studio model with the LiteLLM Proxy Server
   <TabItem value="openai" label="OpenAI Python v1.0.0+">
 
   ```python
+  import os
   import openai
   client = openai.OpenAI(
-      api_key="litellm-proxy-key",             # pass litellm proxy key, if you're using virtual keys
+      api_key=os.environ["LITELLM_MASTER_KEY"], # litellm proxy key
       base_url="http://0.0.0.0:4000" # litellm-proxy-base url
   )
 
@@ -133,6 +166,7 @@ Here's how to call a Nebius AI Studio model with the LiteLLM Proxy Server
               "content": "What character was Wall-e in love with?"
           }
       ],
+      max_tokens=100,
   )
 
   print(response)
@@ -143,7 +177,7 @@ Here's how to call a Nebius AI Studio model with the LiteLLM Proxy Server
 
   ```shell
   curl --location 'http://0.0.0.0:4000/chat/completions' \
-      --header 'Authorization: litellm-proxy-key' \
+      --header "Authorization: Bearer $LITELLM_MASTER_KEY" \
       --header 'Content-Type: application/json' \
       --data '{
       "model": "my-model",
@@ -153,6 +187,7 @@ Here's how to call a Nebius AI Studio model with the LiteLLM Proxy Server
           "content": "What character was Wall-e in love with?"
           }
       ],
+      "max_tokens": 100
   }'
   ```
   </TabItem>
