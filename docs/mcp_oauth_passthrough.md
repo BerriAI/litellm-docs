@@ -370,11 +370,13 @@ OpenCode reads them from `opencode.json`:
 
 :::warning[Deprecated]
 
-`delegate_auth_to_upstream` is the original flag-based form of client-forwarded OAuth and is deprecated. It no longer bypasses LiteLLM admission: on current versions LiteLLM still requires its own API key, SSO, or JWT on every request that carries a bearer, and the proxy logs a deprecation warning when a server is loaded with `auth_type: oauth2` and `delegate_auth_to_upstream: true`. New servers should use `auth_type: oauth_delegate` (admission required, upstream token forwarded) or `auth_type: true_passthrough` (no admission). Existing configs should migrate to one of those two. The section below describes what the legacy flag still does.
+`delegate_auth_to_upstream` is the original flag-based form of client-forwarded OAuth. It is deprecated but still works: a client can call tools with only its upstream token, and LiteLLM forwards that token and admits the caller anonymously unless the token is also a LiteLLM credential. The proxy logs a deprecation warning when it loads a server with `auth_type: oauth2` and `delegate_auth_to_upstream: true`. New servers should use `auth_type: true_passthrough` (no admission) or `auth_type: oauth_delegate` (admission required, upstream token forwarded).
+
+From v1.103.0 until the release that includes [PR #48939](https://github.com/BerriAI/litellm/pull/48939), the flag required a LiteLLM credential on every request that carried a bearer, so clients that sent only the upstream token received `401`. On those versions, send a LiteLLM key in `x-litellm-api-key` alongside the upstream bearer.
 
 :::
 
-For OAuth2 MCP servers where the client authenticates directly against the upstream server's own OAuth issuer, the legacy flag lets a credential-free client reach the upstream's OAuth challenge through LiteLLM so it can start PKCE. Once the client holds an upstream token it must also present a LiteLLM credential, exactly as with `oauth_delegate`.
+For OAuth2 MCP servers where the client authenticates directly against the upstream server's own OAuth issuer, the flag lets the client run PKCE with the upstream and then call tools with only the upstream token, so the client never needs a LiteLLM key.
 
 ### Setup
 
@@ -389,9 +391,9 @@ mcp_servers:
 
 Delegated servers are interactive, so they take `oauth2_flow: authorization_code`. The flag is honored **only** when `auth_type: oauth2`; setting it on any other auth type is silently ignored.
 
-:::warning[Internal-only (`available_on_public_internet: false`) and the anonymous discovery step]
+:::warning[Internal-only (`available_on_public_internet: false`) and anonymous access]
 
-`available_on_public_internet: false` does not make the credential-free cold start authenticated. An anonymous caller with no `Authorization` header can still reach the upstream OAuth2 `/authorize` challenge for a matching `auth_type: oauth2` server with `delegate_auth_to_upstream: true` (not `oauth2_flow: client_credentials`). The internal-only flag mainly controls IP-based discovery and related behavior ([see guide](./mcp_public_internet.md)). Tool calls are not affected: any request carrying a bearer goes through LiteLLM admission.
+`available_on_public_internet: false` does not make delegated access authenticated. An anonymous caller can reach the upstream OAuth2 `/authorize` challenge and, with a valid upstream token, call tools on a matching `auth_type: oauth2` server with `delegate_auth_to_upstream: true` (not `oauth2_flow: client_credentials`). The internal-only flag mainly controls IP-based discovery and related behavior ([see guide](./mcp_public_internet.md)), so rely on the upstream IdP and network policy to restrict who can use the server.
 
 :::
 
@@ -400,8 +402,10 @@ Delegated servers are interactive, so they take `oauth2_flow: authorization_code
 1. The client sends an MCP request to LiteLLM with no `Authorization` header and no `x-litellm-api-key`.
 2. Because every target server is `auth_type: oauth2` with `delegate_auth_to_upstream: true`, LiteLLM admits this credential-free request anonymously so the upstream's own `401` + `WWW-Authenticate` flows back to the client.
 3. The client completes PKCE directly with the upstream OAuth issuer.
-4. The client retries with `Authorization: Bearer <upstream-token>`. LiteLLM runs its own admission on this request. With no LiteLLM credential the request fails with `401`; the client has to send a LiteLLM key in `x-litellm-api-key` alongside the upstream bearer, which is the `oauth_delegate` request shape.
-5. Once admitted, LiteLLM forwards the upstream bearer untouched and never forwards the LiteLLM credential.
+4. The client retries with `Authorization: Bearer <upstream-token>`. The bearer is not the master key, a gateway session token, or a virtual key in LiteLLM's key table, so LiteLLM admits the caller anonymously and forwards the bearer to the upstream untouched.
+5. If the upstream rejects the token when the session opens, for example because it expired, LiteLLM returns `401` with the upstream's `resource_metadata` so the client signs in again.
+
+A bearer that is a LiteLLM credential takes normal LiteLLM admission and is never forwarded; a refused key returns its error. When the proxy has another way to identify callers, LiteLLM also tries the bearer as an identity, using the same check its own auth would run for that token: a custom auth function, then OAuth2 token introspection (`enable_oauth2_auth`), then trusted reverse-proxy headers (`enable_oauth2_proxy_auth`), then a JWT whose issuer LiteLLM's JWT auth accepts. When that check vouches for the caller and the user is granted the server, the caller is admitted as that user and the bearer is still forwarded. A caller the check rejects, a user LiteLLM does not know, or a user who is not granted the server is admitted anonymously; a known user who is over budget or explicitly disallowed receives that error. Custom auth decides alone, so any custom auth failure is anonymous. A client that sends `x-litellm-api-key` together with the upstream bearer is admitted with that key, and only the upstream bearer is forwarded.
 
 ```mermaid
 sequenceDiagram
@@ -420,10 +424,7 @@ sequenceDiagram
     Auth-->>Client: access_token
 
     Client->>LiteLLM: MCP request + Bearer access_token (no LiteLLM key)
-    LiteLLM-->>Client: 401 (LiteLLM admission required)
-
-    Client->>LiteLLM: MCP request + x-litellm-api-key + Bearer access_token
-    Note over LiteLLM: Admit caller, strip admission credential
+    Note over LiteLLM: Not a LiteLLM credential, admit anonymously
     LiteLLM->>MCP: Forward request + Bearer access_token
     MCP-->>LiteLLM: MCP response
     LiteLLM-->>Client: MCP response
@@ -431,20 +432,18 @@ sequenceDiagram
 
 ### Fail-Closed Behavior
 
-The anonymous cold start fires only when the request carries no bearer and **every** target opts in. It runs normal LiteLLM auth when:
+LiteLLM runs normal admission, with no anonymous path, when any of these holds:
 
-- The request carries an `Authorization` header (any bearer, including an upstream token).
 - The server's `auth_type` is anything other than `oauth2`.
 - `delegate_auth_to_upstream` is not explicitly `true`.
 - The server's effective `oauth2_flow` is `client_credentials`.
 - The request targets multiple servers (`x-mcp-servers: a,b`) and any one is not delegated.
 - The target server cannot be resolved from the URL path or `x-mcp-servers` header.
+- The bearer is a LiteLLM credential, or LiteLLM cannot finish checking whether it is one.
 
 ### Security Trade-offs
 
-- Only the credential-free discovery step is anonymous. Tool calls run under a LiteLLM identity, so spend tracking, per-key rate limits, and guardrails apply as they do for `oauth_delegate`.
-- LiteLLM forwards the upstream token without inspecting it, so the upstream still owns tool-level authorization and token validation.
-- Because the flag is deprecated and behaves like `oauth_delegate` once a bearer is present, migrate to `auth_type: oauth_delegate` rather than relying on it.
+Anonymous callers skip LiteLLM's per-server permissions, budgets, and rate limits, because there is no key, user, or team to apply them to. Their tool calls still appear in spend logs and on the Logs page with the tool's configured cost and no attribution. LiteLLM forwards the upstream token without inspecting it, so the upstream still owns token validation and tool-level authorization. A live LiteLLM key from a different proxy is unknown to this one and is forwarded as an upstream token, so send LiteLLM keys in `x-litellm-api-key`, never in `Authorization`, on delegated servers. A JWT that LiteLLM's JWT auth also accepts is forwarded too, which lets the upstream replay it against LiteLLM. With `enable_oauth2_auth` on, an opaque token names no issuer, so every bearer that is not a LiteLLM credential, upstream tokens included, is sent to your provider's introspection endpoint, and a valid one is introspected twice per request. Use `auth_type: oauth_delegate` when every caller must be a LiteLLM principal.
 
 ### Config Reference
 
@@ -452,4 +451,4 @@ The anonymous cold start fires only when the request carries no bearer and **eve
 |-------|----------|-------------|
 | `auth_type` | Yes | Must be `oauth2`. The flag is ignored otherwise. |
 | `oauth2_flow` | Yes | Set to `authorization_code`; delegation lets the client's interactive PKCE flow start against the upstream server. |
-| `delegate_auth_to_upstream` | Yes | Set to `true` to opt this server into the legacy delegate behavior. Deprecated in favor of `auth_type: oauth_delegate`. |
+| `delegate_auth_to_upstream` | Yes | Set to `true` to opt this server into the legacy delegate behavior. Deprecated in favor of `auth_type: true_passthrough` or `auth_type: oauth_delegate`. |
