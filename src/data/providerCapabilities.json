@@ -659,6 +659,12 @@
       "chat"
     ]
   },
+  "providers/nagaai": {
+    "prefix": "nagaai",
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/nano-gpt": {
     "prefix": "nanogpt",
     "capabilities": [

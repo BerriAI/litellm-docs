@@ -93,7 +93,7 @@ const DISPLAY_NAMES = dict(Object.entries({
   lm_studio: 'LM Studio', manus: 'Manus', maritalk: 'Maritalk', meta: 'Meta Model API',
   meta_llama: 'Meta - Llama API', microsoft_365_copilot: 'Microsoft 365 Copilot', milvus: 'Milvus',
   minimax: 'Minimax', mistral: 'Mistral AI API', modelscope: 'ModelScope', mongodb: 'MongoDB Atlas',
-  moonshot: 'Moonshot', morph: 'Morph', nace: 'Nace', nadir: 'Nadir', nanogpt: 'NanoGPT', nebius: 'Nebius AI Studio',
+  moonshot: 'Moonshot', morph: 'Morph', nace: 'Nace', nadir: 'Nadir', nagaai: 'NagaAI', nanogpt: 'NanoGPT', nebius: 'Nebius AI Studio',
   neosantara: 'Neosantara', nimble: 'Nimble', nlp_cloud: 'NLP Cloud', novita: 'Novita AI', nscale: 'Nscale',
   nvidia_nim: 'Nvidia NIM', nvidia_riva: 'Nvidia Riva', oci: 'OCI', ollama: 'Ollama', ollama_chat: 'Ollama Chat',
   oobabooga: 'Oobabooga', openai: 'OpenAI', openai_like: 'OpenAI-like', opencode_go: 'OpenCode Go',
