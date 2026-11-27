@@ -54,6 +54,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | A deployment's own [`supports_audio_input` and `supports_video_input`](#audio-and-video-on-other-deployments) values, and clip requests going only to the group deployments that take clips | `v1.110.0` |
 | [JSON input](#json-input) on OpenAI | `v1.112.0-rc.1`, and `v1.108.14` on the 1.108.x LTS line |
 | [Another LiteLLM proxy](#send-decision-calls-through-a-litellm-proxy) as a provider, with `litellm_proxy/` models | `v1.112.0-rc.1`, and `v1.108.15` on the 1.108.x LTS line |
+| [Levanto Sage](./providers/levanto.md#sage-decisions) | `v1.113.0` |
 
 | Feature | Supported | Notes |
 |---------|-----------|-------|
@@ -83,6 +84,7 @@ Decision routes are available <SinceVersion v="1.104.2" />, except the `v1.105.0
 | [Strands Decider](./providers/strands_decider.md) (self-hosted) | `strands_decider/strands-decider-2B-hobson-v19` | `STRANDS_DECIDER_API_BASE` required, `STRANDS_DECIDER_API_KEY` optional | `/v1/systemone` | No |
 | [vLLM](https://docs.vllm.ai/en/latest/serving/online_serving/structured_decisions.html) (self-hosted) | `hosted_vllm/Qwen/Qwen3-0.6B` | `HOSTED_VLLM_API_BASE` or `api_base` required, `HOSTED_VLLM_API_KEY` optional | `/v1/systemone` | No |
 | [Laya](https://github.com/NandhaKishorM/laya) (self-hosted) | `laya/english`, `laya/multilingual` or `laya/typed-decisions` | `api_base` or `LAYA_API_BASE` required, `LAYA_API_KEY` optional | `/v1/systemone` | No |
+| [Levanto Sage](./providers/levanto.md#sage-decisions) | `levanto/levanto-sage-2` or `levanto/sage-latest` | `LEVANTO_API_KEY`, optional `LEVANTO_BASE_URL` | `/v1/systemone` | No |
 | [Bespoke Nimble](https://github.com/bespokelabsai/nimble) (self-hosted) | `bespoke/nimble` on Ollama, else `bespoke/nimble-latest` or `bespoke/bespokelabs/Bespoke-Nimble-9B` | `api_base` or `BESPOKE_API_BASE` required, `BESPOKE_API_KEY` optional | `/v1/systemone` | No |
 | [LiteLLM proxy](#send-decision-calls-through-a-litellm-proxy) | `litellm_proxy/<model on that proxy>` | `LITELLM_PROXY_API_BASE` or `api_base` required, `LITELLM_PROXY_API_KEY` optional | The route you called | When that proxy's model takes them |
 
