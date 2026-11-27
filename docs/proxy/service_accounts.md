@@ -87,6 +87,8 @@ The [default routes](./virtual_keys.md#default-keygenerate-params) apply at crea
 
 ## Example - require `user` param for all service account requests
 
+For global and per-key requirements with a complete proxy setup, see [Enforced required params](./enforced_params.md).
+
 
 ### 1. Set settings for Service Accounts
 

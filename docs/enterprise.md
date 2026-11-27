@@ -65,7 +65,7 @@ Everything below is enabled by the license key. Each item links to its setup gui
 - **[Disable logging per team](./proxy/team_logging.md#disable-logging-for-a-team)**. GDPR-friendly opt-out at the team level
 - **[Log export to GCS / Azure Blob](./observability/gcs_bucket_integration.md)**. Durable storage for compliance
 - **[Guardrails per key/team](#guardrails-oss-vs-enterprise)**. Secret redaction, content moderation, banned keywords
-- **Enforced required params**. Reject requests missing required metadata
+- **[Enforced required params](./proxy/enforced_params.md)**. Reject requests missing required metadata
 
 ### Operations and branding {#operations--branding}
 
