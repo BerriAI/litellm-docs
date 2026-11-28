@@ -574,3 +574,4 @@ curl --location 'http://0.0.0.0:4000/team/update' \
 ```
 
 In this example, `max_budget: 100` succeeds when the team's current budget is already `100` or higher. Going above the current budget needs `raise_max_budget` as well, and on an org-scoped team the new value must stay within the organization's `max_budget`. With no fields enabled the call returns 403 and tells the team admin which setting to ask a proxy admin for.
+
