@@ -309,6 +309,7 @@ const sidebars = {
           { type: "doc", id: "proxy/guardrails/straiker", customProps: { icon: "/img/integrations/straiker.png" } },
           "proxy/guardrails/alice",
           "proxy/guardrails/llm_shield_proxy",
+          "proxy/guardrails/newmean_pii",
           { type: "doc", id: "proxy/guardrails/conduct", customProps: { icon: "/img/integrations/conduct.png" } },
           { type: "doc", id: "proxy/guardrails/collieai", customProps: { icon: "/img/integrations/collieai.png" } },
         ].sort((a, b) => (typeof a === "string" ? a : a.id).localeCompare(typeof b === "string" ? b : b.id)),
