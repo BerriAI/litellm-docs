@@ -14,7 +14,23 @@ Keep the current version serving until replacements are ready. Route new request
 
 Use rolling deployments for routine upgrades, [blue/green](./deploy/ha/blue_green.md) to test a full replacement before cutover, or a [canary](./deploy/ha/canary.md) to shift traffic gradually.
 
-## Before you start {#before-you-upgrade}
+### Check compatibility while old pods are serving
+
+The migration job can change a shared database while old gateway pods still serve traffic. `DISABLE_SCHEMA_UPDATE=true` stops gateway pods from running schema updates. Old pods still query the database, and existing connections can keep prepared statements that expect the old result shape.
+
+On a restored copy of production, start the installed gateway version and send representative requests before running the target migration job. Keep the old pods and their database sessions alive. After the job completes, repeat those requests against the old pods before rolling out the target version. Include a request authenticated with a virtual key and any reads or writes that use the changed tables. Check for HTTP errors and PostgreSQL errors such as `cached plan must not change result type`. See [the virtual-key authentication incident](https://github.com/BerriAI/litellm/issues/36418).
+
+If the old version fails against the new schema, schedule a maintenance window. Drain traffic and stop every old gateway that uses the shared database before running the migration job. Start the target version after the job succeeds, then verify readiness and representative requests before restoring traffic.
+
+### Check compatibility while old pods are serving
+
+The migration job can change a shared database while old gateway pods still serve traffic. `DISABLE_SCHEMA_UPDATE=true` stops gateway pods from running schema updates. Old pods still query the database, and existing connections can keep prepared statements that expect the old result shape.
+
+On a restored copy of production, start the installed gateway version and send representative requests before running the target migration job. Keep the old pods and their database sessions alive. After the job completes, repeat those requests against the old pods before rolling out the target version. Include a request authenticated with a virtual key and any reads or writes that use the changed tables. Check for HTTP errors and PostgreSQL errors such as `cached plan must not change result type`. See [the virtual-key authentication incident](https://github.com/BerriAI/litellm/issues/36418).
+
+If the old version fails against the new schema, schedule a maintenance window. Drain traffic and stop every old gateway that uses the shared database before running the migration job. Start the target version after the job succeeds, then verify readiness and representative requests before restoring traffic.
+
+### Upgrading from a version before v1.104.0
 
 | Check | Required for this workflow |
 | --- | --- |
