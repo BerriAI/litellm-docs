@@ -60,7 +60,7 @@ print(response.choices[0].message.content)
 
 ## Embeddings
 
-The embedding model takes 1 to 64 inputs per request and returns 1024-dimensional vectors by default. Pass `dimensions=512` or `dimensions=256` for shorter vectors. Pass `input_type="query"` for search queries and `input_type="document"` for the texts you index.
+The embedding model takes 1 to 64 inputs per request and returns 1024-dimensional vectors by default. Pass `dimensions=512` or `dimensions=256` for shorter vectors.
 
 ```python
 from litellm import embedding
@@ -69,7 +69,6 @@ response = embedding(
     model="assetfeed/assetfeed/assetfeed-embed-v1",
     input=["bitcoin etf inflows"],
     dimensions=512,
-    input_type="query",
 )
 
 print(len(response.data[0]["embedding"]))
@@ -109,7 +108,7 @@ curl http://localhost:4000/v1/chat/completions \
 
 curl http://localhost:4000/v1/embeddings \
   -H "Content-Type: application/json" \
-  -d '{"model": "assetfeed-embed", "input": ["bitcoin etf inflows"], "dimensions": 512, "input_type": "query"}'
+  -d '{"model": "assetfeed-embed", "input": ["bitcoin etf inflows"], "dimensions": 512}'
 ```
 
 If your proxy requires authentication, also send `Authorization: Bearer <your-litellm-key>`. This is your LiteLLM key, not your AssetFeed API key.
