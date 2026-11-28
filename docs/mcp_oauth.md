@@ -28,7 +28,7 @@ mcp_servers:
     client_secret: os.environ/GITHUB_OAUTH_CLIENT_SECRET
 ```
 
-[**See Claude Code Tutorial**](/docs/tutorials/claude_responses_api)
+[**See Claude Code MCP Tutorial**](./tutorials/claude_mcp.md)
 
 ### How It Works
 
