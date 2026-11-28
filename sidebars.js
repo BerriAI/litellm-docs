@@ -1730,6 +1730,7 @@ const sidebars = {
             "projects/Agent Lightning",
             "projects/Harbor",
             "projects/CompatCanary",
+            "projects/ai-gateway-audit",
             "projects/GraphRAG",
             "projects/Docq.AI",
             "projects/PDL",
