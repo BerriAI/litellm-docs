@@ -14,6 +14,7 @@ Most integrations need three calls on your LiteLLM proxy: list recent runs, read
 | Read a run and its steps | [`GET /v1/traces/{trace_id}`](#read-a-run) |
 | Read an investigation's findings | [`GET /lens/{id}`](#read-findings) |
 | Ask your own question with SQL | [`POST /v1/traces/query`](#query-traces) |
+| Read OTLP log records | [`GET /v1/logs`](#logs) on the Lens server |
 
 Every call uses your LiteLLM base URL and a proxy key in `Authorization: Bearer <key>`. There is no Lens command-line tool for these endpoints. Use curl, any HTTP client, or a coding agent that calls them directly.
 
@@ -220,12 +221,98 @@ For a direct upload, use the Lens base URL, keeping `/lens-ingest` when present,
 | Endpoint | Purpose |
 | --- | --- |
 | `POST /v1/traces` | Ingest OTLP/HTTP traces as protobuf (`application/x-protobuf`) or JSON (`application/json`). Supports gzip with `Content-Encoding: gzip`. |
-| `POST /v1/logs` | Ingest OTLP/HTTP logs, including coding-agent session events |
+| `POST /v1/logs` | Ingest OTLP/HTTP logs from any exporter, including coding-agent session events. See [OTLP logs](#logs) |
 | `POST /v1/traces/receipt` | Check delivery of a `trace_id` and up to 1,000 `span_ids` uploaded with the same tracing key. Returns `received`; never returns trace contents |
 
 A tracing key permits ingestion and its own delivery receipts only. It cannot read traces or call models. Lens itself rejects a LiteLLM key with 401, so a LiteLLM key uploads only through the gateway.
 
 A successful upload confirms ClickHouse accepted it. A 429 or 503 is retryable, so use bounded exporter retries. During an extended outage, the exporter can drop traces. Keys refresh on each Lens replica every 30 seconds, with a 90-second maximum credential snapshot age.
+
+## OTLP logs {#logs}
+
+`POST /v1/logs` accepts any OTLP/HTTP log export, as protobuf or JSON. A record needs no particular instrumentation scope, attribute, or trace context to be kept: Lens stores every `LogRecord` in the request, whether it comes from a coding agent, an application logger, or a custom exporter, and whether or not it carries a `trace_id`. Records from Claude Code and Codex CLI are also assembled into [coding agent sessions](./coding-agents.md), which does not change how the record itself is stored.
+
+Each stored record keeps its `time_unix_nano`, `observed_time_unix_nano`, severity number and text, event name, body, attributes, `dropped_attributes_count`, trace ID, span ID, and trace flags, together with the resource attributes and schema URL and the scope name, version, attributes, and schema URL it arrived under. The body and every attribute keep their OTLP type. A value reads back as `{"type": ..., "value": ...}`, where `type` is one of `null`, `string`, `boolean`, `integer`, `double`, `bytes`, `array`, or `map`, so an integer stays an integer and a nested map stays a map.
+
+Read stored records from the Lens server. LiteLLM forwards log uploads to Lens and does not serve these two read routes, so use the Lens base URL and a credential Lens accepts, such as the Lens admin token.
+
+```bash
+curl -H "Authorization: Bearer <lens-admin-token>" \
+  "https://<your-lens-server>/v1/logs?service=checkout&severity=WARN"
+```
+
+```json
+{
+  "data": [
+    {
+      "record_id": "a540aca4909350299a4660bb3927e7292ead275332561db8f3a9d27e5400e2f9",
+      "timestamp_ns": "1795844656000000000",
+      "observed_timestamp_ns": "1795844656000000000",
+      "severity_number": 13,
+      "severity_text": "WARN",
+      "event_name": "app.thing",
+      "semantic_event_name": null,
+      "scope_name": "my.generic.logger",
+      "service_name": "checkout",
+      "trace_id": "",
+      "span_id": "",
+      "conversation_id": null
+    }
+  ],
+  "next_cursor": null
+}
+```
+
+Records come back newest first. `start_ms` and `end_ms` are Unix milliseconds, default to the last 24 hours, and must fall inside the trace retention window. Each filter is an exact match:
+
+| Parameter | Matches |
+| --- | --- |
+| `service` | The `service.name` resource attribute |
+| `severity` | The record's severity text, such as `WARN` |
+| `event` | The record's `event.name` attribute, returned as `semantic_event_name` |
+| `trace_id` | The record's trace ID |
+| `conversation_id` | The coding agent session the record belongs to |
+
+`page_size` is 1 to 100. Pass `next_cursor` back as `cursor` to read the next page. `timestamp_ns` is the record's `time_unix_nano`. When the exporter leaves that unset, Lens uses the `event.timestamp` attribute, then the observed time. A record without a trace has an empty `trace_id` and `span_id`.
+
+Read one record in full with its `record_id`:
+
+```bash
+curl -H "Authorization: Bearer <lens-admin-token>" \
+  "https://<your-lens-server>/v1/logs/<record_id>"
+```
+
+```json
+{
+  "record_id": "a540aca4909350299a4660bb3927e7292ead275332561db8f3a9d27e5400e2f9",
+  "timestamp_ns": "1795844656000000000",
+  "raw_timestamp_ns": "1795844656000000000",
+  "observed_timestamp_ns": "1795844656000000000",
+  "severity_number": 13,
+  "severity_text": "WARN",
+  "event_name": "app.thing",
+  "semantic_event_name": null,
+  "body": {"type": "map", "value": {"k": {"type": "integer", "value": 7}}},
+  "attributes": {"a": {"type": "boolean", "value": true}},
+  "resource_attributes": {"service.name": {"type": "string", "value": "checkout"}},
+  "resource_schema_url": "",
+  "scope_name": "my.generic.logger",
+  "scope_version": "1.2",
+  "scope_attributes": {},
+  "scope_schema_url": "",
+  "trace_id": "",
+  "span_id": "",
+  "trace_flags": 0,
+  "dropped_attributes_count": 2,
+  "service_name": "checkout",
+  "conversation_id": null,
+  "codex": null
+}
+```
+
+`raw_timestamp_ns` is the `time_unix_nano` the exporter sent, before any fallback. `codex` is set only for Codex CLI records. Log reads follow the same rules as trace reads: an administrator sees every record, and other callers see the records their user or teams own.
+
+One upload can hold up to 16,384 log records and 64 MiB of decoded content, and Lens rejects a request over either limit as a whole. Raise them on the Lens server with `OTLP_MAX_LOG_RECORDS` and `OTLP_MAX_DECODED_LOG_BYTES`.
 
 ## Who can read traces {#access}
 
