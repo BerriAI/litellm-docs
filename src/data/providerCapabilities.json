@@ -331,6 +331,13 @@
       "chat"
     ]
   },
+  "providers/assetfeed": {
+    "prefix": "assetfeed",
+    "capabilities": [
+      "chat",
+      "embeddings"
+    ]
+  },
   "providers/aws_sagemaker": {
     "prefix": "sagemaker",
     "capabilities": [
