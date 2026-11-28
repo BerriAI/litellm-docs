@@ -10,6 +10,7 @@ For shared endpoint, transport, and authentication rules, see the [MCP Configura
 
 | Server | Endpoint | Auth | Covers |
 |---|---|---|---|
+| [Suno, Seedance, HappyHorse, GPT Image, Nano Banana by Ace Data Cloud](./acedatacloud.md) | Hosted per-service endpoints | Your Ace business API token | Music, video, images, and asynchronous task retrieval |
 | [Slack](./slack.md) | `https://mcp.slack.com/mcp` | OAuth 2.1, your own Slack app | Search, channel and thread reads, messaging, canvases |
 | [Atlassian](./atlassian.md) | `https://mcp.atlassian.com/v1/mcp/authv2` | OAuth 2.1, dynamic registration | Jira, Confluence, Compass, Jira Service Management, Bitbucket |
 | [Linear](./linear.md) | `https://mcp.linear.app/mcp` | OAuth 2.1, dynamic registration | Issues, projects, cycles, documents, comments |
