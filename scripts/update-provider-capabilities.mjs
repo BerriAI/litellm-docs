@@ -72,6 +72,7 @@ const PAGE_CAPABILITIES = {
   'providers/black_forest_labs_img_edit': ['images'],
   'providers/clf_ai_gateway': ['chat'],
   'providers/custom_llm_server': ['chat', 'embeddings'],
+  'providers/jembatanai': ['chat'],
   'providers/litellm_proxy': ['embeddings', 'audio', 'rerank'],
   'providers/ollama': ['embeddings'],
   'providers/opencode_go': ['chat'],

@@ -243,6 +243,11 @@
       "chat"
     ]
   },
+  "providers/jembatanai": {
+    "capabilities": [
+      "chat"
+    ]
+  },
   "providers/poe": {
     "prefix": "poe",
     "capabilities": [
