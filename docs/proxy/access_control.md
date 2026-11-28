@@ -220,7 +220,7 @@ curl -X POST 'http://0.0.0.0:4000/team/member_add' \
 
 #### Choosing what team admins can edit
 
-By default team admins cannot change team settings at all: `/team/update` from a team admin returns 403 and names the setting a proxy admin needs to enable. A proxy admin picks the fields in the Admin UI under Settings > UI > "Team admin editable fields", or sets `team_admin_editable_team_fields` through the API. The same key also works under `general_settings` in the proxy config yaml; a value saved through the UI or API takes precedence over the yaml. The list applies to every team admin on the proxy, only for the teams they administer. Proxy admins and org admins are not affected by it.
+By default team admins cannot change team settings at all: `/team/update` from a team admin returns 403 and names the setting a proxy admin needs to enable. A proxy admin picks the fields in the Admin UI under Settings > UI > "Team admin editable fields", or sets `team_admin_editable_team_fields` through the API. The same key also works under `general_settings` in the proxy YAML config. When the file declares the key, its value controls what team admins can edit. A successful `PATCH /update/ui_settings` can still save a different value to the database, but that value only takes effect after you remove the key from the config file and reload the config. The list applies to every team admin on the proxy, only for the teams they administer. Proxy admins and org admins are not affected by it.
 
 ```shell
 curl -X PATCH 'http://localhost:4000/update/ui_settings' \
@@ -240,7 +240,13 @@ Read the current value back with `GET /get/ui_settings`.
 | `soft_budget` | Change or clear the team's `soft_budget` on `/team/update`. It must stay below the team's `max_budget`, the same rule proxy admins follow |
 | `projects` | Create and update projects for those teams (`/project/new`, `/project/update`) |
 | `member_key_budgets` | Update budget fields on keys owned by other members of those teams (`/key/update`) |
+| `create_member_keys` | Create keys owned by other members of those teams via `/key/generate`. The key authenticates as its owner, so the owner must have the `internal_user` or `internal_user_viewer` role, and the key is always an `llm_api` key confined to LLM API routes |
 | `metadata` | Add, change and remove the team's own metadata keys on `/team/update`. Keys the proxy reads as settings (guardrails, tags, callbacks, rate limit tiers and similar) stay with proxy admins and return 403 naming the key. Keys declared in `team_metadata_schema` can be changed but not removed or left empty |
+| `team_member_budget` | Change the team's default `max_budget` for individual members on `/team/update` |
+| `team_member_budget_duration` | Change the team's default budget duration for individual members on `/team/update` |
+| `team_member_rollover_max_budget` | Change or clear the team's default cap on each member's base budget plus carried allowance on `/team/update`. The cap requires a reset period and must exceed the base member budget |
+| `team_member_tpm_limit` | Change the team's default TPM limit for individual members on `/team/update` |
+| `team_member_rpm_limit` | Change the team's default RPM limit for individual members on `/team/update` |
 
 A raise is capped by the organization's `max_budget` when the team belongs to an organization that has one: going above it returns 400 with `Team max_budget (...) exceeds organization's max_budget (...)`. Teams outside an organization, or in an organization without a budget, have no ceiling. Org-scoped teams must also stay within the organization's budget and TPM/RPM limits no matter who edits them.
 
